@@ -18,6 +18,7 @@
     <title>@yield('title', $pageTitle)</title>
 
     @include('partials.head')
+
 </head>
 
 <body>
@@ -25,18 +26,21 @@
     <x-ui.header />
 
     <main>
-        <div class="container">
-            @yield('content')
-        </div>
+        @yield('content')
     </main>
 
+    <x-ui.chat-btn />
     <x-ui.footer />
 
-    <script src="{{ asset('js/common.js') }}"></script>
-    <script src="{{ asset('js/custom-dropdown.js') }}"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
-    <script src="{{ asset('js/customer_journey.js') }}"></script>
-    <script src="{{ asset('js/profile.js') }}"></script>
+    @stack('styles')
+
+    <!-- <script src="{{ asset('js/common.js') }}" defer></script> -->
+    <!-- <script src="{{ asset('js/custom-dropdown.js') }}" defer></script> -->
+    <script src="{{ asset('js/custom.js') }}" defer></script>
+    <!-- <script src="{{ asset('js/customer_journey.js') }}" defer></script> -->
+    <!-- <script src="{{ asset('js/profile.js') }}" defer></script> -->
+
+    <!-- <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script> -->
 
     @stack('scripts')
 
