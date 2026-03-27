@@ -1,0 +1,414 @@
+@media (max-width: 1199px) and (min-width: 992px) {
+
+    .numbering {
+        left: 35%;
+    }
+
+}
+
+@media (max-width: 1200px) {
+    header {
+        position: sticky;
+        top: 0;
+        z-index: 10000;
+        background: #fff;
+    }
+
+    nav ul a {
+        font-size: 16px;
+    }
+
+    .login-btn,
+    .signup-btn {
+        padding: 5px 20px 5px 20px;
+        font-size: 16px;
+    }
+
+    .select-box-first-row,
+    .select-box-second-row {
+        display: flex;
+        flex-wrap: wrap;
+        /* allow items to move to next line */
+        gap: 20px;
+        /* spacing between items */
+    }
+
+    .find-groomer-content-area,
+    .find-space-content-area {
+        width: 813px;
+        /* reduce width slightly */
+        height: auto;
+        /* let it grow with content */
+        padding: 15px 20px;
+        /* optional for spacing */
+    }
+
+    .pet-type-wrapper,
+    .pet-weight-wrapper,
+    .service-select-wrapper {
+        max-width: 250px;
+        /* slightly smaller than desktop */
+    }
+
+    .label {
+        font-size: 16px;
+        /* smaller label font */
+    }
+
+    .pet-option,
+    .weight-option {
+        font-size: 16px;
+        /* reduce font for buttons */
+        padding: 10px 12px;
+        height: 44px;
+        /* slightly shorter buttons */
+    }
+
+    .pet-option span,
+    .weight-option span {
+        font-weight: 400;
+    }
+
+    .custom-select .select-trigger {
+        font-size: 16px;
+        /* dropdown text size */
+    }
+
+    .search-box input {
+        font-size: 16px;
+        /* input font smaller */
+        padding: 10px 12px;
+    }
+
+    .submit-button .form-submit-button {
+        font-size: 16px;
+        padding: 10px 20px;
+    }
+
+    /* Optional: adjust spacing between fields */
+    .select-box-first-row,
+    .select-box-second-row {
+        gap: 12px;
+    }
+
+    .search-box {
+        width: 250px;
+    }
+
+    .field {
+        padding: 7px 13px !important;
+    }
+
+    .field.date {
+        width: 220px !important;
+    }
+
+    .popover {
+        width: 347px !important;
+    }
+
+    section.rating-section.section {
+        padding: 500px 0 0 0px;
+    }
+
+    .how-it-works-grid {
+        grid-template-columns: 1fr;
+        gap: 60px;
+    }
+
+    .how-arrow {
+        transform: rotate(90deg);
+        margin: 0 auto;
+    }
+
+    .how-it-works {
+        height: auto;
+    }
+
+    .how-it-works-grid {
+        grid-template-columns: 1fr;
+        gap: 60px;
+    }
+
+    .how-arrow {
+        transform: rotate(90deg);
+        margin: 0 auto;
+    }
+
+    nav.navbar {
+        padding: 20px 0 0 0;
+        background: #fff;
+    }
+
+    body.menu-open {
+        overflow: hidden;
+    }
+
+    .menu-toggle {
+        display: block;
+        z-index: 10;
+        margin-bottom: 10px;
+    }
+
+    .menu-items {
+        flex-direction: column;
+        width: 100%;
+        display: none;
+        /* hide by default */
+
+        /* Full-screen overlay below logo */
+        position: fixed;
+        /* overlay on top of content */
+        top: 80px;
+        /* height of your nav row / logo */
+        left: 0;
+        height: calc(100vh - 80px);
+        /* full height minus header */
+        background-color: white;
+        /* menu background */
+        z-index: 9999;
+        padding-top: 20px;
+        /* spacing from top of menu */
+        gap: 30px;
+        /* space between items */
+        align-items: center;
+        /* center items horizontally */
+        justify-content: flex-start;
+        transition: all 0.3s ease-in-out;
+        /* smooth animation */
+    }
+
+    .menu-items.active {
+        display: flex;
+    }
+
+    .menu-items li {
+        width: 100%;
+        text-align: center;
+    }
+
+    .login-btn,
+    .signup-btn {
+        width: 80%;
+        /* better for buttons on full-screen menu */
+    }
+
+    .inverted-radius {
+        --r: 20px;
+        --s: 13px;
+        --x: 165px;
+        --y: 62px;
+        height: 401px;
+    }
+
+    /* rating  */
+
+    .rating-text {
+        flex-direction: column;
+    }
+
+    .find-groomer-content-area,
+    .bottom-left {
+        display: none;
+    }
+
+    .description {
+        width: 300px;
+    }
+
+    .how-it-works {
+        height: auto;
+    }
+
+    .our-mission {
+        height: auto;
+        padding: 15px;
+    }
+
+    .content-column {
+        margin-top: 5% !important;
+    }
+
+    .text-styling {
+        padding-bottom: 35px;
+        text-align: center;
+    }
+
+    .points>div {
+        gap: 20px;
+    }
+
+    .popular-content-area .image-wrapper {
+        width: 220px;
+        height: 220px;
+    }
+
+    .how-up-arrow,
+    .how-down-arrow {
+        margin: 100px 0 100px 0;
+    }
+
+    .how-up-arrow svg {
+        transform: rotate(89deg) translateY(42px);
+        transform-origin: center;
+    }
+
+    .how-down-arrow svg {
+        transform: rotate(89deg) translateY(-42px);
+        transform-origin: center;
+    }
+
+    .join-buttons .become-host-btn,
+    .become-groomer-btn {
+        padding: 5px 10px 5px 10px;
+        margin-top: 10%;
+    }
+
+    .fursgo-map-image-wrapper {
+        width: auto;
+        float: right;
+        position: absolute;
+        right: 0;
+        top: 65%;
+    }
+
+    .points {
+        margin: 0px;
+    }
+
+    .our-mission .image-wrapper img {
+        height: auto;
+        width: 100%;
+    }
+
+    .login-signup-div {
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .points .text {
+        width: 180px;
+    }
+
+    .section {
+        padding: 50px 0;
+    }
+
+    .numbering {
+        left: 35%;
+    }
+
+    .col-lg-6.mt-xs-5.d-flex.justify-content-end {
+        flex-direction: column;
+    }
+
+    .testimonial-section .left .quote {
+        margin-top: 0%;
+    }
+
+    .testimonial-section .left {
+        width: 100%;
+    }
+
+    .testimonial-section .layout {
+        flex-direction: column;
+        overflow: hidden;
+        align-items: normal;
+        height: auto;
+    }
+
+    .testimonial-heading-text {
+        font-size: 16px;
+    }
+
+    .testimonial-section .ending-quotes {
+        bottom: 0;
+        align-items: normal;
+    }
+
+}
+
+@media (max-width: 767px) {}
+
+@media (max-width: 520px) {
+
+    .popover {
+        width: 100%;
+        left: 0;
+        right: 0;
+    }
+
+    .datetime-wrapper {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .points>div span {
+        font-size: 14px;
+    }
+
+    .testimonial-section .card {
+        max-width: 100%;
+    }
+
+}
+
+@media (max-width: 375px) {
+
+    .fursgo-map-image-wrapper {
+        top: 74% !important;
+    }
+
+    .popular-content-area .image-wrapper {
+        width: 230px !important;
+        height: 230px !important;
+    }
+
+    .numbering {
+        left: 12% !important;
+    }
+
+}
+
+@media (max-width: 320px) {
+
+    .testimonial-section .card .testimonial-photo {
+        width: 100px;
+        height: 100px;
+        aspect-ratio: 1 / 1;
+        bottom: 74px;
+    }
+
+    .testimonial-section .text-stars {
+        top: 24px;
+        height: 192px;
+        left: 15px;
+        padding: 20px 0 5px 0;
+    }
+
+    .testimonial-section .card .text-stars p {
+        font-size: 14px;
+    }
+
+    .avatar svg {
+        width: 25px;
+    }
+
+    .testimonial-section .card.default .avatar {
+        position: absolute;
+        left: 171px;
+        bottom: 32px;
+    }
+
+    .testimonial-section .card.default .meta {
+        bottom: 36px;
+        left: 210px;
+    }
+
+    .testimonial-section .card .meta {
+        bottom: 8px;
+        left: 212px;
+    }
+
+}

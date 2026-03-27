@@ -1,0 +1,35 @@
+[
+    {
+        "id": 1,
+        "name": "Buddy",
+        "type": "Dog",
+        "breed": "Golden Retriever",
+        "birthday": "22/08/2018",
+        "sex": "Male",
+        "weight": "30 kg",
+        "image": "images/buddy.jpg",
+        "notes": "Very friendly and loves to play fetch."
+    },
+    {
+        "id": 2,
+        "name": "Luna",
+        "type": "Cat",
+        "breed": "Persian",
+        "birthday": "14/03/2020",
+        "sex": "Female",
+        "weight": "4.5 kg",
+        "image": "images/luna.jpg",
+        "notes": "A bit shy but enjoys petting. Needs regular grooming."
+    },
+    {
+        "id": 3,
+        "name": "Charlie",
+        "type": "Dog",
+        "breed": "Bulldog",
+        "birthday": "05/11/2017",
+        "sex": "Male",
+        "weight": "22 kg",
+        "image": "images/charlie.jpg",
+        "notes": "Has a sensitive stomach, needs special diet plan."
+    }
+]

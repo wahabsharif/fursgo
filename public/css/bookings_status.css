@@ -1,0 +1,107 @@
+:root {
+    --border-color: #D8E8B7;
+    --bg-color: #FFEDED;
+}
+
+/* Page-specific bullet color */
+body.status-updated {
+    --border-color: #D8E8B7;
+    --bg-color: #D8E8B7;
+}
+
+body.status-cancel {
+    --border-color: #FF6E6E;
+    --bg-color: #FFEDED;
+}
+
+.bg-color{
+    background-color: var(--bg-color) !important;
+}
+
+.color{
+    color: var(--border-color) !important;
+}
+
+.top-head.d-flex.align-items-center.justify-content-center {
+    padding: 25px 50px;
+    border-radius: 10px;
+    background: #F8F8F8;
+}
+
+.booking-cards {
+    width: 610px;
+    height: auto;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: #FFF;
+}
+
+.booking-card-top {
+    width: 610px;
+    height: 68px;
+    border-radius: 10px 10px 0 0;
+    border: 1px solid var(--border-color);
+    background: #F5F9ED;
+    padding: 30px;
+}
+
+.booking-card-bottom-section {
+    padding: 30px;
+}
+
+.tag {
+    background: #FFC97A;
+    border: 1px solid rgba(246, 168, 127, 0.15);
+    color: #FFF;
+    padding: 6px 10px;
+    border-radius: 999px;
+    text-align: center;
+    font-family: "Lato";
+    font-size: 14px;
+    font-weight: 400;
+
+    display: inline-block;
+
+    min-width: 80px;
+    max-width: 100%;
+    width: fit-content;
+}
+
+.vertical-line {
+    width: 1px;
+    height: 54px;
+    background: #ccc;
+    border: none;
+    margin: 0;
+}
+
+.no-border {
+    border: none !important;
+    background: #F2F6F9;
+}
+
+.list-style-default {
+    list-style: disc;
+    /* or 'circle' / 'square' depending on bullet type */
+    padding-left: 20px;
+    /* controls spacing from the edge */
+    margin-left: 12px;
+    /* optional, adjust spacing around list */
+}
+
+.btn-custom {
+    width: 295px;
+    height: 48px;
+}
+
+.green-btn {
+    background: #C9DDA0;
+    border: none;
+    color: #fff;
+}
+
+.blue-btn {
+    background: #CBDCE8;
+    border: none;
+    color: #fff;
+}
