@@ -2,6 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
+use Illuminate\Support\Facades\Artisan;
+
+
+Route::get('/clear', function () {
+    Artisan::call('optimize:clear');
+    return "All caches cleared!";
+});
+
 
 Route::get('/', function () {
     return view('home');
