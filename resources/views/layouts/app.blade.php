@@ -1,34 +1,23 @@
+<!-- app.blade.php -->
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    @php
+        $segments = request()->segments();
 
-    <title>@yield('title', 'Laravel')</title>
+        if (empty($segments)) {
+            $pageTitle = 'Fursgo';
+        } else {
+            $pageTitle = 'Fursgo - ' . collect($segments)
+                ->map(fn($s) => ucfirst(str_replace(['-', '_'], ' ', $s)))
+                ->implode(' - ');
+        }
+    @endphp
 
-    <!-- Fonts -->
-    <!-- <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" /> -->
+    <title>@yield('title', $pageTitle)</title>
 
-    <!-- CSS -->
-    <!-- <link rel="stylesheet" href="{{ asset('css/app.css') }}"> -->
-    <link rel="stylesheet" href="{{ asset('css/bookings_status.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/bootstrap.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/change_groomer_space_bookings.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/common.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/company_information.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/customer_journey.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/groomer_space_profile.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/login_signup.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/media_query.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/messages.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/my_bookings.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/notification.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
-
-    @stack('styles')
+    @include('partials.head')
 </head>
 
 <body>
@@ -42,15 +31,15 @@
     </main>
 
     <x-ui.footer />
-    <!-- JS -->
+
     <script src="{{ asset('js/common.js') }}"></script>
     <script src="{{ asset('js/custom-dropdown.js') }}"></script>
     <script src="{{ asset('js/custom.js') }}"></script>
     <script src="{{ asset('js/customer_journey.js') }}"></script>
     <script src="{{ asset('js/profile.js') }}"></script>
-    <!-- If you have more -->
 
     @stack('scripts')
+
 </body>
 
 </html>
