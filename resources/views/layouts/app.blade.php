@@ -40,7 +40,7 @@
     <!-- <script src="{{ asset('js/customer_journey.js') }}" defer></script> -->
     <!-- <script src="{{ asset('js/profile.js') }}" defer></script> -->
 
-    <!-- <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script> -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     @stack('scripts')
 

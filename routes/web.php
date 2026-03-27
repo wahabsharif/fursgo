@@ -15,6 +15,12 @@ Route::get('/', function () {
     return view('home');
 })->name('home');
 
+Route::get('/cookies-overlay-card', function () {
+    return view('components.ui.cookies-overlay-card');
+})->name('cookies-overlay-card');
+
+
+
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
