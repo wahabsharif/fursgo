@@ -4,15 +4,15 @@
 
 <head>
     @php
-        $segments = request()->segments();
+    $segments = request()->segments();
 
-        if (empty($segments)) {
-            $pageTitle = 'Fursgo';
-        } else {
-            $pageTitle = 'Fursgo - ' . collect($segments)
-                ->map(fn($s) => ucfirst(str_replace(['-', '_'], ' ', $s)))
-                ->implode(' - ');
-        }
+    if (empty($segments)) {
+    $pageTitle = 'Fursgo';
+    } else {
+    $pageTitle = 'Fursgo - ' . collect($segments)
+    ->map(fn($s) => ucfirst(str_replace(['-', '_'], ' ', $s)))
+    ->implode(' - ');
+    }
     @endphp
 
     <title>@yield('title', $pageTitle)</title>
@@ -29,13 +29,13 @@
         @yield('content')
     </main>
 
-    <x-ui.chat-btn />
+    <x-layouts.chat-btn />
     <x-layouts.footer />
 
     @stack('styles')
 
     <!-- <script src="{{ asset('js/common.js') }}" defer></script> -->
-    <!-- <script src="{{ asset('js/custom-dropdown.js') }}" defer></script> -->
+    <script src="{{ asset('js/custom-dropdown.js') }}" defer></script>
     <script src="{{ asset('js/custom.js') }}" defer></script>
     <!-- <script src="{{ asset('js/customer_journey.js') }}" defer></script> -->
     <!-- <script src="{{ asset('js/profile.js') }}" defer></script> -->
