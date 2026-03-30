@@ -23,14 +23,14 @@
 
 <body>
 
-    <x-ui.header />
+    <x-layouts.header />
 
     <main>
         @yield('content')
     </main>
 
     <x-ui.chat-btn />
-    <x-ui.footer />
+    <x-layouts.footer />
 
     @stack('styles')
 
