@@ -14,6 +14,9 @@ Route::get('/clear', function () {
 Route::get('/', function () {
     return view('home');
 })->name('home');
+Route::get('/booking-groomer', function () {
+    return view('booking-groomer');
+})->name('booking-groomer');
 
 Route::get('/cookies-overlay-card', function () {
     return view('components.ui.cookies-overlay-card');
