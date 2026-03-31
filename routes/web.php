@@ -26,6 +26,11 @@ Route::get('/cookies-overlay-card', function () {
     return view('components.ui.cookies-overlay-card');
 })->name('cookies-overlay-card');
 
+Route::get('/business-homepage-groomer-space-Owner', function () {
+    return view('business-homepage-groomer-space-Owner');
+})->name('business-homepage-groomer-space-Owner');
+
+
 Route::get('/cookies', function () {
     return view('components.ui.cookies');
 })->name('cookies');
