@@ -38,6 +38,10 @@ Route::get('/search-results', function () {
     return view('search-results');
 })->name('search-results');
 
+Route::get('/account-and-setting/settings', function () {
+    return view('account-and-setting');
+})->name('account-and-setting');
+
 Route::get('/search-results', [SearchController::class, 'index'])->name('search-results');
 
 
