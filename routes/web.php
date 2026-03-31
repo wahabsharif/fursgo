@@ -27,6 +27,10 @@ Route::get('/cookies', function () {
     return view('components.ui.cookies');
 })->name('cookies');
 
+Route::get('/rating-overlay-card', function () {
+    return view('components.ui.rating-overlay-card');
+})->name('rating-overlay-card');
+
 
 
 
