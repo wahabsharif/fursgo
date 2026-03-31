@@ -30,7 +30,7 @@
     style="display: none; border: 1px solid #D4D4D4; border-top: none; border-radius: 0 0 10px 10px; background: #FFF; max-height: 200px; overflow-y: auto; position: absolute; width: calc(100% - 20px); z-index: 10;">
 </div>
 
-@push('scripts')
+@push('script')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // If the shared JS is not loaded, load it first (optional)

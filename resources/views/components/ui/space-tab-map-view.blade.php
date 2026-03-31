@@ -171,7 +171,7 @@
     </div>
 </div>
 
-@push('scripts')
+@push('script')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Check if Leaflet is available

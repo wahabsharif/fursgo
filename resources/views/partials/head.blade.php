@@ -23,4 +23,4 @@
 
 @stack('styles')
 @yield('styles')
-@yield('scripts')
+@yield('script')

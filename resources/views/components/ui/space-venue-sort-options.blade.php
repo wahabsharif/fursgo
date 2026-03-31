@@ -123,7 +123,7 @@ return $sortOptions[0]['label'] ?? 'Recommended';
 </div>
 
 @once
-@push('scripts')
+@push('script')
 <script>
     (function() {
         // Dropdown toggle logic

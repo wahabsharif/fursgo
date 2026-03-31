@@ -152,7 +152,7 @@
     </div>
 </section>
 
-@push('scripts')
+@push('script')
 <script>
     // Initialize map when the DOM is ready
     document.addEventListener('DOMContentLoaded', function() {

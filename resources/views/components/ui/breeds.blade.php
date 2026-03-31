@@ -22,7 +22,7 @@
     </select>
 </div>
 
-@push('scripts')
+@push('script')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Ensure the furs‑dropdown is initialised

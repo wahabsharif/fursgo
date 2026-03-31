@@ -2017,7 +2017,7 @@
 @endsection
 
 
-@section('scripts')
+@section('script')
 <script>
     // ===== Pet Breeds Data =====
     let petBreedsData = {};
