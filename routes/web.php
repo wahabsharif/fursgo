@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\SearchController;
+
+
 
 
 Route::get('/clear', function () {
@@ -31,6 +34,11 @@ Route::get('/rating-overlay-card', function () {
     return view('components.ui.rating-overlay-card');
 })->name('rating-overlay-card');
 
+Route::get('/search-results', function () {
+    return view('search-results');
+})->name('search-results');
+
+Route::get('/search-results', [SearchController::class, 'index'])->name('search-results');
 
 
 

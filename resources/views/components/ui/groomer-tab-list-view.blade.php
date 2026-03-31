@@ -1,0 +1,209 @@
+{{--
+
+====== Expected Data Structure ======
+
+[
+    [
+        'id' => 1,
+        'name' => 'Sarah W.',
+        'studio_name' => 'Sarah’s Grooming Studio',
+        'distance' => '2.5 mi',
+        'rating' => 4.3,
+        'reviews_count' => 20,
+        'experience' => 'Hi, I’m Sarah — a professional groomer in West London, specialising in small breeds, anxious pets, & gentle handling! Gentle, breed-specific trims · 6+ years experience.',
+        'tags' => ['Home Visit', 'Mobile Station'],
+        'slots' => ['Mon 1, 08:30 AM', 'Tue 15, 12:30 PM', 'Wed 27, 09:15 AM', 'Thu 9, 15:45 PM'],
+        'price' => 38,
+        'image' => '/assets/images/card1.png',
+        'is_top_rated' => true,
+        'is_favorite' => false,
+    ],
+    // ... more groomers
+]
+
+
+====== Usage ======
+
+<x-groomer-tab-list-view
+    :groomers="$groomers"
+    :showLoadMore="true"
+    loadMoreText="Show More Groomers"
+    loadMoreUrl="{{ route('groomers.index') }}?page=2"
+/>
+
+--}}
+@props([
+'groomers' => [], // Array of groomer data
+'showLoadMore' => false, // Whether to show the Load More button
+'loadMoreText' => 'Load More', // Button text
+'loadMoreUrl' => '#', // Optional URL for load more action
+])
+
+<section class="section-gap">
+    <div class="row">
+        {{-- Left spacing column --}}
+        <div class="col-lg-1"></div>
+
+        {{-- Main content column containing all groomer cards --}}
+        <div class="col-lg-10">
+            @forelse($groomers as $index => $groomer)
+            {{-- Individual groomer card --}}
+            <div class="card mt-3">
+                {{-- Left column with image and decorative leaf SVG --}}
+                <div class="left">
+                    {{-- Decorative leaf SVG (top-left corner) --}}
+                    <div class="top-left-svg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="21" height="22" viewBox="0 0 21 22" fill="none">
+                            <rect x="4.14746" y="4.14746" width="12.443" height="13.8256" rx="3" fill="white" />
+                            <path
+                                d="M10.9482 0.125295C10.7667 0.043205 10.5723 0 10.3692 0C10.1662 0 9.97174 0.043205 9.79028 0.125295L1.65477 3.57738C0.704262 3.97918 -0.00430085 4.91673 1.96518e-05 6.0487C0.0216222 10.3346 1.78439 18.1764 9.22861 21.7408C9.95014 22.0864 10.7883 22.0864 11.5098 21.7408C18.9541 18.1764 20.7168 10.3346 20.7384 6.0487C20.7428 4.91673 20.0342 3.97918 19.0837 3.57738L10.9482 0.125295ZM6.26043 12.3653C6.46781 12.4171 6.68816 12.443 6.91282 12.443C8.43796 12.443 9.67795 11.2031 9.67795 9.67793V6.9128H11.5876C12.1104 6.9128 12.59 7.2066 12.8233 7.67753L13.1343 8.29537H15.8995C16.2797 8.29537 16.5907 8.60644 16.5907 8.98665V10.3692C16.5907 12.2789 15.044 13.8256 13.1343 13.8256H11.0605V16.0161C11.0605 16.3315 10.8056 16.5907 10.4859 16.5907C10.4081 16.5907 10.3303 16.5734 10.2612 16.5432L5.99688 14.7156C5.71172 14.5947 5.53026 14.3138 5.53026 14.0071C5.53026 13.8861 5.55619 13.7694 5.61235 13.6614L6.26043 12.3653ZM6.22154 6.9128H8.29538V9.67793C8.29538 10.4427 7.67755 11.0605 6.91282 11.0605C6.1481 11.0605 5.53026 10.4427 5.53026 9.67793V7.60408C5.53026 7.22388 5.84134 6.9128 6.22154 6.9128ZM11.7518 8.98665C11.7518 8.80331 11.679 8.62748 11.5493 8.49784C11.4197 8.3682 11.2438 8.29537 11.0605 8.29537C10.8772 8.29537 10.7013 8.3682 10.5717 8.49784C10.4421 8.62748 10.3692 8.80331 10.3692 8.98665C10.3692 9.16998 10.4421 9.34581 10.5717 9.47545C10.7013 9.60509 10.8772 9.67793 11.0605 9.67793C11.2438 9.67793 11.4197 9.60509 11.5493 9.47545C11.679 9.34581 11.7518 9.16998 11.7518 8.98665Z"
+                                fill="#C9DDA0" />
+                        </svg>
+                    </div>
+
+                    {{-- Groomer image with custom clip path --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="270" height="246" viewBox="0 0 170 246">
+                        <defs>
+                            {{-- Unique clipPath ID for each card --}}
+                            <clipPath id="cardClip-{{ $index }}">
+                                <path
+                                    d="M165 0C167.761 2.57702e-06 170 2.23858 170 5V241C170 243.761 167.761 246 165 246H5C2.23858 246 0 243.761 0 241V37C0 34.2386 2.23858 32 5 32H27C29.7614 32 32 29.7614 32 27V5C32 2.23858 34.2386 0 37 0H165Z" />
+                            </clipPath>
+                        </defs>
+                        <image href="{{ $groomer['image'] ?? asset('assets/images/default-groomer.png') }}"
+                            preserveAspectRatio="xMidYMid slice"
+                            clip-path="url(#cardClip-{{ $index }})" />
+                    </svg>
+                </div>
+
+                {{-- Right column with groomer details --}}
+                <div class="right">
+                    {{-- Top row: tags and action icons --}}
+                    <div class="top-row">
+                        <div class="tags" aria-hidden="true">
+                            @php
+                            $tags = $groomer['tags'] ?? [];
+                            if (is_string($tags)) {
+                            // Try JSON decode first, fallback to comma-separated
+                            $decoded = json_decode($tags, true);
+                            $tags = is_array($decoded) ? $decoded : explode(',', $tags);
+                            }
+                            if (!is_array($tags)) $tags = [];
+                            @endphp
+                            @foreach($tags as $tag)
+                            <div class="tag">{{ trim($tag) }}</div>
+                            @endforeach
+                        </div>
+                        <div class="icons" aria-hidden="true">
+                            {{-- Crown icon: only show if top-rated --}}
+                            @if($groomer['is_top_rated'] ?? false)
+                            <button class="first-icon" title="Top-rated">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="9" viewBox="0 0 10 9"
+                                    fill="none">
+                                    <path
+                                        d="M2 8.99999C1.85833 8.99999 1.73967 8.95199 1.644 8.85599C1.54833 8.75999 1.50033 8.64133 1.5 8.49999C1.49967 8.35866 1.54767 8.23999 1.644 8.14399C1.74033 8.04799 1.859 7.99999 2 7.99999H8C8.14166 7.99999 8.2605 8.04799 8.3565 8.14399C8.4525 8.23999 8.50033 8.35866 8.5 8.49999C8.49966 8.64133 8.45166 8.76016 8.356 8.85649C8.26033 8.95283 8.14166 9.00066 8 8.99999H2ZM2.35 7.24999C2.10833 7.24999 1.89383 7.17083 1.7065 7.0125C1.51917 6.85416 1.4045 6.65416 1.3625 6.4125L0.862501 3.2375C0.845834 3.2375 0.827167 3.23967 0.806501 3.244C0.785834 3.24833 0.767001 3.25033 0.750001 3.25C0.541667 3.25 0.364668 3.17717 0.219001 3.0315C0.0733344 2.88583 0.000334469 2.70867 1.13636e-06 2.5C-0.000332197 2.29133 0.0726677 2.11433 0.219001 1.969C0.365334 1.82367 0.542334 1.75067 0.750001 1.75C0.957667 1.74933 1.13483 1.82233 1.2815 1.969C1.42817 2.11567 1.501 2.29267 1.5 2.5C1.5 2.55833 1.49367 2.6125 1.481 2.6625C1.46833 2.7125 1.45383 2.75833 1.4375 2.8L3 3.5L4.5625 1.3625C4.47083 1.29583 4.39583 1.20833 4.3375 1.1C4.27917 0.991667 4.25 0.875 4.25 0.75C4.25 0.541667 4.323 0.364501 4.469 0.218501C4.615 0.0725011 4.792 -0.000332194 5 1.13895e-06C5.208 0.000334472 5.38516 0.0733344 5.5315 0.219001C5.67783 0.364667 5.75066 0.541667 5.75 0.75C5.75 0.875 5.72083 0.991667 5.6625 1.1C5.60416 1.20833 5.52916 1.29583 5.4375 1.3625L7 3.5L8.5625 2.8C8.54583 2.75833 8.53116 2.7125 8.5185 2.6625C8.50583 2.6125 8.49966 2.55833 8.5 2.5C8.5 2.29167 8.573 2.1145 8.719 1.9685C8.865 1.8225 9.042 1.74967 9.25 1.75C9.458 1.75033 9.63516 1.82333 9.7815 1.969C9.92783 2.11467 10.0007 2.29167 10 2.5C9.99933 2.70833 9.92649 2.8855 9.7815 3.0315C9.6365 3.1775 9.45933 3.25033 9.25 3.25C9.23333 3.25 9.21466 3.248 9.194 3.244C9.17333 3.24 9.1545 3.23783 9.1375 3.2375L8.6375 6.4125C8.59583 6.65416 8.48133 6.85416 8.294 7.0125C8.10666 7.17083 7.892 7.24999 7.65 7.24999H2.35ZM2.35 6.25H7.65L7.975 4.1625L7.4 4.4125C7.18333 4.50416 6.9625 4.52083 6.7375 4.4625C6.5125 4.40416 6.32916 4.27916 6.1875 4.0875L5 2.45L3.8125 4.0875C3.67083 4.27916 3.4875 4.40416 3.2625 4.4625C3.0375 4.52083 2.81667 4.50416 2.6 4.4125L2.025 4.1625L2.35 6.25Z"
+                                        fill="white" />
+                                </svg>
+                            </button>
+                            @endif
+
+                            {{-- Heart icon: fill changes based on favorite status --}}
+                            <button class="second-icon" title="Favourite">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="11" viewBox="0 0 9 11"
+                                    fill="none">
+                                    <path fill-rule="evenodd" clip-rule="evenodd"
+                                        d="M3.79701 0.30821C3.81025 0.23997 3.84191 0.176658 3.88858 0.125138C3.93524 0.0736173 3.99512 0.0358558 4.06172 0.0159479C4.12832 -0.00396001 4.1991 -0.00525449 4.26638 0.0122049C4.33367 0.0296642 4.39489 0.0652111 4.4434 0.114991C4.56671 0.240837 4.80378 0.489988 5.04467 0.777274C5.28111 1.05884 5.53916 1.39761 5.68788 1.69951C5.8328 1.99443 5.98661 2.37578 6.10801 2.69421L6.67305 1.75354C6.70456 1.701 6.74826 1.65683 6.80046 1.62476C6.85265 1.59269 6.91181 1.57367 6.97292 1.56931C7.03402 1.56494 7.09528 1.57536 7.1515 1.59969C7.20773 1.62401 7.25727 1.66152 7.29592 1.70905C8.09867 2.70057 8.49846 3.76263 8.6974 4.57365C8.79718 4.97979 8.8474 5.32491 8.87282 5.57025C8.88576 5.69278 8.89424 5.81574 8.89824 5.93889V5.97131C8.89824 8.4482 6.93364 10.4649 4.44785 10.4649C1.96206 10.4649 0 8.44756 0 5.97004C0 5.28805 0.322244 3.68192 1.27563 2.36498C1.31266 2.31422 1.36166 2.27341 1.41826 2.24615C1.47487 2.2189 1.53734 2.20605 1.60011 2.20876C1.66287 2.21146 1.724 2.22963 1.77806 2.26166C1.83211 2.29368 1.87741 2.33856 1.90994 2.39231L2.55507 3.46709C2.75083 3.16073 3.01269 2.73044 3.21163 2.3332C3.49765 1.76117 3.72455 0.682572 3.79701 0.308845M4.3201 0.912655C4.20506 1.42113 4.01501 2.14697 3.77985 2.61858C3.46714 3.24336 3.0165 3.9298 2.86142 4.16051C2.82554 4.21345 2.77693 4.25651 2.72005 4.28574C2.66317 4.31497 2.59986 4.32943 2.53593 4.32778C2.472 4.32614 2.40952 4.30844 2.35422 4.27632C2.29892 4.24421 2.25258 4.1987 2.21948 4.14399L1.57118 3.06476C0.87457 4.19166 0.635589 5.45839 0.635589 5.97131C0.635589 8.10561 2.32244 9.82806 4.44785 9.82806C6.57326 9.82806 8.26265 8.10561 8.26265 5.97131V5.95351L8.26011 5.88995C8.25568 5.80484 8.24911 5.71986 8.24041 5.63508C8.20712 5.3287 8.15362 5.02487 8.08024 4.72555C7.87826 3.89157 7.52027 3.10334 7.02516 2.40248L6.38068 3.47535C6.34338 3.53732 6.28925 3.58743 6.22459 3.61985C6.15993 3.65227 6.08739 3.66566 6.01542 3.65847C5.94344 3.65128 5.87499 3.6238 5.81802 3.57923C5.76105 3.53466 5.71791 3.47483 5.6936 3.40671C5.59064 3.11815 5.33831 2.42917 5.11713 1.98044C5.00463 1.751 4.78916 1.46117 4.55781 1.18596C4.4801 1.09353 4.40086 1.00242 4.3201 0.912655Z"
+                                        fill="{{ ($groomer['is_favorite'] ?? false) ? '#FF4D4D' : '#FEFEFE' }}" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Groomer name --}}
+                    <h2 class="name">{{ $groomer['name'] ?? 'Groomer Name' }}</h2>
+
+                    {{-- Studio details row: studio name, distance, rating --}}
+                    <div class="studio-details mt-1 d-flex align-items-center justify-content-between">
+                        <div class="studio">
+                            {{ $groomer['studio_name'] ?? 'Grooming Studio' }}
+                        </div>
+                        <div class="meta d-flex align-items-center justify-content-between">
+                            <div class="distance" title="Distance">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="14" viewBox="0 0 10 14"
+                                    fill="none">
+                                    <path
+                                        d="M5 6.65C4.5264 6.65 4.0722 6.46563 3.73731 6.13744C3.40242 5.80925 3.21429 5.36413 3.21429 4.9C3.21429 4.43587 3.40242 3.99075 3.73731 3.66256C4.0722 3.33437 4.5264 3.15 5 3.15C5.4736 3.15 5.9278 3.33437 6.26269 3.66256C6.59758 3.99075 6.78571 4.43587 6.78571 4.9C6.78571 5.12981 6.73953 5.35738 6.64979 5.5697C6.56004 5.78202 6.42851 5.97493 6.26269 6.13744C6.09687 6.29994 5.90002 6.42884 5.68336 6.51679C5.46671 6.60473 5.2345 6.65 5 6.65ZM5 0C3.67392 0 2.40215 0.516248 1.46447 1.43518C0.526784 2.3541 0 3.60044 0 4.9C0 8.575 5 14 5 14C5 14 10 8.575 10 4.9C10 3.60044 9.47322 2.3541 8.53553 1.43518C7.59785 0.516248 6.32608 0 5 0Z"
+                                        fill="var(--active-bg)" />
+                                </svg>
+                                <span>{{ $groomer['distance'] ?? 'N/A' }}</span>
+                            </div>
+                            <div class="rating" title="Rating">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
+                                    fill="none">
+                                    <path
+                                        d="M6.12956 0.660476C6.40354 -0.220161 7.59647 -0.220158 7.87045 0.660479L8.89548 3.95519C9.01801 4.34902 9.36942 4.61566 9.76593 4.61566H13.083C13.9696 4.61566 14.3383 5.80055 13.621 6.34481L10.9374 8.38106C10.6166 8.62446 10.4824 9.0559 10.6049 9.44973L11.63 12.7444C11.9039 13.6251 10.9388 14.3574 10.2215 13.8131L7.53797 11.7769C7.21719 11.5335 6.78282 11.5335 6.46204 11.7769L3.77846 13.8131C3.06117 14.3574 2.09607 13.6251 2.37005 12.7444L3.39508 9.44973C3.51761 9.0559 3.38338 8.62446 3.0626 8.38106L0.37903 6.34481C-0.338258 5.80055 0.0303816 4.61566 0.916998 4.61566H4.23408C4.63058 4.61566 4.98199 4.34902 5.10452 3.95519L6.12956 0.660476Z"
+                                        fill="var(--active-bg)" />
+                                </svg>
+                                <span>{{ $groomer['rating'] ?? '0.0' }} <small style="color:var(--muted)">({{ $groomer['reviews_count'] ?? 0 }})</small></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Experience / bio text --}}
+                    <p class="experience">{{ $groomer['experience'] ?? 'Experienced groomer dedicated to providing quality care for your pets.' }}</p>
+
+                    {{-- Availability section --}}
+                    <div class="availability">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15"
+                            fill="none">
+                            <path
+                                d="M7.5 0C3.375 0 0 3.375 0 7.5C0 11.625 3.375 15 7.5 15C11.625 15 15 11.625 15 7.5C15 3.375 11.625 0 7.5 0ZM6 11.25L2.25 7.5L3.3075 6.4425L6 9.1275L11.6925 3.435L12.75 4.5L6 11.25Z"
+                                fill="#D8E8B7" />
+                        </svg>
+                        <span>Availability</span>
+                    </div>
+
+                    {{-- Time slots and price row --}}
+                    <div class="slots-price d-flex align-items-center">
+                        <div class="slots d-flex" aria-label="Available slots">
+                            @php
+                            $slots = $groomer['slots'] ?? [];
+                            if (is_string($slots)) {
+                            $decoded = json_decode($slots, true);
+                            $slots = is_array($decoded) ? $decoded : explode(',', $slots);
+                            }
+                            if (!is_array($slots)) $slots = [];
+                            @endphp
+                            @forelse($slots as $slotIndex => $slot)
+                            <div class="slot {{ $slotIndex === 0 ? 'highlight' : '' }}">{{ trim($slot) }}</div>
+                            @empty
+                            <div class="slot">No slots available</div>
+                            @endforelse
+                        </div>
+                        <div class="price">From <span>£{{ $groomer['price'] ?? '0' }}</span></div>
+                    </div>
+                </div>
+            </div>
+            @empty
+            {{-- Empty state: no groomers available --}}
+            <div class="alert alert-info text-center" role="alert">
+                No groomers found. Please check back later.
+            </div>
+            @endforelse
+        </div>
+
+        {{-- Right spacing column --}}
+        <div class="col-lg-1"></div>
+
+        {{-- Load More button (conditional) --}}
+        @if($showLoadMore && $groomers->count() > 0)
+        <div class="col-lg-12 text-center section-gap">
+            @if($loadMoreUrl !== '#')
+            <a href="{{ $loadMoreUrl }}" class="load-more">{{ $loadMoreText }}</a>
+            @else
+            <button class="load-more">{{ $loadMoreText }}</button>
+            @endif
+        </div>
+        @endif
+    </div>
+</section>
