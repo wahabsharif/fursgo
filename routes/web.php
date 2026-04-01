@@ -43,6 +43,9 @@ Route::get('/search-results', function () {
     return view('search-results');
 })->name('search-results');
 
+Route::get('/search-results', [SearchController::class, 'index'])->name('search-results');
+
+
 Route::get('/account-and-setting/settings', function () {
     return view('account-and-setting');
 })->name('account-and-setting');
@@ -51,7 +54,10 @@ Route::get('/my-account/my-profile', function () {
     return view('my-profile');
 })->name('my-profile');
 
-Route::get('/search-results', [SearchController::class, 'index'])->name('search-results');
+Route::get('/support-and-assistance/search', function () {
+    return view('search');
+})->name('search');
+
 
 
 
