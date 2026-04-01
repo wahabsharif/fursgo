@@ -2035,9 +2035,9 @@
     }
 
     function setupPetTypeAutoDetection() {
-        const petTypeInput = document.getElementById('petTypeInput');
-        const suggestionBox = document.getElementById('petTypeSuggestions');
-        const petBreedSelect = document.getElementById('petBreedSelect');
+        const petTypeInput = document.getElementById('my-pet-type');
+        const suggestionBox = document.getElementById('my-pet-type-suggestions');
+        const petBreedSelect = document.getElementById('my-pet-breed');
 
         if (!petTypeInput || !petBreedsData.petTypes) return;
 
@@ -2075,7 +2075,7 @@
                         petTypeInput.value = match.name;
                         selectedPetType = match.name;
                         suggestionBox.style.display = 'none';
-                        populateBreeds(match);
+                        populateBreeds('my-pet-breed', match);
                         checkContinueBtnState();
                     });
                     suggestionBox.appendChild(item);
@@ -2089,7 +2089,7 @@
             const exactMatch = petBreedsData.petTypes.find(p => p.name.toLowerCase() === inputValue);
             if (exactMatch) {
                 selectedPetType = exactMatch.name;
-                populateBreeds(exactMatch);
+                populateBreeds('my-pet-breed', exactMatch);
                 suggestionBox.style.display = 'none';
             }
 
@@ -2107,8 +2107,8 @@
         });
     }
 
-    function populateBreeds(petType) {
-        const petBreedSelect = document.getElementById('petBreedSelect');
+    function populateBreeds(breedSelectId, petType) {
+        const petBreedSelect = document.getElementById(breedSelectId);
         petBreedSelect.innerHTML = '<option value="">Select a Breed</option>';
         if (petType && petType.breeds) {
             petType.breeds.forEach(breed => {
@@ -2161,85 +2161,64 @@
         checkContinueBtnState();
     };
 
-    // ===== IMPROVED Continue Button State Check =====
+    // ===== SIMPLIFIED Continue Button State Check =====
+    let isCheckingButtonState = false;
+    let checkButtonTimeout;
+
     function checkContinueBtnState() {
-        const continueBtn = document.querySelector('.continue-btn');
-        if (!continueBtn) return;
+        // Prevent recursive calls
+        if (isCheckingButtonState) return;
+        isCheckingButtonState = true;
 
-        // Helper to get trimmed value
-        const val = (id) => {
-            const el = document.getElementById(id);
-            return el ? el.value.trim() : '';
-        };
+        try {
+            const continueBtn = document.querySelector('.continue-btn');
+            if (!continueBtn) return;
 
-        // Pet details – from live form fields
-        const petNameFilled = val('petName') !== '';
-        const petTypeFilled = val('petTypeInput') !== '';
-        const petWeightFilled = val('petWeight') !== '';
+            // Get field values - ONLY check native .value properties, not text content
+            // (text content gives placeholder/label text, not actual selected values)
+            const petName = (document.getElementById('petName')?.value || '').trim();
+            const petType = (document.getElementById('my-pet-type')?.value || '').trim();
+            const petBreed = (document.getElementById('my-pet-breed')?.value || '').trim();
+            const petWeight = (document.getElementById('petWeight')?.value || '').trim();
+            const birthday = (document.querySelector('input[name="birthday"]')?.value || '').trim();
+            const sex = (document.querySelector('input[name="sex"]:checked')?.value || '').trim();
+            const addressInput = (document.querySelector('.address-service .input-wrapper input')?.value || '').trim();
+            const homeAddressToggled = document.getElementById('home-address-option')?.classList.contains('selected') || false;
 
-        // Birthday
-        const birthdayEl = document.querySelector('input[name="birthday"]');
-        const petBirthdayFilled = birthdayEl && birthdayEl.value.trim() !== '';
+            // Boolean checks
+            const hasName = petName !== '';
+            const hasType = petType !== '';
+            const hasBreed = petBreed !== '';
+            const hasWeight = petWeight !== '';
+            const hasBirthday = birthday !== '';
+            const hasSex = sex !== '';
+            const hasAddress = addressInput !== '' || homeAddressToggled;
 
-        // Breed – support both native select and custom component
-        const petBreedEl = document.getElementById('petBreedSelect');
-        let petBreedFilled = false;
-        if (petBreedEl) {
-            if (petBreedEl._fursDD && typeof petBreedEl._fursDD.getValue === 'function') {
-                petBreedFilled = petBreedEl._fursDD.getValue() !== '';
+            // All required
+            const allFilled = hasName && hasType && hasBreed && hasWeight && hasBirthday && hasSex && hasAddress;
+
+            if (allFilled) {
+                continueBtn.classList.add('active');
+                continueBtn.querySelector('button').style.color = '#FFF';
+                const arrow = continueBtn.querySelector('svg path');
+                if (arrow) arrow.setAttribute('fill', '#FFF');
             } else {
-                petBreedFilled = petBreedEl.value !== '' && petBreedEl.value !== 'Select a Breed';
+                continueBtn.classList.remove('active');
+                continueBtn.querySelector('button').style.color = '#DDD';
+                const arrow = continueBtn.querySelector('svg path');
+                if (arrow) arrow.setAttribute('fill', '#DDDDDD');
             }
+
+            return allFilled;
+        } finally {
+            isCheckingButtonState = false;
         }
-
-        // Sex
-        const petSexChecked = document.querySelector('input[name="sex"]:checked');
-        const petSexFilled = !!petSexChecked;
-
-        // Address
-        const addressEl = document.querySelector('.address-service .input-wrapper input');
-        const addressFilled = addressEl && addressEl.value.trim() !== '';
-
-        // Add-ons – improved detection (watch checkboxes inside the addons container)
-        let addonsFilled = false;
-        const addonsContainer = document.getElementById('furs-addons-groomer');
-        if (addonsContainer) {
-            const checkedAddons = addonsContainer.querySelectorAll('input[type="checkbox"]:checked');
-            addonsFilled = checkedAddons.length > 0;
-        } else {
-            // Fallback to global checkboxes
-            const allChecked = document.querySelectorAll('#step1Content input[type="checkbox"]:checked');
-            addonsFilled = allChecked.length > 0;
-        }
-
-        const allFilled = petNameFilled && petBirthdayFilled && petTypeFilled &&
-            petBreedFilled && petSexFilled && petWeightFilled &&
-            addressFilled && addonsFilled;
-
-        const arrow = continueBtn.querySelector('svg path');
-        if (allFilled) {
-            continueBtn.classList.add('active');
-            continueBtn.querySelector('button').style.color = '#FFF';
-            if (arrow) arrow.setAttribute('fill', '#FFF');
-        } else {
-            continueBtn.classList.remove('active');
-            continueBtn.querySelector('button').style.color = '#DDD';
-            if (arrow) arrow.setAttribute('fill', '#DDDDDD');
-        }
-
-        // Optional debug (uncomment if needed)
-        // if (!allFilled) {
-        //     console.debug('Continue disabled – missing:', {
-        //         petNameFilled, petBirthdayFilled, petTypeFilled,
-        //         petBreedFilled, petSexFilled, petWeightFilled,
-        //         addressFilled, addonsFilled
-        //     });
-        // }
     }
 
     // ===== Address Toggle =====
     window.toggleHomeAddress = function(el) {
         el.classList.toggle('selected');
+        setTimeout(checkContinueBtnState, 100);
     };
 
     // ===== Photo Upload =====
@@ -2338,8 +2317,8 @@
         return {
             name: (document.getElementById('petName')?.value ?? '').trim(),
             birthday: (document.querySelector('input[name="birthday"]')?.value ?? ''),
-            type: (document.getElementById('petTypeInput')?.value ?? '').trim(),
-            breed: (document.getElementById('petBreedSelect')?.value ?? ''),
+            type: (document.getElementById('my-pet-type')?.value ?? '').trim(),
+            breed: (document.getElementById('my-pet-breed')?.value ?? ''),
             sex: (document.querySelector('input[name="sex"]:checked')?.value ?? ''),
             weight: (document.getElementById('petWeight')?.value ?? ''),
             notes: (document.getElementById('petNotes')?.value ?? '').trim(),
@@ -2386,9 +2365,10 @@
             </div>
             <div class="pet-detail-item">
                 <label>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="17" viewBox="0 0 15 17" fill="none">
-                        <path d="M1.27778 11.7778V14.5C1.27778 14.9126 1.44167 15.3082 1.73339 15.5999C2.02511 15.8917 2.42077 16.0556 2.83333 16.0556H12.1667C12.5792 16.0556 12.9749 15.8917 13.2666 15.5999C13.5583 15.3082 13.7222 14.9126 13.7222 14.5V11.7778M0.5 9.83333V9.05556C0.5 8.643 0.663888 8.24734 0.955612 7.95561C1.24733 7.66389 1.643 7.5 2.05556 7.5H12.9444C13.357 7.5 13.7527 7.66389 14.0444 7.95561C14.3361 8.24734 14.5 8.643 14.5 9.05556V9.83333M7.5 5.16667V7.5M7.5 5.16667C8.48156 5.16667 9.05556 4.41378 9.05556 3.125C9.05556 1.83622 7.5 0.5 7.5 0.5C7.5 0.5 5.94444 1.83622 5.94444 3.125C5.94444 4.41378 6.51844 5.16667 7.5 5.16667Z" stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="17" viewBox="0 0 15 17" fill="none">
+  <path d="M1.27778 11.7778V14.5C1.27778 14.9126 1.44167 15.3082 1.73339 15.5999C2.02511 15.8917 2.42077 16.0556 2.83333 16.0556H12.1667C12.5792 16.0556 12.9749 15.8917 13.2666 15.5999C13.5583 15.3082 13.7222 14.9126 13.7222 14.5V11.7778M0.5 9.83333V9.05556C0.5 8.643 0.663888 8.24734 0.955612 7.95561C1.24733 7.66389 1.643 7.5 2.05556 7.5H12.9444C13.357 7.5 13.7527 7.66389 14.0444 7.95561C14.3361 8.24734 14.5 8.643 14.5 9.05556V9.83333M7.5 5.16667V7.5M7.5 5.16667C8.48156 5.16667 9.05556 4.41378 9.05556 3.125C9.05556 1.83622 7.5 0.5 7.5 0.5C7.5 0.5 5.94444 1.83622 5.94444 3.125C5.94444 4.41378 6.51844 5.16667 7.5 5.16667Z" stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M0.5 9.8335C0.5 10.4523 0.745833 11.0458 1.18342 11.4834C1.621 11.921 2.21449 12.1668 2.83333 12.1668C3.45217 12.1668 4.04566 11.921 4.48325 11.4834C4.92083 11.0458 5.16667 10.4523 5.16667 9.8335C5.16667 10.4523 5.4125 11.0458 5.85008 11.4834C6.28767 11.921 6.88116 12.1668 7.5 12.1668C8.11884 12.1668 8.71233 11.921 9.14992 11.4834C9.5875 11.0458 9.83333 10.4523 9.83333 9.8335C9.83333 10.4523 10.0792 11.0458 10.5168 11.4834C10.9543 11.921 11.5478 12.1668 12.1667 12.1668C12.7855 12.1668 13.379 11.921 13.8166 11.4834C14.2542 11.0458 14.5 10.4523 14.5 9.8335" stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
                     Birthday
                 </label>
                 <span>${birthdayDisplay}</span>
@@ -2404,9 +2384,11 @@
             </div>
             <div class="pet-detail-item full-width">
                 <label>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="16" viewBox="0 0 15 16" fill="none">
-                        <path d="M13.5905 8.11123L13.9601 6.73016C14.3918 5.1182 14.6084 4.31257 14.4462 3.61489C14.3176 3.0641 14.0285 2.56382 13.6155 2.17734C13.093 1.68768 12.2866 1.4718 10.6747 1.04003C9.0627 0.607553 8.25636 0.391671 7.55939 0.55394C7.0086 0.682549 6.50833 0.971618 6.12185 1.38458C5.70224 1.83207 5.4835 2.48758 5.15824 3.67851L4.98382 4.32544L4.61425 5.70651C4.18177 7.31847 3.96589 8.1241 4.12816 8.82178C4.25677 9.37257 4.54584 9.87285 4.9588 10.2593C5.48135 10.749 6.28769 10.9649 7.89966 11.3974C9.35221 11.7862 10.1507 12 10.8048 11.9192C10.8763 11.9101 10.9463 11.8977 11.0149 11.882C11.5655 11.7538 12.0658 11.4652 12.4525 11.0528C12.9421 10.5295 13.158 9.7232 13.5905 8.11123Z" stroke="#9D9B98"/>
-                    </svg>
+                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="16" viewBox="0 0 15 16" fill="none">
+  <path d="M13.5905 8.11123L13.9601 6.73016C14.3918 5.1182 14.6084 4.31257 14.4462 3.61489C14.3176 3.0641 14.0285 2.56382 13.6155 2.17734C13.093 1.68768 12.2866 1.4718 10.6747 1.04003C9.0627 0.607553 8.25636 0.391671 7.55939 0.55394C7.0086 0.682549 6.50833 0.971618 6.12185 1.38458C5.70224 1.83207 5.4835 2.48758 5.15824 3.67851L4.98382 4.32544L4.61425 5.70651C4.18177 7.31847 3.96589 8.1241 4.12816 8.82178C4.25677 9.37257 4.54584 9.87285 4.9588 10.2593C5.48135 10.749 6.28769 10.9649 7.89966 11.3974C9.35221 11.7862 10.1507 12 10.8048 11.9192C10.8763 11.9101 10.9463 11.8977 11.0149 11.882C11.5655 11.7538 12.0658 11.4652 12.4525 11.0528C12.9421 10.5295 13.158 9.7232 13.5905 8.11123Z" stroke="#9D9B98"/>
+  <path d="M10.8047 11.9191C10.6553 12.3769 10.3927 12.7895 10.0413 13.1186C9.51875 13.6083 8.71241 13.8242 7.10045 14.2559C5.48848 14.6877 4.68214 14.9043 3.98517 14.7413C3.43447 14.6129 2.9342 14.3241 2.54763 13.9114C2.05796 13.3888 1.84137 12.5825 1.4096 10.9705L1.04003 9.58946C0.607553 7.9775 0.391671 7.17116 0.55394 6.47419C0.682549 5.9234 0.971618 5.42313 1.38458 5.03665C1.90713 4.54698 2.71347 4.3311 4.32544 3.89862C4.62948 3.81665 4.90708 3.74302 5.15823 3.67773" stroke="#9D9B98"/>
+  <path d="M7.48927 6.21924L10.9419 7.14424M6.93384 8.29084L9.00544 8.84556" stroke="#9D9B98" stroke-linecap="round"/>
+</svg>
                     Notes
                 </label>
                 <span>${details.notes || 'No notes added'}</span>
@@ -2432,7 +2414,7 @@
     }
 
     function populateFormWithSavedData() {
-        const savedPetDetails = sessionStorage.getItem('petDetails');
+        const savedPetDetails = localStorage.getItem('petDetails');
         if (!savedPetDetails) return;
         try {
             const details = JSON.parse(savedPetDetails);
@@ -2440,14 +2422,14 @@
             const petNameInput = document.getElementById('petName');
             if (petNameInput) petNameInput.value = details.name || '';
 
-            const petTypeInput = document.getElementById('petTypeInput');
+            const petTypeInput = document.getElementById('my-pet-type');
             if (petTypeInput) petTypeInput.value = details.type || '';
 
-            const petBreedSelect = document.getElementById('petBreedSelect');
+            const petBreedSelect = document.getElementById('my-pet-breed');
             if (petBreedSelect && details.breed) {
                 if (petBreedsData.petTypes) {
                     const selectedType = petBreedsData.petTypes.find(pt => pt.name === details.type);
-                    if (selectedType) populateBreeds(selectedType);
+                    if (selectedType) populateBreeds('my-pet-breed', selectedType);
                 }
                 if (petBreedSelect._fursDD) petBreedSelect._fursDD.setValue(details.breed);
                 else petBreedSelect.value = details.breed;
@@ -2476,16 +2458,86 @@
     }
 
     function checkSavedPetDetails() {
-        const saved = sessionStorage.getItem('petDetails');
-        if (!saved) return;
+        // Try both localStorage and localStorage
+        const saved = localStorage.getItem('petDetails') || localStorage.getItem('petDetails');
+
+        if (!saved) {
+            console.log('[Init] No saved pet details found');
+            return;
+        }
+
         try {
             const petDetails = JSON.parse(saved);
-            if (petDetails.photo) {
-                petPhotoBase64 = petDetails.photo;
-                displayPetPhotoPreview(petPhotoBase64);
-            }
-            toggleFormDisplay(true);
-            displayPetDetails(petDetails);
+            console.log('[Init] Found pet details:', petDetails.name);
+
+            // Ensure the form is visible during population
+            const petDetailsForm = document.querySelector('.pet-details-form');
+            if (petDetailsForm) petDetailsForm.classList.remove('hidden');
+
+            // Populate all form fields with a small delay to ensure DOM is ready
+            setTimeout(() => {
+                const petNameInput = document.getElementById('petName');
+                if (petNameInput) {
+                    petNameInput.value = petDetails.name || '';
+                    console.log('[Init] Set petName to:', petNameInput.value);
+                }
+
+                const petTypeInput = document.getElementById('my-pet-type');
+                if (petTypeInput) {
+                    petTypeInput.value = petDetails.type || '';
+                    console.log('[Init] Set petType to:', petTypeInput.value);
+                }
+
+                const petBreedSelect = document.getElementById('my-pet-breed');
+                if (petBreedSelect && petDetails.breed) {
+                    if (petBreedsData && petBreedsData.petTypes) {
+                        const selectedType = petBreedsData.petTypes.find(pt => pt.name === petDetails.type);
+                        if (selectedType) populateBreeds('my-pet-breed', selectedType);
+                    }
+                    if (petBreedSelect._fursDD) {
+                        petBreedSelect._fursDD.setValue(petDetails.breed);
+                        console.log('[Init] Set breed via FursDD:', petDetails.breed);
+                    } else {
+                        petBreedSelect.value = petDetails.breed;
+                        console.log('[Init] Set breed via value:', petDetails.breed);
+                    }
+                }
+
+                const petBirthdayInput = document.querySelector('input[name="birthday"]');
+                if (petBirthdayInput) {
+                    petBirthdayInput.value = petDetails.birthday || '';
+                    console.log('[Init] Set birthday to:', petBirthdayInput.value);
+                }
+
+                document.querySelectorAll('input[name="sex"]').forEach(input => {
+                    input.checked = input.value === petDetails.sex;
+                });
+                console.log('[Init] Set sex to:', petDetails.sex);
+
+                const petWeightInput = document.getElementById('petWeight');
+                if (petWeightInput) {
+                    petWeightInput.value = petDetails.weight || '';
+                    console.log('[Init] Set weight to:', petWeightInput.value);
+                }
+
+                const petNotesInput = document.getElementById('petNotes');
+                if (petNotesInput) {
+                    petNotesInput.value = petDetails.notes || '';
+                }
+
+                if (petDetails.photo) {
+                    petPhotoBase64 = petDetails.photo;
+                    displayPetPhotoPreview(petPhotoBase64);
+                    console.log('[Init] Restored pet photo');
+                }
+
+                // Now display the saved pet details
+                toggleFormDisplay(true);
+                displayPetDetails(petDetails);
+                checkContinueBtnState();
+
+                console.log('[Init] Successfully restored all pet details');
+            }, 100);
         } catch (e) {
             console.error('Error restoring saved pet details:', e);
         }
@@ -2516,7 +2568,7 @@
         if (progressFill) progressFill.style.width = '100%';
 
         // Populate confirm page fields
-        const saved = sessionStorage.getItem('petDetails');
+        const saved = localStorage.getItem('petDetails');
         if (saved) {
             try {
                 const pet = JSON.parse(saved);
@@ -2628,7 +2680,7 @@
         }
 
         try {
-            const p = JSON.parse(sessionStorage.getItem('petDetails') || 'null');
+            const p = JSON.parse(localStorage.getItem('petDetails') || 'null');
             if (p) {
                 if (p.name) {
                     const ic = document.getElementById('petNameCheck');
@@ -2645,13 +2697,14 @@
     // ===== MAIN DOMContentLoaded =====
     document.addEventListener('DOMContentLoaded', function() {
         // Init subsystems
-        loadPetBreedsData();
         initPhotoUpload();
         initDatePickers();
         initCheckmarkToggles();
 
-        // Restore saved pet details
-        checkSavedPetDetails();
+        // Load breed data, then restore saved pet details
+        loadPetBreedsData().then(() => {
+            checkSavedPetDetails();
+        });
 
         // ---- Pet form save / cancel (delegated) ----
         document.body.addEventListener('click', function(e) {
@@ -2666,7 +2719,7 @@
                     alert('Please enter pet name');
                     return;
                 }
-                sessionStorage.setItem('petDetails', JSON.stringify(petDetails));
+                localStorage.setItem('petDetails', JSON.stringify(petDetails));
                 toggleFormDisplay(true);
                 displayPetDetails(petDetails);
                 setTimeout(checkContinueBtnState, 100);
@@ -2676,7 +2729,7 @@
             if (cancelBtn) {
                 e.preventDefault();
                 e.stopPropagation();
-                const hasSaved = !!sessionStorage.getItem('petDetails');
+                const hasSaved = !!localStorage.getItem('petDetails');
                 if (hasSaved) {
                     if (confirm('Discard unsaved changes?')) toggleFormDisplay(true);
                 } else {
@@ -2723,10 +2776,12 @@
         }
 
         // ---- Live field watchers for continue button ----
-        const watchIds = ['petName', 'petTypeInput', 'petWeight'];
-        watchIds.forEach(id => {
+        ['petName', 'my-pet-type', 'my-pet-breed', 'petWeight'].forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.addEventListener('input', checkContinueBtnState);
+            if (el) {
+                el.addEventListener('input', checkContinueBtnState);
+                el.addEventListener('change', checkContinueBtnState);
+            }
         });
 
         const birthdayInput = document.querySelector('input[name="birthday"]');
@@ -2750,10 +2805,17 @@
 
         document.querySelectorAll('input[name="sex"]').forEach(r => r.addEventListener('change', checkContinueBtnState));
 
+        // Address input listeners with fallbacks
         const addressInput = document.querySelector('.address-service .input-wrapper input');
         if (addressInput) {
             addressInput.addEventListener('input', checkContinueBtnState);
             addressInput.addEventListener('change', checkContinueBtnState);
+        }
+
+        // Watch for home address toggle
+        const homeAddressOption = document.getElementById('home-address-option');
+        if (homeAddressOption) {
+            homeAddressOption.addEventListener('click', checkContinueBtnState);
         }
 
         // Watch for add‑on checkbox changes (dynamic)
@@ -2767,19 +2829,83 @@
         // Initial check
         setTimeout(checkContinueBtnState, 200);
 
+        // ---- Broad mutation observer for custom component updates ----
+        // This catches DOM changes from custom components that don't fire standard events
+        // but ONLY on form inputs, not on the button itself
+        let mutationTimeout;
+        const petDetailsForm = document.querySelector('.pet-details-form');
+        if (petDetailsForm && typeof MutationObserver !== 'undefined') {
+            const observer = new MutationObserver((mutations) => {
+                // Ignore mutations on the continue button - only care about form changes
+                const isButtonChange = mutations.every(m =>
+                    m.target.closest('.continue-btn') ||
+                    m.target.classList.contains('continue-btn')
+                );
+                if (isButtonChange) return;
+
+                clearTimeout(mutationTimeout);
+                mutationTimeout = setTimeout(() => {
+                    checkContinueBtnState();
+                }, 400);
+            });
+            observer.observe(petDetailsForm, {
+                attributes: true,
+                attributeFilter: ['class'],
+                subtree: true,
+                characterData: false,
+            });
+        }
+
+        // ---- Try to hook into custom component libraries' internal updates ----
+        // For Furs custom components (pet-type, breeds, etc), they may use internal state
+        const petTypeEl = document.getElementById('my-pet-type');
+        const petBreedEl = document.getElementById('my-pet-breed');
+
+        // Hook BEFORE library initialization to capture the real value setters
+        if (petTypeEl) {
+            const originalPetTypeValue = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(petTypeEl), 'value');
+            if (originalPetTypeValue && originalPetTypeValue.set) {
+                Object.defineProperty(petTypeEl, 'value', {
+                    get: originalPetTypeValue.get,
+                    set: function(val) {
+                        originalPetTypeValue.set.call(this, val);
+                        console.log('[Hook] my-pet-type value changed to:', val);
+                        checkContinueBtnState();
+                    }
+                });
+            }
+        }
+
+        if (petBreedEl) {
+            const originalPetBreedValue = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(petBreedEl), 'value');
+            if (originalPetBreedValue && originalPetBreedValue.set) {
+                Object.defineProperty(petBreedEl, 'value', {
+                    get: originalPetBreedValue.get,
+                    set: function(val) {
+                        originalPetBreedValue.set.call(this, val);
+                        console.log('[Hook] my-pet-breed value changed to:', val);
+                        checkContinueBtnState();
+                    }
+                });
+            }
+        }
+
         // ---- Continue button click ----
         const continueBtn = document.querySelector('.continue-btn');
         if (continueBtn) {
             continueBtn.addEventListener('click', function(e) {
+                console.log('[Continue Click] Button clicked, active class:', continueBtn.classList.contains('active'));
                 e.preventDefault();
                 if (!continueBtn.classList.contains('active')) {
+                    console.error('[Continue Click] Not active, showing alert');
                     alert('Please complete all required fields and select at least one add-on.');
                     return;
                 }
+                console.log('[Continue Click] Active! Proceeding to goToStep2()');
                 // Auto-save pet details if not already saved
                 const petDetails = collectPetDetails();
-                if (petDetails.name && !sessionStorage.getItem('petDetails')) {
-                    sessionStorage.setItem('petDetails', JSON.stringify(petDetails));
+                if (petDetails.name && !localStorage.getItem('petDetails')) {
+                    localStorage.setItem('petDetails', JSON.stringify(petDetails));
                     toggleFormDisplay(true);
                     displayPetDetails(petDetails);
                 }

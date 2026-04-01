@@ -180,10 +180,10 @@
                     </svg>
                 </div>
                 <div class="pay-btn" style="background:#FFD88C;">
-                    <img src="{{ asset('assets/images/icons/paypal-icon.png') }}" alt="Paypal" />
+                    <img src="{{ asset('images/icons/paypal-icon.png') }}" alt="Paypal" />
                 </div>
                 <div class="pay-btn">
-                    <img src="{{ asset('assets/images/icons/g-pay-icon.png') }}" alt="G-Pay" />
+                    <img src="{{ asset('images/icons/g-pay-icon.png') }}" alt="G-Pay" />
                 </div>
             </div>
         </div>
