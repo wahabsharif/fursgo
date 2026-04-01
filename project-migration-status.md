@@ -1,4 +1,4 @@
-# Project Tasks
+# Project Migration Status
 
 - [x] Homepage - (home.blade.php) - /
 
@@ -15,3 +15,7 @@
 - [x] Account and Setting - (account-and-setting.blade.php) - /account-and-setting/settings
 
 - [x] My Profile - (my-profile.blade.php) - /my-account/my-profile
+
+- [x] Support And Assistance (Search) - (search.blade.php) - /support-and-assistance/search
+
+- [x] Support And Assistance (Help And Support) - (help-and-support.blade.php) - /support-and-assistance/help-and-support
