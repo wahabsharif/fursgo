@@ -58,6 +58,10 @@ Route::get('/support-and-assistance/search', function () {
     return view('search');
 })->name('search');
 
+Route::get('/support-and-assistance/help-and-support', function () {
+    return view('help-and-support');
+})->name('help-and-support');
+
 
 
 
