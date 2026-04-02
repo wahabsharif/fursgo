@@ -1751,7 +1751,7 @@
                             <div>
                                 <h2>Pet Details</h2>
                             </div>
-                            <div>
+                            <div class="pet-photo-col-wrapper">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="85" height="85" viewBox="0 0 85 85"
                                     fill="none" id="petPhotoPlaceholder">
                                     <mask id="path-1-inside-1_85_569" fill="white">
@@ -2261,6 +2261,9 @@
             const reader = new FileReader();
             reader.onload = function(event) {
                 petPhotoBase64 = event.target.result;
+                // Update the hidden input so the photo gets submitted with the form
+                const photoInput = document.getElementById('photoBase64');
+                if (photoInput) photoInput.value = petPhotoBase64;
                 displayPetPhotoPreview(petPhotoBase64);
             };
             reader.readAsDataURL(file);
