@@ -30,6 +30,10 @@ Route::get('/business-homepage-groomer-space-owner', function () {
     return view('business-homepage-groomer-space-owner');
 })->name('business-homepage-groomer-space-owner');
 
+Route::get('/business-landing-page', function () {
+    return view('business-landing-page');
+})->name('business-landing-page');
+
 
 Route::get('/cookies', function () {
     return view('components.ui.cookies');

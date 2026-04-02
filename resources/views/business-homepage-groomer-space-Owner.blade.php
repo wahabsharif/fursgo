@@ -1195,7 +1195,7 @@
                 <div class="bgs-services-card image-card">
                     <img src="{{ asset('images/servcies-rectangle-332.png') }}" alt="">
                     <h3>Training</h3>
-                    <p>Basic obedience or behaviour-focused  training sessions.</p>
+                    <p>Basic obedience or behaviour-focused training sessions.</p>
                 </div>
 
             </div>
