@@ -2,7 +2,6 @@
 
 ======== Usage ========
 <x-ui.groomer-tab-card-view :groomers="$groomers" />
-<x-ui.groomer-tab-card-view/>
 
 
 

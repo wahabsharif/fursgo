@@ -1745,7 +1745,9 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="pet-details-form">
+                        <form method="POST" action="{{ route('pet-details.store') }}" class="pet-details-form" id="petDetailsForm">
+                            @csrf
+                            <input type="hidden" name="photo" id="photoBase64" value="{{ $petDetails->photo ?? '' }}">
                             <div>
                                 <h2>Pet Details</h2>
                             </div>
@@ -1779,7 +1781,8 @@
                                 <div class="form-group">
                                     <label>Name</label>
                                     <div style="position:relative; display:block;">
-                                        <input type="text" id="petName"
+                                        <input type="text" id="petName" name="name"
+                                            value="{{ $petDetails->name ?? '' }}"
                                             style="padding-right:2.5rem; width:100%; display:block;">
                                         <span class="input-check-icon" id="petNameCheck">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19"
@@ -1792,16 +1795,16 @@
                                     </div>
                                 </div>
 
-                                <x-ui.calendar name="birthday" />
+                                <x-ui.calendar name="birthday" :value="$petDetails->birthday ?? ''" />
 
                                 <div class="form-group">
                                     <x-ui.pet-type id="my-pet-type" name="pet_type" label="Pet Type"
                                         placeholder="e.g. Dog, Cat, Rabbit..." :required="true"
-                                        breedsSelectId="my-pet-breed" />
+                                        breedsSelectId="my-pet-breed" :value="$petDetails->pet_type ?? ''" />
                                 </div>
 
                                 <div class="form-group">
-                                    <x-ui.breeds id="my-pet-breed" name="pet_breed" label="Breed(s)" :required="true" />
+                                    <x-ui.breeds id="my-pet-breed" name="breed" label="Breed(s)" :required="true" :value="$petDetails->breed ?? ''" />
                                 </div>
 
                                 <div class="form-group">
@@ -1809,13 +1812,15 @@
 
                                     <div class="sex-options" role="radiogroup" aria-label="Sex">
                                         <label class="radio--small">
-                                            <input type="radio" name="sex" value="male" id="petSexMale">
+                                            <input type="radio" name="sex" value="male" id="petSexMale"
+                                                {{ ($petDetails->sex ?? '') === 'male' ? 'checked' : '' }}>
                                             <span class="radio--visual" aria-hidden="true"></span>
                                             <span class="radio--text">Male</span>
                                         </label>
 
                                         <label class="radio--small">
-                                            <input type="radio" name="sex" value="female" id="petSexFemale">
+                                            <input type="radio" name="sex" value="female" id="petSexFemale"
+                                                {{ ($petDetails->sex ?? '') === 'female' ? 'checked' : '' }}>
                                             <span class="radio--visual" aria-hidden="true"></span>
                                             <span class="radio--text">Female</span>
                                         </label>
@@ -1824,22 +1829,23 @@
 
                                 <div class="form-group">
                                     <label>Weight <span>(kg)</span></label>
-                                    <input value="4" type="number" id="petWeight">
+                                    <input type="number" id="petWeight" name="weight"
+                                        value="{{ $petDetails->weight ?? '4' }}">
                                 </div>
 
                                 <div class="form-group full-width">
                                     <label>Notes <span>(Optional)</span></label>
                                     <textarea placeholder="Anything your groomer should know?
-                    (e.g. anxious around dryers, allergies, behaviour cues)" rows="4" cols="50" id="petNotes"></textarea>
+                    (e.g. anxious around dryers, allergies, behaviour cues)" rows="4" cols="50" id="petNotes" name="notes">{{ $petDetails->notes ?? '' }}</textarea>
                                 </div>
                             </div>
-                        </div>
-                        <div class="form-btns" id="petFormBtns">
-                            <div>
-                                <button type="button" id="petFormCancelBtn">Cancel</button>
-                                <button type="button" id="petFormSaveBtn">Save</button>
+                            <div class="form-btns" id="petFormBtns">
+                                <div>
+                                    <button type="button" id="petFormCancelBtn">Cancel</button>
+                                    <button type="submit" id="petFormSaveBtn">Save</button>
+                                </div>
                             </div>
-                        </div>
+                        </form>
 
                         <!-- Pet Details Display Section -->
                         <div class="pet-details-display" id="petDetailsDisplay">
@@ -2322,7 +2328,9 @@
             sex: (document.querySelector('input[name="sex"]:checked')?.value ?? ''),
             weight: (document.getElementById('petWeight')?.value ?? ''),
             notes: (document.getElementById('petNotes')?.value ?? '').trim(),
-            photo: petPhotoBase64
+            photo: petPhotoBase64,
+            address: (document.querySelector('.address-service .input-wrapper input')?.value ?? '').trim(),
+            homeAddressToggled: document.getElementById('home-address-option')?.classList.contains('selected') || false
         };
     }
 
@@ -2413,131 +2421,46 @@
         }
     }
 
-    function populateFormWithSavedData() {
-        const savedPetDetails = localStorage.getItem('petDetails');
-        if (!savedPetDetails) return;
-        try {
-            const details = JSON.parse(savedPetDetails);
-
-            const petNameInput = document.getElementById('petName');
-            if (petNameInput) petNameInput.value = details.name || '';
-
-            const petTypeInput = document.getElementById('my-pet-type');
-            if (petTypeInput) petTypeInput.value = details.type || '';
-
-            const petBreedSelect = document.getElementById('my-pet-breed');
-            if (petBreedSelect && details.breed) {
-                if (petBreedsData.petTypes) {
-                    const selectedType = petBreedsData.petTypes.find(pt => pt.name === details.type);
-                    if (selectedType) populateBreeds('my-pet-breed', selectedType);
-                }
-                if (petBreedSelect._fursDD) petBreedSelect._fursDD.setValue(details.breed);
-                else petBreedSelect.value = details.breed;
-            }
-
-            const petBirthdayInput = document.querySelector('input[name="birthday"]');
-            if (petBirthdayInput) petBirthdayInput.value = details.birthday || '';
-
-            document.querySelectorAll('input[name="sex"]').forEach(input => {
-                input.checked = input.value === details.sex;
-            });
-
-            const petWeightInput = document.getElementById('petWeight');
-            if (petWeightInput) petWeightInput.value = details.weight || '';
-
-            const petNotesInput = document.getElementById('petNotes');
-            if (petNotesInput) petNotesInput.value = details.notes || '';
-
-            if (details.photo) {
-                petPhotoBase64 = details.photo;
-                displayPetPhotoPreview(petPhotoBase64);
-            }
-        } catch (e) {
-            console.error('Error populating form:', e);
-        }
-    }
+    // Server-side rendered pet details (passed from controller)
+    const serverPetDetails = @json($petDetails ?? null);
 
     function checkSavedPetDetails() {
-        // Try both localStorage and localStorage
-        const saved = localStorage.getItem('petDetails') || localStorage.getItem('petDetails');
-
-        if (!saved) {
+        if (!serverPetDetails) {
             console.log('[Init] No saved pet details found');
             return;
         }
 
         try {
-            const petDetails = JSON.parse(saved);
-            console.log('[Init] Found pet details:', petDetails.name);
+            console.log('[Init] Found pet details:', serverPetDetails.name);
 
-            // Ensure the form is visible during population
-            const petDetailsForm = document.querySelector('.pet-details-form');
-            if (petDetailsForm) petDetailsForm.classList.remove('hidden');
+            // Populate all form fields
+            const petNameInput = document.getElementById('petName');
+            if (petNameInput && !petNameInput.value) {
+                petNameInput.value = serverPetDetails.name || '';
+            }
 
-            // Populate all form fields with a small delay to ensure DOM is ready
-            setTimeout(() => {
-                const petNameInput = document.getElementById('petName');
-                if (petNameInput) {
-                    petNameInput.value = petDetails.name || '';
-                    console.log('[Init] Set petName to:', petNameInput.value);
-                }
+            const petTypeInput = document.getElementById('my-pet-type');
+            if (petTypeInput && !petTypeInput.value) {
+                petTypeInput.value = serverPetDetails.pet_type || '';
+            }
 
-                const petTypeInput = document.getElementById('my-pet-type');
-                if (petTypeInput) {
-                    petTypeInput.value = petDetails.type || '';
-                    console.log('[Init] Set petType to:', petTypeInput.value);
-                }
+            // Show the saved details display
+            toggleFormDisplay(true);
+            displayPetDetails({
+                name: serverPetDetails.name,
+                type: serverPetDetails.pet_type,
+                breed: serverPetDetails.breed,
+                birthday: serverPetDetails.birthday,
+                sex: serverPetDetails.sex,
+                weight: serverPetDetails.weight,
+                notes: serverPetDetails.notes,
+                photo: serverPetDetails.photo,
+                address: serverPetDetails.address,
+                homeAddressToggled: serverPetDetails.home_address_toggled
+            });
+            checkContinueBtnState();
 
-                const petBreedSelect = document.getElementById('my-pet-breed');
-                if (petBreedSelect && petDetails.breed) {
-                    if (petBreedsData && petBreedsData.petTypes) {
-                        const selectedType = petBreedsData.petTypes.find(pt => pt.name === petDetails.type);
-                        if (selectedType) populateBreeds('my-pet-breed', selectedType);
-                    }
-                    if (petBreedSelect._fursDD) {
-                        petBreedSelect._fursDD.setValue(petDetails.breed);
-                        console.log('[Init] Set breed via FursDD:', petDetails.breed);
-                    } else {
-                        petBreedSelect.value = petDetails.breed;
-                        console.log('[Init] Set breed via value:', petDetails.breed);
-                    }
-                }
-
-                const petBirthdayInput = document.querySelector('input[name="birthday"]');
-                if (petBirthdayInput) {
-                    petBirthdayInput.value = petDetails.birthday || '';
-                    console.log('[Init] Set birthday to:', petBirthdayInput.value);
-                }
-
-                document.querySelectorAll('input[name="sex"]').forEach(input => {
-                    input.checked = input.value === petDetails.sex;
-                });
-                console.log('[Init] Set sex to:', petDetails.sex);
-
-                const petWeightInput = document.getElementById('petWeight');
-                if (petWeightInput) {
-                    petWeightInput.value = petDetails.weight || '';
-                    console.log('[Init] Set weight to:', petWeightInput.value);
-                }
-
-                const petNotesInput = document.getElementById('petNotes');
-                if (petNotesInput) {
-                    petNotesInput.value = petDetails.notes || '';
-                }
-
-                if (petDetails.photo) {
-                    petPhotoBase64 = petDetails.photo;
-                    displayPetPhotoPreview(petPhotoBase64);
-                    console.log('[Init] Restored pet photo');
-                }
-
-                // Now display the saved pet details
-                toggleFormDisplay(true);
-                displayPetDetails(petDetails);
-                checkContinueBtnState();
-
-                console.log('[Init] Successfully restored all pet details');
-            }, 100);
+            console.log('[Init] Successfully restored pet details from server');
         } catch (e) {
             console.error('Error restoring saved pet details:', e);
         }
@@ -2567,14 +2490,11 @@
         const progressFill = document.querySelector('.progress-fill');
         if (progressFill) progressFill.style.width = '100%';
 
-        // Populate confirm page fields
-        const saved = localStorage.getItem('petDetails');
-        if (saved) {
-            try {
-                const pet = JSON.parse(saved);
-                const petNameEl = document.getElementById('confirmPetName');
-                if (petNameEl) petNameEl.textContent = `${pet.name} · ${pet.type}${pet.breed ? ' · ' + pet.breed : ''}`;
-            } catch (e) {}
+        // Populate confirm page fields from current form data
+        const petDetails = collectPetDetails();
+        if (petDetails.name) {
+            const petNameEl = document.getElementById('confirmPetName');
+            if (petNameEl) petNameEl.textContent = `${petDetails.name} · ${petDetails.type}${petDetails.breed ? ' · ' + petDetails.breed : ''}`;
         }
 
         const addressInput = document.querySelector('.address-service .input-wrapper input');
@@ -2664,7 +2584,7 @@
     // ===== Checkmark Icon Toggles =====
     function initCheckmarkToggles() {
         const petNameInput = document.getElementById('petName');
-        const petTypeInput = document.getElementById('petTypeInput');
+        const petTypeInput = document.getElementById('my-pet-type');
 
         if (petNameInput) {
             petNameInput.addEventListener('input', function() {
@@ -2680,13 +2600,12 @@
         }
 
         try {
-            const p = JSON.parse(localStorage.getItem('petDetails') || 'null');
-            if (p) {
-                if (p.name) {
+            if (serverPetDetails) {
+                if (serverPetDetails.name) {
                     const ic = document.getElementById('petNameCheck');
                     if (ic) ic.classList.add('visible');
                 }
-                if (p.type) {
+                if (serverPetDetails.pet_type) {
                     const ic = document.getElementById('petTypeCheck');
                     if (ic) ic.classList.add('visible');
                 }
@@ -2701,36 +2620,20 @@
         initDatePickers();
         initCheckmarkToggles();
 
-        // Load breed data, then restore saved pet details
+        // Load breed data, then show saved pet details
         loadPetBreedsData().then(() => {
             checkSavedPetDetails();
         });
 
-        // ---- Pet form save / cancel (delegated) ----
+        // ---- Pet form cancel (delegated) ----
         document.body.addEventListener('click', function(e) {
-            const saveBtn = e.target.closest('#petFormSaveBtn');
             const cancelBtn = e.target.closest('#petFormCancelBtn');
-
-            if (saveBtn) {
-                e.preventDefault();
-                e.stopPropagation();
-                const petDetails = collectPetDetails();
-                if (!petDetails.name) {
-                    alert('Please enter pet name');
-                    return;
-                }
-                localStorage.setItem('petDetails', JSON.stringify(petDetails));
-                toggleFormDisplay(true);
-                displayPetDetails(petDetails);
-                setTimeout(checkContinueBtnState, 100);
-                return;
-            }
 
             if (cancelBtn) {
                 e.preventDefault();
                 e.stopPropagation();
-                const hasSaved = !!localStorage.getItem('petDetails');
-                if (hasSaved) {
+                // Check if we have saved data
+                if (serverPetDetails) {
                     if (confirm('Discard unsaved changes?')) toggleFormDisplay(true);
                 } else {
                     // Clear fields
@@ -2740,9 +2643,9 @@
                     });
                     const bi = document.querySelector('input[name="birthday"]');
                     if (bi) bi.value = '';
-                    const ti = document.getElementById('petTypeInput');
+                    const ti = document.getElementById('my-pet-type');
                     if (ti) ti.value = '';
-                    const bs = document.getElementById('petBreedSelect');
+                    const bs = document.getElementById('my-pet-breed');
                     if (bs) {
                         if (bs._fursDD) bs._fursDD.setValue('');
                         else bs.value = '';
@@ -2790,7 +2693,7 @@
             birthdayInput.addEventListener('change', checkContinueBtnState);
         }
 
-        const petBreedSelect = document.getElementById('petBreedSelect');
+        const petBreedSelect = document.getElementById('my-pet-breed');
         if (petBreedSelect) {
             petBreedSelect.addEventListener('change', checkContinueBtnState);
             // If custom component exists, try to hook its internal change
@@ -2902,13 +2805,6 @@
                     return;
                 }
                 console.log('[Continue Click] Active! Proceeding to goToStep2()');
-                // Auto-save pet details if not already saved
-                const petDetails = collectPetDetails();
-                if (petDetails.name && !localStorage.getItem('petDetails')) {
-                    localStorage.setItem('petDetails', JSON.stringify(petDetails));
-                    toggleFormDisplay(true);
-                    displayPetDetails(petDetails);
-                }
                 goToStep2();
             });
         }

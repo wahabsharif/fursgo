@@ -488,8 +488,10 @@ const onDragEnd = (e) => {
 };
 
 // Drag events
-track.addEventListener("mousedown", onDragStart);
-track.addEventListener("touchstart", onDragStart);
+if (track) {
+    track.addEventListener("mousedown", onDragStart);
+    track.addEventListener("touchstart", onDragStart);
+}
 window.addEventListener("mousemove", onDragMove);
 window.addEventListener("touchmove", onDragMove);
 window.addEventListener("mouseup", onDragEnd);
