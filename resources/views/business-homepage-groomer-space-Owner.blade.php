@@ -170,7 +170,6 @@
 
 
         .card.active {
-            /* border: 2px solid #3498db; */
             box-shadow: 0 10px 20px rgba(52, 152, 219, 0.1);
         }
 
@@ -384,7 +383,6 @@
         /* Card Style */
         .step-card {
             background: white;
-            /* border-radius: 15px; */
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -506,13 +504,9 @@
         .slider-wrapper {
             position: relative;
             margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            border: 1px solid #D4D4D4;
-            width: 400px;
-            height: 164px;
+            width: 420px;
+            height: 180px;
+            overflow: hidden;
         }
 
         .bgs-t-quote-icon-left,
@@ -537,13 +531,28 @@
 
         .slider-content {
             display: flex;
-            align-items: center;
-            gap: 12px;
-            width: 100%;
+            justify-content: center;
+            gap: 16px;
+            transition: transform 0.4s ease;
+            padding: 0 60px;
+        }
+
+        .card {
+            min-width: 351px;
+            background: #fff;
+            border: 1px solid #D4D4D4;
+            border-radius: 12px;
+            padding: 20px;
+            transition: 0.3s;
+        }
+
+        .side-card {
+            opacity: 1.3;
+            transform: scale(1);
         }
 
         .active-card {
-            flex: 2;
+            opacity: 1;
         }
 
         .date {
@@ -705,13 +714,8 @@
 
 
         .bgs-services-section {
-            padding: 60px 0;
+            padding: 70px 0;
         }
-
-        /* .bgs-services {
-                                                                                                                                            width: 85%;
-                                                                                                                                            margin: auto;
-                                                                                                                                        } */
 
         .bgs-services-header {
             display: flex;
@@ -1151,8 +1155,7 @@
     </section>
 
     <section class="container">
-        <div class="bgs-services-section"></div>
-        <div class="bgs-services">
+        <div class="bgs-services-section">
 
             <div class="bgs-services-header">
                 <div>
@@ -1226,14 +1229,39 @@
 
             activeCard.style.opacity = 0;
 
-            setTimeout(() => {
-                activeCard.querySelector('.date').innerText = data.date;
-                activeCard.querySelector('.testimonial-text').innerText = data.text;
-                activeCard.querySelector('.user-info img').src = data.img;
-                activeCard.querySelector('.user-details h4').innerText = data.name;
-                activeCard.querySelector('.user-details p').innerText = data.role;
-                activeCard.style.opacity = 1;
-            }, 200);
+            const slider = document.querySelector('.slider-content');
+            const cards = document.querySelectorAll('.card');
+
+            let index = 1;
+
+            function updateSlider() {
+
+                const cardWidth = cards[2].offsetWidth + 16;
+
+                slider.style.transform = `translateX(-${index * cardWidth}px)`;
+
+                cards.forEach((card, i) => {
+                    card.classList.remove('active-card');
+                    card.classList.add('side-card');
+                });
+
+                cards[index].classList.add('active-card');
+            }
+
+            function changeSlide(direction) {
+                index += direction;
+
+
+                if (index >= cards.length) {
+                    index = 0;
+                }
+
+                if (index < 0) {
+                    index = cards.length - 1;
+                }
+
+                updateSlider();
+            }
 
 
             dots.forEach((dot, index) => {
@@ -1241,11 +1269,18 @@
             });
         }
 
-        function changeSlide(direction) {
-            currentIdx += direction;
-            if (currentIdx >= testimonials.length) currentIdx = 0;
-            if (currentIdx < 0) currentIdx = testimonials.length - 1;
-            updateSlider();
+        function updateSlider() {
+
+            const cardWidth = cards[0].offsetWidth + 16;
+
+            slider.style.transform = `translateX(-${index * cardWidth}px)`;
+
+            cards.forEach(card => {
+                card.classList.remove('active-card');
+                card.classList.add('side-card');
+            });
+
+            cards[index].classList.add('active-card');
         }
 
         function currentSlide(index) {
