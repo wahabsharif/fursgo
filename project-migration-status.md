@@ -2,7 +2,7 @@
 
 - [x] Homepage - (home.blade.php) - /
 
-- [ ] Booking Groomer - (booking-groomer.blade.php) - /booking-groomer
+- [x] Booking Groomer - (booking-groomer.blade.php) - /booking-groomer
 
 - [x] Cookies Overlay Card - (components.ui.cookies-overlay-card.blade.php) - /cookies-overlay-card
 
