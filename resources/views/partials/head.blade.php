@@ -1,6 +1,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<link rel="icon" href="{{ asset('images/logo/favicon.ico') }}" type="image/x-icon">
+
+
 <!-- CSS -->
 <!-- <link rel="stylesheet" href="{{ asset('css/bookings_status.css') }}"> -->
 <link rel="stylesheet" href="{{ asset('css/bootstrap.css') }}">

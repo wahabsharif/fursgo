@@ -1,4 +1,4 @@
-# Project Tasks
+# Project Migration Status
 
 - [x] Homepage - (home.blade.php) - /
 
@@ -15,3 +15,11 @@
 - [x] Account and Setting - (account-and-setting.blade.php) - /account-and-setting/settings
 
 - [x] My Profile - (my-profile.blade.php) - /my-account/my-profile
+
+- [x] Support And Assistance (Search) - (search.blade.php) - /support-and-assistance/search
+
+- [ ] Groomer Unavailability (Location Unavailability) - (groomer-unavailability.location-unavailability.blade.php) - /groomer-unavailability/location-unavailability
+
+- [x] Login - (livewire.auth.login.blade.php) - /login
+
+- [x] SignUp - (livewire.auth.signup.blade.php) - /signup

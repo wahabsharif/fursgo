@@ -451,9 +451,11 @@ var nextBtn = document.getElementById("next");
 if (prevBtn) prevBtn.addEventListener("click", () => go(index - 1));
 if (nextBtn) nextBtn.addEventListener("click", () => go(index + 1));
 
-// Init
-window.addEventListener("resize", () => go(index, false));
-go(index, false);
+// Init (only if viewport exists - carousel code is only for certain pages)
+if (viewport && track && cards.length > 0) {
+    window.addEventListener("resize", () => go(index, false));
+    go(index, false);
+}
 
 // Dragging
 let startX = 0,
@@ -486,8 +488,10 @@ const onDragEnd = (e) => {
 };
 
 // Drag events
-track.addEventListener("mousedown", onDragStart);
-track.addEventListener("touchstart", onDragStart);
+if (track) {
+    track.addEventListener("mousedown", onDragStart);
+    track.addEventListener("touchstart", onDragStart);
+}
 window.addEventListener("mousemove", onDragMove);
 window.addEventListener("touchmove", onDragMove);
 window.addEventListener("mouseup", onDragEnd);

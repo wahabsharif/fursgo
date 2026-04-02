@@ -2,7 +2,7 @@
 
 ===== usage example =====
 
-<x-filter-section
+<x-ui.filter-section
     groom-modal-id="groomModal"
     space-modal-id="spaceModal"
     active-tab="groomer"

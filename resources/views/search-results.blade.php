@@ -1,4 +1,3 @@
-{{-- resources/views/search-results.blade.php --}}
 @extends('layouts.app')
 
 @section('content')

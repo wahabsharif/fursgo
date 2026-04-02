@@ -567,14 +567,25 @@
                                         </svg>
                                     </a>
                                     <div class="user-profile-options">
+                                        @auth
                                         <div class="user-profile-image d-flex align-items-center gap-20">
-                                            <img src="{{ asset('images/profile_image.png') }}" alt="Hero Image"
+                                            <img src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : asset('images/user-placeholder.png') }}" alt="Profile Image"
                                                 class="rounded-image">
                                             <div class="name-email d-flex flex-column">
-                                                <p class="medium-font-bold">Jane Wilson</p>
-                                                <p class="medium-muted-font">janew@email.com</p>
+                                                <p class="medium-font-bold">{{ Auth::user()->name }}</p>
+                                                <p class="medium-muted-font">{{ Auth::user()->email }}</p>
                                             </div>
                                         </div>
+                                        @else
+                                        <div class="user-profile-image d-flex align-items-center gap-20">
+                                            <img src="{{ asset('images/user-placeholder.png') }}" alt="Profile Image"
+                                                class="rounded-image">
+                                            <div class="name-email d-flex flex-column">
+                                                <p class="medium-font-bold">Guest</p>
+                                                <p class="medium-muted-font">Please log in</p>
+                                            </div>
+                                        </div>
+                                        @endauth
                                         <div class="profile-menu">
                                             <a href="#" class="profile-item d-flex align-items-center gap-40">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="22"
@@ -613,19 +624,35 @@
                                                 <p class="medium-light-font">Help & Support</p>
                                             </a>
                                         </div>
+                                        @auth
+                                        <div class="logout-option" onclick="this.querySelector('form').submit()">
+                                            <form method="POST" action="{{ route('logout') }}" class="d-flex">
+                                                @csrf
+                                                <button type="submit" class="mt-3 d-flex align-items-center gap-40 border-0 bg-transparent p-0 w-100 cursor-pointer">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="22"
+                                                        viewBox="0 0 17 22" fill="none">
+                                                        <path
+                                                            d="M15.5645 0C15.9787 0 16.3145 0.335786 16.3145 0.75V4.4541C16.3142 4.86813 15.9785 5.2041 15.5645 5.2041C15.1505 5.20391 14.8147 4.86801 14.8145 4.4541V1.5H1.5V20H14.8145V17.0459C14.8147 16.632 15.1505 16.2961 15.5645 16.2959C15.9785 16.2959 16.3142 16.6319 16.3145 17.0459V20.75C16.3145 21.1642 15.9787 21.5 15.5645 21.5H0.75C0.335787 21.5 3.5434e-07 21.1642 0 20.75V0.75C0 0.335786 0.335786 0 0.75 0H15.5645ZM12.0293 6.84473C12.2246 6.64946 12.5411 6.64946 12.7363 6.84473L15.918 10.0264C16.1131 10.2216 16.1132 10.5382 15.918 10.7334L12.7363 13.915C12.5411 14.1101 12.2245 14.1101 12.0293 13.915C11.8342 13.7198 11.8342 13.4032 12.0293 13.208L14.3574 10.8799H5.19434C4.91827 10.8799 4.69447 10.6559 4.69434 10.3799C4.69434 10.1037 4.91819 9.87988 5.19434 9.87988H14.3574L12.0293 7.55176C11.8341 7.35658 11.8343 7.04001 12.0293 6.84473Z"
+                                                            fill="#3B3731" />
+                                                    </svg>
+                                                    <p class="medium-light-font">Log out</p>
+                                                </button>
+                                            </form>
+                                        </div>
+                                        @else
                                         <div class="logout-option">
-                                            <a href="#" class="mt-3 d-flex align-items-center gap-40">
+                                            <a href="{{ route('login') }}" class="mt-3 d-flex align-items-center gap-40">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="17" height="22"
                                                     viewBox="0 0 17 22" fill="none">
                                                     <path
                                                         d="M15.5645 0C15.9787 0 16.3145 0.335786 16.3145 0.75V4.4541C16.3142 4.86813 15.9785 5.2041 15.5645 5.2041C15.1505 5.20391 14.8147 4.86801 14.8145 4.4541V1.5H1.5V20H14.8145V17.0459C14.8147 16.632 15.1505 16.2961 15.5645 16.2959C15.9785 16.2959 16.3142 16.6319 16.3145 17.0459V20.75C16.3145 21.1642 15.9787 21.5 15.5645 21.5H0.75C0.335787 21.5 3.5434e-07 21.1642 0 20.75V0.75C0 0.335786 0.335786 0 0.75 0H15.5645ZM12.0293 6.84473C12.2246 6.64946 12.5411 6.64946 12.7363 6.84473L15.918 10.0264C16.1131 10.2216 16.1132 10.5382 15.918 10.7334L12.7363 13.915C12.5411 14.1101 12.2245 14.1101 12.0293 13.915C11.8342 13.7198 11.8342 13.4032 12.0293 13.208L14.3574 10.8799H5.19434C4.91827 10.8799 4.69447 10.6559 4.69434 10.3799C4.69434 10.1037 4.91819 9.87988 5.19434 9.87988H14.3574L12.0293 7.55176C11.8341 7.35658 11.8343 7.04001 12.0293 6.84473Z"
-                                                        fill="#3B3731" />
+                                                            fill="#3B3731" />
                                                 </svg>
-                                                <p class="medium-light-font">Log out</p>
+                                                <p class="medium-light-font">Log in</p>
                                             </a>
                                         </div>
+                                        @endauth
                                     </div>
-
                                 </div>
                             </div>
                         </li>
@@ -637,59 +664,113 @@
 </header>
 
 <script>
-    const notificationBtn = document.querySelector('.notification-btn');
-    const messagesBtn = document.querySelector('.messages-btn');
-    const userBtn = document.querySelector('.user-btn');
+    function initHeaderDropdowns() {
+        const notificationBtn = document.querySelector('.notification-btn');
+        const messagesBtn = document.querySelector('.messages-btn');
+        const userBtn = document.querySelector('.user-btn');
 
-    const headerNotifications = document.querySelector('.header-notifications');
-    const messagesNotifications = document.querySelector('.messages-notifications');
-    const userProfileOptions = document.querySelector('.user-profile-options');
+        const headerNotifications = document.querySelector('.header-notifications');
+        const messagesNotifications = document.querySelector('.messages-notifications');
+        const userProfileOptions = document.querySelector('.user-profile-options');
 
-    // Helper function to close all menus
-    const closeAllMenus = () => {
-        headerNotifications.style.display = 'none';
-        messagesNotifications.style.display = 'none';
-        userProfileOptions.style.display = 'none';
-    };
+        if (!notificationBtn || !messagesBtn || !userBtn) return;
 
-    // Toggle logic for buttons
-    notificationBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevents immediate closing from the document listener
-        const isVisible = headerNotifications.style.display === 'block';
-        closeAllMenus();
-        headerNotifications.style.display = isVisible ? 'none' : 'block';
+        // Remove existing listeners by cloning elements
+        const newNotificationBtn = notificationBtn.cloneNode(true);
+        const newMessagesBtn = messagesBtn.cloneNode(true);
+        const newUserBtn = userBtn.cloneNode(true);
+
+        notificationBtn.parentNode.replaceChild(newNotificationBtn, notificationBtn);
+        messagesBtn.parentNode.replaceChild(newMessagesBtn, messagesBtn);
+        userBtn.parentNode.replaceChild(newUserBtn, userBtn);
+
+        // Helper function to close all menus
+        const closeAllMenus = () => {
+            if (headerNotifications) headerNotifications.style.display = 'none';
+            if (messagesNotifications) messagesNotifications.style.display = 'none';
+            if (userProfileOptions) userProfileOptions.style.display = 'none';
+        };
+
+        // Toggle logic for buttons
+        newNotificationBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isVisible = headerNotifications.style.display === 'block';
+            closeAllMenus();
+            headerNotifications.style.display = isVisible ? 'none' : 'block';
+        });
+
+        newMessagesBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isVisible = messagesNotifications.style.display === 'block';
+            closeAllMenus();
+            messagesNotifications.style.display = isVisible ? 'none' : 'block';
+        });
+
+        newUserBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isVisible = userProfileOptions.style.display === 'block';
+            closeAllMenus();
+            userProfileOptions.style.display = isVisible ? 'none' : 'block';
+        });
+    }
+
+    // Initialize on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initHeaderDropdowns);
+    } else {
+        initHeaderDropdowns();
+    }
+
+    // Re-initialize after Livewire navigations
+    document.addEventListener('livewire:navigated', initHeaderDropdowns);
+    document.addEventListener('livewire:load', initHeaderDropdowns);
+    document.addEventListener('livewire:update', initHeaderDropdowns);
+
+    // Fallback: re-initialize when header is added/modified in DOM
+    const headerObserver = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            for (const node of mutation.addedNodes) {
+                if (node.nodeType === 1 && node.querySelector && node.querySelector('.user-btn')) {
+                    initHeaderDropdowns();
+                    break;
+                }
+            }
+        }
     });
 
-    messagesBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const isVisible = messagesNotifications.style.display === 'block';
-        closeAllMenus();
-        messagesNotifications.style.display = isVisible ? 'none' : 'block';
-    });
+    if (document.body) {
+        headerObserver.observe(document.body, { childList: true, subtree: true });
+    } else {
+        document.addEventListener('DOMContentLoaded', () => {
+            headerObserver.observe(document.body, { childList: true, subtree: true });
+        });
+    }
 
-    userBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const isVisible = userProfileOptions.style.display === 'block';
-        closeAllMenus();
-        userProfileOptions.style.display = isVisible ? 'none' : 'block';
-    });
-
-    // 1. Close when clicking anywhere outside
+    // Close menus when clicking outside
     document.addEventListener('click', (e) => {
-        // Check if the click was inside any of the dropdown menus
         const isInsideMenu = e.target.closest('.header-notifications') ||
             e.target.closest('.messages-notifications') ||
             e.target.closest('.user-profile-options');
 
         if (!isInsideMenu) {
-            closeAllMenus();
+            const headerNotifications = document.querySelector('.header-notifications');
+            const messagesNotifications = document.querySelector('.messages-notifications');
+            const userProfileOptions = document.querySelector('.user-profile-options');
+            if (headerNotifications) headerNotifications.style.display = 'none';
+            if (messagesNotifications) messagesNotifications.style.display = 'none';
+            if (userProfileOptions) userProfileOptions.style.display = 'none';
         }
     });
 
-    // 2. Close when pressing the Escape key
+    // Close on Escape key
     document.addEventListener('keydown', (e) => {
         if (e.key === "Escape") {
-            closeAllMenus();
+            const headerNotifications = document.querySelector('.header-notifications');
+            const messagesNotifications = document.querySelector('.messages-notifications');
+            const userProfileOptions = document.querySelector('.user-profile-options');
+            if (headerNotifications) headerNotifications.style.display = 'none';
+            if (messagesNotifications) messagesNotifications.style.display = 'none';
+            if (userProfileOptions) userProfileOptions.style.display = 'none';
         }
     });
 </script>
