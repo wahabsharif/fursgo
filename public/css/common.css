@@ -579,13 +579,13 @@ p.messages-count {
 
 /* user profile options  */
 .user-profile-options {
+    min-width: 300px;
     position: absolute;
-    width: 280px;
     height: auto;
     border-radius: 10px 0 10px 10px;
     border: 1px solid #e2e2e2;
     background: #fff;
-    right: 0;
+    right: -5px;
     top: 45px;
     z-index: 1001;
     display: none;
@@ -601,8 +601,15 @@ p.messages-count {
 }
 
 .logout-option {
-    border-top: 1px solid #e2e2e2;
-    padding: 0 25px 15px 25px;
+border-top: 1px solid #e2e2e2;
+padding: 0 25px 15px 25px;
+cursor: pointer !important;
+}
+.logout-option>form>button {
+border: none;
+background: transparent;
+cursor: pointer !important;
+
 }
 
 .profile-item:hover {
