@@ -18,4 +18,8 @@
 
 - [x] Support And Assistance (Search) - (search.blade.php) - /support-and-assistance/search
 
-- [x] Support And Assistance (Help And Support) - (help-and-support.blade.php) - /support-and-assistance/help-and-support
+- [ ] Groomer Unavailability (Location Unavailability) - (groomer-unavailability.location-unavailability.blade.php) - /groomer-unavailability/location-unavailability
+
+- [x] Login - (livewire.auth.login.blade.php) - /login
+
+- [x] SignUp - (livewire.auth.signup.blade.php) - /signup
