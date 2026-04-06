@@ -251,6 +251,7 @@
 
 <!-- Business Landing Content -->
 
+<div>
     <section class="container">
         <div class="blp-hero">
             <div class="blp-hero-content">
@@ -424,3 +425,5 @@
             </div>
         </div>
     </section>
+
+</div>

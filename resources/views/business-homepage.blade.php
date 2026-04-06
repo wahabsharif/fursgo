@@ -814,6 +814,7 @@
     </style>
 
 <!-- Business Homepage Content -->
+<div>
     <section class="container">
         <div class="bgs-business-groomer ">
             <!-- LEFT CONTENT -->
@@ -1286,3 +1287,5 @@
         }
 
     </script>
+
+</div>
