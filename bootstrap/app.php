@@ -2,6 +2,8 @@
 
 use Illuminate\Foundation\Application;
 
-return Application::create(
-    basePath: dirname(__DIR__)
+$app = new Application(
+    $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
 );
+
+return $app;
