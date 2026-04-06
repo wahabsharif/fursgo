@@ -1,7 +1,3 @@
-@extends('layouts.app')
-
-@section('content')
-
 {{-- filter modal --}}
 <x-ui.filter-modal modal-id="groomModal" variant="groom" />
 <x-ui.filter-modal modal-id="spaceModal" variant="space" />

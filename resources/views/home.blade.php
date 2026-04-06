@@ -1,7 +1,3 @@
-@extends('layouts.app')
-
-@section('content')
-
     <!-- hero section -->
     <section>
         <div class="container">
@@ -985,4 +981,3 @@
             </div>
         </div>
     </section>
-@endsection

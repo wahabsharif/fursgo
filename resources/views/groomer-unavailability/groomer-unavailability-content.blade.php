@@ -1,6 +1,3 @@
-@extends('layouts.app')
-
-@section('content')
 <section>
     <div class="groomer-tab-content main-tab-content" id="groomer">
         <x-ui.filter-section
@@ -103,12 +100,11 @@
     </div>
 </section>
 
-@endsection
-
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/customer_journey.css') }}">
 @endpush
 
 @push('script')
-<script src="{{ asset('js/costumer_journey.js') }}"></script>
+<script
+src="{{ asset('js/costumer_journey.js') }}"></script>
 @endpush

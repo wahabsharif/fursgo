@@ -37,6 +37,15 @@ class PetDetailController extends Controller
         // Store in session for immediate display
         session(['pet_details' => $petDetail]);
 
+        // Return JSON for AJAX requests, redirect for traditional form submissions
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Pet details saved successfully!',
+                'data' => $petDetail
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Pet details saved successfully!');
     }
 

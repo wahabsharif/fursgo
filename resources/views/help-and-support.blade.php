@@ -1,7 +1,3 @@
-@extends('layouts.app')
-
-@section('content')
-
 <section class="container mb-5 mt-5">
     <div class="row">
         <div class="col-lg-1"></div>
@@ -401,8 +397,6 @@
 
     </div>
 </section>
-
-@endsection
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/company_information.css') }}">

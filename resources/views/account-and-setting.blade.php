@@ -1,6 +1,3 @@
-@extends('layouts.app')
-
-
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/company_information.css') }}">
 
@@ -868,7 +865,7 @@
 @endpush
 
 
-@section('content')
+<!-- Account Settings Content -->
 
 <div class="container mb-5 mt-5">
     <div class="row">
@@ -2003,7 +2000,6 @@
     </div>
 
 </div>
-@endsection
 
 @push('script')
 <script src="{{ asset('js/common.js') }}"></script>

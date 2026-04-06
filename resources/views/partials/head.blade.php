@@ -27,3 +27,24 @@
 @stack('styles')
 @yield('styles')
 @yield('script')
+
+<style>
+    /* N-Progress bar */
+    #nprogress .bar {
+        background: #f9c87c !important;
+        height: 5px !important;
+        border-top-right-radius: 5px !important;
+        border-bottom-right-radius: 5px !important;
+    }
+
+    /* The glow/peg element */
+    #nprogress .peg {
+        box-shadow: 0 0 10px #f9c87c !important;
+    }
+
+    /* The spinner (if shown) */
+    #nprogress .spinner-icon {
+        border-top-color: #f9c87c !important;
+        border-left-color: #f9c87c !important;
+    }
+</style>

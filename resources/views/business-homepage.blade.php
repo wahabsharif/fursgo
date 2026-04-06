@@ -1,5 +1,3 @@
-@extends('layouts.app')
-
 @section('styles')
     <style>
         * {
@@ -814,9 +812,8 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
         }
     </style>
-@endsection
 
-@section('content')
+<!-- Business Homepage Content -->
     <section class="container">
         <div class="bgs-business-groomer ">
             <!-- LEFT CONTENT -->
@@ -1287,5 +1284,5 @@
             currentIdx = index;
             updateSlider();
         }
+
     </script>
-@endsection

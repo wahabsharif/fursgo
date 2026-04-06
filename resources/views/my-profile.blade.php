@@ -1,5 +1,3 @@
-@extends('layouts.app')
-
 @section('styles')
 <style>
     body {
@@ -3021,9 +3019,8 @@
         -moz-appearance: textfield;
     }
 </style>
-@endsection
 
-@section('content')
+<!-- Profile Content -->
 <div class="container mb-5 mt-5">
     <div class="row">
         <div class="col-lg-1"></div>
@@ -6278,7 +6275,6 @@ line-height: normal;">
         <div class="col-lg-1"></div>
     </div>
 </div>
-@endsection
 
 @push('script')
 <script>

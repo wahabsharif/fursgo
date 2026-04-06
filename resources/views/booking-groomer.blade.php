@@ -1,1560 +1,1559 @@
 <!-- booking-groomer.blade.php -->
 
-@extends('layouts.app')
-
 @push('styles')
-<style>
-    body {
-        background: #FDFCF8;
-    }
+    <style>
+        body {
+            background: #FDFCF8;
+        }
 
-    h1 {
-        color: #3B3731;
-        font-family: "Playfair Display";
-        font-size: 1.75rem;
-        font-style: normal;
-        font-weight: 800;
-        line-height: normal;
-    }
+        h1 {
+            color: #3B3731;
+            font-family: "Playfair Display";
+            font-size: 1.75rem;
+            font-style: normal;
+            font-weight: 800;
+            line-height: normal;
+        }
 
-    p,
-    span {
-        color: #3B3731;
-        font-family: Lato;
-        line-height: normal;
-    }
+        p,
+        span {
+            color: #3B3731;
+            font-family: Lato;
+            line-height: normal;
+        }
 
-    /* step css  */
-    .step-indicator {
-        width: 100%;
-        max-width: 15.625rem;
-    }
+        /* step css  */
+        .step-indicator {
+            width: 100%;
+            max-width: 15.625rem;
+        }
 
-    .steps-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: .75rem;
-    }
+        .steps-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: .75rem;
+        }
 
-    .step-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        flex: 1;
-        position: relative;
-    }
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
 
-    .step-circle {
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: .625rem;
-        position: relative;
-        z-index: 2;
-        color: #FDFCF8;
-        text-align: center;
-        font-family: Lato;
-        font-size: .875rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
+        .step-circle {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: .625rem;
+            position: relative;
+            z-index: 2;
+            color: #FDFCF8;
+            text-align: center;
+            font-family: Lato;
+            font-size: .875rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
 
-    .step-item.active .step-circle {
-        background-color: #C9DDA0;
-    }
+        .step-item.active .step-circle {
+            background-color: #C9DDA0;
+        }
 
-    .step-item.inactive .step-circle {
-        background-color: #e8e8e8;
-        /* color: #c0c0c0 !important; */
-    }
+        .step-item.inactive .step-circle {
+            background-color: #e8e8e8;
+            /* color: #c0c0c0 !important; */
+        }
 
-    .step-label {
-        color: #C9DDA0;
-        text-align: center;
-        font-family: Lato;
-        font-size: .875rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
+        .step-label {
+            color: #C9DDA0;
+            text-align: center;
+            font-family: Lato;
+            font-size: .875rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
 
-    .step-item.active .step-label {
-        color: #C9DDA0;
-    }
+        .step-item.active .step-label {
+            color: #C9DDA0;
+        }
 
-    .step-item.inactive .step-label {
-        color: #d0d0d0;
-    }
+        .step-item.inactive .step-label {
+            color: #d0d0d0;
+        }
 
-    .progress-bar {
-        width: 100%;
-        height: .5rem;
-        background-color: #e8e8e8;
-        border-radius: .25rem;
-        overflow: hidden;
-        position: relative;
-    }
+        .progress-bar {
+            width: 100%;
+            height: .5rem;
+            background-color: #e8e8e8;
+            border-radius: .25rem;
+            overflow: hidden;
+            position: relative;
+        }
 
-    .progress-fill {
-        height: 100%;
-        background-color: #C9DDA0;
-        border-radius: .25rem;
-        transition: width 0.3s ease;
-    }
+        .progress-fill {
+            height: 100%;
+            background-color: #C9DDA0;
+            border-radius: .25rem;
+            transition: width 0.3s ease;
+        }
 
-    .groomer-service-button.active {
-        border: .0625rem solid var(--groomer-color);
-        background-color: var(--groomer-color);
-        color: #fff;
-    }
+        .groomer-service-button.active {
+            border: .0625rem solid var(--groomer-color);
+            background-color: var(--groomer-color);
+            color: #fff;
+        }
 
-    /* Animation for demo purposes */
-    @keyframes pulse {
+        /* Animation for demo purposes */
+        @keyframes pulse {
 
-        0%,
-        100% {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .step-item.active .step-circle {
+            animation: pulse 2s infinite;
+        }
+
+        .booking-details {
+            margin-top: 64px;
+        }
+
+        .card {
+            margin-top: 32px;
+            border-radius: .625rem;
+            background: #F8F8F8;
+            padding: 1.875rem;
+            display: flex;
+        }
+
+
+        .card>.clip-path {
+            display: flex;
+            align-items: flex-start;
+            position: relative;
+        }
+
+        .card>.clip-path>svg>image {
+            width: 100%;
+            height: 100%;
+        }
+
+        .card>.clip-path>.svg-icon {
+            position: absolute;
+            left: .1875rem;
+            top: 0rem;
+        }
+
+        .card-body {
+            width: 100%;
+            padding-left: 1.875rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: start;
+        }
+
+        .card-body>div {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+        }
+
+        .card-body>div:first-child>div:first-child>span {
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: .875rem;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .card-body>div>div:first-child>div {
+            margin-top: .625rem;
+            width: 5.8125rem;
+            height: 1.5rem;
+            border-radius: 6.25rem;
+            background: #FFC97A;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-body>div>div:first-child>div>p {
+            color: #FFF;
+            text-align: center;
+            font-family: Lato;
+            font-size: .875rem;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+        }
+
+        .card-body>div>div:nth-child(2)>div:first-child {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .375rem;
+        }
+
+        .card-body>div>div:nth-child(2)>div:first-child>div:first-child {
+            width: 5.125rem;
+            height: 1.5rem;
+            border-radius: 6.25rem;
+            background: #CBDCE8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .375rem;
+        }
+
+        .card-body>div>div:nth-child(2)>div:first-child>div:last-child {
+            width: 5.8125rem;
+            height: 1.5rem;
+            border-radius: 6.25rem;
+            background: #FFA899;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .375rem;
+        }
+
+        .card-body>div>div:nth-child(2)>div:first-child>div:first-child p {
+            color: #FFF;
+            font-family: Lato;
+            font-size: .875rem;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+        }
+
+        .card-body>div>div:nth-child(2)>div:first-child>div:last-child p {
+            color: #FFF;
+            font-family: Lato;
+            font-size: .875rem;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+        }
+
+        .card-body>div>div:nth-child(2)>div:first-child>div:first-child svg {
+            width: .625rem;
+            height: .5625rem;
+            aspect-ratio: 10/9;
+        }
+
+        .card-body>div>div:nth-child(2)>div:last-child {
+            margin-top: 1.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .625rem;
+        }
+
+        .card-body>div>div:nth-child(2)>div:last-child>div {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+        }
+
+        .card-body-info>div>span {
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: .875rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            display: flex;
+            gap: .3125rem;
+        }
+
+        .card-body-info>div>button {
+            border-radius: 6.25rem;
+            background: #EAE8E5;
+            width: 4.1875rem;
+            height: 2rem;
+            border: none;
+            cursor: pointer;
+        }
+
+        .pet-details-form {
+            margin-top: 1.875rem;
+        }
+
+        .pet-details-form>div>h2 {
+            color: #3B3731;
+            font-family: "Playfair Display";
+            font-size: 1.75rem;
+            font-style: normal;
+            font-weight: 800;
+            line-height: normal;
+        }
+
+        .pet-details-form>div:nth-child(2) {
+            margin-top: 1.5625rem;
+            display: flex;
+            align-items: center;
+            justify-content: start;
+            gap: 2.5rem;
+        }
+
+        .pet-details-form>div>button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            width: 11.8125rem;
+            height: 3rem;
+            border-radius: 6rem;
+            border: .0625rem solid #3B3731;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 32px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            /* ADDED: for pseudo icon and opener button */
+        }
+
+        .form-group .input-check-icon {
+            position: absolute;
+            right: .75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            display: none;
+            line-height: 0;
+            z-index: 5;
+        }
+
+        .form-group .input-check-icon.visible {
+            display: block;
+        }
+
+        .form-group label {
+            margin-bottom: .9375rem;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .form-group label>span {
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group option {
+            padding: .5rem .625rem;
+            font-size: .875rem;
+            border-radius: .625rem;
+            border: .0625rem solid #D4D4D4;
+            background: #FFF;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+            height: 3rem;
+        }
+
+        .form-group select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            padding-right: 2.5rem;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8" fill="none"><path d="M13.5105 0.5L6.95017 7.06033L0.499971 0.610127" stroke="%233B3731" stroke-linecap="round" stroke-linejoin="round"/></svg>') !important;
+            background-repeat: no-repeat !important;
+            background-position: right .875rem center;
+            background-size: .9375rem .5rem;
+            cursor: pointer;
+        }
+
+        .form-group input[type="number"] {
+            width: 5.3125rem;
+            height: 3rem;
+        }
+
+        .form-group textarea {
+            padding: .5rem .625rem;
+            border-radius: .625rem;
+            border: .0625rem solid #D4D4D4;
+            background: #FFF;
+            color: #D4D4D4;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+            resize: none;
+
+        }
+
+        /* REPLACE the entire rule for the date input with this */
+        .form-group input[type="date"] {
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+            appearance: none;
+
+            padding: .5rem 2.75rem .5rem .625rem;
+            cursor: pointer;
+            font-size: 1rem;
+            border-radius: .625rem .625rem 0 0;
+            border: .0625rem solid #D4D4D4;
+
+            /* keep color separate so it doesn't override background-image */
+            background-color: #FFF;
+            color: #3B3731;
+
+            /* SVG arrow (note: # must be encoded as %23) */
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8" fill="none"><path d="M13.5105 0.5L6.95017 7.06033L0.499971 0.610127" stroke="%233B3731" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right .875rem center;
+            /* .875rem from right + vertically centered */
+            background-size: .9375rem .5rem;
+
+            height: 3rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        /* Hide native calendar picker in WebKit (Chrome/Safari) */
+        .form-group input[type="date"]::-webkit-calendar-picker-indicator {
+            display: none;
+        }
+
+        /* hide inner clear/spin controls if present */
+        .form-group input[type="date"]::-webkit-clear-button,
+        .form-group input[type="date"]::-webkit-inner-spin-button {
+            display: none;
+        }
+
+        /* Firefox tweaks */
+        .form-group input[type="date"]::-moz-focus-inner {
+            border: 0;
+        }
+
+        /* Pet Type Auto-Detection Suggestions */
+        #petTypeSuggestions {
+            box-shadow: 0 .25rem .5rem rgba(0, 0, 0, 0.1);
+        }
+
+        #petTypeSuggestions>div:last-child {
+            border-bottom: none;
+        }
+
+        /* clickable (transparent) button that forwards to the input picker */
+        .form-group .picker-opener {
+            position: absolute;
+            right: .375rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 2.125rem;
+            height: 2.125rem;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* sex small circular radios (matches the screenshot) */
+        .sex-options {
+            display: flex;
+            gap: 1.75rem;
+            height: 100%;
+            align-items: center;
+            margin-top: 20.8px;
+        }
+
+        /* label that wraps each radio */
+        .radio--small {
+            display: inline-flex;
+            align-items: center;
+            gap: .625rem;
+            /* gap between circle and text */
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        /* keep native input for accessibility but hide native radio */
+        .radio--small input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: .0625rem;
+            height: .0625rem;
+            margin: 0;
+            pointer-events: none;
+        }
+
+        /* the visible circle */
+        .radio--visual {
+            width: 1.375rem;
+            height: 1.375rem;
+            border-radius: 50%;
+            border: .125rem solid #ccc;
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            transition: border-color 0.15s;
+            flex: 0 0 auto;
+            position: relative;
+        }
+
+        /* inner dot for checked state */
+        .radio--visual::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 14.4px;
+            height: 14.4px;
+            transform: translate(-50%, -50%) scale(0);
+            border-radius: 50%;
+            background: #FFD88C;
+            transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+        }
+
+        /* checked styles */
+        .radio--small input[type="radio"]:checked+.radio--visual {
+            border-color: #FFD88C;
+        }
+
+        .radio--small input[type="radio"]:checked+.radio--visual::after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* label text styling */
+        .radio--text {
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+
+
+        .radio--small input[type="radio"]:checked+.radio--visual::after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* focus-visible for keyboard users */
+        .radio--small input[type="radio"]:focus+.radio--visual {
+            outline: .1875rem solid rgba(201, 221, 160, 0.22);
+            outline-offset: .125rem;
+        }
+
+
+
+
+        .full-width {
+            grid-column: span 3;
+        }
+
+        /* placeholder color for inputs & textareas (cross-browser) */
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #D4D4D4;
+            opacity: 1;
+            /* ensure consistent opacity across browsers */
+        }
+
+        /* WebKit/Blink */
+        .form-group input::-webkit-input-placeholder,
+        .form-group textarea::-webkit-input-placeholder {
+            color: #D4D4D4;
+        }
+
+        /* Mozilla Firefox 19+ */
+        .form-group input::-moz-placeholder,
+        .form-group textarea::-moz-placeholder {
+            color: #D4D4D4;
+        }
+
+        /* Mozilla Firefox 4 - 18 */
+        .form-group input:-moz-placeholder,
+        .form-group textarea:-moz-placeholder {
+            color: #D4D4D4;
+        }
+
+        /* Internet Explorer 10+ */
+        .form-group input:-ms-input-placeholder,
+        .form-group textarea:-ms-input-placeholder {
+            color: #D4D4D4;
+        }
+
+        /* Select "placeholder" (first disabled option) — note: styling options is inconsistent across browsers */
+        .form-group select option[disabled][selected] {
+            color: #D4D4D4;
+        }
+
+        .form-btns {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 32px;
+        }
+
+        .form-btns div {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1.875rem;
+
+        }
+
+        .form-btns div>button:first-child {
+            color: #3B3731;
+            text-align: center;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            text-decoration-line: underline;
+            text-decoration-style: solid;
+            text-decoration-skip-ink: auto;
+            text-decoration-thickness: auto;
+            text-underline-offset: auto;
+            text-underline-position: from-font;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        .form-btns div>button:last-child {
+            border-radius: 6rem;
+            border: .0625rem solid #FFC97A;
+            background: #FFF;
+            box-shadow: 0 .3125rem .5rem 0 rgba(0, 0, 0, 0.05);
+            width: 7.5rem;
+            height: 3rem;
+            cursor: pointer;
+            color: #FFC97A;
+            text-align: center;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+
+        }
+
+        .service-summary {
+            width: 25rem;
+            border-radius: .625rem;
+            border: .0625rem solid #FFC97A;
+            background: #FFF;
+            padding: 1.25rem;
+        }
+
+        .service-summary>div>h3 {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .service-summary>div:nth-child(2) {
+            margin-top: 32px;
+            display: flex;
+            align-items: flex-start;
+            position: relative;
+            /* border-bottom: .0625rem solid #FFC97A;
+                                                                                                                                                            padding-bottom: 32px; */
+        }
+
+        .service-summary>div:nth-child(2)>div>svg {
+            position: absolute;
+        }
+
+        .service-summary>div:nth-child(2)>div>img {
+            width: 5.6757rem;
+            height: 5.6757rem;
+            aspect-ratio: 1/1;
+            border-radius: 50%;
+        }
+
+        .service-summary>div:nth-child(2)>div:nth-child(2) {
+            margin-left: 16px;
+        }
+
+        .service-summary>div:nth-child(2)>div:nth-child(2) p {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 1.125rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .service-summary>div:nth-child(2)>div:nth-child(2) span {
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 1.125rem;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .service-summary>div:nth-child(2)>div:nth-child(2) {
+            display: flex;
+            flex-direction: column
+        }
+
+        .service-summary>div:nth-child(2)>div:nth-child(2)>div:nth-child(2) {
+            display: flex;
+            align-items: center;
+            gap: .3125rem
+        }
+
+        .service-summary>div:nth-child(2)>div:nth-child(2)>div:nth-child(2) p {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+        }
+
+        .service-summary>div:nth-child(2)>div:nth-child(2)>div:nth-child(2) span {
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+        }
+
+        .divider {
+            display: block;
+            width: 100%;
+            height: .125rem;
+            background-color: #FFC97A;
+            margin: 24px auto;
+        }
+
+
+        .service-summary>div:nth-child(4)>div {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .service-summary>div:nth-child(4)>div>p {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: .875rem;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+            margin-top: .625rem
+        }
+
+        .service-summary>div:nth-child(4)>span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: .875rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .service-summary>div:nth-child(6)>div {
+            margin-top: 24px;
+        }
+
+        .service-summary>div:nth-child(6)>p {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: .875rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            display: none;
+        }
+
+        .service-summary>div:nth-child(6)>div>div {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .service-summary>div:nth-child(6)>div>div>p {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: .875rem;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 1.4375rem;
+            /* 164.286% */
+        }
+
+        .promocode {
+            margin-top: 32px;
+            width: 21.25rem;
+            height: 7.3125rem;
+            border-radius: .625rem;
+            background: #F8F8F8;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: .625rem;
+        }
+
+        .promocode label {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: .875rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .promocode input {
+            border-radius: .625rem;
+            border: .0625rem solid #D4D4D4;
+            background: #FFF;
+            width: 18.536rem;
+            height: 3rem;
+            padding: .5rem .625rem;
+        }
+
+
+        .sum div {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        .sum div p {
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 1.4375rem;
+        }
+
+        .sum div span {
+            color: #3B3731;
+            text-align: right;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 1.4375rem;
+            /* 143.75% */
+        }
+
+        .total {
+            margin-top: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total p,
+        span {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+        }
+
+        .payment button {
+            margin: 24px auto;
+            width: 21.25rem;
+            height: 3rem;
+            border-radius: 6rem;
+            background: #F8F8F8;
+            border: transparent;
+            color: #DDD;
+            text-align: center;
+            font-family: Lato;
+            font-size: 1.125rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .caution {
+            display: flex;
+            align-items: center;
+            width: 21.25rem;
+            height: 5.5rem;
+            gap: .625rem;
+            padding: 1.25rem;
+            border-radius: .625rem;
+            background: #FFF;
+            box-shadow: 0 .3125rem 3.4375rem 0 rgba(0, 0, 0, 0.05);
+
+        }
+
+        .caution svg {
+            width: 5rem;
+            height: 5rem;
+        }
+
+        .caution p {
+            margin-left: 16px;
+        }
+
+        .need-help {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .625rem;
+            margin-top: 24px;
+        }
+
+        .need-help p {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 1.125rem;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .need-help p>a {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 1.125rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            text-decoration-line: underline;
+            text-decoration-style: solid;
+            text-decoration-skip-ink: auto;
+            text-decoration-thickness: auto;
+            text-underline-offset: auto;
+            text-underline-position: from-font;
+        }
+
+        .address-service h3 {
+            color: #3B3731;
+            font-family: "Playfair Display";
+            font-size: 1.75rem;
+            font-style: normal;
+            font-weight: 800;
+            line-height: normal;
+        }
+
+        .address-service div {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .address-service .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .address-service .input-wrapper svg {
+            position: absolute;
+            right: 1.25rem;
+            top: 50%;
+            bottom: 50%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .address-service .input-wrapper input {
+            padding: 0 1.25rem !important;
+            margin-top: .625rem;
+        }
+
+        .address-service div input::placeholder {
+            color: #D4D4D4;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .address-service div label {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .address-service div input {
+            width: 100%;
+            border-radius: .625rem;
+            border: .0625rem solid #D4D4D4;
+            background: #FFF;
+            height: 3rem;
+        }
+
+
+
+
+
+
+        .option {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .6875rem .25rem;
+            cursor: pointer;
+            border-radius: .5rem;
+            transition: background 0.12s;
+            user-select: none;
+        }
+
+        .option:hover {
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        /* Custom radio */
+        .radio {
+            width: 1.375rem;
+            height: 1.375rem;
+            border-radius: 50%;
+            border: .125rem solid #ccc;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color 0.15s, background 0.15s;
+            position: relative;
+        }
+
+        .radio::after {
+            content: '';
+            width: 14.4px;
+            height: 14.4px;
+            border-radius: 50%;
+            background: #FFD88C;
+            transform: scale(0);
+            transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .option.selected .radio {
+            border-color: #FFD88C;
+            background: #fff;
+        }
+
+        .option.selected .radio::after {
             transform: scale(1);
         }
 
-        50% {
-            transform: scale(1.05);
+        .option-name {
+            flex: 1;
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 1.125rem;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
         }
-    }
-
-    .step-item.active .step-circle {
-        animation: pulse 2s infinite;
-    }
-
-    .booking-details {
-        margin-top: 64px;
-    }
-
-    .card {
-        margin-top: 32px;
-        border-radius: .625rem;
-        background: #F8F8F8;
-        padding: 1.875rem;
-        display: flex;
-    }
-
-
-    .card>.clip-path {
-        display: flex;
-        align-items: flex-start;
-        position: relative;
-    }
-
-    .card>.clip-path>svg>image {
-        width: 100%;
-        height: 100%;
-    }
-
-    .card>.clip-path>.svg-icon {
-        position: absolute;
-        left: .1875rem;
-        top: 0rem;
-    }
-
-    .card-body {
-        width: 100%;
-        padding-left: 1.875rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: start;
-    }
-
-    .card-body>div {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: end;
-    }
-
-    .card-body>div:first-child>div:first-child>span {
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: .875rem;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-    .card-body>div>div:first-child>div {
-        margin-top: .625rem;
-        width: 5.8125rem;
-        height: 1.5rem;
-        border-radius: 6.25rem;
-        background: #FFC97A;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .card-body>div>div:first-child>div>p {
-        color: #FFF;
-        text-align: center;
-        font-family: Lato;
-        font-size: .875rem;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-    }
-
-    .card-body>div>div:nth-child(2)>div:first-child {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: .375rem;
-    }
-
-    .card-body>div>div:nth-child(2)>div:first-child>div:first-child {
-        width: 5.125rem;
-        height: 1.5rem;
-        border-radius: 6.25rem;
-        background: #CBDCE8;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: .375rem;
-    }
-
-    .card-body>div>div:nth-child(2)>div:first-child>div:last-child {
-        width: 5.8125rem;
-        height: 1.5rem;
-        border-radius: 6.25rem;
-        background: #FFA899;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: .375rem;
-    }
-
-    .card-body>div>div:nth-child(2)>div:first-child>div:first-child p {
-        color: #FFF;
-        font-family: Lato;
-        font-size: .875rem;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-    }
-
-    .card-body>div>div:nth-child(2)>div:first-child>div:last-child p {
-        color: #FFF;
-        font-family: Lato;
-        font-size: .875rem;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-    }
-
-    .card-body>div>div:nth-child(2)>div:first-child>div:first-child svg {
-        width: .625rem;
-        height: .5625rem;
-        aspect-ratio: 10/9;
-    }
-
-    .card-body>div>div:nth-child(2)>div:last-child {
-        margin-top: 1.375rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: .625rem;
-    }
-
-    .card-body>div>div:nth-child(2)>div:last-child>div {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: .5rem;
-    }
-
-    .card-body-info>div>span {
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: .875rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        display: flex;
-        gap: .3125rem;
-    }
-
-    .card-body-info>div>button {
-        border-radius: 6.25rem;
-        background: #EAE8E5;
-        width: 4.1875rem;
-        height: 2rem;
-        border: none;
-        cursor: pointer;
-    }
-
-    .pet-details-form {
-        margin-top: 1.875rem;
-    }
-
-    .pet-details-form>div>h2 {
-        color: #3B3731;
-        font-family: "Playfair Display";
-        font-size: 1.75rem;
-        font-style: normal;
-        font-weight: 800;
-        line-height: normal;
-    }
-
-    .pet-details-form>div:nth-child(2) {
-        margin-top: 1.5625rem;
-        display: flex;
-        align-items: center;
-        justify-content: start;
-        gap: 2.5rem;
-    }
-
-    .pet-details-form>div>button {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 8px;
-        width: 11.8125rem;
-        height: 3rem;
-        border-radius: 6rem;
-        border: .0625rem solid #3B3731;
-        background: transparent;
-        cursor: pointer;
-    }
-
-    .form-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-        margin-top: 32px;
-    }
-
-    .form-group {
-        display: flex;
-        flex-direction: column;
-        position: relative;
-        /* ADDED: for pseudo icon and opener button */
-    }
-
-    .form-group .input-check-icon {
-        position: absolute;
-        right: .75rem;
-        top: 50%;
-        transform: translateY(-50%);
-        pointer-events: none;
-        display: none;
-        line-height: 0;
-        z-index: 5;
-    }
-
-    .form-group .input-check-icon.visible {
-        display: block;
-    }
-
-    .form-group label {
-        margin-bottom: .9375rem;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .form-group label>span {
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .form-group input,
-    .form-group select,
-    .form-group option {
-        padding: .5rem .625rem;
-        font-size: .875rem;
-        border-radius: .625rem;
-        border: .0625rem solid #D4D4D4;
-        background: #FFF;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        height: 3rem;
-    }
-
-    .form-group select {
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        padding-right: 2.5rem;
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8" fill="none"><path d="M13.5105 0.5L6.95017 7.06033L0.499971 0.610127" stroke="%233B3731" stroke-linecap="round" stroke-linejoin="round"/></svg>') !important;
-        background-repeat: no-repeat !important;
-        background-position: right .875rem center;
-        background-size: .9375rem .5rem;
-        cursor: pointer;
-    }
-
-    .form-group input[type="number"] {
-        width: 5.3125rem;
-        height: 3rem;
-    }
-
-    .form-group textarea {
-        padding: .5rem .625rem;
-        border-radius: .625rem;
-        border: .0625rem solid #D4D4D4;
-        background: #FFF;
-        color: #D4D4D4;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        resize: none;
-
-    }
-
-    /* REPLACE the entire rule for the date input with this */
-    .form-group input[type="date"] {
-        -webkit-appearance: none;
-        -moz-appearance: textfield;
-        appearance: none;
-
-        padding: .5rem 2.75rem .5rem .625rem;
-        cursor: pointer;
-        font-size: 1rem;
-        border-radius: .625rem .625rem 0 0;
-        border: .0625rem solid #D4D4D4;
-
-        /* keep color separate so it doesn't override background-image */
-        background-color: #FFF;
-        color: #3B3731;
-
-        /* SVG arrow (note: # must be encoded as %23) */
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8" fill="none"><path d="M13.5105 0.5L6.95017 7.06033L0.499971 0.610127" stroke="%233B3731" stroke-linecap="round" stroke-linejoin="round"/></svg>');
-        background-repeat: no-repeat;
-        background-position: right .875rem center;
-        /* .875rem from right + vertically centered */
-        background-size: .9375rem .5rem;
-
-        height: 3rem;
-        box-sizing: border-box;
-        outline: none;
-    }
-
-    /* Hide native calendar picker in WebKit (Chrome/Safari) */
-    .form-group input[type="date"]::-webkit-calendar-picker-indicator {
-        display: none;
-    }
-
-    /* hide inner clear/spin controls if present */
-    .form-group input[type="date"]::-webkit-clear-button,
-    .form-group input[type="date"]::-webkit-inner-spin-button {
-        display: none;
-    }
-
-    /* Firefox tweaks */
-    .form-group input[type="date"]::-moz-focus-inner {
-        border: 0;
-    }
-
-    /* Pet Type Auto-Detection Suggestions */
-    #petTypeSuggestions {
-        box-shadow: 0 .25rem .5rem rgba(0, 0, 0, 0.1);
-    }
-
-    #petTypeSuggestions>div:last-child {
-        border-bottom: none;
-    }
-
-    /* clickable (transparent) button that forwards to the input picker */
-    .form-group .picker-opener {
-        position: absolute;
-        right: .375rem;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 2.125rem;
-        height: 2.125rem;
-        border: 0;
-        background: transparent;
-        cursor: pointer;
-        padding: 0;
-        margin: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* sex small circular radios (matches the screenshot) */
-    .sex-options {
-        display: flex;
-        gap: 1.75rem;
-        height: 100%;
-        align-items: center;
-        margin-top: 20.8px;
-    }
-
-    /* label that wraps each radio */
-    .radio--small {
-        display: inline-flex;
-        align-items: center;
-        gap: .625rem;
-        /* gap between circle and text */
-        cursor: pointer;
-        user-select: none;
-        position: relative;
-    }
-
-    /* keep native input for accessibility but hide native radio */
-    .radio--small input[type="radio"] {
-        position: absolute;
-        opacity: 0;
-        width: .0625rem;
-        height: .0625rem;
-        margin: 0;
-        pointer-events: none;
-    }
-
-    /* the visible circle */
-    .radio--visual {
-        width: 1.375rem;
-        height: 1.375rem;
-        border-radius: 50%;
-        border: .125rem solid #ccc;
-        box-sizing: border-box;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: #fff;
-        transition: border-color 0.15s;
-        flex: 0 0 auto;
-        position: relative;
-    }
-
-    /* inner dot for checked state */
-    .radio--visual::after {
-        content: "";
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        width: 14.4px;
-        height: 14.4px;
-        transform: translate(-50%, -50%) scale(0);
-        border-radius: 50%;
-        background: #FFD88C;
-        transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
-        pointer-events: none;
-    }
-
-    /* checked styles */
-    .radio--small input[type="radio"]:checked+.radio--visual {
-        border-color: #FFD88C;
-    }
-
-    .radio--small input[type="radio"]:checked+.radio--visual::after {
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    /* label text styling */
-    .radio--text {
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-
-
-    .radio--small input[type="radio"]:checked+.radio--visual::after {
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    /* focus-visible for keyboard users */
-    .radio--small input[type="radio"]:focus+.radio--visual {
-        outline: .1875rem solid rgba(201, 221, 160, 0.22);
-        outline-offset: .125rem;
-    }
-
-
-
-
-    .full-width {
-        grid-column: span 3;
-    }
-
-    /* placeholder color for inputs & textareas (cross-browser) */
-    .form-group input::placeholder,
-    .form-group textarea::placeholder {
-        color: #D4D4D4;
-        opacity: 1;
-        /* ensure consistent opacity across browsers */
-    }
-
-    /* WebKit/Blink */
-    .form-group input::-webkit-input-placeholder,
-    .form-group textarea::-webkit-input-placeholder {
-        color: #D4D4D4;
-    }
-
-    /* Mozilla Firefox 19+ */
-    .form-group input::-moz-placeholder,
-    .form-group textarea::-moz-placeholder {
-        color: #D4D4D4;
-    }
-
-    /* Mozilla Firefox 4 - 18 */
-    .form-group input:-moz-placeholder,
-    .form-group textarea:-moz-placeholder {
-        color: #D4D4D4;
-    }
-
-    /* Internet Explorer 10+ */
-    .form-group input:-ms-input-placeholder,
-    .form-group textarea:-ms-input-placeholder {
-        color: #D4D4D4;
-    }
-
-    /* Select "placeholder" (first disabled option) — note: styling options is inconsistent across browsers */
-    .form-group select option[disabled][selected] {
-        color: #D4D4D4;
-    }
-
-    .form-btns {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 32px;
-    }
-
-    .form-btns div {
-        display: flex;
-        justify-content: flex-end;
-        gap: 1.875rem;
-
-    }
-
-    .form-btns div>button:first-child {
-        color: #3B3731;
-        text-align: center;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        text-decoration-line: underline;
-        text-decoration-style: solid;
-        text-decoration-skip-ink: auto;
-        text-decoration-thickness: auto;
-        text-underline-offset: auto;
-        text-underline-position: from-font;
-        background: transparent;
-        border: none;
-        cursor: pointer;
-    }
-
-    .form-btns div>button:last-child {
-        border-radius: 6rem;
-        border: .0625rem solid #FFC97A;
-        background: #FFF;
-        box-shadow: 0 .3125rem .5rem 0 rgba(0, 0, 0, 0.05);
-        width: 7.5rem;
-        height: 3rem;
-        cursor: pointer;
-        color: #FFC97A;
-        text-align: center;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-
-    }
-
-    .service-summary {
-        width: 25rem;
-        border-radius: .625rem;
-        border: .0625rem solid #FFC97A;
-        background: #FFF;
-        padding: 1.25rem;
-    }
-
-    .service-summary>div>h3 {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .service-summary>div:nth-child(2) {
-        margin-top: 32px;
-        display: flex;
-        align-items: flex-start;
-        position: relative;
-        /* border-bottom: .0625rem solid #FFC97A;
-                                                                                                                                                        padding-bottom: 32px; */
-    }
-
-    .service-summary>div:nth-child(2)>div>svg {
-        position: absolute;
-    }
-
-    .service-summary>div:nth-child(2)>div>img {
-        width: 5.6757rem;
-        height: 5.6757rem;
-        aspect-ratio: 1/1;
-        border-radius: 50%;
-    }
-
-    .service-summary>div:nth-child(2)>div:nth-child(2) {
-        margin-left: 16px;
-    }
-
-    .service-summary>div:nth-child(2)>div:nth-child(2) p {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 1.125rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .service-summary>div:nth-child(2)>div:nth-child(2) span {
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: 1.125rem;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-    .service-summary>div:nth-child(2)>div:nth-child(2) {
-        display: flex;
-        flex-direction: column
-    }
-
-    .service-summary>div:nth-child(2)>div:nth-child(2)>div:nth-child(2) {
-        display: flex;
-        align-items: center;
-        gap: .3125rem
-    }
-
-    .service-summary>div:nth-child(2)>div:nth-child(2)>div:nth-child(2) p {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-    }
-
-    .service-summary>div:nth-child(2)>div:nth-child(2)>div:nth-child(2) span {
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-    }
-
-    .divider {
-        display: block;
-        width: 100%;
-        height: .125rem;
-        background-color: #FFC97A;
-        margin: 24px auto;
-    }
-
-
-    .service-summary>div:nth-child(4)>div {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .service-summary>div:nth-child(4)>div>p {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: .875rem;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        margin-top: .625rem
-    }
-
-    .service-summary>div:nth-child(4)>span {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: .875rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .service-summary>div:nth-child(6)>div {
-        margin-top: 24px;
-    }
-
-    .service-summary>div:nth-child(6)>p {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: .875rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        display: none;
-    }
-
-    .service-summary>div:nth-child(6)>div>div {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .service-summary>div:nth-child(6)>div>div>p {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: .875rem;
-        font-style: normal;
-        font-weight: 400;
-        line-height: 1.4375rem;
-        /* 164.286% */
-    }
-
-    .promocode {
-        margin-top: 32px;
-        width: 21.25rem;
-        height: 7.3125rem;
-        border-radius: .625rem;
-        background: #F8F8F8;
-        padding: 1.25rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: .625rem;
-    }
-
-    .promocode label {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: .875rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .promocode input {
-        border-radius: .625rem;
-        border: .0625rem solid #D4D4D4;
-        background: #FFF;
-        width: 18.536rem;
-        height: 3rem;
-        padding: .5rem .625rem;
-    }
-
-
-    .sum div {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 16px;
-    }
-
-    .sum div p {
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 400;
-        line-height: 1.4375rem;
-    }
-
-    .sum div span {
-        color: #3B3731;
-        text-align: right;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 400;
-        line-height: 1.4375rem;
-        /* 143.75% */
-    }
-
-    .total {
-        margin-top: 32px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .total p,
-    span {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-    }
-
-    .payment button {
-        margin: 24px auto;
-        width: 21.25rem;
-        height: 3rem;
-        border-radius: 6rem;
-        background: #F8F8F8;
-        border: transparent;
-        color: #DDD;
-        text-align: center;
-        font-family: Lato;
-        font-size: 1.125rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .caution {
-        display: flex;
-        align-items: center;
-        width: 21.25rem;
-        height: 5.5rem;
-        gap: .625rem;
-        padding: 1.25rem;
-        border-radius: .625rem;
-        background: #FFF;
-        box-shadow: 0 .3125rem 3.4375rem 0 rgba(0, 0, 0, 0.05);
-
-    }
-
-    .caution svg {
-        width: 5rem;
-        height: 5rem;
-    }
-
-    .caution p {
-        margin-left: 16px;
-    }
-
-    .need-help {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: .625rem;
-        margin-top: 24px;
-    }
-
-    .need-help p {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 1.125rem;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-    .need-help p>a {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 1.125rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        text-decoration-line: underline;
-        text-decoration-style: solid;
-        text-decoration-skip-ink: auto;
-        text-decoration-thickness: auto;
-        text-underline-offset: auto;
-        text-underline-position: from-font;
-    }
-
-    .address-service h3 {
-        color: #3B3731;
-        font-family: "Playfair Display";
-        font-size: 1.75rem;
-        font-style: normal;
-        font-weight: 800;
-        line-height: normal;
-    }
-
-    .address-service div {
-        display: flex;
-        flex-direction: column;
-        position: relative;
-    }
-
-    .address-service .input-wrapper {
-        position: relative;
-        display: flex;
-        align-items: center;
-    }
-
-    .address-service .input-wrapper svg {
-        position: absolute;
-        right: 1.25rem;
-        top: 50%;
-        bottom: 50%;
-        pointer-events: none;
-        z-index: 1;
-    }
-
-    .address-service .input-wrapper input {
-        padding: 0 1.25rem !important;
-        margin-top: .625rem;
-    }
-
-    .address-service div input::placeholder {
-        color: #D4D4D4;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-    .address-service div label {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .address-service div input {
-        width: 100%;
-        border-radius: .625rem;
-        border: .0625rem solid #D4D4D4;
-        background: #FFF;
-        height: 3rem;
-    }
-
-
-
-
-
-
-    .option {
-        display: flex;
-        align-items: center;
-        gap: .75rem;
-        padding: .6875rem .25rem;
-        cursor: pointer;
-        border-radius: .5rem;
-        transition: background 0.12s;
-        user-select: none;
-    }
-
-    .option:hover {
-        background: rgba(0, 0, 0, 0.03);
-    }
-
-    /* Custom radio */
-    .radio {
-        width: 1.375rem;
-        height: 1.375rem;
-        border-radius: 50%;
-        border: .125rem solid #ccc;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: border-color 0.15s, background 0.15s;
-        position: relative;
-    }
-
-    .radio::after {
-        content: '';
-        width: 14.4px;
-        height: 14.4px;
-        border-radius: 50%;
-        background: #FFD88C;
-        transform: scale(0);
-        transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .option.selected .radio {
-        border-color: #FFD88C;
-        background: #fff;
-    }
-
-    .option.selected .radio::after {
-        transform: scale(1);
-    }
-
-    .option-name {
-        flex: 1;
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: 1.125rem;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-
-
-
-    /* Add this to your <style> block */
-    #home-address-option {
-        flex-direction: row !important;
-        align-items: center !important;
-    }
-
-    .continue-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: .625rem;
-        cursor: pointer;
-        width: 25rem;
-        height: 3rem;
-        border-radius: 2.5rem;
-        background: #F8F8F8;
-        margin-left: auto;
-        transition: background 0.3s ease;
-    }
-
-    .continue-btn button {
-        color: #DDD;
-        text-align: center;
-        font-family: Lato;
-        font-size: 1.125rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        border: none;
-        cursor: pointer;
-        background: transparent;
-        transition: color 0.3s ease;
-    }
-
-    .continue-btn.active {
-        background: #C9DDA0;
-    }
-
-    .continue-btn.active button {
-        color: #FFF;
-    }
-
-    .continue-btn.active svg path {
-        fill: #FFF;
-    }
-
-    /* Pet Details Display Styles */
-    .pet-details-display {
-        display: none;
-        margin-top: 1.875rem;
-        padding: 1.875rem;
-        border-radius: .625rem;
-        border-radius: .625rem;
-        background: #F8F8F8;
-        border: none;
-    }
-
-    .pet-details-display.active {
-        display: flex;
-        align-items: center;
-        justify-content: space-between
-    }
-
-    .pet-details-display h2 {
-        color: #3B3731;
-        font-family: "Playfair Display";
-        font-size: 1.5rem;
-        font-weight: 800;
-        margin-bottom: 1.25rem;
-    }
-
-    .pet-details-display-content {
-        display: flex;
-        gap: 64px;
-    }
-
-    .pet-detail-item {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .pet-detail-item label {
-        display: flex;
-        align-items: center;
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: .875rem;
-        font-weight: 600;
-        margin-bottom: .5rem;
-        gap: .3125rem
-    }
-
-    .pet-detail-item span {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 1rem;
-        font-weight: 400;
-    }
-
-    .pet-detail-item.full-width {
-        grid-column: span 2;
-    }
-
-    .pet-display-action-btns {
-        display: flex;
-        gap: .9375rem;
-        margin-top: 1.25rem;
-        justify-content: flex-end;
-    }
-
-    .pet-display-action-btns button {
-        width: 4.1875rem;
-        height: 2rem;
-        border-radius: 6.25rem;
-        background: #EAE8E5;
-        border: none;
-        cursor: pointer;
-        color: #3B3731;
-        text-align: center;
-        font-family: Lato;
-        font-size: .875rem;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-    }
-
-
-    .pet-details-form.hidden {
-        display: none;
-    }
-
-    .pet-photo-preview {
-        position: relative;
-        width: 5.3125rem;
-        height: 5.3125rem;
-        border-radius: 50%;
-        overflow: hidden;
-        flex-shrink: 0;
-    }
-
-    .pet-photo-preview img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .pet-photo-col-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 1.25rem;
-        width: 100%;
-        margin-bottom: 1.25rem;
-    }
-
-    .pet-photo-action-btns {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex: 1;
-    }
-
-    .pet-photo-edit-btn {
-        background-color: transparent;
-        color: #3B3731;
-        border: .0625rem solid #D4D4D4;
-        height: 3rem;
-        padding: 0 1.25rem;
-        border-radius: 6rem;
-        cursor: pointer;
-        font-family: Lato;
-        font-size: .875rem;
-        font-weight: 600;
-        white-space: nowrap;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: .5rem;
-    }
-
-    .pet-photo-save-btn {
-        background-color: transparent;
-        border: .0625rem solid #FFC97A;
-        color: #FFC97A;
-        height: 3rem;
-        padding: 0 1.25rem;
-        border-radius: 6rem;
-        cursor: pointer;
-        font-family: Lato;
-        font-size: .875rem;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-
-    .pet-photo-edit-btn,
-    .pet-photo-save-btn {
-        padding: .625rem .9375rem;
-        border: none;
-        border-radius: 6rem;
-        cursor: pointer;
-        font-family: Lato;
-        font-size: .875rem;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
-
-    .pet-photo-edit-btn {
-        background-color: transparent;
-        color: #3B3731;
-        border: .0625rem solid #D4D4D4;
-        width: 8.6875rem;
-        height: 3rem;
-
-    }
-
-    .pet-photo-edit-btn:hover {
-        background-color: #E8E7E6;
-        border-color: #C0BFBE;
-    }
-
-    .pet-photo-save-btn {
-        background-color: transparent;
-        border: .0625rem solid #FFC97A;
-        color: #FFC97A;
-        width: 7.5rem;
-        height: 3rem;
-    }
-
-    .pet-photo-save-btn:hover {
-        background-color: #FFB85C;
-        color: #FFF;
-    }
-
-    .dot {
-        width: .375rem;
-        height: .375rem;
-        background-color: #3B3731;
-        border-radius: 50%;
-        display: inline-block;
-        margin: 0 .25rem;
-    }
-
-    .confirm-pay {
-        max-width: 100%;
-        margin: 0 auto;
-    }
-
-    .confirm-pay form {
-        width: 100%;
-    }
-
-    .form-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.125rem 1.5rem;
-        align-items: start;
-    }
-
-    .full-row {
-        grid-column: 1 / -1;
-    }
-
-
-    .form-grid>div>label {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        margin-top: .625rem;
-    }
-
-    .form-grid>div>label>span {
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .input-wrap {
-        position: relative;
-        margin: .5rem 0;
-    }
-
-    .input-wrap>input,
-    .input-wrap>select {
-        border-radius: .625rem !important;
-        border: .0625rem solid #D4D4D4 !important;
-        background: #FFF !important;
-    }
-
-    .input-wrap input[type="text"],
-    .input-wrap input[type="tel"],
-    .input-wrap input[type="email"],
-    .input-wrap select,
-    .input-wrap textarea {
-        width: 100%;
-        box-sizing: border-box;
-        padding: .75rem 2.75rem .75rem .875rem;
-        border-radius: .5rem;
-        border: .0625rem solid #eee6dd;
-        background: #FFF;
-        font-size: .875rem;
-        outline: none;
-        transition: border-color .15s, box-shadow .12s;
-    }
-
-    .input-wrap select {
-        -webkit-appearance: none;
-        appearance: none;
-        padding-right: 2.75rem;
-        background-image: none;
-        cursor: pointer;
-    }
-
-    .input-wrap.select-wrap {
-        position: relative;
-    }
-
-
-    .input-wrap.select-wrap.open::after {
-        transform: translateY(-50%) rotate(180deg);
-    }
-
-
-
-    .input-wrap select {
-        -webkit-appearance: none;
-        appearance: none;
-        padding-right: 2.75rem;
-        background-color: #FFF;
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8" fill="none"><path d="M13.5105 0.5L6.95017 7.06033L0.499971 0.610127" stroke="%233B3731" stroke-linecap="round" stroke-linejoin="round"/></svg>');
-        background-repeat: no-repeat;
-        background-position: right .875rem center;
-        background-size: .9375rem .5rem;
-        cursor: pointer;
-    }
-
-    .input-wrap textarea {
-        min-height: 2.375rem;
-        resize: vertical;
-    }
-
-    .input-wrap input:focus,
-    .input-wrap select:focus,
-    .input-wrap textarea:focus {
-        border-color: #e6dccd;
-        box-shadow: 0 0 0 .1875rem rgba(201, 221, 160, 0.12);
-    }
-
-    /* check icon container */
-    .icon {
-        position: absolute;
-        right: .625rem;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 1.375rem;
-        height: 1.375rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
-        opacity: 0;
-        transition: opacity .12s, transform .12s;
-    }
-
-    .input-wrap.valid .icon {
-        opacity: 1;
-        transform: translateY(-50%) scale(1);
-    }
-
-    /* red state */
-    .input-wrap.error input,
-    .input-wrap.error textarea,
-    .input-wrap.error select {
-        border-color: rgba(255, 107, 107, 0.22);
-        box-shadow: 0 0 0 .1875rem rgba(255, 107, 107, 0.06);
-    }
-
-    .error-msg {
-        color: #FF6E6E;
-        font-size: .8125rem;
-        margin-top: .375rem;
-        font-family: Lato;
-        display: none;
-    }
-
-    .input-wrap.error+.error-msg {
-        display: block;
-    }
-
-    .buttons {
-        display: flex;
-        justify-content: flex-end;
-        gap: .75rem;
-        margin-top: 1.125rem;
-    }
-
-    .btn {
-        padding: .625rem 1.125rem;
-        border-radius: 1.625rem;
-        border: .0625rem solid #f0d5c0;
-        background: transparent;
-        cursor: pointer;
-        font-weight: 600;
-    }
-
-    .btn.cancel {
-        color: #3B3731;
-        text-align: center;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        text-decoration-line: underline;
-        text-decoration-style: solid;
-        text-decoration-skip-ink: auto;
-        text-decoration-thickness: auto;
-        text-underline-offset: auto;
-        text-underline-position: from-font;
-        border: none;
-    }
-
-    .btn.save {
-        width: 7.5rem;
-        height: 3rem;
-        border-radius: 6rem;
-        border: .0625rem solid #FFC97A;
-        background: #FFF;
-        box-shadow: 0 .3125rem .5rem 0 rgba(0, 0, 0, 0.05);
-        color: #FFC97A;
-        text-align: center;
-        font-family: Lato;
-        font-size: 1rem;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-</style>
+
+
+
+
+        /* Add this to your <style> block */
+        #home-address-option {
+            flex-direction: row !important;
+            align-items: center !important;
+        }
+
+        .continue-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .625rem;
+            cursor: pointer;
+            width: 25rem;
+            height: 3rem;
+            border-radius: 2.5rem;
+            background: #F8F8F8;
+            margin-left: auto;
+            transition: background 0.3s ease;
+        }
+
+        .continue-btn button {
+            color: #DDD;
+            text-align: center;
+            font-family: Lato;
+            font-size: 1.125rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: color 0.3s ease;
+        }
+
+        .continue-btn.active {
+            background: #C9DDA0;
+        }
+
+        .continue-btn.active button {
+            color: #FFF;
+        }
+
+        .continue-btn.active svg path {
+            fill: #FFF;
+        }
+
+        /* Pet Details Display Styles */
+        .pet-details-display {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.875rem;
+            padding: 1.875rem;
+            border-radius: .625rem;
+            border-radius: .625rem;
+            background: #F8F8F8;
+            border: none;
+        }
+
+        .pet-details-display.active {
+            display: flex;
+            align-items: center;
+            justify-content: space-between
+        }
+
+        .pet-details-display h2 {
+            color: #3B3731;
+            font-family: "Playfair Display";
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 1.25rem;
+        }
+
+        .pet-details-display-content {
+            display: flex;
+            gap: 64px;
+        }
+
+        .pet-detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pet-detail-item label {
+            display: flex;
+            align-items: center;
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: .875rem;
+            font-weight: 600;
+            margin-bottom: .5rem;
+            gap: .3125rem
+        }
+
+        .pet-detail-item span {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        .pet-detail-item.full-width {
+            grid-column: span 2;
+        }
+
+        .pet-display-action-btns {
+            display: flex;
+            gap: .9375rem;
+            margin-top: 1.25rem;
+            justify-content: flex-end;
+        }
+
+        .pet-display-action-btns button {
+            width: 4.1875rem;
+            height: 2rem;
+            border-radius: 6.25rem;
+            background: #EAE8E5;
+            border: none;
+            cursor: pointer;
+            color: #3B3731;
+            text-align: center;
+            font-family: Lato;
+            font-size: .875rem;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+        }
+
+
+        .pet-details-form.hidden {
+            display: none;
+        }
+
+        .pet-photo-preview {
+            position: relative;
+            width: 5.3125rem;
+            height: 5.3125rem;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .pet-photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .pet-photo-col-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            width: 100%;
+            margin-bottom: 1.25rem;
+        }
+
+        .pet-photo-action-btns {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex: 1;
+        }
+
+        .pet-photo-edit-btn {
+            background-color: transparent;
+            color: #3B3731;
+            border: .0625rem solid #D4D4D4;
+            height: 3rem;
+            padding: 0 1.25rem;
+            border-radius: 6rem;
+            cursor: pointer;
+            font-family: Lato;
+            font-size: .875rem;
+            font-weight: 600;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+        }
+
+        .pet-photo-save-btn {
+            background-color: transparent;
+            border: .0625rem solid #FFC97A;
+            color: #FFC97A;
+            height: 3rem;
+            padding: 0 1.25rem;
+            border-radius: 6rem;
+            cursor: pointer;
+            font-family: Lato;
+            font-size: .875rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .pet-photo-edit-btn,
+        .pet-photo-save-btn {
+            padding: .625rem .9375rem;
+            border: none;
+            border-radius: 6rem;
+            cursor: pointer;
+            font-family: Lato;
+            font-size: .875rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .pet-photo-edit-btn {
+            background-color: transparent;
+            color: #3B3731;
+            border: .0625rem solid #D4D4D4;
+            width: 8.6875rem;
+            height: 3rem;
+
+        }
+
+        .pet-photo-edit-btn:hover {
+            background-color: #E8E7E6;
+            border-color: #C0BFBE;
+        }
+
+        .pet-photo-save-btn {
+            background-color: transparent;
+            border: .0625rem solid #FFC97A;
+            color: #FFC97A;
+            width: 7.5rem;
+            height: 3rem;
+        }
+
+        .pet-photo-save-btn:hover {
+            background-color: #FFB85C;
+            color: #FFF;
+        }
+
+        .dot {
+            width: .375rem;
+            height: .375rem;
+            background-color: #3B3731;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 .25rem;
+        }
+
+        .confirm-pay {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .confirm-pay form {
+            width: 100%;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.125rem 1.5rem;
+            align-items: start;
+        }
+
+        .full-row {
+            grid-column: 1 / -1;
+        }
+
+
+        .form-grid>div>label {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            margin-top: .625rem;
+        }
+
+        .form-grid>div>label>span {
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .input-wrap {
+            position: relative;
+            margin: .5rem 0;
+        }
+
+        .input-wrap>input,
+        .input-wrap>select {
+            border-radius: .625rem !important;
+            border: .0625rem solid #D4D4D4 !important;
+            background: #FFF !important;
+        }
+
+        .input-wrap input[type="text"],
+        .input-wrap input[type="tel"],
+        .input-wrap input[type="email"],
+        .input-wrap select,
+        .input-wrap textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: .75rem 2.75rem .75rem .875rem;
+            border-radius: .5rem;
+            border: .0625rem solid #eee6dd;
+            background: #FFF;
+            font-size: .875rem;
+            outline: none;
+            transition: border-color .15s, box-shadow .12s;
+        }
+
+        .input-wrap select {
+            -webkit-appearance: none;
+            appearance: none;
+            padding-right: 2.75rem;
+            background-image: none;
+            cursor: pointer;
+        }
+
+        .input-wrap.select-wrap {
+            position: relative;
+        }
+
+
+        .input-wrap.select-wrap.open::after {
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+
+
+        .input-wrap select {
+            -webkit-appearance: none;
+            appearance: none;
+            padding-right: 2.75rem;
+            background-color: #FFF;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8" fill="none"><path d="M13.5105 0.5L6.95017 7.06033L0.499971 0.610127" stroke="%233B3731" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right .875rem center;
+            background-size: .9375rem .5rem;
+            cursor: pointer;
+        }
+
+        .input-wrap textarea {
+            min-height: 2.375rem;
+            resize: vertical;
+        }
+
+        .input-wrap input:focus,
+        .input-wrap select:focus,
+        .input-wrap textarea:focus {
+            border-color: #e6dccd;
+            box-shadow: 0 0 0 .1875rem rgba(201, 221, 160, 0.12);
+        }
+
+        /* check icon container */
+        .icon {
+            position: absolute;
+            right: .625rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1.375rem;
+            height: 1.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity .12s, transform .12s;
+        }
+
+        .input-wrap.valid .icon {
+            opacity: 1;
+            transform: translateY(-50%) scale(1);
+        }
+
+        /* red state */
+        .input-wrap.error input,
+        .input-wrap.error textarea,
+        .input-wrap.error select {
+            border-color: rgba(255, 107, 107, 0.22);
+            box-shadow: 0 0 0 .1875rem rgba(255, 107, 107, 0.06);
+        }
+
+        .error-msg {
+            color: #FF6E6E;
+            font-size: .8125rem;
+            margin-top: .375rem;
+            font-family: Lato;
+            display: none;
+        }
+
+        .input-wrap.error+.error-msg {
+            display: block;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: .75rem;
+            margin-top: 1.125rem;
+        }
+
+        .btn {
+            padding: .625rem 1.125rem;
+            border-radius: 1.625rem;
+            border: .0625rem solid #f0d5c0;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn.cancel {
+            color: #3B3731;
+            text-align: center;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            text-decoration-line: underline;
+            text-decoration-style: solid;
+            text-decoration-skip-ink: auto;
+            text-decoration-thickness: auto;
+            text-underline-offset: auto;
+            text-underline-position: from-font;
+            border: none;
+        }
+
+        .btn.save {
+            width: 7.5rem;
+            height: 3rem;
+            border-radius: 6rem;
+            border: .0625rem solid #FFC97A;
+            background: #FFF;
+            box-shadow: 0 .3125rem .5rem 0 rgba(0, 0, 0, 0.05);
+            color: #FFC97A;
+            text-align: center;
+            font-family: Lato;
+            font-size: 1rem;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+    </style>
 @endpush
 
-@section('content')
 <section>
     <div class="container">
         <div class="d-flex align-items-end justify-content-between">
@@ -1562,8 +1561,10 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 32px;">
                 <button id="backToStep1Btn"
                     style="display: flex; align-items: center; gap: .5rem; background: transparent; border: none; cursor: pointer; font-family: Lato; font-size: 1rem; font-weight: 600; color: #3B3731; text-decoration: underline;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
-                        <rect width="48" height="48" rx="24" transform="matrix(-1 0 0 1 48 0)" fill="#EAE8E5" />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"
+                        fill="none">
+                        <rect width="48" height="48" rx="24" transform="matrix(-1 0 0 1 48 0)"
+                            fill="#EAE8E5" />
                         <path
                             d="M15.2902 23.1723C14.8946 23.5641 14.8952 24.2036 15.2915 24.5947L19.8487 29.0918C20.204 29.4424 20.7767 29.4378 21.1263 29.0815C21.2649 28.9448 21.3203 28.8081 21.2926 28.6714C21.2579 28.5347 21.1818 28.4049 21.064 28.2819L18.0826 25.3603C17.9164 25.1963 17.7606 25.0493 17.6152 24.9195C17.5 24.8167 17.5887 24.6111 17.7423 24.6266C17.9201 24.6446 18.1028 24.6603 18.2904 24.6735C18.6713 24.7008 19.066 24.7145 19.4746 24.7145H32.1645C32.6259 24.7145 33 24.3404 33 23.879C33 23.4176 32.6259 23.0435 32.1645 23.0435H19.4746C19.066 23.0435 18.6678 23.0572 18.28 23.0846C18.0952 23.0976 17.9151 23.1129 17.7398 23.1306C17.584 23.1463 17.496 22.9401 17.6152 22.8385C17.7606 22.7087 17.9164 22.5617 18.0826 22.3977L21.0848 19.4557C21.2095 19.3326 21.2856 19.2028 21.3133 19.0661C21.341 18.9294 21.2891 18.7928 21.1575 18.6561C20.8023 18.2942 20.2205 18.2901 19.8602 18.6469L15.2902 23.1723Z"
                             fill="#3B3731" />
@@ -1603,8 +1604,8 @@
                         <div class="card">
                             <div class="clip-path">
                                 <div class="svg-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="12" viewBox="0 0 11 12"
-                                        fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="12"
+                                        viewBox="0 0 11 12" fill="none">
                                         <rect x="2.71265" y="2.71231" width="6.41005" height="7.12228" rx="3"
                                             fill="white" />
                                         <path
@@ -1694,10 +1695,12 @@
                                                 viewBox="0 0 14 15" fill="none">
                                                 <path
                                                     d="M4.38022 10.1726C5.5048 11.2972 8.23992 10.3857 10.4891 8.13624C12.7386 5.88709 13.65 3.15197 12.5255 2.02739M7.68915 1.26352L8.19816 1.77289M5.90761 3.04541L6.41662 3.55442M4.37986 5.08182L4.88887 5.59083M3.87085 7.62723L4.37986 8.13624M10.4891 0.5L10.9981 1.00901M9.98006 3.55478L10.9981 4.5728M8.19852 5.33668L9.21654 6.3547M6.16212 6.86371L7.18014 7.88173"
-                                                    stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
+                                                    stroke="#9D9B98" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
                                                 <path
                                                     d="M4.37996 11.7C4.80171 11.2783 4.80171 10.5945 4.37996 10.1727C3.95822 9.75101 3.27444 9.75101 2.8527 10.1728L0.816351 12.2091C0.394609 12.6308 0.39461 13.3146 0.816351 13.7364C1.23809 14.1581 1.92187 14.1581 2.34361 13.7364L4.37996 11.7Z"
-                                                    stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
+                                                    stroke="#9D9B98" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
                                             </svg>Service</span>
                                         <p>Full Groom</p>
                                     </div>
@@ -1733,7 +1736,8 @@
                                                 viewBox="0 0 16 15" fill="none">
                                                 <path
                                                     d="M8 6.02632C5.73786 6.02632 3.82643 8.06405 3.20929 10.6813C2.93786 11.8323 3.34714 13.0539 4.35179 13.6279C5.14821 14.0829 6.33286 14.5 8 14.5C9.66714 14.5 10.8521 14.0829 11.6486 13.6279C12.6532 13.0539 13.0621 11.8323 12.7907 10.6813C12.1736 8.06368 10.2621 6.02632 8 6.02632ZM0.5 5.45305C0.5 6.47063 1.13929 7.5 1.92857 7.5C2.71786 7.5 3.35714 6.47063 3.35714 5.45305C3.35714 4.43547 2.71786 3.81579 1.92857 3.81579C1.13929 3.81579 0.5 4.43584 0.5 5.45305ZM15.5 5.45305C15.5 6.47063 14.8607 7.5 14.0714 7.5C13.2821 7.5 12.6429 6.47063 12.6429 5.45305C12.6429 4.43547 13.2821 3.81579 14.0714 3.81579C14.8607 3.81579 15.5 4.43584 15.5 5.45305ZM4.25 2.13726C4.25 3.15484 4.88929 4.18421 5.67857 4.18421C6.46786 4.18421 7.10714 3.15484 7.10714 2.13726C7.10714 1.11968 6.46786 0.5 5.67857 0.5C4.88929 0.5 4.25 1.12005 4.25 2.13726ZM11.75 2.13726C11.75 3.15484 11.1107 4.18421 10.3214 4.18421C9.53214 4.18421 8.89286 3.15484 8.89286 2.13726C8.89286 1.11968 9.53214 0.5 10.3214 0.5C11.1107 0.5 11.75 1.12005 11.75 2.13726Z"
-                                                    stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
+                                                    stroke="#9D9B98" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
                                             </svg>Pet</span>
                                         <p> Other • Medium</p>
                                     </div>
@@ -1745,15 +1749,17 @@
                                 </div>
                             </div>
                         </div>
-                        <form method="POST" action="{{ route('pet-details.store') }}" class="pet-details-form" id="petDetailsForm">
+                        <form method="POST" action="{{ route('pet-details.store') }}" class="pet-details-form"
+                            id="petDetailsForm" @if(isset($petDetails) && $petDetails->name) style="display: none;" @endif>
                             @csrf
-                            <input type="hidden" name="photo" id="photoBase64" value="{{ $petDetails->photo ?? '' }}">
+                            <input type="hidden" name="photo" id="photoBase64"
+                                value="{{ $petDetails->photo ?? '' }}">
                             <div>
                                 <h2>Pet Details</h2>
                             </div>
                             <div class="pet-photo-col-wrapper">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="85" height="85" viewBox="0 0 85 85"
-                                    fill="none" id="petPhotoPlaceholder">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="85" height="85"
+                                    viewBox="0 0 85 85" fill="none" id="petPhotoPlaceholder">
                                     <mask id="path-1-inside-1_85_569" fill="white">
                                         <path
                                             d="M43.5 0C66.4198 0 85 18.5802 85 41.5V43.5C85 66.4198 66.4198 85 43.5 85H41.5C18.5802 85 0 66.4198 0 43.5V41.5C0 18.5802 18.5802 0 41.5 0H43.5ZM43 39.3184C39.2287 39.3184 36.4346 41.367 34.6494 43.9092C32.8863 46.4133 32 49.5227 32 52.0459C32.0002 54.9857 33.7446 57.0319 35.8848 58.2568C37.9904 59.4658 40.6304 60 43 60C45.3696 60 48.0096 59.469 50.1152 58.2568C52.2523 57.0287 53.9998 54.9857 54 52.0459C54 49.5227 53.1137 46.4133 51.3506 43.9092C49.5686 41.3638 46.7745 39.3184 43 39.3184ZM25.7139 39.3184C24.1584 39.3185 22.9388 40.2763 22.1846 41.4248C21.421 42.5829 21 44.0941 21 45.6816C21 47.2694 21.4209 48.7813 22.1846 49.9395C22.9388 51.0848 24.1584 52.0457 25.7139 52.0459C27.2696 52.0459 28.4899 51.0881 29.2441 49.9395C30.0079 48.7813 30.4287 47.2694 30.4287 45.6816C30.4287 44.0942 30.0077 42.5829 29.2441 41.4248C28.4899 40.2794 27.2696 39.3184 25.7139 39.3184ZM60.2861 39.3184C58.7304 39.3184 57.5101 40.2762 56.7559 41.4248C55.9923 42.5829 55.5713 44.0942 55.5713 45.6816C55.5713 47.2694 55.9921 48.7813 56.7559 49.9395C57.5102 51.0849 58.7304 52.0459 60.2861 52.0459C61.8416 52.0457 63.0612 51.0879 63.8154 49.9395C64.5791 48.7813 65 47.2694 65 45.6816C65 44.0941 64.579 42.5829 63.8154 41.4248C63.0612 40.2795 61.8416 39.3185 60.2861 39.3184ZM35.1426 25C33.587 25.0001 32.3675 25.9579 31.6133 27.1064C30.8497 28.2645 30.4288 29.7757 30.4287 31.3633C30.4287 32.951 30.8496 34.4629 31.6133 35.6211C32.3675 36.7665 33.587 37.7274 35.1426 37.7275C36.6982 37.7275 37.9176 36.7696 38.6719 35.6211C39.4356 34.4629 39.8574 32.951 39.8574 31.3633C39.8574 29.7757 39.4355 28.2645 38.6719 27.1064C37.9176 25.961 36.6982 25 35.1426 25ZM50.8574 25C49.3018 25 48.0824 25.9579 47.3281 27.1064C46.5645 28.2645 46.1426 29.7757 46.1426 31.3633C46.1426 32.951 46.5644 34.4629 47.3281 35.6211C48.0824 36.7664 49.3019 37.7275 50.8574 37.7275C52.413 37.7274 53.6325 36.7696 54.3867 35.6211C55.1504 34.4629 55.5713 32.951 55.5713 31.3633C55.5712 29.7757 55.1503 28.2645 54.3867 27.1064C53.6325 25.9611 52.413 25.0001 50.8574 25Z" />
@@ -1768,8 +1774,8 @@
                                 <!-- Hidden file input -->
                                 <input type="file" id="petPhotoInput" accept="image/*" style="display: none;">
                                 <button type="button" id="petPhotoUploadBtn">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
-                                        fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                        viewBox="0 0 14 14" fill="none">
                                         <path
                                             d="M7 10.3162C6.72386 10.3162 6.5 10.0923 6.5 9.8162V1.6662L4.52903 3.63716C4.33115 3.83504 4.00998 3.83392 3.81349 3.63465C3.61896 3.43738 3.62005 3.1201 3.81593 2.92416L6.55492 0.184403C6.80072 -0.0614672 7.19931 -0.0614954 7.44514 0.184341L10.185 2.92419C10.3809 3.12014 10.3822 3.43747 10.1877 3.63493C9.99116 3.83455 9.66959 3.83579 9.47149 3.63769L7.5 1.6662V9.8162C7.5 10.0923 7.27614 10.3162 7 10.3162ZM1.616 13.7392C1.15533 13.7392 0.771 13.5852 0.463 13.2772C0.155 12.9692 0.000666667 12.5845 0 12.1232V10.2002C0 9.92405 0.223858 9.7002 0.5 9.7002C0.776142 9.7002 1 9.92406 1 10.2002V12.1232C1 12.2772 1.064 12.4185 1.192 12.5472C1.32 12.6759 1.461 12.7399 1.615 12.7392H12.385C12.5383 12.7392 12.6793 12.6752 12.808 12.5472C12.9367 12.4192 13.0007 12.2779 13 12.1232V10.2002C13 9.92405 13.2239 9.7002 13.5 9.7002C13.7761 9.7002 14 9.92406 14 10.2002V12.1232C14 12.5839 13.846 12.9682 13.538 13.2762C13.23 13.5842 12.8453 13.7385 12.384 13.7392H1.616Z"
                                             fill="#3B3731" />
@@ -1804,7 +1810,8 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <x-ui.breeds id="my-pet-breed" name="breed" label="Breed(s)" :required="true" :value="$petDetails->breed ?? ''" />
+                                    <x-ui.breeds id="my-pet-breed" name="breed" label="Breed(s)" :required="true"
+                                        :value="$petDetails->breed ?? ''" />
                                 </div>
 
                                 <div class="form-group">
@@ -1835,8 +1842,10 @@
 
                                 <div class="form-group full-width">
                                     <label>Notes <span>(Optional)</span></label>
-                                    <textarea placeholder="Anything your groomer should know?
-                    (e.g. anxious around dryers, allergies, behaviour cues)" rows="4" cols="50" id="petNotes" name="notes">{{ $petDetails->notes ?? '' }}</textarea>
+                                    <textarea
+                                        placeholder="Anything your groomer should know?
+                    (e.g. anxious around dryers, allergies, behaviour cues)"
+                                        rows="4" cols="50" id="petNotes" name="notes">{{ $petDetails->notes ?? '' }}</textarea>
                                 </div>
                             </div>
                             <div class="form-btns" id="petFormBtns">
@@ -1848,7 +1857,7 @@
                         </form>
 
                         <!-- Pet Details Display Section -->
-                        <div class="pet-details-display" id="petDetailsDisplay">
+                        <div class="pet-details-display" id="petDetailsDisplay" @if(isset($petDetails) && $petDetails->name) style="display: flex;" @else style="display: none;" @endif>
                             <div class="pet-details-display-content" id="petDetailsContent">
                             </div>
                             <div class="pet-display-action-btns">
@@ -1862,8 +1871,8 @@
                             <div style="margin-top: 32px;">
                                 <label>Address</label>
                                 <div class="input-wrapper">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
-                                        fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                        viewBox="0 0 16 16" fill="none">
                                         <path
                                             d="M5.73535 0.5C8.6267 0.500031 10.9707 2.844 10.9707 5.73535C10.9707 7.22006 10.3528 8.55933 9.35938 9.5127C8.41826 10.4158 7.14221 10.9707 5.73535 10.9707C2.844 10.9707 0.500031 8.6267 0.5 5.73535C0.5 2.84398 2.84398 0.5 5.73535 0.5Z"
                                             stroke="#3B3731" />
@@ -1891,8 +1900,8 @@
 
                         <div class="continue-btn">
                             <button>Continue</button>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="11" viewBox="0 0 18 11"
-                                fill="none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="11"
+                                viewBox="0 0 18 11" fill="none">
                                 <path
                                     d="M17.7098 4.79038C18.1054 5.18216 18.1048 5.82163 17.7085 6.21273L13.1513 10.7098C12.796 11.0605 12.2233 11.0559 11.8737 10.6995C11.7351 10.5628 11.6797 10.4261 11.7074 10.2895C11.7421 10.1528 11.8182 10.0229 11.936 9.89991L14.9174 6.97834C15.0836 6.81432 15.2394 6.66739 15.3848 6.53754C15.5 6.43474 15.4113 6.2291 15.2577 6.24466C15.0799 6.26268 14.8972 6.27829 14.7096 6.29152C14.3287 6.31885 13.934 6.33252 13.5254 6.33252H0.835466C0.374051 6.33252 0 5.95847 0 5.49705C0 5.03564 0.374051 4.66159 0.835466 4.66159H13.5254C13.934 4.66159 14.3322 4.67526 14.72 4.70259C14.9048 4.71562 15.0849 4.73097 15.2602 4.74865C15.416 4.76436 15.504 4.55812 15.3848 4.45657C15.2394 4.32672 15.0836 4.17979 14.9174 4.01577L11.9152 1.0737C11.7905 0.950687 11.7144 0.820839 11.6867 0.684158C11.659 0.547476 11.7109 0.410795 11.8425 0.274113C12.1977 -0.0877635 12.7795 -0.0918727 13.1398 0.264949L17.7098 4.79038Z"
                                     fill="#DDDDDD" />
@@ -1917,9 +1926,10 @@
                         </div>
                         <div>
                             <div>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="36" viewBox="0 0 32 36"
-                                    fill="none">
-                                    <ellipse cx="17.3667" cy="18.0807" rx="10.2458" ry="9.64315" fill="white" />
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="36"
+                                    viewBox="0 0 32 36" fill="none">
+                                    <ellipse cx="17.3667" cy="18.0807" rx="10.2458" ry="9.64315"
+                                        fill="white" />
                                     <path
                                         d="M16.8932 0.202494C16.6132 0.0698256 16.3132 0 15.9998 0C15.6865 0 15.3865 0.0698256 15.1065 0.202494L2.55333 5.78156C1.08668 6.43094 -0.00663626 7.94615 3.03229e-05 9.77559C0.0333633 16.7023 2.75333 29.3756 14.2399 35.1362C15.3532 35.6949 16.6465 35.6949 17.7598 35.1362C29.2463 29.3756 31.9663 16.7023 31.9996 9.77559C32.0063 7.94615 30.913 6.43094 29.4463 5.78156L16.8932 0.202494ZM9.65991 19.9841C9.97991 20.0679 10.3199 20.1098 10.6666 20.1098C13.0199 20.1098 14.9332 18.1058 14.9332 15.6409V11.1721H17.8798C18.6865 11.1721 19.4265 11.6469 19.7865 12.408L20.2665 13.4065H24.5331C25.1197 13.4065 25.5997 13.9093 25.5997 14.5237V16.7581C25.5997 19.8444 23.2131 22.3442 20.2665 22.3442H17.0665V25.8844C17.0665 26.3941 16.6732 26.813 16.1798 26.813C16.0598 26.813 15.9398 26.7851 15.8332 26.7362L9.25325 23.7826C8.81326 23.5871 8.53326 23.1332 8.53326 22.6375C8.53326 22.4419 8.57326 22.2534 8.65993 22.0789L9.65991 19.9841ZM9.59992 11.1721H12.7999V15.6409C12.7999 16.8769 11.8466 17.8754 10.6666 17.8754C9.48658 17.8754 8.53326 16.8769 8.53326 15.6409V12.2893C8.53326 11.6748 9.01326 11.1721 9.59992 11.1721ZM18.1331 14.5237C18.1331 14.2274 18.0208 13.9433 17.8207 13.7337C17.6207 13.5242 17.3494 13.4065 17.0665 13.4065C16.7836 13.4065 16.5123 13.5242 16.3123 13.7337C16.1122 13.9433 15.9998 14.2274 15.9998 14.5237C15.9998 14.82 16.1122 15.1042 16.3123 15.3137C16.5123 15.5232 16.7836 15.6409 17.0665 15.6409C17.3494 15.6409 17.6207 15.5232 17.8207 15.3137C18.0208 15.1042 18.1331 14.82 18.1331 14.5237Z"
                                         fill="#C9DDA0" />
@@ -1957,8 +1967,8 @@
 
                         <div>
                             <span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="15" viewBox="0 0 14 15"
-                                    fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="15"
+                                    viewBox="0 0 14 15" fill="none">
                                     <path
                                         d="M4.38022 10.1726C5.5048 11.2972 8.23992 10.3857 10.4891 8.13624C12.7386 5.88709 13.65 3.15197 12.5255 2.02739M7.68915 1.26352L8.19816 1.77289M5.90761 3.04541L6.41662 3.55442M4.37986 5.08182L4.88887 5.59083M3.87085 7.62723L4.37986 8.13624M10.4891 0.5L10.9981 1.00901M9.98006 3.55478L10.9981 4.5728M8.19852 5.33668L9.21654 6.3547M6.16212 6.86371L7.18014 7.88173"
                                         stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
@@ -1998,8 +2008,8 @@
                         <div class="payment"><button id="confirmPayBtnSidebar" disabled
                                 style="cursor: not-allowed; transition: all 0.2s ease;">Confirm & Pay</button></div>
                         <div class="caution">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"
-                                fill="none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"
+                                viewBox="0 0 48 48" fill="none">
                                 <path
                                     d="M24 4.8C34.5864 4.8 43.2 13.4136 43.2 24C43.2 34.5864 34.5864 43.2 24 43.2C13.4136 43.2 4.8 34.5864 4.8 24C4.8 13.4136 13.4136 4.8 24 4.8ZM24 0C10.7448 0 0 10.7448 0 24C0 37.2552 10.7448 48 24 48C37.2552 48 48 37.2552 48 24C48 10.7448 37.2552 0 24 0ZM26.4 31.2H21.6V36H26.4V31.2ZM21.6 26.4H26.4L27.6 12H20.4L21.6 26.4Z"
                                     fill="#FFC97A" />
@@ -2012,7 +2022,8 @@
 
                     </div>
                     <div class="need-help">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="34" height="28" viewBox="0 0 34 28" fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="34" height="28" viewBox="0 0 34 28"
+                            fill="none">
                             <path
                                 d="M3.08333 13.875C1.3875 13.875 0 12.4875 0 10.7917V3.08333C0 1.3875 1.3875 0 3.08333 0H15.4167C17.1125 0 18.5 1.3875 18.5 3.08333V10.7917C18.5 12.4875 17.1125 13.875 15.4167 13.875H12.3333V18.5L7.70833 13.875H3.08333ZM30.8333 23.125C32.5292 23.125 33.9167 21.7375 33.9167 20.0417V12.3333C33.9167 10.6375 32.5292 9.25 30.8333 9.25H21.5833V10.7917C21.5833 14.1833 18.8083 16.9583 15.4167 16.9583V20.0417C15.4167 21.7375 16.8042 23.125 18.5 23.125H21.5833V27.75L26.2083 23.125H30.8333Z"
                                 fill="#D8E8B7" />
@@ -2020,351 +2031,353 @@
                         <p>Need help? Chat with <a>Fursgo Support</a>.</p>
                     </div>
 </section>
-@endsection
 
 
 @section('script')
-<script>
-    // ===== Pet Breeds Data =====
-    let petBreedsData = {};
-    let selectedPetType = '';
+    <script>
+        // ===== Pet Breeds Data =====
+        let petBreedsData = {};
+        let selectedPetType = '';
 
-    async function loadPetBreedsData() {
-        try {
-            const response = await fetch('/data/pet-breeds.json');
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            petBreedsData = await response.json();
-            setupPetTypeAutoDetection();
-        } catch (error) {
-            console.error('Failed to load pet breeds:', error);
-        }
-    }
-
-    function setupPetTypeAutoDetection() {
-        const petTypeInput = document.getElementById('my-pet-type');
-        const suggestionBox = document.getElementById('my-pet-type-suggestions');
-        const petBreedSelect = document.getElementById('my-pet-breed');
-
-        if (!petTypeInput || !petBreedsData.petTypes) return;
-
-        petTypeInput.addEventListener('input', function() {
-            const inputValue = this.value.trim().toLowerCase();
-            suggestionBox.innerHTML = '';
-
-            if (inputValue.length === 0) {
-                suggestionBox.style.display = 'none';
-                petBreedSelect.innerHTML = '<option value="">Select a Breed</option>';
-                if (petBreedSelect._fursDD) petBreedSelect._fursDD.refresh();
-                selectedPetType = '';
-                checkContinueBtnState();
-                return;
+        async function loadPetBreedsData() {
+            try {
+                const response = await fetch('/data/pet-breeds.json');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                petBreedsData = await response.json();
+                setupPetTypeAutoDetection();
+            } catch (error) {
+                console.error('Failed to load pet breeds:', error);
             }
+        }
 
-            const matches = petBreedsData.petTypes.filter(pt =>
-                pt.name.toLowerCase().includes(inputValue)
-            );
+        function setupPetTypeAutoDetection() {
+            const petTypeInput = document.getElementById('my-pet-type');
+            const suggestionBox = document.getElementById('my-pet-type-suggestions');
+            const petBreedSelect = document.getElementById('my-pet-breed');
 
-            if (matches.length > 0) {
-                suggestionBox.style.display = 'block';
+            if (!petTypeInput || !petBreedsData.petTypes) return;
+
+            petTypeInput.addEventListener('input', function() {
+                const inputValue = this.value.trim().toLowerCase();
                 suggestionBox.innerHTML = '';
-                matches.forEach(match => {
-                    const item = document.createElement('div');
-                    item.style.cssText = 'padding:.625rem;cursor:pointer;border-bottom:.0625rem solid #EEE;color:#3B3731;font-family:Lato;';
-                    item.textContent = match.name;
-                    item.addEventListener('mouseover', function() {
-                        this.style.backgroundColor = '#f5f5f5';
+
+                if (inputValue.length === 0) {
+                    suggestionBox.style.display = 'none';
+                    petBreedSelect.innerHTML = '<option value="">Select a Breed</option>';
+                    if (petBreedSelect._fursDD) petBreedSelect._fursDD.refresh();
+                    selectedPetType = '';
+                    checkContinueBtnState();
+                    return;
+                }
+
+                const matches = petBreedsData.petTypes.filter(pt =>
+                    pt.name.toLowerCase().includes(inputValue)
+                );
+
+                if (matches.length > 0) {
+                    suggestionBox.style.display = 'block';
+                    suggestionBox.innerHTML = '';
+                    matches.forEach(match => {
+                        const item = document.createElement('div');
+                        item.style.cssText =
+                            'padding:.625rem;cursor:pointer;border-bottom:.0625rem solid #EEE;color:#3B3731;font-family:Lato;';
+                        item.textContent = match.name;
+                        item.addEventListener('mouseover', function() {
+                            this.style.backgroundColor = '#f5f5f5';
+                        });
+                        item.addEventListener('mouseout', function() {
+                            this.style.backgroundColor = 'transparent';
+                        });
+                        item.addEventListener('click', function() {
+                            petTypeInput.value = match.name;
+                            selectedPetType = match.name;
+                            suggestionBox.style.display = 'none';
+                            populateBreeds('my-pet-breed', match);
+                            checkContinueBtnState();
+                        });
+                        suggestionBox.appendChild(item);
                     });
-                    item.addEventListener('mouseout', function() {
-                        this.style.backgroundColor = 'transparent';
-                    });
-                    item.addEventListener('click', function() {
-                        petTypeInput.value = match.name;
-                        selectedPetType = match.name;
-                        suggestionBox.style.display = 'none';
-                        populateBreeds('my-pet-breed', match);
-                        checkContinueBtnState();
-                    });
-                    suggestionBox.appendChild(item);
+                } else {
+                    suggestionBox.style.display = 'none';
+                    petBreedSelect.innerHTML = '<option value="">Select a Breed</option>';
+                    if (petBreedSelect._fursDD) petBreedSelect._fursDD.refresh();
+                }
+
+                const exactMatch = petBreedsData.petTypes.find(p => p.name.toLowerCase() === inputValue);
+                if (exactMatch) {
+                    selectedPetType = exactMatch.name;
+                    populateBreeds('my-pet-breed', exactMatch);
+                    suggestionBox.style.display = 'none';
+                }
+
+                checkContinueBtnState();
+            });
+
+            document.addEventListener('click', function(e) {
+                if (e.target !== petTypeInput && e.target !== suggestionBox) {
+                    suggestionBox.style.display = 'none';
+                }
+            });
+
+            petTypeInput.addEventListener('focus', function() {
+                if (this.value.trim().length > 0) suggestionBox.style.display = 'block';
+            });
+        }
+
+        function populateBreeds(breedSelectId, petType) {
+            const petBreedSelect = document.getElementById(breedSelectId);
+            petBreedSelect.innerHTML = '<option value="">Select a Breed</option>';
+            if (petType && petType.breeds) {
+                petType.breeds.forEach(breed => {
+                    const option = document.createElement('option');
+                    option.value = breed;
+                    option.textContent = breed;
+                    petBreedSelect.appendChild(option);
                 });
-            } else {
-                suggestionBox.style.display = 'none';
-                petBreedSelect.innerHTML = '<option value="">Select a Breed</option>';
-                if (petBreedSelect._fursDD) petBreedSelect._fursDD.refresh();
             }
-
-            const exactMatch = petBreedsData.petTypes.find(p => p.name.toLowerCase() === inputValue);
-            if (exactMatch) {
-                selectedPetType = exactMatch.name;
-                populateBreeds('my-pet-breed', exactMatch);
-                suggestionBox.style.display = 'none';
-            }
-
-            checkContinueBtnState();
-        });
-
-        document.addEventListener('click', function(e) {
-            if (e.target !== petTypeInput && e.target !== suggestionBox) {
-                suggestionBox.style.display = 'none';
-            }
-        });
-
-        petTypeInput.addEventListener('focus', function() {
-            if (this.value.trim().length > 0) suggestionBox.style.display = 'block';
-        });
-    }
-
-    function populateBreeds(breedSelectId, petType) {
-        const petBreedSelect = document.getElementById(breedSelectId);
-        petBreedSelect.innerHTML = '<option value="">Select a Breed</option>';
-        if (petType && petType.breeds) {
-            petType.breeds.forEach(breed => {
-                const option = document.createElement('option');
-                option.value = breed;
-                option.textContent = breed;
-                petBreedSelect.appendChild(option);
-            });
-        }
-        if (petBreedSelect._fursDD) petBreedSelect._fursDD.refresh();
-        // Force re-check after breeds are loaded
-        setTimeout(checkContinueBtnState, 100);
-    }
-
-    // ===== Service Summary Add-ons =====
-    window.handleAddonsChange = function(selectedIds, total, selectedAddons) {
-        const addonsContainer = document.querySelector('.service-summary .extras-addons-list');
-        const extrasHeading = document.querySelector('.service-summary .extras-heading');
-
-        if (addonsContainer) {
-            addonsContainer.innerHTML = '';
-            selectedAddons.forEach(a => {
-                const div = document.createElement('div');
-                div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;';
-                div.innerHTML = `<p>${a.name}</p><p>£${a.price}</p>`;
-                addonsContainer.appendChild(div);
-            });
-        }
-        if (extrasHeading) {
-            extrasHeading.style.display = selectedAddons.length ? 'block' : 'none';
+            if (petBreedSelect._fursDD) petBreedSelect._fursDD.refresh();
+            // Force re-check after breeds are loaded
+            setTimeout(checkContinueBtnState, 100);
         }
 
-        const baseServicePrice = 48;
-        const platformFee = 2;
-        const totalWithAddons = baseServicePrice + total + platformFee;
+        // ===== Service Summary Add-ons =====
+        window.handleAddonsChange = function(selectedIds, total, selectedAddons) {
+            const addonsContainer = document.querySelector('.service-summary .extras-addons-list');
+            const extrasHeading = document.querySelector('.service-summary .extras-heading');
 
-        const sumDiv = document.querySelector('.service-summary .sum');
-        if (sumDiv) {
-            sumDiv.innerHTML = `
+            if (addonsContainer) {
+                addonsContainer.innerHTML = '';
+                selectedAddons.forEach(a => {
+                    const div = document.createElement('div');
+                    div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;';
+                    div.innerHTML = `<p>${a.name}</p><p>£${a.price}</p>`;
+                    addonsContainer.appendChild(div);
+                });
+            }
+            if (extrasHeading) {
+                extrasHeading.style.display = selectedAddons.length ? 'block' : 'none';
+            }
+
+            const baseServicePrice = 48;
+            const platformFee = 2;
+            const totalWithAddons = baseServicePrice + total + platformFee;
+
+            const sumDiv = document.querySelector('.service-summary .sum');
+            if (sumDiv) {
+                sumDiv.innerHTML = `
                 <div><p>Service:</p><span>£${baseServicePrice}</span></div>
                 ${selectedAddons.length ? `<div><p>Add-ons:</p><span>£${total}</span></div>` : ''}
                 <div><p>Platform fee:</p><span>£${platformFee}</span></div>
             `;
+            }
+
+            const totalSpan = document.querySelector('.service-summary .total span');
+            if (totalSpan) totalSpan.innerText = `£${totalWithAddons}`;
+
+            // IMPORTANT: re-check continue button state after add-ons change
+            checkContinueBtnState();
+        };
+
+        // ===== SIMPLIFIED Continue Button State Check =====
+        let isCheckingButtonState = false;
+        let checkButtonTimeout;
+
+        function checkContinueBtnState() {
+            // Prevent recursive calls
+            if (isCheckingButtonState) return;
+            isCheckingButtonState = true;
+
+            try {
+                const continueBtn = document.querySelector('.continue-btn');
+                if (!continueBtn) return;
+
+                // Get field values - ONLY check native .value properties, not text content
+                // (text content gives placeholder/label text, not actual selected values)
+                const petName = (document.getElementById('petName')?.value || '').trim();
+                const petType = (document.getElementById('my-pet-type')?.value || '').trim();
+                const petBreed = (document.getElementById('my-pet-breed')?.value || '').trim();
+                const petWeight = (document.getElementById('petWeight')?.value || '').trim();
+                const birthday = (document.querySelector('input[name="birthday"]')?.value || '').trim();
+                const sex = (document.querySelector('input[name="sex"]:checked')?.value || '').trim();
+                const addressInput = (document.querySelector('.address-service .input-wrapper input')?.value || '').trim();
+                const homeAddressToggled = document.getElementById('home-address-option')?.classList.contains('selected') ||
+                    false;
+
+                // Boolean checks
+                const hasName = petName !== '';
+                const hasType = petType !== '';
+                const hasBreed = petBreed !== '';
+                const hasWeight = petWeight !== '';
+                const hasBirthday = birthday !== '';
+                const hasSex = sex !== '';
+                const hasAddress = addressInput !== '' || homeAddressToggled;
+
+                // All required
+                const allFilled = hasName && hasType && hasBreed && hasWeight && hasBirthday && hasSex && hasAddress;
+
+                if (allFilled) {
+                    continueBtn.classList.add('active');
+                    continueBtn.querySelector('button').style.color = '#FFF';
+                    const arrow = continueBtn.querySelector('svg path');
+                    if (arrow) arrow.setAttribute('fill', '#FFF');
+                } else {
+                    continueBtn.classList.remove('active');
+                    continueBtn.querySelector('button').style.color = '#DDD';
+                    const arrow = continueBtn.querySelector('svg path');
+                    if (arrow) arrow.setAttribute('fill', '#DDDDDD');
+                }
+
+                return allFilled;
+            } finally {
+                isCheckingButtonState = false;
+            }
         }
 
-        const totalSpan = document.querySelector('.service-summary .total span');
-        if (totalSpan) totalSpan.innerText = `£${totalWithAddons}`;
+        // ===== Address Toggle =====
+        window.toggleHomeAddress = function(el) {
+            el.classList.toggle('selected');
+            setTimeout(checkContinueBtnState, 100);
+        };
 
-        // IMPORTANT: re-check continue button state after add-ons change
-        checkContinueBtnState();
-    };
+        // ===== Photo Upload =====
+        let petPhotoBase64 = null;
 
-    // ===== SIMPLIFIED Continue Button State Check =====
-    let isCheckingButtonState = false;
-    let checkButtonTimeout;
+        function initPhotoUpload() {
+            const petPhotoUploadBtn = document.getElementById('petPhotoUploadBtn');
+            const petPhotoInput = document.getElementById('petPhotoInput');
+            const petPhotoPlaceholder = document.getElementById('petPhotoPlaceholder');
 
-    function checkContinueBtnState() {
-        // Prevent recursive calls
-        if (isCheckingButtonState) return;
-        isCheckingButtonState = true;
+            if (!petPhotoUploadBtn || !petPhotoInput) return;
 
-        try {
-            const continueBtn = document.querySelector('.continue-btn');
-            if (!continueBtn) return;
+            // Move input to body to avoid display:none issues
+            document.body.appendChild(petPhotoInput);
+            petPhotoInput.style.cssText = 'position:absolute;left:-9999px;top:-9999px;opacity:0;width:1px;height:1px;';
 
-            // Get field values - ONLY check native .value properties, not text content
-            // (text content gives placeholder/label text, not actual selected values)
-            const petName = (document.getElementById('petName')?.value || '').trim();
-            const petType = (document.getElementById('my-pet-type')?.value || '').trim();
-            const petBreed = (document.getElementById('my-pet-breed')?.value || '').trim();
-            const petWeight = (document.getElementById('petWeight')?.value || '').trim();
-            const birthday = (document.querySelector('input[name="birthday"]')?.value || '').trim();
-            const sex = (document.querySelector('input[name="sex"]:checked')?.value || '').trim();
-            const addressInput = (document.querySelector('.address-service .input-wrapper input')?.value || '').trim();
-            const homeAddressToggled = document.getElementById('home-address-option')?.classList.contains('selected') || false;
+            petPhotoUploadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                petPhotoInput.click();
+            });
 
-            // Boolean checks
-            const hasName = petName !== '';
-            const hasType = petType !== '';
-            const hasBreed = petBreed !== '';
-            const hasWeight = petWeight !== '';
-            const hasBirthday = birthday !== '';
-            const hasSex = sex !== '';
-            const hasAddress = addressInput !== '' || homeAddressToggled;
+            petPhotoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select an image file');
+                    return;
+                }
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Image size must be less than 5MB');
+                    return;
+                }
 
-            // All required
-            const allFilled = hasName && hasType && hasBreed && hasWeight && hasBirthday && hasSex && hasAddress;
-
-            if (allFilled) {
-                continueBtn.classList.add('active');
-                continueBtn.querySelector('button').style.color = '#FFF';
-                const arrow = continueBtn.querySelector('svg path');
-                if (arrow) arrow.setAttribute('fill', '#FFF');
-            } else {
-                continueBtn.classList.remove('active');
-                continueBtn.querySelector('button').style.color = '#DDD';
-                const arrow = continueBtn.querySelector('svg path');
-                if (arrow) arrow.setAttribute('fill', '#DDDDDD');
-            }
-
-            return allFilled;
-        } finally {
-            isCheckingButtonState = false;
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    petPhotoBase64 = event.target.result;
+                    // Update the hidden input so the photo gets submitted with the form
+                    const photoInput = document.getElementById('photoBase64');
+                    if (photoInput) photoInput.value = petPhotoBase64;
+                    displayPetPhotoPreview(petPhotoBase64);
+                };
+                reader.readAsDataURL(file);
+            });
         }
-    }
 
-    // ===== Address Toggle =====
-    window.toggleHomeAddress = function(el) {
-        el.classList.toggle('selected');
-        setTimeout(checkContinueBtnState, 100);
-    };
+        function displayPetPhotoPreview(photoBase64) {
+            const petPhotoPlaceholder = document.getElementById('petPhotoPlaceholder');
+            const petPhotoUploadBtn = document.getElementById('petPhotoUploadBtn');
+            if (!petPhotoPlaceholder) return;
 
-    // ===== Photo Upload =====
-    let petPhotoBase64 = null;
+            const existingWrapper = petPhotoPlaceholder.parentElement.querySelector('.pet-photo-col-wrapper');
+            if (existingWrapper) existingWrapper.remove();
 
-    function initPhotoUpload() {
-        const petPhotoUploadBtn = document.getElementById('petPhotoUploadBtn');
-        const petPhotoInput = document.getElementById('petPhotoInput');
-        const petPhotoPlaceholder = document.getElementById('petPhotoPlaceholder');
+            const previewDiv = document.createElement('div');
+            previewDiv.className = 'pet-photo-preview';
+            const img = document.createElement('img');
+            img.src = photoBase64;
+            previewDiv.appendChild(img);
 
-        if (!petPhotoUploadBtn || !petPhotoInput) return;
+            petPhotoPlaceholder.style.display = 'none';
+            if (petPhotoUploadBtn) petPhotoUploadBtn.style.display = 'none';
 
-        // Move input to body to avoid display:none issues
-        document.body.appendChild(petPhotoInput);
-        petPhotoInput.style.cssText = 'position:absolute;left:-9999px;top:-9999px;opacity:0;width:1px;height:1px;';
+            const colWrapper = document.createElement('div');
+            colWrapper.className = 'pet-photo-col-wrapper';
 
-        petPhotoUploadBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            petPhotoInput.click();
-        });
+            const actionBtnsDiv = document.createElement('div');
+            actionBtnsDiv.className = 'pet-photo-action-btns';
 
-        petPhotoInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            if (!file.type.startsWith('image/')) {
-                alert('Please select an image file');
-                return;
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Image size must be less than 5MB');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                petPhotoBase64 = event.target.result;
-                // Update the hidden input so the photo gets submitted with the form
-                const photoInput = document.getElementById('photoBase64');
-                if (photoInput) photoInput.value = petPhotoBase64;
-                displayPetPhotoPreview(petPhotoBase64);
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    function displayPetPhotoPreview(photoBase64) {
-        const petPhotoPlaceholder = document.getElementById('petPhotoPlaceholder');
-        const petPhotoUploadBtn = document.getElementById('petPhotoUploadBtn');
-        if (!petPhotoPlaceholder) return;
-
-        const existingWrapper = petPhotoPlaceholder.parentElement.querySelector('.pet-photo-col-wrapper');
-        if (existingWrapper) existingWrapper.remove();
-
-        const previewDiv = document.createElement('div');
-        previewDiv.className = 'pet-photo-preview';
-        const img = document.createElement('img');
-        img.src = photoBase64;
-        previewDiv.appendChild(img);
-
-        petPhotoPlaceholder.style.display = 'none';
-        if (petPhotoUploadBtn) petPhotoUploadBtn.style.display = 'none';
-
-        const colWrapper = document.createElement('div');
-        colWrapper.className = 'pet-photo-col-wrapper';
-
-        const actionBtnsDiv = document.createElement('div');
-        actionBtnsDiv.className = 'pet-photo-action-btns';
-
-        const editBtn = document.createElement('button');
-        editBtn.type = 'button';
-        editBtn.className = 'pet-photo-edit-btn';
-        editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+            const editBtn = document.createElement('button');
+            editBtn.type = 'button';
+            editBtn.className = 'pet-photo-edit-btn';
+            editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M7.78125 2.1875L11.8125 6.21875M1.3125 12.6875H3.64583L11.8125 4.52083C12.4419 3.89148 12.4419 2.87114 11.8125 2.2418C11.1832 1.61245 10.1628 1.61245 9.53345 2.2418L1.3125 10.4627V12.6875Z" stroke="#3B3731" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg> Edit photo`;
-        editBtn.addEventListener('click', function() {
-            const input = document.getElementById('petPhotoInput');
-            if (input) input.click();
-        });
+            editBtn.addEventListener('click', function() {
+                const input = document.getElementById('petPhotoInput');
+                if (input) input.click();
+            });
 
-        const saveBtn = document.createElement('button');
-        saveBtn.type = 'button';
-        saveBtn.className = 'pet-photo-save-btn';
-        saveBtn.textContent = 'Save';
-        saveBtn.addEventListener('click', function() {
-            console.log('Photo confirmed');
-        });
+            const saveBtn = document.createElement('button');
+            saveBtn.type = 'button';
+            saveBtn.className = 'pet-photo-save-btn';
+            saveBtn.textContent = 'Save';
 
-        actionBtnsDiv.appendChild(editBtn);
-        actionBtnsDiv.appendChild(saveBtn);
 
-        colWrapper.appendChild(previewDiv);
-        colWrapper.appendChild(actionBtnsDiv);
+            actionBtnsDiv.appendChild(editBtn);
+            actionBtnsDiv.appendChild(saveBtn);
 
-        petPhotoPlaceholder.parentElement.insertBefore(colWrapper, petPhotoPlaceholder);
-    }
+            colWrapper.appendChild(previewDiv);
+            colWrapper.appendChild(actionBtnsDiv);
 
-    // ===== Pet Details Form =====
-    function collectPetDetails() {
-        return {
-            name: (document.getElementById('petName')?.value ?? '').trim(),
-            birthday: (document.querySelector('input[name="birthday"]')?.value ?? ''),
-            type: (document.getElementById('my-pet-type')?.value ?? '').trim(),
-            breed: (document.getElementById('my-pet-breed')?.value ?? ''),
-            sex: (document.querySelector('input[name="sex"]:checked')?.value ?? ''),
-            weight: (document.getElementById('petWeight')?.value ?? ''),
-            notes: (document.getElementById('petNotes')?.value ?? '').trim(),
-            photo: petPhotoBase64,
-            address: (document.querySelector('.address-service .input-wrapper input')?.value ?? '').trim(),
-            homeAddressToggled: document.getElementById('home-address-option')?.classList.contains('selected') || false
-        };
-    }
+            petPhotoPlaceholder.parentElement.insertBefore(colWrapper, petPhotoPlaceholder);
+        }
 
-    function displayPetDetails(details) {
-        const petDetailsDisplay = document.getElementById('petDetailsDisplay');
-        const petDetailsContent = document.getElementById('petDetailsContent');
-        if (!petDetailsDisplay || !petDetailsContent) return;
+        // ===== Pet Details Form =====
+        function collectPetDetails() {
+            return {
+                name: (document.getElementById('petName')?.value ?? '').trim(),
+                birthday: (document.querySelector('input[name="birthday"]')?.value ?? ''),
+                type: (document.getElementById('my-pet-type')?.value ?? '').trim(),
+                breed: (document.getElementById('my-pet-breed')?.value ?? ''),
+                sex: (document.querySelector('input[name="sex"]:checked')?.value ?? ''),
+                weight: (document.getElementById('petWeight')?.value ?? ''),
+                notes: (document.getElementById('petNotes')?.value ?? '').trim(),
+                photo: petPhotoBase64,
+                address: (document.querySelector('.address-service .input-wrapper input')?.value ?? '').trim(),
+                homeAddressToggled: document.getElementById('home-address-option')?.classList.contains('selected') || false
+            };
+        }
 
-        let birthdayDisplay = 'Not provided';
-        if (details.birthday) {
-            try {
-                const d = new Date(details.birthday + 'T00:00:00');
-                if (!isNaN(d.getTime())) {
-                    birthdayDisplay = `${String(d.getDate()).padStart(2, '0')} / ${String(d.getMonth() + 1).padStart(2, '0')} / ${d.getFullYear()}`;
+        function displayPetDetails(details) {
+            const petDetailsDisplay = document.getElementById('petDetailsDisplay');
+            const petDetailsContent = document.getElementById('petDetailsContent');
+            if (!petDetailsDisplay || !petDetailsContent) return;
+
+            let birthdayDisplay = 'Not provided';
+            if (details.birthday) {
+                try {
+                    // Handle ISO 8601 format from server (e.g., "2026-04-03T00:00:00.000000Z")
+                    const d = new Date(details.birthday);
+                    if (!isNaN(d.getTime())) {
+                        birthdayDisplay =
+                            `${String(d.getDate()).padStart(2, '0')} / ${String(d.getMonth() + 1).padStart(2, '0')} / ${d.getFullYear()}`;
+                    }
+                } catch (e) {
+                    birthdayDisplay = details.birthday;
                 }
-            } catch (e) {
-                birthdayDisplay = details.birthday;
             }
-        }
 
-        const existingPhoto = document.getElementById('petDisplayPhoto');
-        if (existingPhoto) existingPhoto.remove();
+            const existingPhoto = document.getElementById('petDisplayPhoto');
+            if (existingPhoto) existingPhoto.remove();
 
-        if (details.photo) {
-            const photoEl = document.createElement('div');
-            photoEl.id = 'petDisplayPhoto';
-            photoEl.innerHTML = `<img src="${details.photo}" alt="Pet photo" style="width:5.3125rem;height:5.3125rem;border-radius:50%;object-fit:cover;flex-shrink:0;">`;
-            petDetailsDisplay.insertBefore(photoEl, petDetailsContent);
-        }
+            if (details.photo) {
+                const photoEl = document.createElement('div');
+                photoEl.id = 'petDisplayPhoto';
+                photoEl.innerHTML =
+                    `<img src="${details.photo}" alt="Pet photo" style="width:5.3125rem;height:5.3125rem;border-radius:50%;object-fit:cover;flex-shrink:0;">`;
+                petDetailsDisplay.insertBefore(photoEl, petDetailsContent);
+            }
 
-        petDetailsContent.innerHTML = `
+            petDetailsContent.innerHTML = `
             <div class="pet-detail-item">
                 <label>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 16 15" fill="none">
@@ -2376,10 +2389,10 @@
             </div>
             <div class="pet-detail-item">
                 <label>
-                              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="17" viewBox="0 0 15 17" fill="none">
-  <path d="M1.27778 11.7778V14.5C1.27778 14.9126 1.44167 15.3082 1.73339 15.5999C2.02511 15.8917 2.42077 16.0556 2.83333 16.0556H12.1667C12.5792 16.0556 12.9749 15.8917 13.2666 15.5999C13.5583 15.3082 13.7222 14.9126 13.7222 14.5V11.7778M0.5 9.83333V9.05556C0.5 8.643 0.663888 8.24734 0.955612 7.95561C1.24733 7.66389 1.643 7.5 2.05556 7.5H12.9444C13.357 7.5 13.7527 7.66389 14.0444 7.95561C14.3361 8.24734 14.5 8.643 14.5 9.05556V9.83333M7.5 5.16667V7.5M7.5 5.16667C8.48156 5.16667 9.05556 4.41378 9.05556 3.125C9.05556 1.83622 7.5 0.5 7.5 0.5C7.5 0.5 5.94444 1.83622 5.94444 3.125C5.94444 4.41378 6.51844 5.16667 7.5 5.16667Z" stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M0.5 9.8335C0.5 10.4523 0.745833 11.0458 1.18342 11.4834C1.621 11.921 2.21449 12.1668 2.83333 12.1668C3.45217 12.1668 4.04566 11.921 4.48325 11.4834C4.92083 11.0458 5.16667 10.4523 5.16667 9.8335C5.16667 10.4523 5.4125 11.0458 5.85008 11.4834C6.28767 11.921 6.88116 12.1668 7.5 12.1668C8.11884 12.1668 8.71233 11.921 9.14992 11.4834C9.5875 11.0458 9.83333 10.4523 9.83333 9.8335C9.83333 10.4523 10.0792 11.0458 10.5168 11.4834C10.9543 11.921 11.5478 12.1668 12.1667 12.1668C12.7855 12.1668 13.379 11.921 13.8166 11.4834C14.2542 11.0458 14.5 10.4523 14.5 9.8335" stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="17" viewBox="0 0 15 17" fill="none">
+                        <path d="M1.27778 11.7778V14.5C1.27778 14.9126 1.44167 15.3082 1.73339 15.5999C2.02511 15.8917 2.42077 16.0556 2.83333 16.0556H12.1667C12.5792 16.0556 12.9749 15.8917 13.2666 15.5999C13.5583 15.3082 13.7222 14.9126 13.7222 14.5V11.7778M0.5 9.83333V9.05556C0.5 8.643 0.663888 8.24734 0.955612 7.95561C1.24733 7.66389 1.643 7.5 2.05556 7.5H12.9444C13.357 7.5 13.7527 7.66389 14.0444 7.95561C14.3361 8.24734 14.5 8.643 14.5 9.05556V9.83333M7.5 5.16667V7.5M7.5 5.16667C8.48156 5.16667 9.05556 4.41378 9.05556 3.125C9.05556 1.83622 7.5 0.5 7.5 0.5C7.5 0.5 5.94444 1.83622 5.94444 3.125C5.94444 4.41378 6.51844 5.16667 7.5 5.16667Z" stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M0.5 9.8335C0.5 10.4523 0.745833 11.0458 1.18342 11.4834C1.621 11.921 2.21449 12.1668 2.83333 12.1668C3.45217 12.1668 4.04566 11.921 4.48325 11.4834C4.92083 11.0458 5.16667 10.4523 5.16667 9.8335C5.16667 10.4523 5.4125 11.0458 5.85008 11.4834C6.28767 11.921 6.88116 12.1668 7.5 12.1668C8.11884 12.1668 8.71233 11.921 9.14992 11.4834C9.5875 11.0458 9.83333 10.4523 9.83333 9.8335C9.83333 10.4523 10.0792 11.0458 10.5168 11.4834C10.9543 11.921 11.5478 12.1668 12.1667 12.1668C12.7855 12.1668 13.379 11.921 13.8166 11.4834C14.2542 11.0458 14.5 10.4523 14.5 9.8335" stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                     Birthday
                 </label>
                 <span>${birthdayDisplay}</span>
@@ -2395,429 +2408,500 @@
             </div>
             <div class="pet-detail-item full-width">
                 <label>
-                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="16" viewBox="0 0 15 16" fill="none">
-  <path d="M13.5905 8.11123L13.9601 6.73016C14.3918 5.1182 14.6084 4.31257 14.4462 3.61489C14.3176 3.0641 14.0285 2.56382 13.6155 2.17734C13.093 1.68768 12.2866 1.4718 10.6747 1.04003C9.0627 0.607553 8.25636 0.391671 7.55939 0.55394C7.0086 0.682549 6.50833 0.971618 6.12185 1.38458C5.70224 1.83207 5.4835 2.48758 5.15824 3.67851L4.98382 4.32544L4.61425 5.70651C4.18177 7.31847 3.96589 8.1241 4.12816 8.82178C4.25677 9.37257 4.54584 9.87285 4.9588 10.2593C5.48135 10.749 6.28769 10.9649 7.89966 11.3974C9.35221 11.7862 10.1507 12 10.8048 11.9192C10.8763 11.9101 10.9463 11.8977 11.0149 11.882C11.5655 11.7538 12.0658 11.4652 12.4525 11.0528C12.9421 10.5295 13.158 9.7232 13.5905 8.11123Z" stroke="#9D9B98"/>
-  <path d="M10.8047 11.9191C10.6553 12.3769 10.3927 12.7895 10.0413 13.1186C9.51875 13.6083 8.71241 13.8242 7.10045 14.2559C5.48848 14.6877 4.68214 14.9043 3.98517 14.7413C3.43447 14.6129 2.9342 14.3241 2.54763 13.9114C2.05796 13.3888 1.84137 12.5825 1.4096 10.9705L1.04003 9.58946C0.607553 7.9775 0.391671 7.17116 0.55394 6.47419C0.682549 5.9234 0.971618 5.42313 1.38458 5.03665C1.90713 4.54698 2.71347 4.3311 4.32544 3.89862C4.62948 3.81665 4.90708 3.74302 5.15823 3.67773" stroke="#9D9B98"/>
-  <path d="M7.48927 6.21924L10.9419 7.14424M6.93384 8.29084L9.00544 8.84556" stroke="#9D9B98" stroke-linecap="round"/>
-</svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="16" viewBox="0 0 15 16" fill="none">
+                        <path d="M13.5905 8.11123L13.9601 6.73016C14.3918 5.1182 14.6084 4.31257 14.4462 3.61489C14.3176 3.0641 14.0285 2.56382 13.6155 2.17734C13.093 1.68768 12.2866 1.4718 10.6747 1.04003C9.0627 0.607553 8.25636 0.391671 7.55939 0.55394C7.0086 0.682549 6.50833 0.971618 6.12185 1.38458C5.70224 1.83207 5.4835 2.48758 5.15824 3.67851L4.98382 4.32544L4.61425 5.70651C4.18177 7.31847 3.96589 8.1241 4.12816 8.82178C4.25677 9.37257 4.54584 9.87285 4.9588 10.2593C5.48135 10.749 6.28769 10.9649 7.89966 11.3974C9.35221 11.7862 10.1507 12 10.8048 11.9192C10.8763 11.9101 10.9463 11.8977 11.0149 11.882C11.5655 11.7538 12.0658 11.4652 12.4525 11.0528C12.9421 10.5295 13.158 9.7232 13.5905 8.11123Z" stroke="#9D9B98"/>
+                        <path d="M10.8047 11.9191C10.6553 12.3769 10.3927 12.7895 10.0413 13.1186C9.51875 13.6083 8.71241 13.8242 7.10045 14.2559C5.48848 14.6877 4.68214 14.9043 3.98517 14.7413C3.43447 14.6129 2.9342 14.3241 2.54763 13.9114C2.05796 13.3888 1.84137 12.5825 1.4096 10.9705L1.04003 9.58946C0.607553 7.9775 0.391671 7.17116 0.55394 6.47419C0.682549 5.9234 0.971618 5.42313 1.38458 5.03665C1.90713 4.54698 2.71347 4.3311 4.32544 3.89862C4.62948 3.81665 4.90708 3.74302 5.15823 3.67773" stroke="#9D9B98"/>
+                        <path d="M7.48927 6.21924L10.9419 7.14424M6.93384 8.29084L9.00544 8.84556" stroke="#9D9B98" stroke-linecap="round"/>
+                    </svg>
                     Notes
                 </label>
                 <span>${details.notes || 'No notes added'}</span>
             </div>
         `;
-    }
-
-    function toggleFormDisplay(showDisplay) {
-        const petDetailsForm = document.querySelector('.pet-details-form');
-        const petDetailsDisplay = document.getElementById('petDetailsDisplay');
-        const petFormBtns = document.getElementById('petFormBtns');
-
-        if (showDisplay) {
-            if (petDetailsForm) petDetailsForm.classList.add('hidden');
-            if (petDetailsDisplay) petDetailsDisplay.classList.add('active');
-            if (petFormBtns) petFormBtns.style.display = 'none';
-        } else {
-            if (petDetailsForm) petDetailsForm.classList.remove('hidden');
-            if (petDetailsDisplay) petDetailsDisplay.classList.remove('active');
-            if (petFormBtns) petFormBtns.style.display = 'block';
-            populateFormWithSavedData();
-        }
-    }
-
-    // Server-side rendered pet details (passed from controller)
-    const serverPetDetails = @json($petDetails ?? null);
-
-    function checkSavedPetDetails() {
-        if (!serverPetDetails) {
-            console.log('[Init] No saved pet details found');
-            return;
         }
 
-        try {
-            console.log('[Init] Found pet details:', serverPetDetails.name);
+        function toggleFormDisplay(showDisplay) {
+            // Use querySelector to find form - don't redeclare if already exists
+            let formEl = document.querySelector('.pet-details-form');
+            const petDetailsDisplay = document.getElementById('petDetailsDisplay');
+            const petFormBtns = document.getElementById('petFormBtns');
 
-            // Populate all form fields
-            const petNameInput = document.getElementById('petName');
-            if (petNameInput && !petNameInput.value) {
-                petNameInput.value = serverPetDetails.name || '';
+            if (showDisplay) {
+                if (formEl) formEl.style.display = 'none';
+                if (petDetailsDisplay) petDetailsDisplay.style.display = 'flex';
+                if (petFormBtns) petFormBtns.style.display = 'none';
+            } else {
+                if (formEl) formEl.style.display = 'block';
+                if (petDetailsDisplay) petDetailsDisplay.style.display = 'none';
+                if (petFormBtns) petFormBtns.style.display = 'block';
+            }
+        }
+
+        // Server-side rendered pet details (passed from controller)
+        let serverPetDetails = @json($petDetails ?? null);
+
+        function checkSavedPetDetails() {
+            if (!serverPetDetails) {
+                return;
             }
 
-            const petTypeInput = document.getElementById('my-pet-type');
-            if (petTypeInput && !petTypeInput.value) {
-                petTypeInput.value = serverPetDetails.pet_type || '';
-            }
-
-            // Show the saved details display
-            toggleFormDisplay(true);
-            displayPetDetails({
-                name: serverPetDetails.name,
-                type: serverPetDetails.pet_type,
-                breed: serverPetDetails.breed,
-                birthday: serverPetDetails.birthday,
-                sex: serverPetDetails.sex,
-                weight: serverPetDetails.weight,
-                notes: serverPetDetails.notes,
-                photo: serverPetDetails.photo,
-                address: serverPetDetails.address,
-                homeAddressToggled: serverPetDetails.home_address_toggled
-            });
-            checkContinueBtnState();
-
-            console.log('[Init] Successfully restored pet details from server');
-        } catch (e) {
-            console.error('Error restoring saved pet details:', e);
-        }
-    }
-
-    // ===== Step Navigation =====
-    function goToStep2() {
-        const step1 = document.querySelector('.step-item:nth-child(1)');
-        const step2 = document.querySelector('.step-item:nth-child(2)');
-
-        if (step1) {
-            step1.classList.remove('active');
-            step1.classList.add('inactive');
-            const circle1 = step1.querySelector('.step-circle');
-            if (circle1) {
-                circle1.style.backgroundColor = '#C9DDA0';
-                circle1.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="13" viewBox="0 0 16 13" fill="none"><path d="M14.6667 1.49969L5.50004 10.6664L1.33337 6.49969" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-            }
-            const label1 = step1.querySelector('.step-label');
-            if (label1) label1.style.color = '#C9DDA0';
-        }
-        if (step2) {
-            step2.classList.remove('inactive');
-            step2.classList.add('active');
-        }
-
-        const progressFill = document.querySelector('.progress-fill');
-        if (progressFill) progressFill.style.width = '100%';
-
-        // Populate confirm page fields from current form data
-        const petDetails = collectPetDetails();
-        if (petDetails.name) {
-            const petNameEl = document.getElementById('confirmPetName');
-            if (petNameEl) petNameEl.textContent = `${petDetails.name} · ${petDetails.type}${petDetails.breed ? ' · ' + petDetails.breed : ''}`;
-        }
-
-        const addressInput = document.querySelector('.address-service .input-wrapper input');
-        const confirmAddress = document.getElementById('confirmAddress');
-        if (addressInput && confirmAddress) confirmAddress.textContent = addressInput.value.trim() || '—';
-
-        document.getElementById('step1Content').style.display = 'none';
-        document.getElementById('step2Content').style.display = 'block';
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    }
-
-    function goToStep1() {
-        const step1 = document.querySelector('.step-item:nth-child(1)');
-        const step2 = document.querySelector('.step-item:nth-child(2)');
-
-        if (step1) {
-            step1.classList.add('active');
-            step1.classList.remove('inactive');
-            const circle1 = step1.querySelector('.step-circle');
-            if (circle1) {
-                circle1.style.backgroundColor = '';
-                circle1.innerHTML = '1';
-            }
-            const label1 = step1.querySelector('.step-label');
-            if (label1) label1.style.color = '';
-        }
-        if (step2) {
-            step2.classList.add('inactive');
-            step2.classList.remove('active');
-        }
-
-        const progressFill = document.querySelector('.progress-fill');
-        if (progressFill) progressFill.style.width = '50%';
-
-        document.getElementById('step1Content').style.display = 'block';
-        document.getElementById('step2Content').style.display = 'none';
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    }
-
-    // ===== Date Picker Opener =====
-    function initDatePickers() {
-        document.querySelectorAll('.form-group').forEach(group => {
-            const input = group.querySelector('input[type="date"]');
-            if (!input || group.querySelector('.picker-opener')) return;
-
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'picker-opener';
-            btn.setAttribute('aria-label', 'Open date picker');
-            btn.innerHTML = '<span style="position:absolute;left:-624.9375rem">Open date picker</span>';
-
-            const openPicker = () => {
-                if (typeof input.showPicker === 'function') {
-                    try {
-                        input.showPicker();
-                        return;
-                    } catch (e) {}
+            try {
+                // Populate all form fields
+                const petNameInput = document.getElementById('petName');
+                if (petNameInput && !petNameInput.value) {
+                    petNameInput.value = serverPetDetails.name || '';
                 }
-                input.focus();
-            };
 
-            btn.addEventListener('click', e => {
-                e.stopPropagation();
-                openPicker();
-            });
-            input.addEventListener('click', e => {
-                e.stopPropagation();
-                openPicker();
-            });
-            input.addEventListener('keydown', e => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    openPicker();
+                const petTypeInput = document.getElementById('my-pet-type');
+                if (petTypeInput && !petTypeInput.value) {
+                    petTypeInput.value = serverPetDetails.pet_type || '';
                 }
-            });
 
-            group.appendChild(btn);
-        });
-    }
-
-    // ===== Checkmark Icon Toggles =====
-    function initCheckmarkToggles() {
-        const petNameInput = document.getElementById('petName');
-        const petTypeInput = document.getElementById('my-pet-type');
-
-        if (petNameInput) {
-            petNameInput.addEventListener('input', function() {
-                const icon = document.getElementById('petNameCheck');
-                if (icon) icon.classList.toggle('visible', this.value.trim() !== '');
-            });
-        }
-        if (petTypeInput) {
-            petTypeInput.addEventListener('input', function() {
-                const icon = document.getElementById('petTypeCheck');
-                if (icon) icon.classList.toggle('visible', this.value.trim() !== '');
-            });
-        }
-
-        try {
-            if (serverPetDetails) {
-                if (serverPetDetails.name) {
-                    const ic = document.getElementById('petNameCheck');
-                    if (ic) ic.classList.add('visible');
-                }
-                if (serverPetDetails.pet_type) {
-                    const ic = document.getElementById('petTypeCheck');
-                    if (ic) ic.classList.add('visible');
-                }
-            }
-        } catch (e) {}
-    }
-
-    // ===== MAIN DOMContentLoaded =====
-    document.addEventListener('DOMContentLoaded', function() {
-        // Init subsystems
-        initPhotoUpload();
-        initDatePickers();
-        initCheckmarkToggles();
-
-        // Load breed data, then show saved pet details
-        loadPetBreedsData().then(() => {
-            checkSavedPetDetails();
-        });
-
-        // ---- Pet form cancel (delegated) ----
-        document.body.addEventListener('click', function(e) {
-            const cancelBtn = e.target.closest('#petFormCancelBtn');
-
-            if (cancelBtn) {
-                e.preventDefault();
-                e.stopPropagation();
-                // Check if we have saved data
-                if (serverPetDetails) {
-                    if (confirm('Discard unsaved changes?')) toggleFormDisplay(true);
-                } else {
-                    // Clear fields
-                    ['petName'].forEach(id => {
-                        const el = document.getElementById(id);
-                        if (el) el.value = '';
-                    });
-                    const bi = document.querySelector('input[name="birthday"]');
-                    if (bi) bi.value = '';
-                    const ti = document.getElementById('my-pet-type');
-                    if (ti) ti.value = '';
-                    const bs = document.getElementById('my-pet-breed');
-                    if (bs) {
-                        if (bs._fursDD) bs._fursDD.setValue('');
-                        else bs.value = '';
-                    }
-                    document.querySelectorAll('input[name="sex"]').forEach(r => r.checked = false);
-                    const wi = document.getElementById('petWeight');
-                    if (wi) wi.value = '4';
-                    const ni = document.getElementById('petNotes');
-                    if (ni) ni.value = '';
-                    petPhotoBase64 = null;
-                    const pi = document.getElementById('petPhotoInput');
-                    if (pi) pi.value = '';
-                    const ph = document.getElementById('petPhotoPlaceholder');
-                    if (ph) ph.style.display = 'block';
-                    const ub = document.getElementById('petPhotoUploadBtn');
-                    if (ub) ub.style.display = 'block';
-                    const cw = document.querySelector('.pet-photo-col-wrapper');
-                    if (cw) cw.remove();
-                }
+                // Show the saved details display
+                toggleFormDisplay(true);
+                displayPetDetails({
+                    name: serverPetDetails.name,
+                    type: serverPetDetails.pet_type,
+                    breed: serverPetDetails.breed,
+                    birthday: serverPetDetails.birthday,
+                    sex: serverPetDetails.sex,
+                    weight: serverPetDetails.weight,
+                    notes: serverPetDetails.notes,
+                    photo: serverPetDetails.photo,
+                    address: serverPetDetails.address,
+                    homeAddressToggled: serverPetDetails.home_address_toggled
+                });
                 checkContinueBtnState();
-            }
-        });
-
-        // ---- Pet display Change button ----
-        const petDisplayChangeBtn = document.getElementById('petDisplayChangeBtn');
-        if (petDisplayChangeBtn) {
-            petDisplayChangeBtn.addEventListener('click', function() {
-                toggleFormDisplay(false);
-                setTimeout(checkContinueBtnState, 50);
-            });
-        }
-
-        // ---- Live field watchers for continue button ----
-        ['petName', 'my-pet-type', 'my-pet-breed', 'petWeight'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', checkContinueBtnState);
-                el.addEventListener('change', checkContinueBtnState);
-            }
-        });
-
-        const birthdayInput = document.querySelector('input[name="birthday"]');
-        if (birthdayInput) {
-            birthdayInput.addEventListener('input', checkContinueBtnState);
-            birthdayInput.addEventListener('change', checkContinueBtnState);
-        }
-
-        const petBreedSelect = document.getElementById('my-pet-breed');
-        if (petBreedSelect) {
-            petBreedSelect.addEventListener('change', checkContinueBtnState);
-            // If custom component exists, try to hook its internal change
-            if (petBreedSelect._fursDD && typeof petBreedSelect._fursDD.onChange === 'function') {
-                const orig = petBreedSelect._fursDD.onChange;
-                petBreedSelect._fursDD.onChange = function(...args) {
-                    if (orig) orig.apply(this, args);
-                    checkContinueBtnState();
-                };
+            } catch (e) {
             }
         }
 
-        document.querySelectorAll('input[name="sex"]').forEach(r => r.addEventListener('change', checkContinueBtnState));
+        // ===== Step Navigation =====
+        function goToStep2() {
+            const step1 = document.querySelector('.step-item:nth-child(1)');
+            const step2 = document.querySelector('.step-item:nth-child(2)');
 
-        // Address input listeners with fallbacks
-        const addressInput = document.querySelector('.address-service .input-wrapper input');
-        if (addressInput) {
-            addressInput.addEventListener('input', checkContinueBtnState);
-            addressInput.addEventListener('change', checkContinueBtnState);
-        }
-
-        // Watch for home address toggle
-        const homeAddressOption = document.getElementById('home-address-option');
-        if (homeAddressOption) {
-            homeAddressOption.addEventListener('click', checkContinueBtnState);
-        }
-
-        // Watch for add‑on checkbox changes (dynamic)
-        const addonsContainer = document.getElementById('furs-addons-groomer');
-        if (addonsContainer) {
-            addonsContainer.addEventListener('change', (e) => {
-                if (e.target.type === 'checkbox') checkContinueBtnState();
-            });
-        }
-
-        // Initial check
-        setTimeout(checkContinueBtnState, 200);
-
-        // ---- Broad mutation observer for custom component updates ----
-        // This catches DOM changes from custom components that don't fire standard events
-        // but ONLY on form inputs, not on the button itself
-        let mutationTimeout;
-        const petDetailsForm = document.querySelector('.pet-details-form');
-        if (petDetailsForm && typeof MutationObserver !== 'undefined') {
-            const observer = new MutationObserver((mutations) => {
-                // Ignore mutations on the continue button - only care about form changes
-                const isButtonChange = mutations.every(m =>
-                    m.target.closest('.continue-btn') ||
-                    m.target.classList.contains('continue-btn')
-                );
-                if (isButtonChange) return;
-
-                clearTimeout(mutationTimeout);
-                mutationTimeout = setTimeout(() => {
-                    checkContinueBtnState();
-                }, 400);
-            });
-            observer.observe(petDetailsForm, {
-                attributes: true,
-                attributeFilter: ['class'],
-                subtree: true,
-                characterData: false,
-            });
-        }
-
-        // ---- Try to hook into custom component libraries' internal updates ----
-        // For Furs custom components (pet-type, breeds, etc), they may use internal state
-        const petTypeEl = document.getElementById('my-pet-type');
-        const petBreedEl = document.getElementById('my-pet-breed');
-
-        // Hook BEFORE library initialization to capture the real value setters
-        if (petTypeEl) {
-            const originalPetTypeValue = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(petTypeEl), 'value');
-            if (originalPetTypeValue && originalPetTypeValue.set) {
-                Object.defineProperty(petTypeEl, 'value', {
-                    get: originalPetTypeValue.get,
-                    set: function(val) {
-                        originalPetTypeValue.set.call(this, val);
-                        console.log('[Hook] my-pet-type value changed to:', val);
-                        checkContinueBtnState();
-                    }
-                });
-            }
-        }
-
-        if (petBreedEl) {
-            const originalPetBreedValue = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(petBreedEl), 'value');
-            if (originalPetBreedValue && originalPetBreedValue.set) {
-                Object.defineProperty(petBreedEl, 'value', {
-                    get: originalPetBreedValue.get,
-                    set: function(val) {
-                        originalPetBreedValue.set.call(this, val);
-                        console.log('[Hook] my-pet-breed value changed to:', val);
-                        checkContinueBtnState();
-                    }
-                });
-            }
-        }
-
-        // ---- Continue button click ----
-        const continueBtn = document.querySelector('.continue-btn');
-        if (continueBtn) {
-            continueBtn.addEventListener('click', function(e) {
-                console.log('[Continue Click] Button clicked, active class:', continueBtn.classList.contains('active'));
-                e.preventDefault();
-                if (!continueBtn.classList.contains('active')) {
-                    console.error('[Continue Click] Not active, showing alert');
-                    alert('Please complete all required fields and select at least one add-on.');
-                    return;
+            if (step1) {
+                step1.classList.remove('active');
+                step1.classList.add('inactive');
+                const circle1 = step1.querySelector('.step-circle');
+                if (circle1) {
+                    circle1.style.backgroundColor = '#C9DDA0';
+                    circle1.innerHTML =
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="13" viewBox="0 0 16 13" fill="none"><path d="M14.6667 1.49969L5.50004 10.6664L1.33337 6.49969" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
                 }
-                console.log('[Continue Click] Active! Proceeding to goToStep2()');
-                goToStep2();
+                const label1 = step1.querySelector('.step-label');
+                if (label1) label1.style.color = '#C9DDA0';
+            }
+            if (step2) {
+                step2.classList.remove('inactive');
+                step2.classList.add('active');
+            }
+
+            const progressFill = document.querySelector('.progress-fill');
+            if (progressFill) progressFill.style.width = '100%';
+
+            // Populate confirm page fields from current form data
+            const petDetails = collectPetDetails();
+            if (petDetails.name) {
+                const petNameEl = document.getElementById('confirmPetName');
+                if (petNameEl) petNameEl.textContent =
+                    `${petDetails.name} · ${petDetails.type}${petDetails.breed ? ' · ' + petDetails.breed : ''}`;
+            }
+
+            const addressInput = document.querySelector('.address-service .input-wrapper input');
+            const confirmAddress = document.getElementById('confirmAddress');
+            if (addressInput && confirmAddress) confirmAddress.textContent = addressInput.value.trim() || '—';
+
+            document.getElementById('step1Content').style.display = 'none';
+            document.getElementById('step2Content').style.display = 'block';
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
             });
         }
 
-        // ---- Back button click ----
-        document.addEventListener('click', function(e) {
-            if (e.target && e.target.closest('#backToStep1Btn')) {
-                goToStep1();
+        function goToStep1() {
+            const step1 = document.querySelector('.step-item:nth-child(1)');
+            const step2 = document.querySelector('.step-item:nth-child(2)');
+
+            if (step1) {
+                step1.classList.add('active');
+                step1.classList.remove('inactive');
+                const circle1 = step1.querySelector('.step-circle');
+                if (circle1) {
+                    circle1.style.backgroundColor = '';
+                    circle1.innerHTML = '1';
+                }
+                const label1 = step1.querySelector('.step-label');
+                if (label1) label1.style.color = '';
+            }
+            if (step2) {
+                step2.classList.add('inactive');
+                step2.classList.remove('active');
+            }
+
+            const progressFill = document.querySelector('.progress-fill');
+            if (progressFill) progressFill.style.width = '50%';
+
+            document.getElementById('step1Content').style.display = 'block';
+            document.getElementById('step2Content').style.display = 'none';
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        // ===== Date Picker Opener =====
+        function initDatePickers() {
+            document.querySelectorAll('.form-group').forEach(group => {
+                const input = group.querySelector('input[type="date"]');
+                if (!input || group.querySelector('.picker-opener')) return;
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'picker-opener';
+                btn.setAttribute('aria-label', 'Open date picker');
+                btn.innerHTML = '<span style="position:absolute;left:-624.9375rem">Open date picker</span>';
+
+                const openPicker = () => {
+                    if (typeof input.showPicker === 'function') {
+                        try {
+                            input.showPicker();
+                            return;
+                        } catch (e) {}
+                    }
+                    input.focus();
+                };
+
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    openPicker();
+                });
+                input.addEventListener('click', e => {
+                    e.stopPropagation();
+                    openPicker();
+                });
+                input.addEventListener('keydown', e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openPicker();
+                    }
+                });
+
+                group.appendChild(btn);
+            });
+        }
+
+        // ===== Checkmark Icon Toggles =====
+        function initCheckmarkToggles() {
+            const petNameInput = document.getElementById('petName');
+            const petTypeInput = document.getElementById('my-pet-type');
+
+            if (petNameInput) {
+                petNameInput.addEventListener('input', function() {
+                    const icon = document.getElementById('petNameCheck');
+                    if (icon) icon.classList.toggle('visible', this.value.trim() !== '');
+                });
+            }
+            if (petTypeInput) {
+                petTypeInput.addEventListener('input', function() {
+                    const icon = document.getElementById('petTypeCheck');
+                    if (icon) icon.classList.toggle('visible', this.value.trim() !== '');
+                });
+            }
+
+            try {
+                if (serverPetDetails) {
+                    if (serverPetDetails.name) {
+                        const ic = document.getElementById('petNameCheck');
+                        if (ic) ic.classList.add('visible');
+                    }
+                    if (serverPetDetails.pet_type) {
+                        const ic = document.getElementById('petTypeCheck');
+                        if (ic) ic.classList.add('visible');
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // ===== MAIN DOMContentLoaded =====
+        document.addEventListener('DOMContentLoaded', function() {
+            // Init subsystems
+            initPhotoUpload();
+            initDatePickers();
+            initCheckmarkToggles();
+
+            // Load breed data in background
+            loadPetBreedsData();
+
+            // Set initial visibility immediately (no setTimeout to prevent flash)
+            if (serverPetDetails && serverPetDetails.name) {
+                toggleFormDisplay(true);
+                displayPetDetails({
+                    name: serverPetDetails.name,
+                    type: serverPetDetails.pet_type,
+                    breed: serverPetDetails.breed,
+                    birthday: serverPetDetails.birthday,
+                    sex: serverPetDetails.sex,
+                    weight: serverPetDetails.weight,
+                    notes: serverPetDetails.notes,
+                    photo: serverPetDetails.photo,
+                    address: serverPetDetails.address,
+                    homeAddressToggled: serverPetDetails.home_address_toggled
+                });
+                checkContinueBtnState();
+            } else {
+                toggleFormDisplay(false);
+            }
+
+            // ---- Pet form cancel (delegated) ----
+            document.body.addEventListener('click', function(e) {
+                const cancelBtn = e.target.closest('#petFormCancelBtn');
+
+                if (cancelBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Check if we have saved data
+                    if (serverPetDetails) {
+                        if (confirm('Discard unsaved changes?')) toggleFormDisplay(true);
+                    } else {
+                        // Clear fields
+                        ['petName'].forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) el.value = '';
+                        });
+                        const bi = document.querySelector('input[name="birthday"]');
+                        if (bi) bi.value = '';
+                        const ti = document.getElementById('my-pet-type');
+                        if (ti) ti.value = '';
+                        const bs = document.getElementById('my-pet-breed');
+                        if (bs) {
+                            if (bs._fursDD) bs._fursDD.setValue('');
+                            else bs.value = '';
+                        }
+                        document.querySelectorAll('input[name="sex"]').forEach(r => r.checked = false);
+                        const wi = document.getElementById('petWeight');
+                        if (wi) wi.value = '4';
+                        const ni = document.getElementById('petNotes');
+                        if (ni) ni.value = '';
+                        petPhotoBase64 = null;
+                        const pi = document.getElementById('petPhotoInput');
+                        if (pi) pi.value = '';
+                        const ph = document.getElementById('petPhotoPlaceholder');
+                        if (ph) ph.style.display = 'block';
+                        const ub = document.getElementById('petPhotoUploadBtn');
+                        if (ub) ub.style.display = 'block';
+                        const cw = document.querySelector('.pet-photo-col-wrapper');
+                        if (cw) cw.remove();
+                    }
+                    checkContinueBtnState();
+                }
+            });
+
+            // ---- Pet display Change button ----
+            const petDisplayChangeBtn = document.getElementById('petDisplayChangeBtn');
+            if (petDisplayChangeBtn) {
+                petDisplayChangeBtn.addEventListener('click', function() {
+                    toggleFormDisplay(false);
+                    setTimeout(checkContinueBtnState, 50);
+                });
+            }
+
+            // ---- Live field watchers for continue button ----
+            ['petName', 'my-pet-type', 'my-pet-breed', 'petWeight'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', checkContinueBtnState);
+                    el.addEventListener('change', checkContinueBtnState);
+                }
+            });
+
+            const birthdayInput = document.querySelector('input[name="birthday"]');
+            if (birthdayInput) {
+                birthdayInput.addEventListener('input', checkContinueBtnState);
+                birthdayInput.addEventListener('change', checkContinueBtnState);
+            }
+
+            const petBreedSelect = document.getElementById('my-pet-breed');
+            if (petBreedSelect) {
+                petBreedSelect.addEventListener('change', checkContinueBtnState);
+                // If custom component exists, try to hook its internal change
+                if (petBreedSelect._fursDD && typeof petBreedSelect._fursDD.onChange === 'function') {
+                    const orig = petBreedSelect._fursDD.onChange;
+                    petBreedSelect._fursDD.onChange = function(...args) {
+                        if (orig) orig.apply(this, args);
+                        checkContinueBtnState();
+                    };
+                }
+            }
+
+            document.querySelectorAll('input[name="sex"]').forEach(r => r.addEventListener('change',
+                checkContinueBtnState));
+
+            // Address input listeners with fallbacks
+            const addressInput = document.querySelector('.address-service .input-wrapper input');
+            if (addressInput) {
+                addressInput.addEventListener('input', checkContinueBtnState);
+                addressInput.addEventListener('change', checkContinueBtnState);
+            }
+
+            // Watch for home address toggle
+            const homeAddressOption = document.getElementById('home-address-option');
+            if (homeAddressOption) {
+                homeAddressOption.addEventListener('click', checkContinueBtnState);
+            }
+
+            // Watch for add‑on checkbox changes (dynamic)
+            const addonsContainer = document.getElementById('furs-addons-groomer');
+            if (addonsContainer) {
+                addonsContainer.addEventListener('change', (e) => {
+                    if (e.target.type === 'checkbox') checkContinueBtnState();
+                });
+            }
+
+            // Initial check
+            setTimeout(checkContinueBtnState, 200);
+
+            // ---- Broad mutation observer for custom component updates ----
+            // This catches DOM changes from custom components that don't fire standard events
+            // but ONLY on form inputs, not on the button itself
+            let mutationTimeout;
+            // Reuse petDetailsForm from earlier or get it fresh
+            let petDetailsFormObserver = document.querySelector('.pet-details-form');
+            if (petDetailsFormObserver && typeof MutationObserver !== 'undefined') {
+                const observer = new MutationObserver((mutations) => {
+                    // Ignore mutations on the continue button - only care about form changes
+                    const isButtonChange = mutations.every(m =>
+                        m.target.closest('.continue-btn') ||
+                        m.target.classList.contains('continue-btn')
+                    );
+                    if (isButtonChange) return;
+
+                    clearTimeout(mutationTimeout);
+                    mutationTimeout = setTimeout(() => {
+                        checkContinueBtnState();
+                    }, 400);
+                });
+                observer.observe(petDetailsFormObserver, {
+                    attributes: true,
+                    attributeFilter: ['class'],
+                    subtree: true,
+                    characterData: false,
+                });
+            }
+
+            // ---- Try to hook into custom component libraries' internal updates ----
+            // For Furs custom components (pet-type, breeds, etc), they may use internal state
+            const petTypeEl = document.getElementById('my-pet-type');
+            const petBreedEl = document.getElementById('my-pet-breed');
+
+            // Hook BEFORE library initialization to capture the real value setters
+            if (petTypeEl) {
+                const originalPetTypeValue = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(petTypeEl),
+                    'value');
+                if (originalPetTypeValue && originalPetTypeValue.set) {
+                    Object.defineProperty(petTypeEl, 'value', {
+                        get: originalPetTypeValue.get,
+                        set: function(val) {
+                            originalPetTypeValue.set.call(this, val);
+                            checkContinueBtnState();
+                        }
+                    });
+                }
+            }
+
+            if (petBreedEl) {
+                const originalPetBreedValue = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(petBreedEl),
+                    'value');
+                if (originalPetBreedValue && originalPetBreedValue.set) {
+                    Object.defineProperty(petBreedEl, 'value', {
+                        get: originalPetBreedValue.get,
+                        set: function(val) {
+                            originalPetBreedValue.set.call(this, val);
+                            checkContinueBtnState();
+                        }
+                    });
+                }
+            }
+
+            // ---- Continue button click ----
+            const continueBtn = document.querySelector('.continue-btn');
+            if (continueBtn) {
+                continueBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (!continueBtn.classList.contains('active')) {
+                        alert('Please complete all required fields and select at least one add-on.');
+                        return;
+                    }
+                    goToStep2();
+                });
+            }
+
+            // ---- Back button click ----
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.closest('#backToStep1Btn')) {
+                    goToStep1();
+                }
+            });
+
+            // ---- AJAX Form Submission for Pet Details ----
+            let petDetailsForm = document.getElementById('petDetailsForm');
+            if (petDetailsForm) {
+                petDetailsForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(this);
+                    const saveBtn = document.getElementById('petFormSaveBtn');
+                    const originalText = saveBtn.textContent;
+                    saveBtn.textContent = 'Saving...';
+                    saveBtn.disabled = true;
+
+                    fetch(this.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                // Collect form data to update display immediately
+                                const formData = collectPetDetails();
+                                // Update serverPetDetails so display works correctly
+                                serverPetDetails = {
+                                    name: document.getElementById('petName')?.value,
+                                    pet_type: document.getElementById('my-pet-type')?.value,
+                                    breed: document.getElementById('my-pet-breed')?.value,
+                                    birthday: document.querySelector('input[name="birthday"]')
+                                        ?.value,
+                                    sex: document.querySelector('input[name="sex"]:checked')?.value,
+                                    weight: document.getElementById('petWeight')?.value,
+                                    notes: document.getElementById('petNotes')?.value,
+                                    photo: petPhotoBase64 || document.getElementById('photoBase64')
+                                        ?.value,
+                                    address: document.querySelector(
+                                        '.address-service .input-wrapper input')?.value,
+                                    home_address_toggled: document.getElementById(
+                                            'home-address-option')?.classList.contains(
+                                        'selected') || false
+                                };
+                                // Show the display section with saved data
+                                toggleFormDisplay(true);
+                                displayPetDetails(serverPetDetails);
+                                checkContinueBtnState();
+                            } else {
+                                alert('Failed to save pet details. Please try again.');
+                            }
+                        })
+                        .catch(error => {
+                            alert('An error occurred while saving.');
+                        })
+                        .finally(() => {
+                            saveBtn.textContent = originalText;
+                            saveBtn.disabled = false;
+                        });
+                });
             }
         });
-    });
-</script>
-@endsection
+    </script>

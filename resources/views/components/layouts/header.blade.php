@@ -5,7 +5,7 @@
                 <div class="col-lg-4 ">
                     <div class="logo-toggle-button d-flex justify-content-between">
 
-                        <a href="{{ route('home') }}">
+                        <a href="{{ route('home') }}" wire:navigate>
 
                             <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40" viewBox="0 0 145 40"
                                 fill="none">
@@ -40,10 +40,10 @@
                 </div>
                 <div class="col-lg-8">
                     <ul class="menu-items">
-                        <li><a href="#" class="active">How it works</a></li>
-                        <li><a href="#">For Groomers & Hosts</a></li>
+                        <li><a href="#" class="active" wire:navigate>How it works</a></li>
+                        <li><a href="#" wire:navigate>For Groomers & Hosts</a></li>
                         <!-- <li><a href="#">For Hosts</a></li> -->
-                        <li><a href="#">Help Centre</a></li>
+                        <li><a href="#" wire:navigate>Help Centre</a></li>
                         <li>
                             <div class="session-login-signup-div d-flex align-items-center gap-40">
                                 <div class="messages-content-tab">
@@ -229,7 +229,7 @@
                                         <div
                                             class="view-all-mark-read d-flex align-items-center justify-content-between mt-4">
                                             <a href="{{ url('/messages_notification/messages') }}"
-                                                class="dark-color-font link-tag">View
+                                                class="dark-color-font link-tag" wire:navigate>View
                                                 All</a>
 
                                             <div class="d-flex align-items-center gap-10">
@@ -242,7 +242,7 @@
                                                         stroke="#3B3731" stroke-linecap="round"
                                                         stroke-linejoin="round" />
                                                 </svg>
-                                                <a href="" class="dark-color-font link-tag">Mark as Read</a>
+                                                <a href="" class="dark-color-font link-tag" wire:navigate>Mark as Read</a>
                                             </div>
                                         </div>
                                     </div>
@@ -533,7 +533,7 @@
                                         <div
                                             class="view-all-mark-read d-flex align-items-center justify-content-between mt-4">
                                             <a href="{{ url('/messages_notification/notifications') }}"
-                                                class="dark-color-font link-tag">View
+                                                class="dark-color-font link-tag" wire:navigate>View
                                                 All</a>
 
                                             <div class="d-flex align-items-center gap-10">
@@ -546,7 +546,7 @@
                                                         stroke="#3B3731" stroke-linecap="round"
                                                         stroke-linejoin="round" />
                                                 </svg>
-                                                <a href="" class="dark-color-font link-tag">Mark as Read</a>
+                                                <a href="" class="dark-color-font link-tag" wire:navigate>Mark as Read</a>
                                             </div>
                                         </div>
                                     </div>
@@ -587,7 +587,7 @@
                                         </div>
                                         @endauth
                                         <div class="profile-menu">
-                                            <a href="#" class="profile-item d-flex align-items-center gap-40">
+                                            <a href="#" class="profile-item d-flex align-items-center gap-40" wire:navigate>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="22"
                                                     viewBox="0 0 20 22" fill="none">
                                                     <path
@@ -596,7 +596,7 @@
                                                 </svg>
                                                 <p class="medium-light-font">My Account</p>
                                             </a>
-                                            <a href="#" class="profile-item d-flex align-items-center gap-40">
+                                            <a href="#" class="profile-item d-flex align-items-center gap-40" wire:navigate>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="22"
                                                     viewBox="0 0 18 22" fill="none">
                                                     <path
@@ -605,7 +605,7 @@
                                                 </svg>
                                                 <p class="medium-light-font">My Bookings</p>
                                             </a>
-                                            <a href="#" class="profile-item d-flex align-items-center gap-40">
+                                            <a href="#" class="profile-item d-flex align-items-center gap-40" wire:navigate>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="21" height="22"
                                                     viewBox="0 0 21 22" fill="none">
                                                     <path
@@ -614,7 +614,7 @@
                                                 </svg>
                                                 <p class="medium-light-font">Account Settings</p>
                                             </a>
-                                            <a href="#" class="profile-item d-flex align-items-center gap-40">
+                                            <a href="#" class="profile-item d-flex align-items-center gap-40" wire:navigate>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="19" height="22"
                                                     viewBox="0 0 19 22" fill="none">
                                                     <path
@@ -641,7 +641,7 @@
                                         </div>
                                         @else
                                         <div class="logout-option">
-                                            <a href="{{ route('login') }}" class="mt-3 d-flex align-items-center gap-40">
+                                            <a href="{{ route('login') }}" class="mt-3 d-flex align-items-center gap-40" wire:navigate>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="17" height="22"
                                                     viewBox="0 0 17 22" fill="none">
                                                     <path

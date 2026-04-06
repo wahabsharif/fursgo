@@ -1,5 +1,3 @@
-@extends('layouts.app')
-
 @section('styles')
     <style>
         * {
@@ -249,10 +247,9 @@
             transform: translateY(-5px);
         }
     </style>
-@endsection
 
 
-@section('content')
+<!-- Business Landing Content -->
 
     <section class="container">
         <div class="blp-hero">
@@ -427,5 +424,3 @@
             </div>
         </div>
     </section>
-
-@endsection

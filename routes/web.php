@@ -3,10 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use Illuminate\Support\Facades\Artisan;
-use App\Http\Controllers\SearchController;
 use App\Http\Controllers\PetDetailController;
-
-
 
 
 Route::get('/clear', function () {
@@ -14,28 +11,35 @@ Route::get('/clear', function () {
     return "All caches cleared!";
 });
 
+// Public pages - converted to Volt
+Volt::route('/', 'home')->name('home');
+Volt::route('/business-landing-page', 'business.landing')->name('business-landing-page');
+Volt::route('/support-and-assistance/help-and-support', 'help.support')->name('help-and-support');
+Volt::route('/support-and-assistance/search', 'help.search')->name('search');
 
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+// Search results - LiveWire component
+Volt::route('/search-results', 'search.results')->name('search-results');
 
-Route::get('/booking-groomer', function () {
-    $petDetails = PetDetailController::getPetDetailsForUser();
-    return view('booking-groomer', compact('petDetails'));
-})->middleware(['auth'])->name('booking-groomer');
+// Business pages
+Volt::route('/business-homepage-groomer-space-owner', 'business.homepage')->name('business-homepage-groomer-space-owner');
 
+// Authenticated pages
+Volt::route('/booking-groomer', 'booking.groomer')
+    ->middleware(['auth'])
+    ->name('booking-groomer');
+
+Volt::route('/my-account/my-profile', 'account.profile')
+    ->middleware(['auth'])
+    ->name('my-profile');
+
+Volt::route('/account-and-setting/settings', 'account.settings')
+    ->middleware(['auth'])
+    ->name('account-and-setting');
+
+// Cookie and overlay components
 Route::get('/cookies-overlay-card', function () {
     return view('components.ui.cookies-overlay-card');
 })->name('cookies-overlay-card');
-
-Route::get('/business-homepage-groomer-space-owner', function () {
-    return view('business-homepage-groomer-space-owner');
-})->name('business-homepage-groomer-space-owner');
-
-Route::get('/business-landing-page', function () {
-    return view('business-landing-page');
-})->name('business-landing-page');
-
 
 Route::get('/cookies', function () {
     return view('components.ui.cookies');
@@ -45,69 +49,9 @@ Route::get('/rating-overlay-card', function () {
     return view('components.ui.rating-overlay-card');
 })->name('rating-overlay-card');
 
-Route::get('/search-results', function () {
-    return view('search-results');
-})->name('search-results');
-
-Route::get('/search-results', [SearchController::class, 'index'])->name('search-results');
-
-
-Route::get('/account-and-setting/settings', function () {
-    return view('account-and-setting');
-})->name('account-and-setting');
-
-Route::get('/my-account/my-profile', function () {
-    return view('my-profile');
-})->name('my-profile');
-
-Route::get('/support-and-assistance/search', function () {
-    return view('search');
-})->name('search');
-
-Route::get('/support-and-assistance/help-and-support', function () {
-    return view('help-and-support');
-})->name('help-and-support');
-
-Route::get('/groomer-unavailability/location-unavailability', function () {
-    return view('groomer-unavailability.location-unavailability');
-})->name('groomer-unavailability.location-unavailability');
-
-Route::get('/groomer-unavailability/location-unavailability', function () {
-
-    $groomers = collect([
-        [
-            'name' => 'Sarah W.',
-            'studio_name' => 'Sarah’s Grooming Studio',
-            'distance' => '2.5',
-            'rating' => '4.3',
-            'reviews_count' => 20,
-            'experience_text' => '6+ years experience',
-            'price' => 38,
-            'image_url' => 'assets/images/card1.png',
-            'tags' => ['Home Visit'],
-            'slots' => ['Mon 1, 08:30 AM'],
-            'is_top_rated' => true,
-        ]
-    ]);
-
-    $spaces = collect([
-        [
-            'name' => 'Pet Care Space',
-            'location' => 'London',
-            'price' => 25,
-            'image_url' => 'assets/images/space1.png',
-        ]
-    ]);
-
-    return view('groomer-unavailability.location-unavailability', compact('groomers', 'spaces'));
-});
-
-
-
-
-
-
-
+// Groomer unavailability
+Volt::route('/groomer-unavailability/location-unavailability', 'groomer.unavailability')
+    ->name('groomer-unavailability.location-unavailability');
 
 // ===============================================================
 // Authenticated Routes
@@ -123,10 +67,11 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('settings/password', 'settings.password')->name('settings.password');
     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
 
-    // Pet Details Routes
-    Route::get('/pet-details', [PetDetailController::class, 'show'])->name('pet-details.show');
+    // Pet Details - handled by LiveWire Volt component
+    Volt::route('/pet-details', 'pet-details.manager')->name('pet-details.show');
+
+    // Pet Details form submission (traditional POST for booking-groomer page)
     Route::post('/pet-details', [PetDetailController::class, 'store'])->name('pet-details.store');
-    Route::delete('/pet-details', [PetDetailController::class, 'destroy'])->name('pet-details.destroy');
 });
 
 require __DIR__ . '/auth.php';
