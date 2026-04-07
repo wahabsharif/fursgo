@@ -1,28 +1,14 @@
-<IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews -Indexes
-    </IfModule>
+RewriteEngine On
+RewriteBase /projects/fursgo/
 
-    RewriteEngine On
-    RewriteBase /projects/fursgo/
+# Handle Authorization Header
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Handle Authorization Header
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+# If request is for a real file/directory in public folder, serve it
+RewriteCond %{DOCUMENT_ROOT}/projects/fursgo/public/$1 -f [OR]
+RewriteCond %{DOCUMENT_ROOT}/projects/fursgo/public/$1 -d
+RewriteRule ^(.*)$ public/$1 [L]
 
-    # Redirect Trailing Slashes If Not A Folder...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
-
-    # If the request is for a real file or directory in public, serve it
-    RewriteCond %{REQUEST_URI} ^(.*)$
-    RewriteCond %{DOCUMENT_ROOT}/projects/fursgo/public%1 -f [OR]
-    RewriteCond %{DOCUMENT_ROOT}/projects/fursgo/public%1 -d
-    RewriteRule ^(.*)$ public/$1 [L]
-
-    # Send all other requests to public/index.php
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)$ public/index.php [L]
-</IfModule>
+# Otherwise, send to index.php for Laravel routing
+RewriteRule ^(.*)$ public/index.php [L]

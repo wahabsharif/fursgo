@@ -4,6 +4,7 @@
     </IfModule>
 
     RewriteEngine On
+    RewriteBase /projects/fursgo/
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
