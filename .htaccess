@@ -1,14 +1,11 @@
-RewriteEngine On
-RewriteBase /projects/fursgo/
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /projects/fursgo/
 
-# Handle Authorization Header
-RewriteCond %{HTTP:Authorization} .
-RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-# If request is for a real file/directory in public folder, serve it
-RewriteCond %{DOCUMENT_ROOT}/projects/fursgo/public/$1 -f [OR]
-RewriteCond %{DOCUMENT_ROOT}/projects/fursgo/public/$1 -d
-RewriteRule ^(.*)$ public/$1 [L]
-
-# Otherwise, send to index.php for Laravel routing
-RewriteRule ^(.*)$ public/index.php [L]
+    # Rewrite all requests to public folder
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
