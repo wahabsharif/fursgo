@@ -1,11 +1,20 @@
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteBase /projects/fursgo/
+Options +FollowSymLinks
+RewriteEngine On
 
-    # Handle Authorization Header
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+# Set the base path for rewrites
+RewriteBase /projects/fursgo/
 
-    # Rewrite all requests to public folder
-    RewriteRule ^(.*)$ public/$1 [L]
-</IfModule>
+# Handle Authorization Header
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# If the request is for an existing file in public, serve it
+RewriteCond %{DOCUMENT_ROOT}/projects/fursgo/public/$1 -f
+RewriteRule ^(.*)$ public/$1 [L]
+
+# If the request is for an existing directory in public, serve it
+RewriteCond %{DOCUMENT_ROOT}/projects/fursgo/public/$1 -d
+RewriteRule ^(.*)$ public/$1 [L]
+
+# Otherwise, route everything to public/index.php
+RewriteRule ^(.*)$ public/index.php [L]
