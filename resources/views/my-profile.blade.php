@@ -6443,7 +6443,7 @@ line-height: normal;">
         let petBreedsData = null;
 
         // Load pet breeds JSON once
-        fetch("{{ asset('assets/data/pet-breeds.json') }}")
+        fetch("{{ asset('data/pet-breeds.json') }}")
             .then(res => res.json())
             .then(data => {
                 petBreedsData = data.petTypes;
@@ -6551,7 +6551,7 @@ line-height: normal;">
     async function loadProfilePetBreedsData() {
         try {
             const response = await fetch(
-                "{{ asset('assets/data/pet-breeds.json') }}");
+                "{{ asset('data/pet-breeds.json') }}");
             if (!response.ok) throw new Error('Failed to load pet breeds');
             const data = await response.json();
             profilePetBreedsData = data;

@@ -2041,7 +2041,9 @@
 
         async function loadPetBreedsData() {
             try {
-                const response = await fetch('/data/pet-breeds.json');
+                const baseUrlMeta = document.querySelector('meta[name="asset-base-url"]');
+                const baseUrl = baseUrlMeta ? baseUrlMeta.content : '';
+                const response = await fetch(`${baseUrl}data/pet-breeds.json`);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 petBreedsData = await response.json();
                 setupPetTypeAutoDetection();
