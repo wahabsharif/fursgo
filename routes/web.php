@@ -56,7 +56,7 @@ Volt::route('/groomer-unavailability/location-unavailability', 'groomer.unavaila
 // ===============================================================
 // Authenticated Routes
 // ===============================================================
-Route::view('dashboard', 'dashboard')
+Volt::route('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 

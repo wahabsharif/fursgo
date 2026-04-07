@@ -7,9 +7,9 @@
     $segments = request()->segments();
 
     if (empty($segments)) {
-    $pageTitle = 'Fursgo';
+    $pageTitle = 'Fursgo Dashboard';
     } else {
-    $pageTitle = 'Fursgo - ' . collect($segments)
+    $pageTitle = 'Fursgo Dashboard - ' . collect($segments)
     ->map(fn($s) => ucfirst(str_replace(['-', '_'], ' ', $s)))
     ->implode(' - ');
     }
@@ -23,7 +23,6 @@
 
 <body>
 
-    <x-common.header />
 
     <main>
         @if(isset($slot))
@@ -33,8 +32,7 @@
         @endif
     </main>
 
-    <x-common.chat-btn />
-    <x-common.footer />
+    <x-layouts.footer />
 
     @stack('styles')
 
