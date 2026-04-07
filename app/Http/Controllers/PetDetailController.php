@@ -13,40 +13,52 @@ class PetDetailController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'photo' => 'nullable|string',
-            'birthday' => 'required|date',
-            'pet_type' => 'required|string|max:255',
-            'breed' => 'required|string|max:255',
-            'sex' => 'required|string|in:male,female',
-            'weight' => 'required|numeric|min:0|max:999.99',
-            'notes' => 'nullable|string|max:1000',
-            'address' => 'nullable|string|max:500',
-            'home_address_toggled' => 'boolean',
-        ]);
-
-        // Convert checkbox to boolean
-        $validated['home_address_toggled'] = $request->has('home_address_toggled') || $request->input('home_address_toggled') === 'true';
-
-        $petDetail = PetDetail::updateOrCreate(
-            ['user_id' => Auth::id()],
-            array_merge($validated, ['user_id' => Auth::id()])
-        );
-
-        // Store in session for immediate display
-        session(['pet_details' => $petDetail]);
-
-        // Return JSON for AJAX requests, redirect for traditional form submissions
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Pet details saved successfully!',
-                'data' => $petDetail
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'photo' => 'nullable|string',
+                'birthday' => 'required|date',
+                'pet_type' => 'required|string|max:255',
+                'breed' => 'required|string|max:255',
+                'sex' => 'required|string|in:male,female',
+                'weight' => 'required|numeric|min:0|max:999.99',
+                'notes' => 'nullable|string|max:1000',
+                'address' => 'nullable|string|max:500',
+                'home_address_toggled' => 'boolean',
             ]);
-        }
 
-        return redirect()->back()->with('success', 'Pet details saved successfully!');
+            // Convert checkbox to boolean
+            $validated['home_address_toggled'] = $request->has('home_address_toggled') || $request->input('home_address_toggled') === 'true' || $request->input('home_address_toggled') === '1';
+
+            $petDetail = PetDetail::updateOrCreate(
+                ['user_id' => Auth::id()],
+                array_merge($validated, ['user_id' => Auth::id()])
+            );
+
+            // Store in session for immediate display
+            session(['pet_details' => $petDetail]);
+
+            // Return JSON for AJAX requests, redirect for traditional form submissions
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Pet details saved successfully!',
+                    'data' => $petDetail
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Pet details saved successfully!');
+        } catch (\Exception $e) {
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Failed to save pet details. Please try again.');
+        }
     }
 
     /**
