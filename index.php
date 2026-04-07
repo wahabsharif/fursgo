@@ -17,16 +17,17 @@ if (strpos($uri, $basePath) === 0) {
     $requestedPath = substr($uri, strlen($basePath));
 }
 
-// If empty path, default to index
+// If empty path, route to Laravel
 if (empty($requestedPath) || $requestedPath === '/') {
-    $requestedPath = '/index.php';
+    require __DIR__ . '/public/index.php';
+    exit;
 }
 
 // Build the full path to the public directory
 $publicPath = __DIR__ . '/public' . $requestedPath;
 
-// If it's a real file or directory, serve it directly
-if (is_file($publicPath)) {
+// If it's a real file (but not PHP), serve it directly
+if (is_file($publicPath) && !preg_match('/\.php$/', $requestedPath)) {
     // Serve the file
     $mimeTypes = [
         'css' => 'text/css',
