@@ -664,6 +664,7 @@
 </header>
 
 <script>
+(function() {
     function initHeaderDropdowns() {
         const notificationBtn = document.querySelector('.notification-btn');
         const messagesBtn = document.querySelector('.messages-btn');
@@ -773,4 +774,5 @@
             if (userProfileOptions) userProfileOptions.style.display = 'none';
         }
     });
+})();
 </script>

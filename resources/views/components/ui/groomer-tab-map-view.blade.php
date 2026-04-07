@@ -154,6 +154,7 @@
 
 @push('script')
 <script>
+(function() {
     // Initialize map when the DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
         // Example map initialization (replace with your actual map logic)
@@ -166,21 +167,13 @@
             // Add markers for each groomer
             @foreach($groomers as $groomer)
             @if(isset($groomer['latitude']) && isset($groomer['longitude']))
-            L.marker([{
-                    {
-                        $groomer['latitude']
-                    }
-                }, {
-                    {
-                        $groomer['longitude']
-                    }
-                }])
-                .bindPopup('{{ $groomer['
-                    name '] }}')
+            L.marker([{{ $groomer['latitude'] }}, {{ $groomer['longitude'] }}])
+                .bindPopup('{{ $groomer['name'] }}')
                 .addTo(map);
             @endif
             @endforeach
         }
     });
+})();
 </script>
 @endpush

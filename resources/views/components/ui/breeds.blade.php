@@ -24,6 +24,7 @@
 
 @push('script')
 <script>
+(function() {
     document.addEventListener('DOMContentLoaded', function() {
         // Ensure the furs‑dropdown is initialised
         const select = document.getElementById('{{ $id }}');
@@ -31,5 +32,6 @@
             select._fursDD = new FursDropdown(select);
         }
     });
+})();
 </script>
 @endpush

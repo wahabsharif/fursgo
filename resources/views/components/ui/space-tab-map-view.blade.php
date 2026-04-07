@@ -173,41 +173,26 @@
 
 @push('script')
 <script>
+(function() {
     document.addEventListener('DOMContentLoaded', function() {
         // Check if Leaflet is available
         if (typeof L !== 'undefined') {
-            var map = L.map('{{ $mapId }}').setView([{
-                {
-                    $mapCenter['lat']
-                }
-            }, {
-                {
-                    $mapCenter['lng']
-                }
-            }], 13);
+            var map = L.map('{{ $mapId }}').setView([{{ $mapCenter['lat'] }}, {{ $mapCenter['lng'] }}], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
             @foreach($mapMarkers as $marker)
-            L.marker([{
-                    {
-                        $marker['lat']
-                    }
-                }, {
-                    {
-                        $marker['lng']
-                    }
-                }])
+            L.marker([{{ $marker['lat'] }}, {{ $marker['lng'] }}])
                 .addTo(map)
             @if(isset($marker['popup']))
-                .bindPopup('{{ addslashes($marker['
-                    popup ']) }}')
+                .bindPopup('{{ addslashes($marker['popup']) }}')
             @endif;
             @endforeach
         } else {
             console.warn('Leaflet library is not loaded. Please include Leaflet CSS and JS.');
         }
     });
+})();
 </script>
 @endpush

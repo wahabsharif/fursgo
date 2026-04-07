@@ -32,6 +32,7 @@
 
 @push('script')
 <script>
+(function() {
     document.addEventListener('DOMContentLoaded', function() {
         // If the shared JS is not loaded, load it first (optional)
         if (typeof setupPetTypeAutoDetection === 'undefined') {
@@ -52,5 +53,6 @@
             checkIcon.classList.toggle('visible', input.value.trim() !== '');
         }
     });
+})();
 </script>
 @endpush

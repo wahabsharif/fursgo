@@ -64,7 +64,7 @@ new #[Layout('layouts.app')] class extends Component {
 
         Auth::login($user);
 
-        redirect()->route('home')->navigate();
+        $this->redirectRoute('home', navigate: true);
     }
 };
 ?>
