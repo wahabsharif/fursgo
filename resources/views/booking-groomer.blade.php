@@ -1754,6 +1754,7 @@
                             @csrf
                             <input type="hidden" name="photo" id="photoBase64"
                                 value="{{ $petDetails->photo ?? '' }}">
+                            <input type="hidden" name="home_address_toggled" id="homeAddressToggled" value="0">
                             <div>
                                 <h2>Pet Details</h2>
                             </div>
@@ -1880,7 +1881,7 @@
                                             d="M14.6464 15.3535C14.8416 15.5487 15.1582 15.5487 15.3535 15.3535C15.5487 15.1582 15.5487 14.8416 15.3535 14.6464L14.9999 14.9999L14.6464 15.3535ZM9.70581 9.70581L9.35226 10.0594L14.6464 15.3535L14.9999 14.9999L15.3535 14.6464L10.0594 9.35226L9.70581 9.70581Z"
                                             fill="#3B3731" />
                                     </svg>
-                                    <input placeholder="Start typing address..." />
+                                    <input placeholder="Start typing address..." name="address" id="serviceAddress" />
                                 </div>
                             </div>
                             <div class="option" id="home-address-option"
@@ -2201,7 +2202,7 @@
                 const petWeight = (document.getElementById('petWeight')?.value || '').trim();
                 const birthday = (document.querySelector('input[name="birthday"]')?.value || '').trim();
                 const sex = (document.querySelector('input[name="sex"]:checked')?.value || '').trim();
-                const addressInput = (document.querySelector('.address-service .input-wrapper input')?.value || '').trim();
+                const addressInput = (document.getElementById('serviceAddress')?.value || '').trim();
                 const homeAddressToggled = document.getElementById('home-address-option')?.classList.contains('selected') ||
                     false;
 
@@ -2238,6 +2239,11 @@
         // ===== Address Toggle =====
         window.toggleHomeAddress = function(el) {
             el.classList.toggle('selected');
+            const isSelected = el.classList.contains('selected');
+            const hiddenInput = document.getElementById('homeAddressToggled');
+            if (hiddenInput) {
+                hiddenInput.value = isSelected ? '1' : '0';
+            }
             setTimeout(checkContinueBtnState, 100);
         };
 
@@ -2344,8 +2350,8 @@
                 weight: (document.getElementById('petWeight')?.value ?? ''),
                 notes: (document.getElementById('petNotes')?.value ?? '').trim(),
                 photo: petPhotoBase64,
-                address: (document.querySelector('.address-service .input-wrapper input')?.value ?? '').trim(),
-                homeAddressToggled: document.getElementById('home-address-option')?.classList.contains('selected') || false
+                address: (document.getElementById('serviceAddress')?.value ?? '').trim(),
+                homeAddressToggled: document.getElementById('homeAddressToggled')?.value === '1' || false
             };
         }
 
@@ -2511,9 +2517,9 @@
                     `${petDetails.name} · ${petDetails.type}${petDetails.breed ? ' · ' + petDetails.breed : ''}`;
             }
 
-            const addressInput = document.querySelector('.address-service .input-wrapper input');
+            const serviceAddress = document.getElementById('serviceAddress');
             const confirmAddress = document.getElementById('confirmAddress');
-            if (addressInput && confirmAddress) confirmAddress.textContent = addressInput.value.trim() || '—';
+            if (serviceAddress && confirmAddress) confirmAddress.textContent = serviceAddress.value.trim() || '—';
 
             document.getElementById('step1Content').style.display = 'none';
             document.getElementById('step2Content').style.display = 'block';
@@ -2742,16 +2748,23 @@
                 checkContinueBtnState));
 
             // Address input listeners with fallbacks
-            const addressInput = document.querySelector('.address-service .input-wrapper input');
-            if (addressInput) {
-                addressInput.addEventListener('input', checkContinueBtnState);
-                addressInput.addEventListener('change', checkContinueBtnState);
+            const serviceAddress = document.getElementById('serviceAddress');
+            if (serviceAddress) {
+                serviceAddress.addEventListener('input', checkContinueBtnState);
+                serviceAddress.addEventListener('change', checkContinueBtnState);
             }
 
             // Watch for home address toggle
             const homeAddressOption = document.getElementById('home-address-option');
+            const homeAddressToggled = document.getElementById('homeAddressToggled');
             if (homeAddressOption) {
-                homeAddressOption.addEventListener('click', checkContinueBtnState);
+                homeAddressOption.addEventListener('click', function() {
+                    checkContinueBtnState();
+                });
+            }
+            // Also watch the hidden input for changes
+            if (homeAddressToggled) {
+                homeAddressToggled.addEventListener('change', checkContinueBtnState);
             }
 
             // Watch for add‑on checkbox changes (dynamic)
@@ -2882,11 +2895,8 @@
                                     notes: document.getElementById('petNotes')?.value,
                                     photo: petPhotoBase64 || document.getElementById('photoBase64')
                                         ?.value,
-                                    address: document.querySelector(
-                                        '.address-service .input-wrapper input')?.value,
-                                    home_address_toggled: document.getElementById(
-                                            'home-address-option')?.classList.contains(
-                                        'selected') || false
+                                    address: document.getElementById('serviceAddress')?.value,
+                                    home_address_toggled: document.getElementById('homeAddressToggled')?.value === '1' || false
                                 };
                                 // Show the display section with saved data
                                 toggleFormDisplay(true);
