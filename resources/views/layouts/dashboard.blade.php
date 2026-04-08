@@ -23,7 +23,8 @@
 
 <body>
 
-    <x-common.sidebar />
+    <x-common.header variant="dashboard" />
+    {{-- <x-common.sidebar /> --}}
 
     <main>
         @if(isset($slot))
