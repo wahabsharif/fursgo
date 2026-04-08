@@ -1,7 +1,7 @@
 @props(['variant' => null])
 
 <footer class="mt-5 mb-5"
-    style="padding: 6rem; {{ $variant === 'dashboard' ? 'max-width: 110rem; margin: 0 auto; width: 100%;' : '' }}">
+    style="padding: 6rem; {{ $variant === 'dashboard' ? 'max-width: 110rem; margin: 0 auto; width: 100%; padding: 0' : '' }}">
     <section class="section">
         <div class="{{ $variant === 'dashboard' ? 'container-fluid' : 'container' }}">
             <div class="row align-items-end">
