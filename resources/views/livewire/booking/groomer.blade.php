@@ -14,5 +14,7 @@ new class extends Component {
 }; ?>
 
 <div>
-    @include('booking-groomer', ['petDetails' => $petDetails])
+    @include('booking-groomer', [
+        'petDetails' => $petDetails,
+    ])
 </div>

@@ -35,8 +35,8 @@ class PetDetailController extends Controller
                 array_merge($validated, ['user_id' => Auth::id()])
             );
 
-            // Store in session for immediate display
-            session(['pet_details' => $petDetail]);
+            // Store only pet ID in session (not the full object with photo) to avoid large payload
+            session(['pet_details_id' => $petDetail->id]);
 
             // Return JSON for AJAX requests, redirect for traditional form submissions
             if ($request->ajax() || $request->wantsJson()) {
@@ -48,6 +48,10 @@ class PetDetailController extends Controller
             }
 
             return redirect()->back()->with('success', 'Pet details saved successfully!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
         } catch (\Exception $e) {
 
             if ($request->ajax() || $request->wantsJson()) {
@@ -57,7 +61,9 @@ class PetDetailController extends Controller
                 ], 500);
             }
 
-            return redirect()->back()->with('error', 'Failed to save pet details. Please try again.');
+            return redirect()->back()
+                ->with('error', 'Failed to save pet details: ' . $e->getMessage())
+                ->withInput();
         }
     }
 
@@ -70,11 +76,6 @@ class PetDetailController extends Controller
             return null;
         }
 
-        // First check session for recently saved data
-        if (session()->has('pet_details')) {
-            return session('pet_details');
-        }
-
         return PetDetail::where('user_id', Auth::id())->first();
     }
 
@@ -84,7 +85,7 @@ class PetDetailController extends Controller
     public function destroy()
     {
         PetDetail::where('user_id', Auth::id())->delete();
-        session()->forget('pet_details');
+        session()->forget(['pet_details', 'pet_details_id']);
 
         return redirect()->back()->with('success', 'Pet details deleted successfully!');
     }

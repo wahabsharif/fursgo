@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->text('photo')->nullable();
+            $table->longText('photo')->nullable();
             $table->date('birthday');
             $table->string('pet_type');
             $table->string('breed');

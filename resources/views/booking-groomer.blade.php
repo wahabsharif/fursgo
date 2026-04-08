@@ -703,7 +703,7 @@
             align-items: flex-start;
             position: relative;
             /* border-bottom: .0625rem solid #FFC97A;
-                                                                                                                                                            padding-bottom: 32px; */
+                                                                                                                                                                        padding-bottom: 32px; */
         }
 
         .service-summary>div:nth-child(2)>div>svg {
@@ -1183,7 +1183,9 @@
 
         .pet-details-display-content {
             display: flex;
-            gap: 64px;
+            gap: 47px;
+            justify-content: center;
+            align-items: center;
         }
 
         .pet-detail-item {
@@ -1261,7 +1263,7 @@
             align-items: center;
             gap: 1.25rem;
             width: 100%;
-            margin-bottom: 1.25rem;
+            margin: 1.25rem 0;
         }
 
         .pet-photo-action-btns {
@@ -1379,7 +1381,7 @@
             font-style: normal;
             font-weight: 600;
             line-height: normal;
-            margin-top: .625rem;
+            /* margin-top: .625rem; */
         }
 
         .form-grid>div>label>span {
@@ -1749,12 +1751,111 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- Pet Details Display Section (shown when pet exists) -->
+                        @if ($petDetails)
+                            <div class="pet-details-display active" id="petDetailsDisplay">
+                                <div class="pet-details-display-content" id="petDetailsContent">
+                                    @if ($petDetails->photo)
+                                        <div id="petDisplayPhoto">
+                                            <img src="{{ $petDetails->photo }}" alt="Pet photo"
+                                                style="width:5.3125rem;height:5.3125rem;border-radius:50%;object-fit:cover;flex-shrink:0;">
+                                        </div>
+                                    @endif
+                                    <div class="pet-detail-item">
+                                        <label>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15"
+                                                viewBox="0 0 16 15" fill="none">
+                                                <path
+                                                    d="M8 6.02632C5.73786 6.02632 3.82643 8.06405 3.20929 10.6813C2.93786 11.8323 3.34714 13.0539 4.35179 13.6279C5.14821 14.0829 6.33286 14.5 8 14.5C9.66714 14.5 10.8521 14.0829 11.6486 13.6279C12.6532 13.0539 13.0621 11.8323 12.7907 10.6813C12.1736 8.06368 10.2621 6.02632 8 6.02632ZM0.5 5.45305C0.5 6.47063 1.13929 7.5 1.92857 7.5C2.71786 7.5 3.35714 6.47063 3.35714 5.45305C3.35714 4.43547 2.71786 3.81579 1.92857 3.81579C1.13929 3.81579 0.5 4.43584 0.5 5.45305ZM15.5 5.45305C15.5 6.47063 14.8607 7.5 14.0714 7.5C13.2821 7.5 12.6429 6.47063 12.6429 5.45305C12.6429 4.43547 13.2821 3.81579 14.0714 3.81579C14.8607 3.81579 15.5 4.43584 15.5 5.45305ZM4.25 2.13726C4.25 3.15484 4.88929 4.18421 5.67857 4.18421C6.46786 4.18421 7.10714 3.15484 7.10714 2.13726C7.10714 1.11968 6.46786 0.5 5.67857 0.5C4.88929 0.5 4.25 1.12005 4.25 2.13726ZM11.75 2.13726C11.75 3.15484 11.1107 4.18421 10.3214 4.18421C9.53214 4.18421 8.89286 3.15484 8.89286 2.13726C8.89286 1.11968 9.53214 0.5 10.3214 0.5C11.1107 0.5 11.75 1.12005 11.75 2.13726Z"
+                                                    stroke="#9D9B98" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                            </svg>
+                                            {{ $petDetails->name ?: 'Unnamed Pet' }}
+                                        </label>
+                                        <span>{{ $petDetails->pet_type ?: 'Not provided' }} <span
+                                                class="dot"></span>
+                                            {{ $petDetails->breed ?: 'Not provided' }}</span>
+                                    </div>
+                                    <div class="pet-detail-item">
+                                        <label>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="17"
+                                                viewBox="0 0 15 17" fill="none">
+                                                <path
+                                                    d="M1.27778 11.7778V14.5C1.27778 14.9126 1.44167 15.3082 1.73339 15.5999C2.02511 15.8917 2.42077 16.0556 2.83333 16.0556H12.1667C12.5792 16.0556 12.9749 15.8917 13.2666 15.5999C13.5583 15.3082 13.7222 14.9126 13.7222 14.5V11.7778M0.5 9.83333V9.05556C0.5 8.643 0.663888 8.24734 0.955612 7.95561C1.24733 7.66389 1.643 7.5 2.05556 7.5H12.9444C13.357 7.5 13.7527 7.66389 14.0444 7.95561C14.3361 8.24734 14.5 8.643 14.5 9.05556V9.83333M7.5 5.16667V7.5M7.5 5.16667C8.48156 5.16667 9.05556 4.41378 9.05556 3.125C9.05556 1.83622 7.5 0.5 7.5 0.5C7.5 0.5 5.94444 1.83622 5.94444 3.125C5.94444 4.41378 6.51844 5.16667 7.5 5.16667Z"
+                                                    stroke="#9D9B98" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                                <path
+                                                    d="M0.5 9.8335C0.5 10.4523 0.745833 11.0458 1.18342 11.4834C1.621 11.921 2.21449 12.1668 2.83333 12.1668C3.45217 12.1668 4.04566 11.921 4.48325 11.4834C4.92083 11.0458 5.16667 10.4523 5.16667 9.8335C5.16667 10.4523 5.4125 11.0458 5.85008 11.4834C6.28767 11.921 6.88116 12.1668 7.5 12.1668C8.11884 12.1668 8.71233 11.921 9.14992 11.4834C9.5875 11.0458 9.83333 10.4523 9.83333 9.8335C9.83333 10.4523 10.0792 11.0458 10.5168 11.4834C10.9543 11.921 11.5478 12.1668 12.1667 12.1668C12.7855 12.1668 13.379 11.921 13.8166 11.4834C14.2542 11.0458 14.5 10.4523 14.5 9.8335"
+                                                    stroke="#9D9B98" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                            </svg>
+                                            Birthday
+                                        </label>
+                                        <span>
+                                            @if ($petDetails->birthday)
+                                                {{ \Carbon\Carbon::parse($petDetails->birthday)->format('d / m / Y') }}
+                                            @else
+                                                Not provided
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <div class="pet-detail-item">
+                                        <label>
+                                            <svg fill="#9D9B98" width="15" height="15"
+                                                viewBox="0 0 61.13 61.13" xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M27.482,34.031v12.317h-6.92c-1.703,0-3.084,1.381-3.084,3.084s1.381,3.084,3.084,3.084h6.92v5.531c0,1.703,1.381,3.084,3.084,3.084s3.084-1.381,3.084-3.084v-5.531h6.92c1.703,0,3.084-1.381,3.084-3.084s-1.381-3.084-3.084-3.084h-6.92V34.031c7.993-1.458,14.072-8.467,14.072-16.874C47.723,7.697,40.026,0,30.566,0c-9.46,0-17.157,7.697-17.157,17.157C13.409,25.564,19.489,32.573,27.482,34.031z M30.566,6.169c6.059,0,10.988,4.929,10.988,10.988s-4.929,10.988-10.988,10.988s-10.988-4.929-10.988-10.988S24.507,6.169,30.566,6.169z" />
+                                            </svg>
+                                            Sex
+                                        </label>
+                                        <span>{{ $petDetails->sex ? ucfirst($petDetails->sex) : 'Not provided' }}</span>
+                                    </div>
+                                    <div class="pet-detail-item full-width">
+                                        <label>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="16"
+                                                viewBox="0 0 15 16" fill="none">
+                                                <path
+                                                    d="M13.5905 8.11123L13.9601 6.73016C14.3918 5.1182 14.6084 4.31257 14.4462 3.61489C14.3176 3.0641 14.0285 2.56382 13.6155 2.17734C13.093 1.68768 12.2866 1.4718 10.6747 1.04003C9.0627 0.607553 8.25636 0.391671 7.55939 0.55394C7.0086 0.682549 6.50833 0.971618 6.12185 1.38458C5.70224 1.83207 5.4835 2.48758 5.15824 3.67851L4.98382 4.32544L4.61425 5.70651C4.18177 7.31847 3.96589 8.1241 4.12816 8.82178C4.25677 9.37257 4.54584 9.87285 4.9588 10.2593C5.48135 10.749 6.28769 10.9649 7.89966 11.3974C9.35221 11.7862 10.1507 12 10.8048 11.9192C10.8763 11.9101 10.9463 11.8977 11.0149 11.882C11.5655 11.7538 12.0658 11.4652 12.4525 11.0528C12.9421 10.5295 13.158 9.7232 13.5905 8.11123Z"
+                                                    stroke="#9D9B98" />
+                                                <path
+                                                    d="M10.8047 11.9191C10.6553 12.3769 10.3927 12.7895 10.0413 13.1186C9.51875 13.6083 8.71241 13.8242 7.10045 14.2559C5.48848 14.6877 4.68214 14.9043 3.98517 14.7413C3.43447 14.6129 2.9342 14.3241 2.54763 13.9114C2.05796 13.3888 1.84137 12.5825 1.4096 10.9705L1.04003 9.58946C0.607553 7.9775 0.391671 7.17116 0.55394 6.47419C0.682549 5.9234 0.971618 5.42313 1.38458 5.03665C1.90713 4.54698 2.71347 4.3311 4.32544 3.89862C4.62948 3.81665 4.90708 3.74302 5.15823 3.67773"
+                                                    stroke="#9D9B98" />
+                                                <path
+                                                    d="M7.48927 6.21924L10.9419 7.14424M6.93384 8.29084L9.00544 8.84556"
+                                                    stroke="#9D9B98" stroke-linecap="round" />
+                                            </svg>
+                                            Notes
+                                        </label>
+                                        <span>{{ $petDetails->notes ?: 'No notes added' }}</span>
+                                    </div>
+                                </div>
+                                <div class="pet-display-action-btns">
+                                    <button type="button" id="petDisplayChangeBtn">Change</button>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Success/Error Messages -->
+                        @if (session('success'))
+                            <div class="alert alert-success"
+                                style="margin-top: 1rem; padding: 1rem; background: #d4edda; border-radius: .5rem; color: #155724;">
+                                {{ session('success') }}
+                            </div>
+                        @endif
+                        @if (session('error'))
+                            <div class="alert alert-error"
+                                style="margin-top: 1rem; padding: 1rem; background: #f8d7da; border-radius: .5rem; color: #721c24;">
+                                {{ session('error') }}
+                            </div>
+                        @endif
+
                         <form method="POST" action="{{ route('pet-details.store') }}" class="pet-details-form"
-                            id="petDetailsForm" @if(isset($petDetails) && $petDetails->name) style="display: none;" @endif>
+                            id="petDetailsForm" @if ($petDetails) style="display: none;" @endif>
                             @csrf
                             <input type="hidden" name="photo" id="photoBase64"
                                 value="{{ $petDetails->photo ?? '' }}">
-                            <input type="hidden" name="home_address_toggled" id="homeAddressToggled" value="0">
+                            <input type="hidden" name="home_address_toggled" id="homeAddressToggled"
+                                value="0">
                             <div>
                                 <h2>Pet Details</h2>
                             </div>
@@ -1789,7 +1890,7 @@
                                     <label>Name</label>
                                     <div style="position:relative; display:block;">
                                         <input type="text" id="petName" name="name"
-                                            value="{{ $petDetails->name ?? '' }}"
+                                            value="{{ old('name', $petDetails->name ?? '') }}"
                                             style="padding-right:2.5rem; width:100%; display:block;">
                                         <span class="input-check-icon" id="petNameCheck">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19"
@@ -1800,19 +1901,37 @@
                                             </svg>
                                         </span>
                                     </div>
+                                    @error('name')
+                                        <span class="error-msg"
+                                            style="color: #FF6E6E; font-size: .8125rem; margin-top: .375rem; display: block;">{{ $message }}</span>
+                                    @enderror
                                 </div>
 
-                                <x-ui.calendar name="birthday" :value="$petDetails->birthday ?? ''" />
+                                <div class="form-group">
+                                    <x-ui.calendar name="birthday" :value="old('birthday', $petDetails->birthday ?? '')" />
+                                    @error('birthday')
+                                        <span class="error-msg"
+                                            style="color: #FF6E6E; font-size: .8125rem; margin-top: .375rem; display: block;">{{ $message }}</span>
+                                    @enderror
+                                </div>
 
                                 <div class="form-group">
                                     <x-ui.pet-type id="my-pet-type" name="pet_type" label="Pet Type"
                                         placeholder="e.g. Dog, Cat, Rabbit..." :required="true"
-                                        breedsSelectId="my-pet-breed" :value="$petDetails->pet_type ?? ''" />
+                                        breedsSelectId="my-pet-breed" :value="old('pet_type', $petDetails->pet_type ?? '')" />
+                                    @error('pet_type')
+                                        <span class="error-msg"
+                                            style="color: #FF6E6E; font-size: .8125rem; margin-top: .375rem; display: block;">{{ $message }}</span>
+                                    @enderror
                                 </div>
 
                                 <div class="form-group">
                                     <x-ui.breeds id="my-pet-breed" name="breed" label="Breed(s)" :required="true"
-                                        :value="$petDetails->breed ?? ''" />
+                                        :value="old('breed', $petDetails->breed ?? '')" />
+                                    @error('breed')
+                                        <span class="error-msg"
+                                            style="color: #FF6E6E; font-size: .8125rem; margin-top: .375rem; display: block;">{{ $message }}</span>
+                                    @enderror
                                 </div>
 
                                 <div class="form-group">
@@ -1821,24 +1940,32 @@
                                     <div class="sex-options" role="radiogroup" aria-label="Sex">
                                         <label class="radio--small">
                                             <input type="radio" name="sex" value="male" id="petSexMale"
-                                                {{ ($petDetails->sex ?? '') === 'male' ? 'checked' : '' }}>
+                                                {{ old('sex', $petDetails->sex ?? '') === 'male' ? 'checked' : '' }}>
                                             <span class="radio--visual" aria-hidden="true"></span>
                                             <span class="radio--text">Male</span>
                                         </label>
 
                                         <label class="radio--small">
                                             <input type="radio" name="sex" value="female" id="petSexFemale"
-                                                {{ ($petDetails->sex ?? '') === 'female' ? 'checked' : '' }}>
+                                                {{ old('sex', $petDetails->sex ?? '') === 'female' ? 'checked' : '' }}>
                                             <span class="radio--visual" aria-hidden="true"></span>
                                             <span class="radio--text">Female</span>
                                         </label>
                                     </div>
+                                    @error('sex')
+                                        <span class="error-msg"
+                                            style="color: #FF6E6E; font-size: .8125rem; margin-top: .375rem; display: block;">{{ $message }}</span>
+                                    @enderror
                                 </div>
 
                                 <div class="form-group">
                                     <label>Weight <span>(kg)</span></label>
                                     <input type="number" id="petWeight" name="weight"
-                                        value="{{ $petDetails->weight ?? '4' }}">
+                                        value="{{ old('weight', $petDetails->weight ?? '4') }}">
+                                    @error('weight')
+                                        <span class="error-msg"
+                                            style="color: #FF6E6E; font-size: .8125rem; margin-top: .375rem; display: block;">{{ $message }}</span>
+                                    @enderror
                                 </div>
 
                                 <div class="form-group full-width">
@@ -1846,25 +1973,22 @@
                                     <textarea
                                         placeholder="Anything your groomer should know?
                     (e.g. anxious around dryers, allergies, behaviour cues)"
-                                        rows="4" cols="50" id="petNotes" name="notes">{{ $petDetails->notes ?? '' }}</textarea>
+                                        rows="4" cols="50" id="petNotes" name="notes">{{ old('notes', $petDetails->notes ?? '') }}</textarea>
+                                    @error('notes')
+                                        <span class="error-msg"
+                                            style="color: #FF6E6E; font-size: .8125rem; margin-top: .375rem; display: block;">{{ $message }}</span>
+                                    @enderror
                                 </div>
                             </div>
                             <div class="form-btns" id="petFormBtns">
                                 <div>
-                                    <button type="button" id="petFormCancelBtn">Cancel</button>
+                                    <a href="{{ route('booking-groomer') }}" class="btn btn-secondary"
+                                        style="color: #3B3731; text-align: center; font-family: Lato; font-size: 1rem; font-weight: 600; line-height: normal; text-decoration-line: underline; text-decoration-style: solid; text-decoration-skip-ink: auto; text-decoration-thickness: auto; text-underline-offset: auto; text-underline-position: from-font; background: transparent; border: none; cursor: pointer; display: inline-flex; align-items: center;">Cancel</a>
                                     <button type="submit" id="petFormSaveBtn">Save</button>
                                 </div>
                             </div>
                         </form>
 
-                        <!-- Pet Details Display Section -->
-                        <div class="pet-details-display" id="petDetailsDisplay" @if(isset($petDetails) && $petDetails->name) style="display: flex;" @else style="display: none;" @endif>
-                            <div class="pet-details-display-content" id="petDetailsContent">
-                            </div>
-                            <div class="pet-display-action-btns">
-                                <button type="button" id="petDisplayChangeBtn">Change</button>
-                            </div>
-                        </div>
                         <div class=" address-service">
                             <h3>
                                 Attending Address of Service
@@ -1881,7 +2005,8 @@
                                             d="M14.6464 15.3535C14.8416 15.5487 15.1582 15.5487 15.3535 15.3535C15.5487 15.1582 15.5487 14.8416 15.3535 14.6464L14.9999 14.9999L14.6464 15.3535ZM9.70581 9.70581L9.35226 10.0594L14.6464 15.3535L14.9999 14.9999L15.3535 14.6464L10.0594 9.35226L9.70581 9.70581Z"
                                             fill="#3B3731" />
                                     </svg>
-                                    <input placeholder="Start typing address..." name="address" id="serviceAddress" />
+                                    <input placeholder="Start typing address..." name="address"
+                                        id="serviceAddress" />
                                 </div>
                             </div>
                             <div class="option" id="home-address-option"
@@ -2448,42 +2573,6 @@
         // Server-side rendered pet details (passed from controller)
         let serverPetDetails = @json($petDetails ?? null);
 
-        function checkSavedPetDetails() {
-            if (!serverPetDetails) {
-                return;
-            }
-
-            try {
-                // Populate all form fields
-                const petNameInput = document.getElementById('petName');
-                if (petNameInput && !petNameInput.value) {
-                    petNameInput.value = serverPetDetails.name || '';
-                }
-
-                const petTypeInput = document.getElementById('my-pet-type');
-                if (petTypeInput && !petTypeInput.value) {
-                    petTypeInput.value = serverPetDetails.pet_type || '';
-                }
-
-                // Show the saved details display
-                toggleFormDisplay(true);
-                displayPetDetails({
-                    name: serverPetDetails.name,
-                    type: serverPetDetails.pet_type,
-                    breed: serverPetDetails.breed,
-                    birthday: serverPetDetails.birthday,
-                    sex: serverPetDetails.sex,
-                    weight: serverPetDetails.weight,
-                    notes: serverPetDetails.notes,
-                    photo: serverPetDetails.photo,
-                    address: serverPetDetails.address,
-                    homeAddressToggled: serverPetDetails.home_address_toggled
-                });
-                checkContinueBtnState();
-            } catch (e) {
-            }
-        }
-
         // ===== Step Navigation =====
         function goToStep2() {
             const step1 = document.querySelector('.step-item:nth-child(1)');
@@ -2644,74 +2733,22 @@
             loadPetBreedsData();
 
             // Set initial visibility immediately (no setTimeout to prevent flash)
-            if (serverPetDetails && serverPetDetails.name) {
+            // Only run if server pet details exist - otherwise let server-side rendering handle it
+            if (serverPetDetails) {
                 toggleFormDisplay(true);
-                displayPetDetails({
-                    name: serverPetDetails.name,
-                    type: serverPetDetails.pet_type,
-                    breed: serverPetDetails.breed,
-                    birthday: serverPetDetails.birthday,
-                    sex: serverPetDetails.sex,
-                    weight: serverPetDetails.weight,
-                    notes: serverPetDetails.notes,
-                    photo: serverPetDetails.photo,
-                    address: serverPetDetails.address,
-                    homeAddressToggled: serverPetDetails.home_address_toggled
-                });
                 checkContinueBtnState();
-            } else {
-                toggleFormDisplay(false);
             }
-
-            // ---- Pet form cancel (delegated) ----
-            document.body.addEventListener('click', function(e) {
-                const cancelBtn = e.target.closest('#petFormCancelBtn');
-
-                if (cancelBtn) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    // Check if we have saved data
-                    if (serverPetDetails) {
-                        if (confirm('Discard unsaved changes?')) toggleFormDisplay(true);
-                    } else {
-                        // Clear fields
-                        ['petName'].forEach(id => {
-                            const el = document.getElementById(id);
-                            if (el) el.value = '';
-                        });
-                        const bi = document.querySelector('input[name="birthday"]');
-                        if (bi) bi.value = '';
-                        const ti = document.getElementById('my-pet-type');
-                        if (ti) ti.value = '';
-                        const bs = document.getElementById('my-pet-breed');
-                        if (bs) {
-                            if (bs._fursDD) bs._fursDD.setValue('');
-                            else bs.value = '';
-                        }
-                        document.querySelectorAll('input[name="sex"]').forEach(r => r.checked = false);
-                        const wi = document.getElementById('petWeight');
-                        if (wi) wi.value = '4';
-                        const ni = document.getElementById('petNotes');
-                        if (ni) ni.value = '';
-                        petPhotoBase64 = null;
-                        const pi = document.getElementById('petPhotoInput');
-                        if (pi) pi.value = '';
-                        const ph = document.getElementById('petPhotoPlaceholder');
-                        if (ph) ph.style.display = 'block';
-                        const ub = document.getElementById('petPhotoUploadBtn');
-                        if (ub) ub.style.display = 'block';
-                        const cw = document.querySelector('.pet-photo-col-wrapper');
-                        if (cw) cw.remove();
-                    }
-                    checkContinueBtnState();
-                }
-            });
 
             // ---- Pet display Change button ----
             const petDisplayChangeBtn = document.getElementById('petDisplayChangeBtn');
             if (petDisplayChangeBtn) {
                 petDisplayChangeBtn.addEventListener('click', function() {
                     toggleFormDisplay(false);
+                    // Show existing photo if available
+                    if (serverPetDetails && serverPetDetails.photo) {
+                        petPhotoBase64 = serverPetDetails.photo;
+                        displayPetPhotoPreview(serverPetDetails.photo);
+                    }
                     setTimeout(checkContinueBtnState, 50);
                 });
             }
