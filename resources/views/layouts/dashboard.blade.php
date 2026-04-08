@@ -23,6 +23,7 @@
 
 <body>
 
+    <x-common.sidebar />
 
     <main>
         @if(isset($slot))
@@ -32,7 +33,7 @@
         @endif
     </main>
 
-    <x-layouts.footer />
+    <x-common.footer />
 
     @stack('styles')
 
