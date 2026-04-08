@@ -4,15 +4,15 @@
 
 <head>
     @php
-    $segments = request()->segments();
+        $segments = request()->segments();
 
-    if (empty($segments)) {
-    $pageTitle = 'Fursgo Dashboard';
-    } else {
-    $pageTitle = 'Fursgo Dashboard - ' . collect($segments)
-    ->map(fn($s) => ucfirst(str_replace(['-', '_'], ' ', $s)))
-    ->implode(' - ');
-    }
+        if (empty($segments)) {
+            $pageTitle = 'Fursgo Dashboard';
+        } else {
+            $pageTitle =
+                'Fursgo Dashboard - ' .
+                collect($segments)->map(fn($s) => ucfirst(str_replace(['-', '_'], ' ', $s)))->implode(' - ');
+        }
     @endphp
 
     <title>@yield('title', $pageTitle)</title>
@@ -27,14 +27,14 @@
     {{-- <x-common.sidebar /> --}}
 
     <main>
-        @if(isset($slot))
+        @if (isset($slot))
             {{ $slot }}
         @else
             @yield('content')
         @endif
     </main>
 
-    <x-common.footer />
+    <x-common.footer variant="dashboard" />
 
     @stack('styles')
 

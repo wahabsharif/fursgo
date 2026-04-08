@@ -1,6 +1,9 @@
-<footer class="mt-5 mb-5" style="padding: 6rem;">
+@props(['variant' => null])
+
+<footer class="mt-5 mb-5"
+    style="padding: 6rem; {{ $variant === 'dashboard' ? 'max-width: 110rem; margin: 0 auto; width: 100%;' : '' }}">
     <section class="section">
-        <div class="container">
+        <div class="{{ $variant === 'dashboard' ? 'container-fluid' : 'container' }}">
             <div class="row align-items-end">
                 <div class="col-lg-7">
                     <h1 class="join-heading">Join thousands of happy pets & owners.</h1>
@@ -18,11 +21,12 @@
 
         </div>
     </section>
-    <div class="container">
+    <div class="{{ $variant === 'dashboard' ? 'container-fluid' : 'container' }}">
         <div class="row">
             <div class="col-lg-3">
                 <div class="footer-logo mt-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="190" height="53" viewBox="0 0 190 53" fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="190" height="53" viewBox="0 0 190 53"
+                        fill="none">
                         <path
                             d="M173.235 16.7646C176.627 16.7646 179.563 17.347 182.042 18.5116C184.564 19.6331 186.521 21.4879 187.913 24.076C189.304 26.6641 190 30.1365 190 34.4931C190 38.8497 189.304 42.3221 187.913 44.9101C186.521 47.4982 184.564 49.353 182.042 50.4745C179.563 51.5961 176.627 52.1568 173.235 52.1568C169.887 52.1568 166.951 51.5961 164.429 50.4745C161.907 49.353 159.95 47.4982 158.558 44.9101C157.166 42.3221 156.471 38.8497 156.471 34.4931C156.471 30.1365 157.166 26.6641 158.558 24.076C159.95 21.4879 161.907 19.6331 164.429 18.5116C166.951 17.347 169.887 16.7646 173.235 16.7646ZM173.235 18.0587C171.931 18.0587 170.843 19.3527 169.974 21.9408C169.104 24.5289 168.669 28.713 168.669 34.4931C168.669 40.2732 169.104 44.4572 169.974 47.0453C170.843 49.5903 171.931 50.8628 173.235 50.8628C174.54 50.8628 175.627 49.5903 176.497 47.0453C177.367 44.4572 177.802 40.2732 177.802 34.4931C177.802 28.713 177.367 24.5289 176.497 21.9408C175.627 19.3527 174.54 18.0587 173.235 18.0587Z"
                             fill="#FFC97A" />
