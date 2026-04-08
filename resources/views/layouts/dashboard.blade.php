@@ -24,17 +24,45 @@
 <body>
 
     <x-common.header variant="dashboard" />
-    {{-- <x-common.sidebar /> --}}
 
-    <main>
-        @if (isset($slot))
-            {{ $slot }}
-        @else
-            @yield('content')
-        @endif
-    </main>
+    <div class="dashboard-wrapper" x-data="{ activeSection: 'business-hub' }">
+        <!-- Active Section Header -->
+        <div class="active-section-header"
+            x-text="activeSection.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())"></div>
+
+        <x-common.sidebar variant="dashboard" />
+
+        <main>
+            @if (isset($slot))
+                {{ $slot }}
+            @else
+                @yield('content')
+            @endif
+        </main>
+    </div>
 
     <x-common.footer variant="dashboard" />
+
+    <style>
+        .active-section-header {
+            position: absolute;
+            right: 0;
+            top: 2rem;
+            color: #3B3731;
+            text-align: right;
+            font-family: "Playfair Display";
+            font-size: 28px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            text-transform: capitalize;
+            z-index: 10;
+        }
+
+        .dashboard-wrapper {
+            position: relative;
+        }
+    </style>
 
     @stack('styles')
 

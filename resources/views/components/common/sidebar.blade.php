@@ -1,4 +1,7 @@
-<div x-data="{ mobileOpen: false, activeSection: 'business-hub' }" class="sidebar-container">
+@props(['variant' => null])
+
+<div x-data="{ mobileOpen: false }"
+    style="{{ $variant === 'dashboard' ? 'max-width: 110rem; margin: 0 auto; width: 100%; position: relative;' : 'position: relative;' }}">
     @php
         $activeBgColor = '#FFC97A';
         if (auth()->check()) {
@@ -28,13 +31,12 @@
     </button>
 
     <!-- Horizontal Navigation (above content) -->
-    <aside class="container">
+    <aside>
         <ul class="nav-list">
             <!-- Business Hub -->
             <li class="nav-item">
                 <a href="{{ route('dashboard') }}" @click.prevent="activeSection = 'business-hub'"
-                    :class="{ 'active': activeSection === 'business-hub' }"
-                    class="nav-link">
+                    :class="{ 'active': activeSection === 'business-hub' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor" class="nav-icon">
                         <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -168,9 +170,27 @@
     </div>
 
     <style>
-        .sidebar-container {
-            position: relative;
-            z-index: 40;
+        /* Dashboard Layout */
+        .dashboard-wrapper {
+            display: flex;
+            gap: 2rem;
+            padding: 2rem 0;
+            max-width: 110rem;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .dashboard-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        aside {
+            flex-shrink: 0;
+            position: sticky;
+            top: 2rem;
+            align-self: flex-start;
+            height: fit-content;
         }
 
         /* Mobile Toggle Button */
@@ -188,13 +208,6 @@
             color: #5a3d2b;
         }
 
-        @media (max-width: 1024px) {
-            .mobile-toggle {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-        }
 
         .nav-list {
             list-style: none;
@@ -271,11 +284,6 @@
             z-index: 35;
         }
 
-        @media (min-width: 1025px) {
-            .mobile-overlay {
-                display: none !important;
-            }
-        }
 
         /* Scrollbar styling */
         .sidebar::-webkit-scrollbar {
