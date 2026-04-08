@@ -1,7 +1,7 @@
 @props(['variant' => null])
 
 <div x-data="{ mobileOpen: false }"
-    style="{{ $variant === 'dashboard' ? 'max-width: 110rem; margin: 0 auto; width: 100%; position: relative;' : 'position: relative;' }}">
+    style="{{ $variant === 'dashboard' ? 'max-width: 12rem; margin: 0; padding: 0; width: 100%; position: relative;' : 'position: relative;' }}">
     @php
         $activeBgColor = '#FFC97A';
         if (auth()->check()) {
@@ -50,7 +50,7 @@
 
             <!-- Bookings -->
             <li class="nav-item">
-                <a href="#bookings" @click="activeSection = 'bookings'"
+                <a href="#" @click.prevent="activeSection = 'bookings'"
                     :class="{ 'active': activeSection === 'bookings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14"
                         fill="none">
@@ -67,7 +67,7 @@
 
             <!-- Availability -->
             <li class="nav-item">
-                <a href="#availability" @click="activeSection = 'availability'"
+                <a href="#" @click.prevent="activeSection = 'availability'"
                     :class="{ 'active': activeSection === 'availability' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 14 13"
                         fill="none">
@@ -86,7 +86,7 @@
 
             <!-- Services -->
             <li class="nav-item">
-                <a href="#services" @click="activeSection = 'services'"
+                <a href="#" @click.prevent="activeSection = 'services'"
                     :class="{ 'active': activeSection === 'services' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14"
                         fill="none">
@@ -103,7 +103,7 @@
 
             <!-- Clients -->
             <li class="nav-item">
-                <a href="#clients" @click="activeSection = 'clients'"
+                <a href="#" @click.prevent="activeSection = 'clients'"
                     :class="{ 'active': activeSection === 'clients' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="10" viewBox="0 0 14 10"
                         fill="none">
@@ -126,7 +126,7 @@
 
             <!-- Earnings -->
             <li class="nav-item">
-                <a href="#earnings" @click="activeSection = 'earnings'"
+                <a href="#" @click.prevent="activeSection = 'earnings'"
                     :class="{ 'active': activeSection === 'earnings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="12" viewBox="0 0 14 12"
                         fill="none">
@@ -145,7 +145,7 @@
 
             <!-- Settings -->
             <li class="nav-item">
-                <a href="#settings" @click="activeSection = 'settings'"
+                <a href="#" @click.prevent="activeSection = 'settings'"
                     :class="{ 'active': activeSection === 'settings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
                         fill="none">
