@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (! Schema::hasTable('goormer_spacer_profiles')
+            || ! Schema::hasColumn('goormer_spacer_profiles', 'user_id')) {
+            return;
+        }
+
         Schema::table('goormer_spacer_profiles', function (Blueprint $table) {
             $table->dropForeign(['user_id']);
             $table->dropColumn('user_id');
@@ -22,6 +27,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (! Schema::hasTable('goormer_spacer_profiles')
+            || Schema::hasColumn('goormer_spacer_profiles', 'user_id')) {
+            return;
+        }
+
         Schema::table('goormer_spacer_profiles', function (Blueprint $table) {
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
         });
