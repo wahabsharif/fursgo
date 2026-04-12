@@ -831,7 +831,7 @@
                 </p>
 
                 <div class="bgs-buttons">
-                    <button class="bgs-btn primary">Complete your Profile</button>
+                    <a href="{{ route('verify-qualify') }}" wire:navigate class="bgs-btn primary" style="text-decoration: none; display: inline-block;">Complete your Profile</a>
                     <button class="bgs-btn secondary">Learn more</button>
                 </div>
             </div>
