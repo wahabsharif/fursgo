@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\GroomerSpacerPrivateFileController;
+use App\Livewire\Actions\Logout;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -10,6 +12,9 @@ Route::middleware('guest')->group(function () {
 
     Volt::route('signup', 'auth.signup')
         ->name('signup');
+
+    Volt::route('signup-groomer-space', 'auth.signup-groomer-space')
+        ->name('signup-groomer-space');
 
     Volt::route('forgot-password', 'auth.forgot-password')
         ->name('password.request');
@@ -31,5 +36,16 @@ Route::middleware('auth')->group(function () {
         ->name('password.confirm');
 });
 
-Route::post('logout', App\Livewire\Actions\Logout::class)
+Route::middleware('auth:groomer_spacer')->group(function () {
+    Volt::route('verify-qualify', 'auth.verify-qualify')
+        ->name('verify-qualify');
+
+    Route::get('groomer-spacer/business-owner-id-file', [GroomerSpacerPrivateFileController::class, 'businessOwnerIdImage'])
+        ->name('groomer-spacer.business-owner-id-file');
+
+    Route::get('groomer-spacer/business-basics-file', [GroomerSpacerPrivateFileController::class, 'businessBasicsFile'])
+        ->name('groomer-spacer.business-basics-file');
+});
+
+Route::post('logout', Logout::class)
     ->name('logout');
