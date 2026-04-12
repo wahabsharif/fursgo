@@ -258,7 +258,7 @@
                 <p class="blp-sub-text">→ Create something that's yours — structured, flexible, and built on your terms.</p>
                 <h1 class="blp-main-title">Step into a new opportunity — built around your love for animals.</h1>
                 <p class="blp-cta-text">Begin your application.</p>
-                <a href="#" class="blp-btn">Get Started</a>
+                <a href="{{ route('signup-groomer-space') }}" wire:navigate class="blp-btn">Get Started</a>
             </div>
         </div>
 
