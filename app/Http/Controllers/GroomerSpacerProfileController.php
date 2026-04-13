@@ -26,7 +26,7 @@ class GroomerSpacerProfileController extends Controller
                 'business_details' => 'nullable|array',
                 'freelance_details' => 'nullable|array',
                 'business_basics' => 'nullable|array',
-                'business_profile' => 'nullable|array',
+                'groomer_business_profile' => 'nullable|array',
                 'legal_policy_agreements' => 'boolean',
                 'information_accuracy_confirmed' => 'nullable|boolean',
             ]);

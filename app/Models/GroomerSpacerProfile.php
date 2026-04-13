@@ -25,7 +25,7 @@ class GroomerSpacerProfile extends Authenticatable
         'insurance_details',
         'freelance_details',
         'business_basics',
-        'business_profile',
+        'groomer_business_profile',
         'legal_policy_agreements',
     ];
 
@@ -40,7 +40,7 @@ class GroomerSpacerProfile extends Authenticatable
         'insurance_details' => 'array',
         'freelance_details' => 'array',
         'business_basics' => 'array',
-        'business_profile' => 'array',
+        'groomer_business_profile' => 'array',
         'legal_policy_agreements' => 'boolean',
     ];
 

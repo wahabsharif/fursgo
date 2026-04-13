@@ -1,5 +1,11 @@
 @font-face {
     font-family: "Playfair Display";
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-Medium.ttf")
+        format("truetype");
+    font-weight: 400;
+}
+@font-face {
+    font-family: "Playfair Display";
     src: url("../fonts/Playfair_Display/static/PlayfairDisplay-Bold.ttf")
         format("truetype");
     font-weight: 600;
@@ -601,15 +607,14 @@ p.messages-count {
 }
 
 .logout-option {
-border-top: 1px solid #e2e2e2;
-padding: 0 25px 15px 25px;
-cursor: pointer !important;
+    border-top: 1px solid #e2e2e2;
+    padding: 0 25px 15px 25px;
+    cursor: pointer !important;
 }
-.logout-option>form>button {
-border: none;
-background: transparent;
-cursor: pointer !important;
-
+.logout-option > form > button {
+    border: none;
+    background: transparent;
+    cursor: pointer !important;
 }
 
 .profile-item:hover {

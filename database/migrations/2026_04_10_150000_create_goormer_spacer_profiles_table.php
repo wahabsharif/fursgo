@@ -23,7 +23,7 @@ return new class extends Migration
             $table->json('business_details')->nullable();
             $table->json('freelance_details')->nullable();
             $table->json('business_basics')->nullable();
-            $table->json('business_profile')->nullable();
+            $table->json('groomer_business_profile')->nullable();
             $table->boolean('legal_policy_agreements')->default(false);
             $table->timestamps();
         });

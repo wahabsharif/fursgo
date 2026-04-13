@@ -21,6 +21,8 @@ new #[Layout('layouts.app')] class extends Component {
     public bool $showFreelance = false;
     public bool $showVerificationStatus = false;
     public bool $showBusinessBasicsForm = false;
+    public bool $showGroomerBusinessProfileForm = false;
+    public bool $showSpacerBusinessProfileForm = false;
 
     /** Step 2 — Business Basics (customer-facing profile). */
     public string $business_display_name = '';
@@ -40,6 +42,41 @@ new #[Layout('layouts.app')] class extends Component {
     public array $business_gallery_pending = [];
 
     public $business_gallery_pick = null;
+
+    /** Step 2A — Groomer business profile. */
+    public string $groomer_experience = '';
+    public string $groomer_specialties = '';
+    public array $groomer_pet_specialties = [];
+    public string $groomer_specialty_other = '';
+    public array $groomer_pet_sizes = [];
+    public string $groomer_addon_input = '';
+    public array $groomer_custom_addons = [];
+    public array $groomer_selected_addons = [];
+
+    /**
+     * Fixed grooming service rows (matches verify-qualify-groomer-business-profile UI). Stored in groomer_business_profile.services.
+     *
+     * @var array<string, array{price: string, description?: string}>
+     */
+    public array $groomer_services_pricing = [
+        'full_groom' => ['price' => '', 'description' => ''],
+        'face_trim' => ['price' => ''],
+    ];
+
+    /**
+     * Sample add-on price rows in the pricing table. Stored in groomer_business_profile.addon_pricing.
+     *
+     * @var array<string, array{price: string, description?: string}>
+     */
+    public array $groomer_addon_pricing = [
+        'flea_tick' => ['price' => '', 'description' => ''],
+        'fast_dry' => ['price' => ''],
+    ];
+
+    /** Step 2B — Spacer business profile. */
+    public string $space_location = '';
+    public string $space_capacity = '';
+    public string $space_amenities = '';
 
     // First form: Account verification
     public string $fursgo_usage = '';
@@ -87,27 +124,7 @@ new #[Layout('layouts.app')] class extends Component {
     public function updated($propertyName)
     {
         // When any property is updated, preserve the uploaded files
-        if (
-            in_array($propertyName, [
-                'full_name',
-                'business_email',
-                'business_name',
-                'business_registration_number',
-                'business_phone',
-                'freelance_service_home_address_line1',
-                'freelance_service_home_address_line2',
-                'business_owner_id_images',
-                'insurance_certificate_upload',
-                'id_documents',
-                'account_holder_name',
-                'account_number',
-                'sort_code',
-                'iban',
-                'business_display_name',
-                'business_tagline',
-                'business_bio',
-            ])
-        ) {
+        if (in_array($propertyName, ['full_name', 'business_email', 'business_name', 'business_registration_number', 'business_phone', 'freelance_service_home_address_line1', 'freelance_service_home_address_line2', 'business_owner_id_images', 'insurance_certificate_upload', 'id_documents', 'account_holder_name', 'account_number', 'sort_code', 'iban', 'business_display_name', 'business_tagline', 'business_bio', 'groomer_experience', 'groomer_specialties', 'groomer_pet_specialties', 'groomer_specialty_other', 'groomer_pet_sizes', 'groomer_addon_input', 'groomer_custom_addons', 'groomer_selected_addons', 'groomer_services_pricing', 'groomer_addon_pricing', 'space_location', 'space_capacity', 'space_amenities'])) {
             // Don't reset file arrays when other properties change
             return;
         }
@@ -204,19 +221,26 @@ new #[Layout('layouts.app')] class extends Component {
                 $this->id_documents = [];
             }
             $rawInsPaths = $insuranceDetails['insurance_certificate_paths'] ?? [];
-            $this->insurance_certificate_paths = is_array($rawInsPaths)
-                ? array_values(array_filter($rawInsPaths, fn($p) => is_string($p) && $p !== ''))
-                : [];
+            $this->insurance_certificate_paths = is_array($rawInsPaths) ? array_values(array_filter($rawInsPaths, fn($p) => is_string($p) && $p !== '')) : [];
             $this->insurance_certificate_upload = [];
-            $this->business_owner_id_images = ($user->account_type ?? '') === 'freelance'
-                ? ($freelanceDetails['id_verification_images'] ?? [])
-                : ($businessDetails['business_owner_id_images'] ?? []);
+            $this->business_owner_id_images = ($user->account_type ?? '') === 'freelance' ? $freelanceDetails['id_verification_images'] ?? [] : $businessDetails['business_owner_id_images'] ?? [];
 
             // Which wizard screen to show (session), or last step if profile data shows onboarding is done.
             $personalInfoDone = $user->hasCompletedVerifyQualifyPersonalStep();
 
             if (session('verification_build_profile_step', false) && $personalInfoDone && $user instanceof GroomerSpacerProfile) {
                 $this->enterBusinessBasicsStep($user, false);
+
+                $buildProfileSubstep = (string) session('verification_build_profile_substep', 'business_basics');
+                if ($buildProfileSubstep === 'groomer_profile') {
+                    $this->showBusinessBasicsForm = false;
+                    $this->showGroomerBusinessProfileForm = true;
+                    $this->showSpacerBusinessProfileForm = false;
+                } elseif ($buildProfileSubstep === 'spacer_profile') {
+                    $this->showBusinessBasicsForm = false;
+                    $this->showGroomerBusinessProfileForm = false;
+                    $this->showSpacerBusinessProfileForm = true;
+                }
             } elseif (session('verify_qualify_show_approved', false) && $personalInfoDone) {
                 $this->showVerificationStatus = true;
                 $this->showVerificationCard = false;
@@ -226,8 +250,8 @@ new #[Layout('layouts.app')] class extends Component {
             } elseif ($personalInfoDone) {
                 $this->showVerificationCard = false;
                 $this->showAccountPayoutsForm = false;
-                $this->showRegisteredBusiness = ($user->account_type === 'registered_business');
-                $this->showFreelance = ($user->account_type === 'freelance');
+                $this->showRegisteredBusiness = $user->account_type === 'registered_business';
+                $this->showFreelance = $user->account_type === 'freelance';
             } else {
                 switch ($currentStep) {
                     case 'registered_business':
@@ -316,10 +340,7 @@ new #[Layout('layouts.app')] class extends Component {
             if (!is_array($images) || !in_array($path, $images, true)) {
                 return;
             }
-            $freelanceDetails['id_verification_images'] = array_values(array_filter(
-                $images,
-                fn($p) => $p !== $path
-            ));
+            $freelanceDetails['id_verification_images'] = array_values(array_filter($images, fn($p) => $p !== $path));
         } else {
             $businessDetails = $user->business_details ?? [];
             if (!is_array($businessDetails)) {
@@ -331,22 +352,18 @@ new #[Layout('layouts.app')] class extends Component {
                 return;
             }
 
-            $businessDetails['business_owner_id_images'] = array_values(array_filter(
-                $images,
-                fn($p) => $p !== $path
-            ));
+            $businessDetails['business_owner_id_images'] = array_values(array_filter($images, fn($p) => $p !== $path));
         }
 
-        $this->business_owner_id_images = array_values(array_filter(
-            $this->business_owner_id_images ?? [],
-            function ($item) use ($path) {
+        $this->business_owner_id_images = array_values(
+            array_filter($this->business_owner_id_images ?? [], function ($item) use ($path) {
                 if ($item instanceof TemporaryUploadedFile || $item instanceof UploadedFile) {
                     return true;
                 }
 
                 return !(is_string($item) && $item === $path);
-            }
-        ));
+            }),
+        );
 
         $idPaths = [];
         $rawId = $user->id_document_paths ?? null;
@@ -357,10 +374,7 @@ new #[Layout('layouts.app')] class extends Component {
         }
         $idPaths = array_values(array_filter($idPaths, fn($p) => is_string($p) && $p !== $path));
 
-        $this->id_documents = array_values(array_filter(
-            $this->id_documents ?? [],
-            fn($item) => !is_string($item) || $item !== $path
-        ));
+        $this->id_documents = array_values(array_filter($this->id_documents ?? [], fn($item) => !is_string($item) || $item !== $path));
 
         $payload = [];
         if ($isFreelance) {
@@ -403,15 +417,9 @@ new #[Layout('layouts.app')] class extends Component {
             return;
         }
 
-        $insuranceDetails['insurance_certificate_paths'] = array_values(array_filter(
-            $paths,
-            fn($p) => $p !== $path
-        ));
+        $insuranceDetails['insurance_certificate_paths'] = array_values(array_filter($paths, fn($p) => $p !== $path));
 
-        $this->insurance_certificate_paths = array_values(array_filter(
-            $this->insurance_certificate_paths ?? [],
-            fn($p) => $p !== $path
-        ));
+        $this->insurance_certificate_paths = array_values(array_filter($this->insurance_certificate_paths ?? [], fn($p) => $p !== $path));
 
         $user->update(['insurance_details' => $insuranceDetails]);
 
@@ -460,9 +468,7 @@ new #[Layout('layouts.app')] class extends Component {
      */
     public function isFormValid(): bool
     {
-        return $this->fursgo_usage &&
-            $this->account_type &&
-            count($this->location_types) > 0;
+        return $this->fursgo_usage && $this->account_type && count($this->location_types) > 0;
     }
 
     public function verifyBusiness()
@@ -484,7 +490,13 @@ new #[Layout('layouts.app')] class extends Component {
         $this->showAccountPayoutsForm = true;
         $this->showRegisteredBusiness = false;
         $this->showFreelance = false;
+        $this->showBusinessBasicsForm = false;
+        $this->showGroomerBusinessProfileForm = false;
+        $this->showSpacerBusinessProfileForm = false;
         session(['verification_current_step' => 'account_payouts']);
+        session()->forget('verification_build_profile_step');
+        session()->forget('verification_build_profile_substep');
+        session()->save();
     }
 
     /**
@@ -498,7 +510,10 @@ new #[Layout('layouts.app')] class extends Component {
         }
 
         session()->forget('verify_qualify_show_approved');
-        session(['verification_build_profile_step' => true]);
+        session([
+            'verification_build_profile_step' => true,
+            'verification_build_profile_substep' => 'business_basics',
+        ]);
         session()->save();
 
         $this->enterBusinessBasicsStep($user, true);
@@ -515,6 +530,8 @@ new #[Layout('layouts.app')] class extends Component {
         $this->showAccountPayoutsForm = false;
         $this->showRegisteredBusiness = false;
         $this->showFreelance = false;
+        $this->showGroomerBusinessProfileForm = false;
+        $this->showSpacerBusinessProfileForm = false;
 
         if ($refreshFromDb) {
             $user->refresh();
@@ -566,6 +583,97 @@ new #[Layout('layouts.app')] class extends Component {
         $this->business_avatar_upload = null;
         $this->business_gallery_pending = [];
         $this->business_gallery_pick = null;
+
+        $groomerProfile = $user->groomer_business_profile ?? [];
+        if (!is_array($groomerProfile)) {
+            $groomerProfile = is_string($groomerProfile) ? (json_decode($groomerProfile, true) ?: []) : [];
+        }
+        if ($groomerProfile === [] && isset($bb['groomer_profile'])) {
+            $legacy = $bb['groomer_profile'];
+            $groomerProfile = is_array($legacy) ? $legacy : (is_string($legacy) ? (json_decode($legacy, true) ?: []) : []);
+        }
+        $this->groomer_experience = trim((string) ($groomerProfile['experience'] ?? ''));
+        $this->groomer_specialties = trim((string) ($groomerProfile['specialties'] ?? ''));
+        $petSpecialties = $groomerProfile['pet_specialties'] ?? [];
+        if (!is_array($petSpecialties)) {
+            $petSpecialties = [];
+        }
+        $this->groomer_pet_specialties = array_values(array_filter($petSpecialties, fn($v) => in_array($v, ['dog', 'cat', 'other'], true)));
+        $this->groomer_specialty_other = trim((string) ($groomerProfile['specialty_other'] ?? ''));
+        $petSizes = $groomerProfile['pet_sizes'] ?? [];
+        if (!is_array($petSizes)) {
+            $petSizes = [];
+        }
+        $this->groomer_pet_sizes = array_values(array_filter($petSizes, fn($v) => in_array($v, ['small', 'medium', 'large'], true)));
+        $customAddons = $groomerProfile['custom_addons'] ?? [];
+        if (!is_array($customAddons)) {
+            $customAddons = [];
+        }
+        $this->groomer_custom_addons = array_values(array_filter($customAddons, fn($v) => is_string($v) && trim($v) !== ''));
+        $selectedAddons = $groomerProfile['selected_addons'] ?? [];
+        if (!is_array($selectedAddons)) {
+            $selectedAddons = [];
+        }
+        $this->groomer_selected_addons = array_values(array_filter($selectedAddons, fn($v) => is_string($v) && trim($v) !== ''));
+        $this->groomer_addon_input = '';
+
+        $this->hydrateGroomerServiceAndAddonPricing($groomerProfile);
+
+        $spacerProfile = $bb['spacer_profile'] ?? [];
+        if (!is_array($spacerProfile)) {
+            $spacerProfile = is_string($spacerProfile) ? (json_decode($spacerProfile, true) ?: []) : [];
+        }
+        $this->space_location = trim((string) ($spacerProfile['location'] ?? ''));
+        $this->space_capacity = trim((string) ($spacerProfile['capacity'] ?? ''));
+        $this->space_amenities = trim((string) ($spacerProfile['amenities'] ?? ''));
+    }
+
+    /**
+     * Load groomer_services_pricing / groomer_addon_pricing from saved JSON (fixed keys for the template rows).
+     */
+    private function hydrateGroomerServiceAndAddonPricing(array $groomerProfile): void
+    {
+        $defServices = [
+            'full_groom' => ['price' => '', 'description' => ''],
+            'face_trim' => ['price' => ''],
+        ];
+        $svc = $groomerProfile['services'] ?? [];
+        if (!is_array($svc)) {
+            $svc = [];
+        }
+        $outS = [];
+        foreach ($defServices as $k => $shape) {
+            $row = isset($svc[$k]) && is_array($svc[$k]) ? $svc[$k] : [];
+            $merged = $shape;
+            foreach (array_keys($shape) as $f) {
+                if (array_key_exists($f, $row) && (is_string($row[$f]) || is_numeric($row[$f]))) {
+                    $merged[$f] = trim((string) $row[$f]);
+                }
+            }
+            $outS[$k] = $merged;
+        }
+        $this->groomer_services_pricing = $outS;
+
+        $defAddons = [
+            'flea_tick' => ['price' => '', 'description' => ''],
+            'fast_dry' => ['price' => ''],
+        ];
+        $addon = $groomerProfile['addon_pricing'] ?? [];
+        if (!is_array($addon)) {
+            $addon = [];
+        }
+        $outA = [];
+        foreach ($defAddons as $k => $shape) {
+            $row = isset($addon[$k]) && is_array($addon[$k]) ? $addon[$k] : [];
+            $merged = $shape;
+            foreach (array_keys($shape) as $f) {
+                if (array_key_exists($f, $row) && (is_string($row[$f]) || is_numeric($row[$f]))) {
+                    $merged[$f] = trim((string) $row[$f]);
+                }
+            }
+            $outA[$k] = $merged;
+        }
+        $this->groomer_addon_pricing = $outA;
     }
 
     public function updatedBusinessGalleryPick($value): void
@@ -671,7 +779,7 @@ new #[Layout('layouts.app')] class extends Component {
         $units = ['B', 'KB', 'MB', 'GB'];
         $i = (int) floor(log($bytes, $k));
         $i = min(max($i, 0), count($units) - 1);
-        $value = $bytes / ($k ** $i);
+        $value = $bytes / $k ** $i;
         $decimals = $i === 0 ? 0 : ($value >= 10 ? 1 : 2);
 
         return number_format($value, $decimals, '.', '') . ' ' . $units[$i];
@@ -680,6 +788,56 @@ new #[Layout('layouts.app')] class extends Component {
     public function isBusinessBasicsContinueEnabled(): bool
     {
         return trim($this->business_display_name) !== '';
+    }
+
+    public function isGroomerBusinessProfileContinueEnabled(): bool
+    {
+        $hasSpecialty = count($this->groomer_pet_specialties) > 0;
+        $otherOk = !in_array('other', $this->groomer_pet_specialties, true) || trim($this->groomer_specialty_other) !== '';
+
+        return trim($this->groomer_experience) !== '' && $hasSpecialty && count($this->groomer_pet_sizes) > 0 && $otherOk;
+    }
+
+    public function isSpacerBusinessProfileContinueEnabled(): bool
+    {
+        return trim($this->space_location) !== '' && trim($this->space_capacity) !== '';
+    }
+
+    public function addGroomerCustomAddon(): void
+    {
+        $name = trim($this->groomer_addon_input);
+        if ($name === '') {
+            return;
+        }
+
+        if (in_array($name, $this->groomerAddonCatalog(), true)) {
+            if (!in_array($name, $this->groomer_selected_addons, true)) {
+                $this->groomer_selected_addons[] = $name;
+            }
+            $this->groomer_addon_input = '';
+
+            return;
+        }
+
+        if (!in_array($name, $this->groomer_custom_addons, true)) {
+            $this->groomer_custom_addons[] = $name;
+        }
+        if (!in_array($name, $this->groomer_selected_addons, true)) {
+            $this->groomer_selected_addons[] = $name;
+        }
+
+        $this->groomer_addon_input = '';
+    }
+
+    private function groomerAddonCatalog(): array
+    {
+        return ['Flea & Tick Treatment', 'Hypoallergenic Shampoo Upgrade', 'Tear-Stain Treatment', 'Coat Shine Spray', 'Nail Grinding', 'Coat Colour Enhancing Shampoo', 'Fast-Dry Service (express grooming)', 'Breath Freshner Gel', 'Deep Conditioning Mask', 'Shed-Control Shampoo', 'Deodorising Treatment', 'Anti-Itch Treatment', 'Soft-Claws / Nail Caps Application', 'Premium Fragrance Upgrade', 'Paw Fur Shaping'];
+    }
+
+    private function setBuildProfileSubstep(string $substep): void
+    {
+        session(['verification_build_profile_substep' => $substep]);
+        session()->save();
     }
 
     public function submitBusinessBasics(): void
@@ -744,8 +902,109 @@ new #[Layout('layouts.app')] class extends Component {
         $this->business_avatar_upload = null;
         $this->business_gallery_paths = $gallery;
         $this->business_avatar_path = $avatarPath;
+        $this->showBusinessBasicsForm = false;
+        $this->showGroomerBusinessProfileForm = $this->fursgo_usage === 'groomer';
+        $this->showSpacerBusinessProfileForm = $this->fursgo_usage === 'space';
+        if ($this->showGroomerBusinessProfileForm) {
+            $this->setBuildProfileSubstep('groomer_profile');
+        } elseif ($this->showSpacerBusinessProfileForm) {
+            $this->setBuildProfileSubstep('spacer_profile');
+        }
 
-        $this->js('alert(' . json_encode('Your business basics have been saved.') . ')');
+        if (!$this->showGroomerBusinessProfileForm && !$this->showSpacerBusinessProfileForm) {
+            $this->showBusinessBasicsForm = true;
+            $this->setBuildProfileSubstep('business_basics');
+            $this->js('alert(' . json_encode('Please select how you use FursGo (groomer or space).') . ')');
+        }
+    }
+
+    public function submitGroomerBusinessProfile(): void
+    {
+        $user = Auth::guard('groomer_spacer')->user();
+        if (!$user) {
+            return;
+        }
+
+        $this->validate([
+            'groomer_experience' => ['required', 'string', 'max:1000'],
+            'groomer_pet_specialties' => ['required', 'array', 'min:1'],
+            'groomer_pet_specialties.*' => ['in:dog,cat,other'],
+            'groomer_specialty_other' => ['nullable', 'string', 'max:255'],
+            'groomer_pet_sizes' => ['required', 'array', 'min:1'],
+            'groomer_pet_sizes.*' => ['in:small,medium,large'],
+            'groomer_custom_addons' => ['nullable', 'array'],
+            'groomer_custom_addons.*' => ['string', 'max:255'],
+            'groomer_selected_addons' => ['nullable', 'array'],
+            'groomer_selected_addons.*' => ['string', 'max:255'],
+        ]);
+
+        if (in_array('other', $this->groomer_pet_specialties, true) && trim($this->groomer_specialty_other) === '') {
+            $this->addError('groomer_specialty_other', 'Please specify your other specialty.');
+
+            return;
+        }
+
+        $specialtyLabels = [
+            'dog' => 'Dog',
+            'cat' => 'Cat',
+            'other' => 'Other',
+        ];
+        $selectedSpecialties = [];
+        foreach ($this->groomer_pet_specialties as $key) {
+            $selectedSpecialties[] = $specialtyLabels[$key] ?? $key;
+        }
+        if (in_array('other', $this->groomer_pet_specialties, true) && trim($this->groomer_specialty_other) !== '') {
+            $selectedSpecialties[] = trim($this->groomer_specialty_other);
+        }
+
+        $user->update([
+            'groomer_business_profile' => [
+                'experience' => trim($this->groomer_experience),
+                'specialties' => implode(', ', $selectedSpecialties),
+                'pet_specialties' => array_values($this->groomer_pet_specialties),
+                'specialty_other' => trim($this->groomer_specialty_other),
+                'pet_sizes' => array_values($this->groomer_pet_sizes),
+                'custom_addons' => array_values($this->groomer_custom_addons),
+                'selected_addons' => array_values($this->groomer_selected_addons),
+                'services' => $this->groomer_services_pricing,
+                'addon_pricing' => $this->groomer_addon_pricing,
+            ],
+        ]);
+        $this->setBuildProfileSubstep('groomer_profile');
+
+        $this->js('alert(' . json_encode('Groomer business profile saved.') . ')');
+    }
+
+    public function submitSpacerBusinessProfile(): void
+    {
+        $user = Auth::guard('groomer_spacer')->user();
+        if (!$user) {
+            return;
+        }
+
+        $this->validate([
+            'space_location' => ['required', 'string', 'max:255'],
+            'space_capacity' => ['required', 'string', 'max:255'],
+            'space_amenities' => ['nullable', 'string', 'max:1500'],
+        ]);
+
+        $existing = $user->business_basics ?? [];
+        if (!is_array($existing)) {
+            $existing = is_string($existing) ? (json_decode($existing, true) ?: []) : [];
+        }
+
+        $user->update([
+            'business_basics' => array_merge($existing, [
+                'spacer_profile' => [
+                    'location' => trim($this->space_location),
+                    'capacity' => trim($this->space_capacity),
+                    'amenities' => trim($this->space_amenities),
+                ],
+            ]),
+        ]);
+        $this->setBuildProfileSubstep('spacer_profile');
+
+        $this->js('alert(' . json_encode('Spacer business profile saved.') . ')');
     }
 
     /**
@@ -938,10 +1197,7 @@ new #[Layout('layouts.app')] class extends Component {
             $documentPaths = [];
 
             // Insurance: keep existing stored paths + persist new uploads from insurance_certificate_upload only
-            $insuranceCertificatePaths = array_values(array_filter(
-                $this->insurance_certificate_paths ?? [],
-                fn($p) => is_string($p) && $p !== ''
-            ));
+            $insuranceCertificatePaths = array_values(array_filter($this->insurance_certificate_paths ?? [], fn($p) => is_string($p) && $p !== ''));
             foreach ($insuranceUploadFiles as $certificate) {
                 if ($certificate instanceof UploadedFile || $certificate instanceof TemporaryUploadedFile) {
                     $dir = $this->storageDirectoryForUpload($certificate, 'insurance_certificates');
@@ -1074,30 +1330,10 @@ new #[Layout('layouts.app')] class extends Component {
         $emailOk = (bool) filter_var($this->business_email, FILTER_VALIDATE_EMAIL);
 
         if ($this->isFreelanceAccount()) {
-            return $this->information_accuracy_confirmed &&
-                $this->full_name &&
-                $this->business_email &&
-                $this->business_phone &&
-                $this->account_holder_name &&
-                $this->account_number &&
-                $this->sort_code &&
-                $this->iban &&
-                $hasIdProof &&
-                $emailOk;
+            return $this->information_accuracy_confirmed && $this->full_name && $this->business_email && $this->business_phone && $this->account_holder_name && $this->account_number && $this->sort_code && $this->iban && $hasIdProof && $emailOk;
         }
 
-        return $this->information_accuracy_confirmed &&
-            $this->full_name &&
-            $this->business_email &&
-            $this->business_name &&
-            $this->business_registration_number &&
-            $this->business_phone &&
-            $this->account_holder_name &&
-            $this->account_number &&
-            $this->sort_code &&
-            $this->iban &&
-            $hasIdProof &&
-            $emailOk;
+        return $this->information_accuracy_confirmed && $this->full_name && $this->business_email && $this->business_name && $this->business_registration_number && $this->business_phone && $this->account_holder_name && $this->account_number && $this->sort_code && $this->iban && $hasIdProof && $emailOk;
     }
 
     /**
@@ -1113,6 +1349,8 @@ new #[Layout('layouts.app')] class extends Component {
             'step' => [
                 'showVerificationStatus' => $this->showVerificationStatus,
                 'showBusinessBasicsForm' => $this->showBusinessBasicsForm,
+                'showGroomerBusinessProfileForm' => $this->showGroomerBusinessProfileForm,
+                'showSpacerBusinessProfileForm' => $this->showSpacerBusinessProfileForm,
                 'showVerificationCard' => $this->showVerificationCard,
                 'showAccountPayoutsForm' => $this->showAccountPayoutsForm,
                 'showRegisteredBusiness' => $this->showRegisteredBusiness,
@@ -1148,6 +1386,14 @@ new #[Layout('layouts.app')] class extends Component {
         ];
     }
 
+    public function activeSidebarStepLabel(): string
+    {
+        if ($this->showBusinessBasicsForm || $this->showGroomerBusinessProfileForm || $this->showSpacerBusinessProfileForm) {
+            return 'Build Your Profile';
+        }
+
+        return 'Verify & Qualify';
+    }
 };
 ?>
 
@@ -1156,18 +1402,19 @@ new #[Layout('layouts.app')] class extends Component {
         <!-- Floating Sidebar -->
         <div class="floating-sidebar">
             <div class="sidebar-header">
-                <h1>Verify & Qualify</h1>
+                <h1>{{ $this->activeSidebarStepLabel() }}</h1>
             </div>
             <div class="steps-list">
                 <div
-                    class="step-item {{ ($showVerificationCard || $showAccountPayoutsForm || $showRegisteredBusiness || $showFreelance || $showVerificationStatus) && !$showBusinessBasicsForm ? 'active' : '' }}">
+                    class="step-item {{ ($showVerificationCard || $showAccountPayoutsForm || $showRegisteredBusiness || $showFreelance || $showVerificationStatus) && !$showBusinessBasicsForm && !$showGroomerBusinessProfileForm && !$showSpacerBusinessProfileForm ? 'active' : '' }}">
                     <div class="step-content">
                         <div class="step-title"><span>1.</span>
                             <p>Verify & Qualify</p>
                         </div>
                     </div>
                 </div>
-                <div class="step-item {{ $showBusinessBasicsForm ? 'active' : '' }}">
+                <div
+                    class="step-item {{ $showBusinessBasicsForm || $showGroomerBusinessProfileForm || $showSpacerBusinessProfileForm ? 'active' : '' }}">
                     <div class="step-content">
                         <div class="step-title"><span>2.</span>
                             <p>Build Your Profile</p>
@@ -1204,13 +1451,12 @@ new #[Layout('layouts.app')] class extends Component {
                             <div class="basics-field">
                                 <label class="form-label" for="business-display-name">Business Name</label>
                                 <div class="input-field-wrap">
-                                    <textarea id="business-display-name" wire:model.live="business_display_name"
-                                        class="form-input"
+                                    <textarea id="business-display-name" wire:model.live="business_display_name" class="form-input"
                                         placeholder="Enter your business display name (what customers see) if different from legal name (e.g. Companies House)."
                                         style="width: 100%; height: 70px; resize: none; overflow: hidden;"></textarea>
                                     <span class="input-valid-icon" aria-hidden="true"><svg
-                                            xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
-                                            fill="none">
+                                            xmlns="http://www.w3.org/2000/svg" width="19" height="19"
+                                            viewBox="0 0 19 19" fill="none">
                                             <path
                                                 d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
                                                 fill="#C9DDA0" />
@@ -1230,8 +1476,7 @@ new #[Layout('layouts.app')] class extends Component {
                             </div>
                             <div class="basics-field">
                                 <label class="form-label" for="business-bio">Bio</label>
-                                <textarea id="business-bio" wire:model.live="business_bio"
-                                    class="form-input basics-textarea"
+                                <textarea id="business-bio" wire:model.live="business_bio" class="form-input basics-textarea"
                                     style="resize: none; overflow: hidden; height: 90px; width: 100%;"
                                     placeholder="Tell customers a bit about yourself (and your space), it would be good to provide information for them to learn a bit more about your experience and training."></textarea>
                                 @error('business_bio')
@@ -1248,9 +1493,10 @@ new #[Layout('layouts.app')] class extends Component {
                             <div class="profile-photo-upload-tracker" wire:key="profile-avatar-widget">
                                 <div class="profile-photo-drop">
                                     <div class="profile-photo-placeholder-static" aria-hidden="true">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="85" height="85" viewBox="0 0 85 85"
-                                            fill="none">
-                                            <circle cx="42.5" cy="42.5" r="42" fill="#E3E3E3" stroke="#F6F6F6" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="85" height="85"
+                                            viewBox="0 0 85 85" fill="none">
+                                            <circle cx="42.5" cy="42.5" r="42" fill="#E3E3E3"
+                                                stroke="#F6F6F6" />
                                             <path
                                                 d="M16.4332 75.7445C18.0849 43.507 66.8864 43.507 68.5381 75.7446C68.5381 75.7446 59.0091 84.8113 42.5757 84.8113C26.1424 84.8113 16.4332 75.7445 16.4332 75.7445Z"
                                                 fill="white" />
@@ -1271,7 +1517,8 @@ new #[Layout('layouts.app')] class extends Component {
                                     <div class="profile-photo-copy">
                                         <p class="profile-photo-label">Upload Image</p>
                                         <label class="profile-photo-btn">
-                                            <input type="file" wire:model="business_avatar_upload" class="hidden-input">
+                                            <input type="file" wire:model="business_avatar_upload"
+                                                class="hidden-input">
                                             <span class="profile-photo-btn-inner">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
                                                     viewBox="0 0 14 14" fill="none">
@@ -1293,8 +1540,8 @@ new #[Layout('layouts.app')] class extends Component {
                                         @if ($business_avatar_upload)
                                             <div class="file-item-1" wire:key="profile-avatar-temp">
                                                 <div class="file-info">
-                                                    <img src="{{ $business_avatar_upload->temporaryUrl() }}" class="file-thumbnail"
-                                                        alt="">
+                                                    <img src="{{ $business_avatar_upload->temporaryUrl() }}"
+                                                        class="file-thumbnail" alt="">
                                                     <div class="file-details">
                                                         <div class="file-name">
                                                             {{ $business_avatar_upload->getClientOriginalName() }}
@@ -1305,11 +1552,13 @@ new #[Layout('layouts.app')] class extends Component {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <button type="button" class="file-remove" wire:click="removeBusinessAvatar"
-                                                    title="Remove" aria-label="Remove">
-                                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                                        <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="1.5"
-                                                            stroke-linecap="round" />
+                                                <button type="button" class="file-remove"
+                                                    wire:click="removeBusinessAvatar" title="Remove"
+                                                    aria-label="Remove">
+                                                    <svg width="16" height="16" viewBox="0 0 16 16"
+                                                        fill="none">
+                                                        <path d="M12 4L4 12M4 4L12 12" stroke="currentColor"
+                                                            stroke-width="1.5" stroke-linecap="round" />
                                                     </svg>
                                                 </button>
                                             </div>
@@ -1317,19 +1566,23 @@ new #[Layout('layouts.app')] class extends Component {
                                             <div class="file-item file-item--saved" wire:key="profile-avatar-saved">
                                                 <div class="file-info">
                                                     <img class="file-thumbnail"
-                                                        src="{{ $this->publicDiskUrl($business_avatar_path) }}" alt=""
-                                                        loading="lazy">
+                                                        src="{{ $this->publicDiskUrl($business_avatar_path) }}"
+                                                        alt="" loading="lazy">
                                                     <div class="file-details">
-                                                        <div class="file-name">{{ basename($business_avatar_path) }}</div>
-                                                        <div class="file-progress-text" style="color:#10b981">Saved</div>
+                                                        <div class="file-name">{{ basename($business_avatar_path) }}
+                                                        </div>
+                                                        <div class="file-progress-text" style="color:#10b981">Saved
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <button type="button" class="file-remove" wire:click="removeBusinessAvatar"
-                                                    wire:loading.attr="disabled" wire:target="removeBusinessAvatar" title="Remove"
+                                                <button type="button" class="file-remove"
+                                                    wire:click="removeBusinessAvatar" wire:loading.attr="disabled"
+                                                    wire:target="removeBusinessAvatar" title="Remove"
                                                     aria-label="Remove">
-                                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                                        <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="1.5"
-                                                            stroke-linecap="round" />
+                                                    <svg width="16" height="16" viewBox="0 0 16 16"
+                                                        fill="none">
+                                                        <path d="M12 4L4 12M4 4L12 12" stroke="currentColor"
+                                                            stroke-width="1.5" stroke-linecap="round" />
                                                     </svg>
                                                 </button>
                                             </div>
@@ -1340,7 +1593,8 @@ new #[Layout('layouts.app')] class extends Component {
                                 <div class="profile-avatar-upload-progress" hidden>
                                     <div class="profile-avatar-upload-progress-inner">
                                         <div class="profile-avatar-upload-progress-thumb-wrap" aria-hidden="true">
-                                            <img class="profile-avatar-upload-progress-thumb" src="" alt="">
+                                            <img class="profile-avatar-upload-progress-thumb" src=""
+                                                alt="">
                                         </div>
                                         <div class="profile-avatar-upload-progress-text">
                                             <span class="profile-avatar-upload-progress-name"></span>
@@ -1371,29 +1625,39 @@ new #[Layout('layouts.app')] class extends Component {
                                     }
                                     $gallery_items = array_slice($gallery_items, 0, 3);
                                     $gallery_used = count($gallery_items);
-                                    $gallery_room = max(0, 3 - count($business_gallery_paths) - count($business_gallery_pending));
+                                    $gallery_room = max(
+                                        0,
+                                        3 - count($business_gallery_paths) - count($business_gallery_pending),
+                                    );
                                 @endphp
                                 @foreach (range(0, 2) as $slot)
                                     @php $item = $gallery_items[$slot] ?? null; @endphp
                                     <div class="gallery-slot">
                                         @if ($item && $item['kind'] === 'path')
-                                            <img class="gallery-slot-img" src="{{ $this->publicDiskUrl($item['path']) }}" alt="">
+                                            <img class="gallery-slot-img"
+                                                src="{{ $this->publicDiskUrl($item['path']) }}" alt="">
                                             <button type="button" class="gallery-slot-remove"
                                                 wire:click="removeBusinessGalleryPath({{ (int) $item['pathIndex'] }})"
                                                 aria-label="Remove photo">&times;</button>
-                                        @elseif ($item && $item['kind'] === 'pending' && $item['file'] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile)
-                                            <img class="gallery-slot-img" src="{{ $item['file']->temporaryUrl() }}" alt="">
+                                        @elseif (
+                                            $item &&
+                                                $item['kind'] === 'pending' &&
+                                                $item['file'] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile)
+                                            <img class="gallery-slot-img" src="{{ $item['file']->temporaryUrl() }}"
+                                                alt="">
                                             <button type="button" class="gallery-slot-remove"
                                                 wire:click="removeBusinessGalleryPending({{ (int) $item['idx'] }})"
                                                 aria-label="Remove photo">&times;</button>
                                         @else
                                             @if ($slot === $gallery_used && $gallery_room > 0)
                                                 <label class="gallery-slot-empty">
-                                                    <input type="file" wire:model="business_gallery_pick" class="hidden-input">
+                                                    <input type="file" wire:model="business_gallery_pick"
+                                                        class="hidden-input">
                                                     <span class="gallery-paw" aria-hidden="true">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="160" height="158"
-                                                            viewBox="0 0 160 158" fill="none">
-                                                            <rect width="159.422" height="157.441" rx="10" fill="white" />
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="160"
+                                                            height="158" viewBox="0 0 160 158" fill="none">
+                                                            <rect width="159.422" height="157.441" rx="10"
+                                                                fill="white" />
                                                             <path fill-rule="evenodd" clip-rule="evenodd"
                                                                 d="M69.9503 40.5986C67.9196 40.5986 66.328 41.8179 65.3434 43.2803C64.3466 44.7548 63.7969 46.6789 63.7969 48.7002C63.7969 50.7216 64.3466 52.6457 65.3434 54.1202C66.328 55.5785 67.9196 56.8018 69.9503 56.8018C71.9809 56.8018 73.5725 55.5825 74.5571 54.1202C75.5539 52.6457 76.1036 50.7216 76.1036 48.7002C76.1036 46.6789 75.5539 44.7548 74.5571 43.2803C73.5725 41.822 71.9809 40.5986 69.9503 40.5986ZM90.4615 40.5986C88.4309 40.5986 86.8392 41.8179 85.8546 43.2803C84.8578 44.7548 84.3081 46.6789 84.3081 48.7002C84.3081 50.7216 84.8578 52.6457 85.8546 54.1202C86.8392 55.5785 88.4309 56.8018 90.4615 56.8018C92.4921 56.8018 94.0837 55.5825 95.0683 54.1202C96.0651 52.6457 96.6148 50.7216 96.6148 48.7002C96.6148 46.6789 96.0651 44.7548 95.0683 43.2803C94.0837 41.822 92.4921 40.5986 90.4615 40.5986ZM57.6435 58.8272C55.6129 58.8272 54.0213 60.0465 53.0367 61.5089C52.0399 62.9834 51.4902 64.9075 51.4902 66.9288C51.4902 68.9502 52.0399 70.8743 53.0367 72.3488C54.0213 73.8071 55.6129 75.0305 57.6435 75.0305C59.6741 75.0305 61.2658 73.8112 62.2504 72.3488C63.2472 70.8743 63.7969 68.9502 63.7969 66.9288C63.7969 64.9075 63.2472 62.9834 62.2504 61.5089C61.2658 60.0506 59.6741 58.8272 57.6435 58.8272ZM80.2059 58.8272C75.2832 58.8272 71.6363 61.436 69.3062 64.6726C67.0048 67.8605 65.848 71.8182 65.848 75.0305C65.848 78.7734 68.1248 81.3781 70.9184 82.9376C73.6669 84.4769 77.1128 85.1575 80.2059 85.1575C83.299 85.1575 86.7448 84.481 89.4933 82.9376C92.2829 81.374 94.5637 78.7734 94.5637 75.0305C94.5637 71.8182 93.4069 67.8605 91.1055 64.6726C88.7795 61.4319 85.1327 58.8272 80.2059 58.8272ZM102.768 58.8272C100.738 58.8272 99.1459 60.0465 98.1614 61.5089C97.1645 62.9834 96.6148 64.9075 96.6148 66.9288C96.6148 68.9502 97.1645 70.8743 98.1614 72.3488C99.1459 73.8071 100.738 75.0305 102.768 75.0305C104.799 75.0305 106.39 73.8112 107.375 72.3488C108.372 70.8743 108.922 68.9502 108.922 66.9288C108.922 64.9075 108.372 62.9834 107.375 61.5089C106.39 60.0506 104.799 58.8272 102.768 58.8272Z"
                                                                 fill="#E5E5E5" />
@@ -1410,11 +1674,13 @@ new #[Layout('layouts.app')] class extends Component {
                                                     </span>
                                                 </label>
                                             @else
-                                                <div class="gallery-slot-empty gallery-slot-placeholder" aria-hidden="true">
+                                                <div class="gallery-slot-empty gallery-slot-placeholder"
+                                                    aria-hidden="true">
                                                     <span class="gallery-paw">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="160" height="158"
-                                                            viewBox="0 0 160 158" fill="none">
-                                                            <rect width="159.422" height="157.441" rx="10" fill="white" />
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="160"
+                                                            height="158" viewBox="0 0 160 158" fill="none">
+                                                            <rect width="159.422" height="157.441" rx="10"
+                                                                fill="white" />
                                                             <path fill-rule="evenodd" clip-rule="evenodd"
                                                                 d="M69.9503 40.5986C67.9196 40.5986 66.328 41.8179 65.3434 43.2803C64.3466 44.7548 63.7969 46.6789 63.7969 48.7002C63.7969 50.7216 64.3466 52.6457 65.3434 54.1202C66.328 55.5785 67.9196 56.8018 69.9503 56.8018C71.9809 56.8018 73.5725 55.5825 74.5571 54.1202C75.5539 52.6457 76.1036 50.7216 76.1036 48.7002C76.1036 46.6789 75.5539 44.7548 74.5571 43.2803C73.5725 41.822 71.9809 40.5986 69.9503 40.5986ZM90.4615 40.5986C88.4309 40.5986 86.8392 41.8179 85.8546 43.2803C84.8578 44.7548 84.3081 46.6789 84.3081 48.7002C84.3081 50.7216 84.8578 52.6457 85.8546 54.1202C86.8392 55.5785 88.4309 56.8018 90.4615 56.8018C92.4921 56.8018 94.0837 55.5825 95.0683 54.1202C96.0651 52.6457 96.6148 50.7216 96.6148 48.7002C96.6148 46.6789 96.0651 44.7548 95.0683 43.2803C94.0837 41.822 92.4921 40.5986 90.4615 40.5986ZM57.6435 58.8272C55.6129 58.8272 54.0213 60.0465 53.0367 61.5089C52.0399 62.9834 51.4902 64.9075 51.4902 66.9288C51.4902 68.9502 52.0399 70.8743 53.0367 72.3488C54.0213 73.8071 55.6129 75.0305 57.6435 75.0305C59.6741 75.0305 61.2658 73.8112 62.2504 72.3488C63.2472 70.8743 63.7969 68.9502 63.7969 66.9288C63.7969 64.9075 63.2472 62.9834 62.2504 61.5089C61.2658 60.0506 59.6741 58.8272 57.6435 58.8272ZM80.2059 58.8272C75.2832 58.8272 71.6363 61.436 69.3062 64.6726C67.0048 67.8605 65.848 71.8182 65.848 75.0305C65.848 78.7734 68.1248 81.3781 70.9184 82.9376C73.6669 84.4769 77.1128 85.1575 80.2059 85.1575C83.299 85.1575 86.7448 84.481 89.4933 82.9376C92.2829 81.374 94.5637 78.7734 94.5637 75.0305C94.5637 71.8182 93.4069 67.8605 91.1055 64.6726C88.7795 61.4319 85.1327 58.8272 80.2059 58.8272ZM102.768 58.8272C100.738 58.8272 99.1459 60.0465 98.1614 61.5089C97.1645 62.9834 96.6148 64.9075 96.6148 66.9288C96.6148 68.9502 97.1645 70.8743 98.1614 72.3488C99.1459 73.8071 100.738 75.0305 102.768 75.0305C104.799 75.0305 106.39 73.8112 107.375 72.3488C108.372 70.8743 108.922 68.9502 108.922 66.9288C108.922 64.9075 108.372 62.9834 107.375 61.5089C106.39 60.0506 104.799 58.8272 102.768 58.8272Z"
                                                                 fill="#E5E5E5" />
@@ -1443,19 +1709,24 @@ new #[Layout('layouts.app')] class extends Component {
                         <div class="basics-actions">
                             <button type="submit"
                                 class="submit-btn {{ $this->isBusinessBasicsContinueEnabled() ? 'btn-active' : 'btn-disabled' }}"
-                                wire:loading.attr="disabled" wire:target="submitBusinessBasics" @if (!$this->isBusinessBasicsContinueEnabled()) disabled @endif>
+                                wire:loading.attr="disabled" wire:target="submitBusinessBasics"
+                                @if (!$this->isBusinessBasicsContinueEnabled()) disabled @endif>
                                 <span wire:loading.remove wire:target="submitBusinessBasics">Continue</span>
                                 <span wire:loading wire:target="submitBusinessBasics">Saving…</span>
                             </button>
                         </div>
                     </form>
                 </div>
+            @elseif ($showGroomerBusinessProfileForm)
+                @include('livewire.auth.verify-qualify-groomer-business-profile')
+            @elseif ($showSpacerBusinessProfileForm)
+                @include('livewire.auth.verify-qualify-spacer-business-profile')
             @elseif ($showVerificationCard)
                 <div class="verification-card">
                     <div class="verification-header">
                         <div class="icon-wrapper">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="138" height="135" viewBox="0 0 138 135"
-                                fill="none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="138" height="135"
+                                viewBox="0 0 138 135" fill="none">
                                 <g filter="url(#filter0_d_14_635)">
                                     <path
                                         d="M72.0689 18.8712C72.2854 18.7938 72.522 18.7934 72.7388 18.87L109.21 31.766C109.609 31.9072 109.876 32.285 109.876 32.7088V70.8439C109.876 91.5939 77.1721 108.667 73.0304 110.746C72.7583 110.883 72.4436 110.883 72.1715 110.746C68.0298 108.667 35.3257 91.5939 35.3257 70.8439V32.7063C35.3257 32.2837 35.5913 31.9068 35.9892 31.7646L72.0689 18.8712Z"
@@ -1466,7 +1737,8 @@ new #[Layout('layouts.app')] class extends Component {
                                     <path
                                         d="M57.5518 67.7464L69.0816 79.2762L91.3519 57.006C92.3984 55.9596 92.4014 54.2639 91.3586 53.2138C90.3107 52.1584 88.6046 52.1554 87.553 53.207L69.0816 71.6783L61.3373 63.9556C60.2908 62.912 58.5969 62.9132 57.5518 63.9583C56.5057 65.0043 56.5057 66.7004 57.5518 67.7464Z"
                                         fill="#FFC97A" />
-                                    <rect x="16.9937" y="12.9932" width="20.9817" height="23.313" rx="3" fill="white" />
+                                    <rect x="16.9937" y="12.9932" width="20.9817" height="23.313" rx="3"
+                                        fill="white" />
                                     <path
                                         d="M28.461 6.21127C28.155 6.07285 27.8272 6 27.4848 6C27.1424 6 26.8146 6.07285 26.5086 6.21127L12.7903 12.0322C11.1875 12.7098 9.99275 14.2907 10 16.1995C10.0365 23.4265 13.0089 36.6494 25.5615 42.6598C26.7781 43.2426 28.1915 43.2426 29.4081 42.6598C41.9607 36.6494 44.9331 23.4265 44.9696 16.1995C44.9769 14.2907 43.7821 12.7098 42.1793 12.0322L28.461 6.21127ZM20.5565 26.8506C20.9062 26.938 21.2777 26.9817 21.6565 26.9817C24.2283 26.9817 26.3191 24.8908 26.3191 22.3191V17.6565H29.5393C30.4208 17.6565 31.2295 18.1519 31.6229 18.946L32.1474 19.9878H36.81C37.4511 19.9878 37.9757 20.5124 37.9757 21.1535V23.4848C37.9757 26.7049 35.3675 29.313 32.1474 29.313H28.6504V33.0067C28.6504 33.5385 28.2206 33.9756 27.6815 33.9756C27.5504 33.9756 27.4192 33.9465 27.3027 33.8955L20.1121 30.8138C19.6312 30.6098 19.3252 30.1363 19.3252 29.619C19.3252 29.415 19.369 29.2183 19.4637 29.0362L20.5565 26.8506ZM20.4909 17.6565H23.9878V22.3191C23.9878 23.6086 22.946 24.6504 21.6565 24.6504C20.367 24.6504 19.3252 23.6086 19.3252 22.3191V18.8222C19.3252 18.1811 19.8498 17.6565 20.4909 17.6565ZM29.8161 21.1535C29.8161 20.8443 29.6933 20.5478 29.4747 20.3292C29.2561 20.1106 28.9596 19.9878 28.6504 19.9878C28.3413 19.9878 28.0448 20.1106 27.8262 20.3292C27.6076 20.5478 27.4848 20.8443 27.4848 21.1535C27.4848 21.4626 27.6076 21.7591 27.8262 21.9777C28.0448 22.1963 28.3413 22.3191 28.6504 22.3191C28.9596 22.3191 29.2561 22.1963 29.4747 21.9777C29.6933 21.7591 29.8161 21.4626 29.8161 21.1535Z"
                                         fill="#C9DDA0" />
@@ -1478,12 +1750,14 @@ new #[Layout('layouts.app')] class extends Component {
                                         fill="#CBDCE8" />
                                     <path
                                         d="M119.52 94.0211L112.026 101.984M108.696 101.595C106.373 102.487 104.515 102.334 102.658 101.598C103.126 107.634 105.94 109.954 109.692 110.883C109.692 110.883 112.518 108.884 112.926 104.145C112.97 103.632 112.992 103.376 112.886 103.086C112.779 102.797 112.569 102.59 112.15 102.175C111.461 101.493 111.117 101.152 110.708 101.066C110.298 100.981 109.764 101.186 108.696 101.595Z"
-                                        stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        stroke="white" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
                                     <path
                                         d="M104.063 106.618C104.063 106.618 106.405 107.071 108.747 105.263L104.063 106.618Z"
                                         fill="#CBDCE8" />
                                     <path d="M104.063 106.618C104.063 106.618 106.405 107.071 108.747 105.263"
-                                        stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        stroke="white" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
                                     <path
                                         d="M107.81 98.0027C107.81 98.3133 107.687 98.6111 107.467 98.8307C107.248 99.0503 106.95 99.1737 106.639 99.1737C106.329 99.1737 106.031 99.0503 105.811 98.8307C105.592 98.6111 105.468 98.3133 105.468 98.0027C105.468 97.6921 105.592 97.3943 105.811 97.1747C106.031 96.9551 106.329 96.8317 106.639 96.8317C106.95 96.8317 107.248 96.9551 107.467 97.1747C107.687 97.3943 107.81 97.6921 107.81 98.0027Z"
                                         fill="#CBDCE8" stroke="white" />
@@ -1500,7 +1774,8 @@ new #[Layout('layouts.app')] class extends Component {
                                         <feOffset dy="4" />
                                         <feGaussianBlur stdDeviation="5" />
                                         <feComposite in2="hardAlpha" operator="out" />
-                                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.28 0" />
+                                        <feColorMatrix type="matrix"
+                                            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.28 0" />
                                         <feBlend mode="normal" in2="BackgroundImageFix"
                                             result="effect1_dropShadow_14_635" />
                                         <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_14_635"
@@ -1540,24 +1815,26 @@ new #[Layout('layouts.app')] class extends Component {
                                 </div>
                                 <div class="radio-group">
                                     <div class="radio-item {{ $fursgo_usage == 'groomer' ? 'checked' : '' }}">
-                                        <input type="radio" wire:model.live="fursgo_usage" value="groomer" id="groomer"
-                                            name="fursgo_usage">
+                                        <input type="radio" wire:model.live="fursgo_usage" value="groomer"
+                                            id="groomer" name="fursgo_usage">
                                         <label for="groomer" class="radio-label">
                                             <div class="radio-content">
                                                 <p class="radio-title">Pet Groomer</p>
-                                                <p class="radio-description">I provide grooming services for pets and accept
+                                                <p class="radio-description">I provide grooming services for pets and
+                                                    accept
                                                     bookings from pet owners.</p>
                                             </div>
                                             <span class="radio-custom"></span>
                                         </label>
                                     </div>
                                     <div class="radio-item {{ $fursgo_usage == 'space' ? 'checked' : '' }}">
-                                        <input type="radio" wire:model.live="fursgo_usage" value="space" id="space"
-                                            name="fursgo_usage">
+                                        <input type="radio" wire:model.live="fursgo_usage" value="space"
+                                            id="space" name="fursgo_usage">
                                         <label for="space" class="radio-label">
                                             <div class="radio-content">
                                                 <p class="radio-title">Space Host</p>
-                                                <p class="radio-description">I rent out a grooming space for professional
+                                                <p class="radio-description">I rent out a grooming space for
+                                                    professional
                                                     groomers to use.</p>
                                             </div>
                                             <span class="radio-custom"></span>
@@ -1573,9 +1850,10 @@ new #[Layout('layouts.app')] class extends Component {
                             <div class="form-section">
                                 <h3 class="section-title">Select Account Type</h3>
                                 <div class="radio-group">
-                                    <div class="radio-item {{ $account_type == 'registered_business' ? 'checked' : '' }}">
-                                        <input type="radio" wire:model.live="account_type" value="registered_business"
-                                            id="registered_business" name="account_type">
+                                    <div
+                                        class="radio-item {{ $account_type == 'registered_business' ? 'checked' : '' }}">
+                                        <input type="radio" wire:model.live="account_type"
+                                            value="registered_business" id="registered_business" name="account_type">
                                         <label for="registered_business" class="radio-label">
                                             <div class="radio-content">
                                                 <p class="radio-title">Registered Business</p>
@@ -1585,8 +1863,8 @@ new #[Layout('layouts.app')] class extends Component {
                                         </label>
                                     </div>
                                     <div class="radio-item {{ $account_type == 'freelance' ? 'checked' : '' }}">
-                                        <input type="radio" wire:model.live="account_type" value="freelance" id="freelance"
-                                            name="account_type">
+                                        <input type="radio" wire:model.live="account_type" value="freelance"
+                                            id="freelance" name="account_type">
                                         <label for="freelance" class="radio-label">
                                             <div class="radio-content">
                                                 <p class="radio-title">Freelance</p>
@@ -1618,8 +1896,8 @@ new #[Layout('layouts.app')] class extends Component {
                                     </div>
                                     <div
                                         class="checkbox-item {{ in_array('commercial_salon', $location_types) ? 'checked' : '' }}">
-                                        <input type="checkbox" wire:model.live="location_types" value="commercial_salon"
-                                            id="commercial_salon" name="location_types">
+                                        <input type="checkbox" wire:model.live="location_types"
+                                            value="commercial_salon" id="commercial_salon" name="location_types">
                                         <label for="commercial_salon" class="checkbox-label">
                                             <div class="checkbox-content">
                                                 <p class="checkbox-title">Commercial Salon</p>
@@ -1671,7 +1949,8 @@ new #[Layout('layouts.app')] class extends Component {
                         <div class="submit-section">
                             <button type="submit"
                                 class="submit-btn {{ $fursgo_usage && $account_type && count($location_types) > 0 ? 'btn-active' : 'btn-disabled' }}"
-                                wire:loading.attr="disabled" wire:target="submit" @if ($fursgo_usage && $account_type && count($location_types) > 0) @else disabled @endif>
+                                wire:loading.attr="disabled" wire:target="submit"
+                                @if ($fursgo_usage && $account_type && count($location_types) > 0) @else disabled @endif>
                                 <span wire:loading.remove wire:target="submit">Continue</span>
                                 <span wire:loading wire:target="submit">Processing...</span>
                             </button>
@@ -1781,9 +2060,12 @@ new #[Layout('layouts.app')] class extends Component {
                                 </div>
                                 <div>
                                     <label class="form-label">Business Owner ID</label>
-                                    <p>Please upload a clear photo or scan of a valid government-issued ID (e.g. passport or
-                                        driving licence) and a recent UK utility bill, bank statement, or official letter
-                                        showing your current address. Both documents must be in English and dated within the
+                                    <p>Please upload a clear photo or scan of a valid government-issued ID (e.g.
+                                        passport or
+                                        driving licence) and a recent UK utility bill, bank statement, or official
+                                        letter
+                                        showing your current address. Both documents must be in English and dated within
+                                        the
                                         last 3 months.</p>
 
                                     @php
@@ -1812,15 +2094,15 @@ new #[Layout('layouts.app')] class extends Component {
                                         <div class="upload-tabs">
                                             <div>
                                                 <button type="button" class="tab-btn active" data-tab="attach"><svg
-                                                        xmlns="http://www.w3.org/2000/svg" width="11" height="12"
-                                                        viewBox="0 0 11 12" fill="none">
+                                                        xmlns="http://www.w3.org/2000/svg" width="11"
+                                                        height="12" viewBox="0 0 11 12" fill="none">
                                                         <path
                                                             d="M10.5 6.04469L6.17551 10.5107C5.54818 11.1481 4.70239 11.5037 3.82235 11.5C2.94232 11.4963 2.09936 11.1336 1.47707 10.4909C0.854792 9.8483 0.503611 8.97775 0.500028 8.06891C0.496444 7.16008 0.840748 6.2866 1.45794 5.63874L5.78243 1.17272C5.98895 0.95944 6.23412 0.790259 6.50395 0.674834C6.77378 0.559409 7.06298 0.5 7.35504 0.5C7.64711 0.5 7.93631 0.559409 8.20614 0.674834C8.47597 0.790259 8.72114 0.95944 8.92766 1.17272C9.13418 1.386 9.298 1.63919 9.40977 1.91785C9.52153 2.19652 9.57906 2.49518 9.57906 2.7968C9.57906 3.09842 9.52153 3.39709 9.40977 3.67575C9.298 3.95441 9.13418 4.20761 8.92766 4.42089L4.60317 8.88691C4.3946 9.10231 4.1117 9.22333 3.81673 9.22333C3.52175 9.22333 3.23886 9.10231 3.03028 8.88691C2.8217 8.6715 2.70452 8.37935 2.70452 8.07472C2.70452 7.77009 2.8217 7.47794 3.03028 7.26254L6.96168 3.20304"
                                                             stroke="#3B3731" stroke-linecap="round" />
                                                     </svg>Attach</button>
                                                 <button type="button" class="tab-btn" data-tab="upload"><svg
-                                                        xmlns="http://www.w3.org/2000/svg" width="12" height="12"
-                                                        viewBox="0 0 12 12" fill="none">
+                                                        xmlns="http://www.w3.org/2000/svg" width="12"
+                                                        height="12" viewBox="0 0 12 12" fill="none">
                                                         <path
                                                             d="M10.2778 0.5H1.72222C1.04721 0.5 0.5 1.04721 0.5 1.72222V10.2778C0.5 10.9528 1.04721 11.5 1.72222 11.5H10.2778C10.9528 11.5 11.5 10.9528 11.5 10.2778V1.72222C11.5 1.04721 10.9528 0.5 10.2778 0.5Z"
                                                             stroke="#3B3731" stroke-linecap="round"
@@ -1845,7 +2127,8 @@ new #[Layout('layouts.app')] class extends Component {
                                                 <div class="file-list" id="business-owner-id-file-list" wire:ignore>
                                                     <!-- Files will be dynamically added here -->
                                                 </div>
-                                                <p class="file-list-empty-msg" data-role="file-list-empty">No file attached.
+                                                <p class="file-list-empty-msg" data-role="file-list-empty">No file
+                                                    attached.
                                                 </p>
                                             </div>
 
@@ -1875,8 +2158,8 @@ new #[Layout('layouts.app')] class extends Component {
                                     <label class="form-label">Account Holder Name</label>
                                     <div class="input-container">
                                         <div class="input-field-wrap">
-                                            <input type="text" wire:model.live="account_holder_name" class="form-input"
-                                                placeholder=" " required>
+                                            <input type="text" wire:model.live="account_holder_name"
+                                                class="form-input" placeholder=" " required>
                                             <span class="input-valid-icon" aria-hidden="true"><svg
                                                     xmlns="http://www.w3.org/2000/svg" width="19" height="19"
                                                     viewBox="0 0 19 19" fill="none">
@@ -1923,8 +2206,8 @@ new #[Layout('layouts.app')] class extends Component {
                                     <label class="form-label">IBAN</label>
                                     <div class="input-container">
                                         <div class="input-field-wrap">
-                                            <input type="text" wire:model.live="iban" class="form-input" placeholder=" "
-                                                required>
+                                            <input type="text" wire:model.live="iban" class="form-input"
+                                                placeholder=" " required>
                                             <span class="input-valid-icon" aria-hidden="true"><svg
                                                     xmlns="http://www.w3.org/2000/svg" width="19" height="19"
                                                     viewBox="0 0 19 19" fill="none">
@@ -1966,16 +2249,18 @@ new #[Layout('layouts.app')] class extends Component {
                                         <!-- Tabs -->
                                         <div class="upload-tabs">
                                             <div>
-                                                <button type="button" class="tab-btn" data-tab="insurance-attach"><svg
-                                                        xmlns="http://www.w3.org/2000/svg" width="11" height="12"
-                                                        viewBox="0 0 11 12" fill="none">
+                                                <button type="button" class="tab-btn"
+                                                    data-tab="insurance-attach"><svg
+                                                        xmlns="http://www.w3.org/2000/svg" width="11"
+                                                        height="12" viewBox="0 0 11 12" fill="none">
                                                         <path
                                                             d="M10.5 6.04469L6.17551 10.5107C5.54818 11.1481 4.70239 11.5037 3.82235 11.5C2.94232 11.4963 2.09936 11.1336 1.47707 10.4909C0.854792 9.8483 0.503611 8.97775 0.500028 8.06891C0.496444 7.16008 0.840748 6.2866 1.45794 5.63874L5.78243 1.17272C5.98895 0.95944 6.23412 0.790259 6.50395 0.674834C6.77378 0.559409 7.06298 0.5 7.35504 0.5C7.64711 0.5 7.93631 0.559409 8.20614 0.674834C8.47597 0.790259 8.72114 0.95944 8.92766 1.17272C9.13418 1.386 9.298 1.63919 9.40977 1.91785C9.52153 2.19652 9.57906 2.49518 9.57906 2.7968C9.57906 3.09842 9.52153 3.39709 9.40977 3.67575C9.298 3.95441 9.13418 4.20761 8.92766 4.42089L4.60317 8.88691C4.3946 9.10231 4.1117 9.22333 3.81673 9.22333C3.52175 9.22333 3.23886 9.10231 3.03028 8.88691C2.8217 8.6715 2.70452 8.37935 2.70452 8.07472C2.70452 7.77009 2.8217 7.47794 3.03028 7.26254L6.96168 3.20304"
                                                             stroke="#3B3731" stroke-linecap="round" />
                                                     </svg>Attach</button>
                                                 <button type="button" class="tab-btn active"
-                                                    data-tab="insurance-upload"><svg xmlns="http://www.w3.org/2000/svg"
-                                                        width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                                    data-tab="insurance-upload"><svg
+                                                        xmlns="http://www.w3.org/2000/svg" width="12"
+                                                        height="12" viewBox="0 0 12 12" fill="none">
                                                         <path
                                                             d="M10.2778 0.5H1.72222C1.04721 0.5 0.5 1.04721 0.5 1.72222V10.2778C0.5 10.9528 1.04721 11.5 1.72222 11.5H10.2778C10.9528 11.5 11.5 10.9528 11.5 10.2778V1.72222C11.5 1.04721 10.9528 0.5 10.2778 0.5Z"
                                                             stroke="#3B3731" stroke-linecap="round"
@@ -2000,7 +2285,8 @@ new #[Layout('layouts.app')] class extends Component {
                                                 <div class="file-list" id="insurance-file-list" wire:ignore>
                                                     <!-- Files will be dynamically added here -->
                                                 </div>
-                                                <p class="file-list-empty-msg" data-role="file-list-empty">No file attached.
+                                                <p class="file-list-empty-msg" data-role="file-list-empty">No file
+                                                    attached.
                                                 </p>
                                             </div>
 
@@ -2025,7 +2311,8 @@ new #[Layout('layouts.app')] class extends Component {
                                         <span class="error-text">{{ $message }}</span>
                                     @enderror
                                     @if ($errors->has('insurance_certificate_upload.*'))
-                                        <span class="error-text">{{ $errors->first('insurance_certificate_upload.*') }}</span>
+                                        <span
+                                            class="error-text">{{ $errors->first('insurance_certificate_upload.*') }}</span>
                                     @endif
                                 </div>
 
@@ -2057,144 +2344,153 @@ new #[Layout('layouts.app')] class extends Component {
 </section>
 
 @script
-<script>
-    (function () {
-        if (window.__verifyQualifyDebugInstalled) {
-            return;
-        }
-        window.__verifyQualifyDebugInstalled = true;
-
-        let t = null;
-        const debounceMs = 250;
-
-        function wireRootFromNode(node) {
-            if (!node || !node.closest) {
-                return null;
-            }
-            return node.closest('[wire\\:id]');
-        }
-
-        function resolveComponent(component, el) {
-            if (component && typeof component.call === 'function') {
-                return component;
-            }
-            const root = wireRootFromNode(el);
-            const id = root && root.getAttribute('wire:id');
-            if (!id || typeof Livewire === 'undefined' || typeof Livewire.find !== 'function') {
-                return null;
-            }
-            return Livewire.find(id);
-        }
-
-        function logVerifyQualifyState(component, el) {
-            const cmp = resolveComponent(component, el);
-            if (!cmp || typeof cmp.call !== 'function') {
+    <script>
+        (function() {
+            if (window.__verifyQualifyDebugInstalled) {
                 return;
             }
-            clearTimeout(t);
-            t = setTimeout(() => {
-                cmp.call('getSubmitButtonDebug').then((data) => {
-                    const p = data.personal_step;
-                    const c = data.continue_step;
+            window.__verifyQualifyDebugInstalled = true;
 
-                    if (data.step.showBusinessBasicsForm) {
-                        console.log(
-                            '%c[verify-qualify]%c Business basics (Build Your Profile)',
-                            'color:#ca8a04;font-weight:bold',
-                            'color:inherit',
-                            data.business_basics?.continue_enabled ? 'Continue ENABLED' : 'Continue DISABLED — Business name required',
-                            data
-                        );
-                        return;
-                    }
+            let t = null;
+            const debounceMs = 250;
 
-                    if (data.step.showVerificationStatus) {
-                        console.log(
-                            '%c[verify-qualify]%c Verification approved screen',
-                            'color:#16a34a;font-weight:bold',
-                            'color:inherit',
-                            data
-                        );
-                        return;
-                    }
+            function wireRootFromNode(node) {
+                if (!node || !node.closest) {
+                    return null;
+                }
+                return node.closest('[wire\\:id]');
+            }
 
-                    if (data.step.showAccountPayoutsForm) {
-                        const continueReasons = [];
-                        if (!c.continue_would_enable) {
-                            if (!data.continue_step.fursgo_usage) {
-                                continueReasons.push('Choose how you use FursGo (groomer vs space)');
-                            }
-                            if (!data.continue_step.account_type) {
-                                continueReasons.push('Select account type');
-                            }
-                            if (data.continue_step.location_types_count < 1) {
-                                continueReasons.push('Select at least one location type');
-                            }
-                        }
-                        console.log(
-                            '%c[verify-qualify]%c Continue',
-                            'color:#2563eb;font-weight:bold',
-                            'color:inherit',
-                            c.continue_would_enable ? 'ENABLED' : 'DISABLED — ' + continueReasons.join('; '),
-                            data
-                        );
-                    }
-
-                    if (data.step.showRegisteredBusiness || data.step.showFreelance) {
-                        const submitReasons = [];
-                        if (!p.submit_would_enable) {
-                            const skipKeys = new Set([
-                                'email_format_ok',
-                                'business_owner_id_images_count',
-                                'id_documents_count',
-                                'has_id_proof',
-                                'submit_would_enable',
-                            ]);
-                            Object.entries(p).forEach(([key, ok]) => {
-                                if (skipKeys.has(key) || key.endsWith('_count')) {
-                                    return;
-                                }
-                                if (ok === false) {
-                                    submitReasons.push('missing or empty: ' + key);
-                                }
-                            });
-                            if (!p.email_format_ok && p.business_email) {
-                                submitReasons.push('business_email fails email validation');
-                            }
-                            if (!p.has_id_proof) {
-                                submitReasons.push('no ID files on server (upload Business Owner ID; drag-drop must fire change on the Livewire input)');
-                            }
-                        }
-                        console.log(
-                            '%c[verify-qualify]%c Submit',
-                            'color:#059669;font-weight:bold',
-                            'color:inherit',
-                            p.submit_would_enable ? 'ENABLED' : 'DISABLED — ' + submitReasons.join('; '),
-                            data
-                        );
-                    }
-                }).catch((e) => console.warn('[verify-qualify] getSubmitButtonDebug failed', e));
-            }, debounceMs);
-        }
-
-        document.addEventListener('livewire:init', () => {
-            Livewire.hook('morph.updated', ({ el, component }) => {
+            function resolveComponent(component, el) {
+                if (component && typeof component.call === 'function') {
+                    return component;
+                }
                 const root = wireRootFromNode(el);
-                if (!root || !root.querySelector('.verification-wrapper')) {
+                const id = root && root.getAttribute('wire:id');
+                if (!id || typeof Livewire === 'undefined' || typeof Livewire.find !== 'function') {
+                    return null;
+                }
+                return Livewire.find(id);
+            }
+
+            function logVerifyQualifyState(component, el) {
+                const cmp = resolveComponent(component, el);
+                if (!cmp || typeof cmp.call !== 'function') {
                     return;
                 }
-                logVerifyQualifyState(component, el);
-            });
+                clearTimeout(t);
+                t = setTimeout(() => {
+                    cmp.call('getSubmitButtonDebug').then((data) => {
+                        const p = data.personal_step;
+                        const c = data.continue_step;
 
-            queueMicrotask(() => {
-                const wrap = document.querySelector('.verification-wrapper');
-                if (wrap) {
-                    logVerifyQualifyState(null, wrap);
-                }
+                        if (data.step.showBusinessBasicsForm) {
+                            console.log(
+                                '%c[verify-qualify]%c Business basics (Build Your Profile)',
+                                'color:#ca8a04;font-weight:bold',
+                                'color:inherit',
+                                data.business_basics?.continue_enabled ? 'Continue ENABLED' :
+                                'Continue DISABLED — Business name required',
+                                data
+                            );
+                            return;
+                        }
+
+                        if (data.step.showVerificationStatus) {
+                            console.log(
+                                '%c[verify-qualify]%c Verification approved screen',
+                                'color:#16a34a;font-weight:bold',
+                                'color:inherit',
+                                data
+                            );
+                            return;
+                        }
+
+                        if (data.step.showAccountPayoutsForm) {
+                            const continueReasons = [];
+                            if (!c.continue_would_enable) {
+                                if (!data.continue_step.fursgo_usage) {
+                                    continueReasons.push(
+                                        'Choose how you use FursGo (groomer vs space)');
+                                }
+                                if (!data.continue_step.account_type) {
+                                    continueReasons.push('Select account type');
+                                }
+                                if (data.continue_step.location_types_count < 1) {
+                                    continueReasons.push('Select at least one location type');
+                                }
+                            }
+                            console.log(
+                                '%c[verify-qualify]%c Continue',
+                                'color:#2563eb;font-weight:bold',
+                                'color:inherit',
+                                c.continue_would_enable ? 'ENABLED' : 'DISABLED — ' +
+                                continueReasons.join('; '),
+                                data
+                            );
+                        }
+
+                        if (data.step.showRegisteredBusiness || data.step.showFreelance) {
+                            const submitReasons = [];
+                            if (!p.submit_would_enable) {
+                                const skipKeys = new Set([
+                                    'email_format_ok',
+                                    'business_owner_id_images_count',
+                                    'id_documents_count',
+                                    'has_id_proof',
+                                    'submit_would_enable',
+                                ]);
+                                Object.entries(p).forEach(([key, ok]) => {
+                                    if (skipKeys.has(key) || key.endsWith('_count')) {
+                                        return;
+                                    }
+                                    if (ok === false) {
+                                        submitReasons.push('missing or empty: ' + key);
+                                    }
+                                });
+                                if (!p.email_format_ok && p.business_email) {
+                                    submitReasons.push('business_email fails email validation');
+                                }
+                                if (!p.has_id_proof) {
+                                    submitReasons.push(
+                                        'no ID files on server (upload Business Owner ID; drag-drop must fire change on the Livewire input)'
+                                    );
+                                }
+                            }
+                            console.log(
+                                '%c[verify-qualify]%c Submit',
+                                'color:#059669;font-weight:bold',
+                                'color:inherit',
+                                p.submit_would_enable ? 'ENABLED' : 'DISABLED — ' + submitReasons
+                                .join('; '),
+                                data
+                            );
+                        }
+                    }).catch((e) => console.warn('[verify-qualify] getSubmitButtonDebug failed', e));
+                }, debounceMs);
+            }
+
+            document.addEventListener('livewire:init', () => {
+                Livewire.hook('morph.updated', ({
+                    el,
+                    component
+                }) => {
+                    const root = wireRootFromNode(el);
+                    if (!root || !root.querySelector('.verification-wrapper')) {
+                        return;
+                    }
+                    logVerifyQualifyState(component, el);
+                });
+
+                queueMicrotask(() => {
+                    const wrap = document.querySelector('.verification-wrapper');
+                    if (wrap) {
+                        logVerifyQualifyState(null, wrap);
+                    }
+                });
             });
-        });
-    })();
-</script>
+        })();
+    </script>
 @endscript
 
 <style>
@@ -3341,14 +3637,14 @@ new #[Layout('layouts.app')] class extends Component {
     .business-basics-form {
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 2.5rem;
     }
 
     .basics-card {
         border-radius: 10px;
         background: #FBFBFB;
         padding: 1.75rem 2rem;
-        border: 1px solid #eee;
+        border: none;
     }
 
     .basics-card-heading {
@@ -3395,6 +3691,125 @@ new #[Layout('layouts.app')] class extends Component {
 
     .basics-field:last-child {
         margin-bottom: 0;
+    }
+
+    .groomer-focus-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+    }
+
+    .groomer-focus-heading {
+        margin: 0;
+        color: #3B3731;
+        font-family: Lato, sans-serif;
+        font-size: 22px;
+        font-weight: 500;
+        line-height: 1.2;
+    }
+
+    .groomer-pill-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.7rem;
+    }
+
+    .groomer-pill-option {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        width: fit-content;
+        max-width: max-content;
+        border-radius: 96px;
+        border: 1px solid #E2E2E2;
+        background: #FFF;
+        color: #FDFCF8;
+        text-align: center;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        min-height: 58px;
+        padding: 0.5rem 1.65rem;
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.2s ease;
+    }
+
+    .groomer-pill-option>span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        white-space: nowrap;
+        color: #D4D4D4;
+        text-align: center;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .groomer-pill-option input {
+        display: none;
+    }
+
+    .groomer-pill-option.is-active {
+        background: #FFC97A;
+        border: none;
+        color: #FFF !important;
+    }
+
+    .groomer-pill-option.is-active>span {
+        color: #FDFCF8 !important;
+    }
+
+    .groomer-pill-icon {
+        color: #D4D4D4;
+        flex-shrink: 0;
+    }
+
+    .groomer-pill-option.is-active .groomer-pill-icon {
+        color: #FDFCF8;
+    }
+
+    .groomer-pill-option.groomer-pill-size span::before {
+        content: none;
+    }
+
+    .groomer-pill-option.groomer-pill-size.is-active span::before {
+        content: "";
+        display: inline-block;
+        width: 14px;
+        height: 10px;
+        background-color: #FDFCF8;
+        -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='10' viewBox='0 0 14 10' fill='none'%3E%3Cpath d='M13.6793 0.289386C13.5867 0.197689 13.4765 0.124907 13.3551 0.0752394C13.2337 0.0255714 13.1035 0 12.972 0C12.8405 0 12.7103 0.0255714 12.5889 0.0752394C12.4675 0.124907 12.3574 0.197689 12.2647 0.289386L4.84329 7.58766L1.72529 4.51573C1.62913 4.42451 1.51563 4.35279 1.39125 4.30465C1.26688 4.25652 1.13406 4.23291 1.0004 4.23518C0.86673 4.23745 0.734828 4.26555 0.612221 4.31789C0.489614 4.37022 0.378704 4.44576 0.285823 4.54019C0.192942 4.63462 0.119909 4.74609 0.0708932 4.86824C0.0218778 4.99039 -0.00216024 5.12082 0.000152332 5.25209C0.0024649 5.38336 0.0310826 5.5129 0.0843711 5.63331C0.13766 5.75372 0.214575 5.86265 0.310727 5.95386L4.13601 9.71062C4.22862 9.80231 4.3388 9.87509 4.46019 9.92476C4.58158 9.97443 4.71179 10 4.84329 10C4.9748 10 5.105 9.97443 5.22639 9.92476C5.34779 9.87509 5.45796 9.80231 5.55057 9.71062L13.6793 1.72752C13.7804 1.63591 13.8611 1.52472 13.9163 1.40096C13.9715 1.2772 14 1.14356 14 1.00845C14 0.873344 13.9715 0.7397 13.9163 0.615943C13.8611 0.492186 13.7804 0.380998 13.6793 0.289386Z' fill='black'/%3E%3C/svg%3E");
+        mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='10' viewBox='0 0 14 10' fill='none'%3E%3Cpath d='M13.6793 0.289386C13.5867 0.197689 13.4765 0.124907 13.3551 0.0752394C13.2337 0.0255714 13.1035 0 12.972 0C12.8405 0 12.7103 0.0255714 12.5889 0.0752394C12.4675 0.124907 12.3574 0.197689 12.2647 0.289386L4.84329 7.58766L1.72529 4.51573C1.62913 4.42451 1.51563 4.35279 1.39125 4.30465C1.26688 4.25652 1.13406 4.23291 1.0004 4.23518C0.86673 4.23745 0.734828 4.26555 0.612221 4.31789C0.489614 4.37022 0.378704 4.44576 0.285823 4.54019C0.192942 4.63462 0.119909 4.74609 0.0708932 4.86824C0.0218778 4.99039 -0.00216024 5.12082 0.000152332 5.25209C0.0024649 5.38336 0.0310826 5.5129 0.0843711 5.63331C0.13766 5.75372 0.214575 5.86265 0.310727 5.95386L4.13601 9.71062C4.22862 9.80231 4.3388 9.87509 4.46019 9.92476C4.58158 9.97443 4.71179 10 4.84329 10C4.9748 10 5.105 9.97443 5.22639 9.92476C5.34779 9.87509 5.45796 9.80231 5.55057 9.71062L13.6793 1.72752C13.7804 1.63591 13.8611 1.52472 13.9163 1.40096C13.9715 1.2772 14 1.14356 14 1.00845C14 0.873344 13.9715 0.7397 13.9163 0.615943C13.8611 0.492186 13.7804 0.380998 13.6793 0.289386Z' fill='black'/%3E%3C/svg%3E");
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-size: 14px 10px;
+        mask-size: 14px 10px;
+        -webkit-mask-position: center;
+        mask-position: center;
+    }
+
+    .groomer-pill-option.groomer-pill-specialty.is-active span::before {
+        content: "";
+        display: inline-block;
+        width: 14px;
+        height: 10px;
+        background-color: #FDFCF8;
+        -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='10' viewBox='0 0 14 10' fill='none'%3E%3Cpath d='M13.6793 0.289386C13.5867 0.197689 13.4765 0.124907 13.3551 0.0752394C13.2337 0.0255714 13.1035 0 12.972 0C12.8405 0 12.7103 0.0255714 12.5889 0.0752394C12.4675 0.124907 12.3574 0.197689 12.2647 0.289386L4.84329 7.58766L1.72529 4.51573C1.62913 4.42451 1.51563 4.35279 1.39125 4.30465C1.26688 4.25652 1.13406 4.23291 1.0004 4.23518C0.86673 4.23745 0.734828 4.26555 0.612221 4.31789C0.489614 4.37022 0.378704 4.44576 0.285823 4.54019C0.192942 4.63462 0.119909 4.74609 0.0708932 4.86824C0.0218778 4.99039 -0.00216024 5.12082 0.000152332 5.25209C0.0024649 5.38336 0.0310826 5.5129 0.0843711 5.63331C0.13766 5.75372 0.214575 5.86265 0.310727 5.95386L4.13601 9.71062C4.22862 9.80231 4.3388 9.87509 4.46019 9.92476C4.58158 9.97443 4.71179 10 4.84329 10C4.9748 10 5.105 9.97443 5.22639 9.92476C5.34779 9.87509 5.45796 9.80231 5.55057 9.71062L13.6793 1.72752C13.7804 1.63591 13.8611 1.52472 13.9163 1.40096C13.9715 1.2772 14 1.14356 14 1.00845C14 0.873344 13.9715 0.7397 13.9163 0.615943C13.8611 0.492186 13.7804 0.380998 13.6793 0.289386Z' fill='black'/%3E%3C/svg%3E");
+        mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='10' viewBox='0 0 14 10' fill='none'%3E%3Cpath d='M13.6793 0.289386C13.5867 0.197689 13.4765 0.124907 13.3551 0.0752394C13.2337 0.0255714 13.1035 0 12.972 0C12.8405 0 12.7103 0.0255714 12.5889 0.0752394C12.4675 0.124907 12.3574 0.197689 12.2647 0.289386L4.84329 7.58766L1.72529 4.51573C1.62913 4.42451 1.51563 4.35279 1.39125 4.30465C1.26688 4.25652 1.13406 4.23291 1.0004 4.23518C0.86673 4.23745 0.734828 4.26555 0.612221 4.31789C0.489614 4.37022 0.378704 4.44576 0.285823 4.54019C0.192942 4.63462 0.119909 4.74609 0.0708932 4.86824C0.0218778 4.99039 -0.00216024 5.12082 0.000152332 5.25209C0.0024649 5.38336 0.0310826 5.5129 0.0843711 5.63331C0.13766 5.75372 0.214575 5.86265 0.310727 5.95386L4.13601 9.71062C4.22862 9.80231 4.3388 9.87509 4.46019 9.92476C4.58158 9.97443 4.71179 10 4.84329 10C4.9748 10 5.105 9.97443 5.22639 9.92476C5.34779 9.87509 5.45796 9.80231 5.55057 9.71062L13.6793 1.72752C13.7804 1.63591 13.8611 1.52472 13.9163 1.40096C13.9715 1.2772 14 1.14356 14 1.00845C14 0.873344 13.9715 0.7397 13.9163 0.615943C13.8611 0.492186 13.7804 0.380998 13.6793 0.289386Z' fill='black'/%3E%3C/svg%3E");
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-size: 14px 10px;
+        mask-size: 14px 10px;
+        -webkit-mask-position: center;
+        mask-position: center;
     }
 
     .profile-photo-upload-tracker {
@@ -3643,7 +4058,9 @@ new #[Layout('layouts.app')] class extends Component {
             if (avatarThumbObjectUrl) {
                 try {
                     URL.revokeObjectURL(avatarThumbObjectUrl);
-                } catch (err) { /* ignore */ }
+                } catch (err) {
+                    /* ignore */
+                }
                 avatarThumbObjectUrl = null;
             }
         }
@@ -3683,7 +4100,7 @@ new #[Layout('layouts.app')] class extends Component {
             }
         }
 
-        document.addEventListener('livewire-upload-start', function (e) {
+        document.addEventListener('livewire-upload-start', function(e) {
             var tracker = trackerFromEventTarget(e.target);
             if (!tracker) {
                 return;
@@ -3713,7 +4130,7 @@ new #[Layout('layouts.app')] class extends Component {
             }
         });
 
-        document.addEventListener('livewire-upload-progress', function (e) {
+        document.addEventListener('livewire-upload-progress', function(e) {
             var tracker = trackerFromEventTarget(e.target);
             if (!tracker) {
                 return;
@@ -3724,7 +4141,8 @@ new #[Layout('layouts.app')] class extends Component {
             var p = (e.detail && typeof e.detail.progress === 'number') ? e.detail.progress : 0;
             if (o.statusEl && file) {
                 var loaded = Math.round((file.size * p) / 100);
-                o.statusEl.textContent = formatKb(loaded) + ' of ' + formatKb(file.size) + ' • Uploading...';
+                o.statusEl.textContent = formatKb(loaded) + ' of ' + formatKb(file.size) +
+                    ' • Uploading...';
             }
         });
 
@@ -3732,19 +4150,19 @@ new #[Layout('layouts.app')] class extends Component {
             hide(tracker);
         }
 
-        document.addEventListener('livewire-upload-finish', function (e) {
+        document.addEventListener('livewire-upload-finish', function(e) {
             var t = trackerFromEventTarget(e.target);
             if (t) {
                 end(t);
             }
         });
-        document.addEventListener('livewire-upload-cancel', function (e) {
+        document.addEventListener('livewire-upload-cancel', function(e) {
             var t = trackerFromEventTarget(e.target);
             if (t) {
                 end(t);
             }
         });
-        document.addEventListener('livewire-upload-error', function (e) {
+        document.addEventListener('livewire-upload-error', function(e) {
             var t = trackerFromEventTarget(e.target);
             if (t) {
                 end(t);
@@ -3803,7 +4221,10 @@ new #[Layout('layouts.app')] class extends Component {
             .map((item) => {
                 if (typeof item === 'string') {
                     const path = storagePathFromPublicUrl(item);
-                    return { path: path || '', url: item };
+                    return {
+                        path: path || '',
+                        url: item
+                    };
                 }
                 if (item && typeof item.url === 'string') {
                     return {
@@ -3817,7 +4238,7 @@ new #[Layout('layouts.app')] class extends Component {
     }
 
     if (!window.removeBusinessOwnerStoredFile) {
-        window.removeBusinessOwnerStoredFile = function (storagePath) {
+        window.removeBusinessOwnerStoredFile = function(storagePath) {
             if (!storagePath || !window.Livewire) return;
             const root = document.querySelector('[wire\\:id]');
             if (!root) return;
@@ -3846,11 +4267,11 @@ new #[Layout('layouts.app')] class extends Component {
             div.className = 'file-item file-item--saved';
             const isImg = /\.(jpe?g|png|gif|webp|bmp|heic)$/i.test(name);
             const isPdf = /\.pdf$/i.test(name) || getFileExtension(name) === 'PDF';
-            const thumb = isImg
-                ? `<img src="${url}" class="file-thumbnail" alt="" loading="lazy">`
-                : isPdf
-                    ? `<div class="file-icon file-icon--pdf">${pdfIconSvgHtml()}</div>`
-                    : `<div class="file-icon">${getFileExtension(name)}</div>`;
+            const thumb = isImg ?
+                `<img src="${url}" class="file-thumbnail" alt="" loading="lazy">` :
+                isPdf ?
+                `<div class="file-icon file-icon--pdf">${pdfIconSvgHtml()}</div>` :
+                `<div class="file-icon">${getFileExtension(name)}</div>`;
             div.innerHTML = `
             <div class="file-info">
                 ${thumb}
@@ -3899,7 +4320,10 @@ new #[Layout('layouts.app')] class extends Component {
             .map((item) => {
                 if (typeof item === 'string') {
                     const path = storagePathFromPublicUrl(item);
-                    return { path: path || '', url: item };
+                    return {
+                        path: path || '',
+                        url: item
+                    };
                 }
                 if (item && typeof item.url === 'string') {
                     return {
@@ -3913,7 +4337,7 @@ new #[Layout('layouts.app')] class extends Component {
     }
 
     if (!window.removeInsuranceStoredFile) {
-        window.removeInsuranceStoredFile = function (storagePath) {
+        window.removeInsuranceStoredFile = function(storagePath) {
             if (!storagePath || !window.Livewire) {
                 return;
             }
@@ -3951,11 +4375,11 @@ new #[Layout('layouts.app')] class extends Component {
             div.className = 'file-item file-item--saved';
             const isImg = /\.(jpe?g|png|gif|webp|bmp|heic)$/i.test(name);
             const isPdf = /\.pdf$/i.test(name) || getFileExtension(name) === 'PDF';
-            const thumb = isImg
-                ? `<img src="${url}" class="file-thumbnail" alt="" loading="lazy">`
-                : isPdf
-                    ? `<div class="file-icon file-icon--pdf">${pdfIconSvgHtml()}</div>`
-                    : `<div class="file-icon">${getFileExtension(name)}</div>`;
+            const thumb = isImg ?
+                `<img src="${url}" class="file-thumbnail" alt="" loading="lazy">` :
+                isPdf ?
+                `<div class="file-icon file-icon--pdf">${pdfIconSvgHtml()}</div>` :
+                `<div class="file-icon">${getFileExtension(name)}</div>`;
             div.innerHTML = `
             <div class="file-info">
                 ${thumb}
@@ -4039,7 +4463,8 @@ new #[Layout('layouts.app')] class extends Component {
                 if (!removed || !removed.file) return;
                 clearUploadSimForFile(removed.file);
                 window.businessOwnerIdRawFiles = (window.businessOwnerIdRawFiles || []).filter(
-                    (f) => businessOwnerFileFingerprint(f) !== businessOwnerFileFingerprint(removed.file)
+                    (f) => businessOwnerFileFingerprint(f) !== businessOwnerFileFingerprint(removed
+                        .file)
                 );
                 const input = document.getElementById('business-owner-id-file-input');
                 if (input) {
@@ -4047,7 +4472,9 @@ new #[Layout('layouts.app')] class extends Component {
                     (window.businessOwnerIdRawFiles || []).forEach((f) => dt.items.add(f));
                     window.__boIdIgnoreNextChange = true;
                     input.files = dt.files;
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('input', {
+                        bubbles: true
+                    }));
                 }
                 rebuildBusinessOwnerIdListUI();
             });
@@ -4062,7 +4489,7 @@ new #[Layout('layouts.app')] class extends Component {
         window.__boOwnerUploadClickDelegated = true;
         document.addEventListener(
             'click',
-            function (e) {
+            function(e) {
                 const area = e.target.closest && e.target.closest('#business-owner-id-upload-area');
                 if (!area) return;
                 if (e.target.closest('#business-owner-id-file-input')) return;
@@ -4071,7 +4498,7 @@ new #[Layout('layouts.app')] class extends Component {
                 if (!inp || window.__boIdFileDialogOpening) return;
                 window.__boIdFileDialogOpening = true;
                 inp.click();
-                setTimeout(function () {
+                setTimeout(function() {
                     window.__boIdFileDialogOpening = false;
                 }, 500);
             },
@@ -4084,7 +4511,7 @@ new #[Layout('layouts.app')] class extends Component {
         window.__insuranceUploadClickDelegated = true;
         document.addEventListener(
             'click',
-            function (e) {
+            function(e) {
                 const area = e.target.closest && e.target.closest('#insurance-upload-area');
                 if (!area) return;
                 if (e.target.closest('#insurance-file-input')) return;
@@ -4093,7 +4520,7 @@ new #[Layout('layouts.app')] class extends Component {
                 if (!inp || window.__insIdFileDialogOpening) return;
                 window.__insIdFileDialogOpening = true;
                 inp.click();
-                setTimeout(function () {
+                setTimeout(function() {
                     window.__insIdFileDialogOpening = false;
                 }, 500);
             },
@@ -4103,12 +4530,15 @@ new #[Layout('layouts.app')] class extends Component {
 
     function formatFileSize(bytes) {
         if (!bytes) return '0 Bytes';
-        const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const k = 1024,
+            sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
-    function getFileExtension(name) { return name.split('.').pop().toUpperCase(); }
+    function getFileExtension(name) {
+        return name.split('.').pop().toUpperCase();
+    }
 
     function pdfIconSvgHtml() {
         return `<svg xmlns="http://www.w3.org/2000/svg" width="21" height="25" viewBox="0 0 21 25" fill="none" aria-hidden="true">
@@ -4201,7 +4631,11 @@ new #[Layout('layouts.app')] class extends Component {
             div.remove();
             onRemove(id);
         });
-        return { element: div, id, file };
+        return {
+            element: div,
+            id,
+            file
+        };
     }
 
     function updateNoFileMessage(listEl) {
@@ -4285,7 +4719,7 @@ new #[Layout('layouts.app')] class extends Component {
         if (window.__tabDelegationBound) return;
         window.__tabDelegationBound = true;
 
-        document.addEventListener('click', function (e) {
+        document.addEventListener('click', function(e) {
             const btn = e.target.closest('[data-tab]');
             if (!btn) return;
 
@@ -4317,7 +4751,7 @@ new #[Layout('layouts.app')] class extends Component {
         if (fileInput && !fileInput.dataset.bound) {
             fileInput.dataset.bound = '1';
 
-            fileInput.addEventListener('change', function () {
+            fileInput.addEventListener('change', function() {
                 const listEl = document.getElementById('business-file-list') || fileList;
                 if (!listEl) return;
                 (window.uploadedFiles || []).forEach((u) => {
@@ -4332,7 +4766,8 @@ new #[Layout('layouts.app')] class extends Component {
                         if (removed && removed.file) {
                             clearUploadSimForFile(removed.file);
                         }
-                        window.uploadedFiles = window.uploadedFiles.filter(f => f.id !== removedId);
+                        window.uploadedFiles = window.uploadedFiles.filter(f => f.id !==
+                            removedId);
                         updateNoFileMessage(listEl);
                     });
                     listEl.appendChild(item.element);
@@ -4347,20 +4782,28 @@ new #[Layout('layouts.app')] class extends Component {
             uploadArea.dataset.bound = '1';
 
             // Use stopPropagation on the hidden input so click doesn't bubble back up
-            uploadArea.addEventListener('click', function (e) {
+            uploadArea.addEventListener('click', function(e) {
                 // If the click came FROM the hidden input itself, ignore it
                 if (e.target === fileInput || e.target === document.getElementById('file-input')) return;
                 document.getElementById('file-input').click();
             });
 
-            uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
-            uploadArea.addEventListener('dragleave', e => { e.preventDefault(); uploadArea.classList.remove('dragover'); });
+            uploadArea.addEventListener('dragover', e => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            uploadArea.addEventListener('dragleave', e => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
             uploadArea.addEventListener('drop', e => {
                 e.preventDefault();
                 uploadArea.classList.remove('dragover');
                 if (!fileInput || !fileList) return;
                 fileInput.files = e.dataTransfer.files;
-                fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                fileInput.dispatchEvent(new Event('change', {
+                    bubbles: true
+                }));
             });
         }
 
@@ -4372,7 +4815,7 @@ new #[Layout('layouts.app')] class extends Component {
         if (insFileInput && !insFileInput.dataset.bound) {
             insFileInput.dataset.bound = '1';
 
-            insFileInput.addEventListener('change', function () {
+            insFileInput.addEventListener('change', function() {
                 const listEl = document.getElementById('insurance-file-list') || insFileList;
                 if (!listEl) return;
                 (window.insuranceUploadedFiles || []).forEach((u) => {
@@ -4384,11 +4827,13 @@ new #[Layout('layouts.app')] class extends Component {
 
                 Array.from(this.files).forEach(file => {
                     const item = createFileItem(file, removedId => {
-                        const removed = window.insuranceUploadedFiles.find((f) => f.id === removedId);
+                        const removed = window.insuranceUploadedFiles.find((f) => f.id ===
+                            removedId);
                         if (removed && removed.file) {
                             clearUploadSimForFile(removed.file);
                         }
-                        window.insuranceUploadedFiles = window.insuranceUploadedFiles.filter(f => f.id !== removedId);
+                        window.insuranceUploadedFiles = window.insuranceUploadedFiles.filter(
+                            f => f.id !== removedId);
                         updateNoFileMessage(listEl);
                     });
                     listEl.appendChild(item.element);
@@ -4396,7 +4841,9 @@ new #[Layout('layouts.app')] class extends Component {
                     simulateUpload(item);
                 });
                 updateNoFileMessage(listEl);
-                this.dispatchEvent(new Event('input', { bubbles: true }));
+                this.dispatchEvent(new Event('input', {
+                    bubbles: true
+                }));
                 showInsuranceAttachTab();
             });
         }
@@ -4404,14 +4851,22 @@ new #[Layout('layouts.app')] class extends Component {
         if (insUploadArea && !insUploadArea.dataset.bound) {
             insUploadArea.dataset.bound = '1';
 
-            insUploadArea.addEventListener('dragover', e => { e.preventDefault(); insUploadArea.classList.add('dragover'); });
-            insUploadArea.addEventListener('dragleave', e => { e.preventDefault(); insUploadArea.classList.remove('dragover'); });
+            insUploadArea.addEventListener('dragover', e => {
+                e.preventDefault();
+                insUploadArea.classList.add('dragover');
+            });
+            insUploadArea.addEventListener('dragleave', e => {
+                e.preventDefault();
+                insUploadArea.classList.remove('dragover');
+            });
             insUploadArea.addEventListener('drop', e => {
                 e.preventDefault();
                 insUploadArea.classList.remove('dragover');
                 if (!insFileInput) return;
                 insFileInput.files = e.dataTransfer.files;
-                insFileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                insFileInput.dispatchEvent(new Event('change', {
+                    bubbles: true
+                }));
             });
         }
 
@@ -4423,14 +4878,16 @@ new #[Layout('layouts.app')] class extends Component {
         if (businessOwnerIdFileInput && !businessOwnerIdFileInput.dataset.bound) {
             businessOwnerIdFileInput.dataset.bound = '1';
 
-            businessOwnerIdFileInput.addEventListener('change', function () {
+            businessOwnerIdFileInput.addEventListener('change', function() {
                 if (window.__boIdIgnoreNextChange) {
                     window.__boIdIgnoreNextChange = false;
                     return;
                 }
                 mergeBusinessOwnerPicks(this, Array.from(this.files));
                 rebuildBusinessOwnerIdListUI();
-                this.dispatchEvent(new Event('input', { bubbles: true }));
+                this.dispatchEvent(new Event('input', {
+                    bubbles: true
+                }));
                 showBusinessOwnerAttachTab();
             });
         }
@@ -4453,7 +4910,9 @@ new #[Layout('layouts.app')] class extends Component {
                 if (!inp) return;
                 mergeBusinessOwnerPicks(inp, Array.from(e.dataTransfer.files));
                 rebuildBusinessOwnerIdListUI();
-                inp.dispatchEvent(new Event('input', { bubbles: true }));
+                inp.dispatchEvent(new Event('input', {
+                    bubbles: true
+                }));
                 showBusinessOwnerAttachTab();
             });
         }
@@ -4538,10 +4997,10 @@ new #[Layout('layouts.app')] class extends Component {
     document.addEventListener('livewire:navigated', initVerificationPage);
 
     let __vqMorphLightTimer = null;
-    document.addEventListener('livewire:init', function () {
-        Livewire.hook('morph.updated', function () {
+    document.addEventListener('livewire:init', function() {
+        Livewire.hook('morph.updated', function() {
             clearTimeout(__vqMorphLightTimer);
-            __vqMorphLightTimer = setTimeout(function () {
+            __vqMorphLightTimer = setTimeout(function() {
                 afterLivewireMorphLight();
             }, 100);
         });
@@ -4560,13 +5019,13 @@ new #[Layout('layouts.app')] class extends Component {
             el.closest('#upload-area')
         );
     }
-    document.addEventListener('dragover', function (e) {
+    document.addEventListener('dragover', function(e) {
         if (__vqIsFileUploadZoneTarget(e.target)) {
             return;
         }
         e.preventDefault();
     });
-    document.addEventListener('drop', function (e) {
+    document.addEventListener('drop', function(e) {
         if (__vqIsFileUploadZoneTarget(e.target)) {
             return;
         }
