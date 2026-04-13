@@ -53,7 +53,10 @@ new #[Layout('layouts.app')] class extends Component {
     public string $business_registration_number = '';
     public string $business_phone = '';
     public $id_documents = [];
-    public $insurance_certificate = [];
+    /** Saved storage paths (strings) from DB — never use as wire:model for file inputs. */
+    public array $insurance_certificate_paths = [];
+    /** New file picks only — bound to the insurance file input. */
+    public $insurance_certificate_upload = [];
     public $business_owner_id_images = [];
 
     // Third form: Payout details
@@ -94,6 +97,8 @@ new #[Layout('layouts.app')] class extends Component {
                 'freelance_service_home_address_line1',
                 'freelance_service_home_address_line2',
                 'business_owner_id_images',
+                'insurance_certificate_upload',
+                'id_documents',
                 'account_holder_name',
                 'account_number',
                 'sort_code',
@@ -198,7 +203,11 @@ new #[Layout('layouts.app')] class extends Component {
             } else {
                 $this->id_documents = [];
             }
-            $this->insurance_certificate = $insuranceDetails['insurance_certificate_paths'] ?? [];
+            $rawInsPaths = $insuranceDetails['insurance_certificate_paths'] ?? [];
+            $this->insurance_certificate_paths = is_array($rawInsPaths)
+                ? array_values(array_filter($rawInsPaths, fn($p) => is_string($p) && $p !== ''))
+                : [];
+            $this->insurance_certificate_upload = [];
             $this->business_owner_id_images = ($user->account_type ?? '') === 'freelance'
                 ? ($freelanceDetails['id_verification_images'] ?? [])
                 : ($businessDetails['business_owner_id_images'] ?? []);
@@ -256,14 +265,6 @@ new #[Layout('layouts.app')] class extends Component {
     public function updatedIdDocuments($files)
     {
         $this->id_documents = $files;
-    }
-
-    /**
-     * Handle insurance certificate uploads
-     */
-    public function updatedInsuranceCertificate($files)
-    {
-        $this->insurance_certificate = $files;
     }
 
     /**
@@ -372,6 +373,47 @@ new #[Layout('layouts.app')] class extends Component {
         }
 
         $user->update($payload);
+
+        if (Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
+    }
+
+    /**
+     * Remove a stored insurance certificate path from profile JSON and disk.
+     */
+    public function removeStoredInsuranceCertificate(string $path): void
+    {
+        if ($path === '' || str_contains($path, '..')) {
+            return;
+        }
+
+        $user = Auth::guard('groomer_spacer')->user();
+        if (!$user) {
+            return;
+        }
+
+        $insuranceDetails = $user->insurance_details ?? [];
+        if (!is_array($insuranceDetails)) {
+            $insuranceDetails = is_string($insuranceDetails) ? (json_decode($insuranceDetails, true) ?: []) : [];
+        }
+
+        $paths = $insuranceDetails['insurance_certificate_paths'] ?? [];
+        if (!is_array($paths) || !in_array($path, $paths, true)) {
+            return;
+        }
+
+        $insuranceDetails['insurance_certificate_paths'] = array_values(array_filter(
+            $paths,
+            fn($p) => $p !== $path
+        ));
+
+        $this->insurance_certificate_paths = array_values(array_filter(
+            $this->insurance_certificate_paths ?? [],
+            fn($p) => $p !== $path
+        ));
+
+        $user->update(['insurance_details' => $insuranceDetails]);
 
         if (Storage::disk('public')->exists($path)) {
             Storage::disk('public')->delete($path);
@@ -816,7 +858,7 @@ new #[Layout('layouts.app')] class extends Component {
                 'business_phone' => ['required', 'string', 'max:20'],
                 'business_owner_id_images' => ['nullable', 'array'],
                 'id_documents' => ['nullable', 'array'],
-                'insurance_certificate' => ['nullable', 'array'],
+                'insurance_certificate_upload' => ['nullable', 'array'],
                 'account_holder_name' => ['required', 'string', 'max:255'],
                 'account_number' => ['required', 'string', 'max:50'],
                 'sort_code' => ['required', 'string', 'max:20'],
@@ -839,7 +881,7 @@ new #[Layout('layouts.app')] class extends Component {
                 'business_phone' => ['required', 'string', 'max:20'],
                 'business_owner_id_images' => ['required', 'array', 'min:1'],
                 'id_documents' => ['nullable', 'array'],
-                'insurance_certificate' => ['nullable', 'array'],
+                'insurance_certificate_upload' => ['nullable', 'array'],
                 'account_holder_name' => ['required', 'string', 'max:255'],
                 'account_number' => ['required', 'string', 'max:50'],
                 'sort_code' => ['required', 'string', 'max:20'],
@@ -872,16 +914,22 @@ new #[Layout('layouts.app')] class extends Component {
             }
         }
 
-        if ($this->insurance_certificate && is_array($this->insurance_certificate)) {
-            foreach ($this->insurance_certificate as $index => $certificate) {
-                if ($certificate instanceof UploadedFile) {
-                    $this->validate([
-                        "insurance_certificate.$index" => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
-                    ]);
-                } elseif ($certificate !== null && $certificate !== '' && !is_string($certificate)) {
-                    $this->addError('insurance_certificate', 'Invalid insurance certificate entry.');
-                    return;
-                }
+        $insuranceUploadFiles = [];
+        if (is_array($this->insurance_certificate_upload)) {
+            $insuranceUploadFiles = $this->insurance_certificate_upload;
+        } elseif ($this->insurance_certificate_upload instanceof UploadedFile || $this->insurance_certificate_upload instanceof TemporaryUploadedFile) {
+            $insuranceUploadFiles = [$this->insurance_certificate_upload];
+        }
+
+        foreach ($insuranceUploadFiles as $index => $certificate) {
+            if ($certificate instanceof UploadedFile || $certificate instanceof TemporaryUploadedFile) {
+                $this->validate([
+                    "insurance_certificate_upload.$index" => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:51200'],
+                ]);
+            } else {
+                $this->addError('insurance_certificate_upload', 'Invalid insurance certificate upload.');
+
+                return;
             }
         }
 
@@ -889,18 +937,15 @@ new #[Layout('layouts.app')] class extends Component {
             // ID proof uploads (same files as business owner ID; id_document_paths mirrors for legacy column)
             $documentPaths = [];
 
-            // Store the insurance certificate if uploaded
-            $insuranceCertificatePaths = [];
-            if ($this->insurance_certificate && is_array($this->insurance_certificate)) {
-                foreach ($this->insurance_certificate as $certificate) {
-                    if ($certificate instanceof \Illuminate\Http\UploadedFile) {
-                        $dir = $this->storageDirectoryForUpload($certificate, 'insurance_certificates');
-                        $path = $certificate->store($dir, 'public');
-                        $insuranceCertificatePaths[] = $path;
-                    } elseif (is_string($certificate)) {
-                        // Handle case where file path is already stored
-                        $insuranceCertificatePaths[] = $certificate;
-                    }
+            // Insurance: keep existing stored paths + persist new uploads from insurance_certificate_upload only
+            $insuranceCertificatePaths = array_values(array_filter(
+                $this->insurance_certificate_paths ?? [],
+                fn($p) => is_string($p) && $p !== ''
+            ));
+            foreach ($insuranceUploadFiles as $certificate) {
+                if ($certificate instanceof UploadedFile || $certificate instanceof TemporaryUploadedFile) {
+                    $dir = $this->storageDirectoryForUpload($certificate, 'insurance_certificates');
+                    $insuranceCertificatePaths[] = $certificate->store($dir, 'public');
                 }
             }
 
@@ -1003,6 +1048,9 @@ new #[Layout('layouts.app')] class extends Component {
                 $payload['id_document_paths'] = $documentPaths;
             }
             $user->update($payload);
+
+            $this->insurance_certificate_paths = $insuranceCertificatePaths;
+            $this->insurance_certificate_upload = [];
 
             session(['verify_qualify_show_approved' => true]);
             session()->save();
@@ -1243,7 +1291,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 @if ($business_avatar_upload || $business_avatar_path !== '')
                                     <div class="file-list profile-basics-avatar-attachments">
                                         @if ($business_avatar_upload)
-                                            <div class="file-item" wire:key="profile-avatar-temp">
+                                            <div class="file-item-1" wire:key="profile-avatar-temp">
                                                 <div class="file-info">
                                                     <img src="{{ $business_avatar_upload->temporaryUrl() }}" class="file-thumbnail"
                                                         alt="">
@@ -1753,13 +1801,13 @@ new #[Layout('layouts.app')] class extends Component {
                                     @endphp
                                     <input type="hidden" id="business-owner-saved-urls-json"
                                         value="{{ htmlspecialchars(json_encode($__boSavedFileEntries), ENT_QUOTES, 'UTF-8') }}"
-                                        wire:key="bo-saved-{{ md5(json_encode($business_owner_id_images ?? [])) }}">
+                                        wire:key="business-owner-saved-urls-json">
                                     <script>
                                         window.__boSavedFileEntries = @json($__boSavedFileEntries);
                                     </script>
 
-                                    <!-- Custom File Upload Interface for Business Owner ID Images (ignore only the JS-built list, not the Livewire file input) -->
-                                    <div class="custom-file-upload">
+                                    <!-- Custom File Upload Interface: wire:ignore entire widget so Livewire morphs do not reset Attach/Upload tab state (was causing flicker on every wire:model.live keystroke). Hidden saved-url inputs stay above this block. -->
+                                    <div class="custom-file-upload" wire:ignore>
                                         <!-- Tabs -->
                                         <div class="upload-tabs">
                                             <div>
@@ -1797,7 +1845,8 @@ new #[Layout('layouts.app')] class extends Component {
                                                 <div class="file-list" id="business-owner-id-file-list" wire:ignore>
                                                     <!-- Files will be dynamically added here -->
                                                 </div>
-                                                <p>No file attached.</p>
+                                                <p class="file-list-empty-msg" data-role="file-list-empty">No file attached.
+                                                </p>
                                             </div>
 
                                             <!-- Upload Tab -->
@@ -1893,8 +1942,27 @@ new #[Layout('layouts.app')] class extends Component {
                                 <h3>Insurance Details</h3>
                                 <div>
                                     <label class="form-label">Insurance Certificate <span>(Optional)</span></label>
-                                    <!-- Custom File Upload Interface -->
-                                    <div class="custom-file-upload">
+                                    @php
+                                        $__insSavedFileEntries = [];
+                                        foreach ($insurance_certificate_paths ?? [] as $__p) {
+                                            if (is_string($__p) && $__p !== '') {
+                                                $__insSavedFileEntries[] = [
+                                                    'path' => $__p,
+                                                    'url' => route('groomer-spacer.insurance-certificate-file', [
+                                                        't' => \Illuminate\Support\Facades\Crypt::encryptString($__p),
+                                                    ]),
+                                                ];
+                                            }
+                                        }
+                                    @endphp
+                                    <input type="hidden" id="insurance-saved-urls-json"
+                                        value="{{ htmlspecialchars(json_encode($__insSavedFileEntries), ENT_QUOTES, 'UTF-8') }}"
+                                        wire:key="insurance-saved-urls-json">
+                                    <script>
+                                        window.__insSavedFileEntries = @json($__insSavedFileEntries);
+                                    </script>
+                                    <!-- Custom File Upload Interface (wire:ignore — same tab-flicker fix as Business Owner ID) -->
+                                    <div class="custom-file-upload" wire:ignore>
                                         <!-- Tabs -->
                                         <div class="upload-tabs">
                                             <div>
@@ -1929,10 +1997,11 @@ new #[Layout('layouts.app')] class extends Component {
                                         <div class="tab-content">
                                             <!-- Attach Tab -->
                                             <div class="tab-pane" id="insurance-attach-tab">
-                                                <div class="file-list" id="insurance-file-list">
+                                                <div class="file-list" id="insurance-file-list" wire:ignore>
                                                     <!-- Files will be dynamically added here -->
                                                 </div>
-                                                <p>No file attached.</p>
+                                                <p class="file-list-empty-msg" data-role="file-list-empty">No file attached.
+                                                </p>
                                             </div>
 
                                             <!-- Upload Tab -->
@@ -1945,13 +2014,19 @@ new #[Layout('layouts.app')] class extends Component {
                                                     <div class="upload-icon">
                                                         Browse File
                                                     </div>
-                                                    <input type="file" wire:model="insurance_certificate"
+                                                    <input type="file" wire:model="insurance_certificate_upload"
                                                         id="insurance-file-input" class="hidden-input"
                                                         accept=".pdf,.jpg,.jpeg,.png" multiple>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    @error('insurance_certificate_upload')
+                                        <span class="error-text">{{ $message }}</span>
+                                    @enderror
+                                    @if ($errors->has('insurance_certificate_upload.*'))
+                                        <span class="error-text">{{ $errors->first('insurance_certificate_upload.*') }}</span>
+                                    @endif
                                 </div>
 
                             </div>
@@ -3006,8 +3081,16 @@ new #[Layout('layouts.app')] class extends Component {
         align-items: center;
         justify-content: space-between;
         padding: 12px 16px;
-        border-radius: 0 0 10px 10px;
         border: 1px solid #E2E2E2;
+    }
+
+    .file-item-1 {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border: 1px solid #E2E2E2;
+        border-radius: 0 0 10px 10px;
         background: #F8F8F8;
         margin-bottom: 8px;
     }
@@ -3796,6 +3879,138 @@ new #[Layout('layouts.app')] class extends Component {
         });
     }
 
+    function readSavedInsuranceEntries() {
+        const hid = document.getElementById('insurance-saved-urls-json');
+        let raw = [];
+        if (hid) {
+            try {
+                raw = JSON.parse(hid.value || '[]');
+            } catch (e) {
+                raw = [];
+            }
+        }
+        if (!Array.isArray(raw) || !raw.length) {
+            raw = Array.isArray(window.__insSavedFileEntries) ? window.__insSavedFileEntries : [];
+        }
+        if (!Array.isArray(raw)) {
+            return [];
+        }
+        return raw
+            .map((item) => {
+                if (typeof item === 'string') {
+                    const path = storagePathFromPublicUrl(item);
+                    return { path: path || '', url: item };
+                }
+                if (item && typeof item.url === 'string') {
+                    return {
+                        path: item.path || storagePathFromPublicUrl(item.url) || '',
+                        url: item.url,
+                    };
+                }
+                return null;
+            })
+            .filter(Boolean);
+    }
+
+    if (!window.removeInsuranceStoredFile) {
+        window.removeInsuranceStoredFile = function (storagePath) {
+            if (!storagePath || !window.Livewire) {
+                return;
+            }
+            const root = document.querySelector('[wire\\:id]');
+            if (!root) {
+                return;
+            }
+            const wid = root.getAttribute('wire:id');
+            if (!wid) {
+                return;
+            }
+            const c = Livewire.find(wid);
+            if (c && typeof c.$call === 'function') {
+                c.$call('removeStoredInsuranceCertificate', storagePath);
+            }
+        };
+    }
+
+    function appendSavedInsuranceRows(listEl) {
+        if (!listEl) {
+            return;
+        }
+        const entries = readSavedInsuranceEntries();
+        if (!entries.length) {
+            return;
+        }
+        entries.forEach((entry) => {
+            const url = entry.url;
+            const storagePath = entry.path;
+            const seg =
+                (storagePath && storagePath.split('/').pop()) ||
+                (url.split('/').pop() || 'file').split('?')[0];
+            const name = decodeURIComponent(seg);
+            const div = document.createElement('div');
+            div.className = 'file-item file-item--saved';
+            const isImg = /\.(jpe?g|png|gif|webp|bmp|heic)$/i.test(name);
+            const isPdf = /\.pdf$/i.test(name) || getFileExtension(name) === 'PDF';
+            const thumb = isImg
+                ? `<img src="${url}" class="file-thumbnail" alt="" loading="lazy">`
+                : isPdf
+                    ? `<div class="file-icon file-icon--pdf">${pdfIconSvgHtml()}</div>`
+                    : `<div class="file-icon">${getFileExtension(name)}</div>`;
+            div.innerHTML = `
+            <div class="file-info">
+                ${thumb}
+                <div class="file-details">
+                    <div class="file-name"><a href="${url}" target="_blank" rel="noopener noreferrer">${name}</a></div>
+                    <div class="file-progress-text" style="color:#10b981">Saved</div>
+                </div>
+            </div>
+            ${storagePath
+                    ? `<button type="button" class="file-remove" title="Remove" aria-label="Remove">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+            </button>`
+                    : ''
+                }`;
+            const btn = div.querySelector('.file-remove');
+            if (btn && storagePath) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.removeInsuranceStoredFile(storagePath);
+                });
+            }
+            listEl.appendChild(div);
+        });
+    }
+
+    function renderInsuranceAttachListIfNeeded() {
+        const listEl = document.getElementById('insurance-file-list');
+        if (!listEl) {
+            return;
+        }
+        const pending = window.insuranceUploadedFiles || [];
+        if (pending.length > 0) {
+            listEl.replaceChildren();
+            appendSavedInsuranceRows(listEl);
+            pending.forEach((item) => {
+                if (item && item.element) {
+                    listEl.appendChild(item.element);
+                }
+            });
+            updateNoFileMessage(listEl);
+            return;
+        }
+        const entries = readSavedInsuranceEntries();
+        if (!entries.length) {
+            return;
+        }
+        listEl.replaceChildren();
+        appendSavedInsuranceRows(listEl);
+        updateNoFileMessage(listEl);
+        showInsuranceAttachTab();
+    }
+
     function renderBusinessOwnerAttachListIfNeeded() {
         const listEl = document.getElementById('business-owner-id-file-list');
         if (!listEl) return;
@@ -3808,7 +4023,7 @@ new #[Layout('layouts.app')] class extends Component {
         if (!entries.length) return;
         listEl.replaceChildren();
         appendSavedBusinessOwnerRows(listEl);
-        updateNoFileMessage(listEl, 'attach-tab');
+        updateNoFileMessage(listEl);
     }
 
     function rebuildBusinessOwnerIdListUI() {
@@ -3840,7 +4055,7 @@ new #[Layout('layouts.app')] class extends Component {
             window.businessOwnerIdUploadedFiles.push(item);
             simulateUpload(item);
         });
-        updateNoFileMessage(listEl, 'attach-tab');
+        updateNoFileMessage(listEl);
     }
 
     if (!window.__boOwnerUploadClickDelegated) {
@@ -3858,6 +4073,28 @@ new #[Layout('layouts.app')] class extends Component {
                 inp.click();
                 setTimeout(function () {
                     window.__boIdFileDialogOpening = false;
+                }, 500);
+            },
+            true
+        );
+    }
+
+    /** One delegated handler + debounce — avoids duplicate open when setupUploaders re-binds after Livewire morph */
+    if (!window.__insuranceUploadClickDelegated) {
+        window.__insuranceUploadClickDelegated = true;
+        document.addEventListener(
+            'click',
+            function (e) {
+                const area = e.target.closest && e.target.closest('#insurance-upload-area');
+                if (!area) return;
+                if (e.target.closest('#insurance-file-input')) return;
+                e.preventDefault();
+                const inp = document.getElementById('insurance-file-input');
+                if (!inp || window.__insIdFileDialogOpening) return;
+                window.__insIdFileDialogOpening = true;
+                inp.click();
+                setTimeout(function () {
+                    window.__insIdFileDialogOpening = false;
                 }, 500);
             },
             true
@@ -3967,10 +4204,11 @@ new #[Layout('layouts.app')] class extends Component {
         return { element: div, id, file };
     }
 
-    function updateNoFileMessage(listEl, tabId) {
-        const tab = document.getElementById(tabId);
-        if (!tab) return;
-        const msg = tab.querySelector('p');
+    function updateNoFileMessage(listEl) {
+        if (!listEl) return;
+        const pane = listEl.closest('.tab-pane');
+        if (!pane) return;
+        const msg = pane.querySelector('.file-list-empty-msg');
         if (msg) msg.style.display = listEl.children.length === 0 ? 'block' : 'none';
     }
 
@@ -3988,6 +4226,20 @@ new #[Layout('layouts.app')] class extends Component {
         if (uploadPane) uploadPane.classList.remove('active');
     }
 
+    /** Insurance certificate list lives on Attach tab; show it after picking files on Upload tab */
+    function showInsuranceAttachTab() {
+        const wrap = document.getElementById('insurance-file-input')?.closest('.custom-file-upload');
+        if (!wrap) return;
+        const attachBtn = wrap.querySelector('[data-tab="insurance-attach"]');
+        const uploadBtn = wrap.querySelector('[data-tab="insurance-upload"]');
+        if (attachBtn) attachBtn.classList.add('active');
+        if (uploadBtn) uploadBtn.classList.remove('active');
+        const attachPane = document.getElementById('insurance-attach-tab');
+        const uploadPane = document.getElementById('insurance-upload-tab');
+        if (attachPane) attachPane.classList.add('active');
+        if (uploadPane) uploadPane.classList.remove('active');
+    }
+
     // ── Restore file items after Livewire morphs the DOM ─────────────
     function restoreFileItems() {
         const fileList = document.getElementById('business-file-list');
@@ -4001,7 +4253,7 @@ new #[Layout('layouts.app')] class extends Component {
                         fileList.appendChild(item.element);
                     }
                 });
-                updateNoFileMessage(fileList, 'attach-tab');
+                updateNoFileMessage(fileList);
             }
         }
 
@@ -4012,7 +4264,7 @@ new #[Layout('layouts.app')] class extends Component {
                         insFileList.appendChild(item.element);
                     }
                 });
-                updateNoFileMessage(insFileList, 'insurance-attach-tab');
+                updateNoFileMessage(insFileList);
             }
         }
 
@@ -4024,7 +4276,7 @@ new #[Layout('layouts.app')] class extends Component {
                     }
                 });
             }
-            updateNoFileMessage(businessOwnerIdFileList, 'attach-tab');
+            updateNoFileMessage(businessOwnerIdFileList);
         }
     }
 
@@ -4081,13 +4333,13 @@ new #[Layout('layouts.app')] class extends Component {
                             clearUploadSimForFile(removed.file);
                         }
                         window.uploadedFiles = window.uploadedFiles.filter(f => f.id !== removedId);
-                        updateNoFileMessage(listEl, 'attach-tab');
+                        updateNoFileMessage(listEl);
                     });
                     listEl.appendChild(item.element);
                     window.uploadedFiles.push(item);
                     simulateUpload(item);
                 });
-                updateNoFileMessage(listEl, 'attach-tab');
+                updateNoFileMessage(listEl);
             });
         }
 
@@ -4128,6 +4380,7 @@ new #[Layout('layouts.app')] class extends Component {
                 });
                 listEl.replaceChildren();
                 window.insuranceUploadedFiles = [];
+                appendSavedInsuranceRows(listEl);
 
                 Array.from(this.files).forEach(file => {
                     const item = createFileItem(file, removedId => {
@@ -4136,23 +4389,20 @@ new #[Layout('layouts.app')] class extends Component {
                             clearUploadSimForFile(removed.file);
                         }
                         window.insuranceUploadedFiles = window.insuranceUploadedFiles.filter(f => f.id !== removedId);
-                        updateNoFileMessage(listEl, 'insurance-attach-tab');
+                        updateNoFileMessage(listEl);
                     });
                     listEl.appendChild(item.element);
                     window.insuranceUploadedFiles.push(item);
                     simulateUpload(item);
                 });
-                updateNoFileMessage(listEl, 'insurance-attach-tab');
+                updateNoFileMessage(listEl);
+                this.dispatchEvent(new Event('input', { bubbles: true }));
+                showInsuranceAttachTab();
             });
         }
 
         if (insUploadArea && !insUploadArea.dataset.bound) {
             insUploadArea.dataset.bound = '1';
-
-            insUploadArea.addEventListener('click', function (e) {
-                if (e.target === insFileInput || e.target === document.getElementById('insurance-file-input')) return;
-                document.getElementById('insurance-file-input').click();
-            });
 
             insUploadArea.addEventListener('dragover', e => { e.preventDefault(); insUploadArea.classList.add('dragover'); });
             insUploadArea.addEventListener('dragleave', e => { e.preventDefault(); insUploadArea.classList.remove('dragover'); });
@@ -4210,38 +4460,116 @@ new #[Layout('layouts.app')] class extends Component {
 
     }
 
+    /** Stable fingerprint for hidden JSON so harmless re-renders (key order, whitespace) do not rebuild lists. */
+    function normalizeSavedUrlsFingerprint(jsonStr) {
+        if (jsonStr == null || jsonStr === '') {
+            return '';
+        }
+        try {
+            const a = JSON.parse(jsonStr);
+            if (!Array.isArray(a)) {
+                return jsonStr;
+            }
+            const parts = a
+                .map((item) => {
+                    if (typeof item === 'string') {
+                        return 's:' + item;
+                    }
+                    if (item && typeof item === 'object') {
+                        return 'o:' + (item.path || '') + '\t' + (item.url || '');
+                    }
+                    return '';
+                })
+                .filter(Boolean);
+            parts.sort();
+            return parts.join('\n');
+        } catch (e) {
+            return jsonStr;
+        }
+    }
+
+    function syncMorphSavedFingerprints() {
+        const boHid = document.getElementById('business-owner-saved-urls-json');
+        window.__vqLastBoSavedSnap = normalizeSavedUrlsFingerprint(boHid ? boHid.value : '');
+        const insHid = document.getElementById('insurance-saved-urls-json');
+        window.__vqLastInsSavedSnap = normalizeSavedUrlsFingerprint(insHid ? insHid.value : '');
+    }
+
+    /**
+     * After Livewire morph (e.g. wire:model.live): do not re-run full init — that re-bound uploaders and
+     * replaceChildren() on file lists on every keystroke and caused flicker. Only rebuild BO/insurance lists
+     * when the hidden saved-URL JSON actually changed (remove file, new session data, etc.).
+     */
+    function afterLivewireMorphLight() {
+        restoreFileItems();
+
+        const boHid = document.getElementById('business-owner-saved-urls-json');
+        const boFp = normalizeSavedUrlsFingerprint(boHid ? boHid.value : '');
+        if (boFp !== window.__vqLastBoSavedSnap) {
+            window.__vqLastBoSavedSnap = boFp;
+            renderBusinessOwnerAttachListIfNeeded();
+        } else {
+            const boList = document.getElementById('business-owner-id-file-list');
+            if (boList) updateNoFileMessage(boList);
+        }
+
+        const insHid = document.getElementById('insurance-saved-urls-json');
+        const insFp = normalizeSavedUrlsFingerprint(insHid ? insHid.value : '');
+        if (insFp !== window.__vqLastInsSavedSnap) {
+            window.__vqLastInsSavedSnap = insFp;
+            renderInsuranceAttachListIfNeeded();
+        } else {
+            const insList = document.getElementById('insurance-file-list');
+            if (insList) updateNoFileMessage(insList);
+        }
+    }
+
     // ── Boot ──────────────────────────────────────────────────────────
     function initVerificationPage() {
         setupTabs();
         setupUploaders();
         restoreFileItems();
+        renderInsuranceAttachListIfNeeded();
         renderBusinessOwnerAttachListIfNeeded();
+        syncMorphSavedFingerprints();
     }
 
     document.addEventListener('DOMContentLoaded', initVerificationPage);
     document.addEventListener('livewire:navigated', initVerificationPage);
 
-    let __boAttachMorphTimer = null;
-    function scheduleBusinessOwnerAttachRefresh() {
-        clearTimeout(__boAttachMorphTimer);
-        __boAttachMorphTimer = setTimeout(function () {
-            if (document.getElementById('business-owner-id-file-list')) {
-                renderBusinessOwnerAttachListIfNeeded();
-            }
-        }, 100);
-    }
-
-    // Re-init uploaders when the step appears; refresh BO attach list after any morph (hidden URL field may update)
+    let __vqMorphLightTimer = null;
     document.addEventListener('livewire:init', function () {
-        Livewire.hook('morph.updated', function ({ el }) {
-            scheduleBusinessOwnerAttachRefresh();
-            // Re-init whenever the component root updates — new steps may inject inputs/upload areas
-            setTimeout(initVerificationPage, 50);
+        Livewire.hook('morph.updated', function () {
+            clearTimeout(__vqMorphLightTimer);
+            __vqMorphLightTimer = setTimeout(function () {
+                afterLivewireMorphLight();
+            }, 100);
         });
     });
 
 
-    // Global drag prevention
-    document.addEventListener('dragover', e => e.preventDefault());
-    document.addEventListener('drop', e => e.preventDefault());
+    // Global drag prevention (do not cancel drops on our upload zones — those handlers set input.files)
+    function __vqIsFileUploadZoneTarget(el) {
+        if (!el || !el.closest) {
+            return false;
+        }
+        return Boolean(
+            el.closest('.upload-area') ||
+            el.closest('#insurance-upload-area') ||
+            el.closest('#business-owner-id-upload-area') ||
+            el.closest('#upload-area')
+        );
+    }
+    document.addEventListener('dragover', function (e) {
+        if (__vqIsFileUploadZoneTarget(e.target)) {
+            return;
+        }
+        e.preventDefault();
+    });
+    document.addEventListener('drop', function (e) {
+        if (__vqIsFileUploadZoneTarget(e.target)) {
+            return;
+        }
+        e.preventDefault();
+    });
 </script>

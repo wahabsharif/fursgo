@@ -80,13 +80,13 @@
                         @endphp
                         <input type="hidden" id="business-owner-saved-urls-json"
                             value="{{ htmlspecialchars(json_encode($__boSavedFileEntries), ENT_QUOTES, 'UTF-8') }}"
-                            wire:key="bo-saved-{{ md5(json_encode($business_owner_id_images ?? [])) }}">
+                            wire:key="business-owner-saved-urls-json-freelance">
                         <script>
                             window.__boSavedFileEntries = @json($__boSavedFileEntries);
                         </script>
 
-                        <!-- Custom File Upload Interface for Business Owner ID Images (ignore only the JS-built list, not the Livewire file input) -->
-                        <div class="custom-file-upload">
+                        <!-- Custom File Upload Interface (wire:ignore — prevents tab reset on Livewire morph; hidden URLs stay outside) -->
+                        <div class="custom-file-upload" wire:ignore>
                             <!-- Tabs -->
                             <div class="upload-tabs">
                                 <div>
@@ -121,7 +121,7 @@
                                     <div class="file-list" id="business-owner-id-file-list" wire:ignore>
                                         <!-- Files will be dynamically added here -->
                                     </div>
-                                    <p>No file attached.</p>
+                                    <p class="file-list-empty-msg" data-role="file-list-empty">No file attached.</p>
                                 </div>
 
                                 <!-- Upload Tab -->
@@ -189,8 +189,27 @@
                     <h3>Insurance Details</h3>
                     <div>
                         <label class="form-label">Insurance Certificate <span>(Optional)</span></label>
-                        <!-- Custom File Upload Interface -->
-                        <div class="custom-file-upload">
+                        @php
+                            $__insSavedFileEntries = [];
+                            foreach ($insurance_certificate_paths ?? [] as $__p) {
+                                if (is_string($__p) && $__p !== '') {
+                                    $__insSavedFileEntries[] = [
+                                        'path' => $__p,
+                                        'url' => route('groomer-spacer.insurance-certificate-file', [
+                                            't' => \Illuminate\Support\Facades\Crypt::encryptString($__p),
+                                        ]),
+                                    ];
+                                }
+                            }
+                        @endphp
+                        <input type="hidden" id="insurance-saved-urls-json"
+                            value="{{ htmlspecialchars(json_encode($__insSavedFileEntries), ENT_QUOTES, 'UTF-8') }}"
+                            wire:key="insurance-saved-urls-json-freelance">
+                        <script>
+                            window.__insSavedFileEntries = @json($__insSavedFileEntries);
+                        </script>
+                        <!-- Custom File Upload Interface (wire:ignore — same as registered flow) -->
+                        <div class="custom-file-upload" wire:ignore>
                             <!-- Tabs -->
                             <div class="upload-tabs">
                                 <div>
@@ -222,10 +241,10 @@
                             <div class="tab-content">
                                 <!-- Attach Tab -->
                                 <div class="tab-pane" id="insurance-attach-tab">
-                                    <div class="file-list" id="insurance-file-list">
+                                    <div class="file-list" id="insurance-file-list" wire:ignore>
                                         <!-- Files will be dynamically added here -->
                                     </div>
-                                    <p>No file attached.</p>
+                                    <p class="file-list-empty-msg" data-role="file-list-empty">No file attached.</p>
                                 </div>
 
                                 <!-- Upload Tab -->
@@ -238,12 +257,18 @@
                                         <div class="upload-icon">
                                             Browse File
                                         </div>
-                                        <input type="file" wire:model="insurance_certificate" id="insurance-file-input"
+                                        <input type="file" wire:model="insurance_certificate_upload" id="insurance-file-input"
                                             class="hidden-input" accept=".pdf,.jpg,.jpeg,.png" multiple>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        @error('insurance_certificate_upload')
+                            <span class="error-text">{{ $message }}</span>
+                        @enderror
+                        @if ($errors->has('insurance_certificate_upload.*'))
+                            <span class="error-text">{{ $errors->first('insurance_certificate_upload.*') }}</span>
+                        @endif
                     </div>
 
                 </div>

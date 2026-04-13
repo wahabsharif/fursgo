@@ -45,6 +45,9 @@ Route::middleware('auth:groomer_spacer')->group(function () {
 
     Route::get('groomer-spacer/business-basics-file', [GroomerSpacerPrivateFileController::class, 'businessBasicsFile'])
         ->name('groomer-spacer.business-basics-file');
+
+    Route::get('groomer-spacer/insurance-certificate-file', [GroomerSpacerPrivateFileController::class, 'insuranceCertificate'])
+        ->name('groomer-spacer.insurance-certificate-file');
 });
 
 Route::post('logout', Logout::class)

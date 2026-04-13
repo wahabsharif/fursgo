@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class GroomerSpacerPrivateFileController extends Controller
 {
@@ -72,7 +73,7 @@ class GroomerSpacerPrivateFileController extends Controller
             abort(404);
         }
 
-        return Storage::disk('public')->response($path);
+        return $this->publicDiskFileResponse($path);
     }
 
     /**
@@ -137,7 +138,65 @@ class GroomerSpacerPrivateFileController extends Controller
             abort(404);
         }
 
-        return Storage::disk('public')->response($path);
+        return $this->publicDiskFileResponse($path);
+    }
+
+    /**
+     * Serve an insurance certificate file for the logged-in groomer spacer (same pattern as business-owner ID).
+     */
+    public function insuranceCertificate(Request $request)
+    {
+        $token = $request->query('t');
+        if (! is_string($token) || $token === '') {
+            abort(404);
+        }
+
+        try {
+            $path = Crypt::decryptString($token);
+        } catch (\Throwable $e) {
+            abort(404);
+        }
+
+        if ($path === '' || str_contains($path, '..') || str_starts_with($path, '/')) {
+            abort(403);
+        }
+
+        $user = Auth::guard('groomer_spacer')->user();
+        if (! $user) {
+            abort(403);
+        }
+
+        $insuranceDetails = $user->insurance_details ?? [];
+        if (! is_array($insuranceDetails)) {
+            $insuranceDetails = is_string($insuranceDetails) ? (json_decode($insuranceDetails, true) ?: []) : [];
+        }
+
+        $allowed = $insuranceDetails['insurance_certificate_paths'] ?? [];
+        if (! is_array($allowed)) {
+            $allowed = [];
+        }
+
+        $allowedList = array_values(array_filter($allowed, fn ($p) => is_string($p) && $p !== ''));
+
+        if (! in_array($path, $allowedList, true)) {
+            abort(403);
+        }
+
+        if (! Storage::disk('public')->exists($path)) {
+            abort(404);
+        }
+
+        return $this->publicDiskFileResponse($path);
+    }
+
+    /**
+     * Stream a file from the public disk. Uses {@see \Illuminate\Routing\ResponseFactory::file()}
+     * so static analysis does not rely on {@see \Illuminate\Filesystem\FilesystemAdapter::response()},
+     * which is not declared on the {@see \Illuminate\Contracts\Filesystem\Filesystem} contract.
+     */
+    private function publicDiskFileResponse(string $relativePath): BinaryFileResponse
+    {
+        return response()->file(Storage::disk('public')->path($relativePath));
     }
 
     private function normalizePublicDiskRelativePath(string $path): string
