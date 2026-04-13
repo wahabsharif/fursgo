@@ -10,8 +10,8 @@
                 </div>
                 <div class="col-lg-5">
                     <div class="join-buttons">
-                        <button class="become-host-btn">Become a Host</button>
-                        <button class="become-groomer-btn">Become a Groomer</button>
+                        <a href="{{ route('signup-groomer-space') }}" wire:navigate class="become-host-btn">Become a Host</a>
+                        <a href="{{ route('signup-groomer-space') }}" wire:navigate class="become-groomer-btn">Become a Groomer</a>
                     </div>
                 </div>
             </div>

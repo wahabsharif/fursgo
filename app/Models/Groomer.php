@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Groomer extends Model
 {
     protected $fillable = [
+        'user_id',
         'name',
         'studio_name',
         'distance',
@@ -17,7 +18,7 @@ class Groomer extends Model
         'image_url',
         'tags',
         'slots',
-        'is_top_rated'
+        'is_top_rated',
     ];
 
     protected $casts = [
@@ -25,4 +26,12 @@ class Groomer extends Model
         'slots' => 'array',
         'is_top_rated' => 'boolean',
     ];
+
+    /**
+     * Get the user that owns the groomer
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

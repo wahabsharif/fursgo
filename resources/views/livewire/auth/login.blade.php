@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\GroomerSpacerProfile;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -29,7 +30,9 @@ new #[Layout('layouts.app')] class extends Component {
         $this->loginFailed = false; // reset when user re-checks email
 
         if ($this->email && filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
-            $this->emailExists = \DB::table('users')->where('email', $this->email)->exists();
+            $userExists = \DB::table('users')->where('email', $this->email)->exists();
+            $groomerExists = \DB::table('goormer_spacer_profiles')->where('email', $this->email)->exists();
+            $this->emailExists = $userExists || $groomerExists;
             if ($this->emailExists) {
                 $this->resetValidation('email');
             } else {
@@ -51,18 +54,59 @@ new #[Layout('layouts.app')] class extends Component {
         $this->validate();
         $this->ensureIsNotRateLimited();
 
-        if (!Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
-            RateLimiter::hit($this->throttleKey());
-            $this->loginFailed = true;
+        // Check if email exists in groomer_spacer_profiles table
+        $isGroomerSpacer = \DB::table('goormer_spacer_profiles')->where('email', $this->email)->exists();
 
-            throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
-            ]);
+        // Authenticate against the appropriate guard
+        if ($isGroomerSpacer) {
+            // Try to authenticate as groomer_spacer
+            if (!Auth::guard('groomer_spacer')->attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
+                RateLimiter::hit($this->throttleKey());
+                $this->loginFailed = true;
+
+                throw ValidationException::withMessages([
+                    'email' => __('auth.failed'),
+                ]);
+            }
+
+            RateLimiter::clear($this->throttleKey());
+            request()->session()->regenerate();
+
+            /** @var GroomerSpacerProfile $profile */
+            $profile = Auth::guard('groomer_spacer')->user();
+            if ($this->groomerSpacerNeedsVerifyQualify($profile)) {
+                $this->redirectRoute('verify-qualify', navigate: true);
+
+                return;
+            }
+
+            $default = route('business-homepage-groomer-space-owner');
+            $target = session()->pull('url.intended', $default);
+            $this->redirect(is_string($target) && $target !== '' ? $target : $default, navigate: true);
+
+            return;
+        } else {
+            // Try to authenticate as regular user
+            if (!Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
+                RateLimiter::hit($this->throttleKey());
+                $this->loginFailed = true;
+
+                throw ValidationException::withMessages([
+                    'email' => __('auth.failed'),
+                ]);
+            }
+
+            RateLimiter::clear($this->throttleKey());
+            request()->session()->regenerate();
+
+            // Check if user has groomer_spacer_profile and redirect accordingly
+            $user = Auth::user();
+            if ($user && $user->groomerSpacerProfile) {
+                $this->redirectRoute('business-homepage-groomer-space-owner', navigate: true);
+            } else {
+                $this->redirectRoute('home', navigate: true);
+            }
         }
-
-        RateLimiter::clear($this->throttleKey());
-        request()->session()->regenerate();
-        $this->redirectRoute('home', navigate: true);
     }
 
     /**
@@ -92,6 +136,14 @@ new #[Layout('layouts.app')] class extends Component {
     protected function throttleKey(): string
     {
         return Str::transliterate(Str::lower($this->email) . '|' . request()->ip());
+    }
+
+    /**
+     * Matches verify-qualify: profile must complete personal info before other groomer pages.
+     */
+    protected function groomerSpacerNeedsVerifyQualify(GroomerSpacerProfile $profile): bool
+    {
+        return ! $profile->hasCompletedVerifyQualifyPersonalStep();
     }
 }; ?>
 

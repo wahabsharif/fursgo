@@ -14,5 +14,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo('/');
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (
+            \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException $e,
+            \Illuminate\Http\Request $request
+        ) {
+            // Browsers sometimes replay stale Livewire AJAX POST URLs as GET requests.
+            // Redirect them back to the referring page (or home) instead of showing a 405.
+            if ($request->isMethod('GET') && str_contains($request->path(), '/update')) {
+                $referer = $request->headers->get('referer');
+                return redirect($referer ?: '/');
+            }
+        });
     })->create();
