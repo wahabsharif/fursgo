@@ -801,7 +801,7 @@
                                             </div>
                                         </div>
                                         <div class="testimonial-photo"><img
-                                                src="https://dev.zeeteck.com/projects/fursgo//assets/images/testimonial-1.png">
+                                                src="{{ asset('images/testimonial-1.png') }}">
                                         </div>
                                         <div class="avatar-meta">
                                             <div class="avatar">
