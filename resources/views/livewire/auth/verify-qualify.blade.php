@@ -73,10 +73,40 @@ new #[Layout('layouts.app')] class extends Component {
         'fast_dry' => ['price' => ''],
     ];
 
-    /** Step 2B — Spacer business profile. */
-    public string $space_location = '';
-    public string $space_capacity = '';
-    public string $space_amenities = '';
+    /** Step 2B — Spacer business profile (stored in spacer_business_profile JSON). */
+    public string $spacer_bio = '';
+
+    public array $spacer_services_pricing = [
+        'hourly' => ['selected' => false, 'price' => ''],
+        'half_day' => ['selected' => false, 'price' => ''],
+        'full_day' => ['selected' => false, 'price' => ''],
+    ];
+
+    public array $spacer_addons_service = [
+        'storage_locker' => ['selected' => false, 'price' => ''],
+        'deep_clean' => ['selected' => false, 'price' => ''],
+        'after_hours_access' => ['selected' => false, 'price' => ''],
+        'early_hours_access' => ['selected' => false, 'price' => ''],
+    ];
+
+    public string $spacer_addon_input = '';
+
+    /** @var array<int, array{name: string, selected: bool, price: string}> */
+    public array $spacer_addon_custom_rows = [];
+
+    public array $spacer_suitable_for = [];
+
+    public string $spacer_rule_input = '';
+
+    public array $spacer_rules_custom = [];
+
+    public array $spacer_rules_preset_selected = [];
+
+    public string $spacer_amenity_input = '';
+
+    public array $spacer_amenities_custom = [];
+
+    public array $spacer_amenities_preset_selected = [];
 
     // First form: Account verification
     public string $fursgo_usage = '';
@@ -124,7 +154,11 @@ new #[Layout('layouts.app')] class extends Component {
     public function updated($propertyName)
     {
         // When any property is updated, preserve the uploaded files
-        if (in_array($propertyName, ['full_name', 'business_email', 'business_name', 'business_registration_number', 'business_phone', 'freelance_service_home_address_line1', 'freelance_service_home_address_line2', 'business_owner_id_images', 'insurance_certificate_upload', 'id_documents', 'account_holder_name', 'account_number', 'sort_code', 'iban', 'business_display_name', 'business_tagline', 'business_bio', 'groomer_experience', 'groomer_specialties', 'groomer_pet_specialties', 'groomer_specialty_other', 'groomer_pet_sizes', 'groomer_addon_input', 'groomer_custom_addons', 'groomer_selected_addons', 'groomer_services_pricing', 'groomer_addon_pricing', 'space_location', 'space_capacity', 'space_amenities'])) {
+        if (str_starts_with((string) $propertyName, 'spacer_')) {
+            return;
+        }
+
+        if (in_array($propertyName, ['full_name', 'business_email', 'business_name', 'business_registration_number', 'business_phone', 'freelance_service_home_address_line1', 'freelance_service_home_address_line2', 'business_owner_id_images', 'insurance_certificate_upload', 'id_documents', 'account_holder_name', 'account_number', 'sort_code', 'iban', 'business_display_name', 'business_tagline', 'business_bio', 'groomer_experience', 'groomer_specialties', 'groomer_pet_specialties', 'groomer_specialty_other', 'groomer_pet_sizes', 'groomer_addon_input', 'groomer_custom_addons', 'groomer_selected_addons', 'groomer_services_pricing', 'groomer_addon_pricing'])) {
             // Don't reset file arrays when other properties change
             return;
         }
@@ -145,6 +179,44 @@ new #[Layout('layouts.app')] class extends Component {
     }
 
     /**
+     * Map DB / UI values to groomer | space for wizard branching.
+     */
+    private function normalizeFursgoUsage(?string $raw): string
+    {
+        $s = strtolower(trim((string) $raw));
+        if ($s === 'spacer') {
+            return 'space';
+        }
+
+        return $s;
+    }
+
+    /**
+     * Align build-profile session substep with persisted user_type (session can be stale after DB edits).
+     */
+    private function coerceBuildProfileSubstepToUserType(GroomerSpacerProfile $user, string $substep): string
+    {
+        $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
+        $bb = $user->business_basics ?? [];
+        if (!is_array($bb)) {
+            $bb = is_string($bb) ? (json_decode($bb, true) ?: []) : [];
+        }
+        $hasDisplayName = trim((string) ($bb['display_name'] ?? '')) !== '';
+
+        if ($usage === 'space') {
+            if ($substep === 'groomer_profile') {
+                return $hasDisplayName ? 'spacer_profile' : 'business_basics';
+            }
+        } elseif ($usage === 'groomer') {
+            if ($substep === 'spacer_profile') {
+                return $hasDisplayName ? 'groomer_profile' : 'business_basics';
+            }
+        }
+
+        return $substep;
+    }
+
+    /**
      * Load existing data from user profile
      */
     public function loadExistingData(): void
@@ -157,8 +229,8 @@ new #[Layout('layouts.app')] class extends Component {
             // Get current step from session
             $currentStep = session('verification_current_step', 'account_payouts');
 
-            // Load existing verification data
-            $this->fursgo_usage = $user->user_type ?? '';
+            // Load existing verification data (normalize so "Space", "spacer", etc. match wizard branches)
+            $this->fursgo_usage = $this->normalizeFursgoUsage($user->user_type ?? '');
             $this->account_type = $user->account_type ?? '';
             $this->location_types = $user->select_location_type ?? [];
 
@@ -232,6 +304,11 @@ new #[Layout('layouts.app')] class extends Component {
                 $this->enterBusinessBasicsStep($user, false);
 
                 $buildProfileSubstep = (string) session('verification_build_profile_substep', 'business_basics');
+                $buildProfileSubstep = $this->coerceBuildProfileSubstepToUserType($user, $buildProfileSubstep);
+                if ($buildProfileSubstep !== (string) session('verification_build_profile_substep', '')) {
+                    session(['verification_build_profile_substep' => $buildProfileSubstep]);
+                    session()->save();
+                }
                 if ($buildProfileSubstep === 'groomer_profile') {
                     $this->showBusinessBasicsForm = false;
                     $this->showGroomerBusinessProfileForm = true;
@@ -248,10 +325,34 @@ new #[Layout('layouts.app')] class extends Component {
                 $this->showRegisteredBusiness = false;
                 $this->showFreelance = false;
             } elseif ($personalInfoDone) {
-                $this->showVerificationCard = false;
-                $this->showAccountPayoutsForm = false;
-                $this->showRegisteredBusiness = $user->account_type === 'registered_business';
-                $this->showFreelance = $user->account_type === 'freelance';
+                $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
+                if (($usage === 'space' || $usage === 'groomer') && $user instanceof GroomerSpacerProfile) {
+                    // Build-profile flow without relying on session from "Continue to build profile" only
+                    session(['verification_build_profile_step' => true]);
+                    $bb = $user->business_basics ?? [];
+                    if (!is_array($bb)) {
+                        $bb = is_string($bb) ? (json_decode($bb, true) ?: []) : [];
+                    }
+                    $hasDisplayName = trim((string) ($bb['display_name'] ?? '')) !== '';
+                    $substep = $hasDisplayName ? ($usage === 'groomer' ? 'groomer_profile' : 'spacer_profile') : 'business_basics';
+                    session(['verification_build_profile_substep' => $substep]);
+                    session()->save();
+                    $this->enterBusinessBasicsStep($user, false);
+                    if ($substep === 'groomer_profile') {
+                        $this->showBusinessBasicsForm = false;
+                        $this->showGroomerBusinessProfileForm = true;
+                        $this->showSpacerBusinessProfileForm = false;
+                    } elseif ($substep === 'spacer_profile') {
+                        $this->showBusinessBasicsForm = false;
+                        $this->showGroomerBusinessProfileForm = false;
+                        $this->showSpacerBusinessProfileForm = true;
+                    }
+                } else {
+                    $this->showVerificationCard = false;
+                    $this->showAccountPayoutsForm = false;
+                    $this->showRegisteredBusiness = $user->account_type === 'registered_business';
+                    $this->showFreelance = $user->account_type === 'freelance';
+                }
             } else {
                 switch ($currentStep) {
                     case 'registered_business':
@@ -278,6 +379,27 @@ new #[Layout('layouts.app')] class extends Component {
                         $this->showRegisteredBusiness = false;
                         $this->showFreelance = false;
                         break;
+                }
+            }
+
+            // Never show the wrong build-profile partial if session substep was stale vs user_type
+            if ($user instanceof GroomerSpacerProfile) {
+                $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
+                $bb = $user->business_basics ?? [];
+                if (!is_array($bb)) {
+                    $bb = is_string($bb) ? (json_decode($bb, true) ?: []) : [];
+                }
+                $hasDisplayName = trim((string) ($bb['display_name'] ?? '')) !== '';
+                if ($usage === 'space' && $this->showGroomerBusinessProfileForm) {
+                    $this->showGroomerBusinessProfileForm = false;
+                    if ($hasDisplayName && !$this->showBusinessBasicsForm) {
+                        $this->showSpacerBusinessProfileForm = true;
+                    }
+                } elseif ($usage === 'groomer' && $this->showSpacerBusinessProfileForm) {
+                    $this->showSpacerBusinessProfileForm = false;
+                    if ($hasDisplayName && !$this->showBusinessBasicsForm) {
+                        $this->showGroomerBusinessProfileForm = true;
+                    }
                 }
             }
         }
@@ -445,7 +567,7 @@ new #[Layout('layouts.app')] class extends Component {
         if ($user) {
             // Update user profile with verification data
             $user->update([
-                'user_type' => $this->fursgo_usage,
+                'user_type' => $this->normalizeFursgoUsage($this->fursgo_usage),
                 'account_type' => $this->account_type,
                 'select_location_type' => $this->location_types,
             ]);
@@ -619,13 +741,7 @@ new #[Layout('layouts.app')] class extends Component {
 
         $this->hydrateGroomerServiceAndAddonPricing($groomerProfile);
 
-        $spacerProfile = $bb['spacer_profile'] ?? [];
-        if (!is_array($spacerProfile)) {
-            $spacerProfile = is_string($spacerProfile) ? (json_decode($spacerProfile, true) ?: []) : [];
-        }
-        $this->space_location = trim((string) ($spacerProfile['location'] ?? ''));
-        $this->space_capacity = trim((string) ($spacerProfile['capacity'] ?? ''));
-        $this->space_amenities = trim((string) ($spacerProfile['amenities'] ?? ''));
+        $this->hydrateSpacerBusinessProfile($user);
     }
 
     /**
@@ -674,6 +790,150 @@ new #[Layout('layouts.app')] class extends Component {
             $outA[$k] = $merged;
         }
         $this->groomer_addon_pricing = $outA;
+    }
+
+    private function mergeSpacerProfileKeyedRows(array $defaults, array $loaded): array
+    {
+        $out = [];
+        foreach ($defaults as $k => $shape) {
+            $row = isset($loaded[$k]) && is_array($loaded[$k]) ? $loaded[$k] : [];
+            $merged = $shape;
+            foreach ($shape as $f => $_defaultVal) {
+                if (!array_key_exists($f, $row)) {
+                    continue;
+                }
+                if ($f === 'selected') {
+                    $merged['selected'] = (bool) $row[$f];
+                } else {
+                    $merged[$f] = trim((string) $row[$f]);
+                }
+            }
+            $out[$k] = $merged;
+        }
+
+        return $out;
+    }
+
+    private function hydrateSpacerBusinessProfile(GroomerSpacerProfile $user): void
+    {
+        $data = $user->spacer_business_profile ?? [];
+        if (!is_array($data)) {
+            $data = is_string($data) ? (json_decode($data, true) ?: []) : [];
+        }
+
+        $bb = $user->business_basics ?? [];
+        if (!is_array($bb)) {
+            $bb = is_string($bb) ? (json_decode($bb, true) ?: []) : [];
+        }
+
+        if ($data === [] && isset($bb['spacer_profile']) && is_array($bb['spacer_profile']) && $bb['spacer_profile'] !== []) {
+            $leg = $bb['spacer_profile'];
+            $data = [
+                'legacy' => [
+                    'location' => (string) ($leg['location'] ?? ''),
+                    'capacity' => (string) ($leg['capacity'] ?? ''),
+                    'amenities' => (string) ($leg['amenities'] ?? ''),
+                ],
+            ];
+        }
+
+        $this->spacer_bio = trim((string) ($data['bio'] ?? ''));
+
+        if ($this->spacer_bio === '' && isset($data['legacy']) && is_array($data['legacy'])) {
+            $leg = $data['legacy'];
+            $parts = array_values(array_filter([trim((string) ($leg['location'] ?? '')) !== '' ? 'Location: ' . trim($leg['location']) : null, trim((string) ($leg['capacity'] ?? '')) !== '' ? 'Capacity: ' . trim($leg['capacity']) : null, trim((string) ($leg['amenities'] ?? '')) !== '' ? trim($leg['amenities']) : null], fn($x) => $x !== null));
+            $this->spacer_bio = implode("\n\n", $parts);
+        }
+
+        $defSvc = [
+            'hourly' => ['selected' => false, 'price' => ''],
+            'half_day' => ['selected' => false, 'price' => ''],
+            'full_day' => ['selected' => false, 'price' => ''],
+        ];
+        $svcIn = $data['services_pricing'] ?? [];
+        $this->spacer_services_pricing = $this->mergeSpacerProfileKeyedRows($defSvc, is_array($svcIn) ? $svcIn : []);
+
+        $defF = [];
+        foreach ($this->spacerFursgoAddonCatalog() as $slug => $_label) {
+            $defF[$slug] = ['selected' => false, 'price' => ''];
+        }
+        $fuIn = $data['addons_service'] ?? $data['addons_fursgo'] ?? [];
+        $this->spacer_addons_service = $this->mergeSpacerProfileKeyedRows($defF, is_array($fuIn) ? $fuIn : []);
+
+        $this->spacer_addon_custom_rows = [];
+        $customIn = $data['addons_custom'] ?? [];
+        if (is_array($customIn)) {
+            foreach ($customIn as $row) {
+                if (is_array($row) && isset($row['name']) && trim((string) $row['name']) !== '') {
+                    $this->spacer_addon_custom_rows[] = [
+                        'name' => trim((string) $row['name']),
+                        'selected' => (bool) ($row['selected'] ?? true),
+                        'price' => trim((string) ($row['price'] ?? '')),
+                    ];
+                } elseif (is_string($row) && trim($row) !== '') {
+                    $this->spacer_addon_custom_rows[] = ['name' => trim($row), 'selected' => true, 'price' => ''];
+                }
+            }
+        }
+
+        $sf = $data['suitable_for'] ?? [];
+        $this->spacer_suitable_for = is_array($sf) ? array_values(array_filter($sf, fn($v) => is_string($v) && $v !== '')) : [];
+
+        $this->spacer_rules_preset_selected = [];
+        $this->spacer_rules_custom = [];
+        $rulesFlat = $data['rules'] ?? [];
+        if (is_array($rulesFlat) && $rulesFlat !== [] && array_is_list($rulesFlat)) {
+            foreach ($rulesFlat as $r) {
+                if (!is_string($r) || trim($r) === '') {
+                    continue;
+                }
+                if (in_array($r, $this->spacerRulesPresetCatalog(), true)) {
+                    $this->spacer_rules_preset_selected[] = $r;
+                } else {
+                    $this->spacer_rules_custom[] = $r;
+                }
+            }
+        } else {
+            $rp = $data['rules_presets'] ?? [];
+            if (is_array($rp)) {
+                $this->spacer_rules_preset_selected = array_values(array_intersect($this->spacerRulesPresetCatalog(), $rp));
+            }
+            $rc = $data['rules_custom'] ?? [];
+            if (is_array($rc)) {
+                $this->spacer_rules_custom = array_values(array_filter($rc, fn($v) => is_string($v) && trim($v) !== ''));
+            }
+        }
+        $this->spacer_rules_preset_selected = array_values(array_unique($this->spacer_rules_preset_selected));
+
+        $this->spacer_amenities_preset_selected = [];
+        $this->spacer_amenities_custom = [];
+        $amenitiesFlat = $data['amenities'] ?? [];
+        if (is_array($amenitiesFlat) && $amenitiesFlat !== [] && array_is_list($amenitiesFlat)) {
+            foreach ($amenitiesFlat as $a) {
+                if (!is_string($a) || trim($a) === '') {
+                    continue;
+                }
+                if (in_array($a, $this->spacerAmenitiesPresetCatalog(), true)) {
+                    $this->spacer_amenities_preset_selected[] = $a;
+                } else {
+                    $this->spacer_amenities_custom[] = $a;
+                }
+            }
+        } else {
+            $ap = $data['amenities_presets'] ?? [];
+            if (is_array($ap)) {
+                $this->spacer_amenities_preset_selected = array_values(array_intersect($this->spacerAmenitiesPresetCatalog(), $ap));
+            }
+            $ac = $data['amenities_custom'] ?? [];
+            if (is_array($ac)) {
+                $this->spacer_amenities_custom = array_values(array_filter($ac, fn($v) => is_string($v) && trim($v) !== ''));
+            }
+        }
+        $this->spacer_amenities_preset_selected = array_values(array_unique($this->spacer_amenities_preset_selected));
+
+        $this->spacer_addon_input = '';
+        $this->spacer_rule_input = '';
+        $this->spacer_amenity_input = '';
     }
 
     public function updatedBusinessGalleryPick($value): void
@@ -800,7 +1060,93 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function isSpacerBusinessProfileContinueEnabled(): bool
     {
-        return trim($this->space_location) !== '' && trim($this->space_capacity) !== '';
+        if (trim($this->spacer_bio) === '') {
+            return false;
+        }
+        foreach ($this->spacer_services_pricing as $row) {
+            if (!empty($row['selected'])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** @return array<string, string> slug => label */
+    public function spacerFursgoAddonCatalog(): array
+    {
+        return [
+            'storage_locker' => 'Storage Locker',
+            'deep_clean' => 'Deep Clean',
+            'after_hours_access' => 'After Hours access',
+            'early_hours_access' => 'Early Hours Access',
+        ];
+    }
+
+    /** @return array<string, array{name: string, meta: string|null}> */
+    public function spacerServicesPricingRowLabels(): array
+    {
+        return [
+            'hourly' => ['name' => 'Hourly', 'meta' => null],
+            'half_day' => ['name' => 'Half-Day', 'meta' => '(4 hours)'],
+            'full_day' => ['name' => 'Full-Day', 'meta' => '(8 hours)'],
+        ];
+    }
+
+    /** @return list<string> */
+    public function spacerSuitableForCatalog(): array
+    {
+        return ['Full Groom', 'Bath & Brush', 'Nail Trim', 'Ear Cleaning', 'Medicated Bath', 'Teeth Brushing', 'Deshedding', 'Sanitary Trim', 'Dematting', 'Paw Pad Trim', 'Anal Gland Expression'];
+    }
+
+    /** @return list<string> */
+    public function spacerRulesPresetCatalog(): array
+    {
+        return ['Suitable for all breeds and coat types', 'Leave space tidy', 'Not suitable for aggressive animals in heat', 'No overnight stays', 'Pets must remain supervised', 'No smoking'];
+    }
+
+    /** @return list<string> */
+    public function spacerAmenitiesPresetCatalog(): array
+    {
+        return ['Grooming Table', 'Bath', 'Dryer', 'Towels', 'Waiting Area', 'Parking', 'Wi-fi'];
+    }
+
+    public function addSpacerCustomAddonRow(): void
+    {
+        $name = trim($this->spacer_addon_input);
+        if ($name === '') {
+            return;
+        }
+        $this->spacer_addon_custom_rows[] = [
+            'name' => $name,
+            'selected' => true,
+            'price' => '',
+        ];
+        $this->spacer_addon_input = '';
+    }
+
+    public function addSpacerRuleCustom(): void
+    {
+        $t = trim($this->spacer_rule_input);
+        if ($t === '') {
+            return;
+        }
+        if (!in_array($t, $this->spacer_rules_custom, true)) {
+            $this->spacer_rules_custom[] = $t;
+        }
+        $this->spacer_rule_input = '';
+    }
+
+    public function addSpacerAmenityCustom(): void
+    {
+        $t = trim($this->spacer_amenity_input);
+        if ($t === '') {
+            return;
+        }
+        if (!in_array($t, $this->spacer_amenities_custom, true)) {
+            $this->spacer_amenities_custom[] = $t;
+        }
+        $this->spacer_amenity_input = '';
     }
 
     public function addGroomerCustomAddon(): void
@@ -903,8 +1249,13 @@ new #[Layout('layouts.app')] class extends Component {
         $this->business_gallery_paths = $gallery;
         $this->business_avatar_path = $avatarPath;
         $this->showBusinessBasicsForm = false;
-        $this->showGroomerBusinessProfileForm = $this->fursgo_usage === 'groomer';
-        $this->showSpacerBusinessProfileForm = $this->fursgo_usage === 'space';
+        $usage = $this->normalizeFursgoUsage($this->fursgo_usage);
+        $this->showGroomerBusinessProfileForm = $usage === 'groomer';
+        $this->showSpacerBusinessProfileForm = $usage === 'space';
+        if ($this->showGroomerBusinessProfileForm || $this->showSpacerBusinessProfileForm) {
+            session(['verification_build_profile_step' => true]);
+            session()->save();
+        }
         if ($this->showGroomerBusinessProfileForm) {
             $this->setBuildProfileSubstep('groomer_profile');
         } elseif ($this->showSpacerBusinessProfileForm) {
@@ -978,30 +1329,61 @@ new #[Layout('layouts.app')] class extends Component {
     public function submitSpacerBusinessProfile(): void
     {
         $user = Auth::guard('groomer_spacer')->user();
-        if (!$user) {
+        if (!$user instanceof GroomerSpacerProfile) {
             return;
         }
 
         $this->validate([
-            'space_location' => ['required', 'string', 'max:255'],
-            'space_capacity' => ['required', 'string', 'max:255'],
-            'space_amenities' => ['nullable', 'string', 'max:1500'],
+            'spacer_bio' => ['required', 'string', 'max:5000'],
+            'spacer_services_pricing' => ['required', 'array'],
+            'spacer_addon_custom_rows' => ['nullable', 'array'],
+            'spacer_suitable_for' => ['nullable', 'array'],
+            'spacer_suitable_for.*' => ['string', 'max:255'],
+            'spacer_rules_custom' => ['nullable', 'array'],
+            'spacer_rules_custom.*' => ['string', 'max:500'],
+            'spacer_amenities_custom' => ['nullable', 'array'],
+            'spacer_amenities_custom.*' => ['string', 'max:500'],
         ]);
 
-        $existing = $user->business_basics ?? [];
-        if (!is_array($existing)) {
-            $existing = is_string($existing) ? (json_decode($existing, true) ?: []) : [];
+        $anyService = false;
+        foreach ($this->spacer_services_pricing as $row) {
+            if (!empty($row['selected'])) {
+                $anyService = true;
+                break;
+            }
+        }
+        if (!$anyService) {
+            $this->addError('spacer_services_pricing', 'Select at least one pricing option (Hourly, Half-Day, or Full-Day).');
+
+            return;
         }
 
-        $user->update([
-            'business_basics' => array_merge($existing, [
-                'spacer_profile' => [
-                    'location' => trim($this->space_location),
-                    'capacity' => trim($this->space_capacity),
-                    'amenities' => trim($this->space_amenities),
-                ],
-            ]),
-        ]);
+        $rulesMerged = array_values(array_unique(array_merge($this->spacer_rules_preset_selected, $this->spacer_rules_custom)));
+        $amenitiesMerged = array_values(array_unique(array_merge($this->spacer_amenities_preset_selected, $this->spacer_amenities_custom)));
+
+        $payload = [
+            'bio' => trim($this->spacer_bio),
+            'services_pricing' => $this->spacer_services_pricing,
+            'addons_service' => $this->spacer_addons_service,
+            'addons_custom' => $this->spacer_addon_custom_rows,
+            'suitable_for' => array_values($this->spacer_suitable_for),
+            'rules' => $rulesMerged,
+            'amenities' => $amenitiesMerged,
+        ];
+
+        $updates = ['spacer_business_profile' => $payload];
+
+        $bb = $user->business_basics ?? [];
+        if (!is_array($bb)) {
+            $bb = is_string($bb) ? (json_decode($bb, true) ?: []) : [];
+        }
+        if (isset($bb['spacer_profile'])) {
+            unset($bb['spacer_profile']);
+            $updates['business_basics'] = $bb;
+        }
+
+        $user->update($updates);
+
         $this->setBuildProfileSubstep('spacer_profile');
 
         $this->js('alert(' . json_encode('Spacer business profile saved.') . ')');
@@ -1717,10 +2099,17 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
                     </form>
                 </div>
-            @elseif ($showGroomerBusinessProfileForm)
+            @elseif (
+                $fursgo_usage === 'space' &&
+                    !$showBusinessBasicsForm &&
+                    ($showSpacerBusinessProfileForm || $showGroomerBusinessProfileForm))
+                @include('livewire.auth.verify-qualify-spacer-business-profile')
+            @elseif ($fursgo_usage === 'groomer' && !$showBusinessBasicsForm && $showGroomerBusinessProfileForm)
                 @include('livewire.auth.verify-qualify-groomer-business-profile')
             @elseif ($showSpacerBusinessProfileForm)
                 @include('livewire.auth.verify-qualify-spacer-business-profile')
+            @elseif ($showGroomerBusinessProfileForm)
+                @include('livewire.auth.verify-qualify-groomer-business-profile')
             @elseif ($showVerificationCard)
                 <div class="verification-card">
                     <div class="verification-header">
@@ -2852,8 +3241,8 @@ new #[Layout('layouts.app')] class extends Component {
 
     .form-input:focus {
         outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        border-color: var(--active-bg);
+        box-shadow: 0 0 0 4px rgba(255, 201, 122, 0.1);
         transform: translateY(-1px);
     }
 
