@@ -65,7 +65,7 @@ new #[Layout('layouts.app')] class extends Component {
 
         Auth::guard('groomer_spacer')->login($profile);
 
-        $this->redirectRoute('verify-qualify', navigate: true);
+        $this->redirectRoute('business-homepage-groomer-space-owner', navigate: true);
     }
 };
 ?>

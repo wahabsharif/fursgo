@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\GroomerSpacerProfile;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -72,14 +71,6 @@ new #[Layout('layouts.app')] class extends Component {
             RateLimiter::clear($this->throttleKey());
             request()->session()->regenerate();
 
-            /** @var GroomerSpacerProfile $profile */
-            $profile = Auth::guard('groomer_spacer')->user();
-            if ($this->groomerSpacerNeedsVerifyQualify($profile)) {
-                $this->redirectRoute('verify-qualify', navigate: true);
-
-                return;
-            }
-
             $default = route('business-homepage-groomer-space-owner');
             $target = session()->pull('url.intended', $default);
             $this->redirect(is_string($target) && $target !== '' ? $target : $default, navigate: true);
@@ -136,14 +127,6 @@ new #[Layout('layouts.app')] class extends Component {
     protected function throttleKey(): string
     {
         return Str::transliterate(Str::lower($this->email) . '|' . request()->ip());
-    }
-
-    /**
-     * Matches verify-qualify: profile must complete personal info before other groomer pages.
-     */
-    protected function groomerSpacerNeedsVerifyQualify(GroomerSpacerProfile $profile): bool
-    {
-        return ! $profile->hasCompletedVerifyQualifyPersonalStep();
     }
 }; ?>
 
