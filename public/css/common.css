@@ -1025,3 +1025,12 @@ input::placeholder {
     align-items: center;
     justify-content: center;
 }
+
+/* Spacer verify-qualify: unselected pricing row = gray panel; selected = white (avoids filter/layer bugs) */
+.business-basics-wrap .spacer-service-row {
+    background-color: #f8f8f8;
+}
+
+.business-basics-wrap .spacer-service-row.spacer-service-row--selected {
+    background-color: #fff;
+}
