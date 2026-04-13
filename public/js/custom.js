@@ -205,8 +205,8 @@ toggleActive(".find-space-content", ".weight-option", "active");
                 dateField.classList.add("focused");
                 timeField.classList.add("focused");
 
-                dateField.style.borderBottomLeftRadius = "0px";
-                timeField.style.borderBottomRightRadius = "0px";
+                dateField.style.setProperty("border-bottom-left-radius", "0px", "important");
+                timeField.style.setProperty("border-bottom-right-radius", "0px", "important");
 
                 // Auto scroll to selected time
                 const el = timeList.querySelector(

@@ -67,7 +67,7 @@
             bottom: 50px;
             z-index: 1001;
             cursor: pointer;
-            left: 23%;
+            left: calc((100vw - 1140px) / 2);
         }
 
         .need-help-chat {
@@ -103,7 +103,7 @@
         /* Chat panel above overlay */
         #chat-panel {
             position: fixed;
-            z-index: 2;
+            z-index: 12;
             /* higher than overlay */
         }
 
