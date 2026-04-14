@@ -110,7 +110,7 @@
     .legal-agreements-container.is-expanded {
         max-height: none;
         overflow-y: visible;
-        cursor: default;
+        cursor: pointer;
     }
 
     .legal-agreements-container::-webkit-scrollbar {

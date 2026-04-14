@@ -779,8 +779,10 @@ new #[Layout('layouts.app')] class extends Component {
 
     /**
      * Show Business Basics and optionally re-hydrate fields from the database.
+     *
+     * @param  bool  $hydrateBasicsFields  When false, skips heavy JSON hydration (faster step switches to Legal / success).
      */
-    private function enterBusinessBasicsStep(GroomerSpacerProfile $user, bool $refreshFromDb): void
+    private function enterBusinessBasicsStep(GroomerSpacerProfile $user, bool $refreshFromDb, bool $hydrateBasicsFields = true): void
     {
         $this->showBusinessBasicsForm = true;
         $this->showVerificationStatus = false;
@@ -798,7 +800,9 @@ new #[Layout('layouts.app')] class extends Component {
             $user->refresh();
         }
 
-        $this->hydrateBusinessBasicsFields($user);
+        if ($hydrateBasicsFields) {
+            $this->hydrateBusinessBasicsFields($user);
+        }
     }
 
     private function hydrateBusinessBasicsFields(GroomerSpacerProfile $user): void
@@ -1241,6 +1245,219 @@ new #[Layout('layouts.app')] class extends Component {
         session(['verification_build_profile_step' => true]);
         $this->setBuildProfileSubstep('start_grooming');
         session()->save();
+    }
+
+    public function currentSidebarStep(): int
+    {
+        if ($this->showStartGroomingEarningComplete) {
+            return 4;
+        }
+        if ($this->showLegalPolicyForm) {
+            return 3;
+        }
+        if ($this->showBusinessBasicsForm || $this->showGroomerBusinessProfileForm || $this->showSpacerBusinessProfileForm) {
+            return 2;
+        }
+
+        return 1;
+    }
+
+    public function sidebarStepIsAvailable(int $step): bool
+    {
+        if ($step < 1 || $step > 4) {
+            return false;
+        }
+        $user = Auth::guard('groomer_spacer')->user();
+        if (!$user instanceof GroomerSpacerProfile) {
+            return $step === 1;
+        }
+
+        $dbMax = $this->resolveMaximumSidebarStep($user);
+        $forwardCap = $this->resolveForwardNavigationCapFromCurrentUi($user);
+
+        return $step <= min($dbMax, $forwardCap);
+    }
+
+    /**
+     * Caps how far forward the user may jump while the current screen has unsatisfied required fields.
+     */
+    private function resolveForwardNavigationCapFromCurrentUi(GroomerSpacerProfile $user): int
+    {
+        $dbMax = $this->resolveMaximumSidebarStep($user);
+
+        if (!$user->hasCompletedVerifyQualifyPersonalStep()) {
+            return 1;
+        }
+
+        $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
+        if ($usage !== 'groomer' && $usage !== 'space') {
+            return 1;
+        }
+
+        if ($this->showStartGroomingEarningComplete) {
+            return $dbMax;
+        }
+
+        if ($this->showLegalPolicyForm && !$this->isLegalPolicyContinueEnabled()) {
+            return min(3, $dbMax);
+        }
+
+        if ($this->showBusinessBasicsForm && !$this->isBusinessBasicsContinueEnabled()) {
+            return min(2, $dbMax);
+        }
+
+        if ($this->showGroomerBusinessProfileForm && !$this->isGroomerBusinessProfileContinueEnabled()) {
+            return min(2, $dbMax);
+        }
+
+        if ($this->showSpacerBusinessProfileForm && !$this->isSpacerBusinessProfileContinueEnabled()) {
+            return min(2, $dbMax);
+        }
+
+        return $dbMax;
+    }
+
+    private function resolveMaximumSidebarStep(GroomerSpacerProfile $user): int
+    {
+        if (!$user->hasCompletedVerifyQualifyPersonalStep()) {
+            return 1;
+        }
+        $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
+        if ($usage !== 'groomer' && $usage !== 'space') {
+            return 1;
+        }
+        $sub = $this->coerceBuildProfileSubstepToUserType($user, $this->inferVerificationBuildProfileSubstep($user));
+
+        return match ($sub) {
+            'business_basics', 'groomer_profile', 'spacer_profile' => 2,
+            'legal_policy' => 3,
+            'start_grooming' => 4,
+            default => 2,
+        };
+    }
+
+    public function goToSidebarStep(int $step): void
+    {
+        if ($step < 1 || $step > 4) {
+            return;
+        }
+        $user = Auth::guard('groomer_spacer')->user();
+        if (!$user instanceof GroomerSpacerProfile) {
+            return;
+        }
+        if (!$this->sidebarStepIsAvailable($step)) {
+            return;
+        }
+        if ($this->currentSidebarStep() === $step) {
+            return;
+        }
+
+        $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
+        $inBuildProfile = $user->hasCompletedVerifyQualifyPersonalStep() && ($usage === 'groomer' || $usage === 'space');
+
+        if (!$inBuildProfile) {
+            return;
+        }
+
+        match ($step) {
+            1 => $this->applySidebarStepOneForGroomerSpaceUser($user),
+            2 => $this->applySidebarStepTwoForGroomerSpaceUser($user),
+            3 => $this->applySidebarStepThreeForGroomerSpaceUser($user),
+            4 => $this->applySidebarStepFourForGroomerSpaceUser($user),
+        };
+    }
+
+    private function applyBuildProfileSubstepUi(GroomerSpacerProfile $user, string $buildProfileSubstep): void
+    {
+        $buildProfileSubstep = $this->coerceBuildProfileSubstepToUserType($user, $buildProfileSubstep);
+        $hydrateBasics = !in_array($buildProfileSubstep, ['legal_policy', 'start_grooming'], true);
+        $this->enterBusinessBasicsStep($user, false, $hydrateBasics);
+        if ($buildProfileSubstep === 'groomer_profile') {
+            $this->showBusinessBasicsForm = false;
+            $this->showGroomerBusinessProfileForm = true;
+            $this->showSpacerBusinessProfileForm = false;
+            $this->showLegalPolicyForm = false;
+            $this->showStartGroomingEarningComplete = false;
+        } elseif ($buildProfileSubstep === 'spacer_profile') {
+            $this->showBusinessBasicsForm = false;
+            $this->showGroomerBusinessProfileForm = false;
+            $this->showSpacerBusinessProfileForm = true;
+            $this->showLegalPolicyForm = false;
+            $this->showStartGroomingEarningComplete = false;
+        } elseif ($buildProfileSubstep === 'legal_policy') {
+            $this->showBusinessBasicsForm = false;
+            $this->showGroomerBusinessProfileForm = false;
+            $this->showSpacerBusinessProfileForm = false;
+            $this->showLegalPolicyForm = true;
+            $this->showStartGroomingEarningComplete = false;
+            if ($user->legal_policy_agreements) {
+                $this->legal_terms_accepted = true;
+                $this->legal_privacy_accepted = true;
+            }
+        } elseif ($buildProfileSubstep === 'start_grooming') {
+            $this->showBusinessBasicsForm = false;
+            $this->showGroomerBusinessProfileForm = false;
+            $this->showSpacerBusinessProfileForm = false;
+            $this->showLegalPolicyForm = false;
+            $this->showStartGroomingEarningComplete = true;
+        } else {
+            $this->showBusinessBasicsForm = true;
+            $this->showGroomerBusinessProfileForm = false;
+            $this->showSpacerBusinessProfileForm = false;
+            $this->showLegalPolicyForm = false;
+            $this->showStartGroomingEarningComplete = false;
+        }
+    }
+
+    private function applySidebarStepOneForGroomerSpaceUser(GroomerSpacerProfile $user): void
+    {
+        $this->showVerificationStatus = false;
+        $this->showBusinessBasicsForm = false;
+        $this->showGroomerBusinessProfileForm = false;
+        $this->showSpacerBusinessProfileForm = false;
+        $this->showLegalPolicyForm = false;
+        $this->showStartGroomingEarningComplete = false;
+        $this->legal_agreements_expanded = false;
+        $this->showVerificationCard = false;
+        $this->showRegisteredBusiness = false;
+        $this->showFreelance = false;
+        $this->showAccountPayoutsForm = true;
+        session(['verification_current_step' => 'account_payouts']);
+        session()->forget(['verification_build_profile_step', 'verification_build_profile_substep']);
+        session()->save();
+    }
+
+    private function applySidebarStepTwoForGroomerSpaceUser(GroomerSpacerProfile $user): void
+    {
+        $sub = $this->inferVerificationBuildProfileSubstep($user);
+        $sub = $this->coerceBuildProfileSubstepToUserType($user, $sub);
+        if ($sub === 'legal_policy' || $sub === 'start_grooming') {
+            $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
+            $sub = $usage === 'space' ? 'spacer_profile' : 'groomer_profile';
+        }
+        session(['verification_build_profile_step' => true]);
+        session(['verification_build_profile_substep' => $sub]);
+        session()->save();
+        $this->applyBuildProfileSubstepUi($user, $sub);
+    }
+
+    private function applySidebarStepThreeForGroomerSpaceUser(GroomerSpacerProfile $user): void
+    {
+        session(['verification_build_profile_step' => true]);
+        session(['verification_build_profile_substep' => 'legal_policy']);
+        session()->save();
+        $this->applyBuildProfileSubstepUi($user, 'legal_policy');
+    }
+
+    private function applySidebarStepFourForGroomerSpaceUser(GroomerSpacerProfile $user): void
+    {
+        if (!$user->legal_policy_agreements) {
+            return;
+        }
+        session(['verification_build_profile_step' => true]);
+        session(['verification_build_profile_substep' => 'start_grooming']);
+        session()->save();
+        $this->applyBuildProfileSubstepUi($user, 'start_grooming');
     }
 
     /** @return array<string, string> slug => label */
@@ -1960,37 +2177,46 @@ new #[Layout('layouts.app')] class extends Component {
 ?>
 
 <section class="container mt-5 mb-5">
-    <div class="verification-wrapper">
+    <div class="verification-wrapper" wire:loading.class="verification-wrapper--navigating" wire:target="goToSidebarStep">
+        <div class="verification-step-loading-bar" wire:loading wire:target="goToSidebarStep" aria-hidden="true">
+            <span class="verification-step-loading-bar__sweep"></span>
+        </div>
         <!-- Floating Sidebar (step tracker) -->
         <div class="floating-sidebar">
             <div class="sidebar-header">
                 <h1>{{ $this->activeSidebarStepLabel() }}</h1>
             </div>
-            <div class="steps-list">
-                <div
-                    class="step-item {{ ($showVerificationCard || $showAccountPayoutsForm || $showRegisteredBusiness || $showFreelance || $showVerificationStatus) && !$showBusinessBasicsForm && !$showGroomerBusinessProfileForm && !$showSpacerBusinessProfileForm && !$showLegalPolicyForm && !$showStartGroomingEarningComplete ? 'active' : '' }}">
+            <div class="steps-list" role="list">
+                <div @if ($this->sidebarStepIsAvailable(1)) wire:click="goToSidebarStep(1)" role="button"
+                        tabindex="0" @else aria-disabled="true" tabindex="-1" @endif
+                    class="step-item {{ $this->currentSidebarStep() === 1 ? 'active' : '' }} {{ $this->sidebarStepIsAvailable(1) ? 'step-item--clickable' : 'step-item--disabled' }}">
                     <div class="step-content">
                         <div class="step-title"><span>1.</span>
                             <p>Verify & Qualify</p>
                         </div>
                     </div>
                 </div>
-                <div
-                    class="step-item {{ ($showBusinessBasicsForm || $showGroomerBusinessProfileForm || $showSpacerBusinessProfileForm) && !$showLegalPolicyForm && !$showStartGroomingEarningComplete ? 'active' : '' }}">
+                <div @if ($this->sidebarStepIsAvailable(2)) wire:click="goToSidebarStep(2)" role="button"
+                        tabindex="0" @else aria-disabled="true" tabindex="-1" @endif
+                    class="step-item {{ $this->currentSidebarStep() === 2 ? 'active' : '' }} {{ $this->sidebarStepIsAvailable(2) ? 'step-item--clickable' : 'step-item--disabled' }}">
                     <div class="step-content">
                         <div class="step-title"><span>2.</span>
                             <p>Build Your Profile</p>
                         </div>
                     </div>
                 </div>
-                <div class="step-item {{ $showLegalPolicyForm && !$showStartGroomingEarningComplete ? 'active' : '' }}">
+                <div @if ($this->sidebarStepIsAvailable(3)) wire:click="goToSidebarStep(3)" role="button"
+                        tabindex="0" @else aria-disabled="true" tabindex="-1" @endif
+                    class="step-item {{ $this->currentSidebarStep() === 3 ? 'active' : '' }} {{ $this->sidebarStepIsAvailable(3) ? 'step-item--clickable' : 'step-item--disabled' }}">
                     <div class="step-content">
                         <div class="step-title"><span>3.</span>
                             <p>Legal & Policy Agreement</p>
                         </div>
                     </div>
                 </div>
-                <div class="step-item {{ $showStartGroomingEarningComplete ? 'active' : '' }}">
+                <div @if ($this->sidebarStepIsAvailable(4)) wire:click="goToSidebarStep(4)" role="button"
+                        tabindex="0" @else aria-disabled="true" tabindex="-1" @endif
+                    class="step-item {{ $this->currentSidebarStep() === 4 ? 'active' : '' }} {{ $this->sidebarStepIsAvailable(4) ? 'step-item--clickable' : 'step-item--disabled' }}">
                     <div class="step-content">
                         <div class="step-title"><span>4.</span>
                             <p>Start Grooming & Earning!</p>
@@ -3073,6 +3299,65 @@ new #[Layout('layouts.app')] class extends Component {
         position: relative;
     }
 
+    .verification-wrapper--navigating {
+        cursor: wait;
+    }
+
+    .verification-wrapper--navigating .main-content {
+        opacity: 0.58;
+        transition: opacity 0.12s ease;
+        pointer-events: none;
+    }
+
+    .verification-wrapper--navigating .floating-sidebar {
+        pointer-events: none;
+    }
+
+    .verification-step-loading-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        overflow: hidden;
+        background: rgba(232, 228, 222, 0.85);
+        z-index: 5;
+        border-radius: 2px;
+        pointer-events: none;
+    }
+
+    .verification-step-loading-bar__sweep {
+        position: absolute;
+        top: 0;
+        left: -42%;
+        height: 100%;
+        width: 42%;
+        border-radius: 2px;
+        background: linear-gradient(90deg, #FFC97A 0%, #f6a623 45%, #FFC97A 100%);
+        box-shadow: 0 0 12px rgba(246, 166, 35, 0.45);
+        will-change: left;
+        animation: vq-step-load-sweep 1.1s linear infinite;
+    }
+
+    @keyframes vq-step-load-sweep {
+        0% {
+            left: -42%;
+        }
+
+        100% {
+            left: 100%;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .verification-step-loading-bar__sweep {
+            animation: none;
+            left: 0;
+            width: 100%;
+            opacity: 0.85;
+        }
+    }
+
     /* Floating Sidebar */
     .floating-sidebar {
         max-width: 18rem;
@@ -3082,6 +3367,7 @@ new #[Layout('layouts.app')] class extends Component {
     }
 
     .sidebar-header h1 {
+        width: 25rem;
         color: #3B3731;
         font-family: "Playfair Display";
         font-size: 50px;
@@ -3103,13 +3389,33 @@ new #[Layout('layouts.app')] class extends Component {
         gap: 1rem;
         padding: 0.75rem;
         padding-left: 1.5rem;
-        border-radius: 12px;
+        border-radius: 96px;
         cursor: default;
     }
 
     .step-item.active {
         border-radius: 96px;
         background: #FFC97A;
+    }
+
+    .step-item--clickable {
+        cursor: pointer;
+        outline: none;
+        transition: box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .step-item--clickable:focus-visible {
+        box-shadow: 0 0 0 2px #fff, 0 0 0 4px #FFC97A;
+    }
+
+    .step-item--clickable:hover:not(.active) {
+        background: #F0EFEB;
+        border-radius: 96px;
+    }
+
+    .step-item--disabled {
+        opacity: 0.48;
+        cursor: not-allowed !important;
     }
 
     .step-content {
