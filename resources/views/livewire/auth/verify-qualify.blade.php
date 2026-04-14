@@ -27,6 +27,9 @@ new #[Layout('layouts.app')] class extends Component {
     /** Step 3 — Legal & Policy (after groomer/spacer profile). */
     public bool $showLegalPolicyForm = false;
 
+    /** Step 4 — Success after legal agreements (“Start Grooming & Earning!”). */
+    public bool $showStartGroomingEarningComplete = false;
+
     public bool $legal_terms_accepted = false;
 
     public bool $legal_privacy_accepted = false;
@@ -229,7 +232,7 @@ new #[Layout('layouts.app')] class extends Component {
     /**
      * Infer which "Build your profile" substep matches saved profile data (session-independent resume).
      *
-     * @return 'business_basics'|'groomer_profile'|'spacer_profile'|'legal_policy'
+     * @return 'business_basics'|'groomer_profile'|'spacer_profile'|'legal_policy'|'start_grooming'
      */
     private function inferVerificationBuildProfileSubstep(GroomerSpacerProfile $user): string
     {
@@ -258,7 +261,11 @@ new #[Layout('layouts.app')] class extends Component {
             $petSizes = $gp['pet_sizes'] ?? [];
             $profileDone = $experience !== '' && is_array($petSpecs) && count($petSpecs) > 0 && is_array($petSizes) && count($petSizes) > 0;
 
-            return $profileDone ? 'legal_policy' : 'groomer_profile';
+            if (!$profileDone) {
+                return 'groomer_profile';
+            }
+
+            return $user->legal_policy_agreements ? 'start_grooming' : 'legal_policy';
         }
 
         if ($usage === 'space') {
@@ -279,7 +286,11 @@ new #[Layout('layouts.app')] class extends Component {
             }
             $profileDone = $bio !== '' && $anyService;
 
-            return $profileDone ? 'legal_policy' : 'spacer_profile';
+            if (!$profileDone) {
+                return 'spacer_profile';
+            }
+
+            return $user->legal_policy_agreements ? 'start_grooming' : 'legal_policy';
         }
 
         return 'business_basics';
@@ -395,20 +406,29 @@ new #[Layout('layouts.app')] class extends Component {
                     $this->showGroomerBusinessProfileForm = true;
                     $this->showSpacerBusinessProfileForm = false;
                     $this->showLegalPolicyForm = false;
+                    $this->showStartGroomingEarningComplete = false;
                 } elseif ($buildProfileSubstep === 'spacer_profile') {
                     $this->showBusinessBasicsForm = false;
                     $this->showGroomerBusinessProfileForm = false;
                     $this->showSpacerBusinessProfileForm = true;
                     $this->showLegalPolicyForm = false;
+                    $this->showStartGroomingEarningComplete = false;
                 } elseif ($buildProfileSubstep === 'legal_policy') {
                     $this->showBusinessBasicsForm = false;
                     $this->showGroomerBusinessProfileForm = false;
                     $this->showSpacerBusinessProfileForm = false;
                     $this->showLegalPolicyForm = true;
+                    $this->showStartGroomingEarningComplete = false;
                     if ($user->legal_policy_agreements) {
                         $this->legal_terms_accepted = true;
                         $this->legal_privacy_accepted = true;
                     }
+                } elseif ($buildProfileSubstep === 'start_grooming') {
+                    $this->showBusinessBasicsForm = false;
+                    $this->showGroomerBusinessProfileForm = false;
+                    $this->showSpacerBusinessProfileForm = false;
+                    $this->showLegalPolicyForm = false;
+                    $this->showStartGroomingEarningComplete = true;
                 }
             } elseif (session('verify_qualify_show_approved', false) && $personalInfoDone) {
                 $this->showVerificationStatus = true;
@@ -434,20 +454,29 @@ new #[Layout('layouts.app')] class extends Component {
                         $this->showGroomerBusinessProfileForm = true;
                         $this->showSpacerBusinessProfileForm = false;
                         $this->showLegalPolicyForm = false;
+                        $this->showStartGroomingEarningComplete = false;
                     } elseif ($buildProfileSubstep === 'spacer_profile') {
                         $this->showBusinessBasicsForm = false;
                         $this->showGroomerBusinessProfileForm = false;
                         $this->showSpacerBusinessProfileForm = true;
                         $this->showLegalPolicyForm = false;
+                        $this->showStartGroomingEarningComplete = false;
                     } elseif ($buildProfileSubstep === 'legal_policy') {
                         $this->showBusinessBasicsForm = false;
                         $this->showGroomerBusinessProfileForm = false;
                         $this->showSpacerBusinessProfileForm = false;
                         $this->showLegalPolicyForm = true;
+                        $this->showStartGroomingEarningComplete = false;
                         if ($user->legal_policy_agreements) {
                             $this->legal_terms_accepted = true;
                             $this->legal_privacy_accepted = true;
                         }
+                    } elseif ($buildProfileSubstep === 'start_grooming') {
+                        $this->showBusinessBasicsForm = false;
+                        $this->showGroomerBusinessProfileForm = false;
+                        $this->showSpacerBusinessProfileForm = false;
+                        $this->showLegalPolicyForm = false;
+                        $this->showStartGroomingEarningComplete = true;
                     }
                 } else {
                     $this->showVerificationCard = false;
@@ -720,6 +749,7 @@ new #[Layout('layouts.app')] class extends Component {
         $this->showGroomerBusinessProfileForm = false;
         $this->showSpacerBusinessProfileForm = false;
         $this->showLegalPolicyForm = false;
+        $this->showStartGroomingEarningComplete = false;
         $this->legal_agreements_expanded = false;
         session(['verification_current_step' => 'account_payouts']);
         session()->forget('verification_build_profile_step');
@@ -761,6 +791,7 @@ new #[Layout('layouts.app')] class extends Component {
         $this->showGroomerBusinessProfileForm = false;
         $this->showSpacerBusinessProfileForm = false;
         $this->showLegalPolicyForm = false;
+        $this->showStartGroomingEarningComplete = false;
         $this->legal_agreements_expanded = false;
 
         if ($refreshFromDb) {
@@ -1204,11 +1235,12 @@ new #[Layout('layouts.app')] class extends Component {
         $user->update(['legal_policy_agreements' => true]);
 
         $this->legal_agreements_expanded = false;
+        $this->showLegalPolicyForm = false;
+        $this->showStartGroomingEarningComplete = true;
 
-        session()->forget(['verification_build_profile_step', 'verification_build_profile_substep']);
+        session(['verification_build_profile_step' => true]);
+        $this->setBuildProfileSubstep('start_grooming');
         session()->save();
-
-        $this->redirect(route('business-homepage-groomer-space-owner'), navigate: true);
     }
 
     /** @return array<string, string> slug => label */
@@ -1524,6 +1556,7 @@ new #[Layout('layouts.app')] class extends Component {
         $user->update($updates);
 
         $this->showSpacerBusinessProfileForm = false;
+        $this->showStartGroomingEarningComplete = false;
         $this->showLegalPolicyForm = true;
         $this->setBuildProfileSubstep('legal_policy');
     }
@@ -1873,6 +1906,7 @@ new #[Layout('layouts.app')] class extends Component {
                 'showGroomerBusinessProfileForm' => $this->showGroomerBusinessProfileForm,
                 'showSpacerBusinessProfileForm' => $this->showSpacerBusinessProfileForm,
                 'showLegalPolicyForm' => $this->showLegalPolicyForm,
+                'showStartGroomingEarningComplete' => $this->showStartGroomingEarningComplete,
                 'showVerificationCard' => $this->showVerificationCard,
                 'showAccountPayoutsForm' => $this->showAccountPayoutsForm,
                 'showRegisteredBusiness' => $this->showRegisteredBusiness,
@@ -1910,6 +1944,9 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function activeSidebarStepLabel(): string
     {
+        if ($this->showStartGroomingEarningComplete) {
+            return 'Start Grooming & Earning!';
+        }
         if ($this->showLegalPolicyForm) {
             return 'Legal & Policy Agreement';
         }
@@ -1931,7 +1968,7 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
             <div class="steps-list">
                 <div
-                    class="step-item {{ ($showVerificationCard || $showAccountPayoutsForm || $showRegisteredBusiness || $showFreelance || $showVerificationStatus) && !$showBusinessBasicsForm && !$showGroomerBusinessProfileForm && !$showSpacerBusinessProfileForm && !$showLegalPolicyForm ? 'active' : '' }}">
+                    class="step-item {{ ($showVerificationCard || $showAccountPayoutsForm || $showRegisteredBusiness || $showFreelance || $showVerificationStatus) && !$showBusinessBasicsForm && !$showGroomerBusinessProfileForm && !$showSpacerBusinessProfileForm && !$showLegalPolicyForm && !$showStartGroomingEarningComplete ? 'active' : '' }}">
                     <div class="step-content">
                         <div class="step-title"><span>1.</span>
                             <p>Verify & Qualify</p>
@@ -1939,21 +1976,21 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
                 </div>
                 <div
-                    class="step-item {{ ($showBusinessBasicsForm || $showGroomerBusinessProfileForm || $showSpacerBusinessProfileForm) && !$showLegalPolicyForm ? 'active' : '' }}">
+                    class="step-item {{ ($showBusinessBasicsForm || $showGroomerBusinessProfileForm || $showSpacerBusinessProfileForm) && !$showLegalPolicyForm && !$showStartGroomingEarningComplete ? 'active' : '' }}">
                     <div class="step-content">
                         <div class="step-title"><span>2.</span>
                             <p>Build Your Profile</p>
                         </div>
                     </div>
                 </div>
-                <div class="step-item {{ $showLegalPolicyForm ? 'active' : '' }}">
+                <div class="step-item {{ $showLegalPolicyForm && !$showStartGroomingEarningComplete ? 'active' : '' }}">
                     <div class="step-content">
                         <div class="step-title"><span>3.</span>
                             <p>Legal & Policy Agreement</p>
                         </div>
                     </div>
                 </div>
-                <div class="step-item">
+                <div class="step-item {{ $showStartGroomingEarningComplete ? 'active' : '' }}">
                     <div class="step-content">
                         <div class="step-title"><span>4.</span>
                             <p>Start Grooming & Earning!</p>
@@ -1967,6 +2004,8 @@ new #[Layout('layouts.app')] class extends Component {
         <div class="main-content">
             @if ($showVerificationStatus)
                 @include('livewire.auth.verify-qualify-verification-status')
+            @elseif ($showStartGroomingEarningComplete)
+                @include('livewire.auth.verify-qualify-start-grooming-complete')
             @elseif ($showBusinessBasicsForm)
                 <div class="business-basics-wrap" wire:key="verify-qualify-business-basics">
                     <h1 class="business-basics-title">Business Basics</h1>
