@@ -1,0 +1,27 @@
+{
+    "bio": "asd asd ada dlahdg ladkja kd",
+    "services_pricing": {
+        "hourly": { "selected": true, "price": "10" },
+        "half_day": { "selected": true, "price": "80" },
+        "full_day": { "selected": false, "price": "" }
+    },
+    "addons_service": {
+        "storage_locker": { "selected": false, "price": "" },
+        "deep_clean": { "selected": true, "price": "" },
+        "after_hours_access": { "selected": false, "price": "" },
+        "early_hours_access": { "selected": true, "price": "80" }
+    },
+    "addons_custom": [
+        { "name": "Early Hours Access", "selected": true, "price": "0" }
+    ],
+    "suitable_for": ["Full Groom", "Bath & Brush"],
+    "rules": [
+        "Suitable for all breeds and coat types",
+        "Leave space tidy",
+        "Not suitable for aggressive animals in heat",
+        "No overnight stays",
+        "Pets must remain supervised",
+        "Food"
+    ],
+    "amenities": ["Grooming Table", "Bath", "Dryer", "Towels", "Waiting Area"]
+}

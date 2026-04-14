@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\GroomerSpacerPrivateFileController;
+use App\Http\Controllers\LegalAgreementsPdfController;
 use App\Livewire\Actions\Logout;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
@@ -39,6 +40,9 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth:groomer_spacer')->group(function () {
     Volt::route('verify-qualify', 'auth.verify-qualify')
         ->name('verify-qualify');
+
+    Route::get('verify-qualify/legal-agreements.pdf', LegalAgreementsPdfController::class)
+        ->name('verify-qualify.legal-agreements-pdf');
 
     Route::get('groomer-spacer/business-owner-id-file', [GroomerSpacerPrivateFileController::class, 'businessOwnerIdImage'])
         ->name('groomer-spacer.business-owner-id-file');
