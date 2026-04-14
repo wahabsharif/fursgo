@@ -13,6 +13,7 @@ class Logout
     public function __invoke()
     {
         Auth::guard('web')->logout();
+        Auth::guard('groomer_spacer')->logout();
 
         Session::invalidate();
         Session::regenerateToken();

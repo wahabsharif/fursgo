@@ -23,17 +23,17 @@ Volt::route('/search-results', 'search.results')->name('search-results');
 // Business pages
 Volt::route('/business-homepage-groomer-space-owner', 'business.homepage')->name('business-homepage-groomer-space-owner');
 
-// Authenticated pages
+// Authenticated pages (web + groomer/spacer guard)
 Volt::route('/booking-groomer', 'booking.groomer')
-    ->middleware(['auth'])
+    ->middleware(['auth:web,groomer_spacer'])
     ->name('booking-groomer');
 
 Volt::route('/my-account/my-profile', 'account.profile')
-    ->middleware(['auth'])
+    ->middleware(['auth:web,groomer_spacer'])
     ->name('my-profile');
 
 Volt::route('/account-and-setting/settings', 'account.settings')
-    ->middleware(['auth'])
+    ->middleware(['auth:web,groomer_spacer'])
     ->name('account-and-setting');
 
 // Cookie and overlay components
@@ -57,10 +57,10 @@ Volt::route('/groomer-unavailability/location-unavailability', 'groomer.unavaila
 // Authenticated Routes
 // ===============================================================
 Volt::route('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth:web,groomer_spacer', 'verified'])
     ->name('dashboard');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth:web,groomer_spacer'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');

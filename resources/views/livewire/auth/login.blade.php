@@ -28,9 +28,10 @@ new #[Layout('layouts.app')] class extends Component {
     {
         $this->loginFailed = false; // reset when user re-checks email
 
-        if ($this->email && filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
-            $userExists = \DB::table('users')->where('email', $this->email)->exists();
-            $groomerExists = \DB::table('goormer_spacer_profiles')->where('email', $this->email)->exists();
+        $email = Str::lower(trim($this->email));
+        if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $userExists = \DB::table('users')->where('email', $email)->exists();
+            $groomerExists = \DB::table('goormer_spacer_profiles')->where('email', $email)->exists();
             $this->emailExists = $userExists || $groomerExists;
             if ($this->emailExists) {
                 $this->resetValidation('email');
@@ -50,10 +51,11 @@ new #[Layout('layouts.app')] class extends Component {
     public function login(): void
     {
         $this->loginFailed = false; // reset on each attempt
+        $this->email = Str::lower(trim($this->email));
         $this->validate();
         $this->ensureIsNotRateLimited();
 
-        // Check if email exists in groomer_spacer_profiles table
+        // Match signup (lowercase email) so lookups and attempt() use the same value as the DB.
         $isGroomerSpacer = \DB::table('goormer_spacer_profiles')->where('email', $this->email)->exists();
 
         // Authenticate against the appropriate guard
@@ -71,7 +73,7 @@ new #[Layout('layouts.app')] class extends Component {
             RateLimiter::clear($this->throttleKey());
             request()->session()->regenerate();
 
-            $default = route('business-homepage-groomer-space-owner');
+            $default = route('dashboard');
             $target = session()->pull('url.intended', $default);
             $this->redirect(is_string($target) && $target !== '' ? $target : $default, navigate: true);
 
@@ -90,13 +92,9 @@ new #[Layout('layouts.app')] class extends Component {
             RateLimiter::clear($this->throttleKey());
             request()->session()->regenerate();
 
-            // Check if user has groomer_spacer_profile and redirect accordingly
-            $user = Auth::user();
-            if ($user && $user->groomerSpacerProfile) {
-                $this->redirectRoute('business-homepage-groomer-space-owner', navigate: true);
-            } else {
-                $this->redirectRoute('home', navigate: true);
-            }
+            $default = route('dashboard');
+            $target = session()->pull('url.intended', $default);
+            $this->redirect(is_string($target) && $target !== '' ? $target : $default, navigate: true);
         }
     }
 
