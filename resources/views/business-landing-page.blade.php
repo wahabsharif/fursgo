@@ -14,8 +14,7 @@
             height: 100vh;
             width: 100%;
             height: 472px;
-            background: linear-gradient(rgba(173, 216, 230, 0.4), rgba(173, 216, 230, 0.4)),
-                url('{{ asset('images/blp-hero-section-imagerectangle-293.png') }}');
+            background: url('{{ asset('images/blp-hero-section-imagerectangle-293.png') }}');
             background-size: cover;
             background-position: center;
             display: flex;
