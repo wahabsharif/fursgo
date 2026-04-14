@@ -24,6 +24,16 @@ new #[Layout('layouts.app')] class extends Component {
     public bool $showGroomerBusinessProfileForm = false;
     public bool $showSpacerBusinessProfileForm = false;
 
+    /** Step 3 — Legal & Policy (after groomer/spacer profile). */
+    public bool $showLegalPolicyForm = false;
+
+    public bool $legal_terms_accepted = false;
+
+    public bool $legal_privacy_accepted = false;
+
+    /** Legal agreements panel: collapsed (scroll) vs expanded (full height). */
+    public bool $legal_agreements_expanded = false;
+
     /** Step 2 — Business Basics (customer-facing profile). */
     public string $business_display_name = '';
 
@@ -217,6 +227,65 @@ new #[Layout('layouts.app')] class extends Component {
     }
 
     /**
+     * Infer which "Build your profile" substep matches saved profile data (session-independent resume).
+     *
+     * @return 'business_basics'|'groomer_profile'|'spacer_profile'|'legal_policy'
+     */
+    private function inferVerificationBuildProfileSubstep(GroomerSpacerProfile $user): string
+    {
+        $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
+        $bb = $user->business_basics ?? [];
+        if (!is_array($bb)) {
+            $bb = is_string($bb) ? (json_decode($bb, true) ?: []) : [];
+        }
+        $hasDisplayName = trim((string) ($bb['display_name'] ?? '')) !== '';
+
+        if (!$hasDisplayName) {
+            return 'business_basics';
+        }
+
+        if ($usage === 'groomer') {
+            $gp = $user->groomer_business_profile ?? [];
+            if (!is_array($gp)) {
+                $gp = is_string($gp) ? (json_decode($gp, true) ?: []) : [];
+            }
+            if ($gp === [] && isset($bb['groomer_profile'])) {
+                $legacy = $bb['groomer_profile'];
+                $gp = is_array($legacy) ? $legacy : (is_string($legacy) ? (json_decode($legacy, true) ?: []) : []);
+            }
+            $experience = trim((string) ($gp['experience'] ?? ''));
+            $petSpecs = $gp['pet_specialties'] ?? [];
+            $petSizes = $gp['pet_sizes'] ?? [];
+            $profileDone = $experience !== '' && is_array($petSpecs) && count($petSpecs) > 0 && is_array($petSizes) && count($petSizes) > 0;
+
+            return $profileDone ? 'legal_policy' : 'groomer_profile';
+        }
+
+        if ($usage === 'space') {
+            $sp = $user->spacer_business_profile ?? [];
+            if (!is_array($sp)) {
+                $sp = is_string($sp) ? (json_decode($sp, true) ?: []) : [];
+            }
+            $bio = trim((string) ($sp['bio'] ?? ''));
+            $pricing = $sp['services_pricing'] ?? [];
+            $anyService = false;
+            if (is_array($pricing)) {
+                foreach ($pricing as $row) {
+                    if (is_array($row) && !empty($row['selected'])) {
+                        $anyService = true;
+                        break;
+                    }
+                }
+            }
+            $profileDone = $bio !== '' && $anyService;
+
+            return $profileDone ? 'legal_policy' : 'spacer_profile';
+        }
+
+        return 'business_basics';
+    }
+
+    /**
      * Load existing data from user profile
      */
     public function loadExistingData(): void
@@ -301,22 +370,45 @@ new #[Layout('layouts.app')] class extends Component {
             $personalInfoDone = $user->hasCompletedVerifyQualifyPersonalStep();
 
             if (session('verification_build_profile_step', false) && $personalInfoDone && $user instanceof GroomerSpacerProfile) {
-                $this->enterBusinessBasicsStep($user, false);
+                $bpSub = (string) session('verification_build_profile_substep', 'business_basics');
+                if ($bpSub === 'complete') {
+                    session()->forget(['verification_build_profile_step', 'verification_build_profile_substep']);
+                    session()->save();
+                }
+            }
 
-                $buildProfileSubstep = (string) session('verification_build_profile_substep', 'business_basics');
+            if (session('verification_build_profile_step', false) && $personalInfoDone && $user instanceof GroomerSpacerProfile) {
+                $buildProfileSubstep = $this->inferVerificationBuildProfileSubstep($user);
+                session([
+                    'verification_build_profile_step' => true,
+                    'verification_build_profile_substep' => $buildProfileSubstep,
+                ]);
+                session()->save();
                 $buildProfileSubstep = $this->coerceBuildProfileSubstepToUserType($user, $buildProfileSubstep);
                 if ($buildProfileSubstep !== (string) session('verification_build_profile_substep', '')) {
                     session(['verification_build_profile_substep' => $buildProfileSubstep]);
                     session()->save();
                 }
+                $this->enterBusinessBasicsStep($user, false);
                 if ($buildProfileSubstep === 'groomer_profile') {
                     $this->showBusinessBasicsForm = false;
                     $this->showGroomerBusinessProfileForm = true;
                     $this->showSpacerBusinessProfileForm = false;
+                    $this->showLegalPolicyForm = false;
                 } elseif ($buildProfileSubstep === 'spacer_profile') {
                     $this->showBusinessBasicsForm = false;
                     $this->showGroomerBusinessProfileForm = false;
                     $this->showSpacerBusinessProfileForm = true;
+                    $this->showLegalPolicyForm = false;
+                } elseif ($buildProfileSubstep === 'legal_policy') {
+                    $this->showBusinessBasicsForm = false;
+                    $this->showGroomerBusinessProfileForm = false;
+                    $this->showSpacerBusinessProfileForm = false;
+                    $this->showLegalPolicyForm = true;
+                    if ($user->legal_policy_agreements) {
+                        $this->legal_terms_accepted = true;
+                        $this->legal_privacy_accepted = true;
+                    }
                 }
             } elseif (session('verify_qualify_show_approved', false) && $personalInfoDone) {
                 $this->showVerificationStatus = true;
@@ -327,25 +419,35 @@ new #[Layout('layouts.app')] class extends Component {
             } elseif ($personalInfoDone) {
                 $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
                 if (($usage === 'space' || $usage === 'groomer') && $user instanceof GroomerSpacerProfile) {
-                    // Build-profile flow without relying on session from "Continue to build profile" only
-                    session(['verification_build_profile_step' => true]);
-                    $bb = $user->business_basics ?? [];
-                    if (!is_array($bb)) {
-                        $bb = is_string($bb) ? (json_decode($bb, true) ?: []) : [];
-                    }
-                    $hasDisplayName = trim((string) ($bb['display_name'] ?? '')) !== '';
-                    $substep = $hasDisplayName ? ($usage === 'groomer' ? 'groomer_profile' : 'spacer_profile') : 'business_basics';
-                    session(['verification_build_profile_substep' => $substep]);
+                    $buildProfileSubstep = $this->inferVerificationBuildProfileSubstep($user);
+                    session([
+                        'verification_build_profile_step' => true,
+                        'verification_build_profile_substep' => $buildProfileSubstep,
+                    ]);
+                    session()->save();
+                    $buildProfileSubstep = $this->coerceBuildProfileSubstepToUserType($user, $buildProfileSubstep);
+                    session(['verification_build_profile_substep' => $buildProfileSubstep]);
                     session()->save();
                     $this->enterBusinessBasicsStep($user, false);
-                    if ($substep === 'groomer_profile') {
+                    if ($buildProfileSubstep === 'groomer_profile') {
                         $this->showBusinessBasicsForm = false;
                         $this->showGroomerBusinessProfileForm = true;
                         $this->showSpacerBusinessProfileForm = false;
-                    } elseif ($substep === 'spacer_profile') {
+                        $this->showLegalPolicyForm = false;
+                    } elseif ($buildProfileSubstep === 'spacer_profile') {
                         $this->showBusinessBasicsForm = false;
                         $this->showGroomerBusinessProfileForm = false;
                         $this->showSpacerBusinessProfileForm = true;
+                        $this->showLegalPolicyForm = false;
+                    } elseif ($buildProfileSubstep === 'legal_policy') {
+                        $this->showBusinessBasicsForm = false;
+                        $this->showGroomerBusinessProfileForm = false;
+                        $this->showSpacerBusinessProfileForm = false;
+                        $this->showLegalPolicyForm = true;
+                        if ($user->legal_policy_agreements) {
+                            $this->legal_terms_accepted = true;
+                            $this->legal_privacy_accepted = true;
+                        }
                     }
                 } else {
                     $this->showVerificationCard = false;
@@ -600,6 +702,8 @@ new #[Layout('layouts.app')] class extends Component {
         $this->showAccountPayoutsForm = true;
         $this->showRegisteredBusiness = false;
         $this->showFreelance = false;
+        session(['verification_current_step' => 'account_payouts']);
+        session()->save();
     }
 
     /**
@@ -615,6 +719,8 @@ new #[Layout('layouts.app')] class extends Component {
         $this->showBusinessBasicsForm = false;
         $this->showGroomerBusinessProfileForm = false;
         $this->showSpacerBusinessProfileForm = false;
+        $this->showLegalPolicyForm = false;
+        $this->legal_agreements_expanded = false;
         session(['verification_current_step' => 'account_payouts']);
         session()->forget('verification_build_profile_step');
         session()->forget('verification_build_profile_substep');
@@ -654,6 +760,8 @@ new #[Layout('layouts.app')] class extends Component {
         $this->showFreelance = false;
         $this->showGroomerBusinessProfileForm = false;
         $this->showSpacerBusinessProfileForm = false;
+        $this->showLegalPolicyForm = false;
+        $this->legal_agreements_expanded = false;
 
         if ($refreshFromDb) {
             $user->refresh();
@@ -857,7 +965,7 @@ new #[Layout('layouts.app')] class extends Component {
         foreach ($this->spacerFursgoAddonCatalog() as $slug => $_label) {
             $defF[$slug] = ['selected' => false, 'price' => ''];
         }
-        $fuIn = $data['addons_service'] ?? $data['addons_fursgo'] ?? [];
+        $fuIn = $data['addons_service'] ?? ($data['addons_fursgo'] ?? []);
         $this->spacer_addons_service = $this->mergeSpacerProfileKeyedRows($defF, is_array($fuIn) ? $fuIn : []);
 
         $this->spacer_addon_custom_rows = [];
@@ -1070,6 +1178,37 @@ new #[Layout('layouts.app')] class extends Component {
         }
 
         return false;
+    }
+
+    public function isLegalPolicyContinueEnabled(): bool
+    {
+        return $this->legal_terms_accepted;
+    }
+
+    public function toggleLegalAgreementsExpanded(): void
+    {
+        $this->legal_agreements_expanded = !$this->legal_agreements_expanded;
+    }
+
+    public function submitLegalPolicy(): void
+    {
+        $user = Auth::guard('groomer_spacer')->user();
+        if (!$user instanceof GroomerSpacerProfile) {
+            return;
+        }
+
+        $this->validate([
+            'legal_terms_accepted' => ['accepted'],
+        ]);
+
+        $user->update(['legal_policy_agreements' => true]);
+
+        $this->legal_agreements_expanded = false;
+
+        session()->forget(['verification_build_profile_step', 'verification_build_profile_substep']);
+        session()->save();
+
+        $this->redirect(route('business-homepage-groomer-space-owner'), navigate: true);
     }
 
     /** @return array<string, string> slug => label */
@@ -1321,9 +1460,9 @@ new #[Layout('layouts.app')] class extends Component {
                 'addon_pricing' => $this->groomer_addon_pricing,
             ],
         ]);
-        $this->setBuildProfileSubstep('groomer_profile');
-
-        $this->js('alert(' . json_encode('Groomer business profile saved.') . ')');
+        $this->showGroomerBusinessProfileForm = false;
+        $this->showLegalPolicyForm = true;
+        $this->setBuildProfileSubstep('legal_policy');
     }
 
     public function submitSpacerBusinessProfile(): void
@@ -1384,9 +1523,9 @@ new #[Layout('layouts.app')] class extends Component {
 
         $user->update($updates);
 
-        $this->setBuildProfileSubstep('spacer_profile');
-
-        $this->js('alert(' . json_encode('Spacer business profile saved.') . ')');
+        $this->showSpacerBusinessProfileForm = false;
+        $this->showLegalPolicyForm = true;
+        $this->setBuildProfileSubstep('legal_policy');
     }
 
     /**
@@ -1733,6 +1872,7 @@ new #[Layout('layouts.app')] class extends Component {
                 'showBusinessBasicsForm' => $this->showBusinessBasicsForm,
                 'showGroomerBusinessProfileForm' => $this->showGroomerBusinessProfileForm,
                 'showSpacerBusinessProfileForm' => $this->showSpacerBusinessProfileForm,
+                'showLegalPolicyForm' => $this->showLegalPolicyForm,
                 'showVerificationCard' => $this->showVerificationCard,
                 'showAccountPayoutsForm' => $this->showAccountPayoutsForm,
                 'showRegisteredBusiness' => $this->showRegisteredBusiness,
@@ -1770,6 +1910,9 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function activeSidebarStepLabel(): string
     {
+        if ($this->showLegalPolicyForm) {
+            return 'Legal & Policy Agreement';
+        }
         if ($this->showBusinessBasicsForm || $this->showGroomerBusinessProfileForm || $this->showSpacerBusinessProfileForm) {
             return 'Build Your Profile';
         }
@@ -1781,14 +1924,14 @@ new #[Layout('layouts.app')] class extends Component {
 
 <section class="container mt-5 mb-5">
     <div class="verification-wrapper">
-        <!-- Floating Sidebar -->
+        <!-- Floating Sidebar (step tracker) -->
         <div class="floating-sidebar">
             <div class="sidebar-header">
                 <h1>{{ $this->activeSidebarStepLabel() }}</h1>
             </div>
             <div class="steps-list">
                 <div
-                    class="step-item {{ ($showVerificationCard || $showAccountPayoutsForm || $showRegisteredBusiness || $showFreelance || $showVerificationStatus) && !$showBusinessBasicsForm && !$showGroomerBusinessProfileForm && !$showSpacerBusinessProfileForm ? 'active' : '' }}">
+                    class="step-item {{ ($showVerificationCard || $showAccountPayoutsForm || $showRegisteredBusiness || $showFreelance || $showVerificationStatus) && !$showBusinessBasicsForm && !$showGroomerBusinessProfileForm && !$showSpacerBusinessProfileForm && !$showLegalPolicyForm ? 'active' : '' }}">
                     <div class="step-content">
                         <div class="step-title"><span>1.</span>
                             <p>Verify & Qualify</p>
@@ -1796,14 +1939,14 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
                 </div>
                 <div
-                    class="step-item {{ $showBusinessBasicsForm || $showGroomerBusinessProfileForm || $showSpacerBusinessProfileForm ? 'active' : '' }}">
+                    class="step-item {{ ($showBusinessBasicsForm || $showGroomerBusinessProfileForm || $showSpacerBusinessProfileForm) && !$showLegalPolicyForm ? 'active' : '' }}">
                     <div class="step-content">
                         <div class="step-title"><span>2.</span>
                             <p>Build Your Profile</p>
                         </div>
                     </div>
                 </div>
-                <div class="step-item">
+                <div class="step-item {{ $showLegalPolicyForm ? 'active' : '' }}">
                     <div class="step-content">
                         <div class="step-title"><span>3.</span>
                             <p>Legal & Policy Agreement</p>
@@ -2099,6 +2242,8 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
                     </form>
                 </div>
+            @elseif ($showLegalPolicyForm)
+                @include('livewire.auth.verify-qualify-legal-policy')
             @elseif (
                 $fursgo_usage === 'space' &&
                     !$showBusinessBasicsForm &&
@@ -3122,7 +3267,7 @@ new #[Layout('layouts.app')] class extends Component {
         font-style: normal;
         font-weight: 600;
         line-height: normal;
-        background: #FFC97A;
+        background: #FFC97A !important;
         cursor: pointer;
         width: 179px;
         height: 48px;
@@ -3358,7 +3503,7 @@ new #[Layout('layouts.app')] class extends Component {
     }
 
     .btn-disabled {
-        background: #e5e7eb;
+        background: #e5e7eb !important;
         color: #9ca3af;
         cursor: not-allowed;
         width: 105px;
