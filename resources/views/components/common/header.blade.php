@@ -3,18 +3,18 @@
 @if ($variant === 'dashboard')
     {{-- Dashboard Header --}}
     <header class="dashboard-header">
-        <div class="dashboard-header-container">
-            {{-- Curved Shape Background --}}
-            <div class="curve-shape-container">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 260" fill="none" preserveAspectRatio="none">
-                    <path d="M0 0H1440V260H260C116.406 260 0 143.594 0 0Z"
-                        fill="{{ auth()->check() && auth()->user()->user_type === 'space' ? '#FFA89933' : '#FFF4E4' }}" />
-                </svg>
-            </div>
+        {{-- Full-viewport curve (sibling to max-width content wrapper) --}}
+        <div class="curve-shape-container" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 260" fill="none" preserveAspectRatio="none">
+                <path d="M0 0H1440V260H260C116.406 260 0 143.594 0 0Z"
+                    fill="{{ auth()->check() && auth()->user()->user_type === 'space' ? '#FFA89933' : '#FFF4E4' }}" />
+            </svg>
+        </div>
 
+        <div class="dashboard-header-container">
             {{-- Main Navigation Bar --}}
             <nav class="navbar dashboard-navbar">
-                <div class="container">
+                <div class="dashboard-header-inner">
                     <div class="align-items-center dash-menu-items">
                         <div class="logo-toggle-button d-flex justify-content-between">
                             <a href="{{ route('home') }}" wire:navigate>
@@ -696,7 +696,7 @@
 
             {{-- Welcome Section --}}
             <div class="welcome-section">
-                <div class="container">
+                <div class="dashboard-header-inner">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="welcome-left d-flex align-items-center gap-3">
                             <div class="profile-image-container">
@@ -731,17 +731,31 @@
         </div>
 
         <style>
-            .dashboard-header-container {
-                max-width: 110rem;
-                margin: 0 auto;
+            .dashboard-header {
+                position: relative;
                 width: 100%;
-                padding: 0;
             }
 
-            .dashboard-navbar .container,
-            .welcome-section .container {
+            .dashboard-header .dashboard-header-container {
+                position: relative;
+                width: 100%;
+                /* Grow past 110rem on ultra-wide (e.g. 2560px); vw scales; cap keeps layout readable */
+                max-width: min(100%, max(110rem, 92vw), 2450px);
+                margin-left: auto;
+                margin-right: auto;
+                padding-left: clamp(0.75rem, 4vw, 2rem);
+                padding-right: clamp(0.75rem, 4vw, 2rem);
+                box-sizing: border-box;
+            }
+
+            /* Custom inner (not Bootstrap .container) — avoids stacked CSS overriding max-width */
+            .dashboard-header .dashboard-header-container .dashboard-header-inner {
+                width: 100%;
                 max-width: 100%;
+                margin-left: auto;
+                margin-right: auto;
                 padding: 0;
+                box-sizing: border-box;
             }
 
             .dash-menu-items {
@@ -819,10 +833,11 @@
                 z-index: 1001;
             }
 
-            .curve-shape-container {
+            .dashboard-header .curve-shape-container {
                 position: absolute;
                 top: 0;
                 left: 0;
+                right: 0;
                 width: 100%;
                 height: 260px;
                 pointer-events: none;
@@ -889,13 +904,23 @@
                 position: relative;
                 z-index: 2;
                 margin-top: 2rem;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
             }
 
+            .welcome-section>.dashboard-header-inner>.d-flex {
+                flex-wrap: wrap;
+                row-gap: 0.75rem;
+                column-gap: 1rem;
+            }
 
             .welcome-left {
                 display: flex;
                 align-items: center;
                 gap: 16px;
+                min-width: 0;
+                flex: 1 1 auto;
             }
 
             .profile-image-container {
@@ -924,19 +949,21 @@
             .welcome-text {
                 color: #3B3731;
                 font-family: "Playfair Display";
-                font-size: 36px;
+                font-size: clamp(1.25rem, 4vw, 2.25rem);
                 font-style: normal;
                 font-weight: 700;
-                line-height: normal;
+                line-height: 1.2;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
             }
 
             .welcome-text>span {
                 color: #3B3731;
                 font-family: "Playfair Display";
-                font-size: 36px;
+                font-size: inherit;
                 font-style: normal;
                 font-weight: 600;
-                line-height: normal;
+                line-height: inherit;
             }
 
             .welcome-right {
@@ -961,6 +988,134 @@
                 font-style: normal;
                 font-weight: 500;
                 line-height: normal;
+            }
+
+            @media (max-width: 1399.98px) {
+                .dashboard-header .dashboard-header-container {
+                    max-width: min(1320px, 100%);
+                }
+
+                .dashboard-header .dash-menu-items>div:nth-child(2) {
+                    gap: 3rem;
+                }
+
+                .dashboard-header .dashboard-header-icons {
+                    gap: 2rem;
+                }
+            }
+
+            @media (max-width: 1199.98px) {
+                .dashboard-header .dashboard-header-container {
+                    max-width: min(1140px, 100%);
+                }
+
+                .dashboard-header .dash-menu-items>div:nth-child(2) {
+                    gap: 2rem;
+                }
+
+                .dashboard-header .dash-menu-items>div:nth-child(2)>a {
+                    font-size: 16px;
+                }
+            }
+
+            @media (max-width: 991.98px) {
+                .dashboard-header .dashboard-header-container {
+                    max-width: min(960px, 100%);
+                }
+
+                .dashboard-header .curve-shape-container {
+                    height: 220px;
+                }
+
+                .dashboard-header .dash-menu-items>div:nth-child(2) {
+                    gap: 1.25rem;
+                }
+
+                .dashboard-header .dash-menu-items>div:nth-child(2)>a {
+                    font-size: 15px;
+                }
+
+                .dashboard-header .dashboard-header-icons {
+                    gap: 1.25rem;
+                }
+
+                .dashboard-header .welcome-section {
+                    margin-top: 1.5rem;
+                }
+            }
+
+            @media (max-width: 767.98px) {
+                .dashboard-header .dashboard-header-container {
+                    max-width: min(720px, 100%);
+                }
+
+                .dashboard-header .curve-shape-container {
+                    height: 200px;
+                }
+
+                .dashboard-header .dash-menu-items {
+                    flex-wrap: wrap;
+                    row-gap: 0.75rem;
+                }
+
+                .dashboard-header .dash-menu-items>div:nth-child(2) {
+                    gap: 0.75rem;
+                }
+
+                .dashboard-header .dash-menu-items>div:nth-child(2)>a {
+                    font-size: 14px;
+                }
+
+                .dashboard-header .dashboard-header-icons {
+                    gap: 1rem;
+                }
+
+                .dashboard-header .header-icon svg {
+                    width: 22px;
+                    height: 22px;
+                }
+
+                .dashboard-header .welcome-section {
+                    margin-top: 1rem;
+                }
+
+                .dashboard-header .profile-image-container,
+                .dashboard-header .welcome-profile-img {
+                    width: 64px;
+                    height: 64px;
+                }
+
+                .dashboard-header .rating-text,
+                .dashboard-header .reviews-text {
+                    font-size: 16px;
+                }
+            }
+
+            @media (max-width: 575.98px) {
+                .dashboard-header .dashboard-header-container {
+                    max-width: 100%;
+                }
+
+                .dashboard-header .curve-shape-container {
+                    height: 180px;
+                }
+
+                .dashboard-header .dash-menu-items>div:nth-child(2) {
+                    gap: 0.5rem;
+                }
+
+                .dashboard-header .dash-menu-items>div:nth-child(2)>a {
+                    font-size: 13px;
+                }
+
+                .dashboard-header .dashboard-header-icons {
+                    gap: 0.75rem;
+                }
+
+                .dashboard-header .rating-text,
+                .dashboard-header .reviews-text {
+                    font-size: 14px;
+                }
             }
         </style>
     </header>

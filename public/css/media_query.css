@@ -1,9 +1,7 @@
 @media (max-width: 1199px) and (min-width: 992px) {
-
     .numbering {
         left: 35%;
     }
-
 }
 
 @media (max-width: 1200px) {
@@ -137,7 +135,7 @@
 
     nav.navbar {
         padding: 20px 0 0 0;
-        background: #fff;
+        background: transparent;
     }
 
     body.menu-open {
@@ -234,7 +232,7 @@
         text-align: center;
     }
 
-    .points>div {
+    .points > div {
         gap: 20px;
     }
 
@@ -326,13 +324,12 @@
         bottom: 0;
         align-items: normal;
     }
-
 }
 
-@media (max-width: 767px) {}
+@media (max-width: 767px) {
+}
 
 @media (max-width: 520px) {
-
     .popover {
         width: 100%;
         left: 0;
@@ -344,18 +341,16 @@
         gap: 12px;
     }
 
-    .points>div span {
+    .points > div span {
         font-size: 14px;
     }
 
     .testimonial-section .card {
         max-width: 100%;
     }
-
 }
 
 @media (max-width: 375px) {
-
     .fursgo-map-image-wrapper {
         top: 74% !important;
     }
@@ -368,11 +363,9 @@
     .numbering {
         left: 12% !important;
     }
-
 }
 
 @media (max-width: 320px) {
-
     .testimonial-section .card .testimonial-photo {
         width: 100px;
         height: 100px;
@@ -410,5 +403,4 @@
         bottom: 8px;
         left: 212px;
     }
-
 }
