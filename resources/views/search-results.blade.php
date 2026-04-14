@@ -3,10 +3,7 @@
 <x-ui.filter-modal modal-id="spaceModal" variant="space" />
 
 {{-- filters section --}}
-<x-ui.filter-section
-    groom-modal-id="groomModal"
-    space-modal-id="spaceModal"
-    active-tab="groomer" />
+<x-ui.filter-section groom-modal-id="groomModal" space-modal-id="spaceModal" active-tab="groomer" />
 
 <div class="groomer-tab-content main-tab-content" id="groomer">
     <section class="tabs section-gap">
@@ -44,10 +41,7 @@
                 </div>
 
                 <div data-tab-content="groomer-list-view" class="tabcontent" style="display: none;">
-                    <x-ui.groomer-tab-list-view
-                        :groomers="$groomers"
-                        :showLoadMore="true"
-                        loadMoreText="Show More Groomers"
+                    <x-ui.groomer-tab-list-view :groomers="$groomers" :showLoadMore="true" loadMoreText="Show More Groomers"
                         loadMoreUrl="#" />
                 </div>
             </div>
@@ -74,24 +68,19 @@
                     </div>
                 </div>
 
-                <x-ui.space-venue-sort-options
-                    :selectedFilters="['Top Rated', 'Garden / Shed']"
-                    :venueOptions="[
-        ['label' => 'Private rooms', 'value' => 'private_rooms'],
-        ['label' => 'Salon', 'value' => 'salon'],
-        ['label' => 'Mobile station', 'value' => 'mobile_station'],
-        ['label' => 'Garden / Shed', 'value' => 'garden_shed'],
-        ['label' => 'Others', 'value' => 'others'],
-    ]"
-                    :sortOptions="[
-        ['label' => 'Recommended (default)', 'value' => 'recommended'],
-        ['label' => 'Distance', 'value' => 'distance'],
-        ['label' => 'Lowest price', 'value' => 'lowest_price'],
-        ['label' => 'Soonest available', 'value' => 'soonest'],
-    ]"
-                    defaultVenue="private_rooms"
-                    defaultSort="recommended"
-                    filterIcon="fire.svg"
+                <x-ui.space-venue-sort-options :selectedFilters="['Top Rated', 'Garden / Shed']" :venueOptions="[
+                    ['label' => 'Private rooms', 'value' => 'private_rooms'],
+                    ['label' => 'Salon', 'value' => 'salon'],
+                    ['label' => 'Mobile station', 'value' => 'mobile_station'],
+                    ['label' => 'Garden / Shed', 'value' => 'garden_shed'],
+                    ['label' => 'Others', 'value' => 'others'],
+                ]" :sortOptions="[
+                    ['label' => 'Recommended (default)', 'value' => 'recommended'],
+                    ['label' => 'Distance', 'value' => 'distance'],
+                    ['label' => 'Lowest price', 'value' => 'lowest_price'],
+                    ['label' => 'Soonest available', 'value' => 'soonest'],
+                ]"
+                    defaultVenue="private_rooms" defaultSort="recommended" filterIcon="fire.svg"
                     crossIcon="cross.svg" />
                 <div data-tab-content="space-calendar-view" class="tabcontent">
                     <x-ui.calendar-view />
@@ -100,10 +89,7 @@
                         <hr style="border-top: 1px solid #DFDFDF;">
                     </div>
 
-                    <x-ui.space-tab-card-view
-                        :spaces="$spaces"
-                        :showLoadMore="true"
-                        loadMoreText="Show More Spaces"
+                    <x-ui.space-tab-card-view :spaces="$spaces" :showLoadMore="true" loadMoreText="Show More Spaces"
                         loadMoreUrl="#" />
                 </div>
 
@@ -112,86 +98,85 @@
                 </div>
 
                 <div data-tab-content="space-list-view" class="tabcontent" style="display: none;">
-                    <x-ui.space-tab-list-view
-                        :spaces="$spaces"
-                        :showLoadMore="true"
-                        loadMoreUrl="#" />
+                    <x-ui.space-tab-list-view :spaces="$spaces" :showLoadMore="true" loadMoreUrl="#" />
                 </div>
             </div>
         </div>
     </section>
 </div>
 
-@endsection
+
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
-<link rel="stylesheet" href="{{ asset('css/bootstrap.css') }}">
-<link rel="stylesheet" href="{{ asset('css/media_query.css') }}">
-<link rel="stylesheet" href="{{ asset('css/customer_journey.css') }}">
-<link rel="stylesheet" href="{{ asset('css/common.css') }}">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/bootstrap.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/media_query.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/customer_journey.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/common.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 @endpush
 
 @push('script')
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="{{ asset('js/customer_journey.js') }}"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="{{ asset('js/customer_journey.js') }}"></script>
 
-<script>
-    function setupFilterModal(modalId, selectedSectionId) {
-        const modal = document.getElementById(modalId);
-        const applyBtn = modal?.querySelector('.modal-footer-btn.apply');
-        const selectedSection = document.getElementById(selectedSectionId);
+    <script>
+        function setupFilterModal(modalId, selectedSectionId) {
+            const modal = document.getElementById(modalId);
+            const applyBtn = modal?.querySelector('.modal-footer-btn.apply');
+            const selectedSection = document.getElementById(selectedSectionId);
 
-        if (!modal || !applyBtn || !selectedSection) return;
+            if (!modal || !applyBtn || !selectedSection) return;
 
-        applyBtn.addEventListener('click', () => {
-            const checkedItems = modal.querySelectorAll('.filter-options-section input[type="checkbox"]:checked');
-            const uncheckedItems = modal.querySelectorAll('.filter-options-section input[type="checkbox"]:not(:checked)');
+            applyBtn.addEventListener('click', () => {
+                const checkedItems = modal.querySelectorAll(
+                    '.filter-options-section input[type="checkbox"]:checked');
+                const uncheckedItems = modal.querySelectorAll(
+                    '.filter-options-section input[type="checkbox"]:not(:checked)');
 
-            uncheckedItems.forEach(item => {
-                const value = item.value;
-                const existingItem = [...selectedSection.querySelectorAll('.selected-item')]
-                    .find(div => div.querySelector('p')?.textContent === value);
+                uncheckedItems.forEach(item => {
+                    const value = item.value;
+                    const existingItem = [...selectedSection.querySelectorAll('.selected-item')]
+                        .find(div => div.querySelector('p')?.textContent === value);
 
-                if (existingItem) existingItem.remove();
-            });
+                    if (existingItem) existingItem.remove();
+                });
 
-            checkedItems.forEach(item => {
-                const value = item.value;
+                checkedItems.forEach(item => {
+                    const value = item.value;
 
-                const alreadyAdded = [...selectedSection.querySelectorAll('.selected-item p')]
-                    .some(p => p.textContent === value);
+                    const alreadyAdded = [...selectedSection.querySelectorAll('.selected-item p')]
+                        .some(p => p.textContent === value);
 
-                if (alreadyAdded) return;
+                    if (alreadyAdded) return;
 
-                const div = document.createElement('div');
-                div.className = 'selected-item d-flex align-items-center';
-                div.innerHTML = `
+                    const div = document.createElement('div');
+                    div.className = 'selected-item d-flex align-items-center';
+                    div.innerHTML = `
                         <p>${value}</p>
                         <img src="{{ asset('icons/cross.svg') }}" class="cross svg" alt="remove">
                     `;
 
-                div.querySelector('.cross').addEventListener('click', () => {
-                    div.remove();
-                    item.checked = false;
+                    div.querySelector('.cross').addEventListener('click', () => {
+                        div.remove();
+                        item.checked = false;
+                    });
+
+                    selectedSection.appendChild(div);
                 });
 
-                selectedSection.appendChild(div);
-            });
-
-            modal.style.display = 'none';
-        });
-
-        const closeBtn = modal.querySelector('.modal-close');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
                 modal.style.display = 'none';
             });
-        }
-    }
 
-    setupFilterModal('groomModal', 'groomerSelectedSection');
-    setupFilterModal('spaceModal', 'spaceSelectedSection');
-</script>
+            const closeBtn = modal.querySelector('.modal-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                });
+            }
+        }
+
+        setupFilterModal('groomModal', 'groomerSelectedSection');
+        setupFilterModal('spaceModal', 'spaceSelectedSection');
+    </script>
 @endpush

@@ -703,7 +703,7 @@
             align-items: flex-start;
             position: relative;
             /* border-bottom: .0625rem solid #FFC97A;
-                                                                                                                                                                        padding-bottom: 32px; */
+                                                                                                                                                                            padding-bottom: 32px; */
         }
 
         .service-summary>div:nth-child(2)>div>svg {
