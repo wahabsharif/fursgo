@@ -306,8 +306,9 @@ new #[Layout('layouts.app')] class extends Component {
             $this->showVerificationStatus = false;
             $this->showBusinessBasicsForm = false;
 
-            // Get current step from session
-            $currentStep = session('verification_current_step', 'account_payouts');
+            // Get current step from session (no default: new users must see the verification card first;
+            // verifyBusiness() sets 'account_payouts' after "Verify Business").
+            $currentStep = session('verification_current_step');
 
             // Load existing verification data (normalize so "Space", "spacer", etc. match wizard branches)
             $this->fursgo_usage = $this->normalizeFursgoUsage($user->user_type ?? '');
