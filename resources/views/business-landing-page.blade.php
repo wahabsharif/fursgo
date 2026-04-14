@@ -44,6 +44,7 @@
         }
 
         .blp-main-title {
+            max-width: 65rem;
             color: #FFF;
             font-family: "Playfair Display";
             font-size: 50px;
