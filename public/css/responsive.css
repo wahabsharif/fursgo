@@ -1214,7 +1214,7 @@ section.rating-section.section {
             left: 172px;
             bottom: 0;
         }
-        
+
 
         .testimonial-section .card.active .avatar {
             position: absolute;
@@ -1602,12 +1602,15 @@ ul.fursgo-locations li {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 30px;
+    gap: 8px;
     cursor: pointer;
+    width: 100%;
 }
 
 .fake-input {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
+    width: auto;
     background: transparent;
     border: none;
     font-size: 16px;
@@ -1618,21 +1621,17 @@ ul.fursgo-locations li {
     cursor: pointer;
 }
 
+.field .input-row svg {
+    width: 15px;
+    height: 8px;
+    flex: 0 0 15px;
+    display: block;
+}
+
 input#dateInput {
     text-align: center;
 }
 
-.chev {
-    width: 18px;
-    height: 18px;
-    opacity: 0.8;
-}
-
-.chev {
-    width: 18px;
-    height: 18px;
-    transition: transform 0.2s ease;
-}
 
 .rotate-left {
     transform: rotate(90deg);
@@ -1676,7 +1675,7 @@ input#dateInput {
     border: 1px solid var(--border);
     box-shadow: 0 8px 24px rgba(20, 20, 20, 0.08);
     display: none;
-    z-index: 1000;
+    z-index: 10;
     overflow: hidden;
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
@@ -1696,7 +1695,7 @@ input#dateInput {
     align-items: center;
     justify-content: space-between;
     font-weight: 600;
-    margin-bottom: 8px;
+    margin-bottom: 20px;
 }
 
 .month-nav button {
@@ -1764,19 +1763,22 @@ input#dateInput {
 }
 
 .time-col .title {
-    font-weight: 600;
-    margin-bottom: 6px;
-    color: var(--muted);
+    margin-bottom: 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-top: 16px;
+    color: #3B3731;
+    text-align: center;
+    font-family: Lato;
+    font-size: 14px;
+    font-weight: 600;
 }
 
 .time-list {
     max-height: 188px;
     overflow: auto;
-    padding-right: 4px;
+    padding: 10px 0px 0 0;
 }
 
 .time-item {

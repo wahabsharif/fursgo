@@ -2918,7 +2918,7 @@
     .sex-options {
         display: flex;
         gap: 28px;
-        height: 100%;
+        /* height: 100%; */
         align-items: center;
         margin-top: 1.3rem;
     }

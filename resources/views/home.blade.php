@@ -70,9 +70,8 @@
                                                 <div class="custom-select">
                                                     <div class="select-trigger">
                                                         <span class="selected-text">Full Groom, Face Trim ...</span>
-                                                        <svg width="16" height="16" viewBox="0 0 24 24">
-                                                            <path d="M6 9l6 6 6-6" fill="none" stroke="#666"
-                                                                stroke-width="2" />
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8" fill="none">
+                                                            <path d="M13.5105 0.5L6.95017 7.06033L0.499971 0.610127" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                                         </svg>
                                                     </div>
 
@@ -112,10 +111,8 @@
                                                             <input class="fake-input" id="dateInput" readonly
                                                                 placeholder="02 November 2025" aria-label="Date input" />
                                                             <!-- chevron down svg -->
-                                                            <svg class="chev" viewBox="0 0 24 24" fill="none"
-                                                                xmlns="http://www.w3.org/2000/svg">
-                                                                <path d="M6 9l6 6 6-6" stroke="#444" stroke-width="1.6"
-                                                                    stroke-linecap="round" stroke-linejoin="round" />
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8" fill="none">
+                                                                <path d="M13.5105 0.5L6.95017 7.06033L0.499971 0.610127" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                                             </svg>
                                                         </div>
 
@@ -156,7 +153,7 @@
 
                                                                 <div class="time-col">
                                                                     <div class="title">
-                                                                        <div>Time</div>
+                                                                        <p class="time-text">Time</p>
                                                                     </div>
                                                                     <div class="time-list" id="timeList" role="listbox"
                                                                         aria-label="Time options"></div>
@@ -174,10 +171,8 @@
                                                             aria-haspopup="dialog" aria-expanded="false">
                                                             <input class="fake-input" id="timeInput" readonly
                                                                 placeholder="13:00" aria-label="Time input" />
-                                                            <svg class="chev" viewBox="0 0 24 24" fill="none"
-                                                                xmlns="http://www.w3.org/2000/svg">
-                                                                <path d="M6 9l6 6 6-6" stroke="#444" stroke-width="1.6"
-                                                                    stroke-linecap="round" stroke-linejoin="round" />
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8" fill="none">
+                                                                <path d="M13.5105 0.5L6.95017 7.06033L0.499971 0.610127" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                                             </svg>
                                                         </div>
                                                     </div>
@@ -260,9 +255,8 @@
                                                 <div class="custom-select">
                                                     <div class="select-trigger">
                                                         <span class="selected-text">Private Rooms, Salon...</span>
-                                                        <svg width="16" height="16" viewBox="0 0 24 24">
-                                                            <path d="M6 9l6 6 6-6" fill="none" stroke="#666"
-                                                                stroke-width="2" />
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8" fill="none">
+                                                            <path d="M13.5105 0.5L6.95017 7.06033L0.499971 0.610127" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                                         </svg>
                                                     </div>
 
@@ -302,10 +296,8 @@
                                                             <input class="fake-input" id="dateInput" readonly
                                                                 placeholder="02 November 2025" aria-label="Date input" />
                                                             <!-- chevron down svg -->
-                                                            <svg class="chev" viewBox="0 0 24 24" fill="none"
-                                                                xmlns="http://www.w3.org/2000/svg">
-                                                                <path d="M6 9l6 6 6-6" stroke="#444" stroke-width="1.6"
-                                                                    stroke-linecap="round" stroke-linejoin="round" />
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8" fill="none">
+                                                                <path d="M13.5105 0.5L6.95017 7.06033L0.499971 0.610127" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                                             </svg>
                                                         </div>
 
@@ -344,7 +336,7 @@
 
                                                                 <div class="time-col">
                                                                     <div class="title">
-                                                                        <div>Time</div>
+                                                                        <p class="time-text">Time</p>
                                                                     </div>
                                                                     <div class="time-list" id="timeList" role="listbox"
                                                                         aria-label="Time options"></div>
@@ -362,10 +354,8 @@
                                                             aria-haspopup="dialog" aria-expanded="false">
                                                             <input class="fake-input" id="timeInput" readonly
                                                                 placeholder="13:00" aria-label="Time input" />
-                                                            <svg class="chev" viewBox="0 0 24 24" fill="none"
-                                                                xmlns="http://www.w3.org/2000/svg">
-                                                                <path d="M6 9l6 6 6-6" stroke="#444" stroke-width="1.6"
-                                                                    stroke-linecap="round" stroke-linejoin="round" />
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8" fill="none">
+                                                                <path d="M13.5105 0.5L6.95017 7.06033L0.499971 0.610127" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                                             </svg>
                                                         </div>
                                                     </div>
@@ -801,7 +791,7 @@
                                             </div>
                                         </div>
                                         <div class="testimonial-photo"><img
-                                                src="https://dev.zeeteck.com/projects/fursgo//assets/images/testimonial-1.png">
+                                                src="{{ asset('images/testimonial-1.png') }}">
                                         </div>
                                         <div class="avatar-meta">
                                             <div class="avatar">

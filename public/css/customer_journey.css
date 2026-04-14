@@ -730,14 +730,16 @@ ul.grommers-options li {
 }
 
 .map-wrapper {
-    flex: 1;
-    min-height: 500px;
+    /* flex: 1; */
+    min-height: 885px;
     background: #e5e5e5;
     border-radius: 8px;
     overflow: hidden;
     width: 49vw;
 }
-
+.map-wrapper.space-map-wrapper {
+    min-height: 1124px;
+}
 #map,
 #space-map {
     flex: 1;
