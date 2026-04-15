@@ -14,7 +14,7 @@
 
 - [x] Account and Setting - (account-and-setting.blade.php) - /account-and-setting/settings
 
-- [x] My Profile - (my-profile.blade.php) - /my-account/my-profile
+- [x] My Profile - (pet-owner-profile.blade.php) - /my-account/pet-owner-profile
 
 - [x] Support And Assistance (Search) - (search.blade.php) - /support-and-assistance/search
 

@@ -18,6 +18,8 @@
     <title>@yield('title', $pageTitle)</title>
 
     @include('partials.head')
+    @yield('styles')
+    @stack('styles')
 
 </head>
 
@@ -44,8 +46,6 @@
             position: relative;
         }
     </style>
-
-    @stack('styles')
 
     <!-- <script src="{{ asset('js/common.js') }}" defer></script> -->
     <script src="{{ asset('js/custom-dropdown.js') }}" defer></script>

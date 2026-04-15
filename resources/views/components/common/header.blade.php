@@ -1785,7 +1785,7 @@
                                                 </div>
                                             @endauth
                                             <div class="profile-menu">
-                                                <a href="#"
+                                                <a href="{{ route('pet-owner-profile') }}"
                                                     class="profile-item d-flex align-items-center gap-40"
                                                     wire:navigate>
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="20"

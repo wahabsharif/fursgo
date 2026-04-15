@@ -1,3024 +1,3025 @@
 @section('styles')
-<style>
-    body {
-        background: #fff;
-    }
+    <style>
+        body {
+            background: #fff;
+        }
 
-    .profile-title {
-        color: #3B3731;
-        font-family: "Playfair Display";
-        font-size: 36px;
+        .profile-title {
+            color: #3B3731;
+            font-family: "Playfair Display";
+            font-size: 36px;
 
-        font-weight: 700;
+            font-weight: 700;
 
-    }
+        }
 
-    .profile-sidebar {
-        width: 400px;
-        height: 442px;
-        background: #fff;
-        padding: 33px;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
-    }
+        .profile-sidebar {
+            width: 400px;
+            height: 442px;
+            background: #fff;
+            padding: 33px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+        }
 
-    .sidebar-header {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-    }
+        .sidebar-header {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
 
-    /* Optional: Make the dots look clickable */
-    .dots-menu {
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        position: relative;
-    }
-
-    button.edit-button {
-        display: none;
-        gap: 37px;
-        padding: 3px 12px;
-        border-radius: 5px;
-        border: 1px solid #D9D9D9;
-        background: #F8F8F8;
-        cursor: pointer;
-        position: absolute;
-        top: 0;
-        right: 35px;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 14px;
-        font-weight: 500;
-    }
-
-    button.edit-button.show {
-        display: flex;
-
-    }
-
-    .avatar-container img {
-        width: 200px;
-        height: 200px;
-        aspect-ratio: 1/1;
-        border-radius: 144px;
-        border: 5px solid #FFC97A;
-        background: url(<path-to-image>) lightgray 50% / cover no-repeat;
-    }
-
-    .profile-name {
-        font-family: "Playfair Display", serif;
-        font-size: 24px;
-        margin-bottom: 10px;
-    }
-
-    .info-block {
-        width: fit-content;
-        margin: 0 auto;
-        /* centers the block */
-        text-align: right;
-        /* text starts from right */
-    }
-
-    .stats-line,
-    .location-line {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .booking-card {
-        border-radius: 14px;
-        border-radius: 10px;
-    }
-
-    .booking-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-        border-radius: 10px 10px 0 0;
-        padding: 10px 22px;
-    }
-
-    .bg-top-yellow {
-        background: rgba(255, 201, 122, 0.10);
-    }
-
-    .bg-top-pink {
-        background: rgba(255, 168, 153, 0.10);
-
-    }
-
-    .bg-body-yellow {
-        background: #FFFAF2;
-    }
-
-    .bg-body-pink {
-        background: #FFF7F5;
-    }
-
-    .left-top {
-        display: flex;
-        align-items: center;
-        gap: 18px;
-    }
-
-    .tag {
-        background: #FFC97A;
-        color: white;
-        padding: 5px 12px;
-        border-radius: 20px;
-    }
-
-    .type {
-        color: #FFC97A;
-    }
-
-    .status {
-        color: #B5CA89;
-    }
-
-    .avatar-wrap .avatar.avatar-img {
-        width: 48.001px !important;
-        height: 48px !important;
-        aspect-ratio: 1/1 !important;
-    }
-
-    .booking-body {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 22px;
-
-    }
-
-    .profile {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .avatar {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-
-    .view-btn {
-        background: #FFC97A;
-        border: none;
-        color: white;
-        padding: 12px 26px;
-        border-radius: 25px;
-        cursor: pointer;
-    }
-
-    .booking-info {
-        margin-top: 14px;
-        display: flex;
-        gap: 28px;
-        padding: 8px 0px 20px 22px
-    }
-
-    .custom.badge-shield {
-        left: -9px;
-        top: -4px;
-    }
-
-    /* Progress Section Layout */
-    .details-completion {
-        padding: 20px;
-        border-radius: 12px;
-        width: 1000px;
-        font-family: lato;
-    }
-
-    .header-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .header-row h2 {
-        color: #3b3731;
-        font-family: "Playfair Display";
-        font-size: 28px;
-
-        font-weight: 700;
-
-    }
-
-    .header-row p {
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 400;
-
-    }
-
-    .details-grid {
-        display: flex;
-        gap: 20px;
-        align-items: center;
-    }
-
-    /* Semi-Circle Gauge */
-    .progress-container {
-        width: 199px;
-        height: auto;
-        position: relative;
-    }
-
-    .gauge-wrapper {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 24px;
-    }
-
-    .gauge-container {
-        position: relative;
-        width: auto;
-        height: auto;
-        margin-top: -12%;
-    }
-
-    .gauge-container svg {
-        width: 100%;
-        height: 100%;
-    }
-
-    .gauge-label {
-        position: absolute;
-        top: 70%;
-        left: 50%;
-        transform: translate(-50%, -20%);
-        color: #3B3731;
-        text-align: center;
-        font-family: Lato;
-        font-size: 36px;
-        font-weight: 600;
-    }
-
-    .gauge-min {
-        position: absolute;
-        bottom: -18px;
-        left: 18px;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .gauge-max {
-        position: absolute;
-        bottom: -18px;
-        right: 6px;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .controls {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        display: none;
-    }
-
-    .controls label {
-        font-size: 13px;
-        color: #888;
-    }
-
-    .controls input[type="range"] {
-        width: 180px;
-        accent-color: #ffc97a;
-        cursor: pointer;
-    }
-
-    .controls span {
-        font-size: 13px;
-        font-weight: 500;
-        color: #3d3d3d;
-        min-width: 36px;
-    }
-
-    /* .gauge-wrapper {
+        /* Optional: Make the dots look clickable */
+        .dots-menu {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
             position: relative;
-            width: 150px;
-            height: 75px;
-            overflow: hidden;
         }
 
-        .gauge-body {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            background: #fff9f0;
-            border: 15px solid #fff9f0;
-        }
-
-        .gauge-fill {
+        button.edit-button {
+            display: none;
+            gap: 37px;
+            padding: 3px 12px;
+            border-radius: 5px;
+            border: 1px solid #D9D9D9;
+            background: #F8F8F8;
+            cursor: pointer;
             position: absolute;
             top: 0;
-            left: 0;
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            border: 15px solid #ffc97a;
-            border-bottom-color: transparent;
-            border-left-color: transparent;
+            right: 35px;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 14px;
+            font-weight: 500;
         }
 
-        .gauge-cover {
+        button.edit-button.show {
+            display: flex;
+
+        }
+
+        .avatar-container img {
+            width: 200px;
+            height: 200px;
+            aspect-ratio: 1/1;
+            border-radius: 144px;
+            border: 5px solid #FFC97A;
+            background: url(<path-to-image>) lightgray 50% / cover no-repeat;
+        }
+
+        .profile-name {
+            font-family: "Playfair Display", serif;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .info-block {
+            width: fit-content;
+            margin: 0 auto;
+            /* centers the block */
+            text-align: right;
+            /* text starts from right */
+        }
+
+        .stats-line,
+        .location-line {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .booking-card {
+            border-radius: 14px;
+            border-radius: 10px;
+        }
+
+        .booking-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-radius: 10px 10px 0 0;
+            padding: 10px 22px;
+        }
+
+        .bg-top-yellow {
+            background: rgba(255, 201, 122, 0.10);
+        }
+
+        .bg-top-pink {
+            background: rgba(255, 168, 153, 0.10);
+
+        }
+
+        .bg-body-yellow {
+            background: #FFFAF2;
+        }
+
+        .bg-body-pink {
+            background: #FFF7F5;
+        }
+
+        .left-top {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .tag {
+            background: #FFC97A;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
+
+        .type {
+            color: #FFC97A;
+        }
+
+        .status {
+            color: #B5CA89;
+        }
+
+        .avatar-wrap .avatar.avatar-img {
+            width: 48.001px !important;
+            height: 48px !important;
+            aspect-ratio: 1/1 !important;
+        }
+
+        .booking-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 22px;
+
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .view-btn {
+            background: #FFC97A;
+            border: none;
+            color: white;
+            padding: 12px 26px;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+
+        .booking-info {
+            margin-top: 14px;
+            display: flex;
+            gap: 28px;
+            padding: 8px 0px 20px 22px
+        }
+
+        .custom.badge-shield {
+            left: -9px;
+            top: -4px;
+        }
+
+        /* Progress Section Layout */
+        .details-completion {
+            padding: 20px;
+            border-radius: 12px;
+            width: 1000px;
+            font-family: lato;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-row h2 {
+            color: #3b3731;
+            font-family: "Playfair Display";
+            font-size: 28px;
+
+            font-weight: 700;
+
+        }
+
+        .header-row p {
+            color: #9d9b98;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 400;
+
+        }
+
+        .details-grid {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        /* Semi-Circle Gauge */
+        .progress-container {
+            width: 199px;
+            height: auto;
+            position: relative;
+        }
+
+        .gauge-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .gauge-container {
+            position: relative;
+            width: auto;
+            height: auto;
+            margin-top: -12%;
+        }
+
+        .gauge-container svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .gauge-label {
             position: absolute;
-            bottom: 0;
+            top: 70%;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translate(-50%, -20%);
             color: #3B3731;
             text-align: center;
             font-family: Lato;
             font-size: 36px;
+            font-weight: 600;
+        }
+
+        .gauge-min {
+            position: absolute;
+            bottom: -18px;
+            left: 18px;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .gauge-max {
+            position: absolute;
+            bottom: -18px;
+            right: 6px;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            display: none;
+        }
+
+        .controls label {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .controls input[type="range"] {
+            width: 180px;
+            accent-color: #ffc97a;
+            cursor: pointer;
+        }
+
+        .controls span {
+            font-size: 13px;
+            font-weight: 500;
+            color: #3d3d3d;
+            min-width: 36px;
+        }
+
+        /* .gauge-wrapper {
+                position: relative;
+                width: 150px;
+                height: 75px;
+                overflow: hidden;
+            }
+
+            .gauge-body {
+                width: 150px;
+                height: 150px;
+                border-radius: 50%;
+                background: #fff9f0;
+                border: 15px solid #fff9f0;
+            }
+
+            .gauge-fill {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 150px;
+                height: 150px;
+                border-radius: 50%;
+                border: 15px solid #ffc97a;
+                border-bottom-color: transparent;
+                border-left-color: transparent;
+            }
+
+            .gauge-cover {
+                position: absolute;
+                bottom: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                color: #3B3731;
+                text-align: center;
+                font-family: Lato;
+                font-size: 36px;
+
+                font-weight: 600;
+
+            } */
+
+        /* Action Cards */
+        .action-card {
+            background: #fffaf2;
+            padding: 30px 20px;
+            border-radius: 12px;
+            text-align: center;
+            flex: 1;
+            width: 296px;
+            height: 135px;
+        }
+
+        .action-card h3 {
+            color: #3b3731;
+            text-align: center;
+            font-family: Lato;
+            font-size: 20px;
 
             font-weight: 600;
 
-        } */
-
-    /* Action Cards */
-    .action-card {
-        background: #fffaf2;
-        padding: 30px 20px;
-        border-radius: 12px;
-        text-align: center;
-        flex: 1;
-        width: 296px;
-        height: 135px;
-    }
-
-    .action-card h3 {
-        color: #3b3731;
-        text-align: center;
-        font-family: Lato;
-        font-size: 20px;
-
-        font-weight: 600;
-
-    }
-
-    .btn-verify {
-        background: #ffc97a;
-        border: none;
-        border-radius: 75px;
-        margin-top: 15px;
-        cursor: pointer;
-        width: 140px;
-        height: 48px;
-        color: #FFF;
-        font-family: Lato;
-        font-size: 18px;
-        font-weight: 600;
-    }
-
-    .gauge-labels {
-        display: flex;
-        justify-content: space-between;
-    }
-
-    .gauge-labels.span {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 600;
-
-        padding-right: 1rem;
-    }
-
-
-    /* tabs section  */
-    /* Tabs Navigation */
-    .profile-tabs {
-        display: flex;
-        gap: 10px;
-        background: white;
-        padding: 5px;
-        border-radius: 30px;
-        border: 1px solid #eee;
-        width: fit-content;
-        margin: 30px auto;
-        color: #9d9b98;
-        text-align: center;
-        font-family: Lato;
-        font-size: 18px;
-
-        font-weight: 400;
-
-    }
-
-    .tab {
-        padding: 10px 25px;
-        border-radius: 25px;
-        border: none;
-        background: none;
-        cursor: pointer;
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: 18px;
-        font-weight: 400;
-    }
-
-    .tab.active {
-        background: #ffc97a;
-        color: white;
-    }
-
-    /* Add to the bottom of style.css */
-
-    .pets-grid {
-        display: flex;
-        gap: 20px;
-        margin-top: 20px;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .pet-card {
-        min-width: 325px;
-        border-radius: 15px;
-        padding: 45px;
-        position: relative;
-    }
-
-    /* Background Colors from your image */
-    .orange-bg {
-        background-color: #fff4e6;
-    }
-
-    .red-bg {
-        background-color: #fdf2f0;
-    }
-
-    .blue-bg {
-        background-color: #f0f7f9;
-    }
-
-    .pet-card-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 15px;
-    }
-
-    .pet-avatar {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        border: 3px solid #ffc97a;
-        object-fit: cover;
-    }
-
-    .pet-name-type h4 {
-        margin: 0;
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 600;
-
-        display: flex;
-        justify-content: start;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .pet-name-type p {
-        margin: 0;
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 400;
-
-    }
-
-    .pet-info p {
-        margin: 8px 0;
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 400;
-
-    }
-
-    .pet-info {
-        flex-grow: 1;
-    }
-
-    .pet-card .btn-edit-outline {
-        color: #3b3731;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 600;
-
-    }
-
-    .my-pets.btn-edit-outline {
-        border: 1px solid #333;
-        background: white;
-        /* padding: 8px 20px; */
-        border-radius: 20px;
-        cursor: pointer;
-        height: auto;
-        width: fit-content;
-    }
-
-    .btn-add-another-pet {
-        width: 80%;
-        padding: 12px;
-        border-radius: 30px;
-        border: 1px solid #ccc;
-        background: white;
-        color: #3b3731;
-        text-align: center;
-        font-family: Lato;
-        font-size: 18px;
-
-        font-weight: 600;
-
-        cursor: pointer;
-    }
-
-    .slider-arrow-next {
-        position: absolute;
-        right: 4px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: white;
-        width: 35px;
-        height: 35px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        cursor: pointer;
-    }
-
-    #edit-view {
-        display: none;
-    }
-
-    .profile-details-header {
-        display: flex;
-        gap: 40px;
-        margin-bottom: 25px;
-    }
-
-    .avatar-placeholder {
-        width: 150px;
-        height: 150px;
-        flex-shrink: 0;
-    }
-
-    .details-completion.details-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        grid-gap: 20px;
-        flex-grow: 1;
-    }
-
-    .profile-details-card {
-        border-radius: 10px;
-        background: #fafafa;
-        height: auto;
-        margin: 0 0;
-        font-family: "Lato", sans-serif;
-        color: #333;
-        padding: 42px;
-    }
-
-    .tap-details-card {
-        border-radius: 15px;
-        font-family: "Lato", sans-serif;
-        color: #333;
-    }
-
-    /* .profile-header {
-            max-width: 1000px;
-            margin: 0 auto;
-        } */
-
-    h3.section-title {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 20px;
-
-        font-weight: 600;
-
-    }
-
-    .divider {
-        border: none;
-        border-top: 1px solid #d4d4d4;
-        margin: 13px 0 50px 0;
-    }
-
-    /* Header layout (Avatar + Grid) */
-    .profile-details-header {
-        display: flex;
-        gap: 40px;
-        align-items: flex-start;
-        margin-bottom: 30px;
-    }
-
-    /* Avatar Circle */
-    .avatar-placeholder {
-        width: 150px;
-        height: 150px;
-        flex-shrink: 0;
-    }
-
-    /* The Details Grid */
-    /* Ensure the grid has 3 columns to match the design */
-    .profile-details-header .details-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 50px;
-        flex-grow: 1;
-    }
-
-    /* Force Address Line 1 to take up the full width of the row */
-    .detail-item:nth-child(4) {
-        grid-column: 0 / span 3;
-    }
-
-    /* City and Postcode will naturally fall into the next row */
-    .detail-item:nth-child(5) {
-        grid-column: 1;
-    }
-
-    .detail-item:nth-child(6) {
-        grid-column: 2;
-    }
-
-    /* Styling Labels and Text */
-    .detail-item label {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 600;
-
-    }
-
-    .detail-item p {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 400;
-
-    }
-
-    .bio-section label {
-        display: block;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 5px;
-    }
-
-    .bio-section p {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 400;
-    }
-
-    textarea[name="bio"] {
-        height: 80px;
-        /* fixed height */
-        resize: none;
-        overflow: auto;
-    }
-
-    /* Edit Button Styling */
-    .edit-action {
-        grid-column: 3;
-        /* Places button in the far right column */
-        text-align: right;
-    }
-
-    .btn-edit-outline {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        border-radius: 100px;
-        border: 1px solid #3b3731;
-        background: #fff;
-        padding: 8px 16px;
-        cursor: pointer;
-        font-weight: 500;
-        transition: all 0.2s;
-        width: 143px;
-        height: 48px;
-    }
-
-    .btn-edit-outline:hover {
-        background: #f0f0f0;
-    }
-
-    /* Bio Section at the bottom */
-    .bio-section {
-        margin-top: 20px;
-        border-top: 1px solid transparent;
-        /* Keeps spacing consistent */
-    }
-
-    .bio-section p {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 400;
-
-        letter-spacing: 0.5;
-    }
-
-    .details-grid .edit-action {
-        grid-column: 3;
-        /* Places button in the far right column */
-        text-align: left;
-    }
-
-    .btn-edit-outline {
-        border: 1px solid #333;
-        background: white;
-        padding: 8px 20px;
-        border-radius: 100px;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-    }
-
-    .bio-section {
-        margin-top: 20px;
-        border-top: 1px solid transparent;
-        /* Keeps spacing consistent */
-        padding-left: 12rem;
-    }
-
-    .profile-view .bio-section p {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 400;
-
-        width: 611px;
-    }
-
-    .hidden {
-        display: none !important;
-    }
-
-    .edit-layout {
-        display: flex;
-        gap: 50px;
-    }
-
-    .form-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-        flex-grow: 1;
-    }
-
-    .full-width {
-        grid-column: span 2;
-    }
-
-    .form-group label {
-        display: block;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 5px;
-    }
-
-    .form-group input,
-    .form-group textarea {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        background: #fff;
-        font-family: "Lato", sans-serif;
-    }
-
-    /* Container for the input and icon */
-    .input-wrapper {
-        position: relative;
-        display: flex;
-        align-items: center;
-    }
-
-    /* Style the inputs to match your image */
-    .input-wrapper input {
-        width: 100%;
-        padding: 12px 45px 12px 15px;
-        /* Extra padding on the right for the icon */
-        border: 1px solid #dcdcdc;
-        border-radius: 8px;
-        font-size: 15px;
-        color: #3b3731;
-        background-color: #ffffff;
-        outline: none;
-        transition: border-color 0.2s;
-    }
-
-    .input-wrapper input:focus {
-        border-color: #c9dda0;
-    }
-
-    /* Position the checkmark */
-    .input-icon {
-        position: absolute;
-        right: 15px;
-        pointer-events: none;
-        display: block;
-    }
-
-    /* HIDE icon if the input is empty (optional but professional) */
-    .input-wrapper input:placeholder-shown+.input-icon {
-        display: none;
-    }
-
-    .form-actions {
-        grid-column: span 2;
-        display: flex;
-        justify-content: flex-end;
-        gap: 20px;
-        margin-top: 20px;
-    }
-
-    .btn-save {
-        width: 325px;
-        height: 48px;
-        background: #ffcc80;
-        border: none;
-        border-radius: 25px;
-        color: white;
-        font-weight: bold;
-        cursor: pointer;
-        color: #fff;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 700;
-
-    }
-
-    .btn-cancel {
-        width: 295px;
-        height: 48px;
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 25px;
-        cursor: pointer;
-        color: #9d9b98;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 500;
-
-    }
-
-    .site-footer {
-        padding: 100px 10%;
-        color: #3b3731;
-        margin-top: 7rem;
-    }
-
-    /* CTA Section */
-    .footer-cta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 5rem;
-    }
-
-    .cta-heading {
-        color: #3b3731;
-        font-family: "Playfair Display";
-        font-size: 56px;
-
-        font-weight: 900;
-
-    }
-
-    .cta-buttons {
-        display: flex;
-        gap: 15px;
-    }
-
-    .btn-outline,
-    .btn-solid {
-        padding: 12px 30px;
-        border-radius: 30px;
-        font-weight: 600;
-        cursor: pointer;
-        font-size: 16px;
-    }
-
-    .btn-outline {
-        background: transparent;
-        border: 1px solid #3b3731;
-    }
-
-    .btn-solid {
-        background: #fbac83;
-        /* Peach/Orange color from design */
-        border: none;
-        color: white;
-    }
-
-    /* Divider */
-    .footer-divider {
-        border: none;
-        border-top: 2px solid #d1d1d1;
-        margin-bottom: 40px;
-    }
-
-    /* Form Layout */
-    .edit-form-container {
-        padding: 20px;
-    }
-
-    .form-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-        margin-top: 20px;
-    }
-
-    .full-width {
-        grid-column: span 2;
-    }
-
-    /* Segmented Control (Cat/Dog/Other) */
-    .segmented-control {
-        display: flex;
-        background: #f5f5f5;
-        border-radius: 10px;
-        padding: 4px;
-        gap: 5px;
-    }
-
-    .segment {
-        flex: 1;
-        border: none;
-        padding: 10px;
-        border-radius: 8px;
-        background: white;
-        cursor: pointer;
-        font-weight: 600;
-        color: #888;
-    }
-
-    .segment.active {
-        background: #ffc97a;
-        /* Your theme orange */
-        color: white;
-    }
-
-    /* Inputs & Textareas */
-    .input-field,
-    .text-area {
-        width: 100%;
-        padding: 12px;
-        border: 1px solid #eee;
-        border-radius: 12px;
-        margin-top: 8px;
-        font-family: inherit;
-    }
-
-    .text-area {
-        min-height: 100px;
-        resize: vertical;
-    }
-
-    /* Action Buttons */
-    .form-actions {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 30px;
-        gap: 15px;
-    }
-
-    .btn-cancel {
-        flex: 1;
-        padding: 15px;
-        border-radius: 30px;
-        border: 1px solid #ddd;
-        background: white;
-        cursor: pointer;
-    }
-
-    .btn-save {
-        flex: 1;
-        padding: 15px;
-        border-radius: 30px;
-        border: none;
-        background: #ffc97a;
-        color: white;
-        font-weight: bold;
-        cursor: pointer;
-    }
-
-    /* Main Footer Area */
-    .footer-main {
-        display: grid;
-        grid-template-columns: 1.5fr 1fr 1fr;
-        gap: 40px;
-    }
-
-    .footer-logo {
-        height: 40px;
-        margin-bottom: 15px;
-    }
-
-    .footer-brand p {
-        font-size: 14px;
-        color: #666;
-        max-width: 300px;
-    }
-
-    .link-bold {
-        font-weight: bold;
-        text-decoration: underline;
-    }
-
-    .footer-links {
-        display: flex;
-        gap: 60px;
-    }
-
-    .link-group h3 {
-        font-size: 16px;
-        margin-bottom: 15px;
-    }
-
-    .link-group ul {
-        list-style: none;
-        padding: 0;
-    }
-
-    .link-group li {
-        margin-bottom: 8px;
-    }
-
-    .link-group a {
-        text-decoration: none;
-        color: #666;
-        font-size: 14px;
-    }
-
-    /* Social and App Info */
-    .footer-social {
-        text-align: right;
-    }
-
-    .social-icons {
-        display: flex;
-        justify-content: flex-end;
-        gap: 15px;
-        font-size: 20px;
-        flex-direction: column;
-    }
-
-    .app-info {
-        font-size: 14px;
-        color: #666;
-    }
-
-    /* .favourites {
-            max-width: 1000px;
-            margin: auto;
-        } */
-
-    h2 {
-        margin: 20px 0;
-        font-weight: 600;
-    }
-
-    /* TOP BAR */
-    .top-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-
-    .tabs button {
-        border: none;
-        padding: 10px 20px;
-        border-radius: 20px;
-        border: 1px solid #d4d4d4;
-        background: #ffffff;
-        cursor: pointer;
-        margin-right: 10px;
-        color: #9d9b98;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 500;
-
-    }
-
-    .tabs .active {
-        color: #fff;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 600;
-
-        background: #ffc97a;
-        color: #fff;
-        border: 1px solid #FFC97A;
-    }
-
-    .search-area {
-        position: relative;
-        /* Acts as the anchor for the icon */
-        display: flex;
-        align-items: center;
-        width: 405px;
-        /* Matches your input width */
-    }
-
-    .search-area input {
-        padding: 10px 15px 10px 12px;
-        /* Increased left padding (40px) to make room for the icon */
-        border-radius: 10px;
-        border: 1px solid #ddd;
-        width: 405px;
-        height: 48px;
-        color: #333;
-        /* Changed from d4d4d4 to be visible; use d4d4d4 for placeholder only if preferred */
-        font-family: "Lato", sans-serif;
-        font-size: 16px;
-        outline: none;
-    }
-
-    /* Position the icon inside the input */
-    .search-icon {
-        position: absolute;
-        left: 23rem;
-        /* Distance from the left border */
-        pointer-events: none;
-        /* Allows clicks to pass through to the input */
-    }
-
-    .feature-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .feature-heading h2 {
-        color: #3b3731;
-        font-family: "Playfair Display";
-        font-size: 28px;
-
-        font-weight: 600;
-
-    }
-
-    .filter {
-        border: 1px solid #fbac83;
-        background: transparent;
-        padding: 10px 15px;
-        border-radius: 20px;
-        cursor: pointer;
-        color: #fbac83;
-        text-align: center;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 500;
-
-    }
-
-    /* TAG */
-    .modal-tags .tag {
-        display: inline-block;
-        background: #fbac83;
-        padding: 6px 4px;
-        border-radius: 20px;
-        color: #fff;
-        text-align: center;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 500;
-
-        width: 105px;
-        height: 32px;
-        margin-bottom: 2rem;
-    }
-
-    /* GRID */
-    .groomer-grid {
-        margin-top: 25px;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(295px, 1fr));
-        gap: 3rem;
-        justify-content: center;
-    }
-
-    /* CARD */
-    .balance-cards .card {
-        border-radius: 16px;
-        width: 190px;
-        height: 150px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .card-body {
-        background: #FAFAFA;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        padding: 25px 20px;
-        border-radius: 12px;
-        flex-grow: 1;
-    }
-
-    .card-img {
-        position: relative;
-    }
-
-    .left-svg {
-        left: 2%;
-    }
-
-    .card-img img {
-        width: 100%;
-        height: 160px;
-        object-fit: cover;
-        border-radius: 12px;
-    }
-
-    .card-img span {
-        width: 36px;
-        height: 36px;
-        aspect-ratio: 1/1;
-        border-radius: 100px;
-        border: 1px solid #eae8e5;
-        background: #fff;
-    }
-
-    .delete {
-        position: absolute;
-        top: -8px;
-        right: -6px;
-        padding: 10px;
-    }
-
-    /* .group-icon {
-            margin: 22px 0;
-            width: 82px;
-            height: 24px;
-        } */
-
-    /* LABELS */
-    /* .labels {
-        margin: 25px 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 10rem;
         }
 
-        .labels span {
-        background: #ffa899;
-        padding: 5px 10px;
-        border-radius: 12px;
-        margin-right: 5px;
-        color: #fff;
-        text-align: center;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 500;
-
-        width: 107px;
-        height: 24px;
-        } */
-
-    .card .labels {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .labels span {
-        margin: 5% 0 5% 0;
-        padding: 5px 10px;
-        border-radius: 100px;
-        background: #ffa899;
-        color: white;
-    }
-
-    .plus {
-        border-radius: 100px;
-        border: 1px solid #E6E6E5;
-        background: #FFF !important;
-    }
-
-    .card-title h3 {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 20px;
-
-        font-weight: 600;
-
-    }
-
-    .card-title p {
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 400;
-
-    }
-
-    /* TEXT */
-    .sub {
-        color: #888;
-        font-size: 14px;
-        margin-bottom: 8px;
-    }
-
-    .meta {
-        display: flex;
-        justify-content: space-between;
-        margin: 2px 0;
-    }
-
-    .meta-location {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .meta-location span {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 500;
-
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .meta-rating span {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 500;
-
-        align-items: center;
-        margin-right: 10px;
-    }
-
-    .meta-rating strong {
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 500;
-
-    }
-
-    .card-review {
-        width: 246px;
-    }
-
-    .review {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 14px;
-        font-weight: 400;
-        margin: 10px 0;
-        min-height: 34px;
-    }
-
-    /* BOTTOM */
-    .bottom {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 12px 0;
-    }
-
-    .bottom p {
-        color: #3b3731;
-        text-align: right;
-        font-family: Lato;
-        font-size: 20px;
-
-        font-weight: 600;
-
-    }
-
-    .bottom p b {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 20px;
-
-        font-weight: 600;
-
-        text-decoration-line: underline;
-        text-decoration-style: solid;
-        text-decoration-skip-ink: auto;
-        text-decoration-thickness: auto;
-        text-underline-offset: auto;
-        text-underline-position: from-font;
-    }
-
-    .bottom p strong {
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 600;
-
-    }
-
-    .arrow {
-        background: #cfe3a3;
-        border: none;
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        cursor: pointer;
-    }
-
-    /* BUTTONS */
-    .book {
-        width: 100%;
-        padding: 12px;
-        border: none;
-        border-radius: 20px;
-        background: #cbdce8;
-        color: #fff;
-        text-align: center;
-        font-family: Lato;
-        font-size: 18px;
-
-        font-weight: 600;
-
-        cursor: pointer;
-    }
-
-    .card-profile {
-        width: 100%;
-        padding: 12px;
-        border: none;
-        border-radius: 20px;
-        background: #d8e8b7;
-        cursor: pointer;
-        color: #fff;
-        text-align: center;
-        font-family: Lato;
-        font-size: 18px;
-
-        font-weight: 600;
-
-    }
-
-    /* SPACE SWITCH */
-    .space-switch {
-        margin: 20px 0;
-    }
-
-    .space-switch button {
-        color: #9d9b98;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 500;
-
-    }
-
-    .switch {
-        border: none;
-        padding: 10px 20px;
-        border-radius: 20px;
-        background: #eee;
-        margin-right: 10px;
-        cursor: pointer;
-    }
-
-    .switch.active {
-        background: #ffc97a;
-        color: #fff;
-    }
-
-    .favourite-spaces h2 {
-        color: #3b3731;
-        font-family: "Playfair Display";
-        font-size: 28px;
-
-        font-weight: 600;
-
-    }
-
-    .favourite-spaces .tag {
-        display: inline-block;
-        background: #fbac83;
-        padding: 6px 2px;
-        border-radius: 20px;
-        color: #fff;
-        text-align: center;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 500;
-
-        width: 127px;
-        height: 32px;
-        margin-bottom: 2rem;
-    }
-
-    /* GRID */
-    .spaces-grid {
-        margin-top: 25px;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(295px, 1fr));
-        gap: 3rem;
-    }
-
-    /* CARD */
-    .space-card {
-        border-radius: 16px;
-    }
-
-    /* LABEL */
-    .label {
-        display: inline-block;
-        background: #ffd9cc;
-        color: #ff7a5c;
-        padding: 5px 12px;
-        border-radius: 14px;
-        font-size: 12px;
-        margin: 10px 0;
-    }
-
-    /* FEATURES */
-    .features {
-        margin: 12px 0;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        max-width: 80%;
-        width: 100%;
-    }
-
-    .features span {
-        background: rgba(59, 55, 49, 0.13);
-        padding: 6px 10px;
-        border-radius: 14px;
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 500;
-
-    }
-
-    .sub-title h3 {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 20px;
-
-        font-weight: 600;
-
-    }
-
-    .sub {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 400;
-
-    }
-
-    .sub-title strong {
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 400;
-
-    }
-
-    /* REVIEWS SECTION */
-    /* .reviews-section {
-            max-width: 1000px;
-            margin: 0 auto;
-        } */
-
-    .reviews-section hr {
-        border: none;
-        border-top: 1px solid #d4d4d4;
-        margin: 15px 0 25px;
-    }
-
-    .review-group {
-        display: none;
-    }
-
-    .review-group.active {
-        display: block;
-    }
-
-    /* STATS */
-    .review-stats {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 35px;
-    }
-
-    .stat-card {
-        background: #f7f7f7;
-        padding: 45px;
-        border-radius: 14px;
-        min-width: 230px;
-    }
-
-    .stat-card.light {
-        background: transparent;
-    }
-
-    .stat-title {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 20px;
-
-        font-weight: 600;
-
-        margin-bottom: 10px;
-    }
-
-    .stat-card h3 {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 30px;
-
-        font-weight: 600;
-
-    }
-
-    .stat-card span {
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 400;
-
-    }
-
-    /* FILTER BAR */
-    .review-filters {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 15px;
-        margin-bottom: 28px;
-    }
-
-    .left-filters {
-        display: flex;
-        gap: 10px;
-    }
-
-    .left-filters .pill {
-        border: 1px solid #ddd;
-        background: #fff;
-        padding: 10px 16px;
-        border-radius: 20px;
-        cursor: pointer;
-        color: #fff;
-        /* REMOVE THIS */
-    }
-
-    .left-filters .pill {
-        border: 1px solid #ddd;
-        background: #fff;
-        padding: 10px 16px;
-        border-radius: 20px;
-        cursor: pointer;
-        color: #333;
-    }
-
-    .left-filters .pill {
-        border: 1px solid #ddd;
-        background: #fff;
-        padding: 10px 16px;
-        border-radius: 20px;
-        cursor: pointer;
-        color: #9d9b98;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 400;
-
-    }
-
-    .left-filters .pill-1 {
-        border: 1px solid #ddd;
-        background: #fff;
-        padding: 10px 16px;
-        border-radius: 20px;
-        cursor: pointer;
-        color: #9d9b98;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 400;
-
-    }
-
-    .left-filters .pill-3 {
-        border: 1px solid #ddd;
-        background: #fff;
-        padding: 10px 16px;
-        border-radius: 20px;
-        cursor: pointer;
-        color: #9d9b98;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 400;
-
-    }
-
-    .pill.active {
-        background: #ffc97a;
-        color: #fff;
-        border: none;
-    }
-
-    /* RIGHT SIDE */
-    .right-filters {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .right-filters input {
-        padding: 10px 15px;
-        border-radius: 10px;
-        border: 1px solid #ddd;
-        width: 380px;
-    }
-
-    .filter-btn {
-        border: 1px solid #fbac83;
-        background: transparent;
-        padding: 7px 16px;
-        border-radius: 20px;
-        cursor: pointer;
-        color: #fbac83;
-    }
-
-    /* TITLE */
-
-    .all-reviews {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .all-reviews h3 {
-        margin-top: 10px;
-        color: #3b3731;
-        font-family: "Playfair Display";
-        font-size: 28px;
-
-        font-weight: 600;
-
-    }
-
-    .reviews-tag {
-        margin-top: 1.5rem;
-    }
-
-    .reviews-tag span {
-        display: inline-block;
-        background: #fbac83;
-        padding: 6px 0px;
-        border-radius: 20px;
-        color: #fff;
-        text-align: center;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 500;
-
-        width: 127px;
-        height: 32px;
-        margin-bottom: 2rem;
-    }
-
-    /* REVIEW LIST */
-    .reviews-list {
-        margin-top: 25px;
-    }
-
-    /* REVIEW CARD */
-    .review-item {
-        display: flex;
-        justify-content: space-between;
-        gap: 20px;
-        padding: 25px 0;
-        border-bottom: 1px solid #eee;
-    }
-
-    .review-item:last-child {
-        border: none;
-    }
-
-    /* LEFT SIDE */
-    .review-left {
-        display: flex;
-        gap: 15px;
-        min-width: 230px;
-    }
-
-    .avatar {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-
-    .review-user h4 {
-        margin-bottom: 3px;
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 600;
-
-    }
-
-    .review-user p {
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 400;
-
-    }
-
-    .review-meta {
-        margin-top: 6px;
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 500;
-
-    }
-
-    /* CONTENT */
-
-    .review-top {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 23px;
-    }
-
-    .date {
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 400;
-
-    }
-
-    .badge {
-        border-radius: 100px;
-        background: #f2f6f9;
-        color: #a8c9e2;
-        text-align: center;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 500;
-
-        padding: 2px 10px;
-    }
-
-    /* TEXT */
-    .review-text {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 18px;
-
-        font-weight: 400;
-
-        margin-bottom: 25px;
-        width: 674px;
-    }
-
-    /* TAGS */
-    .review-tags {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 1rem;
-    }
-
-    .review-tags span {
-        background: rgba(255, 168, 153, 0.13);
-        padding: 6px 12px;
-        border-radius: 14px;
-        color: #fbac83;
-        text-align: center;
-        font-family: Lato;
-        font-size: 14px;
-
-        font-weight: 500;
-
-    }
-
-    /* MENU */
-    .review-menu {
-        position: relative;
-        cursor: pointer;
-        font-size: 22px;
-    }
-
-    /* DROPDOWN */
-    .menu-dropdown {
-        position: absolute;
-        right: 0;
-        top: 25px;
-        background: #fff;
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        display: none;
-        flex-direction: column;
-    }
-
-    .menu-dropdown button {
-        border: none;
-        background: none;
-        padding: 10px 15px;
-        text-align: left;
-        cursor: pointer;
-    }
-
-    /* .review-menu:hover .menu-dropdown {
+        .btn-verify {
+            background: #ffc97a;
+            border: none;
+            border-radius: 75px;
+            margin-top: 15px;
+            cursor: pointer;
+            width: 140px;
+            height: 48px;
+            color: #FFF;
+            font-family: Lato;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .gauge-labels {
             display: flex;
-        } */
-
-    /* LOAD MORE */
-    .load-more {
-        display: block;
-        margin: 30px auto;
-        padding: 12px 25px;
-        border-radius: 25px;
-        border: 1px solid #aaa;
-        background: #fff;
-        cursor: pointer;
-        color: #3b3731;
-        text-align: center;
-        font-family: Lato;
-        font-size: 18px;
-
-        font-weight: 600;
-
-    }
-
-    /* Jo tab select hoga uska color change ho jaye ga */
-    .tab-link.active {
-        border-bottom: 2px solid #ffc97a;
-        /* Neeche line aa jayegi */
-        color: #fff;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 600;
-
-    }
-
-    /* Sections ke switch hone par halka sa fade effect */
-    .tab-content {
-        animation: fadeIn 0.4s ease;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
+            justify-content: space-between;
         }
 
-        to {
-            opacity: 1;
-            transform: translateY(0);
+        .gauge-labels.span {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 600;
+
+            padding-right: 1rem;
         }
-    }
 
-    /* .rewards-container {
-            max-width: 1000px;
-            margin: 0 auto;
-        } */
 
-    .sub-title h2 {
-        color: #3b3731;
-        font-family: "Playfair Display";
-        font-size: 28px;
-
-        font-weight: 600;
-
-        margin-bottom: 5px;
-    }
-
-    .sub-grahp {
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 18px;
-
-        font-weight: 400;
-
-        margin-bottom: 30px;
-    }
-
-    /* Cards Styling */
-    .balance-cards {
-        display: flex;
-        gap: 20px;
-        justify-content: center;
-        margin-bottom: 40px;
-    }
-
-    .current {
-        background-color: #f5f9ed;
-    }
-
-    .redeemed {
-        background-color: #f2f6f9;
-    }
-
-    .amount {
-        display: block;
-        color: #3b3731;
-        text-align: center;
-        font-family: Lato;
-        font-size: 30px;
-
-        font-weight: 600;
-
-    }
-
-    .card-label {
-        display: inline-block;
-        padding: 5px 12px;
-        border-radius: 14px;
-        color: #3b3731;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-
-        font-weight: 400;
-
-        margin: 10px 0;
-    }
-
-    /* Referral Grid */
-    .referral-grid {
-        display: grid;
-        grid-template-columns: 1.5fr 1fr;
-        gap: 75px;
-        margin-bottom: 50px;
-    }
-
-    .referral-grid label {
-        display: block;
-        margin: 15px 0 5px;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 600;
-    }
-
-    .referral-grid .copy-box {
-        display: flex;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .referral-grid .copy-box input {
-        border: none;
-        padding: 12px;
-        flex-grow: 1;
-        background: #fafafa;
-        width: 609px;
-        height: 48px;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 400;
-    }
-
-    .copy-box button {
-        background: #d4e3b5;
-        border: none;
-        padding: 0 20px;
-        cursor: pointer;
-        font-weight: bold;
-        color: #FFF;
-        text-align: center;
-        font-family: Lato;
-        font-size: 18px;
-
-        font-weight: 600;
-
-    }
-
-    .promo {
-        margin-top: 2.3rem;
-    }
-
-    .promo p strong {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 18px;
-
-        font-weight: 700;
-
-    }
-
-    .promo p {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 18px;
-
-        font-weight: 400;
-
-    }
-
-    .promo-text {
-        margin-right: 7rem;
-        margin-top: 1rem;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 600;
-    }
-
-    /* Icons */
-    /* .social-icons {
+        /* tabs section  */
+        /* Tabs Navigation */
+        .profile-tabs {
             display: flex;
             gap: 10px;
-            margin-top: 15px;
-        } */
+            background: white;
+            padding: 5px;
+            border-radius: 30px;
+            border: 1px solid #eee;
+            width: fit-content;
+            margin: 30px auto;
+            color: #9d9b98;
+            text-align: center;
+            font-family: Lato;
+            font-size: 18px;
 
-    /* .icon {
-  width: 35px;
-  height: 35px;
-  background: #007bff;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-} */
+            font-weight: 400;
 
-    /* Steps */
-    /* .steps-container {
-  display: flex;
-  justify-content: space-between;
-  text-align: center;
-  border-top: 1px solid #eee;
-  padding-top: 40px;
+        }
 
-}
+        .tab {
+            padding: 10px 25px;
+            border-radius: 25px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 18px;
+            font-weight: 400;
+        }
 
-.step-num {
-  background: #ffe0b2;
-  width: 25px;
-  height: 25px;
-  border-radius: 50%;
-  display: inline-block;
-  margin-bottom: 10px;
-} */
+        .tab.active {
+            background: #ffc97a;
+            color: white;
+        }
 
-    .referral-section {
-        padding: 80px 20px;
-    }
+        /* Add to the bottom of style.css */
 
-    .steps-wrapper {
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        max-width: 1000px;
-        margin: 0 auto;
-        position: relative;
-    }
+        .pets-grid {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
 
-    .step-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        width: 250px;
-        position: relative;
-        z-index: 2;
-    }
+        .pet-card {
+            min-width: 325px;
+            border-radius: 15px;
+            padding: 45px;
+            position: relative;
+        }
 
-    .step-circle {
-        position: relative;
-    }
+        /* Background Colors from your image */
+        .orange-bg {
+            background-color: #fff4e6;
+        }
 
-    .step-svg {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
+        .red-bg {
+            background-color: #fdf2f0;
+        }
 
-    /* Connectors Spacing */
-    .connector {
-        margin-top: 70px;
-        width: 120px;
-        margin: auto;
-    }
+        .blue-bg {
+            background-color: #f0f7f9;
+        }
 
-    .number {
-        background: #ffd79b;
-        color: #ffffff;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-shrink: 0;
-    }
-
-
-    .step-item-2 {
-        flex: 3;
-        width: auto;
-    }
-
-    .step-text {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .steps-wrapper {
-            flex-direction: column;
+        .pet-card-header {
+            display: flex;
             align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .pet-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid #ffc97a;
+            object-fit: cover;
+        }
+
+        .pet-name-type h4 {
+            margin: 0;
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 600;
+
+            display: flex;
+            justify-content: start;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pet-name-type p {
+            margin: 0;
+            color: #9d9b98;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 400;
+
+        }
+
+        .pet-info p {
+            margin: 8px 0;
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 400;
+
+        }
+
+        .pet-info {
+            flex-grow: 1;
+        }
+
+        .pet-card .btn-edit-outline {
+            color: #3b3731;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 600;
+
+        }
+
+        .my-pets.btn-edit-outline {
+            border: 1px solid #333;
+            background: white;
+            /* padding: 8px 20px; */
+            border-radius: 20px;
+            cursor: pointer;
+            height: auto;
+            width: fit-content;
+        }
+
+        .btn-add-another-pet {
+            width: 80%;
+            padding: 12px;
+            border-radius: 30px;
+            border: 1px solid #ccc;
+            background: white;
+            color: #3b3731;
+            text-align: center;
+            font-family: Lato;
+            font-size: 18px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+        }
+
+        .slider-arrow-next {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        #edit-view {
+            display: none;
+        }
+
+        .profile-details-header {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 25px;
+        }
+
+        .avatar-placeholder {
+            width: 150px;
+            height: 150px;
+            flex-shrink: 0;
+        }
+
+        .details-completion.details-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 20px;
+            flex-grow: 1;
+        }
+
+        .profile-details-card {
+            border-radius: 10px;
+            background: #fafafa;
+            height: auto;
+            margin: 0 0;
+            font-family: "Lato", sans-serif;
+            color: #333;
+            padding: 42px;
+        }
+
+        .tap-details-card {
+            border-radius: 15px;
+            font-family: "Lato", sans-serif;
+            color: #333;
+        }
+
+        /* .profile-header {
+                max-width: 1000px;
+                margin: 0 auto;
+            } */
+
+        h3.section-title {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 20px;
+
+            font-weight: 600;
+
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #d4d4d4;
+            margin: 13px 0 50px 0;
+        }
+
+        /* Header layout (Avatar + Grid) */
+        .profile-details-header {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        /* Avatar Circle */
+        .avatar-placeholder {
+            width: 150px;
+            height: 150px;
+            flex-shrink: 0;
+        }
+
+        /* The Details Grid */
+        /* Ensure the grid has 3 columns to match the design */
+        .profile-details-header .details-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 50px;
+            flex-grow: 1;
+        }
+
+        /* Force Address Line 1 to take up the full width of the row */
+        .detail-item:nth-child(4) {
+            grid-column: 0 / span 3;
+        }
+
+        /* City and Postcode will naturally fall into the next row */
+        .detail-item:nth-child(5) {
+            grid-column: 1;
+        }
+
+        .detail-item:nth-child(6) {
+            grid-column: 2;
+        }
+
+        /* Styling Labels and Text */
+        .detail-item label {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 600;
+
+        }
+
+        .detail-item p {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 400;
+
+        }
+
+        .bio-section label {
+            display: block;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .bio-section p {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        textarea[name="bio"] {
+            height: 80px;
+            /* fixed height */
+            resize: none;
+            overflow: auto;
+        }
+
+        /* Edit Button Styling */
+        .edit-action {
+            grid-column: 3;
+            /* Places button in the far right column */
+            text-align: right;
+        }
+
+        .btn-edit-outline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 100px;
+            border: 1px solid #3b3731;
+            background: #fff;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            width: 143px;
+            height: 48px;
+        }
+
+        .btn-edit-outline:hover {
+            background: #f0f0f0;
+        }
+
+        /* Bio Section at the bottom */
+        .bio-section {
+            margin-top: 20px;
+            border-top: 1px solid transparent;
+            /* Keeps spacing consistent */
+        }
+
+        .bio-section p {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 400;
+
+            letter-spacing: 0.5;
+        }
+
+        .details-grid .edit-action {
+            grid-column: 3;
+            /* Places button in the far right column */
+            text-align: left;
+        }
+
+        .btn-edit-outline {
+            border: 1px solid #333;
+            background: white;
+            padding: 8px 20px;
+            border-radius: 100px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .bio-section {
+            margin-top: 20px;
+            border-top: 1px solid transparent;
+            /* Keeps spacing consistent */
+            padding-left: 12rem;
+        }
+
+        .profile-view .bio-section p {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 400;
+
+            width: 611px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .edit-layout {
+            display: flex;
+            gap: 50px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            flex-grow: 1;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            display: block;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fff;
+            font-family: "Lato", sans-serif;
+        }
+
+        /* Container for the input and icon */
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Style the inputs to match your image */
+        .input-wrapper input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            /* Extra padding on the right for the icon */
+            border: 1px solid #dcdcdc;
+            border-radius: 8px;
+            font-size: 15px;
+            color: #3b3731;
+            background-color: #ffffff;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-wrapper input:focus {
+            border-color: #c9dda0;
+        }
+
+        /* Position the checkmark */
+        .input-icon {
+            position: absolute;
+            right: 15px;
+            pointer-events: none;
+            display: block;
+        }
+
+        /* HIDE icon if the input is empty (optional but professional) */
+        .input-wrapper input:placeholder-shown+.input-icon {
+            display: none;
+        }
+
+        .form-actions {
+            grid-column: span 2;
+            display: flex;
+            justify-content: flex-end;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .btn-save {
+            width: 325px;
+            height: 48px;
+            background: #ffcc80;
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            color: #fff;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 700;
+
+        }
+
+        .btn-cancel {
+            width: 295px;
+            height: 48px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            cursor: pointer;
+            color: #9d9b98;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 500;
+
+        }
+
+        .site-footer {
+            padding: 100px 10%;
+            color: #3b3731;
+            margin-top: 7rem;
+        }
+
+        /* CTA Section */
+        .footer-cta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5rem;
+        }
+
+        .cta-heading {
+            color: #3b3731;
+            font-family: "Playfair Display";
+            font-size: 56px;
+
+            font-weight: 900;
+
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-outline,
+        .btn-solid {
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #3b3731;
+        }
+
+        .btn-solid {
+            background: #fbac83;
+            /* Peach/Orange color from design */
+            border: none;
+            color: white;
+        }
+
+        /* Divider */
+        .footer-divider {
+            border: none;
+            border-top: 2px solid #d1d1d1;
+            margin-bottom: 40px;
+        }
+
+        /* Form Layout */
+        .edit-form-container {
+            padding: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        /* Segmented Control (Cat/Dog/Other) */
+        .segmented-control {
+            display: flex;
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 4px;
+            gap: 5px;
+        }
+
+        .segment {
+            flex: 1;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            color: #888;
+        }
+
+        .segment.active {
+            background: #ffc97a;
+            /* Your theme orange */
+            color: white;
+        }
+
+        /* Inputs & Textareas */
+        .input-field,
+        .text-area {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            margin-top: 8px;
+            font-family: inherit;
+        }
+
+        .text-area {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Action Buttons */
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            gap: 15px;
+        }
+
+        .btn-cancel {
+            flex: 1;
+            padding: 15px;
+            border-radius: 30px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            flex: 1;
+            padding: 15px;
+            border-radius: 30px;
+            border: none;
+            background: #ffc97a;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Main Footer Area */
+        .footer-main {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr;
             gap: 40px;
         }
 
-        .connector {
-            display: none;
-            /* Mobile par lines remove kar dein */
+        .footer-logo {
+            height: 40px;
+            margin-bottom: 15px;
         }
-    }
-
-    .pf-form {
-        display: flex;
-        gap: 40px;
-        padding: 40px;
-    }
-
-    /* LEFT */
-
-    .pf-left {
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .pf-avatar {
-        width: 190px;
-        height: 190px;
-        margin-bottom: 1.5rem;
-    }
-
-    .pf-edit-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        border: 1px solid #333;
-        padding: 10px 18px;
-        border-radius: 20px;
-        background: white;
-        cursor: pointer;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 500;
-        line-height: 1;
-        white-space: nowrap;
-    }
-
-    .pf-edit-btn span {
-        display: flex;
-        align-items: center;
-        line-height: 0;
-    }
-
-    .pf-edit-btn span svg {
-        display: block;
-    }
-
-    /* RIGHT */
-    .pf-pet-right {
-        flex: 1;
-    }
-
-    /* rows */
-
-    .pf-form-row {
-        display: flex;
-        gap: 30px;
-        margin-bottom: 15px;
-    }
-
-    .pf-field {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .pf-pet-field {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .pf-pet-field label {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        margin-bottom: 0.8rem;
-    }
-
-    .pf-field label {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        margin-bottom: 0.8rem;
-    }
-
-    .pf-field.small {
-        max-width: 100px;
-    }
-
-    /* inputs */
-
-    .pf-pet-field>input,
-    .pf-pet-field>select {
-        /* width: 295px;
-  height: 48px; */
-        padding: 10px;
-        border-radius: 10px;
-        border: 1px solid #ddd;
-    }
-
-    /* toggle buttons */
-
-    .pf-toggle-group {
-        width: 295px;
-        height: 48px;
-        display: flex;
-        border: 1px solid #d4d4d4 !important;
-        background: #fff;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    .pf-toggle-group button {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 6px;
-        flex: 1;
-        padding: 10px 8px;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        line-height: 1;
-    }
-
-    /* Default SVG icon colour */
-    .pf-toggle-group button svg {
-        display: block;
-        /* removes inline baseline gap */
-        flex-shrink: 0;
-    }
-
-    .pf-toggle-group button svg path,
-    .pf-toggle-group button svg circle,
-    .pf-toggle-group button svg ellipse,
-    .pf-toggle-group button svg rect {
-        fill: #D4D4D4;
-    }
-
-    .pf-toggle-group button.active {
-        background: #FFC97A;
-        border-radius: 0;
-        color: #fff;
-    }
-
-    .pf-toggle-group button:first-child.active {
-        border-radius: 8px 0 0 8px;
-    }
-
-    .pf-toggle-group button:last-child.active {
-        border-radius: 0 8px 8px 0;
-    }
-
-    .pf-toggle-group button:only-child.active {
-        border-radius: 8px;
-    }
-
-    .pf-toggle-group button.active p {
-        color: #fff;
-    }
-
-    .pf-toggle-group button.active svg path,
-    .pf-toggle-group button.active svg circle,
-    .pf-toggle-group button.active svg ellipse,
-    .pf-toggle-group button.active svg rect {
-        fill: #fff;
-    }
-
-    .pf-toggle-group button:not(:last-child) {
-        border-right: 1px solid #d4d4d4;
-    }
-
-    /* Default text colour */
-    .pf-toggle-group button p {
-        color: #D4D4D4;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: 1;
-        margin: 0;
-    }
-
-    .pf-toggle-group .active {
-        background: #ffc97a;
-        /* border: 1px solid #d4d4d4; */
-        color: #fff;
-    }
-
-    /* radio */
-
-    .radio-group {
-        display: flex;
-        gap: 10px;
-        margin-top: 10px;
-        max-width: 100px;
-    }
-
-    .radio-group label {
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        display: flex;
-        gap: 12px;
-    }
-
-    .input-box {
-        position: relative;
-        width: 295px;
-        display: inline-flex;
-        align-items: center;
-    }
-
-    .input-box input {
-        width: 100%;
-        height: 48px;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        padding: 0 40px 0 20px;
-    }
-
-    /* SVG positioning */
-
-    .check-icon {
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-    }
-
-    .arrow-icon {
-        position: absolute;
-        right: 37%;
-        top: 50%;
-        transform: translateY(-50%);
-        pointer-events: none;
-    }
-
-    .number-icon {
-        position: absolute;
-        right: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-        cursor: pointer;
-        pointer-events: auto;
-        z-index: 2;
-    }
-
-    .pf-pet-field.small .input-box {
-        position: relative;
-        width: 85px;
-    }
-
-    .pf-pet-field option {
-        width: 295px;
-    }
-
-    .input-group {
-        margin-bottom: 25px;
-    }
-
-    .pf-section-label {
-        display: block;
-        margin-bottom: 12px;
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        margin-top: 1rem;
-    }
-
-    /* Radio Buttons Styling */
-    .pf-radio-group {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 1rem;
-    }
-
-    .pf-radio-item {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-    .pf-radio-item input {
-        display: none;
-    }
-
-    .pf-custom-radio {
-        width: 20px;
-        height: 20px;
-        border: 1px solid #eae8e5;
-        background: #fff;
-        border-radius: 50%;
-        margin-right: 10px;
-        display: inline-block;
-        position: relative;
-    }
-
-    .pf-radio-item input:checked+.custom-radio {
-        border-color: #ccc;
-    }
-
-    .pf-radio-item input:checked+.custom-radio::after {
-        content: "";
-        width: 12px;
-        height: 12px;
-        background: #ffc97a;
-        border-radius: 50%;
-        position: absolute;
-        top: 49%;
-        left: 49%;
-        transform: translate(-50%, -50%);
-    }
-
-    /* Textarea Styling */
-    .pf-textarea {
-        width: 100%;
-        min-height: 80px;
-        border-radius: 10px;
-        padding: 15px;
-        font-size: 16px;
-        font-weight: 400;
-        outline: none;
-        line-height: 1.4;
-        resize: none;
-
-    }
-
-    .pf-textarea::placeholder {
-        white-space: pre-line;
-    }
-
-    .pf-textarea:focus {
-        border-color: #b0b0b0;
-    }
-
-    .pf-gallery-container {
-        color: #444;
-    }
-
-    .pf-gallery-container h3 {
-        margin-top: 1rem;
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .pf-subtitle {
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        margin-bottom: 25px;
-    }
-
-    /* Photo Grid */
-    .pf-photo-grid {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 30px;
-    }
-
-    .pf-photo-card {
-        flex: 1;
-        background: #fafafa;
-        border-radius: 12px;
-        width: 225px;
-        height: 225px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 15px;
-    }
-
-    .pf-upload-btn {
-        border-radius: 96px;
-        border: 1px solid #3b3731;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        width: 162px;
-        height: 48px;
-        color: #3b3731;
-        font-weight: 600;
-        font-size: 16px;
-    }
-
-    /* Notes Area */
-    .pf-notes-section {
-        margin-top: 20px;
-    }
-
-    .pf-notes-section label {
-        display: block;
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        margin-bottom: 10px;
-    }
-
-    .pf-notes-section label span {
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    textarea {
-        width: 100%;
-        border: 1px solid #e0e0e0;
-        border-radius: 10px;
-        padding: 15px;
-        min-height: 100px;
-        outline: none;
-        font-size: 14px;
-    }
-
-    /* Footer Buttons */
-    .pf-action-footer {
-        display: flex;
-        gap: 20px;
-        margin-top: 30px;
-    }
-
-    .btn-cancel,
-    .btn-save {
-        flex: 1;
-        padding: 15px;
-        border-radius: 30px;
-        border: none;
-        cursor: pointer;
-    }
-
-    .btn-cancel {
-        background: white;
-        border: 1px solid #e0e0e0;
-        color: #9d9b98;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-    }
-
-    .btn-save {
-        color: #fff;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 700;
-        line-height: normal;
-        background-color: #ffc97a;
-    }
-
-    .select-wrapper {
-        position: relative;
-        width: 295px;
-    }
-
-    .select-wrapper select {
-        width: 100%;
-        height: 48px;
-        padding: 0 15px;
-        border: 1px solid #d4d4d4;
-        border-radius: 10px;
-        appearance: none;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        background-color: white;
-        font-family: "Lato", sans-serif;
-        color: #3b3731;
-        outline: none;
-        cursor: pointer;
-    }
-
-    .select-icon {
-        position: absolute;
-        right: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-        pointer-events: none;
-    }
-
-    .select-wrapper select:hover {
-        border-color: #ffc671;
-    }
-
-    .suggestions {
-        display: none;
-        position: absolute;
-        background-color: #fff;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        padding: 5px;
-        z-index: 1;
-    }
-
-    .suggestion {
-        cursor: pointer;
-        padding: 5px;
-    }
-
-    .suggestion:hover {
-        background-color: #f5f5f5;
-    }
-
-    /* Keep dropdown opening downward (default component behavior) */
-    .bc-wrapper .bc-dropdown {
-        top: 100% !important;
-        bottom: auto !important;
-    }
-
-    /* Constrain the birthday picker so it cannot spill into the next column */
-    .birthday-input-box {
-        width: 250px;
-        max-width: 250px;
-    }
-
-    .birthday-input-box .bc-wrapper {
-        width: 250px;
-        max-width: 250px;
-    }
-
-    .birthday-input-box .bc-wrapper .bc-dropdown {
-        width: 250px;
-        max-width: 250px;
-        left: 0;
-        right: auto;
-    }
-
-    /* Keep birthday dropdown under the Sex field for this specific row */
-    .birthday-input-box .bc-wrapper .bc-dropdown {
-        z-index: 10 !important;
-    }
-
-    /* Make sure Sex content is above the dropdown */
-    .pf-pet-field.sex-field {
-        position: relative;
-        z-index: 2000000;
-    }
-
-    .sex-options {
-        display: flex;
-        gap: 28px;
-        /* height: 100%; */
-        align-items: center;
-        margin-top: 1.3rem;
-    }
-
-    /* label that wraps each radio */
-    .radio--small {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        /* gap between circle and text */
-        cursor: pointer;
-        user-select: none;
-        position: relative;
-    }
-
-    /* keep native input for accessibility but hide native radio */
-    .radio--small input[type="radio"] {
-        position: absolute;
-        opacity: 0;
-        width: 1px;
-        height: 1px;
-        margin: 0;
-        pointer-events: none;
-    }
-
-    /* the visible circle */
-    .radio--visual {
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        border: 2px solid #ccc;
-        box-sizing: border-box;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: #fff;
-        transition: border-color 0.15s;
-        flex: 0 0 auto;
-        position: relative;
-    }
-
-    /* inner dot for checked state */
-    .radio--visual::after {
-        content: "";
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        width: 0.9rem;
-        height: 0.9rem;
-        transform: translate(-50%, -50%) scale(0);
-        border-radius: 50%;
-        background: #FFD88C;
-        transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
-        pointer-events: none;
-    }
-
-    /* checked styles */
-    .radio--small input[type="radio"]:checked+.radio--visual {
-        border-color: #FFD88C;
-    }
-
-    .radio--small input[type="radio"]:checked+.radio--visual::after {
-        transform: translate(-50%, -50%) scale(1);
-    }
 
-    /* label text styling */
-    .radio--text {
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-
-
-    .radio--small input[type="radio"]:checked+.radio--visual::after {
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    /* focus-visible for keyboard users */
-    .radio--small input[type="radio"]:focus+.radio--visual {
-        outline: 3px solid rgba(201, 221, 160, 0.22);
-        outline-offset: 2px;
-    }
-
-
-    /* Chrome, Safari, Edge */
-    input[type="number"]::-webkit-outer-spin-button,
-    input[type="number"]::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-
-    /* Firefox */
-    input[type="number"] {
-        -moz-appearance: textfield;
-    }
-</style>
+        .footer-brand p {
+            font-size: 14px;
+            color: #666;
+            max-width: 300px;
+        }
+
+        .link-bold {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 60px;
+        }
+
+        .link-group h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .link-group ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .link-group li {
+            margin-bottom: 8px;
+        }
+
+        .link-group a {
+            text-decoration: none;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Social and App Info */
+        .footer-social {
+            text-align: right;
+        }
+
+        .social-icons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            font-size: 20px;
+            flex-direction: column;
+        }
+
+        .app-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* .favourites {
+                max-width: 1000px;
+                margin: auto;
+            } */
+
+        h2 {
+            margin: 20px 0;
+            font-weight: 600;
+        }
+
+        /* TOP BAR */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .tabs button {
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid #d4d4d4;
+            background: #ffffff;
+            cursor: pointer;
+            margin-right: 10px;
+            color: #9d9b98;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 500;
+
+        }
+
+        .tabs .active {
+            color: #fff;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 600;
+
+            background: #ffc97a;
+            color: #fff;
+            border: 1px solid #FFC97A;
+        }
+
+        .search-area {
+            position: relative;
+            /* Acts as the anchor for the icon */
+            display: flex;
+            align-items: center;
+            width: 405px;
+            /* Matches your input width */
+        }
+
+        .search-area input {
+            padding: 10px 15px 10px 12px;
+            /* Increased left padding (40px) to make room for the icon */
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            width: 405px;
+            height: 48px;
+            color: #333;
+            /* Changed from d4d4d4 to be visible; use d4d4d4 for placeholder only if preferred */
+            font-family: "Lato", sans-serif;
+            font-size: 16px;
+            outline: none;
+        }
+
+        /* Position the icon inside the input */
+        .search-icon {
+            position: absolute;
+            left: 23rem;
+            /* Distance from the left border */
+            pointer-events: none;
+            /* Allows clicks to pass through to the input */
+        }
+
+        .feature-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .feature-heading h2 {
+            color: #3b3731;
+            font-family: "Playfair Display";
+            font-size: 28px;
+
+            font-weight: 600;
+
+        }
+
+        .filter {
+            border: 1px solid #fbac83;
+            background: transparent;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #fbac83;
+            text-align: center;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 500;
+
+        }
+
+        /* TAG */
+        .modal-tags .tag {
+            display: inline-block;
+            background: #fbac83;
+            padding: 6px 4px;
+            border-radius: 20px;
+            color: #fff;
+            text-align: center;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 500;
+
+            width: 105px;
+            height: 32px;
+            margin-bottom: 2rem;
+        }
+
+        /* GRID */
+        .groomer-grid {
+            margin-top: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(295px, 1fr));
+            gap: 3rem;
+            justify-content: center;
+        }
+
+        /* CARD */
+        .balance-cards .card {
+            border-radius: 16px;
+            width: 190px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .card-body {
+            background: #FAFAFA;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            padding: 25px 20px;
+            border-radius: 12px;
+            flex-grow: 1;
+        }
+
+        .card-img {
+            position: relative;
+        }
+
+        .left-svg {
+            left: 2%;
+        }
+
+        .card-img img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .card-img span {
+            width: 36px;
+            height: 36px;
+            aspect-ratio: 1/1;
+            border-radius: 100px;
+            border: 1px solid #eae8e5;
+            background: #fff;
+        }
+
+        .delete {
+            position: absolute;
+            top: -8px;
+            right: -6px;
+            padding: 10px;
+        }
+
+        /* .group-icon {
+                margin: 22px 0;
+                width: 82px;
+                height: 24px;
+            } */
+
+        /* LABELS */
+        /* .labels {
+            margin: 25px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10rem;
+            }
+
+            .labels span {
+            background: #ffa899;
+            padding: 5px 10px;
+            border-radius: 12px;
+            margin-right: 5px;
+            color: #fff;
+            text-align: center;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 500;
+
+            width: 107px;
+            height: 24px;
+            } */
+
+        .card .labels {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .labels span {
+            margin: 5% 0 5% 0;
+            padding: 5px 10px;
+            border-radius: 100px;
+            background: #ffa899;
+            color: white;
+        }
+
+        .plus {
+            border-radius: 100px;
+            border: 1px solid #E6E6E5;
+            background: #FFF !important;
+        }
+
+        .card-title h3 {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 20px;
+
+            font-weight: 600;
+
+        }
+
+        .card-title p {
+            color: #9d9b98;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 400;
+
+        }
+
+        /* TEXT */
+        .sub {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .meta {
+            display: flex;
+            justify-content: space-between;
+            margin: 2px 0;
+        }
+
+        .meta-location {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .meta-location span {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 500;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .meta-rating span {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 500;
+
+            align-items: center;
+            margin-right: 10px;
+        }
+
+        .meta-rating strong {
+            color: #9d9b98;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 500;
+
+        }
+
+        .card-review {
+            width: 246px;
+        }
+
+        .review {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 14px;
+            font-weight: 400;
+            margin: 10px 0;
+            min-height: 34px;
+        }
+
+        /* BOTTOM */
+        .bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 12px 0;
+        }
+
+        .bottom p {
+            color: #3b3731;
+            text-align: right;
+            font-family: Lato;
+            font-size: 20px;
+
+            font-weight: 600;
+
+        }
+
+        .bottom p b {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 20px;
+
+            font-weight: 600;
+
+            text-decoration-line: underline;
+            text-decoration-style: solid;
+            text-decoration-skip-ink: auto;
+            text-decoration-thickness: auto;
+            text-underline-offset: auto;
+            text-underline-position: from-font;
+        }
+
+        .bottom p strong {
+            color: #9d9b98;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 600;
+
+        }
+
+        .arrow {
+            background: #cfe3a3;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* BUTTONS */
+        .book {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 20px;
+            background: #cbdce8;
+            color: #fff;
+            text-align: center;
+            font-family: Lato;
+            font-size: 18px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+        }
+
+        .card-profile {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 20px;
+            background: #d8e8b7;
+            cursor: pointer;
+            color: #fff;
+            text-align: center;
+            font-family: Lato;
+            font-size: 18px;
+
+            font-weight: 600;
+
+        }
+
+        /* SPACE SWITCH */
+        .space-switch {
+            margin: 20px 0;
+        }
+
+        .space-switch button {
+            color: #9d9b98;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 500;
+
+        }
+
+        .switch {
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            background: #eee;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .switch.active {
+            background: #ffc97a;
+            color: #fff;
+        }
+
+        .favourite-spaces h2 {
+            color: #3b3731;
+            font-family: "Playfair Display";
+            font-size: 28px;
+
+            font-weight: 600;
+
+        }
+
+        .favourite-spaces .tag {
+            display: inline-block;
+            background: #fbac83;
+            padding: 6px 2px;
+            border-radius: 20px;
+            color: #fff;
+            text-align: center;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 500;
+
+            width: 127px;
+            height: 32px;
+            margin-bottom: 2rem;
+        }
+
+        /* GRID */
+        .spaces-grid {
+            margin-top: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(295px, 1fr));
+            gap: 3rem;
+        }
+
+        /* CARD */
+        .space-card {
+            border-radius: 16px;
+        }
+
+        /* LABEL */
+        .label {
+            display: inline-block;
+            background: #ffd9cc;
+            color: #ff7a5c;
+            padding: 5px 12px;
+            border-radius: 14px;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+
+        /* FEATURES */
+        .features {
+            margin: 12px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-width: 80%;
+            width: 100%;
+        }
+
+        .features span {
+            background: rgba(59, 55, 49, 0.13);
+            padding: 6px 10px;
+            border-radius: 14px;
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 500;
+
+        }
+
+        .sub-title h3 {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 20px;
+
+            font-weight: 600;
+
+        }
+
+        .sub {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 400;
+
+        }
+
+        .sub-title strong {
+            color: #9d9b98;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 400;
+
+        }
+
+        /* REVIEWS SECTION */
+        /* .reviews-section {
+                max-width: 1000px;
+                margin: 0 auto;
+            } */
+
+        .reviews-section hr {
+            border: none;
+            border-top: 1px solid #d4d4d4;
+            margin: 15px 0 25px;
+        }
+
+        .review-group {
+            display: none;
+        }
+
+        .review-group.active {
+            display: block;
+        }
+
+        /* STATS */
+        .review-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 35px;
+        }
+
+        .stat-card {
+            background: #f7f7f7;
+            padding: 45px;
+            border-radius: 14px;
+            min-width: 230px;
+        }
+
+        .stat-card.light {
+            background: transparent;
+        }
+
+        .stat-title {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 20px;
+
+            font-weight: 600;
+
+            margin-bottom: 10px;
+        }
+
+        .stat-card h3 {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 30px;
+
+            font-weight: 600;
+
+        }
+
+        .stat-card span {
+            color: #9d9b98;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 400;
+
+        }
+
+        /* FILTER BAR */
+        .review-filters {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 28px;
+        }
+
+        .left-filters {
+            display: flex;
+            gap: 10px;
+        }
+
+        .left-filters .pill {
+            border: 1px solid #ddd;
+            background: #fff;
+            padding: 10px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #fff;
+            /* REMOVE THIS */
+        }
+
+        .left-filters .pill {
+            border: 1px solid #ddd;
+            background: #fff;
+            padding: 10px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .left-filters .pill {
+            border: 1px solid #ddd;
+            background: #fff;
+            padding: 10px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #9d9b98;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 400;
+
+        }
+
+        .left-filters .pill-1 {
+            border: 1px solid #ddd;
+            background: #fff;
+            padding: 10px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #9d9b98;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 400;
+
+        }
+
+        .left-filters .pill-3 {
+            border: 1px solid #ddd;
+            background: #fff;
+            padding: 10px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #9d9b98;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 400;
+
+        }
+
+        .pill.active {
+            background: #ffc97a;
+            color: #fff;
+            border: none;
+        }
+
+        /* RIGHT SIDE */
+        .right-filters {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .right-filters input {
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            width: 380px;
+        }
+
+        .filter-btn {
+            border: 1px solid #fbac83;
+            background: transparent;
+            padding: 7px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #fbac83;
+        }
+
+        /* TITLE */
+
+        .all-reviews {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .all-reviews h3 {
+            margin-top: 10px;
+            color: #3b3731;
+            font-family: "Playfair Display";
+            font-size: 28px;
+
+            font-weight: 600;
+
+        }
+
+        .reviews-tag {
+            margin-top: 1.5rem;
+        }
+
+        .reviews-tag span {
+            display: inline-block;
+            background: #fbac83;
+            padding: 6px 0px;
+            border-radius: 20px;
+            color: #fff;
+            text-align: center;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 500;
+
+            width: 127px;
+            height: 32px;
+            margin-bottom: 2rem;
+        }
+
+        /* REVIEW LIST */
+        .reviews-list {
+            margin-top: 25px;
+        }
+
+        /* REVIEW CARD */
+        .review-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 25px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .review-item:last-child {
+            border: none;
+        }
+
+        /* LEFT SIDE */
+        .review-left {
+            display: flex;
+            gap: 15px;
+            min-width: 230px;
+        }
+
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .review-user h4 {
+            margin-bottom: 3px;
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 600;
+
+        }
+
+        .review-user p {
+            color: #9d9b98;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 400;
+
+        }
+
+        .review-meta {
+            margin-top: 6px;
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 500;
+
+        }
+
+        /* CONTENT */
+
+        .review-top {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 23px;
+        }
+
+        .date {
+            color: #9d9b98;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 400;
+
+        }
+
+        .badge {
+            border-radius: 100px;
+            background: #f2f6f9;
+            color: #a8c9e2;
+            text-align: center;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 500;
+
+            padding: 2px 10px;
+        }
+
+        /* TEXT */
+        .review-text {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 18px;
+
+            font-weight: 400;
+
+            margin-bottom: 25px;
+            width: 674px;
+        }
+
+        /* TAGS */
+        .review-tags {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .review-tags span {
+            background: rgba(255, 168, 153, 0.13);
+            padding: 6px 12px;
+            border-radius: 14px;
+            color: #fbac83;
+            text-align: center;
+            font-family: Lato;
+            font-size: 14px;
+
+            font-weight: 500;
+
+        }
+
+        /* MENU */
+        .review-menu {
+            position: relative;
+            cursor: pointer;
+            font-size: 22px;
+        }
+
+        /* DROPDOWN */
+        .menu-dropdown {
+            position: absolute;
+            right: 0;
+            top: 25px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: none;
+            flex-direction: column;
+        }
+
+        .menu-dropdown button {
+            border: none;
+            background: none;
+            padding: 10px 15px;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        /* .review-menu:hover .menu-dropdown {
+                display: flex;
+            } */
+
+        /* LOAD MORE */
+        .load-more {
+            display: block;
+            margin: 30px auto;
+            padding: 12px 25px;
+            border-radius: 25px;
+            border: 1px solid #aaa;
+            background: #fff;
+            cursor: pointer;
+            color: #3b3731;
+            text-align: center;
+            font-family: Lato;
+            font-size: 18px;
+
+            font-weight: 600;
+
+        }
+
+        /* Jo tab select hoga uska color change ho jaye ga */
+        .tab-link.active {
+            border-bottom: 2px solid #ffc97a;
+            /* Neeche line aa jayegi */
+            color: #fff;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 600;
+
+        }
+
+        /* Sections ke switch hone par halka sa fade effect */
+        .tab-content {
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* .rewards-container {
+                max-width: 1000px;
+                margin: 0 auto;
+            } */
+
+        .sub-title h2 {
+            color: #3b3731;
+            font-family: "Playfair Display";
+            font-size: 28px;
+
+            font-weight: 600;
+
+            margin-bottom: 5px;
+        }
+
+        .sub-grahp {
+            color: #9d9b98;
+            font-family: Lato;
+            font-size: 18px;
+
+            font-weight: 400;
+
+            margin-bottom: 30px;
+        }
+
+        /* Cards Styling */
+        .balance-cards {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .current {
+            background-color: #f5f9ed;
+        }
+
+        .redeemed {
+            background-color: #f2f6f9;
+        }
+
+        .amount {
+            display: block;
+            color: #3b3731;
+            text-align: center;
+            font-family: Lato;
+            font-size: 30px;
+
+            font-weight: 600;
+
+        }
+
+        .card-label {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 14px;
+            color: #3b3731;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+
+            font-weight: 400;
+
+            margin: 10px 0;
+        }
+
+        /* Referral Grid */
+        .referral-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 75px;
+            margin-bottom: 50px;
+        }
+
+        .referral-grid label {
+            display: block;
+            margin: 15px 0 5px;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .referral-grid .copy-box {
+            display: flex;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .referral-grid .copy-box input {
+            border: none;
+            padding: 12px;
+            flex-grow: 1;
+            background: #fafafa;
+            width: 609px;
+            height: 48px;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .copy-box button {
+            background: #d4e3b5;
+            border: none;
+            padding: 0 20px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #FFF;
+            text-align: center;
+            font-family: Lato;
+            font-size: 18px;
+
+            font-weight: 600;
+
+        }
+
+        .promo {
+            margin-top: 2.3rem;
+        }
+
+        .promo p strong {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 18px;
+
+            font-weight: 700;
+
+        }
+
+        .promo p {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 18px;
+
+            font-weight: 400;
+
+        }
+
+        .promo-text {
+            margin-right: 7rem;
+            margin-top: 1rem;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* Icons */
+        /* .social-icons {
+                display: flex;
+                gap: 10px;
+                margin-top: 15px;
+            } */
+
+        /* .icon {
+      width: 35px;
+      height: 35px;
+      background: #007bff;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    } */
+
+        /* Steps */
+        /* .steps-container {
+      display: flex;
+      justify-content: space-between;
+      text-align: center;
+      border-top: 1px solid #eee;
+      padding-top: 40px;
+
+    }
+
+    .step-num {
+      background: #ffe0b2;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-bottom: 10px;
+    } */
+
+        .referral-section {
+            padding: 80px 20px;
+        }
+
+        .steps-wrapper {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 250px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-circle {
+            position: relative;
+        }
+
+        .step-svg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Connectors Spacing */
+        .connector {
+            margin-top: 70px;
+            width: 120px;
+            margin: auto;
+        }
+
+        .number {
+            background: #ffd79b;
+            color: #ffffff;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+
+        .step-item-2 {
+            flex: 3;
+            width: auto;
+        }
+
+        .step-text {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .steps-wrapper {
+                flex-direction: column;
+                align-items: center;
+                gap: 40px;
+            }
+
+            .connector {
+                display: none;
+                /* Mobile par lines remove kar dein */
+            }
+        }
+
+        .pf-form {
+            display: flex;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        /* LEFT */
+
+        .pf-left {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .pf-avatar {
+            width: 190px;
+            height: 190px;
+            margin-bottom: 1.5rem;
+        }
+
+        .pf-edit-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 1px solid #333;
+            padding: 10px 18px;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .pf-edit-btn span {
+            display: flex;
+            align-items: center;
+            line-height: 0;
+        }
+
+        .pf-edit-btn span svg {
+            display: block;
+        }
+
+        /* RIGHT */
+        .pf-pet-right {
+            flex: 1;
+        }
+
+        /* rows */
+
+        .pf-form-row {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 15px;
+        }
+
+        .pf-field {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pf-pet-field {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pf-pet-field label {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            margin-bottom: 0.8rem;
+        }
+
+        .pf-field label {
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            margin-bottom: 0.8rem;
+        }
+
+        .pf-field.small {
+            max-width: 100px;
+        }
+
+        /* inputs */
+
+        .pf-pet-field>input,
+        .pf-pet-field>select {
+            /* width: 295px;
+      height: 48px; */
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+
+        /* toggle buttons */
+
+        .pf-toggle-group {
+            width: 295px;
+            height: 48px;
+            display: flex;
+            border: 1px solid #d4d4d4 !important;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .pf-toggle-group button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            padding: 10px 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        /* Default SVG icon colour */
+        .pf-toggle-group button svg {
+            display: block;
+            /* removes inline baseline gap */
+            flex-shrink: 0;
+        }
+
+        .pf-toggle-group button svg path,
+        .pf-toggle-group button svg circle,
+        .pf-toggle-group button svg ellipse,
+        .pf-toggle-group button svg rect {
+            fill: #D4D4D4;
+        }
+
+        .pf-toggle-group button.active {
+            background: #FFC97A;
+            border-radius: 0;
+            color: #fff;
+        }
+
+        .pf-toggle-group button:first-child.active {
+            border-radius: 8px 0 0 8px;
+        }
+
+        .pf-toggle-group button:last-child.active {
+            border-radius: 0 8px 8px 0;
+        }
+
+        .pf-toggle-group button:only-child.active {
+            border-radius: 8px;
+        }
+
+        .pf-toggle-group button.active p {
+            color: #fff;
+        }
+
+        .pf-toggle-group button.active svg path,
+        .pf-toggle-group button.active svg circle,
+        .pf-toggle-group button.active svg ellipse,
+        .pf-toggle-group button.active svg rect {
+            fill: #fff;
+        }
+
+        .pf-toggle-group button:not(:last-child) {
+            border-right: 1px solid #d4d4d4;
+        }
+
+        /* Default text colour */
+        .pf-toggle-group button p {
+            color: #D4D4D4;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 1;
+            margin: 0;
+        }
+
+        .pf-toggle-group .active {
+            background: #ffc97a;
+            /* border: 1px solid #d4d4d4; */
+            color: #fff;
+        }
+
+        /* radio */
+
+        .radio-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            max-width: 100px;
+        }
+
+        .radio-group label {
+            color: #9d9b98;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+            display: flex;
+            gap: 12px;
+        }
+
+        .input-box {
+            position: relative;
+            width: 295px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .input-box input {
+            width: 100%;
+            height: 48px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 0 40px 0 20px;
+        }
+
+        /* SVG positioning */
+
+        .check-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .arrow-icon {
+            position: absolute;
+            right: 37%;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .number-icon {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 2;
+        }
+
+        .pf-pet-field.small .input-box {
+            position: relative;
+            width: 85px;
+        }
+
+        .pf-pet-field option {
+            width: 295px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .pf-section-label {
+            display: block;
+            margin-bottom: 12px;
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            margin-top: 1rem;
+        }
+
+        /* Radio Buttons Styling */
+        .pf-radio-group {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 1rem;
+        }
+
+        .pf-radio-item {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: #9d9b98;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .pf-radio-item input {
+            display: none;
+        }
+
+        .pf-custom-radio {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #eae8e5;
+            background: #fff;
+            border-radius: 50%;
+            margin-right: 10px;
+            display: inline-block;
+            position: relative;
+        }
+
+        .pf-radio-item input:checked+.custom-radio {
+            border-color: #ccc;
+        }
+
+        .pf-radio-item input:checked+.custom-radio::after {
+            content: "";
+            width: 12px;
+            height: 12px;
+            background: #ffc97a;
+            border-radius: 50%;
+            position: absolute;
+            top: 49%;
+            left: 49%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Textarea Styling */
+        .pf-textarea {
+            width: 100%;
+            min-height: 80px;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 400;
+            outline: none;
+            line-height: 1.4;
+            resize: none;
+
+        }
+
+        .pf-textarea::placeholder {
+            white-space: pre-line;
+        }
+
+        .pf-textarea:focus {
+            border-color: #b0b0b0;
+        }
+
+        .pf-gallery-container {
+            color: #444;
+        }
+
+        .pf-gallery-container h3 {
+            margin-top: 1rem;
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .pf-subtitle {
+            color: #9d9b98;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+            margin-bottom: 25px;
+        }
+
+        /* Photo Grid */
+        .pf-photo-grid {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .pf-photo-card {
+            flex: 1;
+            background: #fafafa;
+            border-radius: 12px;
+            width: 225px;
+            height: 225px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .pf-upload-btn {
+            border-radius: 96px;
+            border: 1px solid #3b3731;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 162px;
+            height: 48px;
+            color: #3b3731;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        /* Notes Area */
+        .pf-notes-section {
+            margin-top: 20px;
+        }
+
+        .pf-notes-section label {
+            display: block;
+            color: #3b3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            margin-bottom: 10px;
+        }
+
+        .pf-notes-section label span {
+            color: #9d9b98;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        textarea {
+            width: 100%;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 100px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        /* Footer Buttons */
+        .pf-action-footer {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .btn-cancel,
+        .btn-save {
+            flex: 1;
+            padding: 15px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            background: white;
+            border: 1px solid #e0e0e0;
+            color: #9d9b98;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+        }
+
+        .btn-save {
+            color: #fff;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 700;
+            line-height: normal;
+            background-color: #ffc97a;
+        }
+
+        .select-wrapper {
+            position: relative;
+            width: 295px;
+        }
+
+        .select-wrapper select {
+            width: 100%;
+            height: 48px;
+            padding: 0 15px;
+            border: 1px solid #d4d4d4;
+            border-radius: 10px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: white;
+            font-family: "Lato", sans-serif;
+            color: #3b3731;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .select-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .select-wrapper select:hover {
+            border-color: #ffc671;
+        }
+
+        .suggestions {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            padding: 5px;
+            z-index: 1;
+        }
+
+        .suggestion {
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .suggestion:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Keep dropdown opening downward (default component behavior) */
+        .bc-wrapper .bc-dropdown {
+            top: 100% !important;
+            bottom: auto !important;
+        }
+
+        /* Constrain the birthday picker so it cannot spill into the next column */
+        .birthday-input-box {
+            width: 250px;
+            max-width: 250px;
+        }
+
+        .birthday-input-box .bc-wrapper {
+            width: 250px;
+            max-width: 250px;
+        }
+
+        .birthday-input-box .bc-wrapper .bc-dropdown {
+            width: 250px;
+            max-width: 250px;
+            left: 0;
+            right: auto;
+        }
+
+        /* Keep birthday dropdown under the Sex field for this specific row */
+        .birthday-input-box .bc-wrapper .bc-dropdown {
+            z-index: 10 !important;
+        }
+
+        /* Make sure Sex content is above the dropdown */
+        .pf-pet-field.sex-field {
+            position: relative;
+            z-index: 2000000;
+        }
+
+        .sex-options {
+            display: flex;
+            gap: 28px;
+            /* height: 100%; */
+            align-items: center;
+            margin-top: 1.3rem;
+        }
+
+        /* label that wraps each radio */
+        .radio--small {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            /* gap between circle and text */
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        /* keep native input for accessibility but hide native radio */
+        .radio--small input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 1px;
+            height: 1px;
+            margin: 0;
+            pointer-events: none;
+        }
+
+        /* the visible circle */
+        .radio--visual {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            transition: border-color 0.15s;
+            flex: 0 0 auto;
+            position: relative;
+        }
+
+        /* inner dot for checked state */
+        .radio--visual::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 0.9rem;
+            height: 0.9rem;
+            transform: translate(-50%, -50%) scale(0);
+            border-radius: 50%;
+            background: #FFD88C;
+            transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+        }
+
+        /* checked styles */
+        .radio--small input[type="radio"]:checked+.radio--visual {
+            border-color: #FFD88C;
+        }
+
+        .radio--small input[type="radio"]:checked+.radio--visual::after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* label text styling */
+        .radio--text {
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+
+
+        .radio--small input[type="radio"]:checked+.radio--visual::after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* focus-visible for keyboard users */
+        .radio--small input[type="radio"]:focus+.radio--visual {
+            outline: 3px solid rgba(201, 221, 160, 0.22);
+            outline-offset: 2px;
+        }
+
+
+        /* Chrome, Safari, Edge */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+@endsection
 
 <!-- Profile Content -->
 <div class="container mb-5 mt-5">
@@ -3050,8 +3051,7 @@
                             </div>
                         </div>
 
-                        <div
-                            class="avatar-container d-flex justify-content-center flex-column align-items-center mt-4">
+                        <div class="avatar-container d-flex justify-content-center flex-column align-items-center mt-4">
 
                             <img src="{{ asset('images/block_user_5.png') }}" class="avatar-img" alt="">
                             <h2 class="profile-name mt-3">Verity E. <span class="check-badge"><svg
@@ -3103,8 +3103,8 @@
                             </div>
 
                             <div class="status normal-font-bold d-flex align-items-center gap-5">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
-                                    fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                    viewBox="0 0 16 16" fill="none">
                                     <path
                                         d="M8 0C3.6 0 0 3.6 0 8C0 12.4 3.6 16 8 16C12.4 16 16 12.4 16 8C16 3.6 12.4 0 8 0ZM6.4 12L2.4 8L3.528 6.872L6.4 9.736L12.472 3.664L13.6 4.8L6.4 12Z"
                                         fill="#B5CA89" />
@@ -3117,7 +3117,8 @@
 
                             <div class="profile">
                                 <div class="avatar-wrap">
-                                    <img src="{{ asset('images/groomer-profile.png') }}" class="avatar avatar-img" alt="">
+                                    <img src="{{ asset('images/groomer-profile.png') }}" class="avatar avatar-img"
+                                        alt="">
                                     <div class="custom badge-shield" title="Verified">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="20"
                                             viewBox="0 0 18 20" fill="none">
@@ -3142,8 +3143,8 @@
 
                         <div class="booking-info">
                             <div class="d-flex align-items-center gap-5">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="17" viewBox="0 0 16 17"
-                                    fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="17"
+                                    viewBox="0 0 16 17" fill="none">
                                     <path
                                         d="M4.94542 11.5544C6.23065 12.8397 9.3565 11.798 11.927 9.22713C14.4978 6.65667 15.5395 3.53082 14.2543 2.24559M8.72705 1.37259L9.30878 1.95473M6.69101 3.40904L7.27274 3.99077M4.94501 5.73636L5.52673 6.31809M4.36328 8.6454L4.94501 9.22713M11.927 0.5L12.5087 1.08173M11.3452 3.99118L12.5087 5.15463M9.30919 6.02763L10.4726 7.19109M6.98187 7.77281L8.14533 8.93627"
                                         stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
@@ -3154,8 +3155,8 @@
                                 <span class="normal-light-color font-color">Full Groom</span>
                             </div>
                             <div class="d-flex align-items-center gap-5">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="17" viewBox="0 0 19 17"
-                                    fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="17"
+                                    viewBox="0 0 19 17" fill="none">
                                     <path
                                         d="M0.5 8.29554C0.5 5.20139 0.5 3.6539 1.50457 2.69308C2.50914 1.73227 4.12486 1.73145 7.35714 1.73145H10.7857C14.018 1.73145 15.6346 1.73145 16.6383 2.69308C17.642 3.65472 17.6429 5.20139 17.6429 8.29554V9.93656C17.6429 13.0307 17.6429 14.5782 16.6383 15.539C15.6337 16.4998 14.018 16.5007 10.7857 16.5007H7.35714C4.12486 16.5007 2.50829 16.5007 1.50457 15.539C0.500857 14.5774 0.5 13.0307 0.5 9.93656V8.29554Z"
                                         stroke="#3B3731" />
@@ -3168,18 +3169,18 @@
                                 <span class="normal-light-color font-color">18/12/2025</span>
                             </div>
                             <div class="d-flex align-items-center gap-5">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
-                                    fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                    viewBox="0 0 16 16" fill="none">
                                     <!-- Clock circle -->
                                     <path
                                         d="M8 0.5C12.1423 0.5 15.5 3.85774 15.5 8C15.5 12.1423 12.1423 15.5 8 15.5C3.85774 15.5 0.5 12.1423 0.5 8C0.5 3.85774 3.85774 0.5 8 0.5Z"
                                         stroke="#3B3731" stroke-linecap="round" />
                                     <!-- Hour hand pointing to 6 (straight down) -->
-                                    <line x1="8" y1="8" x2="8" y2="12.5" stroke="#3B3731" stroke-width="1.2"
-                                        stroke-linecap="round" />
+                                    <line x1="8" y1="8" x2="8" y2="12.5"
+                                        stroke="#3B3731" stroke-width="1.2" stroke-linecap="round" />
                                     <!-- Minute hand pointing to 6:30 (straight right) -->
-                                    <line x1="8" y1="8" x2="12.5" y2="8" stroke="#3B3731" stroke-width="1.2"
-                                        stroke-linecap="round" />
+                                    <line x1="8" y1="8" x2="12.5" y2="8"
+                                        stroke="#3B3731" stroke-width="1.2" stroke-linecap="round" />
                                     <!-- Center dot -->
                                     <circle cx="8" cy="8" r="0.8" fill="#3B3731" />
                                 </svg>
@@ -3197,8 +3198,8 @@
                             </div>
 
                             <div class="status normal-font-bold d-flex align-items-center gap-5">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
-                                    fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                    viewBox="0 0 16 16" fill="none">
                                     <path
                                         d="M8 0C3.6 0 0 3.6 0 8C0 12.4 3.6 16 8 16C12.4 16 16 12.4 16 8C16 3.6 12.4 0 8 0ZM6.4 12L2.4 8L3.528 6.872L6.4 9.736L12.472 3.664L13.6 4.8L6.4 12Z"
                                         fill="#B5CA89" />
@@ -3212,7 +3213,8 @@
                             <div class="profile">
                                 <div class="avatar-wrap">
 
-                                    <img src="{{ asset('images/space_card3.png') }}" class="avatar avatar-img" alt="">
+                                    <img src="{{ asset('images/space_card3.png') }}" class="avatar avatar-img"
+                                        alt="">
                                     <div class="custom badge-shield" title="Verified">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="19"
                                             viewBox="0 0 18 19" fill="none">
@@ -3228,8 +3230,7 @@
                                             <path
                                                 d="M5.62305 11.0854C5.62305 11.0854 6.76603 11.3067 7.90901 10.4243L5.62305 11.0854Z"
                                                 fill="#CBDCE8" />
-                                            <path
-                                                d="M5.62305 11.0854C5.62305 11.0854 6.76603 11.3067 7.90901 10.4243"
+                                            <path d="M5.62305 11.0854C5.62305 11.0854 6.76603 11.3067 7.90901 10.4243"
                                                 stroke="white" stroke-linecap="round" stroke-linejoin="round" />
                                             <path
                                                 d="M7.45158 6.88106C7.45158 7.03263 7.39137 7.17799 7.28419 7.28517C7.17702 7.39234 7.03165 7.45255 6.88009 7.45255C6.72852 7.45255 6.58316 7.39234 6.47598 7.28517C6.3688 7.17799 6.30859 7.03263 6.30859 6.88106C6.30859 6.72949 6.3688 6.58413 6.47598 6.47696C6.58316 6.36978 6.72852 6.30957 6.88009 6.30957C7.03165 6.30957 7.17702 6.36978 7.28419 6.47696C7.39137 6.58413 7.45158 6.72949 7.45158 6.88106Z"
@@ -3254,8 +3255,8 @@
 
                         <div class="booking-info">
                             <div class="d-flex align-items-center gap-5">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16"
-                                    fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="16"
+                                    viewBox="0 0 12 16" fill="none">
                                     <path
                                         d="M6 0.5C7.4694 0.5 8.87214 1.04525 9.90137 2.00586C10.9293 2.96529 11.4999 4.25871 11.5 5.59961C11.5 7.10011 10.6408 8.95946 9.51855 10.7236C8.41048 12.4655 7.10434 14.0263 6.32227 14.9082C6.14625 15.1067 5.85375 15.1067 5.67773 14.9082C4.89566 14.0263 3.58952 12.4655 2.48145 10.7236C1.35919 8.95946 0.5 7.10011 0.5 5.59961C0.500111 4.25871 1.07068 2.96529 2.09863 2.00586C3.12786 1.04525 4.53061 0.5 6 0.5ZM6 3.09961C5.30978 3.09961 4.64141 3.35564 4.14355 3.82031C3.64466 4.28597 3.35753 4.92517 3.35742 5.59961C3.35742 6.27422 3.64453 6.91413 4.14355 7.37988C4.64141 7.84453 5.30979 8.09961 6 8.09961C6.34236 8.09961 6.68202 8.03695 7 7.91406C7.31807 7.7911 7.60965 7.61022 7.85645 7.37988C8.10326 7.14952 8.30086 6.87397 8.43652 6.56836C8.57224 6.26256 8.64258 5.93289 8.64258 5.59961C8.64247 4.92517 8.35534 4.28597 7.85645 3.82031C7.35859 3.35564 6.69022 3.09961 6 3.09961Z"
                                         stroke="#3B3731" />
@@ -3263,8 +3264,8 @@
                                 <span class="normal-light-color font-color">Victoria Embankment</span>
                             </div>
                             <div class="d-flex align-items-center gap-5">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="17" viewBox="0 0 19 17"
-                                    fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="17"
+                                    viewBox="0 0 19 17" fill="none">
                                     <path
                                         d="M0.5 8.29554C0.5 5.20139 0.5 3.6539 1.50457 2.69308C2.50914 1.73227 4.12486 1.73145 7.35714 1.73145H10.7857C14.018 1.73145 15.6346 1.73145 16.6383 2.69308C17.642 3.65472 17.6429 5.20139 17.6429 8.29554V9.93656C17.6429 13.0307 17.6429 14.5782 16.6383 15.539C15.6337 16.4998 14.018 16.5007 10.7857 16.5007H7.35714C4.12486 16.5007 2.50829 16.5007 1.50457 15.539C0.500857 14.5774 0.5 13.0307 0.5 9.93656V8.29554Z"
                                         stroke="#3B3731" />
@@ -3277,18 +3278,18 @@
                                 <span class="normal-light-color font-color">18/12/2025</span>
                             </div>
                             <div class="d-flex align-items-center gap-5">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
-                                    fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                    viewBox="0 0 16 16" fill="none">
                                     <!-- Clock circle -->
                                     <path
                                         d="M8 0.5C12.1423 0.5 15.5 3.85774 15.5 8C15.5 12.1423 12.1423 15.5 8 15.5C3.85774 15.5 0.5 12.1423 0.5 8C0.5 3.85774 3.85774 0.5 8 0.5Z"
                                         stroke="#3B3731" stroke-linecap="round" />
                                     <!-- Hour hand pointing to 6 (straight down) -->
-                                    <line x1="8" y1="8" x2="8" y2="12.5" stroke="#3B3731" stroke-width="1.2"
-                                        stroke-linecap="round" />
+                                    <line x1="8" y1="8" x2="8" y2="12.5"
+                                        stroke="#3B3731" stroke-width="1.2" stroke-linecap="round" />
                                     <!-- Minute hand pointing to 6:30 (straight right) -->
-                                    <line x1="8" y1="8" x2="12.5" y2="8" stroke="#3B3731" stroke-width="1.2"
-                                        stroke-linecap="round" />
+                                    <line x1="8" y1="8" x2="12.5" y2="8"
+                                        stroke="#3B3731" stroke-width="1.2" stroke-linecap="round" />
                                     <!-- Center dot -->
                                     <circle cx="8" cy="8" r="0.8" fill="#3B3731" />
                                 </svg>
@@ -3371,9 +3372,10 @@
                                             <path d="M 25 155 A 118 118 0 0 1 255 155" fill="none" stroke="#FAF0DC"
                                                 stroke-width="20" stroke-linecap="round" />
                                             <!-- Progress arc -->
-                                            <path id="progress-arc" d="M 25 155 A 118 118 0 0 1 255 155" fill="none"
-                                                stroke="#ffc97a" stroke-width="20" stroke-linecap="round"
-                                                stroke-dasharray="370" stroke-dashoffset="148" />
+                                            <path id="progress-arc" d="M 25 155 A 118 118 0 0 1 255 155"
+                                                fill="none" stroke="#ffc97a" stroke-width="20"
+                                                stroke-linecap="round" stroke-dasharray="370"
+                                                stroke-dashoffset="148" />
                                         </svg>
                                         <div class="gauge-label" id="gauge-label">60%</div>
                                         <div class="gauge-min">0%</div>
@@ -3382,7 +3384,8 @@
 
                                     <div class="controls">
                                         <label>Adjust:</label>
-                                        <input type="range" min="0" max="100" value="60" id="slider" />
+                                        <input type="range" min="0" max="100" value="60"
+                                            id="slider" />
                                         <span id="slider-val">60%</span>
                                     </div>
                                 </div>
@@ -3627,7 +3630,8 @@
                                 <div class="pet-card d-flex flex-column justify-content-between orange-bg">
                                     <div class="pet-card-header">
 
-                                        <img src="{{ asset('images/pet_details_1.png') }}" alt="Image" class="pet-avatar">
+                                        <img src="{{ asset('images/pet_details_1.png') }}" alt="Image"
+                                            class="pet-avatar">
                                         <div class="pet-name-type">
                                             <h4><svg xmlns="http://www.w3.org/2000/svg" width="16" height="15"
                                                     viewBox="0 0 16 15" fill="none">
@@ -3695,8 +3699,10 @@
                                     </div>
                                     <div class="d-flex align-items-center justify-content-center mt-4">
                                         <button class="my-pets btn-edit-outline"><svg
-                                                xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0
-                                                    0 16 15" fill="none">
+                                                xmlns="http://www.w3.org/2000/svg" width="16" height="15"
+                                                viewBox="0
+                                                    0 16 15"
+                                                fill="none">
                                                 <path
                                                     d="M10.2059 2.37997L12.8529 4.97712M8.44118 14.5H15.5M1.38235 11.0371L0.5 14.5L4.02941 13.6343L14.2524 3.60409C14.5832 3.2794 14.769 2.83908 14.769 2.37997C14.769 1.92085 14.5832 1.48054 14.2524 1.15584L14.1006 1.00694C13.7697 0.682347 13.3209 0.5 12.8529 0.5C12.385 0.5 11.9362 0.682347 11.6053 1.00694L1.38235 11.0371Z"
                                                     stroke="#3B3731" stroke-linecap="round"
@@ -3709,7 +3715,8 @@
                                 <div class="pet-card d-flex flex-column justify-content-between red-bg">
                                     <div class="pet-card-header">
 
-                                        <img src="{{ asset('images/pet_details_2.png') }}" alt="Image" class="pet-avatar">
+                                        <img src="{{ asset('images/pet_details_2.png') }}" alt="Image"
+                                            class="pet-avatar">
                                         <div class="pet-name-type">
                                             <h4><svg xmlns="http://www.w3.org/2000/svg" width="16" height="15"
                                                     viewBox="0 0 16 15" fill="none">
@@ -3835,8 +3842,10 @@
                                     </div>
                                     <div class="d-flex align-items-center justify-content-center">
                                         <button class="my-pets btn-edit-outline"><svg
-                                                xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0
-                                                    0 16 15" fill="none">
+                                                xmlns="http://www.w3.org/2000/svg" width="16" height="15"
+                                                viewBox="0
+                                                    0 16 15"
+                                                fill="none">
                                                 <path
                                                     d="M10.2059 2.37997L12.8529 4.97712M8.44118 14.5H15.5M1.38235 11.0371L0.5 14.5L4.02941 13.6343L14.2524 3.60409C14.5832 3.2794 14.769 2.83908 14.769 2.37997C14.769 1.92085 14.5832 1.48054 14.2524 1.15584L14.1006 1.00694C13.7697 0.682347 13.3209 0.5 12.8529 0.5C12.385 0.5 11.9362 0.682347 11.6053 1.00694L1.38235 11.0371Z"
                                                     stroke="#3B3731" stroke-linecap="round"
@@ -3941,7 +3950,8 @@
                                 <div class="pf-avatar">
                                     <span><svg xmlns="http://www.w3.org/2000/svg" width="190" height="190"
                                             viewBox="0 0 190 190" fill="none">
-                                            <circle cx="95" cy="95" r="94.5" fill="#E3E3E3" stroke="#9D9B98" />
+                                            <circle cx="95" cy="95" r="94.5" fill="#E3E3E3"
+                                                stroke="#9D9B98" />
                                             <path
                                                 d="M36.7334 169.099C40.4255 97.0391 149.511 97.0391 153.203 169.1C153.203 169.1 131.903 189.366 95.1698 189.366C58.4364 189.366 36.7334 169.099 36.7334 169.099Z"
                                                 fill="white" stroke="#9D9B98" stroke-linecap="round"
@@ -3979,8 +3989,9 @@
                                         <label>Select Pet Type</label>
                                         <div class="pf-toggle-group">
                                             <button type="button">
-                                                <p>Cat</p> <span><svg xmlns="http://www.w3.org/2000/svg" width="10"
-                                                        height="14" viewBox="0 0 10 14" fill="none">
+                                                <p>Cat</p> <span><svg xmlns="http://www.w3.org/2000/svg"
+                                                        width="10" height="14" viewBox="0 0 10 14"
+                                                        fill="none">
                                                         <path
                                                             d="M4.6084 2.33691C5.10435 2.27575 5.79149 2.29051 6.44824 2.5127C7.17421 2.75837 7.87556 3.26331 8.21875 4.19922L9.63379 4.87793L9.66406 4.98926C9.85166 5.66584 9.96334 6.71639 9.67285 7.67285C9.52643 8.15482 9.27602 8.61867 8.87695 8.99414C8.47673 9.37055 7.93833 9.64708 7.23535 9.77246C4.70572 10.2235 3.27073 12.3877 2.875 13.4092C2.71213 13.8744 1.74663 13.9922 1.51953 13.5547C-1.87265 7.01946 1.17825 1.85935 3.28418 0L4.6084 2.33691ZM6.17578 4.70117C5.80462 4.70117 5.41028 4.88536 5.41016 5.62207C5.41016 6.13084 6.059 5.6221 6.48145 5.62207C6.90389 5.62207 6.94043 6.13086 6.94043 5.62207C6.94028 5.11355 6.59802 4.70134 6.17578 4.70117Z"
                                                             fill="#D4D4D4" />
@@ -3996,8 +4007,8 @@
                                             </button>
                                             <button type="button" class="active">
                                                 <p style="color:#fff;">Other</p> <span><svg
-                                                        xmlns="http://www.w3.org/2000/svg" width="19" height="15"
-                                                        viewBox="0 0 19 15" fill="none">
+                                                        xmlns="http://www.w3.org/2000/svg" width="19"
+                                                        height="15" viewBox="0 0 19 15" fill="none">
                                                         <path fill-rule="evenodd" clip-rule="evenodd"
                                                             d="M6.10714 0C5.43536 0 4.90879 0.410454 4.58307 0.902727C4.25329 1.39909 4.07143 2.04682 4.07143 2.72727C4.07143 3.40773 4.25329 4.05545 4.58307 4.55182C4.90879 5.04273 5.43536 5.45455 6.10714 5.45455C6.77893 5.45455 7.3055 5.04409 7.63121 4.55182C7.961 4.05545 8.14286 3.40773 8.14286 2.72727C8.14286 2.04682 7.961 1.39909 7.63121 0.902727C7.3055 0.411818 6.77893 0 6.10714 0ZM12.8929 0C12.2211 0 11.6945 0.410454 11.3688 0.902727C11.039 1.39909 10.8571 2.04682 10.8571 2.72727C10.8571 3.40773 11.039 4.05545 11.3688 4.55182C11.6945 5.04273 12.2211 5.45455 12.8929 5.45455C13.5646 5.45455 14.0912 5.04409 14.4169 4.55182C14.7467 4.05545 14.9286 3.40773 14.9286 2.72727C14.9286 2.04682 14.7467 1.39909 14.4169 0.902727C14.0912 0.411818 13.5646 0 12.8929 0ZM2.03571 6.13636C1.36393 6.13636 0.837357 6.54682 0.511643 7.03909C0.181857 7.53545 0 8.18318 0 8.86364C0 9.54409 0.181857 10.1918 0.511643 10.6882C0.837357 11.1791 1.36393 11.5909 2.03571 11.5909C2.7075 11.5909 3.23407 11.1805 3.55979 10.6882C3.88957 10.1918 4.07143 9.54409 4.07143 8.86364C4.07143 8.18318 3.88957 7.53545 3.55979 7.03909C3.23407 6.54818 2.7075 6.13636 2.03571 6.13636ZM9.5 6.13636C7.87143 6.13636 6.66493 7.01455 5.89407 8.10409C5.13271 9.17727 4.75 10.5095 4.75 11.5909C4.75 12.8509 5.50321 13.7277 6.42743 14.2527C7.33671 14.7709 8.47671 15 9.5 15C10.5233 15 11.6633 14.7723 12.5726 14.2527C13.4954 13.7264 14.25 12.8509 14.25 11.5909C14.25 10.5095 13.8673 9.17727 13.1059 8.10409C12.3364 7.01318 11.1299 6.13636 9.5 6.13636ZM16.9643 6.13636C16.2925 6.13636 15.7659 6.54682 15.4402 7.03909C15.1104 7.53545 14.9286 8.18318 14.9286 8.86364C14.9286 9.54409 15.1104 10.1918 15.4402 10.6882C15.7659 11.1791 16.2925 11.5909 16.9643 11.5909C17.6361 11.5909 18.1626 11.1805 18.4884 10.6882C18.8181 10.1918 19 9.54409 19 8.86364C19 8.18318 18.8181 7.53545 18.4884 7.03909C18.1626 6.54818 17.6361 6.13636 16.9643 6.13636Z"
                                                             fill="white" />
@@ -4049,8 +4060,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="pf-pet-field sex-field"
-                                        style="position: relative; z-index: 2000000;">
+                                    <div class="pf-pet-field sex-field" style="position: relative; z-index: 2000000;">
                                         <label>Sex</label>
 
                                         <div class="sex-options" role="radiogroup" aria-label="Sex">
@@ -4061,7 +4071,8 @@
                                             </label>
 
                                             <label class="radio--small">
-                                                <input type="radio" name="sex" value="female" id="petSexFemale">
+                                                <input type="radio" name="sex" value="female"
+                                                    id="petSexFemale">
                                                 <span class="radio--visual" aria-hidden="true"></span>
                                                 <span class="radio--text">Female</span>
                                             </label>
@@ -4075,15 +4086,17 @@
                                 <div class="pf-form-row">
 
                                     <div class="pf-pet-field" style="position:relative;">
-                                        <label>Pet Type <span style="color: #9D9B98;
+                                        <label>Pet Type <span
+                                                style="color: #9D9B98;
 font-family: Lato;
 font-size: 16px;
 font-style: normal;
 font-weight: 600;
-line-height: normal;">(for ‘other’ pets)</span></label>
+line-height: normal;">(for
+                                                ‘other’ pets)</span></label>
                                         <div style="position:relative; display:block;width: 300px;">
-                                            <input type="text" id="pet_type" placeholder="e.g. Dog, Cat, Rabbit..."
-                                                autocomplete="off"
+                                            <input type="text" id="pet_type"
+                                                placeholder="e.g. Dog, Cat, Rabbit..." autocomplete="off"
                                                 style="padding-right:40px; width:100%; display:block; height:48px; padding:8px 20px; border-radius:10px; border:1px solid #D4D4D4; background:#FFF; font-family:Lato; font-size:16px;">
                                             <span id="petTypeCheck_profile"
                                                 style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;display:none;line-height:0;z-index:5;">
@@ -4114,15 +4127,16 @@ line-height: normal;">(for ‘other’ pets)</span></label>
 
                                         <div class="input-box">
 
-                                            <input type="number" value="4" style="width: 85px;height: 48px; color: #3B3731;
+                                            <input type="number" value="4"
+                                                style="width: 85px;height: 48px; color: #3B3731;
 font-family: Lato;
 font-size: 16px;
 font-style: normal;
 font-weight: 400;
 line-height: normal;">
                                             <!-- SVG -->
-                                            <svg class="number-icon" xmlns="http://www.w3.org/2000/svg" width="11"
-                                                height="28" viewBox="0 0 11 28" fill="none">
+                                            <svg class="number-icon" xmlns="http://www.w3.org/2000/svg"
+                                                width="11" height="28" viewBox="0 0 11 28" fill="none">
                                                 <path d="M10.374 21.5315L5.3952 26.5103L0.499963 21.6151"
                                                     stroke="#3B3731" stroke-linecap="round"
                                                     stroke-linejoin="round" />
@@ -4147,7 +4161,8 @@ line-height: normal;">
                                             </label>
 
                                             <label class="radio--small">
-                                                <input type="radio" name="status" value="no" id="petSexFemale">
+                                                <input type="radio" name="status" value="no"
+                                                    id="petSexFemale">
                                                 <span class="radio--visual" aria-hidden="true"></span>
                                                 <span class="radio--text">No</span>
                                             </label>
@@ -4181,7 +4196,8 @@ line-height: normal;">
                                         <div class="pf-photo-card">
                                             <div class="pf-paw-icon">
                                                 <i class="fas fa-paw"><svg xmlns="http://www.w3.org/2000/svg"
-                                                        width="80" height="64" viewBox="0 0 80 64" fill="none">
+                                                        width="80" height="64" viewBox="0 0 80 64"
+                                                        fill="none">
                                                         <path fill-rule="evenodd" clip-rule="evenodd"
                                                             d="M25.7143 0C22.8857 0 20.6686 1.75127 19.2971 3.85164C17.9086 5.96945 17.1429 8.73309 17.1429 11.6364C17.1429 14.5396 17.9086 17.3033 19.2971 19.4211C20.6686 21.5156 22.8857 23.2727 25.7143 23.2727C28.5429 23.2727 30.76 21.5215 32.1314 19.4211C33.52 17.3033 34.2857 14.5396 34.2857 11.6364C34.2857 8.73309 33.52 5.96945 32.1314 3.85164C30.76 1.75709 28.5429 0 25.7143 0ZM54.2857 0C51.4571 0 49.24 1.75127 47.8686 3.85164C46.48 5.96945 45.7143 8.73309 45.7143 11.6364C45.7143 14.5396 46.48 17.3033 47.8686 19.4211C49.24 21.5156 51.4571 23.2727 54.2857 23.2727C57.1143 23.2727 59.3314 21.5215 60.7029 19.4211C62.0914 17.3033 62.8571 14.5396 62.8571 11.6364C62.8571 8.73309 62.0914 5.96945 60.7029 3.85164C59.3314 1.75709 57.1143 0 54.2857 0ZM8.57143 26.1818C5.74286 26.1818 3.52571 27.9331 2.15429 30.0335C0.765714 32.1513 0 34.9149 0 37.8182C0 40.7215 0.765714 43.4851 2.15429 45.6029C3.52571 47.6975 5.74286 49.4545 8.57143 49.4545C11.4 49.4545 13.6171 47.7033 14.9886 45.6029C16.3771 43.4851 17.1429 40.7215 17.1429 37.8182C17.1429 34.9149 16.3771 32.1513 14.9886 30.0335C13.6171 27.9389 11.4 26.1818 8.57143 26.1818ZM40 26.1818C33.1429 26.1818 28.0629 29.9287 24.8171 34.5775C21.6114 39.1564 20 44.8407 20 49.4545C20 54.8305 23.1714 58.5716 27.0629 60.8116C30.8914 63.0225 35.6914 64 40 64C44.3086 64 49.1086 63.0284 52.9371 60.8116C56.8229 58.5658 60 54.8305 60 49.4545C60 44.8407 58.3886 39.1564 55.1829 34.5775C51.9429 29.9229 46.8629 26.1818 40 26.1818ZM71.4286 26.1818C68.6 26.1818 66.3829 27.9331 65.0114 30.0335C63.6229 32.1513 62.8571 34.9149 62.8571 37.8182C62.8571 40.7215 63.6229 43.4851 65.0114 45.6029C66.3829 47.6975 68.6 49.4545 71.4286 49.4545C74.2571 49.4545 76.4743 47.7033 77.8457 45.6029C79.2343 43.4851 80 40.7215 80 37.8182C80 34.9149 79.2343 32.1513 77.8457 30.0335C76.4743 27.9389 74.2571 26.1818 71.4286 26.1818Z"
                                                             fill="#E5E5E5" />
@@ -4190,7 +4206,8 @@ line-height: normal;">
                                             <label class="pf-upload-btn">
                                                 <input type="pf-file" hidden>
                                                 <span class="pf-upload-icon"><svg xmlns="http://www.w3.org/2000/svg"
-                                                        width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                                        width="14" height="14" viewBox="0 0 14 14"
+                                                        fill="none">
                                                         <path
                                                             d="M7 10.3163C6.72386 10.3163 6.5 10.0924 6.5 9.81626V1.66626L4.52903 3.63722C4.33115 3.8351 4.00998 3.83398 3.81349 3.63471C3.61896 3.43744 3.62005 3.12016 3.81593 2.92422L6.55492 0.184464C6.80072 -0.0614062 7.19931 -0.0614344 7.44514 0.184402L10.185 2.92425C10.3809 3.1202 10.3822 3.43753 10.1877 3.63499C9.99116 3.83461 9.66959 3.83585 9.47149 3.63775L7.5 1.66626V9.81626C7.5 10.0924 7.27614 10.3163 7 10.3163ZM1.616 13.7393C1.15533 13.7393 0.771 13.5853 0.463 13.2773C0.155 12.9693 0.000666667 12.5846 0 12.1233V10.2003C0 9.92412 0.223858 9.70026 0.5 9.70026C0.776142 9.70026 1 9.92412 1 10.2003V12.1233C1 12.2773 1.064 12.4186 1.192 12.5473C1.32 12.6759 1.461 12.7399 1.615 12.7393H12.385C12.5383 12.7393 12.6793 12.6753 12.808 12.5473C12.9367 12.4193 13.0007 12.2779 13 12.1233V10.2003C13 9.92412 13.2239 9.70026 13.5 9.70026C13.7761 9.70026 14 9.92412 14 10.2003V12.1233C14 12.5839 13.846 12.9683 13.538 13.2763C13.23 13.5843 12.8453 13.7386 12.384 13.7393H1.616Z"
                                                             fill="#3B3731" />
@@ -4201,7 +4218,8 @@ line-height: normal;">
                                         <div class="pf-photo-card">
                                             <div class="pf-paw-icon">
                                                 <i class="fas fa-paw"> <svg xmlns="http://www.w3.org/2000/svg"
-                                                        width="80" height="64" viewBox="0 0 80 64" fill="none">
+                                                        width="80" height="64" viewBox="0 0 80 64"
+                                                        fill="none">
                                                         <path fill-rule="evenodd" clip-rule="evenodd"
                                                             d="M25.7143 0C22.8857 0 20.6686 1.75127 19.2971 3.85164C17.9086 5.96945 17.1429 8.73309 17.1429 11.6364C17.1429 14.5396 17.9086 17.3033 19.2971 19.4211C20.6686 21.5156 22.8857 23.2727 25.7143 23.2727C28.5429 23.2727 30.76 21.5215 32.1314 19.4211C33.52 17.3033 34.2857 14.5396 34.2857 11.6364C34.2857 8.73309 33.52 5.96945 32.1314 3.85164C30.76 1.75709 28.5429 0 25.7143 0ZM54.2857 0C51.4571 0 49.24 1.75127 47.8686 3.85164C46.48 5.96945 45.7143 8.73309 45.7143 11.6364C45.7143 14.5396 46.48 17.3033 47.8686 19.4211C49.24 21.5156 51.4571 23.2727 54.2857 23.2727C57.1143 23.2727 59.3314 21.5215 60.7029 19.4211C62.0914 17.3033 62.8571 14.5396 62.8571 11.6364C62.8571 8.73309 62.0914 5.96945 60.7029 3.85164C59.3314 1.75709 57.1143 0 54.2857 0ZM8.57143 26.1818C5.74286 26.1818 3.52571 27.9331 2.15429 30.0335C0.765714 32.1513 0 34.9149 0 37.8182C0 40.7215 0.765714 43.4851 2.15429 45.6029C3.52571 47.6975 5.74286 49.4545 8.57143 49.4545C11.4 49.4545 13.6171 47.7033 14.9886 45.6029C16.3771 43.4851 17.1429 40.7215 17.1429 37.8182C17.1429 34.9149 16.3771 32.1513 14.9886 30.0335C13.6171 27.9389 11.4 26.1818 8.57143 26.1818ZM40 26.1818C33.1429 26.1818 28.0629 29.9287 24.8171 34.5775C21.6114 39.1564 20 44.8407 20 49.4545C20 54.8305 23.1714 58.5716 27.0629 60.8116C30.8914 63.0225 35.6914 64 40 64C44.3086 64 49.1086 63.0284 52.9371 60.8116C56.8229 58.5658 60 54.8305 60 49.4545C60 44.8407 58.3886 39.1564 55.1829 34.5775C51.9429 29.9229 46.8629 26.1818 40 26.1818ZM71.4286 26.1818C68.6 26.1818 66.3829 27.9331 65.0114 30.0335C63.6229 32.1513 62.8571 34.9149 62.8571 37.8182C62.8571 40.7215 63.6229 43.4851 65.0114 45.6029C66.3829 47.6975 68.6 49.4545 71.4286 49.4545C74.2571 49.4545 76.4743 47.7033 77.8457 45.6029C79.2343 43.4851 80 40.7215 80 37.8182C80 34.9149 79.2343 32.1513 77.8457 30.0335C76.4743 27.9389 74.2571 26.1818 71.4286 26.1818Z"
                                                             fill="#E5E5E5" />
@@ -4210,7 +4228,8 @@ line-height: normal;">
                                             <label class="pf-upload-btn">
                                                 <input type="pf-file" hidden>
                                                 <span class="pf-upload-icon"><svg xmlns="http://www.w3.org/2000/svg"
-                                                        width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                                        width="14" height="14" viewBox="0 0 14 14"
+                                                        fill="none">
                                                         <path
                                                             d="M7 10.3163C6.72386 10.3163 6.5 10.0924 6.5 9.81626V1.66626L4.52903 3.63722C4.33115 3.8351 4.00998 3.83398 3.81349 3.63471C3.61896 3.43744 3.62005 3.12016 3.81593 2.92422L6.55492 0.184464C6.80072 -0.0614062 7.19931 -0.0614344 7.44514 0.184402L10.185 2.92425C10.3809 3.1202 10.3822 3.43753 10.1877 3.63499C9.99116 3.83461 9.66959 3.83585 9.47149 3.63775L7.5 1.66626V9.81626C7.5 10.0924 7.27614 10.3163 7 10.3163ZM1.616 13.7393C1.15533 13.7393 0.771 13.5853 0.463 13.2773C0.155 12.9693 0.000666667 12.5846 0 12.1233V10.2003C0 9.92412 0.223858 9.70026 0.5 9.70026C0.776142 9.70026 1 9.92412 1 10.2003V12.1233C1 12.2773 1.064 12.4186 1.192 12.5473C1.32 12.6759 1.461 12.7399 1.615 12.7393H12.385C12.5383 12.7393 12.6793 12.6753 12.808 12.5473C12.9367 12.4193 13.0007 12.2779 13 12.1233V10.2003C13 9.92412 13.2239 9.70026 13.5 9.70026C13.7761 9.70026 14 9.92412 14 10.2003V12.1233C14 12.5839 13.846 12.9683 13.538 13.2763C13.23 13.5843 12.8453 13.7386 12.384 13.7393H1.616Z"
                                                             fill="#3B3731" />
@@ -4221,7 +4240,8 @@ line-height: normal;">
                                         <div class="pf-photo-card">
                                             <div class="pf-paw-icon">
                                                 <i class="fas fa-paw"><svg xmlns="http://www.w3.org/2000/svg"
-                                                        width="80" height="64" viewBox="0 0 80 64" fill="none">
+                                                        width="80" height="64" viewBox="0 0 80 64"
+                                                        fill="none">
                                                         <path fill-rule="evenodd" clip-rule="evenodd"
                                                             d="M25.7143 0C22.8857 0 20.6686 1.75127 19.2971 3.85164C17.9086 5.96945 17.1429 8.73309 17.1429 11.6364C17.1429 14.5396 17.9086 17.3033 19.2971 19.4211C20.6686 21.5156 22.8857 23.2727 25.7143 23.2727C28.5429 23.2727 30.76 21.5215 32.1314 19.4211C33.52 17.3033 34.2857 14.5396 34.2857 11.6364C34.2857 8.73309 33.52 5.96945 32.1314 3.85164C30.76 1.75709 28.5429 0 25.7143 0ZM54.2857 0C51.4571 0 49.24 1.75127 47.8686 3.85164C46.48 5.96945 45.7143 8.73309 45.7143 11.6364C45.7143 14.5396 46.48 17.3033 47.8686 19.4211C49.24 21.5156 51.4571 23.2727 54.2857 23.2727C57.1143 23.2727 59.3314 21.5215 60.7029 19.4211C62.0914 17.3033 62.8571 14.5396 62.8571 11.6364C62.8571 8.73309 62.0914 5.96945 60.7029 3.85164C59.3314 1.75709 57.1143 0 54.2857 0ZM8.57143 26.1818C5.74286 26.1818 3.52571 27.9331 2.15429 30.0335C0.765714 32.1513 0 34.9149 0 37.8182C0 40.7215 0.765714 43.4851 2.15429 45.6029C3.52571 47.6975 5.74286 49.4545 8.57143 49.4545C11.4 49.4545 13.6171 47.7033 14.9886 45.6029C16.3771 43.4851 17.1429 40.7215 17.1429 37.8182C17.1429 34.9149 16.3771 32.1513 14.9886 30.0335C13.6171 27.9389 11.4 26.1818 8.57143 26.1818ZM40 26.1818C33.1429 26.1818 28.0629 29.9287 24.8171 34.5775C21.6114 39.1564 20 44.8407 20 49.4545C20 54.8305 23.1714 58.5716 27.0629 60.8116C30.8914 63.0225 35.6914 64 40 64C44.3086 64 49.1086 63.0284 52.9371 60.8116C56.8229 58.5658 60 54.8305 60 49.4545C60 44.8407 58.3886 39.1564 55.1829 34.5775C51.9429 29.9229 46.8629 26.1818 40 26.1818ZM71.4286 26.1818C68.6 26.1818 66.3829 27.9331 65.0114 30.0335C63.6229 32.1513 62.8571 34.9149 62.8571 37.8182C62.8571 40.7215 63.6229 43.4851 65.0114 45.6029C66.3829 47.6975 68.6 49.4545 71.4286 49.4545C74.2571 49.4545 76.4743 47.7033 77.8457 45.6029C79.2343 43.4851 80 40.7215 80 37.8182C80 34.9149 79.2343 32.1513 77.8457 30.0335C76.4743 27.9389 74.2571 26.1818 71.4286 26.1818Z"
                                                             fill="#E5E5E5" />
@@ -4230,7 +4250,8 @@ line-height: normal;">
                                             <label class="pf-upload-btn">
                                                 <input type="pf-file" hidden>
                                                 <span class="pf-upload-icon"><svg xmlns="http://www.w3.org/2000/svg"
-                                                        width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                                        width="14" height="14" viewBox="0 0 14 14"
+                                                        fill="none">
                                                         <path
                                                             d="M7 10.3163C6.72386 10.3163 6.5 10.0924 6.5 9.81626V1.66626L4.52903 3.63722C4.33115 3.8351 4.00998 3.83398 3.81349 3.63471C3.61896 3.43744 3.62005 3.12016 3.81593 2.92422L6.55492 0.184464C6.80072 -0.0614062 7.19931 -0.0614344 7.44514 0.184402L10.185 2.92425C10.3809 3.1202 10.3822 3.43753 10.1877 3.63499C9.99116 3.83461 9.66959 3.83585 9.47149 3.63775L7.5 1.66626V9.81626C7.5 10.0924 7.27614 10.3163 7 10.3163ZM1.616 13.7393C1.15533 13.7393 0.771 13.5853 0.463 13.2773C0.155 12.9693 0.000666667 12.5846 0 12.1233V10.2003C0 9.92412 0.223858 9.70026 0.5 9.70026C0.776142 9.70026 1 9.92412 1 10.2003V12.1233C1 12.2773 1.064 12.4186 1.192 12.5473C1.32 12.6759 1.461 12.7399 1.615 12.7393H12.385C12.5383 12.7393 12.6793 12.6753 12.808 12.5473C12.9367 12.4193 13.0007 12.2779 13 12.1233V10.2003C13 9.92412 13.2239 9.70026 13.5 9.70026C13.7761 9.70026 14 9.92412 14 10.2003V12.1233C14 12.5839 13.846 12.9683 13.538 13.2763C13.23 13.5843 12.8453 13.7386 12.384 13.7393H1.616Z"
                                                             fill="#3B3731" />
@@ -4246,7 +4267,8 @@ line-height: normal;">
                                     </div>
 
                                     <div class="pf-action-footer">
-                                        <button type="button" id="cancel-add-pet" class="btn-cancel">Cancel</button>
+                                        <button type="button" id="cancel-add-pet"
+                                            class="btn-cancel">Cancel</button>
                                         <button type="submit" class="btn-save">Save</button>
                                     </div>
                                 </div>
@@ -4296,21 +4318,21 @@ line-height: normal;">
                                 <div class="filter-section">
                                     <button class="filter">Groomer Venue <svg xmlns="http://www.w3.org/2000/svg"
                                             width="13" height="7" viewBox="0 0 13 7" fill="none">
-                                            <path d="M11.9102 0.5L6.15672 6.25344L0.499867 0.596581"
-                                                stroke="#FBAC83" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path d="M11.9102 0.5L6.15672 6.25344L0.499867 0.596581" stroke="#FBAC83"
+                                                stroke-linecap="round" stroke-linejoin="round" />
                                         </svg></button>
-                                    <button class="filter">Sort <svg xmlns="http://www.w3.org/2000/svg" width="13"
-                                            height="7" viewBox="0 0 13 7" fill="none">
-                                            <path d="M11.9102 0.5L6.15672 6.25344L0.499867 0.596581"
-                                                stroke="#FBAC83" stroke-linecap="round" stroke-linejoin="round" />
+                                    <button class="filter">Sort <svg xmlns="http://www.w3.org/2000/svg"
+                                            width="13" height="7" viewBox="0 0 13 7" fill="none">
+                                            <path d="M11.9102 0.5L6.15672 6.25344L0.499867 0.596581" stroke="#FBAC83"
+                                                stroke-linecap="round" stroke-linejoin="round" />
                                         </svg></button>
                                 </div>
                             </div>
 
 
 
-                            <span class="tag mt-4">Full Groom <svg xmlns="http://www.w3.org/2000/svg" width="9"
-                                    height="9" viewBox="0 0 9 9" fill="none">
+                            <span class="tag mt-4">Full Groom <svg xmlns="http://www.w3.org/2000/svg"
+                                    width="9" height="9" viewBox="0 0 9 9" fill="none">
                                     <path d="M0.5 7.57L7.572 0.5M0.5 0.5L7.572 7.57" stroke="white"
                                         stroke-linecap="round" />
                                 </svg></span>
@@ -4323,8 +4345,8 @@ line-height: normal;">
                                     <div class="card-body">
                                         <div class="card-img">
                                             <div class="top-left-svg left-svg">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="21" height="22"
-                                                    viewBox="0 0 21 22" fill="none">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="21"
+                                                    height="22" viewBox="0 0 21 22" fill="none">
                                                     <path
                                                         d="M10.9482 0.125295C10.7667 0.043205 10.5723 0 10.3692 0C10.1662 0 9.97174 0.043205 9.79028 0.125295L1.65477 3.57738C0.704262 3.97918 -0.00430085 4.91673 1.96518e-05 6.0487C0.0216222 10.3346 1.78439 18.1764 9.22861 21.7408C9.95014 22.0864 10.7883 22.0864 11.5098 21.7408C18.9541 18.1764 20.7168 10.3346 20.7384 6.0487C20.7428 4.91673 20.0342 3.97918 19.0837 3.57738L10.9482 0.125295ZM6.26043 12.3653C6.46781 12.4171 6.68816 12.443 6.91282 12.443C8.43796 12.443 9.67795 11.2031 9.67795 9.67793V6.9128H11.5876C12.1104 6.9128 12.59 7.2066 12.8233 7.67753L13.1343 8.29537H15.8995C16.2797 8.29537 16.5907 8.60644 16.5907 8.98665V10.3692C16.5907 12.2789 15.044 13.8256 13.1343 13.8256H11.0605V16.0161C11.0605 16.3315 10.8056 16.5907 10.4859 16.5907C10.4081 16.5907 10.3303 16.5734 10.2612 16.5432L5.99688 14.7156C5.71172 14.5947 5.53026 14.3138 5.53026 14.0071C5.53026 13.8861 5.55619 13.7694 5.61235 13.6614L6.26043 12.3653ZM6.22154 6.9128H8.29538V9.67793C8.29538 10.4427 7.67755 11.0605 6.91282 11.0605C6.1481 11.0605 5.53026 10.4427 5.53026 9.67793V7.60408C5.53026 7.22388 5.84134 6.9128 6.22154 6.9128ZM11.7518 8.98665C11.7518 8.80331 11.679 8.62748 11.5493 8.49784C11.4197 8.3682 11.2438 8.29537 11.0605 8.29537C10.8772 8.29537 10.7013 8.3682 10.5717 8.49784C10.4421 8.62748 10.3692 8.80331 10.3692 8.98665C10.3692 9.16998 10.4421 9.34581 10.5717 9.47545C10.7013 9.60509 10.8772 9.67793 11.0605 9.67793C11.2438 9.67793 11.4197 9.60509 11.5493 9.47545C11.679 9.34581 11.7518 9.16998 11.7518 8.98665Z"
                                                         fill="#C9DDA0"></path>
@@ -4336,7 +4358,8 @@ line-height: normal;">
                                                     <pattern id="pattern-card-1" patternUnits="userSpaceOnUse"
                                                         width="255" height="130">
 
-                                                        <image href="{{ asset('images/profile_modal_image.jpg') }}" alt="Image" width="255" height="130"
+                                                        <image href="{{ asset('images/profile_modal_image.jpg') }}"
+                                                            alt="Image" width="255" height="130"
                                                             preserveAspectRatio="xMinYMax slice"></image>
                                                     </pattern>
                                                 </defs>
@@ -4346,7 +4369,8 @@ line-height: normal;">
                                                     fill="url(#pattern-card-1)"></path>
                                             </svg>
                                             <span class="delete cursor"><svg xmlns="http://www.w3.org/2000/svg"
-                                                    width="13" height="15" viewBox="0 0 13 15" fill="none">
+                                                    width="13" height="15" viewBox="0 0 13 15"
+                                                    fill="none">
                                                     <path
                                                         d="M2.42915 15C2.01624 15 1.66308 14.8494 1.36965 14.5482C1.07622 14.247 0.929196 13.8859 0.928577 13.4648V1.68358H0.464292C0.332435 1.68358 0.222244 1.63792 0.133721 1.54661C0.0451968 1.45529 0.000625407 1.34211 6.36006e-06 1.20704C-0.000612687 1.07197 0.0439588 0.9591 0.133721 0.868421C0.223482 0.777743 0.333673 0.732403 0.464292 0.732403H3.71429C3.71429 0.535827 3.78548 0.364616 3.92786 0.21877C4.07024 0.0729233 4.23738 0 4.42929 0H8.57071C8.76262 0 8.92976 0.0729233 9.07214 0.21877C9.21452 0.364616 9.28571 0.535827 9.28571 0.732403H12.5357C12.6676 0.732403 12.7778 0.77806 12.8663 0.869372C12.9548 0.960685 12.9994 1.07387 13 1.20894C13.0006 1.34401 12.956 1.45688 12.8663 1.54756C12.7765 1.63824 12.6663 1.68358 12.5357 1.68358H12.0714V13.4639C12.0714 13.8862 11.9244 14.2476 11.6304 14.5482C11.3363 14.8488 10.9834 14.9994 10.5718 15H2.42915ZM11.1429 1.68358H1.85715V13.4639C1.85715 13.6344 1.91069 13.7746 2.01779 13.8843C2.12489 13.994 2.262 14.0488 2.42915 14.0488H10.5718C10.7383 14.0488 10.8751 13.994 10.9822 13.8843C11.0893 13.7746 11.1429 13.6344 11.1429 13.4639V1.68358ZM4.92886 12.1465C5.06072 12.1465 5.17122 12.1008 5.26036 12.0095C5.3495 11.9182 5.39376 11.8053 5.39314 11.6709V4.06151C5.39314 3.92644 5.34857 3.81357 5.25943 3.72289C5.17029 3.63221 5.05979 3.58656 4.92793 3.58592C4.79607 3.58529 4.68588 3.63094 4.59736 3.72289C4.50884 3.81484 4.46457 3.92771 4.46457 4.06151V11.6709C4.46457 11.806 4.50914 11.9188 4.59829 12.0095C4.68743 12.1008 4.79762 12.1465 4.92886 12.1465ZM8.07207 12.1465C8.20393 12.1465 8.31412 12.1008 8.40264 12.0095C8.49117 11.9182 8.53543 11.8053 8.53543 11.6709V4.06151C8.53543 3.92644 8.49086 3.81357 8.40171 3.72289C8.31257 3.63158 8.20238 3.58592 8.07114 3.58592C7.93928 3.58592 7.82878 3.63158 7.73964 3.72289C7.6505 3.8142 7.60624 3.92708 7.60686 4.06151V11.6709C7.60686 11.806 7.65143 11.9188 7.74057 12.0095C7.82971 12.1002 7.94021 12.1458 8.07207 12.1465Z"
                                                         fill="#3B3731"></path>
@@ -4356,18 +4380,21 @@ line-height: normal;">
                                         <div class="group-icon mt-3">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="82" height="24"
                                                 viewBox="0 0 82 24" fill="none">
-                                                <rect width="24" height="24" rx="12" fill="#CBDCE8" />
+                                                <rect width="24" height="24" rx="12"
+                                                    fill="#CBDCE8" />
                                                 <path
                                                     d="M9 17C8.85833 17 8.73967 16.952 8.644 16.856C8.54833 16.76 8.50033 16.6413 8.5 16.5C8.49967 16.3587 8.54767 16.24 8.644 16.144C8.74033 16.048 8.859 16 9 16H15C15.1417 16 15.2605 16.048 15.3565 16.144C15.4525 16.24 15.5003 16.3587 15.5 16.5C15.4997 16.6413 15.4517 16.7602 15.356 16.8565C15.2603 16.9528 15.1417 17.0007 15 17H9ZM9.35 15.25C9.10833 15.25 8.89383 15.1708 8.7065 15.0125C8.51917 14.8542 8.4045 14.6542 8.3625 14.4125L7.8625 11.2375C7.84583 11.2375 7.82717 11.2397 7.8065 11.244C7.78583 11.2483 7.767 11.2503 7.75 11.25C7.54167 11.25 7.36467 11.1772 7.219 11.0315C7.07333 10.8858 7.00033 10.7087 7 10.5C6.99967 10.2913 7.07267 10.1143 7.219 9.969C7.36533 9.82367 7.54233 9.75067 7.75 9.75C7.95767 9.74933 8.13483 9.82233 8.2815 9.969C8.42817 10.1157 8.501 10.2927 8.5 10.5C8.5 10.5583 8.49367 10.6125 8.481 10.6625C8.46833 10.7125 8.45383 10.7583 8.4375 10.8L10 11.5L11.5625 9.3625C11.4708 9.29583 11.3958 9.20833 11.3375 9.1C11.2792 8.99167 11.25 8.875 11.25 8.75C11.25 8.54167 11.323 8.3645 11.469 8.2185C11.615 8.0725 11.792 7.99967 12 8C12.208 8.00033 12.3852 8.07333 12.5315 8.219C12.6778 8.36467 12.7507 8.54167 12.75 8.75C12.75 8.875 12.7208 8.99167 12.6625 9.1C12.6042 9.20833 12.5292 9.29583 12.4375 9.3625L14 11.5L15.5625 10.8C15.5458 10.7583 15.5312 10.7125 15.5185 10.6625C15.5058 10.6125 15.4997 10.5583 15.5 10.5C15.5 10.2917 15.573 10.1145 15.719 9.9685C15.865 9.8225 16.042 9.74967 16.25 9.75C16.458 9.75033 16.6352 9.82333 16.7815 9.969C16.9278 10.1147 17.0007 10.2917 17 10.5C16.9993 10.7083 16.9265 10.8855 16.7815 11.0315C16.6365 11.1775 16.4593 11.2503 16.25 11.25C16.2333 11.25 16.2147 11.248 16.194 11.244C16.1733 11.24 16.1545 11.2378 16.1375 11.2375L15.6375 14.4125C15.5958 14.6542 15.4813 14.8542 15.294 15.0125C15.1067 15.1708 14.892 15.25 14.65 15.25H9.35ZM9.35 14.25H14.65L14.975 12.1625L14.4 12.4125C14.1833 12.5042 13.9625 12.5208 13.7375 12.4625C13.5125 12.4042 13.3292 12.2792 13.1875 12.0875L12 10.45L10.8125 12.0875C10.6708 12.2792 10.4875 12.4042 10.2625 12.4625C10.0375 12.5208 9.81667 12.5042 9.6 12.4125L9.025 12.1625L9.35 14.25Z"
                                                     fill="white" />
-                                                <rect x="29" width="24" height="24" rx="12" fill="#FFA899" />
+                                                <rect x="29" width="24" height="24" rx="12"
+                                                    fill="#FFA899" />
                                                 <path fill-rule="evenodd" clip-rule="evenodd"
                                                     d="M43.4127 14.893C43.4417 14.3436 43.3153 13.7971 43.0481 13.3161C42.7809 12.8351 42.3837 12.4391 41.9019 12.1733C41.8164 12.1238 41.715 12.1095 41.619 12.1333C41.5231 12.1572 41.4402 12.2173 41.3877 12.3011L40.775 13.2818L40.2653 12.6653C40.2373 12.6315 40.2026 12.6038 40.1634 12.5841C40.1242 12.5644 40.0813 12.553 40.0375 12.5507C39.9936 12.5484 39.9498 12.5551 39.9087 12.5706C39.8676 12.586 39.8302 12.6098 39.7988 12.6405C39.4987 12.9308 39.2643 13.2821 39.1114 13.6707C38.9584 14.0592 38.8905 14.476 38.9121 14.893C38.9121 15.4897 39.1492 16.062 39.5711 16.484C39.9931 16.9059 40.5654 17.143 41.1621 17.143C41.7588 17.143 42.3311 16.9059 42.7531 16.484C43.175 16.062 43.4121 15.4897 43.4121 14.893M40.0098 13.3549L39.9704 13.407C39.6715 13.8245 39.5217 14.3305 39.5452 14.8434L39.5471 14.8809C39.5471 15.3091 39.7172 15.7197 40.0199 16.0225C40.3227 16.3252 40.7333 16.4953 41.1615 16.4953C41.5896 16.4953 42.0003 16.3252 42.303 16.0225C42.6058 15.7197 42.7759 15.3091 42.7759 14.8809L42.7778 14.8441C42.7822 14.8028 42.8814 13.6663 41.8416 12.8934L41.7901 12.8559L41.1265 13.9174C41.0945 13.9686 41.0507 14.0114 40.9989 14.0424C40.9471 14.0734 40.8886 14.0916 40.8283 14.0956C40.7681 14.0995 40.7077 14.0892 40.6523 14.0652C40.5968 14.0413 40.5478 14.0046 40.5094 13.9581L40.0098 13.3549Z"
                                                     fill="#FEFEFE" />
                                                 <path fill-rule="evenodd" clip-rule="evenodd"
                                                     d="M40.797 7.30821C40.8102 7.23997 40.8419 7.17666 40.8886 7.12514C40.9352 7.07362 40.9951 7.03586 41.0617 7.01595C41.1283 6.99604 41.1991 6.99475 41.2664 7.0122C41.3337 7.02966 41.3949 7.06521 41.4434 7.11499C41.5667 7.24084 41.8038 7.48999 42.0447 7.77727C42.2811 8.05884 42.5392 8.39761 42.6879 8.69951C42.8328 8.99443 42.9866 9.37578 43.108 9.69421L43.673 8.75354C43.7046 8.701 43.7483 8.65683 43.8005 8.62476C43.8527 8.59269 43.9118 8.57367 43.9729 8.56931C44.034 8.56494 44.0953 8.57536 44.1515 8.59969C44.2077 8.62401 44.2573 8.66152 44.2959 8.70905C45.0987 9.70057 45.4985 10.7626 45.6974 11.5736C45.7972 11.9798 45.8474 12.3249 45.8728 12.5703C45.8858 12.6928 45.8942 12.8157 45.8982 12.9389V12.9713C45.8982 15.4482 43.9336 17.4649 41.4479 17.4649C38.9621 17.4649 37 15.4476 37 12.97C37 12.288 37.3222 10.6819 38.2756 9.36498C38.3127 9.31422 38.3617 9.27341 38.4183 9.24615C38.4749 9.2189 38.5373 9.20605 38.6001 9.20876C38.6629 9.21146 38.724 9.22963 38.7781 9.26166C38.8321 9.29368 38.8774 9.33856 38.9099 9.39231L39.5551 10.4671C39.7508 10.1607 40.0127 9.73044 40.2116 9.3332C40.4976 8.76117 40.7246 7.68257 40.797 7.30885M41.3201 7.91265C41.2051 8.42113 41.015 9.14697 40.7798 9.61858C40.4671 10.2434 40.0165 10.9298 39.8614 11.1605C39.8255 11.2134 39.7769 11.2565 39.7201 11.2857C39.6632 11.315 39.5999 11.3294 39.5359 11.3278C39.472 11.3261 39.4095 11.3084 39.3542 11.2763C39.2989 11.2442 39.2526 11.1987 39.2195 11.144L38.5712 10.0648C37.8746 11.1917 37.6356 12.4584 37.6356 12.9713C37.6356 15.1056 39.3224 16.8281 41.4479 16.8281C43.5733 16.8281 45.2627 15.1056 45.2627 12.9713V12.9535L45.2601 12.89C45.2557 12.8048 45.2491 12.7199 45.2404 12.6351C45.2071 12.3287 45.1536 12.0249 45.0802 11.7256C44.8783 10.8916 44.5203 10.1033 44.0252 9.40248L43.3807 10.4753C43.3434 10.5373 43.2892 10.5874 43.2246 10.6199C43.1599 10.6523 43.0874 10.6657 43.0154 10.6585C42.9434 10.6513 42.875 10.6238 42.818 10.5792C42.761 10.5347 42.7179 10.4748 42.6936 10.4067C42.5906 10.1181 42.3383 9.42917 42.1171 8.98044C42.0046 8.751 41.7892 8.46117 41.5578 8.18596C41.4801 8.09353 41.4009 8.00242 41.3201 7.91265Z"
                                                     fill="#FEFEFE" />
-                                                <rect x="58" width="24" height="24" rx="12" fill="#D8E8B7" />
+                                                <rect x="58" width="24" height="24" rx="12"
+                                                    fill="#D8E8B7" />
                                                 <path
                                                     d="M70 14.619C69.7348 14.619 69.4804 14.5187 69.2929 14.3401C69.1054 14.1615 69 13.9193 69 13.6667C69 13.1381 69.445 12.7143 70 12.7143C70.2652 12.7143 70.5196 12.8146 70.7071 12.9932C70.8946 13.1718 71 13.4141 71 13.6667C71 13.9193 70.8946 14.1615 70.7071 14.3401C70.5196 14.5187 70.2652 14.619 70 14.619ZM73 16.0476V11.2857H67V16.0476H73ZM73 10.3333C73.2652 10.3333 73.5196 10.4337 73.7071 10.6123C73.8946 10.7909 74 11.0331 74 11.2857V16.0476C74 16.3002 73.8946 16.5424 73.7071 16.7211C73.5196 16.8997 73.2652 17 73 17H67C66.7348 17 66.4804 16.8997 66.2929 16.7211C66.1054 16.5424 66 16.3002 66 16.0476V11.2857C66 10.7571 66.445 10.3333 67 10.3333H67.5V9.38095C67.5 8.74948 67.7634 8.14388 68.2322 7.69736C68.7011 7.25085 69.337 7 70 7C70.3283 7 70.6534 7.06159 70.9567 7.18124C71.26 7.30089 71.5356 7.47627 71.7678 7.69736C71.9999 7.91846 72.1841 8.18093 72.3097 8.4698C72.4353 8.75867 72.5 9.06828 72.5 9.38095V10.3333H73ZM70 7.95238C69.6022 7.95238 69.2206 8.10289 68.9393 8.3708C68.658 8.63871 68.5 9.00207 68.5 9.38095V10.3333H71.5V9.38095C71.5 9.00207 71.342 8.63871 71.0607 8.3708C70.7794 8.10289 70.3978 7.95238 70 7.95238Z"
                                                     fill="white" />
@@ -4385,8 +4412,8 @@ line-height: normal;">
 
                                         <div class="meta mt-4">
                                             <div class="meta-location">
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10" height="14"
-                                                        viewBox="0 0 10 14" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10"
+                                                        height="14" viewBox="0 0 10 14" fill="none">
                                                         <path
                                                             d="M5 6.65C4.5264 6.65 4.0722 6.46563 3.73731 6.13744C3.40242 5.80925 3.21429 5.36413 3.21429 4.9C3.21429 4.43587 3.40242 3.99075 3.73731 3.66256C4.0722 3.33437 4.5264 3.15 5 3.15C5.4736 3.15 5.9278 3.33437 6.26269 3.66256C6.59758 3.99075 6.78571 4.43587 6.78571 4.9C6.78571 5.12981 6.73953 5.35738 6.64979 5.5697C6.56004 5.78202 6.42851 5.97493 6.26269 6.13744C6.09687 6.29994 5.90002 6.42884 5.68336 6.51679C5.46671 6.60473 5.2345 6.65 5 6.65ZM5 0C3.67392 0 2.40215 0.516248 1.46447 1.43518C0.526784 2.3541 0 3.60044 0 4.9C0 8.575 5 14 5 14C5 14 10 8.575 10 4.9C10 3.60044 9.47322 2.3541 8.53553 1.43518C7.59785 0.516248 6.32608 0 5 0Z"
                                                             fill="#FFC97A" />
@@ -4395,8 +4422,8 @@ line-height: normal;">
 
                                             <div class="meta-rating">
 
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                                                        viewBox="0 0 14 14" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="14"
+                                                        height="14" viewBox="0 0 14 14" fill="none">
                                                         <path
                                                             d="M6.12956 0.660476C6.40354 -0.220161 7.59647 -0.220158 7.87045 0.660479L8.89548 3.95519C9.01801 4.34902 9.36942 4.61566 9.76593 4.61566H13.083C13.9696 4.61566 14.3383 5.80055 13.621 6.34481L10.9374 8.38106C10.6166 8.62446 10.4824 9.0559 10.6049 9.44973L11.63 12.7444C11.9039 13.6251 10.9388 14.3574 10.2215 13.8131L7.53797 11.7769C7.21719 11.5335 6.78282 11.5335 6.46204 11.7769L3.77846 13.8131C3.06117 14.3574 2.09607 13.6251 2.37005 12.7444L3.39508 9.44973C3.51761 9.0559 3.38338 8.62446 3.0626 8.38106L0.37903 6.34481C-0.338258 5.80055 0.0303816 4.61566 0.916998 4.61566H4.23408C4.63058 4.61566 4.98199 4.34902 5.10452 3.95519L6.12956 0.660476Z"
                                                             fill="#FFC97A" />
@@ -4414,9 +4441,11 @@ line-height: normal;">
 
                                         <div class="bottom mt-4">
                                             <p>From <b>£38</b></p>
-                                            <button class="arrow"><svg xmlns="http://www.w3.org/2000/svg" width="36"
-                                                    height="36" viewBox="0 0 36 36" fill="none">
-                                                    <rect width="36" height="36" rx="18" fill="#D8E8B7" />
+                                            <button class="arrow"><svg xmlns="http://www.w3.org/2000/svg"
+                                                    width="36" height="36" viewBox="0 0 36 36"
+                                                    fill="none">
+                                                    <rect width="36" height="36" rx="18"
+                                                        fill="#D8E8B7" />
                                                     <path
                                                         d="M24.3526 17.2013C24.7483 17.5931 24.7477 18.2326 24.3514 18.6236L21.1135 21.8188C20.847 22.0818 20.4175 22.0784 20.1552 21.8111C20.0514 21.7086 20.0098 21.6061 20.0306 21.5036C20.0566 21.401 20.1137 21.3037 20.202 21.2114L22.438 19.0202C22.5627 18.8972 22.6796 18.787 22.7886 18.6896C22.875 18.6125 22.8085 18.4583 22.6933 18.47C22.5599 18.4835 22.4229 18.4952 22.2822 18.5051C21.9965 18.5256 21.7005 18.5359 21.394 18.5359H11.8766C11.5305 18.5359 11.25 18.2553 11.25 17.9093C11.25 17.5632 11.5305 17.2827 11.8766 17.2827H21.394C21.7005 17.2827 21.9991 17.2929 22.29 17.3134C22.4286 17.3232 22.5637 17.3347 22.6952 17.348C22.812 17.3597 22.878 17.2051 22.7886 17.1289C22.6796 17.0315 22.5627 16.9213 22.438 16.7983L20.1864 14.5917C20.0929 14.4995 20.0358 14.4021 20.015 14.2996C19.9942 14.1971 20.0332 14.0946 20.1319 13.9921C20.3983 13.7206 20.8346 13.7176 21.1049 13.9852L24.3526 17.2013Z"
                                                         fill="white" />
@@ -4429,7 +4458,8 @@ line-height: normal;">
                                     <button class="book"><svg xmlns="http://www.w3.org/2000/svg" width="17"
                                             height="17" viewBox="0 0 17 17" fill="none">
                                             <path d="M2.28125 15.5449V12.6621H5.16408" stroke="white"
-                                                stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" />
+                                                stroke-width="1.1" stroke-linecap="round"
+                                                stroke-linejoin="round" />
                                             <path
                                                 d="M15.4154 6.67233C15.7213 8.30432 15.4767 9.99169 14.72 11.4697C13.9633 12.9476 12.7373 14.1326 11.2344 14.8385C9.73156 15.5444 8.03684 15.7315 6.4162 15.3702C4.79556 15.009 3.34071 14.1199 2.27994 12.8425M0.678108 9.42728C0.372236 7.79528 0.616841 6.10792 1.37354 4.62995C2.13024 3.15198 3.35621 1.96706 4.85908 1.26111C6.36195 0.555159 8.05666 0.368136 9.6773 0.729384C11.2979 1.09063 12.7528 1.97971 13.8136 3.25711"
                                                 stroke="white" stroke-width="1.1" stroke-linecap="round"
@@ -4448,8 +4478,8 @@ line-height: normal;">
 
                                         <div class="card-img">
                                             <div class="top-left-svg left-svg">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="21" height="22"
-                                                    viewBox="0 0 21 22" fill="none">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="21"
+                                                    height="22" viewBox="0 0 21 22" fill="none">
                                                     <path
                                                         d="M10.9482 0.125295C10.7667 0.043205 10.5723 0 10.3692 0C10.1662 0 9.97174 0.043205 9.79028 0.125295L1.65477 3.57738C0.704262 3.97918 -0.00430085 4.91673 1.96518e-05 6.0487C0.0216222 10.3346 1.78439 18.1764 9.22861 21.7408C9.95014 22.0864 10.7883 22.0864 11.5098 21.7408C18.9541 18.1764 20.7168 10.3346 20.7384 6.0487C20.7428 4.91673 20.0342 3.97918 19.0837 3.57738L10.9482 0.125295ZM6.26043 12.3653C6.46781 12.4171 6.68816 12.443 6.91282 12.443C8.43796 12.443 9.67795 11.2031 9.67795 9.67793V6.9128H11.5876C12.1104 6.9128 12.59 7.2066 12.8233 7.67753L13.1343 8.29537H15.8995C16.2797 8.29537 16.5907 8.60644 16.5907 8.98665V10.3692C16.5907 12.2789 15.044 13.8256 13.1343 13.8256H11.0605V16.0161C11.0605 16.3315 10.8056 16.5907 10.4859 16.5907C10.4081 16.5907 10.3303 16.5734 10.2612 16.5432L5.99688 14.7156C5.71172 14.5947 5.53026 14.3138 5.53026 14.0071C5.53026 13.8861 5.55619 13.7694 5.61235 13.6614L6.26043 12.3653ZM6.22154 6.9128H8.29538V9.67793C8.29538 10.4427 7.67755 11.0605 6.91282 11.0605C6.1481 11.0605 5.53026 10.4427 5.53026 9.67793V7.60408C5.53026 7.22388 5.84134 6.9128 6.22154 6.9128ZM11.7518 8.98665C11.7518 8.80331 11.679 8.62748 11.5493 8.49784C11.4197 8.3682 11.2438 8.29537 11.0605 8.29537C10.8772 8.29537 10.7013 8.3682 10.5717 8.49784C10.4421 8.62748 10.3692 8.80331 10.3692 8.98665C10.3692 9.16998 10.4421 9.34581 10.5717 9.47545C10.7013 9.60509 10.8772 9.67793 11.0605 9.67793C11.2438 9.67793 11.4197 9.60509 11.5493 9.47545C11.679 9.34581 11.7518 9.16998 11.7518 8.98665Z"
                                                         fill="#C9DDA0"></path>
@@ -4461,7 +4491,8 @@ line-height: normal;">
                                                     <pattern id="pattern-card-2" patternUnits="userSpaceOnUse"
                                                         width="255" height="130">
 
-                                                        <image href="{{ asset('images/profile_modal_image2.jpg') }}" alt="Image" width="255" height="130"
+                                                        <image href="{{ asset('images/profile_modal_image2.jpg') }}"
+                                                            alt="Image" width="255" height="130"
                                                             preserveAspectRatio="xMinYMax slice">
                                                         </image>
                                                     </pattern>
@@ -4472,7 +4503,8 @@ line-height: normal;">
                                                     fill="url(#pattern-card-2)"></path>
                                             </svg>
                                             <span class="delete cursor"><svg xmlns="http://www.w3.org/2000/svg"
-                                                    width="13" height="15" viewBox="0 0 13 15" fill="none">
+                                                    width="13" height="15" viewBox="0 0 13 15"
+                                                    fill="none">
                                                     <path
                                                         d="M2.42915 15C2.01624 15 1.66308 14.8494 1.36965 14.5482C1.07622 14.247 0.929196 13.8859 0.928577 13.4648V1.68358H0.464292C0.332435 1.68358 0.222244 1.63792 0.133721 1.54661C0.0451968 1.45529 0.000625407 1.34211 6.36006e-06 1.20704C-0.000612687 1.07197 0.0439588 0.9591 0.133721 0.868421C0.223482 0.777743 0.333673 0.732403 0.464292 0.732403H3.71429C3.71429 0.535827 3.78548 0.364616 3.92786 0.21877C4.07024 0.0729233 4.23738 0 4.42929 0H8.57071C8.76262 0 8.92976 0.0729233 9.07214 0.21877C9.21452 0.364616 9.28571 0.535827 9.28571 0.732403H12.5357C12.6676 0.732403 12.7778 0.77806 12.8663 0.869372C12.9548 0.960685 12.9994 1.07387 13 1.20894C13.0006 1.34401 12.956 1.45688 12.8663 1.54756C12.7765 1.63824 12.6663 1.68358 12.5357 1.68358H12.0714V13.4639C12.0714 13.8862 11.9244 14.2476 11.6304 14.5482C11.3363 14.8488 10.9834 14.9994 10.5718 15H2.42915ZM11.1429 1.68358H1.85715V13.4639C1.85715 13.6344 1.91069 13.7746 2.01779 13.8843C2.12489 13.994 2.262 14.0488 2.42915 14.0488H10.5718C10.7383 14.0488 10.8751 13.994 10.9822 13.8843C11.0893 13.7746 11.1429 13.6344 11.1429 13.4639V1.68358ZM4.92886 12.1465C5.06072 12.1465 5.17122 12.1008 5.26036 12.0095C5.3495 11.9182 5.39376 11.8053 5.39314 11.6709V4.06151C5.39314 3.92644 5.34857 3.81357 5.25943 3.72289C5.17029 3.63221 5.05979 3.58656 4.92793 3.58592C4.79607 3.58529 4.68588 3.63094 4.59736 3.72289C4.50884 3.81484 4.46457 3.92771 4.46457 4.06151V11.6709C4.46457 11.806 4.50914 11.9188 4.59829 12.0095C4.68743 12.1008 4.79762 12.1465 4.92886 12.1465ZM8.07207 12.1465C8.20393 12.1465 8.31412 12.1008 8.40264 12.0095C8.49117 11.9182 8.53543 11.8053 8.53543 11.6709V4.06151C8.53543 3.92644 8.49086 3.81357 8.40171 3.72289C8.31257 3.63158 8.20238 3.58592 8.07114 3.58592C7.93928 3.58592 7.82878 3.63158 7.73964 3.72289C7.6505 3.8142 7.60624 3.92708 7.60686 4.06151V11.6709C7.60686 11.806 7.65143 11.9188 7.74057 12.0095C7.82971 12.1002 7.94021 12.1458 8.07207 12.1465Z"
                                                         fill="#3B3731"></path>
@@ -4482,18 +4514,21 @@ line-height: normal;">
                                         <div class="group-icon mt-3">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="82" height="24"
                                                 viewBox="0 0 82 24" fill="none">
-                                                <rect width="24" height="24" rx="12" fill="#CBDCE8" />
+                                                <rect width="24" height="24" rx="12"
+                                                    fill="#CBDCE8" />
                                                 <path
                                                     d="M9 17C8.85833 17 8.73967 16.952 8.644 16.856C8.54833 16.76 8.50033 16.6413 8.5 16.5C8.49967 16.3587 8.54767 16.24 8.644 16.144C8.74033 16.048 8.859 16 9 16H15C15.1417 16 15.2605 16.048 15.3565 16.144C15.4525 16.24 15.5003 16.3587 15.5 16.5C15.4997 16.6413 15.4517 16.7602 15.356 16.8565C15.2603 16.9528 15.1417 17.0007 15 17H9ZM9.35 15.25C9.10833 15.25 8.89383 15.1708 8.7065 15.0125C8.51917 14.8542 8.4045 14.6542 8.3625 14.4125L7.8625 11.2375C7.84583 11.2375 7.82717 11.2397 7.8065 11.244C7.78583 11.2483 7.767 11.2503 7.75 11.25C7.54167 11.25 7.36467 11.1772 7.219 11.0315C7.07333 10.8858 7.00033 10.7087 7 10.5C6.99967 10.2913 7.07267 10.1143 7.219 9.969C7.36533 9.82367 7.54233 9.75067 7.75 9.75C7.95767 9.74933 8.13483 9.82233 8.2815 9.969C8.42817 10.1157 8.501 10.2927 8.5 10.5C8.5 10.5583 8.49367 10.6125 8.481 10.6625C8.46833 10.7125 8.45383 10.7583 8.4375 10.8L10 11.5L11.5625 9.3625C11.4708 9.29583 11.3958 9.20833 11.3375 9.1C11.2792 8.99167 11.25 8.875 11.25 8.75C11.25 8.54167 11.323 8.3645 11.469 8.2185C11.615 8.0725 11.792 7.99967 12 8C12.208 8.00033 12.3852 8.07333 12.5315 8.219C12.6778 8.36467 12.7507 8.54167 12.75 8.75C12.75 8.875 12.7208 8.99167 12.6625 9.1C12.6042 9.20833 12.5292 9.29583 12.4375 9.3625L14 11.5L15.5625 10.8C15.5458 10.7583 15.5312 10.7125 15.5185 10.6625C15.5058 10.6125 15.4997 10.5583 15.5 10.5C15.5 10.2917 15.573 10.1145 15.719 9.9685C15.865 9.8225 16.042 9.74967 16.25 9.75C16.458 9.75033 16.6352 9.82333 16.7815 9.969C16.9278 10.1147 17.0007 10.2917 17 10.5C16.9993 10.7083 16.9265 10.8855 16.7815 11.0315C16.6365 11.1775 16.4593 11.2503 16.25 11.25C16.2333 11.25 16.2147 11.248 16.194 11.244C16.1733 11.24 16.1545 11.2378 16.1375 11.2375L15.6375 14.4125C15.5958 14.6542 15.4813 14.8542 15.294 15.0125C15.1067 15.1708 14.892 15.25 14.65 15.25H9.35ZM9.35 14.25H14.65L14.975 12.1625L14.4 12.4125C14.1833 12.5042 13.9625 12.5208 13.7375 12.4625C13.5125 12.4042 13.3292 12.2792 13.1875 12.0875L12 10.45L10.8125 12.0875C10.6708 12.2792 10.4875 12.4042 10.2625 12.4625C10.0375 12.5208 9.81667 12.5042 9.6 12.4125L9.025 12.1625L9.35 14.25Z"
                                                     fill="white" />
-                                                <rect x="29" width="24" height="24" rx="12" fill="#FFA899" />
+                                                <rect x="29" width="24" height="24" rx="12"
+                                                    fill="#FFA899" />
                                                 <path fill-rule="evenodd" clip-rule="evenodd"
                                                     d="M43.4127 14.893C43.4417 14.3436 43.3153 13.7971 43.0481 13.3161C42.7809 12.8351 42.3837 12.4391 41.9019 12.1733C41.8164 12.1238 41.715 12.1095 41.619 12.1333C41.5231 12.1572 41.4402 12.2173 41.3877 12.3011L40.775 13.2818L40.2653 12.6653C40.2373 12.6315 40.2026 12.6038 40.1634 12.5841C40.1242 12.5644 40.0813 12.553 40.0375 12.5507C39.9936 12.5484 39.9498 12.5551 39.9087 12.5706C39.8676 12.586 39.8302 12.6098 39.7988 12.6405C39.4987 12.9308 39.2643 13.2821 39.1114 13.6707C38.9584 14.0592 38.8905 14.476 38.9121 14.893C38.9121 15.4897 39.1492 16.062 39.5711 16.484C39.9931 16.9059 40.5654 17.143 41.1621 17.143C41.7588 17.143 42.3311 16.9059 42.7531 16.484C43.175 16.062 43.4121 15.4897 43.4121 14.893M40.0098 13.3549L39.9704 13.407C39.6715 13.8245 39.5217 14.3305 39.5452 14.8434L39.5471 14.8809C39.5471 15.3091 39.7172 15.7197 40.0199 16.0225C40.3227 16.3252 40.7333 16.4953 41.1615 16.4953C41.5896 16.4953 42.0003 16.3252 42.303 16.0225C42.6058 15.7197 42.7759 15.3091 42.7759 14.8809L42.7778 14.8441C42.7822 14.8028 42.8814 13.6663 41.8416 12.8934L41.7901 12.8559L41.1265 13.9174C41.0945 13.9686 41.0507 14.0114 40.9989 14.0424C40.9471 14.0734 40.8886 14.0916 40.8283 14.0956C40.7681 14.0995 40.7077 14.0892 40.6523 14.0652C40.5968 14.0413 40.5478 14.0046 40.5094 13.9581L40.0098 13.3549Z"
                                                     fill="#FEFEFE" />
                                                 <path fill-rule="evenodd" clip-rule="evenodd"
                                                     d="M40.797 7.30821C40.8102 7.23997 40.8419 7.17666 40.8886 7.12514C40.9352 7.07362 40.9951 7.03586 41.0617 7.01595C41.1283 6.99604 41.1991 6.99475 41.2664 7.0122C41.3337 7.02966 41.3949 7.06521 41.4434 7.11499C41.5667 7.24084 41.8038 7.48999 42.0447 7.77727C42.2811 8.05884 42.5392 8.39761 42.6879 8.69951C42.8328 8.99443 42.9866 9.37578 43.108 9.69421L43.673 8.75354C43.7046 8.701 43.7483 8.65683 43.8005 8.62476C43.8527 8.59269 43.9118 8.57367 43.9729 8.56931C44.034 8.56494 44.0953 8.57536 44.1515 8.59969C44.2077 8.62401 44.2573 8.66152 44.2959 8.70905C45.0987 9.70057 45.4985 10.7626 45.6974 11.5736C45.7972 11.9798 45.8474 12.3249 45.8728 12.5703C45.8858 12.6928 45.8942 12.8157 45.8982 12.9389V12.9713C45.8982 15.4482 43.9336 17.4649 41.4479 17.4649C38.9621 17.4649 37 15.4476 37 12.97C37 12.288 37.3222 10.6819 38.2756 9.36498C38.3127 9.31422 38.3617 9.27341 38.4183 9.24615C38.4749 9.2189 38.5373 9.20605 38.6001 9.20876C38.6629 9.21146 38.724 9.22963 38.7781 9.26166C38.8321 9.29368 38.8774 9.33856 38.9099 9.39231L39.5551 10.4671C39.7508 10.1607 40.0127 9.73044 40.2116 9.3332C40.4976 8.76117 40.7246 7.68257 40.797 7.30885M41.3201 7.91265C41.2051 8.42113 41.015 9.14697 40.7798 9.61858C40.4671 10.2434 40.0165 10.9298 39.8614 11.1605C39.8255 11.2134 39.7769 11.2565 39.7201 11.2857C39.6632 11.315 39.5999 11.3294 39.5359 11.3278C39.472 11.3261 39.4095 11.3084 39.3542 11.2763C39.2989 11.2442 39.2526 11.1987 39.2195 11.144L38.5712 10.0648C37.8746 11.1917 37.6356 12.4584 37.6356 12.9713C37.6356 15.1056 39.3224 16.8281 41.4479 16.8281C43.5733 16.8281 45.2627 15.1056 45.2627 12.9713V12.9535L45.2601 12.89C45.2557 12.8048 45.2491 12.7199 45.2404 12.6351C45.2071 12.3287 45.1536 12.0249 45.0802 11.7256C44.8783 10.8916 44.5203 10.1033 44.0252 9.40248L43.3807 10.4753C43.3434 10.5373 43.2892 10.5874 43.2246 10.6199C43.1599 10.6523 43.0874 10.6657 43.0154 10.6585C42.9434 10.6513 42.875 10.6238 42.818 10.5792C42.761 10.5347 42.7179 10.4748 42.6936 10.4067C42.5906 10.1181 42.3383 9.42917 42.1171 8.98044C42.0046 8.751 41.7892 8.46117 41.5578 8.18596C41.4801 8.09353 41.4009 8.00242 41.3201 7.91265Z"
                                                     fill="#FEFEFE" />
-                                                <rect x="58" width="24" height="24" rx="12" fill="#D8E8B7" />
+                                                <rect x="58" width="24" height="24" rx="12"
+                                                    fill="#D8E8B7" />
                                                 <path
                                                     d="M70 14.619C69.7348 14.619 69.4804 14.5187 69.2929 14.3401C69.1054 14.1615 69 13.9193 69 13.6667C69 13.1381 69.445 12.7143 70 12.7143C70.2652 12.7143 70.5196 12.8146 70.7071 12.9932C70.8946 13.1718 71 13.4141 71 13.6667C71 13.9193 70.8946 14.1615 70.7071 14.3401C70.5196 14.5187 70.2652 14.619 70 14.619ZM73 16.0476V11.2857H67V16.0476H73ZM73 10.3333C73.2652 10.3333 73.5196 10.4337 73.7071 10.6123C73.8946 10.7909 74 11.0331 74 11.2857V16.0476C74 16.3002 73.8946 16.5424 73.7071 16.7211C73.5196 16.8997 73.2652 17 73 17H67C66.7348 17 66.4804 16.8997 66.2929 16.7211C66.1054 16.5424 66 16.3002 66 16.0476V11.2857C66 10.7571 66.445 10.3333 67 10.3333H67.5V9.38095C67.5 8.74948 67.7634 8.14388 68.2322 7.69736C68.7011 7.25085 69.337 7 70 7C70.3283 7 70.6534 7.06159 70.9567 7.18124C71.26 7.30089 71.5356 7.47627 71.7678 7.69736C71.9999 7.91846 72.1841 8.18093 72.3097 8.4698C72.4353 8.75867 72.5 9.06828 72.5 9.38095V10.3333H73ZM70 7.95238C69.6022 7.95238 69.2206 8.10289 68.9393 8.3708C68.658 8.63871 68.5 9.00207 68.5 9.38095V10.3333H71.5V9.38095C71.5 9.00207 71.342 8.63871 71.0607 8.3708C70.7794 8.10289 70.3978 7.95238 70 7.95238Z"
                                                     fill="white" />
@@ -4511,8 +4546,8 @@ line-height: normal;">
 
                                         <div class="meta mt-4">
                                             <div class="meta-location">
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10" height="14"
-                                                        viewBox="0 0 10 14" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10"
+                                                        height="14" viewBox="0 0 10 14" fill="none">
                                                         <path
                                                             d="M5 6.65C4.5264 6.65 4.0722 6.46563 3.73731 6.13744C3.40242 5.80925 3.21429 5.36413 3.21429 4.9C3.21429 4.43587 3.40242 3.99075 3.73731 3.66256C4.0722 3.33437 4.5264 3.15 5 3.15C5.4736 3.15 5.9278 3.33437 6.26269 3.66256C6.59758 3.99075 6.78571 4.43587 6.78571 4.9C6.78571 5.12981 6.73953 5.35738 6.64979 5.5697C6.56004 5.78202 6.42851 5.97493 6.26269 6.13744C6.09687 6.29994 5.90002 6.42884 5.68336 6.51679C5.46671 6.60473 5.2345 6.65 5 6.65ZM5 0C3.67392 0 2.40215 0.516248 1.46447 1.43518C0.526784 2.3541 0 3.60044 0 4.9C0 8.575 5 14 5 14C5 14 10 8.575 10 4.9C10 3.60044 9.47322 2.3541 8.53553 1.43518C7.59785 0.516248 6.32608 0 5 0Z"
                                                             fill="#FFC97A" />
@@ -4521,8 +4556,8 @@ line-height: normal;">
 
                                             <div class="meta-rating">
 
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                                                        viewBox="0 0 14 14" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="14"
+                                                        height="14" viewBox="0 0 14 14" fill="none">
                                                         <path
                                                             d="M6.12956 0.660476C6.40354 -0.220161 7.59647 -0.220158 7.87045 0.660479L8.89548 3.95519C9.01801 4.34902 9.36942 4.61566 9.76593 4.61566H13.083C13.9696 4.61566 14.3383 5.80055 13.621 6.34481L10.9374 8.38106C10.6166 8.62446 10.4824 9.0559 10.6049 9.44973L11.63 12.7444C11.9039 13.6251 10.9388 14.3574 10.2215 13.8131L7.53797 11.7769C7.21719 11.5335 6.78282 11.5335 6.46204 11.7769L3.77846 13.8131C3.06117 14.3574 2.09607 13.6251 2.37005 12.7444L3.39508 9.44973C3.51761 9.0559 3.38338 8.62446 3.0626 8.38106L0.37903 6.34481C-0.338258 5.80055 0.0303816 4.61566 0.916998 4.61566H4.23408C4.63058 4.61566 4.98199 4.34902 5.10452 3.95519L6.12956 0.660476Z"
                                                             fill="#FFC97A" />
@@ -4540,9 +4575,11 @@ line-height: normal;">
 
                                         <div class="bottom mt-4">
                                             <p>From <b>£38</b></p>
-                                            <button class="arrow"><svg xmlns="http://www.w3.org/2000/svg" width="36"
-                                                    height="36" viewBox="0 0 36 36" fill="none">
-                                                    <rect width="36" height="36" rx="18" fill="#D8E8B7" />
+                                            <button class="arrow"><svg xmlns="http://www.w3.org/2000/svg"
+                                                    width="36" height="36" viewBox="0 0 36 36"
+                                                    fill="none">
+                                                    <rect width="36" height="36" rx="18"
+                                                        fill="#D8E8B7" />
                                                     <path
                                                         d="M24.3526 17.2013C24.7483 17.5931 24.7477 18.2326 24.3514 18.6236L21.1135 21.8188C20.847 22.0818 20.4175 22.0784 20.1552 21.8111C20.0514 21.7086 20.0098 21.6061 20.0306 21.5036C20.0566 21.401 20.1137 21.3037 20.202 21.2114L22.438 19.0202C22.5627 18.8972 22.6796 18.787 22.7886 18.6896C22.875 18.6125 22.8085 18.4583 22.6933 18.47C22.5599 18.4835 22.4229 18.4952 22.2822 18.5051C21.9965 18.5256 21.7005 18.5359 21.394 18.5359H11.8766C11.5305 18.5359 11.25 18.2553 11.25 17.9093C11.25 17.5632 11.5305 17.2827 11.8766 17.2827H21.394C21.7005 17.2827 21.9991 17.2929 22.29 17.3134C22.4286 17.3232 22.5637 17.3347 22.6952 17.348C22.812 17.3597 22.878 17.2051 22.7886 17.1289C22.6796 17.0315 22.5627 16.9213 22.438 16.7983L20.1864 14.5917C20.0929 14.4995 20.0358 14.4021 20.015 14.2996C19.9942 14.1971 20.0332 14.0946 20.1319 13.9921C20.3983 13.7206 20.8346 13.7176 21.1049 13.9852L24.3526 17.2013Z"
                                                         fill="white" />
@@ -4554,7 +4591,8 @@ line-height: normal;">
                                     <button class="book"><svg xmlns="http://www.w3.org/2000/svg" width="17"
                                             height="17" viewBox="0 0 17 17" fill="none">
                                             <path d="M2.28125 15.5449V12.6621H5.16408" stroke="white"
-                                                stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" />
+                                                stroke-width="1.1" stroke-linecap="round"
+                                                stroke-linejoin="round" />
                                             <path
                                                 d="M15.4154 6.67233C15.7213 8.30432 15.4767 9.99169 14.72 11.4697C13.9633 12.9476 12.7373 14.1326 11.2344 14.8385C9.73156 15.5444 8.03684 15.7315 6.4162 15.3702C4.79556 15.009 3.34071 14.1199 2.27994 12.8425M0.678108 9.42728C0.372236 7.79528 0.616841 6.10792 1.37354 4.62995C2.13024 3.15198 3.35621 1.96706 4.85908 1.26111C6.36195 0.555159 8.05666 0.368136 9.6773 0.729384C11.2979 1.09063 12.7528 1.97971 13.8136 3.25711"
                                                 stroke="white" stroke-width="1.1" stroke-linecap="round"
@@ -4573,8 +4611,8 @@ line-height: normal;">
 
                                         <div class="card-img">
                                             <div class="top-left-svg left-svg">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="21" height="22"
-                                                    viewBox="0 0 21 22" fill="none">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="21"
+                                                    height="22" viewBox="0 0 21 22" fill="none">
                                                     <path
                                                         d="M10.9482 0.125295C10.7667 0.043205 10.5723 0 10.3692 0C10.1662 0 9.97174 0.043205 9.79028 0.125295L1.65477 3.57738C0.704262 3.97918 -0.00430085 4.91673 1.96518e-05 6.0487C0.0216222 10.3346 1.78439 18.1764 9.22861 21.7408C9.95014 22.0864 10.7883 22.0864 11.5098 21.7408C18.9541 18.1764 20.7168 10.3346 20.7384 6.0487C20.7428 4.91673 20.0342 3.97918 19.0837 3.57738L10.9482 0.125295ZM6.26043 12.3653C6.46781 12.4171 6.68816 12.443 6.91282 12.443C8.43796 12.443 9.67795 11.2031 9.67795 9.67793V6.9128H11.5876C12.1104 6.9128 12.59 7.2066 12.8233 7.67753L13.1343 8.29537H15.8995C16.2797 8.29537 16.5907 8.60644 16.5907 8.98665V10.3692C16.5907 12.2789 15.044 13.8256 13.1343 13.8256H11.0605V16.0161C11.0605 16.3315 10.8056 16.5907 10.4859 16.5907C10.4081 16.5907 10.3303 16.5734 10.2612 16.5432L5.99688 14.7156C5.71172 14.5947 5.53026 14.3138 5.53026 14.0071C5.53026 13.8861 5.55619 13.7694 5.61235 13.6614L6.26043 12.3653ZM6.22154 6.9128H8.29538V9.67793C8.29538 10.4427 7.67755 11.0605 6.91282 11.0605C6.1481 11.0605 5.53026 10.4427 5.53026 9.67793V7.60408C5.53026 7.22388 5.84134 6.9128 6.22154 6.9128ZM11.7518 8.98665C11.7518 8.80331 11.679 8.62748 11.5493 8.49784C11.4197 8.3682 11.2438 8.29537 11.0605 8.29537C10.8772 8.29537 10.7013 8.3682 10.5717 8.49784C10.4421 8.62748 10.3692 8.80331 10.3692 8.98665C10.3692 9.16998 10.4421 9.34581 10.5717 9.47545C10.7013 9.60509 10.8772 9.67793 11.0605 9.67793C11.2438 9.67793 11.4197 9.60509 11.5493 9.47545C11.679 9.34581 11.7518 9.16998 11.7518 8.98665Z"
                                                         fill="#C9DDA0"></path>
@@ -4586,7 +4624,8 @@ line-height: normal;">
                                                     <pattern id="pattern-card-3" patternUnits="userSpaceOnUse"
                                                         width="255" height="130">
 
-                                                        <image href="{{ asset('images/profile_modal_image3.jpg') }}" alt="Image" width="255" height="130"
+                                                        <image href="{{ asset('images/profile_modal_image3.jpg') }}"
+                                                            alt="Image" width="255" height="130"
                                                             preserveAspectRatio="xMinYMax slice">
                                                         </image>
                                                     </pattern>
@@ -4597,7 +4636,8 @@ line-height: normal;">
                                                     fill="url(#pattern-card-3)"></path>
                                             </svg>
                                             <span class="delete cursor"><svg xmlns="http://www.w3.org/2000/svg"
-                                                    width="13" height="15" viewBox="0 0 13 15" fill="none">
+                                                    width="13" height="15" viewBox="0 0 13 15"
+                                                    fill="none">
                                                     <path
                                                         d="M2.42915 15C2.01624 15 1.66308 14.8494 1.36965 14.5482C1.07622 14.247 0.929196 13.8859 0.928577 13.4648V1.68358H0.464292C0.332435 1.68358 0.222244 1.63792 0.133721 1.54661C0.0451968 1.45529 0.000625407 1.34211 6.36006e-06 1.20704C-0.000612687 1.07197 0.0439588 0.9591 0.133721 0.868421C0.223482 0.777743 0.333673 0.732403 0.464292 0.732403H3.71429C3.71429 0.535827 3.78548 0.364616 3.92786 0.21877C4.07024 0.0729233 4.23738 0 4.42929 0H8.57071C8.76262 0 8.92976 0.0729233 9.07214 0.21877C9.21452 0.364616 9.28571 0.535827 9.28571 0.732403H12.5357C12.6676 0.732403 12.7778 0.77806 12.8663 0.869372C12.9548 0.960685 12.9994 1.07387 13 1.20894C13.0006 1.34401 12.956 1.45688 12.8663 1.54756C12.7765 1.63824 12.6663 1.68358 12.5357 1.68358H12.0714V13.4639C12.0714 13.8862 11.9244 14.2476 11.6304 14.5482C11.3363 14.8488 10.9834 14.9994 10.5718 15H2.42915ZM11.1429 1.68358H1.85715V13.4639C1.85715 13.6344 1.91069 13.7746 2.01779 13.8843C2.12489 13.994 2.262 14.0488 2.42915 14.0488H10.5718C10.7383 14.0488 10.8751 13.994 10.9822 13.8843C11.0893 13.7746 11.1429 13.6344 11.1429 13.4639V1.68358ZM4.92886 12.1465C5.06072 12.1465 5.17122 12.1008 5.26036 12.0095C5.3495 11.9182 5.39376 11.8053 5.39314 11.6709V4.06151C5.39314 3.92644 5.34857 3.81357 5.25943 3.72289C5.17029 3.63221 5.05979 3.58656 4.92793 3.58592C4.79607 3.58529 4.68588 3.63094 4.59736 3.72289C4.50884 3.81484 4.46457 3.92771 4.46457 4.06151V11.6709C4.46457 11.806 4.50914 11.9188 4.59829 12.0095C4.68743 12.1008 4.79762 12.1465 4.92886 12.1465ZM8.07207 12.1465C8.20393 12.1465 8.31412 12.1008 8.40264 12.0095C8.49117 11.9182 8.53543 11.8053 8.53543 11.6709V4.06151C8.53543 3.92644 8.49086 3.81357 8.40171 3.72289C8.31257 3.63158 8.20238 3.58592 8.07114 3.58592C7.93928 3.58592 7.82878 3.63158 7.73964 3.72289C7.6505 3.8142 7.60624 3.92708 7.60686 4.06151V11.6709C7.60686 11.806 7.65143 11.9188 7.74057 12.0095C7.82971 12.1002 7.94021 12.1458 8.07207 12.1465Z"
                                                         fill="#3B3731"></path>
@@ -4607,18 +4647,21 @@ line-height: normal;">
                                         <div class="group-icon mt-3">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="82" height="24"
                                                 viewBox="0 0 82 24" fill="none">
-                                                <rect width="24" height="24" rx="12" fill="#CBDCE8" />
+                                                <rect width="24" height="24" rx="12"
+                                                    fill="#CBDCE8" />
                                                 <path
                                                     d="M9 17C8.85833 17 8.73967 16.952 8.644 16.856C8.54833 16.76 8.50033 16.6413 8.5 16.5C8.49967 16.3587 8.54767 16.24 8.644 16.144C8.74033 16.048 8.859 16 9 16H15C15.1417 16 15.2605 16.048 15.3565 16.144C15.4525 16.24 15.5003 16.3587 15.5 16.5C15.4997 16.6413 15.4517 16.7602 15.356 16.8565C15.2603 16.9528 15.1417 17.0007 15 17H9ZM9.35 15.25C9.10833 15.25 8.89383 15.1708 8.7065 15.0125C8.51917 14.8542 8.4045 14.6542 8.3625 14.4125L7.8625 11.2375C7.84583 11.2375 7.82717 11.2397 7.8065 11.244C7.78583 11.2483 7.767 11.2503 7.75 11.25C7.54167 11.25 7.36467 11.1772 7.219 11.0315C7.07333 10.8858 7.00033 10.7087 7 10.5C6.99967 10.2913 7.07267 10.1143 7.219 9.969C7.36533 9.82367 7.54233 9.75067 7.75 9.75C7.95767 9.74933 8.13483 9.82233 8.2815 9.969C8.42817 10.1157 8.501 10.2927 8.5 10.5C8.5 10.5583 8.49367 10.6125 8.481 10.6625C8.46833 10.7125 8.45383 10.7583 8.4375 10.8L10 11.5L11.5625 9.3625C11.4708 9.29583 11.3958 9.20833 11.3375 9.1C11.2792 8.99167 11.25 8.875 11.25 8.75C11.25 8.54167 11.323 8.3645 11.469 8.2185C11.615 8.0725 11.792 7.99967 12 8C12.208 8.00033 12.3852 8.07333 12.5315 8.219C12.6778 8.36467 12.7507 8.54167 12.75 8.75C12.75 8.875 12.7208 8.99167 12.6625 9.1C12.6042 9.20833 12.5292 9.29583 12.4375 9.3625L14 11.5L15.5625 10.8C15.5458 10.7583 15.5312 10.7125 15.5185 10.6625C15.5058 10.6125 15.4997 10.5583 15.5 10.5C15.5 10.2917 15.573 10.1145 15.719 9.9685C15.865 9.8225 16.042 9.74967 16.25 9.75C16.458 9.75033 16.6352 9.82333 16.7815 9.969C16.9278 10.1147 17.0007 10.2917 17 10.5C16.9993 10.7083 16.9265 10.8855 16.7815 11.0315C16.6365 11.1775 16.4593 11.2503 16.25 11.25C16.2333 11.25 16.2147 11.248 16.194 11.244C16.1733 11.24 16.1545 11.2378 16.1375 11.2375L15.6375 14.4125C15.5958 14.6542 15.4813 14.8542 15.294 15.0125C15.1067 15.1708 14.892 15.25 14.65 15.25H9.35ZM9.35 14.25H14.65L14.975 12.1625L14.4 12.4125C14.1833 12.5042 13.9625 12.5208 13.7375 12.4625C13.5125 12.4042 13.3292 12.2792 13.1875 12.0875L12 10.45L10.8125 12.0875C10.6708 12.2792 10.4875 12.4042 10.2625 12.4625C10.0375 12.5208 9.81667 12.5042 9.6 12.4125L9.025 12.1625L9.35 14.25Z"
                                                     fill="white" />
-                                                <rect x="29" width="24" height="24" rx="12" fill="#FFA899" />
+                                                <rect x="29" width="24" height="24" rx="12"
+                                                    fill="#FFA899" />
                                                 <path fill-rule="evenodd" clip-rule="evenodd"
                                                     d="M43.4127 14.893C43.4417 14.3436 43.3153 13.7971 43.0481 13.3161C42.7809 12.8351 42.3837 12.4391 41.9019 12.1733C41.8164 12.1238 41.715 12.1095 41.619 12.1333C41.5231 12.1572 41.4402 12.2173 41.3877 12.3011L40.775 13.2818L40.2653 12.6653C40.2373 12.6315 40.2026 12.6038 40.1634 12.5841C40.1242 12.5644 40.0813 12.553 40.0375 12.5507C39.9936 12.5484 39.9498 12.5551 39.9087 12.5706C39.8676 12.586 39.8302 12.6098 39.7988 12.6405C39.4987 12.9308 39.2643 13.2821 39.1114 13.6707C38.9584 14.0592 38.8905 14.476 38.9121 14.893C38.9121 15.4897 39.1492 16.062 39.5711 16.484C39.9931 16.9059 40.5654 17.143 41.1621 17.143C41.7588 17.143 42.3311 16.9059 42.7531 16.484C43.175 16.062 43.4121 15.4897 43.4121 14.893M40.0098 13.3549L39.9704 13.407C39.6715 13.8245 39.5217 14.3305 39.5452 14.8434L39.5471 14.8809C39.5471 15.3091 39.7172 15.7197 40.0199 16.0225C40.3227 16.3252 40.7333 16.4953 41.1615 16.4953C41.5896 16.4953 42.0003 16.3252 42.303 16.0225C42.6058 15.7197 42.7759 15.3091 42.7759 14.8809L42.7778 14.8441C42.7822 14.8028 42.8814 13.6663 41.8416 12.8934L41.7901 12.8559L41.1265 13.9174C41.0945 13.9686 41.0507 14.0114 40.9989 14.0424C40.9471 14.0734 40.8886 14.0916 40.8283 14.0956C40.7681 14.0995 40.7077 14.0892 40.6523 14.0652C40.5968 14.0413 40.5478 14.0046 40.5094 13.9581L40.0098 13.3549Z"
                                                     fill="#FEFEFE" />
                                                 <path fill-rule="evenodd" clip-rule="evenodd"
                                                     d="M40.797 7.30821C40.8102 7.23997 40.8419 7.17666 40.8886 7.12514C40.9352 7.07362 40.9951 7.03586 41.0617 7.01595C41.1283 6.99604 41.1991 6.99475 41.2664 7.0122C41.3337 7.02966 41.3949 7.06521 41.4434 7.11499C41.5667 7.24084 41.8038 7.48999 42.0447 7.77727C42.2811 8.05884 42.5392 8.39761 42.6879 8.69951C42.8328 8.99443 42.9866 9.37578 43.108 9.69421L43.673 8.75354C43.7046 8.701 43.7483 8.65683 43.8005 8.62476C43.8527 8.59269 43.9118 8.57367 43.9729 8.56931C44.034 8.56494 44.0953 8.57536 44.1515 8.59969C44.2077 8.62401 44.2573 8.66152 44.2959 8.70905C45.0987 9.70057 45.4985 10.7626 45.6974 11.5736C45.7972 11.9798 45.8474 12.3249 45.8728 12.5703C45.8858 12.6928 45.8942 12.8157 45.8982 12.9389V12.9713C45.8982 15.4482 43.9336 17.4649 41.4479 17.4649C38.9621 17.4649 37 15.4476 37 12.97C37 12.288 37.3222 10.6819 38.2756 9.36498C38.3127 9.31422 38.3617 9.27341 38.4183 9.24615C38.4749 9.2189 38.5373 9.20605 38.6001 9.20876C38.6629 9.21146 38.724 9.22963 38.7781 9.26166C38.8321 9.29368 38.8774 9.33856 38.9099 9.39231L39.5551 10.4671C39.7508 10.1607 40.0127 9.73044 40.2116 9.3332C40.4976 8.76117 40.7246 7.68257 40.797 7.30885M41.3201 7.91265C41.2051 8.42113 41.015 9.14697 40.7798 9.61858C40.4671 10.2434 40.0165 10.9298 39.8614 11.1605C39.8255 11.2134 39.7769 11.2565 39.7201 11.2857C39.6632 11.315 39.5999 11.3294 39.5359 11.3278C39.472 11.3261 39.4095 11.3084 39.3542 11.2763C39.2989 11.2442 39.2526 11.1987 39.2195 11.144L38.5712 10.0648C37.8746 11.1917 37.6356 12.4584 37.6356 12.9713C37.6356 15.1056 39.3224 16.8281 41.4479 16.8281C43.5733 16.8281 45.2627 15.1056 45.2627 12.9713V12.9535L45.2601 12.89C45.2557 12.8048 45.2491 12.7199 45.2404 12.6351C45.2071 12.3287 45.1536 12.0249 45.0802 11.7256C44.8783 10.8916 44.5203 10.1033 44.0252 9.40248L43.3807 10.4753C43.3434 10.5373 43.2892 10.5874 43.2246 10.6199C43.1599 10.6523 43.0874 10.6657 43.0154 10.6585C42.9434 10.6513 42.875 10.6238 42.818 10.5792C42.761 10.5347 42.7179 10.4748 42.6936 10.4067C42.5906 10.1181 42.3383 9.42917 42.1171 8.98044C42.0046 8.751 41.7892 8.46117 41.5578 8.18596C41.4801 8.09353 41.4009 8.00242 41.3201 7.91265Z"
                                                     fill="#FEFEFE" />
-                                                <rect x="58" width="24" height="24" rx="12" fill="#D8E8B7" />
+                                                <rect x="58" width="24" height="24" rx="12"
+                                                    fill="#D8E8B7" />
                                                 <path
                                                     d="M70 14.619C69.7348 14.619 69.4804 14.5187 69.2929 14.3401C69.1054 14.1615 69 13.9193 69 13.6667C69 13.1381 69.445 12.7143 70 12.7143C70.2652 12.7143 70.5196 12.8146 70.7071 12.9932C70.8946 13.1718 71 13.4141 71 13.6667C71 13.9193 70.8946 14.1615 70.7071 14.3401C70.5196 14.5187 70.2652 14.619 70 14.619ZM73 16.0476V11.2857H67V16.0476H73ZM73 10.3333C73.2652 10.3333 73.5196 10.4337 73.7071 10.6123C73.8946 10.7909 74 11.0331 74 11.2857V16.0476C74 16.3002 73.8946 16.5424 73.7071 16.7211C73.5196 16.8997 73.2652 17 73 17H67C66.7348 17 66.4804 16.8997 66.2929 16.7211C66.1054 16.5424 66 16.3002 66 16.0476V11.2857C66 10.7571 66.445 10.3333 67 10.3333H67.5V9.38095C67.5 8.74948 67.7634 8.14388 68.2322 7.69736C68.7011 7.25085 69.337 7 70 7C70.3283 7 70.6534 7.06159 70.9567 7.18124C71.26 7.30089 71.5356 7.47627 71.7678 7.69736C71.9999 7.91846 72.1841 8.18093 72.3097 8.4698C72.4353 8.75867 72.5 9.06828 72.5 9.38095V10.3333H73ZM70 7.95238C69.6022 7.95238 69.2206 8.10289 68.9393 8.3708C68.658 8.63871 68.5 9.00207 68.5 9.38095V10.3333H71.5V9.38095C71.5 9.00207 71.342 8.63871 71.0607 8.3708C70.7794 8.10289 70.3978 7.95238 70 7.95238Z"
                                                     fill="white" />
@@ -4635,8 +4678,8 @@ line-height: normal;">
 
                                         <div class="meta mt-4">
                                             <div class="meta-location">
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10" height="14"
-                                                        viewBox="0 0 10 14" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10"
+                                                        height="14" viewBox="0 0 10 14" fill="none">
                                                         <path
                                                             d="M5 6.65C4.5264 6.65 4.0722 6.46563 3.73731 6.13744C3.40242 5.80925 3.21429 5.36413 3.21429 4.9C3.21429 4.43587 3.40242 3.99075 3.73731 3.66256C4.0722 3.33437 4.5264 3.15 5 3.15C5.4736 3.15 5.9278 3.33437 6.26269 3.66256C6.59758 3.99075 6.78571 4.43587 6.78571 4.9C6.78571 5.12981 6.73953 5.35738 6.64979 5.5697C6.56004 5.78202 6.42851 5.97493 6.26269 6.13744C6.09687 6.29994 5.90002 6.42884 5.68336 6.51679C5.46671 6.60473 5.2345 6.65 5 6.65ZM5 0C3.67392 0 2.40215 0.516248 1.46447 1.43518C0.526784 2.3541 0 3.60044 0 4.9C0 8.575 5 14 5 14C5 14 10 8.575 10 4.9C10 3.60044 9.47322 2.3541 8.53553 1.43518C7.59785 0.516248 6.32608 0 5 0Z"
                                                             fill="#FFC97A" />
@@ -4645,8 +4688,8 @@ line-height: normal;">
 
                                             <div class="meta-rating">
 
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                                                        viewBox="0 0 14 14" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="14"
+                                                        height="14" viewBox="0 0 14 14" fill="none">
                                                         <path
                                                             d="M6.12956 0.660476C6.40354 -0.220161 7.59647 -0.220158 7.87045 0.660479L8.89548 3.95519C9.01801 4.34902 9.36942 4.61566 9.76593 4.61566H13.083C13.9696 4.61566 14.3383 5.80055 13.621 6.34481L10.9374 8.38106C10.6166 8.62446 10.4824 9.0559 10.6049 9.44973L11.63 12.7444C11.9039 13.6251 10.9388 14.3574 10.2215 13.8131L7.53797 11.7769C7.21719 11.5335 6.78282 11.5335 6.46204 11.7769L3.77846 13.8131C3.06117 14.3574 2.09607 13.6251 2.37005 12.7444L3.39508 9.44973C3.51761 9.0559 3.38338 8.62446 3.0626 8.38106L0.37903 6.34481C-0.338258 5.80055 0.0303816 4.61566 0.916998 4.61566H4.23408C4.63058 4.61566 4.98199 4.34902 5.10452 3.95519L6.12956 0.660476Z"
                                                             fill="#FFC97A" />
@@ -4664,9 +4707,11 @@ line-height: normal;">
 
                                         <div class="bottom mt-4">
                                             <p>From <b>£38</b></p>
-                                            <button class="arrow"><svg xmlns="http://www.w3.org/2000/svg" width="36"
-                                                    height="36" viewBox="0 0 36 36" fill="none">
-                                                    <rect width="36" height="36" rx="18" fill="#D8E8B7" />
+                                            <button class="arrow"><svg xmlns="http://www.w3.org/2000/svg"
+                                                    width="36" height="36" viewBox="0 0 36 36"
+                                                    fill="none">
+                                                    <rect width="36" height="36" rx="18"
+                                                        fill="#D8E8B7" />
                                                     <path
                                                         d="M24.3526 17.2013C24.7483 17.5931 24.7477 18.2326 24.3514 18.6236L21.1135 21.8188C20.847 22.0818 20.4175 22.0784 20.1552 21.8111C20.0514 21.7086 20.0098 21.6061 20.0306 21.5036C20.0566 21.401 20.1137 21.3037 20.202 21.2114L22.438 19.0202C22.5627 18.8972 22.6796 18.787 22.7886 18.6896C22.875 18.6125 22.8085 18.4583 22.6933 18.47C22.5599 18.4835 22.4229 18.4952 22.2822 18.5051C21.9965 18.5256 21.7005 18.5359 21.394 18.5359H11.8766C11.5305 18.5359 11.25 18.2553 11.25 17.9093C11.25 17.5632 11.5305 17.2827 11.8766 17.2827H21.394C21.7005 17.2827 21.9991 17.2929 22.29 17.3134C22.4286 17.3232 22.5637 17.3347 22.6952 17.348C22.812 17.3597 22.878 17.2051 22.7886 17.1289C22.6796 17.0315 22.5627 16.9213 22.438 16.7983L20.1864 14.5917C20.0929 14.4995 20.0358 14.4021 20.015 14.2996C19.9942 14.1971 20.0332 14.0946 20.1319 13.9921C20.3983 13.7206 20.8346 13.7176 21.1049 13.9852L24.3526 17.2013Z"
                                                         fill="white" />
@@ -4678,7 +4723,8 @@ line-height: normal;">
                                     <button class="book"><svg xmlns="http://www.w3.org/2000/svg" width="17"
                                             height="17" viewBox="0 0 17 17" fill="none">
                                             <path d="M2.28125 15.5449V12.6621H5.16408" stroke="white"
-                                                stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" />
+                                                stroke-width="1.1" stroke-linecap="round"
+                                                stroke-linejoin="round" />
                                             <path
                                                 d="M15.4154 6.67233C15.7213 8.30432 15.4767 9.99169 14.72 11.4697C13.9633 12.9476 12.7373 14.1326 11.2344 14.8385C9.73156 15.5444 8.03684 15.7315 6.4162 15.3702C4.79556 15.009 3.34071 14.1199 2.27994 12.8425M0.678108 9.42728C0.372236 7.79528 0.616841 6.10792 1.37354 4.62995C2.13024 3.15198 3.35621 1.96706 4.85908 1.26111C6.36195 0.555159 8.05666 0.368136 9.6773 0.729384C11.2979 1.09063 12.7528 1.97971 13.8136 3.25711"
                                                 stroke="white" stroke-width="1.1" stroke-linecap="round"
@@ -4756,8 +4802,8 @@ line-height: normal;">
                                         <div class="card-body">
                                             <div class="card-img">
                                                 <div class="top-left-svg left-svg">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="21" height="22"
-                                                        viewBox="0 0 21 22" fill="none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="21"
+                                                        height="22" viewBox="0 0 21 22" fill="none">
                                                         <path
                                                             d="M10.9482 0.125295C10.7667 0.043205 10.5723 0 10.3692 0C10.1662 0 9.97174 0.043205 9.79028 0.125295L1.65477 3.57738C0.704262 3.97918 -0.00430085 4.91673 1.96518e-05 6.0487C0.0216222 10.3346 1.78439 18.1764 9.22861 21.7408C9.95014 22.0864 10.7883 22.0864 11.5098 21.7408C18.9541 18.1764 20.7168 10.3346 20.7384 6.0487C20.7428 4.91673 20.0342 3.97918 19.0837 3.57738L10.9482 0.125295ZM6.26043 12.3653C6.46781 12.4171 6.68816 12.443 6.91282 12.443C8.43796 12.443 9.67795 11.2031 9.67795 9.67793V6.9128H11.5876C12.1104 6.9128 12.59 7.2066 12.8233 7.67753L13.1343 8.29537H15.8995C16.2797 8.29537 16.5907 8.60644 16.5907 8.98665V10.3692C16.5907 12.2789 15.044 13.8256 13.1343 13.8256H11.0605V16.0161C11.0605 16.3315 10.8056 16.5907 10.4859 16.5907C10.4081 16.5907 10.3303 16.5734 10.2612 16.5432L5.99688 14.7156C5.71172 14.5947 5.53026 14.3138 5.53026 14.0071C5.53026 13.8861 5.55619 13.7694 5.61235 13.6614L6.26043 12.3653ZM6.22154 6.9128H8.29538V9.67793C8.29538 10.4427 7.67755 11.0605 6.91282 11.0605C6.1481 11.0605 5.53026 10.4427 5.53026 9.67793V7.60408C5.53026 7.22388 5.84134 6.9128 6.22154 6.9128ZM11.7518 8.98665C11.7518 8.80331 11.679 8.62748 11.5493 8.49784C11.4197 8.3682 11.2438 8.29537 11.0605 8.29537C10.8772 8.29537 10.7013 8.3682 10.5717 8.49784C10.4421 8.62748 10.3692 8.80331 10.3692 8.98665C10.3692 9.16998 10.4421 9.34581 10.5717 9.47545C10.7013 9.60509 10.8772 9.67793 11.0605 9.67793C11.2438 9.67793 11.4197 9.60509 11.5493 9.47545C11.679 9.34581 11.7518 9.16998 11.7518 8.98665Z"
                                                             fill="#C9DDA0"></path>
@@ -4769,7 +4815,8 @@ line-height: normal;">
                                                         <pattern id="pattern-card-4" patternUnits="userSpaceOnUse"
                                                             width="255" height="130">
 
-                                                            <image href="{{ asset('images/space_card1.png') }}" alt="Image" width="255" height="130"
+                                                            <image href="{{ asset('images/space_card1.png') }}"
+                                                                alt="Image" width="255" height="130"
                                                                 preserveAspectRatio="xMinYMax slice">
                                                             </image>
                                                         </pattern>
@@ -4780,7 +4827,8 @@ line-height: normal;">
                                                         fill="url(#pattern-card-4)"></path>
                                                 </svg>
                                                 <span class="delete cursor"><svg xmlns="http://www.w3.org/2000/svg"
-                                                        width="13" height="15" viewBox="0 0 13 15" fill="none">
+                                                        width="13" height="15" viewBox="0 0 13 15"
+                                                        fill="none">
                                                         <path
                                                             d="M2.42915 15C2.01624 15 1.66308 14.8494 1.36965 14.5482C1.07622 14.247 0.929196 13.8859 0.928577 13.4648V1.68358H0.464292C0.332435 1.68358 0.222244 1.63792 0.133721 1.54661C0.0451968 1.45529 0.000625407 1.34211 6.36006e-06 1.20704C-0.000612687 1.07197 0.0439588 0.9591 0.133721 0.868421C0.223482 0.777743 0.333673 0.732403 0.464292 0.732403H3.71429C3.71429 0.535827 3.78548 0.364616 3.92786 0.21877C4.07024 0.0729233 4.23738 0 4.42929 0H8.57071C8.76262 0 8.92976 0.0729233 9.07214 0.21877C9.21452 0.364616 9.28571 0.535827 9.28571 0.732403H12.5357C12.6676 0.732403 12.7778 0.77806 12.8663 0.869372C12.9548 0.960685 12.9994 1.07387 13 1.20894C13.0006 1.34401 12.956 1.45688 12.8663 1.54756C12.7765 1.63824 12.6663 1.68358 12.5357 1.68358H12.0714V13.4639C12.0714 13.8862 11.9244 14.2476 11.6304 14.5482C11.3363 14.8488 10.9834 14.9994 10.5718 15H2.42915ZM11.1429 1.68358H1.85715V13.4639C1.85715 13.6344 1.91069 13.7746 2.01779 13.8843C2.12489 13.994 2.262 14.0488 2.42915 14.0488H10.5718C10.7383 14.0488 10.8751 13.994 10.9822 13.8843C11.0893 13.7746 11.1429 13.6344 11.1429 13.4639V1.68358ZM4.92886 12.1465C5.06072 12.1465 5.17122 12.1008 5.26036 12.0095C5.3495 11.9182 5.39376 11.8053 5.39314 11.6709V4.06151C5.39314 3.92644 5.34857 3.81357 5.25943 3.72289C5.17029 3.63221 5.05979 3.58656 4.92793 3.58592C4.79607 3.58529 4.68588 3.63094 4.59736 3.72289C4.50884 3.81484 4.46457 3.92771 4.46457 4.06151V11.6709C4.46457 11.806 4.50914 11.9188 4.59829 12.0095C4.68743 12.1008 4.79762 12.1465 4.92886 12.1465ZM8.07207 12.1465C8.20393 12.1465 8.31412 12.1008 8.40264 12.0095C8.49117 11.9182 8.53543 11.8053 8.53543 11.6709V4.06151C8.53543 3.92644 8.49086 3.81357 8.40171 3.72289C8.31257 3.63158 8.20238 3.58592 8.07114 3.58592C7.93928 3.58592 7.82878 3.63158 7.73964 3.72289C7.6505 3.8142 7.60624 3.92708 7.60686 4.06151V11.6709C7.60686 11.806 7.65143 11.9188 7.74057 12.0095C7.82971 12.1002 7.94021 12.1458 8.07207 12.1465Z"
                                                             fill="#3B3731"></path>
@@ -4790,9 +4838,10 @@ line-height: normal;">
                                             <div class="labels d-flex align-items-center justify-content-between">
                                                 <span>Salons</span>
                                                 <div class="label-icon">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="82" height="24"
-                                                        viewBox="0 0 82 24" fill="none">
-                                                        <rect width="24" height="24" rx="12" fill="#CBDCE8" />
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="82"
+                                                        height="24" viewBox="0 0 82 24" fill="none">
+                                                        <rect width="24" height="24" rx="12"
+                                                            fill="#CBDCE8" />
                                                         <path
                                                             d="M9 17C8.85833 17 8.73967 16.952 8.644 16.856C8.54833 16.76 8.50033 16.6413 8.5 16.5C8.49967 16.3587 8.54767 16.24 8.644 16.144C8.74033 16.048 8.859 16 9 16H15C15.1417 16 15.2605 16.048 15.3565 16.144C15.4525 16.24 15.5003 16.3587 15.5 16.5C15.4997 16.6413 15.4517 16.7602 15.356 16.8565C15.2603 16.9528 15.1417 17.0007 15 17H9ZM9.35 15.25C9.10833 15.25 8.89383 15.1708 8.7065 15.0125C8.51917 14.8542 8.4045 14.6542 8.3625 14.4125L7.8625 11.2375C7.84583 11.2375 7.82717 11.2397 7.8065 11.244C7.78583 11.2483 7.767 11.2503 7.75 11.25C7.54167 11.25 7.36467 11.1772 7.219 11.0315C7.07333 10.8858 7.00033 10.7087 7 10.5C6.99967 10.2913 7.07267 10.1143 7.219 9.969C7.36533 9.82367 7.54233 9.75067 7.75 9.75C7.95767 9.74933 8.13483 9.82233 8.2815 9.969C8.42817 10.1157 8.501 10.2927 8.5 10.5C8.5 10.5583 8.49367 10.6125 8.481 10.6625C8.46833 10.7125 8.45383 10.7583 8.4375 10.8L10 11.5L11.5625 9.3625C11.4708 9.29583 11.3958 9.20833 11.3375 9.1C11.2792 8.99167 11.25 8.875 11.25 8.75C11.25 8.54167 11.323 8.3645 11.469 8.2185C11.615 8.0725 11.792 7.99967 12 8C12.208 8.00033 12.3852 8.07333 12.5315 8.219C12.6778 8.36467 12.7507 8.54167 12.75 8.75C12.75 8.875 12.7208 8.99167 12.6625 9.1C12.6042 9.20833 12.5292 9.29583 12.4375 9.3625L14 11.5L15.5625 10.8C15.5458 10.7583 15.5312 10.7125 15.5185 10.6625C15.5058 10.6125 15.4997 10.5583 15.5 10.5C15.5 10.2917 15.573 10.1145 15.719 9.9685C15.865 9.8225 16.042 9.74967 16.25 9.75C16.458 9.75033 16.6352 9.82333 16.7815 9.969C16.9278 10.1147 17.0007 10.2917 17 10.5C16.9993 10.7083 16.9265 10.8855 16.7815 11.0315C16.6365 11.1775 16.4593 11.2503 16.25 11.25C16.2333 11.25 16.2147 11.248 16.194 11.244C16.1733 11.24 16.1545 11.2378 16.1375 11.2375L15.6375 14.4125C15.5958 14.6542 15.4813 14.8542 15.294 15.0125C15.1067 15.1708 14.892 15.25 14.65 15.25H9.35ZM9.35 14.25H14.65L14.975 12.1625L14.4 12.4125C14.1833 12.5042 13.9625 12.5208 13.7375 12.4625C13.5125 12.4042 13.3292 12.2792 13.1875 12.0875L12 10.45L10.8125 12.0875C10.6708 12.2792 10.4875 12.4042 10.2625 12.4625C10.0375 12.5208 9.81667 12.5042 9.6 12.4125L9.025 12.1625L9.35 14.25Z"
                                                             fill="white" />
@@ -4846,26 +4895,26 @@ line-height: normal;">
                                             </div>
 
                                             <div class="features mt-4">
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="9"
-                                                        viewBox="0 0 12 9" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12"
+                                                        height="9" viewBox="0 0 12 9" fill="none">
                                                         <path d="M0.75 4.75L4.25 8.25L11.25 0.75" stroke="#3B3731"
                                                             stroke-width="1.5" stroke-linecap="round"
                                                             stroke-linejoin="round" />
                                                     </svg> Grooming Table</span>
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="9"
-                                                        viewBox="0 0 12 9" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12"
+                                                        height="9" viewBox="0 0 12 9" fill="none">
                                                         <path d="M0.75 4.75L4.25 8.25L11.25 0.75" stroke="#3B3731"
                                                             stroke-width="1.5" stroke-linecap="round"
                                                             stroke-linejoin="round" />
                                                     </svg> Bath</span>
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="9"
-                                                        viewBox="0 0 12 9" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12"
+                                                        height="9" viewBox="0 0 12 9" fill="none">
                                                         <path d="M0.75 4.75L4.25 8.25L11.25 0.75" stroke="#3B3731"
                                                             stroke-width="1.5" stroke-linecap="round"
                                                             stroke-linejoin="round" />
                                                     </svg> Dryer</span>
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="9"
-                                                        viewBox="0 0 12 9" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12"
+                                                        height="9" viewBox="0 0 12 9" fill="none">
                                                         <path d="M0.75 4.75L4.25 8.25L11.25 0.75" stroke="#3B3731"
                                                             stroke-width="1.5" stroke-linecap="round"
                                                             stroke-linejoin="round" />
@@ -4876,8 +4925,10 @@ line-height: normal;">
                                             <div class="bottom mt-4">
                                                 <p>From <b>£38</b> <strong> / hour</strong></p>
                                                 <button class="arrow"><svg xmlns="http://www.w3.org/2000/svg"
-                                                        width="36" height="36" viewBox="0 0 36 36" fill="none">
-                                                        <rect width="36" height="36" rx="18" fill="#D8E8B7" />
+                                                        width="36" height="36" viewBox="0 0 36 36"
+                                                        fill="none">
+                                                        <rect width="36" height="36" rx="18"
+                                                            fill="#D8E8B7" />
                                                         <path
                                                             d="M24.3526 17.2013C24.7483 17.5931 24.7477 18.2326 24.3514 18.6236L21.1135 21.8188C20.847 22.0818 20.4175 22.0784 20.1552 21.8111C20.0514 21.7086 20.0098 21.6061 20.0306 21.5036C20.0566 21.401 20.1137 21.3037 20.202 21.2114L22.438 19.0202C22.5627 18.8972 22.6796 18.787 22.7886 18.6896C22.875 18.6125 22.8085 18.4583 22.6933 18.47C22.5599 18.4835 22.4229 18.4952 22.2822 18.5051C21.9965 18.5256 21.7005 18.5359 21.394 18.5359H11.8766C11.5305 18.5359 11.25 18.2553 11.25 17.9093C11.25 17.5632 11.5305 17.2827 11.8766 17.2827H21.394C21.7005 17.2827 21.9991 17.2929 22.29 17.3134C22.4286 17.3232 22.5637 17.3347 22.6952 17.348C22.812 17.3597 22.878 17.2051 22.7886 17.1289C22.6796 17.0315 22.5627 16.9213 22.438 16.7983L20.1864 14.5917C20.0929 14.4995 20.0358 14.4021 20.015 14.2996C19.9942 14.1971 20.0332 14.0946 20.1319 13.9921C20.3983 13.7206 20.8346 13.7176 21.1049 13.9852L24.3526 17.2013Z"
                                                             fill="white" />
@@ -4886,8 +4937,9 @@ line-height: normal;">
 
                                         </div>
 
-                                        <button class="book"><svg xmlns="http://www.w3.org/2000/svg" width="17"
-                                                height="17" viewBox="0 0 17 17" fill="none">
+                                        <button class="book"><svg xmlns="http://www.w3.org/2000/svg"
+                                                width="17" height="17" viewBox="0 0 17 17"
+                                                fill="none">
                                                 <path d="M2.28125 15.5449V12.6621H5.16408" stroke="white"
                                                     stroke-width="1.1" stroke-linecap="round"
                                                     stroke-linejoin="round" />
@@ -4910,8 +4962,8 @@ line-height: normal;">
                                         <div class="card-body">
                                             <div class="card-img">
                                                 <div class="top-left-svg left-svg">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="21" height="22"
-                                                        viewBox="0 0 21 22" fill="none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="21"
+                                                        height="22" viewBox="0 0 21 22" fill="none">
                                                         <path
                                                             d="M10.9482 0.125295C10.7667 0.043205 10.5723 0 10.3692 0C10.1662 0 9.97174 0.043205 9.79028 0.125295L1.65477 3.57738C0.704262 3.97918 -0.00430085 4.91673 1.96518e-05 6.0487C0.0216222 10.3346 1.78439 18.1764 9.22861 21.7408C9.95014 22.0864 10.7883 22.0864 11.5098 21.7408C18.9541 18.1764 20.7168 10.3346 20.7384 6.0487C20.7428 4.91673 20.0342 3.97918 19.0837 3.57738L10.9482 0.125295ZM6.26043 12.3653C6.46781 12.4171 6.68816 12.443 6.91282 12.443C8.43796 12.443 9.67795 11.2031 9.67795 9.67793V6.9128H11.5876C12.1104 6.9128 12.59 7.2066 12.8233 7.67753L13.1343 8.29537H15.8995C16.2797 8.29537 16.5907 8.60644 16.5907 8.98665V10.3692C16.5907 12.2789 15.044 13.8256 13.1343 13.8256H11.0605V16.0161C11.0605 16.3315 10.8056 16.5907 10.4859 16.5907C10.4081 16.5907 10.3303 16.5734 10.2612 16.5432L5.99688 14.7156C5.71172 14.5947 5.53026 14.3138 5.53026 14.0071C5.53026 13.8861 5.55619 13.7694 5.61235 13.6614L6.26043 12.3653ZM6.22154 6.9128H8.29538V9.67793C8.29538 10.4427 7.67755 11.0605 6.91282 11.0605C6.1481 11.0605 5.53026 10.4427 5.53026 9.67793V7.60408C5.53026 7.22388 5.84134 6.9128 6.22154 6.9128ZM11.7518 8.98665C11.7518 8.80331 11.679 8.62748 11.5493 8.49784C11.4197 8.3682 11.2438 8.29537 11.0605 8.29537C10.8772 8.29537 10.7013 8.3682 10.5717 8.49784C10.4421 8.62748 10.3692 8.80331 10.3692 8.98665C10.3692 9.16998 10.4421 9.34581 10.5717 9.47545C10.7013 9.60509 10.8772 9.67793 11.0605 9.67793C11.2438 9.67793 11.4197 9.60509 11.5493 9.47545C11.679 9.34581 11.7518 9.16998 11.7518 8.98665Z"
                                                             fill="#C9DDA0"></path>
@@ -4923,7 +4975,8 @@ line-height: normal;">
                                                         <pattern id="pattern-card-5" patternUnits="userSpaceOnUse"
                                                             width="255" height="130">
 
-                                                            <image href="{{ asset('images/space_card2.png') }}" alt="Image" width="255" height="130"
+                                                            <image href="{{ asset('images/space_card2.png') }}"
+                                                                alt="Image" width="255" height="130"
                                                                 preserveAspectRatio="xMinYMax slice">
                                                             </image>
                                                         </pattern>
@@ -4934,7 +4987,8 @@ line-height: normal;">
                                                         fill="url(#pattern-card-5)"></path>
                                                 </svg>
                                                 <span class="delete cursor"><svg xmlns="http://www.w3.org/2000/svg"
-                                                        width="13" height="15" viewBox="0 0 13 15" fill="none">
+                                                        width="13" height="15" viewBox="0 0 13 15"
+                                                        fill="none">
                                                         <path
                                                             d="M2.42915 15C2.01624 15 1.66308 14.8494 1.36965 14.5482C1.07622 14.247 0.929196 13.8859 0.928577 13.4648V1.68358H0.464292C0.332435 1.68358 0.222244 1.63792 0.133721 1.54661C0.0451968 1.45529 0.000625407 1.34211 6.36006e-06 1.20704C-0.000612687 1.07197 0.0439588 0.9591 0.133721 0.868421C0.223482 0.777743 0.333673 0.732403 0.464292 0.732403H3.71429C3.71429 0.535827 3.78548 0.364616 3.92786 0.21877C4.07024 0.0729233 4.23738 0 4.42929 0H8.57071C8.76262 0 8.92976 0.0729233 9.07214 0.21877C9.21452 0.364616 9.28571 0.535827 9.28571 0.732403H12.5357C12.6676 0.732403 12.7778 0.77806 12.8663 0.869372C12.9548 0.960685 12.9994 1.07387 13 1.20894C13.0006 1.34401 12.956 1.45688 12.8663 1.54756C12.7765 1.63824 12.6663 1.68358 12.5357 1.68358H12.0714V13.4639C12.0714 13.8862 11.9244 14.2476 11.6304 14.5482C11.3363 14.8488 10.9834 14.9994 10.5718 15H2.42915ZM11.1429 1.68358H1.85715V13.4639C1.85715 13.6344 1.91069 13.7746 2.01779 13.8843C2.12489 13.994 2.262 14.0488 2.42915 14.0488H10.5718C10.7383 14.0488 10.8751 13.994 10.9822 13.8843C11.0893 13.7746 11.1429 13.6344 11.1429 13.4639V1.68358ZM4.92886 12.1465C5.06072 12.1465 5.17122 12.1008 5.26036 12.0095C5.3495 11.9182 5.39376 11.8053 5.39314 11.6709V4.06151C5.39314 3.92644 5.34857 3.81357 5.25943 3.72289C5.17029 3.63221 5.05979 3.58656 4.92793 3.58592C4.79607 3.58529 4.68588 3.63094 4.59736 3.72289C4.50884 3.81484 4.46457 3.92771 4.46457 4.06151V11.6709C4.46457 11.806 4.50914 11.9188 4.59829 12.0095C4.68743 12.1008 4.79762 12.1465 4.92886 12.1465ZM8.07207 12.1465C8.20393 12.1465 8.31412 12.1008 8.40264 12.0095C8.49117 11.9182 8.53543 11.8053 8.53543 11.6709V4.06151C8.53543 3.92644 8.49086 3.81357 8.40171 3.72289C8.31257 3.63158 8.20238 3.58592 8.07114 3.58592C7.93928 3.58592 7.82878 3.63158 7.73964 3.72289C7.6505 3.8142 7.60624 3.92708 7.60686 4.06151V11.6709C7.60686 11.806 7.65143 11.9188 7.74057 12.0095C7.82971 12.1002 7.94021 12.1458 8.07207 12.1465Z"
                                                             fill="#3B3731"></path>
@@ -4944,9 +4998,10 @@ line-height: normal;">
                                             <div class="labels d-flex align-items-center justify-content-between">
                                                 <span>Mobile Station</span>
                                                 <div class="label-icon">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="82" height="24"
-                                                        viewBox="0 0 82 24" fill="none">
-                                                        <rect width="24" height="24" rx="12" fill="#CBDCE8" />
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="82"
+                                                        height="24" viewBox="0 0 82 24" fill="none">
+                                                        <rect width="24" height="24" rx="12"
+                                                            fill="#CBDCE8" />
                                                         <path
                                                             d="M9 17C8.85833 17 8.73967 16.952 8.644 16.856C8.54833 16.76 8.50033 16.6413 8.5 16.5C8.49967 16.3587 8.54767 16.24 8.644 16.144C8.74033 16.048 8.859 16 9 16H15C15.1417 16 15.2605 16.048 15.3565 16.144C15.4525 16.24 15.5003 16.3587 15.5 16.5C15.4997 16.6413 15.4517 16.7602 15.356 16.8565C15.2603 16.9528 15.1417 17.0007 15 17H9ZM9.35 15.25C9.10833 15.25 8.89383 15.1708 8.7065 15.0125C8.51917 14.8542 8.4045 14.6542 8.3625 14.4125L7.8625 11.2375C7.84583 11.2375 7.82717 11.2397 7.8065 11.244C7.78583 11.2483 7.767 11.2503 7.75 11.25C7.54167 11.25 7.36467 11.1772 7.219 11.0315C7.07333 10.8858 7.00033 10.7087 7 10.5C6.99967 10.2913 7.07267 10.1143 7.219 9.969C7.36533 9.82367 7.54233 9.75067 7.75 9.75C7.95767 9.74933 8.13483 9.82233 8.2815 9.969C8.42817 10.1157 8.501 10.2927 8.5 10.5C8.5 10.5583 8.49367 10.6125 8.481 10.6625C8.46833 10.7125 8.45383 10.7583 8.4375 10.8L10 11.5L11.5625 9.3625C11.4708 9.29583 11.3958 9.20833 11.3375 9.1C11.2792 8.99167 11.25 8.875 11.25 8.75C11.25 8.54167 11.323 8.3645 11.469 8.2185C11.615 8.0725 11.792 7.99967 12 8C12.208 8.00033 12.3852 8.07333 12.5315 8.219C12.6778 8.36467 12.7507 8.54167 12.75 8.75C12.75 8.875 12.7208 8.99167 12.6625 9.1C12.6042 9.20833 12.5292 9.29583 12.4375 9.3625L14 11.5L15.5625 10.8C15.5458 10.7583 15.5312 10.7125 15.5185 10.6625C15.5058 10.6125 15.4997 10.5583 15.5 10.5C15.5 10.2917 15.573 10.1145 15.719 9.9685C15.865 9.8225 16.042 9.74967 16.25 9.75C16.458 9.75033 16.6352 9.82333 16.7815 9.969C16.9278 10.1147 17.0007 10.2917 17 10.5C16.9993 10.7083 16.9265 10.8855 16.7815 11.0315C16.6365 11.1775 16.4593 11.2503 16.25 11.25C16.2333 11.25 16.2147 11.248 16.194 11.244C16.1733 11.24 16.1545 11.2378 16.1375 11.2375L15.6375 14.4125C15.5958 14.6542 15.4813 14.8542 15.294 15.0125C15.1067 15.1708 14.892 15.25 14.65 15.25H9.35ZM9.35 14.25H14.65L14.975 12.1625L14.4 12.4125C14.1833 12.5042 13.9625 12.5208 13.7375 12.4625C13.5125 12.4042 13.3292 12.2792 13.1875 12.0875L12 10.45L10.8125 12.0875C10.6708 12.2792 10.4875 12.4042 10.2625 12.4625C10.0375 12.5208 9.81667 12.5042 9.6 12.4125L9.025 12.1625L9.35 14.25Z"
                                                             fill="white" />
@@ -5000,22 +5055,22 @@ line-height: normal;">
                                             </div>
 
                                             <div class="features mt-4">
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="9"
-                                                        viewBox="0 0 12 9" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12"
+                                                        height="9" viewBox="0 0 12 9" fill="none">
                                                         <path d="M0.75 4.75L4.25 8.25L11.25 0.75" stroke="#3B3731"
                                                             stroke-width="1.5" stroke-linecap="round"
                                                             stroke-linejoin="round">
                                                         </path>
                                                     </svg> Waiting area</span>
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="9"
-                                                        viewBox="0 0 12 9" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12"
+                                                        height="9" viewBox="0 0 12 9" fill="none">
                                                         <path d="M0.75 4.75L4.25 8.25L11.25 0.75" stroke="#3B3731"
                                                             stroke-width="1.5" stroke-linecap="round"
                                                             stroke-linejoin="round">
                                                         </path>
                                                     </svg> Towels</span>
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="9"
-                                                        viewBox="0 0 12 9" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12"
+                                                        height="9" viewBox="0 0 12 9" fill="none">
                                                         <path d="M0.75 4.75L4.25 8.25L11.25 0.75" stroke="#3B3731"
                                                             stroke-width="1.5" stroke-linecap="round"
                                                             stroke-linejoin="round">
@@ -5027,8 +5082,10 @@ line-height: normal;">
                                             <div class="bottom mt-4">
                                                 <p>From <b>£38</b> <strong> / hour</strong></p>
                                                 <button class="arrow"><svg xmlns="http://www.w3.org/2000/svg"
-                                                        width="36" height="36" viewBox="0 0 36 36" fill="none">
-                                                        <rect width="36" height="36" rx="18" fill="#D8E8B7" />
+                                                        width="36" height="36" viewBox="0 0 36 36"
+                                                        fill="none">
+                                                        <rect width="36" height="36" rx="18"
+                                                            fill="#D8E8B7" />
                                                         <path
                                                             d="M24.3526 17.2013C24.7483 17.5931 24.7477 18.2326 24.3514 18.6236L21.1135 21.8188C20.847 22.0818 20.4175 22.0784 20.1552 21.8111C20.0514 21.7086 20.0098 21.6061 20.0306 21.5036C20.0566 21.401 20.1137 21.3037 20.202 21.2114L22.438 19.0202C22.5627 18.8972 22.6796 18.787 22.7886 18.6896C22.875 18.6125 22.8085 18.4583 22.6933 18.47C22.5599 18.4835 22.4229 18.4952 22.2822 18.5051C21.9965 18.5256 21.7005 18.5359 21.394 18.5359H11.8766C11.5305 18.5359 11.25 18.2553 11.25 17.9093C11.25 17.5632 11.5305 17.2827 11.8766 17.2827H21.394C21.7005 17.2827 21.9991 17.2929 22.29 17.3134C22.4286 17.3232 22.5637 17.3347 22.6952 17.348C22.812 17.3597 22.878 17.2051 22.7886 17.1289C22.6796 17.0315 22.5627 16.9213 22.438 16.7983L20.1864 14.5917C20.0929 14.4995 20.0358 14.4021 20.015 14.2996C19.9942 14.1971 20.0332 14.0946 20.1319 13.9921C20.3983 13.7206 20.8346 13.7176 21.1049 13.9852L24.3526 17.2013Z"
                                                             fill="white" />
@@ -5037,8 +5094,9 @@ line-height: normal;">
 
                                         </div>
 
-                                        <button class="book"><svg xmlns="http://www.w3.org/2000/svg" width="17"
-                                                height="17" viewBox="0 0 17 17" fill="none">
+                                        <button class="book"><svg xmlns="http://www.w3.org/2000/svg"
+                                                width="17" height="17" viewBox="0 0 17 17"
+                                                fill="none">
                                                 <path d="M2.28125 15.5449V12.6621H5.16408" stroke="white"
                                                     stroke-width="1.1" stroke-linecap="round"
                                                     stroke-linejoin="round" />
@@ -5061,8 +5119,8 @@ line-height: normal;">
                                         <div class="card-body">
                                             <div class="card-img">
                                                 <div class="top-left-svg left-svg">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="21" height="22"
-                                                        viewBox="0 0 21 22" fill="none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="21"
+                                                        height="22" viewBox="0 0 21 22" fill="none">
                                                         <path
                                                             d="M10.9482 0.125295C10.7667 0.043205 10.5723 0 10.3692 0C10.1662 0 9.97174 0.043205 9.79028 0.125295L1.65477 3.57738C0.704262 3.97918 -0.00430085 4.91673 1.96518e-05 6.0487C0.0216222 10.3346 1.78439 18.1764 9.22861 21.7408C9.95014 22.0864 10.7883 22.0864 11.5098 21.7408C18.9541 18.1764 20.7168 10.3346 20.7384 6.0487C20.7428 4.91673 20.0342 3.97918 19.0837 3.57738L10.9482 0.125295ZM6.26043 12.3653C6.46781 12.4171 6.68816 12.443 6.91282 12.443C8.43796 12.443 9.67795 11.2031 9.67795 9.67793V6.9128H11.5876C12.1104 6.9128 12.59 7.2066 12.8233 7.67753L13.1343 8.29537H15.8995C16.2797 8.29537 16.5907 8.60644 16.5907 8.98665V10.3692C16.5907 12.2789 15.044 13.8256 13.1343 13.8256H11.0605V16.0161C11.0605 16.3315 10.8056 16.5907 10.4859 16.5907C10.4081 16.5907 10.3303 16.5734 10.2612 16.5432L5.99688 14.7156C5.71172 14.5947 5.53026 14.3138 5.53026 14.0071C5.53026 13.8861 5.55619 13.7694 5.61235 13.6614L6.26043 12.3653ZM6.22154 6.9128H8.29538V9.67793C8.29538 10.4427 7.67755 11.0605 6.91282 11.0605C6.1481 11.0605 5.53026 10.4427 5.53026 9.67793V7.60408C5.53026 7.22388 5.84134 6.9128 6.22154 6.9128ZM11.7518 8.98665C11.7518 8.80331 11.679 8.62748 11.5493 8.49784C11.4197 8.3682 11.2438 8.29537 11.0605 8.29537C10.8772 8.29537 10.7013 8.3682 10.5717 8.49784C10.4421 8.62748 10.3692 8.80331 10.3692 8.98665C10.3692 9.16998 10.4421 9.34581 10.5717 9.47545C10.7013 9.60509 10.8772 9.67793 11.0605 9.67793C11.2438 9.67793 11.4197 9.60509 11.5493 9.47545C11.679 9.34581 11.7518 9.16998 11.7518 8.98665Z"
                                                             fill="#C9DDA0"></path>
@@ -5074,7 +5132,8 @@ line-height: normal;">
                                                         <pattern id="pattern-card-6" patternUnits="userSpaceOnUse"
                                                             width="255" height="130">
 
-                                                            <image href="{{ asset('images/space_card3.png') }}" alt="Image" width="255" height="130"
+                                                            <image href="{{ asset('images/space_card3.png') }}"
+                                                                alt="Image" width="255" height="130"
                                                                 preserveAspectRatio="xMinYMax slice">
                                                             </image>
                                                         </pattern>
@@ -5085,7 +5144,8 @@ line-height: normal;">
                                                         fill="url(#pattern-card-6)"></path>
                                                 </svg>
                                                 <span class="delete cursor"><svg xmlns="http://www.w3.org/2000/svg"
-                                                        width="13" height="15" viewBox="0 0 13 15" fill="none">
+                                                        width="13" height="15" viewBox="0 0 13 15"
+                                                        fill="none">
                                                         <path
                                                             d="M2.42915 15C2.01624 15 1.66308 14.8494 1.36965 14.5482C1.07622 14.247 0.929196 13.8859 0.928577 13.4648V1.68358H0.464292C0.332435 1.68358 0.222244 1.63792 0.133721 1.54661C0.0451968 1.45529 0.000625407 1.34211 6.36006e-06 1.20704C-0.000612687 1.07197 0.0439588 0.9591 0.133721 0.868421C0.223482 0.777743 0.333673 0.732403 0.464292 0.732403H3.71429C3.71429 0.535827 3.78548 0.364616 3.92786 0.21877C4.07024 0.0729233 4.23738 0 4.42929 0H8.57071C8.76262 0 8.92976 0.0729233 9.07214 0.21877C9.21452 0.364616 9.28571 0.535827 9.28571 0.732403H12.5357C12.6676 0.732403 12.7778 0.77806 12.8663 0.869372C12.9548 0.960685 12.9994 1.07387 13 1.20894C13.0006 1.34401 12.956 1.45688 12.8663 1.54756C12.7765 1.63824 12.6663 1.68358 12.5357 1.68358H12.0714V13.4639C12.0714 13.8862 11.9244 14.2476 11.6304 14.5482C11.3363 14.8488 10.9834 14.9994 10.5718 15H2.42915ZM11.1429 1.68358H1.85715V13.4639C1.85715 13.6344 1.91069 13.7746 2.01779 13.8843C2.12489 13.994 2.262 14.0488 2.42915 14.0488H10.5718C10.7383 14.0488 10.8751 13.994 10.9822 13.8843C11.0893 13.7746 11.1429 13.6344 11.1429 13.4639V1.68358ZM4.92886 12.1465C5.06072 12.1465 5.17122 12.1008 5.26036 12.0095C5.3495 11.9182 5.39376 11.8053 5.39314 11.6709V4.06151C5.39314 3.92644 5.34857 3.81357 5.25943 3.72289C5.17029 3.63221 5.05979 3.58656 4.92793 3.58592C4.79607 3.58529 4.68588 3.63094 4.59736 3.72289C4.50884 3.81484 4.46457 3.92771 4.46457 4.06151V11.6709C4.46457 11.806 4.50914 11.9188 4.59829 12.0095C4.68743 12.1008 4.79762 12.1465 4.92886 12.1465ZM8.07207 12.1465C8.20393 12.1465 8.31412 12.1008 8.40264 12.0095C8.49117 11.9182 8.53543 11.8053 8.53543 11.6709V4.06151C8.53543 3.92644 8.49086 3.81357 8.40171 3.72289C8.31257 3.63158 8.20238 3.58592 8.07114 3.58592C7.93928 3.58592 7.82878 3.63158 7.73964 3.72289C7.6505 3.8142 7.60624 3.92708 7.60686 4.06151V11.6709C7.60686 11.806 7.65143 11.9188 7.74057 12.0095C7.82971 12.1002 7.94021 12.1458 8.07207 12.1465Z"
                                                             fill="#3B3731"></path>
@@ -5095,9 +5155,10 @@ line-height: normal;">
                                             <div class="labels d-flex align-items-center justify-content-between">
                                                 <span>Garden / Shed</span>
                                                 <div class="label-icon">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="82" height="24"
-                                                        viewBox="0 0 82 24" fill="none">
-                                                        <rect width="24" height="24" rx="12" fill="#CBDCE8" />
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="82"
+                                                        height="24" viewBox="0 0 82 24" fill="none">
+                                                        <rect width="24" height="24" rx="12"
+                                                            fill="#CBDCE8" />
                                                         <path
                                                             d="M9 17C8.85833 17 8.73967 16.952 8.644 16.856C8.54833 16.76 8.50033 16.6413 8.5 16.5C8.49967 16.3587 8.54767 16.24 8.644 16.144C8.74033 16.048 8.859 16 9 16H15C15.1417 16 15.2605 16.048 15.3565 16.144C15.4525 16.24 15.5003 16.3587 15.5 16.5C15.4997 16.6413 15.4517 16.7602 15.356 16.8565C15.2603 16.9528 15.1417 17.0007 15 17H9ZM9.35 15.25C9.10833 15.25 8.89383 15.1708 8.7065 15.0125C8.51917 14.8542 8.4045 14.6542 8.3625 14.4125L7.8625 11.2375C7.84583 11.2375 7.82717 11.2397 7.8065 11.244C7.78583 11.2483 7.767 11.2503 7.75 11.25C7.54167 11.25 7.36467 11.1772 7.219 11.0315C7.07333 10.8858 7.00033 10.7087 7 10.5C6.99967 10.2913 7.07267 10.1143 7.219 9.969C7.36533 9.82367 7.54233 9.75067 7.75 9.75C7.95767 9.74933 8.13483 9.82233 8.2815 9.969C8.42817 10.1157 8.501 10.2927 8.5 10.5C8.5 10.5583 8.49367 10.6125 8.481 10.6625C8.46833 10.7125 8.45383 10.7583 8.4375 10.8L10 11.5L11.5625 9.3625C11.4708 9.29583 11.3958 9.20833 11.3375 9.1C11.2792 8.99167 11.25 8.875 11.25 8.75C11.25 8.54167 11.323 8.3645 11.469 8.2185C11.615 8.0725 11.792 7.99967 12 8C12.208 8.00033 12.3852 8.07333 12.5315 8.219C12.6778 8.36467 12.7507 8.54167 12.75 8.75C12.75 8.875 12.7208 8.99167 12.6625 9.1C12.6042 9.20833 12.5292 9.29583 12.4375 9.3625L14 11.5L15.5625 10.8C15.5458 10.7583 15.5312 10.7125 15.5185 10.6625C15.5058 10.6125 15.4997 10.5583 15.5 10.5C15.5 10.2917 15.573 10.1145 15.719 9.9685C15.865 9.8225 16.042 9.74967 16.25 9.75C16.458 9.75033 16.6352 9.82333 16.7815 9.969C16.9278 10.1147 17.0007 10.2917 17 10.5C16.9993 10.7083 16.9265 10.8855 16.7815 11.0315C16.6365 11.1775 16.4593 11.2503 16.25 11.25C16.2333 11.25 16.2147 11.248 16.194 11.244C16.1733 11.24 16.1545 11.2378 16.1375 11.2375L15.6375 14.4125C15.5958 14.6542 15.4813 14.8542 15.294 15.0125C15.1067 15.1708 14.892 15.25 14.65 15.25H9.35ZM9.35 14.25H14.65L14.975 12.1625L14.4 12.4125C14.1833 12.5042 13.9625 12.5208 13.7375 12.4625C13.5125 12.4042 13.3292 12.2792 13.1875 12.0875L12 10.45L10.8125 12.0875C10.6708 12.2792 10.4875 12.4042 10.2625 12.4625C10.0375 12.5208 9.81667 12.5042 9.6 12.4125L9.025 12.1625L9.35 14.25Z"
                                                             fill="white" />
@@ -5151,29 +5212,29 @@ line-height: normal;">
                                             </div>
 
                                             <div class="features mt-4">
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="9"
-                                                        viewBox="0 0 12 9" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12"
+                                                        height="9" viewBox="0 0 12 9" fill="none">
                                                         <path d="M0.75 4.75L4.25 8.25L11.25 0.75" stroke="#3B3731"
                                                             stroke-width="1.5" stroke-linecap="round"
                                                             stroke-linejoin="round">
                                                         </path>
                                                     </svg> Bath</span>
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="9"
-                                                        viewBox="0 0 12 9" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12"
+                                                        height="9" viewBox="0 0 12 9" fill="none">
                                                         <path d="M0.75 4.75L4.25 8.25L11.25 0.75" stroke="#3B3731"
                                                             stroke-width="1.5" stroke-linecap="round"
                                                             stroke-linejoin="round">
                                                         </path>
                                                     </svg> Wi-Fi</span>
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="9"
-                                                        viewBox="0 0 12 9" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12"
+                                                        height="9" viewBox="0 0 12 9" fill="none">
                                                         <path d="M0.75 4.75L4.25 8.25L11.25 0.75" stroke="#3B3731"
                                                             stroke-width="1.5" stroke-linecap="round"
                                                             stroke-linejoin="round">
                                                         </path>
                                                     </svg> Dryer</span>
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="9"
-                                                        viewBox="0 0 12 9" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12"
+                                                        height="9" viewBox="0 0 12 9" fill="none">
                                                         <path d="M0.75 4.75L4.25 8.25L11.25 0.75" stroke="#3B3731"
                                                             stroke-width="1.5" stroke-linecap="round"
                                                             stroke-linejoin="round">
@@ -5184,8 +5245,10 @@ line-height: normal;">
                                             <div class="bottom mt-4">
                                                 <p>From <b>£38</b> <strong> / hour</strong></p>
                                                 <button class="arrow"><svg xmlns="http://www.w3.org/2000/svg"
-                                                        width="36" height="36" viewBox="0 0 36 36" fill="none">
-                                                        <rect width="36" height="36" rx="18" fill="#D8E8B7" />
+                                                        width="36" height="36" viewBox="0 0 36 36"
+                                                        fill="none">
+                                                        <rect width="36" height="36" rx="18"
+                                                            fill="#D8E8B7" />
                                                         <path
                                                             d="M24.3526 17.2013C24.7483 17.5931 24.7477 18.2326 24.3514 18.6236L21.1135 21.8188C20.847 22.0818 20.4175 22.0784 20.1552 21.8111C20.0514 21.7086 20.0098 21.6061 20.0306 21.5036C20.0566 21.401 20.1137 21.3037 20.202 21.2114L22.438 19.0202C22.5627 18.8972 22.6796 18.787 22.7886 18.6896C22.875 18.6125 22.8085 18.4583 22.6933 18.47C22.5599 18.4835 22.4229 18.4952 22.2822 18.5051C21.9965 18.5256 21.7005 18.5359 21.394 18.5359H11.8766C11.5305 18.5359 11.25 18.2553 11.25 17.9093C11.25 17.5632 11.5305 17.2827 11.8766 17.2827H21.394C21.7005 17.2827 21.9991 17.2929 22.29 17.3134C22.4286 17.3232 22.5637 17.3347 22.6952 17.348C22.812 17.3597 22.878 17.2051 22.7886 17.1289C22.6796 17.0315 22.5627 16.9213 22.438 16.7983L20.1864 14.5917C20.0929 14.4995 20.0358 14.4021 20.015 14.2996C19.9942 14.1971 20.0332 14.0946 20.1319 13.9921C20.3983 13.7206 20.8346 13.7176 21.1049 13.9852L24.3526 17.2013Z"
                                                             fill="white" />
@@ -5275,8 +5338,8 @@ line-height: normal;">
                                         <path d="M11.9102 0.5L6.15672 6.25344L0.499867 0.596581" stroke="#FBAC83"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg></button>
-                                <button class="filter-btn">Sort <svg xmlns="http://www.w3.org/2000/svg" width="13"
-                                        height="7" viewBox="0 0 13 7" fill="none">
+                                <button class="filter-btn">Sort <svg xmlns="http://www.w3.org/2000/svg"
+                                        width="13" height="7" viewBox="0 0 13 7" fill="none">
                                         <path d="M11.9102 0.5L6.15672 6.25344L0.499867 0.596581" stroke="#FBAC83"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg></button>
@@ -5296,12 +5359,13 @@ line-height: normal;">
                                     <div class="review-left">
                                         <div class="avatar-wrap">
 
-                                            <img src="{{ asset('images/groomer-profile.png') }}" alt="Image" class="avatar">
+                                            <img src="{{ asset('images/groomer-profile.png') }}" alt="Image"
+                                                class="avatar">
                                             <div class="badge-shield" title="Verified">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="33"
-                                                    viewBox="0 0 30 33" fill="none">
-                                                    <ellipse cx="15.873" cy="16.5256" rx="9.3645" ry="8.81365"
-                                                        fill="white"></ellipse>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="30"
+                                                    height="33" viewBox="0 0 30 33" fill="none">
+                                                    <ellipse cx="15.873" cy="16.5256" rx="9.3645"
+                                                        ry="8.81365" fill="white"></ellipse>
                                                     <path
                                                         d="M15.44 0.185076C15.1841 0.0638192 14.9099 0 14.6235 0C14.3372 0 14.063 0.0638192 13.8071 0.185076L2.3337 5.28423C0.993208 5.87775 -0.00606541 7.26263 2.77146e-05 8.93469C0.0304934 15.2656 2.51649 26.8487 13.015 32.1138C14.0325 32.6244 15.2146 32.6244 16.2321 32.1138C26.7306 26.8487 29.2166 15.2656 29.247 8.93469C29.2531 7.26263 28.2539 5.87775 26.9134 5.28423L15.44 0.185076ZM8.82897 18.2651C9.12144 18.3416 9.43219 18.3799 9.74903 18.3799C11.8999 18.3799 13.6486 16.5483 13.6486 14.2955V10.2111H16.3418C17.0791 10.2111 17.7554 10.645 18.0844 11.3407L18.5231 12.2533H22.4227C22.9589 12.2533 23.3976 12.7128 23.3976 13.2744V15.3166C23.3976 18.1374 21.2163 20.4222 18.5231 20.4222H15.5984V23.6578C15.5984 24.1237 15.2389 24.5066 14.7881 24.5066C14.6784 24.5066 14.5687 24.4811 14.4712 24.4364L8.45729 21.7368C8.05514 21.5581 7.79923 21.1433 7.79923 20.6902C7.79923 20.5115 7.83579 20.3392 7.915 20.1796L8.82897 18.2651ZM8.77413 10.2111H11.6988V14.2955C11.6988 15.4251 10.8275 16.3377 9.74903 16.3377C8.67055 16.3377 7.79923 15.4251 7.79923 14.2955V11.2322C7.79923 10.6706 8.23794 10.2111 8.77413 10.2111ZM16.5733 13.2744C16.5733 13.0036 16.4706 12.7439 16.2878 12.5524C16.105 12.3609 15.857 12.2533 15.5984 12.2533C15.3399 12.2533 15.0919 12.3609 14.9091 12.5524C14.7262 12.7439 14.6235 13.0036 14.6235 13.2744C14.6235 13.5452 14.7262 13.8049 14.9091 13.9964C15.0919 14.1879 15.3399 14.2955 15.5984 14.2955C15.857 14.2955 16.105 14.1879 16.2878 13.9964C16.4706 13.8049 16.5733 13.5452 16.5733 13.2744Z"
                                                         fill="#C9DDA0"></path>
@@ -5314,13 +5378,15 @@ line-height: normal;">
                                             <p>Sarah's Grooming Studio</p>
 
                                             <div class="reviews-card-icon">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="53" height="24"
-                                                    viewBox="0 0 53 24" fill="none">
-                                                    <rect width="24" height="24" rx="12" fill="#CBDCE8" />
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="53"
+                                                    height="24" viewBox="0 0 53 24" fill="none">
+                                                    <rect width="24" height="24" rx="12"
+                                                        fill="#CBDCE8" />
                                                     <path
                                                         d="M9 17C8.85833 17 8.73967 16.952 8.644 16.856C8.54833 16.76 8.50033 16.6413 8.5 16.5C8.49967 16.3587 8.54767 16.24 8.644 16.144C8.74033 16.048 8.859 16 9 16H15C15.1417 16 15.2605 16.048 15.3565 16.144C15.4525 16.24 15.5003 16.3587 15.5 16.5C15.4997 16.6413 15.4517 16.7602 15.356 16.8565C15.2603 16.9528 15.1417 17.0007 15 17H9ZM9.35 15.25C9.10833 15.25 8.89383 15.1708 8.7065 15.0125C8.51917 14.8542 8.4045 14.6542 8.3625 14.4125L7.8625 11.2375C7.84583 11.2375 7.82717 11.2397 7.8065 11.244C7.78583 11.2483 7.767 11.2503 7.75 11.25C7.54167 11.25 7.36467 11.1772 7.219 11.0315C7.07333 10.8858 7.00033 10.7087 7 10.5C6.99967 10.2913 7.07267 10.1143 7.219 9.969C7.36533 9.82367 7.54233 9.75067 7.75 9.75C7.95767 9.74933 8.13483 9.82233 8.2815 9.969C8.42817 10.1157 8.501 10.2927 8.5 10.5C8.5 10.5583 8.49367 10.6125 8.481 10.6625C8.46833 10.7125 8.45383 10.7583 8.4375 10.8L10 11.5L11.5625 9.3625C11.4708 9.29583 11.3958 9.20833 11.3375 9.1C11.2792 8.99167 11.25 8.875 11.25 8.75C11.25 8.54167 11.323 8.3645 11.469 8.2185C11.615 8.0725 11.792 7.99967 12 8C12.208 8.00033 12.3852 8.07333 12.5315 8.219C12.6778 8.36467 12.7507 8.54167 12.75 8.75C12.75 8.875 12.7208 8.99167 12.6625 9.1C12.6042 9.20833 12.5292 9.29583 12.4375 9.3625L14 11.5L15.5625 10.8C15.5458 10.7583 15.5312 10.7125 15.5185 10.6625C15.5058 10.6125 15.4997 10.5583 15.5 10.5C15.5 10.2917 15.573 10.1145 15.719 9.9685C15.865 9.8225 16.042 9.74967 16.25 9.75C16.458 9.75033 16.6352 9.82333 16.7815 9.969C16.9278 10.1147 17.0007 10.2917 17 10.5C16.9993 10.7083 16.9265 10.8855 16.7815 11.0315C16.6365 11.1775 16.4593 11.2503 16.25 11.25C16.2333 11.25 16.2147 11.248 16.194 11.244C16.1733 11.24 16.1545 11.2378 16.1375 11.2375L15.6375 14.4125C15.5958 14.6542 15.4813 14.8542 15.294 15.0125C15.1067 15.1708 14.892 15.25 14.65 15.25H9.35ZM9.35 14.25H14.65L14.975 12.1625L14.4 12.4125C14.1833 12.5042 13.9625 12.5208 13.7375 12.4625C13.5125 12.4042 13.3292 12.2792 13.1875 12.0875L12 10.45L10.8125 12.0875C10.6708 12.2792 10.4875 12.4042 10.2625 12.4625C10.0375 12.5208 9.81667 12.5042 9.6 12.4125L9.025 12.1625L9.35 14.25Z"
                                                         fill="white" />
-                                                    <rect x="29" width="24" height="24" rx="12" fill="#FFA899" />
+                                                    <rect x="29" width="24" height="24" rx="12"
+                                                        fill="#FFA899" />
                                                     <path fill-rule="evenodd" clip-rule="evenodd"
                                                         d="M43.4127 14.892C43.4417 14.3426 43.3153 13.7961 43.0481 13.3151C42.7809 12.8341 42.3837 12.4381 41.9019 12.1723C41.8164 12.1229 41.715 12.1085 41.619 12.1323C41.5231 12.1562 41.4402 12.2163 41.3877 12.3001L40.775 13.2808L40.2653 12.6643C40.2373 12.6305 40.2026 12.6029 40.1634 12.5831C40.1242 12.5634 40.0813 12.552 40.0375 12.5497C39.9936 12.5474 39.9498 12.5542 39.9087 12.5696C39.8676 12.5851 39.8302 12.6089 39.7988 12.6395C39.4987 12.9299 39.2643 13.2811 39.1114 13.6697C38.9584 14.0582 38.8905 14.475 38.9121 14.892C38.9121 15.4888 39.1492 16.0611 39.5711 16.483C39.9931 16.905 40.5654 17.142 41.1621 17.142C41.7588 17.142 42.3311 16.905 42.7531 16.483C43.175 16.0611 43.4121 15.4888 43.4121 14.892M40.0098 13.3539L39.9704 13.406C39.6715 13.8236 39.5217 14.3295 39.5452 14.8425L39.5471 14.88C39.5471 15.3081 39.7172 15.7187 40.0199 16.0215C40.3227 16.3243 40.7333 16.4943 41.1615 16.4943C41.5896 16.4943 42.0003 16.3243 42.303 16.0215C42.6058 15.7187 42.7759 15.3081 42.7759 14.88L42.7778 14.8431C42.7822 14.8018 42.8814 13.6653 41.8416 12.8925L41.7901 12.855L41.1265 13.9164C41.0945 13.9676 41.0507 14.0104 40.9989 14.0414C40.9471 14.0724 40.8886 14.0906 40.8283 14.0946C40.7681 14.0986 40.7077 14.0882 40.6523 14.0643C40.5968 14.0404 40.5478 14.0036 40.5094 13.9571L40.0098 13.3539Z"
                                                         fill="#FEFEFE" />
@@ -5331,8 +5397,8 @@ line-height: normal;">
                                             </div>
 
                                             <div class="review-meta">
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10" height="14"
-                                                        viewBox="0 0 10 14" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10"
+                                                        height="14" viewBox="0 0 10 14" fill="none">
                                                         <path
                                                             d="M5 6.65C4.5264 6.65 4.0722 6.46563 3.73731 6.13744C3.40242 5.80925 3.21429 5.36413 3.21429 4.9C3.21429 4.43587 3.40242 3.99075 3.73731 3.66256C4.0722 3.33437 4.5264 3.15 5 3.15C5.4736 3.15 5.9278 3.33437 6.26269 3.66256C6.59758 3.99075 6.78571 4.43587 6.78571 4.9C6.78571 5.12981 6.73953 5.35738 6.64979 5.5697C6.56004 5.78202 6.42851 5.97493 6.26269 6.13744C6.09687 6.29994 5.90002 6.42884 5.68336 6.51679C5.46671 6.60473 5.2345 6.65 5 6.65ZM5 0C3.67392 0 2.40215 0.516248 1.46447 1.43518C0.526784 2.3541 0 3.60044 0 4.9C0 8.575 5 14 5 14C5 14 10 8.575 10 4.9C10 3.60044 9.47322 2.3541 8.53553 1.43518C7.59785 0.516248 6.32608 0 5 0Z"
                                                             fill="#FFC97A" />
@@ -5344,8 +5410,9 @@ line-height: normal;">
                                     <div class="review-content">
 
                                         <div class="review-top">
-                                            <div class="stars"><svg xmlns="http://www.w3.org/2000/svg" width="163"
-                                                    height="30" viewBox="0 0 163 30" fill="none">
+                                            <div class="stars"><svg xmlns="http://www.w3.org/2000/svg"
+                                                    width="163" height="30" viewBox="0 0 163 30"
+                                                    fill="none">
                                                     <path
                                                         d="M12.6642 6.04253C13.2526 4.17853 15.8904 4.17854 16.4787 6.04254L17.4017 8.96675C17.6644 9.79894 18.4363 10.3647 19.309 10.3647H22.4163C24.3397 10.3647 25.1544 12.8144 23.6142 13.9664L21.0015 15.9204C20.3207 16.4296 20.0362 17.3134 20.2921 18.124L21.2664 21.2107C21.8512 23.0636 19.7172 24.578 18.1613 23.4143L15.7693 21.6254C15.0591 21.0942 14.0838 21.0942 13.3736 21.6254L10.9817 23.4143C9.42574 24.578 7.29174 23.0636 7.87658 21.2107L8.85085 18.124C9.10672 17.3134 8.8222 16.4296 8.14146 15.9204L5.52874 13.9664C3.98849 12.8144 4.80322 10.3647 6.7266 10.3647H9.83398C10.7066 10.3647 11.4786 9.79893 11.7412 8.96674L12.6642 6.04253Z"
                                                         fill="#FFC97A" />
@@ -5397,11 +5464,12 @@ line-height: normal;">
                                     <div class="review-left">
                                         <div class="avatar-wrap">
 
-                                            <img src="{{ asset('images/space_card3.png') }}" alt="Image" class="avatar">
+                                            <img src="{{ asset('images/space_card3.png') }}" alt="Image"
+                                                class="avatar">
 
                                             <div class="badge-shield" title="Verified">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="29" height="30"
-                                                    viewBox="0 0 29 30" fill="none">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="29"
+                                                    height="30" viewBox="0 0 29 30" fill="none">
                                                     <path
                                                         d="M14.9293 0.170856C14.6819 0.058916 14.4168 0 14.1399 0C13.8629 0 13.5978 0.058916 13.3504 0.170856L2.25651 4.87824C0.960357 5.42616 -0.0058648 6.70463 2.67979e-05 8.24823C0.0294848 14.0927 2.43326 24.7859 12.5845 29.6465C13.5684 30.1178 14.7113 30.1178 15.6952 29.6465C25.8465 24.7859 28.2502 14.0927 28.2797 8.24823C28.2856 6.70463 27.3194 5.42616 26.0232 4.87824L14.9293 0.170856Z"
                                                         fill="#CBDCE8"></path>
@@ -5436,28 +5504,31 @@ line-height: normal;">
                                             <p>Hosted by Patrick B.</p>
 
                                             <div class="reviews-card-icon">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="82" height="24"
-                                                    viewBox="0 0 82 24" fill="none">
-                                                    <rect width="24" height="24" rx="12" fill="#CBDCE8" />
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="82"
+                                                    height="24" viewBox="0 0 82 24" fill="none">
+                                                    <rect width="24" height="24" rx="12"
+                                                        fill="#CBDCE8" />
                                                     <path
                                                         d="M9 17C8.85833 17 8.73967 16.952 8.644 16.856C8.54833 16.76 8.50033 16.6413 8.5 16.5C8.49967 16.3587 8.54767 16.24 8.644 16.144C8.74033 16.048 8.859 16 9 16H15C15.1417 16 15.2605 16.048 15.3565 16.144C15.4525 16.24 15.5003 16.3587 15.5 16.5C15.4997 16.6413 15.4517 16.7602 15.356 16.8565C15.2603 16.9528 15.1417 17.0007 15 17H9ZM9.35 15.25C9.10833 15.25 8.89383 15.1708 8.7065 15.0125C8.51917 14.8542 8.4045 14.6542 8.3625 14.4125L7.8625 11.2375C7.84583 11.2375 7.82717 11.2397 7.8065 11.244C7.78583 11.2483 7.767 11.2503 7.75 11.25C7.54167 11.25 7.36467 11.1772 7.219 11.0315C7.07333 10.8858 7.00033 10.7087 7 10.5C6.99967 10.2913 7.07267 10.1143 7.219 9.969C7.36533 9.82367 7.54233 9.75067 7.75 9.75C7.95767 9.74933 8.13483 9.82233 8.2815 9.969C8.42817 10.1157 8.501 10.2927 8.5 10.5C8.5 10.5583 8.49367 10.6125 8.481 10.6625C8.46833 10.7125 8.45383 10.7583 8.4375 10.8L10 11.5L11.5625 9.3625C11.4708 9.29583 11.3958 9.20833 11.3375 9.1C11.2792 8.99167 11.25 8.875 11.25 8.75C11.25 8.54167 11.323 8.3645 11.469 8.2185C11.615 8.0725 11.792 7.99967 12 8C12.208 8.00033 12.3852 8.07333 12.5315 8.219C12.6778 8.36467 12.7507 8.54167 12.75 8.75C12.75 8.875 12.7208 8.99167 12.6625 9.1C12.6042 9.20833 12.5292 9.29583 12.4375 9.3625L14 11.5L15.5625 10.8C15.5458 10.7583 15.5312 10.7125 15.5185 10.6625C15.5058 10.6125 15.4997 10.5583 15.5 10.5C15.5 10.2917 15.573 10.1145 15.719 9.9685C15.865 9.8225 16.042 9.74967 16.25 9.75C16.458 9.75033 16.6352 9.82333 16.7815 9.969C16.9278 10.1147 17.0007 10.2917 17 10.5C16.9993 10.7083 16.9265 10.8855 16.7815 11.0315C16.6365 11.1775 16.4593 11.2503 16.25 11.25C16.2333 11.25 16.2147 11.248 16.194 11.244C16.1733 11.24 16.1545 11.2378 16.1375 11.2375L15.6375 14.4125C15.5958 14.6542 15.4813 14.8542 15.294 15.0125C15.1067 15.1708 14.892 15.25 14.65 15.25H9.35ZM9.35 14.25H14.65L14.975 12.1625L14.4 12.4125C14.1833 12.5042 13.9625 12.5208 13.7375 12.4625C13.5125 12.4042 13.3292 12.2792 13.1875 12.0875L12 10.45L10.8125 12.0875C10.6708 12.2792 10.4875 12.4042 10.2625 12.4625C10.0375 12.5208 9.81667 12.5042 9.6 12.4125L9.025 12.1625L9.35 14.25Z"
                                                         fill="white" />
-                                                    <rect x="29" width="24" height="24" rx="12" fill="#FFA899" />
+                                                    <rect x="29" width="24" height="24" rx="12"
+                                                        fill="#FFA899" />
                                                     <path fill-rule="evenodd" clip-rule="evenodd"
                                                         d="M43.4127 14.893C43.4417 14.3436 43.3153 13.7971 43.0481 13.3161C42.7809 12.8351 42.3837 12.4391 41.9019 12.1733C41.8164 12.1238 41.715 12.1095 41.619 12.1333C41.5231 12.1572 41.4402 12.2173 41.3877 12.3011L40.775 13.2818L40.2653 12.6653C40.2373 12.6315 40.2026 12.6038 40.1634 12.5841C40.1242 12.5644 40.0813 12.553 40.0375 12.5507C39.9936 12.5484 39.9498 12.5551 39.9087 12.5706C39.8676 12.586 39.8302 12.6098 39.7988 12.6405C39.4987 12.9308 39.2643 13.2821 39.1114 13.6707C38.9584 14.0592 38.8905 14.476 38.9121 14.893C38.9121 15.4897 39.1492 16.062 39.5711 16.484C39.9931 16.9059 40.5654 17.143 41.1621 17.143C41.7588 17.143 42.3311 16.9059 42.7531 16.484C43.175 16.062 43.4121 15.4897 43.4121 14.893M40.0098 13.3549L39.9704 13.407C39.6715 13.8245 39.5217 14.3305 39.5452 14.8434L39.5471 14.8809C39.5471 15.3091 39.7172 15.7197 40.0199 16.0225C40.3227 16.3252 40.7333 16.4953 41.1615 16.4953C41.5896 16.4953 42.0003 16.3252 42.303 16.0225C42.6058 15.7197 42.7759 15.3091 42.7759 14.8809L42.7778 14.8441C42.7822 14.8028 42.8814 13.6663 41.8416 12.8934L41.7901 12.8559L41.1265 13.9174C41.0945 13.9686 41.0507 14.0114 40.9989 14.0424C40.9471 14.0734 40.8886 14.0916 40.8283 14.0956C40.7681 14.0995 40.7077 14.0892 40.6523 14.0652C40.5968 14.0413 40.5478 14.0046 40.5094 13.9581L40.0098 13.3549Z"
                                                         fill="#FEFEFE" />
                                                     <path fill-rule="evenodd" clip-rule="evenodd"
                                                         d="M40.797 7.30821C40.8102 7.23997 40.8419 7.17666 40.8886 7.12514C40.9352 7.07362 40.9951 7.03586 41.0617 7.01595C41.1283 6.99604 41.1991 6.99475 41.2664 7.0122C41.3337 7.02966 41.3949 7.06521 41.4434 7.11499C41.5667 7.24084 41.8038 7.48999 42.0447 7.77727C42.2811 8.05884 42.5392 8.39761 42.6879 8.69951C42.8328 8.99443 42.9866 9.37578 43.108 9.69421L43.673 8.75354C43.7046 8.701 43.7483 8.65683 43.8005 8.62476C43.8527 8.59269 43.9118 8.57367 43.9729 8.56931C44.034 8.56494 44.0953 8.57536 44.1515 8.59969C44.2077 8.62401 44.2573 8.66152 44.2959 8.70905C45.0987 9.70057 45.4985 10.7626 45.6974 11.5736C45.7972 11.9798 45.8474 12.3249 45.8728 12.5703C45.8858 12.6928 45.8942 12.8157 45.8982 12.9389V12.9713C45.8982 15.4482 43.9336 17.4649 41.4479 17.4649C38.9621 17.4649 37 15.4476 37 12.97C37 12.288 37.3222 10.6819 38.2756 9.36498C38.3127 9.31422 38.3617 9.27341 38.4183 9.24615C38.4749 9.2189 38.5373 9.20605 38.6001 9.20876C38.6629 9.21146 38.724 9.22963 38.7781 9.26166C38.8321 9.29368 38.8774 9.33856 38.9099 9.39231L39.5551 10.4671C39.7508 10.1607 40.0127 9.73044 40.2116 9.3332C40.4976 8.76117 40.7246 7.68257 40.797 7.30885M41.3201 7.91265C41.2051 8.42113 41.015 9.14697 40.7798 9.61858C40.4671 10.2434 40.0165 10.9298 39.8614 11.1605C39.8255 11.2134 39.7769 11.2565 39.7201 11.2857C39.6632 11.315 39.5999 11.3294 39.5359 11.3278C39.472 11.3261 39.4095 11.3084 39.3542 11.2763C39.2989 11.2442 39.2526 11.1987 39.2195 11.144L38.5712 10.0648C37.8746 11.1917 37.6356 12.4584 37.6356 12.9713C37.6356 15.1056 39.3224 16.8281 41.4479 16.8281C43.5733 16.8281 45.2627 15.1056 45.2627 12.9713V12.9535L45.2601 12.89C45.2557 12.8048 45.2491 12.7199 45.2404 12.6351C45.2071 12.3287 45.1536 12.0249 45.0802 11.7256C44.8783 10.8916 44.5203 10.1033 44.0252 9.40248L43.3807 10.4753C43.3434 10.5373 43.2892 10.5874 43.2246 10.6199C43.1599 10.6523 43.0874 10.6657 43.0154 10.6585C42.9434 10.6513 42.875 10.6238 42.818 10.5792C42.761 10.5347 42.7179 10.4748 42.6936 10.4067C42.5906 10.1181 42.3383 9.42917 42.1171 8.98044C42.0046 8.751 41.7892 8.46117 41.5578 8.18596C41.4801 8.09353 41.4009 8.00242 41.3201 7.91265Z"
                                                         fill="#FEFEFE" />
-                                                    <rect x="58" width="24" height="24" rx="12" fill="#D8E8B7" />
+                                                    <rect x="58" width="24" height="24" rx="12"
+                                                        fill="#D8E8B7" />
                                                     <path
                                                         d="M70 14.619C69.7348 14.619 69.4804 14.5187 69.2929 14.3401C69.1054 14.1615 69 13.9193 69 13.6667C69 13.1381 69.445 12.7143 70 12.7143C70.2652 12.7143 70.5196 12.8146 70.7071 12.9932C70.8946 13.1718 71 13.4141 71 13.6667C71 13.9193 70.8946 14.1615 70.7071 14.3401C70.5196 14.5187 70.2652 14.619 70 14.619ZM73 16.0476V11.2857H67V16.0476H73ZM73 10.3333C73.2652 10.3333 73.5196 10.4337 73.7071 10.6123C73.8946 10.7909 74 11.0331 74 11.2857V16.0476C74 16.3002 73.8946 16.5424 73.7071 16.7211C73.5196 16.8997 73.2652 17 73 17H67C66.7348 17 66.4804 16.8997 66.2929 16.7211C66.1054 16.5424 66 16.3002 66 16.0476V11.2857C66 10.7571 66.445 10.3333 67 10.3333H67.5V9.38095C67.5 8.74948 67.7634 8.14388 68.2322 7.69736C68.7011 7.25085 69.337 7 70 7C70.3283 7 70.6534 7.06159 70.9567 7.18124C71.26 7.30089 71.5356 7.47627 71.7678 7.69736C71.9999 7.91846 72.1841 8.18093 72.3097 8.4698C72.4353 8.75867 72.5 9.06828 72.5 9.38095V10.3333H73ZM70 7.95238C69.6022 7.95238 69.2206 8.10289 68.9393 8.3708C68.658 8.63871 68.5 9.00207 68.5 9.38095V10.3333H71.5V9.38095C71.5 9.00207 71.342 8.63871 71.0607 8.3708C70.7794 8.10289 70.3978 7.95238 70 7.95238Z"
                                                         fill="white" />
                                                 </svg>
                                             </div>
                                             <div class="review-meta">
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10" height="14"
-                                                        viewBox="0 0 10 14" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10"
+                                                        height="14" viewBox="0 0 10 14" fill="none">
                                                         <path
                                                             d="M5 6.65C4.5264 6.65 4.0722 6.46563 3.73731 6.13744C3.40242 5.80925 3.21429 5.36413 3.21429 4.9C3.21429 4.43587 3.40242 3.99075 3.73731 3.66256C4.0722 3.33437 4.5264 3.15 5 3.15C5.4736 3.15 5.9278 3.33437 6.26269 3.66256C6.59758 3.99075 6.78571 4.43587 6.78571 4.9C6.78571 5.12981 6.73953 5.35738 6.64979 5.5697C6.56004 5.78202 6.42851 5.97493 6.26269 6.13744C6.09687 6.29994 5.90002 6.42884 5.68336 6.51679C5.46671 6.60473 5.2345 6.65 5 6.65ZM5 0C3.67392 0 2.40215 0.516248 1.46447 1.43518C0.526784 2.3541 0 3.60044 0 4.9C0 8.575 5 14 5 14C5 14 10 8.575 10 4.9C10 3.60044 9.47322 2.3541 8.53553 1.43518C7.59785 0.516248 6.32608 0 5 0Z"
                                                             fill="#FFC97A" />
@@ -5469,8 +5540,9 @@ line-height: normal;">
                                     <div class="review-content">
 
                                         <div class="review-top">
-                                            <div class="stars"><svg xmlns="http://www.w3.org/2000/svg" width="163"
-                                                    height="30" viewBox="0 0 163 30" fill="none">
+                                            <div class="stars"><svg xmlns="http://www.w3.org/2000/svg"
+                                                    width="163" height="30" viewBox="0 0 163 30"
+                                                    fill="none">
                                                     <path
                                                         d="M12.6642 6.04253C13.2526 4.17853 15.8904 4.17854 16.4787 6.04254L17.4017 8.96675C17.6644 9.79894 18.4363 10.3647 19.309 10.3647H22.4163C24.3397 10.3647 25.1544 12.8144 23.6142 13.9664L21.0015 15.9204C20.3207 16.4296 20.0362 17.3134 20.2921 18.124L21.2664 21.2107C21.8512 23.0636 19.7172 24.578 18.1613 23.4143L15.7693 21.6254C15.0591 21.0942 14.0838 21.0942 13.3736 21.6254L10.9817 23.4143C9.42574 24.578 7.29174 23.0636 7.87658 21.2107L8.85085 18.124C9.10672 17.3134 8.8222 16.4296 8.14146 15.9204L5.52874 13.9664C3.98849 12.8144 4.80322 10.3647 6.7266 10.3647H9.83398C10.7066 10.3647 11.4786 9.79893 11.7412 8.96674L12.6642 6.04253Z"
                                                         fill="#FFC97A" />
@@ -5518,11 +5590,12 @@ line-height: normal;">
                                     <div class="review-left">
                                         <div class="avatar-wrap">
 
-                                            <img src="{{ asset('images/space_card3.png') }}" alt="Image" class="avatar">
+                                            <img src="{{ asset('images/space_card3.png') }}" alt="Image"
+                                                class="avatar">
 
                                             <div class="badge-shield" title="Verified">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="29" height="30"
-                                                    viewBox="0 0 29 30" fill="none">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="29"
+                                                    height="30" viewBox="0 0 29 30" fill="none">
                                                     <path
                                                         d="M14.9293 0.170856C14.6819 0.058916 14.4168 0 14.1399 0C13.8629 0 13.5978 0.058916 13.3504 0.170856L2.25651 4.87824C0.960357 5.42616 -0.0058648 6.70463 2.67979e-05 8.24823C0.0294848 14.0927 2.43326 24.7859 12.5845 29.6465C13.5684 30.1178 14.7113 30.1178 15.6952 29.6465C25.8465 24.7859 28.2502 14.0927 28.2797 8.24823C28.2856 6.70463 27.3194 5.42616 26.0232 4.87824L14.9293 0.170856Z"
                                                         fill="#CBDCE8"></path>
@@ -5556,28 +5629,31 @@ line-height: normal;">
                                             <h4>Paws & Bubbles</h4>
                                             <p>Hosted by Patrick B.</p>
                                             <div class="reviews-card-icon">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="82" height="24"
-                                                    viewBox="0 0 82 24" fill="none">
-                                                    <rect width="24" height="24" rx="12" fill="#CBDCE8" />
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="82"
+                                                    height="24" viewBox="0 0 82 24" fill="none">
+                                                    <rect width="24" height="24" rx="12"
+                                                        fill="#CBDCE8" />
                                                     <path
                                                         d="M9 17C8.85833 17 8.73967 16.952 8.644 16.856C8.54833 16.76 8.50033 16.6413 8.5 16.5C8.49967 16.3587 8.54767 16.24 8.644 16.144C8.74033 16.048 8.859 16 9 16H15C15.1417 16 15.2605 16.048 15.3565 16.144C15.4525 16.24 15.5003 16.3587 15.5 16.5C15.4997 16.6413 15.4517 16.7602 15.356 16.8565C15.2603 16.9528 15.1417 17.0007 15 17H9ZM9.35 15.25C9.10833 15.25 8.89383 15.1708 8.7065 15.0125C8.51917 14.8542 8.4045 14.6542 8.3625 14.4125L7.8625 11.2375C7.84583 11.2375 7.82717 11.2397 7.8065 11.244C7.78583 11.2483 7.767 11.2503 7.75 11.25C7.54167 11.25 7.36467 11.1772 7.219 11.0315C7.07333 10.8858 7.00033 10.7087 7 10.5C6.99967 10.2913 7.07267 10.1143 7.219 9.969C7.36533 9.82367 7.54233 9.75067 7.75 9.75C7.95767 9.74933 8.13483 9.82233 8.2815 9.969C8.42817 10.1157 8.501 10.2927 8.5 10.5C8.5 10.5583 8.49367 10.6125 8.481 10.6625C8.46833 10.7125 8.45383 10.7583 8.4375 10.8L10 11.5L11.5625 9.3625C11.4708 9.29583 11.3958 9.20833 11.3375 9.1C11.2792 8.99167 11.25 8.875 11.25 8.75C11.25 8.54167 11.323 8.3645 11.469 8.2185C11.615 8.0725 11.792 7.99967 12 8C12.208 8.00033 12.3852 8.07333 12.5315 8.219C12.6778 8.36467 12.7507 8.54167 12.75 8.75C12.75 8.875 12.7208 8.99167 12.6625 9.1C12.6042 9.20833 12.5292 9.29583 12.4375 9.3625L14 11.5L15.5625 10.8C15.5458 10.7583 15.5312 10.7125 15.5185 10.6625C15.5058 10.6125 15.4997 10.5583 15.5 10.5C15.5 10.2917 15.573 10.1145 15.719 9.9685C15.865 9.8225 16.042 9.74967 16.25 9.75C16.458 9.75033 16.6352 9.82333 16.7815 9.969C16.9278 10.1147 17.0007 10.2917 17 10.5C16.9993 10.7083 16.9265 10.8855 16.7815 11.0315C16.6365 11.1775 16.4593 11.2503 16.25 11.25C16.2333 11.25 16.2147 11.248 16.194 11.244C16.1733 11.24 16.1545 11.2378 16.1375 11.2375L15.6375 14.4125C15.5958 14.6542 15.4813 14.8542 15.294 15.0125C15.1067 15.1708 14.892 15.25 14.65 15.25H9.35ZM9.35 14.25H14.65L14.975 12.1625L14.4 12.4125C14.1833 12.5042 13.9625 12.5208 13.7375 12.4625C13.5125 12.4042 13.3292 12.2792 13.1875 12.0875L12 10.45L10.8125 12.0875C10.6708 12.2792 10.4875 12.4042 10.2625 12.4625C10.0375 12.5208 9.81667 12.5042 9.6 12.4125L9.025 12.1625L9.35 14.25Z"
                                                         fill="white" />
-                                                    <rect x="29" width="24" height="24" rx="12" fill="#FFA899" />
+                                                    <rect x="29" width="24" height="24" rx="12"
+                                                        fill="#FFA899" />
                                                     <path fill-rule="evenodd" clip-rule="evenodd"
                                                         d="M43.4127 14.893C43.4417 14.3436 43.3153 13.7971 43.0481 13.3161C42.7809 12.8351 42.3837 12.4391 41.9019 12.1733C41.8164 12.1238 41.715 12.1095 41.619 12.1333C41.5231 12.1572 41.4402 12.2173 41.3877 12.3011L40.775 13.2818L40.2653 12.6653C40.2373 12.6315 40.2026 12.6038 40.1634 12.5841C40.1242 12.5644 40.0813 12.553 40.0375 12.5507C39.9936 12.5484 39.9498 12.5551 39.9087 12.5706C39.8676 12.586 39.8302 12.6098 39.7988 12.6405C39.4987 12.9308 39.2643 13.2821 39.1114 13.6707C38.9584 14.0592 38.8905 14.476 38.9121 14.893C38.9121 15.4897 39.1492 16.062 39.5711 16.484C39.9931 16.9059 40.5654 17.143 41.1621 17.143C41.7588 17.143 42.3311 16.9059 42.7531 16.484C43.175 16.062 43.4121 15.4897 43.4121 14.893M40.0098 13.3549L39.9704 13.407C39.6715 13.8245 39.5217 14.3305 39.5452 14.8434L39.5471 14.8809C39.5471 15.3091 39.7172 15.7197 40.0199 16.0225C40.3227 16.3252 40.7333 16.4953 41.1615 16.4953C41.5896 16.4953 42.0003 16.3252 42.303 16.0225C42.6058 15.7197 42.7759 15.3091 42.7759 14.8809L42.7778 14.8441C42.7822 14.8028 42.8814 13.6663 41.8416 12.8934L41.7901 12.8559L41.1265 13.9174C41.0945 13.9686 41.0507 14.0114 40.9989 14.0424C40.9471 14.0734 40.8886 14.0916 40.8283 14.0956C40.7681 14.0995 40.7077 14.0892 40.6523 14.0652C40.5968 14.0413 40.5478 14.0046 40.5094 13.9581L40.0098 13.3549Z"
                                                         fill="#FEFEFE" />
                                                     <path fill-rule="evenodd" clip-rule="evenodd"
                                                         d="M40.797 7.30821C40.8102 7.23997 40.8419 7.17666 40.8886 7.12514C40.9352 7.07362 40.9951 7.03586 41.0617 7.01595C41.1283 6.99604 41.1991 6.99475 41.2664 7.0122C41.3337 7.02966 41.3949 7.06521 41.4434 7.11499C41.5667 7.24084 41.8038 7.48999 42.0447 7.77727C42.2811 8.05884 42.5392 8.39761 42.6879 8.69951C42.8328 8.99443 42.9866 9.37578 43.108 9.69421L43.673 8.75354C43.7046 8.701 43.7483 8.65683 43.8005 8.62476C43.8527 8.59269 43.9118 8.57367 43.9729 8.56931C44.034 8.56494 44.0953 8.57536 44.1515 8.59969C44.2077 8.62401 44.2573 8.66152 44.2959 8.70905C45.0987 9.70057 45.4985 10.7626 45.6974 11.5736C45.7972 11.9798 45.8474 12.3249 45.8728 12.5703C45.8858 12.6928 45.8942 12.8157 45.8982 12.9389V12.9713C45.8982 15.4482 43.9336 17.4649 41.4479 17.4649C38.9621 17.4649 37 15.4476 37 12.97C37 12.288 37.3222 10.6819 38.2756 9.36498C38.3127 9.31422 38.3617 9.27341 38.4183 9.24615C38.4749 9.2189 38.5373 9.20605 38.6001 9.20876C38.6629 9.21146 38.724 9.22963 38.7781 9.26166C38.8321 9.29368 38.8774 9.33856 38.9099 9.39231L39.5551 10.4671C39.7508 10.1607 40.0127 9.73044 40.2116 9.3332C40.4976 8.76117 40.7246 7.68257 40.797 7.30885M41.3201 7.91265C41.2051 8.42113 41.015 9.14697 40.7798 9.61858C40.4671 10.2434 40.0165 10.9298 39.8614 11.1605C39.8255 11.2134 39.7769 11.2565 39.7201 11.2857C39.6632 11.315 39.5999 11.3294 39.5359 11.3278C39.472 11.3261 39.4095 11.3084 39.3542 11.2763C39.2989 11.2442 39.2526 11.1987 39.2195 11.144L38.5712 10.0648C37.8746 11.1917 37.6356 12.4584 37.6356 12.9713C37.6356 15.1056 39.3224 16.8281 41.4479 16.8281C43.5733 16.8281 45.2627 15.1056 45.2627 12.9713V12.9535L45.2601 12.89C45.2557 12.8048 45.2491 12.7199 45.2404 12.6351C45.2071 12.3287 45.1536 12.0249 45.0802 11.7256C44.8783 10.8916 44.5203 10.1033 44.0252 9.40248L43.3807 10.4753C43.3434 10.5373 43.2892 10.5874 43.2246 10.6199C43.1599 10.6523 43.0874 10.6657 43.0154 10.6585C42.9434 10.6513 42.875 10.6238 42.818 10.5792C42.761 10.5347 42.7179 10.4748 42.6936 10.4067C42.5906 10.1181 42.3383 9.42917 42.1171 8.98044C42.0046 8.751 41.7892 8.46117 41.5578 8.18596C41.4801 8.09353 41.4009 8.00242 41.3201 7.91265Z"
                                                         fill="#FEFEFE" />
-                                                    <rect x="58" width="24" height="24" rx="12" fill="#D8E8B7" />
+                                                    <rect x="58" width="24" height="24" rx="12"
+                                                        fill="#D8E8B7" />
                                                     <path
                                                         d="M70 14.619C69.7348 14.619 69.4804 14.5187 69.2929 14.3401C69.1054 14.1615 69 13.9193 69 13.6667C69 13.1381 69.445 12.7143 70 12.7143C70.2652 12.7143 70.5196 12.8146 70.7071 12.9932C70.8946 13.1718 71 13.4141 71 13.6667C71 13.9193 70.8946 14.1615 70.7071 14.3401C70.5196 14.5187 70.2652 14.619 70 14.619ZM73 16.0476V11.2857H67V16.0476H73ZM73 10.3333C73.2652 10.3333 73.5196 10.4337 73.7071 10.6123C73.8946 10.7909 74 11.0331 74 11.2857V16.0476C74 16.3002 73.8946 16.5424 73.7071 16.7211C73.5196 16.8997 73.2652 17 73 17H67C66.7348 17 66.4804 16.8997 66.2929 16.7211C66.1054 16.5424 66 16.3002 66 16.0476V11.2857C66 10.7571 66.445 10.3333 67 10.3333H67.5V9.38095C67.5 8.74948 67.7634 8.14388 68.2322 7.69736C68.7011 7.25085 69.337 7 70 7C70.3283 7 70.6534 7.06159 70.9567 7.18124C71.26 7.30089 71.5356 7.47627 71.7678 7.69736C71.9999 7.91846 72.1841 8.18093 72.3097 8.4698C72.4353 8.75867 72.5 9.06828 72.5 9.38095V10.3333H73ZM70 7.95238C69.6022 7.95238 69.2206 8.10289 68.9393 8.3708C68.658 8.63871 68.5 9.00207 68.5 9.38095V10.3333H71.5V9.38095C71.5 9.00207 71.342 8.63871 71.0607 8.3708C70.7794 8.10289 70.3978 7.95238 70 7.95238Z"
                                                         fill="white" />
                                                 </svg>
                                             </div>
                                             <div class="review-meta">
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10" height="14"
-                                                        viewBox="0 0 10 14" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10"
+                                                        height="14" viewBox="0 0 10 14" fill="none">
                                                         <path
                                                             d="M5 6.65C4.5264 6.65 4.0722 6.46563 3.73731 6.13744C3.40242 5.80925 3.21429 5.36413 3.21429 4.9C3.21429 4.43587 3.40242 3.99075 3.73731 3.66256C4.0722 3.33437 4.5264 3.15 5 3.15C5.4736 3.15 5.9278 3.33437 6.26269 3.66256C6.59758 3.99075 6.78571 4.43587 6.78571 4.9C6.78571 5.12981 6.73953 5.35738 6.64979 5.5697C6.56004 5.78202 6.42851 5.97493 6.26269 6.13744C6.09687 6.29994 5.90002 6.42884 5.68336 6.51679C5.46671 6.60473 5.2345 6.65 5 6.65ZM5 0C3.67392 0 2.40215 0.516248 1.46447 1.43518C0.526784 2.3541 0 3.60044 0 4.9C0 8.575 5 14 5 14C5 14 10 8.575 10 4.9C10 3.60044 9.47322 2.3541 8.53553 1.43518C7.59785 0.516248 6.32608 0 5 0Z"
                                                             fill="#FFC97A" />
@@ -5589,8 +5665,9 @@ line-height: normal;">
                                     <div class="review-content">
 
                                         <div class="review-top">
-                                            <div class="stars"><svg xmlns="http://www.w3.org/2000/svg" width="163"
-                                                    height="30" viewBox="0 0 163 30" fill="none">
+                                            <div class="stars"><svg xmlns="http://www.w3.org/2000/svg"
+                                                    width="163" height="30" viewBox="0 0 163 30"
+                                                    fill="none">
                                                     <path
                                                         d="M12.6642 6.04253C13.2526 4.17853 15.8904 4.17854 16.4787 6.04254L17.4017 8.96675C17.6644 9.79894 18.4363 10.3647 19.309 10.3647H22.4163C24.3397 10.3647 25.1544 12.8144 23.6142 13.9664L21.0015 15.9204C20.3207 16.4296 20.0362 17.3134 20.2921 18.124L21.2664 21.2107C21.8512 23.0636 19.7172 24.578 18.1613 23.4143L15.7693 21.6254C15.0591 21.0942 14.0838 21.0942 13.3736 21.6254L10.9817 23.4143C9.42574 24.578 7.29174 23.0636 7.87658 21.2107L8.85085 18.124C9.10672 17.3134 8.8222 16.4296 8.14146 15.9204L5.52874 13.9664C3.98849 12.8144 4.80322 10.3647 6.7266 10.3647H9.83398C10.7066 10.3647 11.4786 9.79893 11.7412 8.96674L12.6642 6.04253Z"
                                                         fill="#FFC97A" />
@@ -5656,13 +5733,14 @@ line-height: normal;">
 
                                         <div class="avatar-wrap">
 
-                                            <img src="{{ asset('images/groomer-profile.png') }}" alt="Image" class="avatar">
+                                            <img src="{{ asset('images/groomer-profile.png') }}" alt="Image"
+                                                class="avatar">
 
                                             <div class="badge-shield" title="Verified">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="33"
-                                                    viewBox="0 0 30 33" fill="none">
-                                                    <ellipse cx="15.873" cy="16.5256" rx="9.3645" ry="8.81365"
-                                                        fill="white"></ellipse>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="30"
+                                                    height="33" viewBox="0 0 30 33" fill="none">
+                                                    <ellipse cx="15.873" cy="16.5256" rx="9.3645"
+                                                        ry="8.81365" fill="white"></ellipse>
                                                     <path
                                                         d="M15.44 0.185076C15.1841 0.0638192 14.9099 0 14.6235 0C14.3372 0 14.063 0.0638192 13.8071 0.185076L2.3337 5.28423C0.993208 5.87775 -0.00606541 7.26263 2.77146e-05 8.93469C0.0304934 15.2656 2.51649 26.8487 13.015 32.1138C14.0325 32.6244 15.2146 32.6244 16.2321 32.1138C26.7306 26.8487 29.2166 15.2656 29.247 8.93469C29.2531 7.26263 28.2539 5.87775 26.9134 5.28423L15.44 0.185076ZM8.82897 18.2651C9.12144 18.3416 9.43219 18.3799 9.74903 18.3799C11.8999 18.3799 13.6486 16.5483 13.6486 14.2955V10.2111H16.3418C17.0791 10.2111 17.7554 10.645 18.0844 11.3407L18.5231 12.2533H22.4227C22.9589 12.2533 23.3976 12.7128 23.3976 13.2744V15.3166C23.3976 18.1374 21.2163 20.4222 18.5231 20.4222H15.5984V23.6578C15.5984 24.1237 15.2389 24.5066 14.7881 24.5066C14.6784 24.5066 14.5687 24.4811 14.4712 24.4364L8.45729 21.7368C8.05514 21.5581 7.79923 21.1433 7.79923 20.6902C7.79923 20.5115 7.83579 20.3392 7.915 20.1796L8.82897 18.2651ZM8.77413 10.2111H11.6988V14.2955C11.6988 15.4251 10.8275 16.3377 9.74903 16.3377C8.67055 16.3377 7.79923 15.4251 7.79923 14.2955V11.2322C7.79923 10.6706 8.23794 10.2111 8.77413 10.2111ZM16.5733 13.2744C16.5733 13.0036 16.4706 12.7439 16.2878 12.5524C16.105 12.3609 15.857 12.2533 15.5984 12.2533C15.3399 12.2533 15.0919 12.3609 14.9091 12.5524C14.7262 12.7439 14.6235 13.0036 14.6235 13.2744C14.6235 13.5452 14.7262 13.8049 14.9091 13.9964C15.0919 14.1879 15.3399 14.2955 15.5984 14.2955C15.857 14.2955 16.105 14.1879 16.2878 13.9964C16.4706 13.8049 16.5733 13.5452 16.5733 13.2744Z"
                                                         fill="#C9DDA0"></path>
@@ -5675,13 +5753,15 @@ line-height: normal;">
                                             <p>Sarah's Grooming Studio</p>
 
                                             <div class="reviews-card-icon">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="53" height="24"
-                                                    viewBox="0 0 53 24" fill="none">
-                                                    <rect width="24" height="24" rx="12" fill="#CBDCE8" />
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="53"
+                                                    height="24" viewBox="0 0 53 24" fill="none">
+                                                    <rect width="24" height="24" rx="12"
+                                                        fill="#CBDCE8" />
                                                     <path
                                                         d="M9 17C8.85833 17 8.73967 16.952 8.644 16.856C8.54833 16.76 8.50033 16.6413 8.5 16.5C8.49967 16.3587 8.54767 16.24 8.644 16.144C8.74033 16.048 8.859 16 9 16H15C15.1417 16 15.2605 16.048 15.3565 16.144C15.4525 16.24 15.5003 16.3587 15.5 16.5C15.4997 16.6413 15.4517 16.7602 15.356 16.8565C15.2603 16.9528 15.1417 17.0007 15 17H9ZM9.35 15.25C9.10833 15.25 8.89383 15.1708 8.7065 15.0125C8.51917 14.8542 8.4045 14.6542 8.3625 14.4125L7.8625 11.2375C7.84583 11.2375 7.82717 11.2397 7.8065 11.244C7.78583 11.2483 7.767 11.2503 7.75 11.25C7.54167 11.25 7.36467 11.1772 7.219 11.0315C7.07333 10.8858 7.00033 10.7087 7 10.5C6.99967 10.2913 7.07267 10.1143 7.219 9.969C7.36533 9.82367 7.54233 9.75067 7.75 9.75C7.95767 9.74933 8.13483 9.82233 8.2815 9.969C8.42817 10.1157 8.501 10.2927 8.5 10.5C8.5 10.5583 8.49367 10.6125 8.481 10.6625C8.46833 10.7125 8.45383 10.7583 8.4375 10.8L10 11.5L11.5625 9.3625C11.4708 9.29583 11.3958 9.20833 11.3375 9.1C11.2792 8.99167 11.25 8.875 11.25 8.75C11.25 8.54167 11.323 8.3645 11.469 8.2185C11.615 8.0725 11.792 7.99967 12 8C12.208 8.00033 12.3852 8.07333 12.5315 8.219C12.6778 8.36467 12.7507 8.54167 12.75 8.75C12.75 8.875 12.7208 8.99167 12.6625 9.1C12.6042 9.20833 12.5292 9.29583 12.4375 9.3625L14 11.5L15.5625 10.8C15.5458 10.7583 15.5312 10.7125 15.5185 10.6625C15.5058 10.6125 15.4997 10.5583 15.5 10.5C15.5 10.2917 15.573 10.1145 15.719 9.9685C15.865 9.8225 16.042 9.74967 16.25 9.75C16.458 9.75033 16.6352 9.82333 16.7815 9.969C16.9278 10.1147 17.0007 10.2917 17 10.5C16.9993 10.7083 16.9265 10.8855 16.7815 11.0315C16.6365 11.1775 16.4593 11.2503 16.25 11.25C16.2333 11.25 16.2147 11.248 16.194 11.244C16.1733 11.24 16.1545 11.2378 16.1375 11.2375L15.6375 14.4125C15.5958 14.6542 15.4813 14.8542 15.294 15.0125C15.1067 15.1708 14.892 15.25 14.65 15.25H9.35ZM9.35 14.25H14.65L14.975 12.1625L14.4 12.4125C14.1833 12.5042 13.9625 12.5208 13.7375 12.4625C13.5125 12.4042 13.3292 12.2792 13.1875 12.0875L12 10.45L10.8125 12.0875C10.6708 12.2792 10.4875 12.4042 10.2625 12.4625C10.0375 12.5208 9.81667 12.5042 9.6 12.4125L9.025 12.1625L9.35 14.25Z"
                                                         fill="white" />
-                                                    <rect x="29" width="24" height="24" rx="12" fill="#FFA899" />
+                                                    <rect x="29" width="24" height="24" rx="12"
+                                                        fill="#FFA899" />
                                                     <path fill-rule="evenodd" clip-rule="evenodd"
                                                         d="M43.4127 14.892C43.4417 14.3426 43.3153 13.7961 43.0481 13.3151C42.7809 12.8341 42.3837 12.4381 41.9019 12.1723C41.8164 12.1229 41.715 12.1085 41.619 12.1323C41.5231 12.1562 41.4402 12.2163 41.3877 12.3001L40.775 13.2808L40.2653 12.6643C40.2373 12.6305 40.2026 12.6029 40.1634 12.5831C40.1242 12.5634 40.0813 12.552 40.0375 12.5497C39.9936 12.5474 39.9498 12.5542 39.9087 12.5696C39.8676 12.5851 39.8302 12.6089 39.7988 12.6395C39.4987 12.9299 39.2643 13.2811 39.1114 13.6697C38.9584 14.0582 38.8905 14.475 38.9121 14.892C38.9121 15.4888 39.1492 16.0611 39.5711 16.483C39.9931 16.905 40.5654 17.142 41.1621 17.142C41.7588 17.142 42.3311 16.905 42.7531 16.483C43.175 16.0611 43.4121 15.4888 43.4121 14.892M40.0098 13.3539L39.9704 13.406C39.6715 13.8236 39.5217 14.3295 39.5452 14.8425L39.5471 14.88C39.5471 15.3081 39.7172 15.7187 40.0199 16.0215C40.3227 16.3243 40.7333 16.4943 41.1615 16.4943C41.5896 16.4943 42.0003 16.3243 42.303 16.0215C42.6058 15.7187 42.7759 15.3081 42.7759 14.88L42.7778 14.8431C42.7822 14.8018 42.8814 13.6653 41.8416 12.8925L41.7901 12.855L41.1265 13.9164C41.0945 13.9676 41.0507 14.0104 40.9989 14.0414C40.9471 14.0724 40.8886 14.0906 40.8283 14.0946C40.7681 14.0986 40.7077 14.0882 40.6523 14.0643C40.5968 14.0404 40.5478 14.0036 40.5094 13.9571L40.0098 13.3539Z"
                                                         fill="#FEFEFE" />
@@ -5692,8 +5772,8 @@ line-height: normal;">
                                             </div>
 
                                             <div class="review-meta">
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10" height="14"
-                                                        viewBox="0 0 10 14" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10"
+                                                        height="14" viewBox="0 0 10 14" fill="none">
                                                         <path
                                                             d="M5 6.65C4.5264 6.65 4.0722 6.46563 3.73731 6.13744C3.40242 5.80925 3.21429 5.36413 3.21429 4.9C3.21429 4.43587 3.40242 3.99075 3.73731 3.66256C4.0722 3.33437 4.5264 3.15 5 3.15C5.4736 3.15 5.9278 3.33437 6.26269 3.66256C6.59758 3.99075 6.78571 4.43587 6.78571 4.9C6.78571 5.12981 6.73953 5.35738 6.64979 5.5697C6.56004 5.78202 6.42851 5.97493 6.26269 6.13744C6.09687 6.29994 5.90002 6.42884 5.68336 6.51679C5.46671 6.60473 5.2345 6.65 5 6.65ZM5 0C3.67392 0 2.40215 0.516248 1.46447 1.43518C0.526784 2.3541 0 3.60044 0 4.9C0 8.575 5 14 5 14C5 14 10 8.575 10 4.9C10 3.60044 9.47322 2.3541 8.53553 1.43518C7.59785 0.516248 6.32608 0 5 0Z"
                                                             fill="#FFC97A" />
@@ -5705,8 +5785,9 @@ line-height: normal;">
                                     <div class="review-content">
 
                                         <div class="review-top">
-                                            <div class="stars"><svg xmlns="http://www.w3.org/2000/svg" width="163"
-                                                    height="30" viewBox="0 0 163 30" fill="none">
+                                            <div class="stars"><svg xmlns="http://www.w3.org/2000/svg"
+                                                    width="163" height="30" viewBox="0 0 163 30"
+                                                    fill="none">
                                                     <path
                                                         d="M12.6642 6.04253C13.2526 4.17853 15.8904 4.17854 16.4787 6.04254L17.4017 8.96675C17.6644 9.79894 18.4363 10.3647 19.309 10.3647H22.4163C24.3397 10.3647 25.1544 12.8144 23.6142 13.9664L21.0015 15.9204C20.3207 16.4296 20.0362 17.3134 20.2921 18.124L21.2664 21.2107C21.8512 23.0636 19.7172 24.578 18.1613 23.4143L15.7693 21.6254C15.0591 21.0942 14.0838 21.0942 13.3736 21.6254L10.9817 23.4143C9.42574 24.578 7.29174 23.0636 7.87658 21.2107L8.85085 18.124C9.10672 17.3134 8.8222 16.4296 8.14146 15.9204L5.52874 13.9664C3.98849 12.8144 4.80322 10.3647 6.7266 10.3647H9.83398C10.7066 10.3647 11.4786 9.79893 11.7412 8.96674L12.6642 6.04253Z"
                                                         fill="#FFC97A" />
@@ -5756,11 +5837,12 @@ line-height: normal;">
                                     <div class="review-left">
                                         <div class="avatar-wrap">
 
-                                            <img src="{{ asset('images/space_card3.png') }}" alt="Image" class="avatar">
+                                            <img src="{{ asset('images/space_card3.png') }}" alt="Image"
+                                                class="avatar">
 
                                             <div class="badge-shield" title="Verified">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="29" height="30"
-                                                    viewBox="0 0 29 30" fill="none">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="29"
+                                                    height="30" viewBox="0 0 29 30" fill="none">
                                                     <path
                                                         d="M14.9293 0.170856C14.6819 0.058916 14.4168 0 14.1399 0C13.8629 0 13.5978 0.058916 13.3504 0.170856L2.25651 4.87824C0.960357 5.42616 -0.0058648 6.70463 2.67979e-05 8.24823C0.0294848 14.0927 2.43326 24.7859 12.5845 29.6465C13.5684 30.1178 14.7113 30.1178 15.6952 29.6465C25.8465 24.7859 28.2502 14.0927 28.2797 8.24823C28.2856 6.70463 27.3194 5.42616 26.0232 4.87824L14.9293 0.170856Z"
                                                         fill="#CBDCE8"></path>
@@ -5794,28 +5876,31 @@ line-height: normal;">
                                             <p>Hosted by Patrick B.</p>
 
                                             <div class="reviews-card-icon">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="82" height="24"
-                                                    viewBox="0 0 82 24" fill="none">
-                                                    <rect width="24" height="24" rx="12" fill="#CBDCE8" />
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="82"
+                                                    height="24" viewBox="0 0 82 24" fill="none">
+                                                    <rect width="24" height="24" rx="12"
+                                                        fill="#CBDCE8" />
                                                     <path
                                                         d="M9 17C8.85833 17 8.73967 16.952 8.644 16.856C8.54833 16.76 8.50033 16.6413 8.5 16.5C8.49967 16.3587 8.54767 16.24 8.644 16.144C8.74033 16.048 8.859 16 9 16H15C15.1417 16 15.2605 16.048 15.3565 16.144C15.4525 16.24 15.5003 16.3587 15.5 16.5C15.4997 16.6413 15.4517 16.7602 15.356 16.8565C15.2603 16.9528 15.1417 17.0007 15 17H9ZM9.35 15.25C9.10833 15.25 8.89383 15.1708 8.7065 15.0125C8.51917 14.8542 8.4045 14.6542 8.3625 14.4125L7.8625 11.2375C7.84583 11.2375 7.82717 11.2397 7.8065 11.244C7.78583 11.2483 7.767 11.2503 7.75 11.25C7.54167 11.25 7.36467 11.1772 7.219 11.0315C7.07333 10.8858 7.00033 10.7087 7 10.5C6.99967 10.2913 7.07267 10.1143 7.219 9.969C7.36533 9.82367 7.54233 9.75067 7.75 9.75C7.95767 9.74933 8.13483 9.82233 8.2815 9.969C8.42817 10.1157 8.501 10.2927 8.5 10.5C8.5 10.5583 8.49367 10.6125 8.481 10.6625C8.46833 10.7125 8.45383 10.7583 8.4375 10.8L10 11.5L11.5625 9.3625C11.4708 9.29583 11.3958 9.20833 11.3375 9.1C11.2792 8.99167 11.25 8.875 11.25 8.75C11.25 8.54167 11.323 8.3645 11.469 8.2185C11.615 8.0725 11.792 7.99967 12 8C12.208 8.00033 12.3852 8.07333 12.5315 8.219C12.6778 8.36467 12.7507 8.54167 12.75 8.75C12.75 8.875 12.7208 8.99167 12.6625 9.1C12.6042 9.20833 12.5292 9.29583 12.4375 9.3625L14 11.5L15.5625 10.8C15.5458 10.7583 15.5312 10.7125 15.5185 10.6625C15.5058 10.6125 15.4997 10.5583 15.5 10.5C15.5 10.2917 15.573 10.1145 15.719 9.9685C15.865 9.8225 16.042 9.74967 16.25 9.75C16.458 9.75033 16.6352 9.82333 16.7815 9.969C16.9278 10.1147 17.0007 10.2917 17 10.5C16.9993 10.7083 16.9265 10.8855 16.7815 11.0315C16.6365 11.1775 16.4593 11.2503 16.25 11.25C16.2333 11.25 16.2147 11.248 16.194 11.244C16.1733 11.24 16.1545 11.2378 16.1375 11.2375L15.6375 14.4125C15.5958 14.6542 15.4813 14.8542 15.294 15.0125C15.1067 15.1708 14.892 15.25 14.65 15.25H9.35ZM9.35 14.25H14.65L14.975 12.1625L14.4 12.4125C14.1833 12.5042 13.9625 12.5208 13.7375 12.4625C13.5125 12.4042 13.3292 12.2792 13.1875 12.0875L12 10.45L10.8125 12.0875C10.6708 12.2792 10.4875 12.4042 10.2625 12.4625C10.0375 12.5208 9.81667 12.5042 9.6 12.4125L9.025 12.1625L9.35 14.25Z"
                                                         fill="white" />
-                                                    <rect x="29" width="24" height="24" rx="12" fill="#FFA899" />
+                                                    <rect x="29" width="24" height="24" rx="12"
+                                                        fill="#FFA899" />
                                                     <path fill-rule="evenodd" clip-rule="evenodd"
                                                         d="M43.4127 14.893C43.4417 14.3436 43.3153 13.7971 43.0481 13.3161C42.7809 12.8351 42.3837 12.4391 41.9019 12.1733C41.8164 12.1238 41.715 12.1095 41.619 12.1333C41.5231 12.1572 41.4402 12.2173 41.3877 12.3011L40.775 13.2818L40.2653 12.6653C40.2373 12.6315 40.2026 12.6038 40.1634 12.5841C40.1242 12.5644 40.0813 12.553 40.0375 12.5507C39.9936 12.5484 39.9498 12.5551 39.9087 12.5706C39.8676 12.586 39.8302 12.6098 39.7988 12.6405C39.4987 12.9308 39.2643 13.2821 39.1114 13.6707C38.9584 14.0592 38.8905 14.476 38.9121 14.893C38.9121 15.4897 39.1492 16.062 39.5711 16.484C39.9931 16.9059 40.5654 17.143 41.1621 17.143C41.7588 17.143 42.3311 16.9059 42.7531 16.484C43.175 16.062 43.4121 15.4897 43.4121 14.893M40.0098 13.3549L39.9704 13.407C39.6715 13.8245 39.5217 14.3305 39.5452 14.8434L39.5471 14.8809C39.5471 15.3091 39.7172 15.7197 40.0199 16.0225C40.3227 16.3252 40.7333 16.4953 41.1615 16.4953C41.5896 16.4953 42.0003 16.3252 42.303 16.0225C42.6058 15.7197 42.7759 15.3091 42.7759 14.8809L42.7778 14.8441C42.7822 14.8028 42.8814 13.6663 41.8416 12.8934L41.7901 12.8559L41.1265 13.9174C41.0945 13.9686 41.0507 14.0114 40.9989 14.0424C40.9471 14.0734 40.8886 14.0916 40.8283 14.0956C40.7681 14.0995 40.7077 14.0892 40.6523 14.0652C40.5968 14.0413 40.5478 14.0046 40.5094 13.9581L40.0098 13.3549Z"
                                                         fill="#FEFEFE" />
                                                     <path fill-rule="evenodd" clip-rule="evenodd"
                                                         d="M40.797 7.30821C40.8102 7.23997 40.8419 7.17666 40.8886 7.12514C40.9352 7.07362 40.9951 7.03586 41.0617 7.01595C41.1283 6.99604 41.1991 6.99475 41.2664 7.0122C41.3337 7.02966 41.3949 7.06521 41.4434 7.11499C41.5667 7.24084 41.8038 7.48999 42.0447 7.77727C42.2811 8.05884 42.5392 8.39761 42.6879 8.69951C42.8328 8.99443 42.9866 9.37578 43.108 9.69421L43.673 8.75354C43.7046 8.701 43.7483 8.65683 43.8005 8.62476C43.8527 8.59269 43.9118 8.57367 43.9729 8.56931C44.034 8.56494 44.0953 8.57536 44.1515 8.59969C44.2077 8.62401 44.2573 8.66152 44.2959 8.70905C45.0987 9.70057 45.4985 10.7626 45.6974 11.5736C45.7972 11.9798 45.8474 12.3249 45.8728 12.5703C45.8858 12.6928 45.8942 12.8157 45.8982 12.9389V12.9713C45.8982 15.4482 43.9336 17.4649 41.4479 17.4649C38.9621 17.4649 37 15.4476 37 12.97C37 12.288 37.3222 10.6819 38.2756 9.36498C38.3127 9.31422 38.3617 9.27341 38.4183 9.24615C38.4749 9.2189 38.5373 9.20605 38.6001 9.20876C38.6629 9.21146 38.724 9.22963 38.7781 9.26166C38.8321 9.29368 38.8774 9.33856 38.9099 9.39231L39.5551 10.4671C39.7508 10.1607 40.0127 9.73044 40.2116 9.3332C40.4976 8.76117 40.7246 7.68257 40.797 7.30885M41.3201 7.91265C41.2051 8.42113 41.015 9.14697 40.7798 9.61858C40.4671 10.2434 40.0165 10.9298 39.8614 11.1605C39.8255 11.2134 39.7769 11.2565 39.7201 11.2857C39.6632 11.315 39.5999 11.3294 39.5359 11.3278C39.472 11.3261 39.4095 11.3084 39.3542 11.2763C39.2989 11.2442 39.2526 11.1987 39.2195 11.144L38.5712 10.0648C37.8746 11.1917 37.6356 12.4584 37.6356 12.9713C37.6356 15.1056 39.3224 16.8281 41.4479 16.8281C43.5733 16.8281 45.2627 15.1056 45.2627 12.9713V12.9535L45.2601 12.89C45.2557 12.8048 45.2491 12.7199 45.2404 12.6351C45.2071 12.3287 45.1536 12.0249 45.0802 11.7256C44.8783 10.8916 44.5203 10.1033 44.0252 9.40248L43.3807 10.4753C43.3434 10.5373 43.2892 10.5874 43.2246 10.6199C43.1599 10.6523 43.0874 10.6657 43.0154 10.6585C42.9434 10.6513 42.875 10.6238 42.818 10.5792C42.761 10.5347 42.7179 10.4748 42.6936 10.4067C42.5906 10.1181 42.3383 9.42917 42.1171 8.98044C42.0046 8.751 41.7892 8.46117 41.5578 8.18596C41.4801 8.09353 41.4009 8.00242 41.3201 7.91265Z"
                                                         fill="#FEFEFE" />
-                                                    <rect x="58" width="24" height="24" rx="12" fill="#D8E8B7" />
+                                                    <rect x="58" width="24" height="24" rx="12"
+                                                        fill="#D8E8B7" />
                                                     <path
                                                         d="M70 14.619C69.7348 14.619 69.4804 14.5187 69.2929 14.3401C69.1054 14.1615 69 13.9193 69 13.6667C69 13.1381 69.445 12.7143 70 12.7143C70.2652 12.7143 70.5196 12.8146 70.7071 12.9932C70.8946 13.1718 71 13.4141 71 13.6667C71 13.9193 70.8946 14.1615 70.7071 14.3401C70.5196 14.5187 70.2652 14.619 70 14.619ZM73 16.0476V11.2857H67V16.0476H73ZM73 10.3333C73.2652 10.3333 73.5196 10.4337 73.7071 10.6123C73.8946 10.7909 74 11.0331 74 11.2857V16.0476C74 16.3002 73.8946 16.5424 73.7071 16.7211C73.5196 16.8997 73.2652 17 73 17H67C66.7348 17 66.4804 16.8997 66.2929 16.7211C66.1054 16.5424 66 16.3002 66 16.0476V11.2857C66 10.7571 66.445 10.3333 67 10.3333H67.5V9.38095C67.5 8.74948 67.7634 8.14388 68.2322 7.69736C68.7011 7.25085 69.337 7 70 7C70.3283 7 70.6534 7.06159 70.9567 7.18124C71.26 7.30089 71.5356 7.47627 71.7678 7.69736C71.9999 7.91846 72.1841 8.18093 72.3097 8.4698C72.4353 8.75867 72.5 9.06828 72.5 9.38095V10.3333H73ZM70 7.95238C69.6022 7.95238 69.2206 8.10289 68.9393 8.3708C68.658 8.63871 68.5 9.00207 68.5 9.38095V10.3333H71.5V9.38095C71.5 9.00207 71.342 8.63871 71.0607 8.3708C70.7794 8.10289 70.3978 7.95238 70 7.95238Z"
                                                         fill="white" />
                                                 </svg>
                                             </div>
                                             <div class="review-meta">
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10" height="14"
-                                                        viewBox="0 0 10 14" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10"
+                                                        height="14" viewBox="0 0 10 14" fill="none">
                                                         <path
                                                             d="M5 6.65C4.5264 6.65 4.0722 6.46563 3.73731 6.13744C3.40242 5.80925 3.21429 5.36413 3.21429 4.9C3.21429 4.43587 3.40242 3.99075 3.73731 3.66256C4.0722 3.33437 4.5264 3.15 5 3.15C5.4736 3.15 5.9278 3.33437 6.26269 3.66256C6.59758 3.99075 6.78571 4.43587 6.78571 4.9C6.78571 5.12981 6.73953 5.35738 6.64979 5.5697C6.56004 5.78202 6.42851 5.97493 6.26269 6.13744C6.09687 6.29994 5.90002 6.42884 5.68336 6.51679C5.46671 6.60473 5.2345 6.65 5 6.65ZM5 0C3.67392 0 2.40215 0.516248 1.46447 1.43518C0.526784 2.3541 0 3.60044 0 4.9C0 8.575 5 14 5 14C5 14 10 8.575 10 4.9C10 3.60044 9.47322 2.3541 8.53553 1.43518C7.59785 0.516248 6.32608 0 5 0Z"
                                                             fill="#FFC97A" />
@@ -5827,8 +5912,9 @@ line-height: normal;">
                                     <div class="review-content">
 
                                         <div class="review-top">
-                                            <div class="stars"><svg xmlns="http://www.w3.org/2000/svg" width="163"
-                                                    height="30" viewBox="0 0 163 30" fill="none">
+                                            <div class="stars"><svg xmlns="http://www.w3.org/2000/svg"
+                                                    width="163" height="30" viewBox="0 0 163 30"
+                                                    fill="none">
                                                     <path
                                                         d="M12.6642 6.04253C13.2526 4.17853 15.8904 4.17854 16.4787 6.04254L17.4017 8.96675C17.6644 9.79894 18.4363 10.3647 19.309 10.3647H22.4163C24.3397 10.3647 25.1544 12.8144 23.6142 13.9664L21.0015 15.9204C20.3207 16.4296 20.0362 17.3134 20.2921 18.124L21.2664 21.2107C21.8512 23.0636 19.7172 24.578 18.1613 23.4143L15.7693 21.6254C15.0591 21.0942 14.0838 21.0942 13.3736 21.6254L10.9817 23.4143C9.42574 24.578 7.29174 23.0636 7.87658 21.2107L8.85085 18.124C9.10672 17.3134 8.8222 16.4296 8.14146 15.9204L5.52874 13.9664C3.98849 12.8144 4.80322 10.3647 6.7266 10.3647H9.83398C10.7066 10.3647 11.4786 9.79893 11.7412 8.96674L12.6642 6.04253Z"
                                                         fill="#FFC97A" />
@@ -5878,13 +5964,14 @@ line-height: normal;">
                                     <div class="review-left">
                                         <div class="avatar-wrap">
 
-                                            <img src="{{ asset('images/groomer-profile.png') }}" alt="Image" class="avatar">
+                                            <img src="{{ asset('images/groomer-profile.png') }}" alt="Image"
+                                                class="avatar">
 
                                             <div class="badge-shield" title="Verified">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="33"
-                                                    viewBox="0 0 30 33" fill="none">
-                                                    <ellipse cx="15.873" cy="16.5256" rx="9.3645" ry="8.81365"
-                                                        fill="white"></ellipse>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="30"
+                                                    height="33" viewBox="0 0 30 33" fill="none">
+                                                    <ellipse cx="15.873" cy="16.5256" rx="9.3645"
+                                                        ry="8.81365" fill="white"></ellipse>
                                                     <path
                                                         d="M15.44 0.185076C15.1841 0.0638192 14.9099 0 14.6235 0C14.3372 0 14.063 0.0638192 13.8071 0.185076L2.3337 5.28423C0.993208 5.87775 -0.00606541 7.26263 2.77146e-05 8.93469C0.0304934 15.2656 2.51649 26.8487 13.015 32.1138C14.0325 32.6244 15.2146 32.6244 16.2321 32.1138C26.7306 26.8487 29.2166 15.2656 29.247 8.93469C29.2531 7.26263 28.2539 5.87775 26.9134 5.28423L15.44 0.185076ZM8.82897 18.2651C9.12144 18.3416 9.43219 18.3799 9.74903 18.3799C11.8999 18.3799 13.6486 16.5483 13.6486 14.2955V10.2111H16.3418C17.0791 10.2111 17.7554 10.645 18.0844 11.3407L18.5231 12.2533H22.4227C22.9589 12.2533 23.3976 12.7128 23.3976 13.2744V15.3166C23.3976 18.1374 21.2163 20.4222 18.5231 20.4222H15.5984V23.6578C15.5984 24.1237 15.2389 24.5066 14.7881 24.5066C14.6784 24.5066 14.5687 24.4811 14.4712 24.4364L8.45729 21.7368C8.05514 21.5581 7.79923 21.1433 7.79923 20.6902C7.79923 20.5115 7.83579 20.3392 7.915 20.1796L8.82897 18.2651ZM8.77413 10.2111H11.6988V14.2955C11.6988 15.4251 10.8275 16.3377 9.74903 16.3377C8.67055 16.3377 7.79923 15.4251 7.79923 14.2955V11.2322C7.79923 10.6706 8.23794 10.2111 8.77413 10.2111ZM16.5733 13.2744C16.5733 13.0036 16.4706 12.7439 16.2878 12.5524C16.105 12.3609 15.857 12.2533 15.5984 12.2533C15.3399 12.2533 15.0919 12.3609 14.9091 12.5524C14.7262 12.7439 14.6235 13.0036 14.6235 13.2744C14.6235 13.5452 14.7262 13.8049 14.9091 13.9964C15.0919 14.1879 15.3399 14.2955 15.5984 14.2955C15.857 14.2955 16.105 14.1879 16.2878 13.9964C16.4706 13.8049 16.5733 13.5452 16.5733 13.2744Z"
                                                         fill="#C9DDA0"></path>
@@ -5896,28 +5983,31 @@ line-height: normal;">
                                             <h4>Paws & Bubbles</h4>
                                             <p>Hosted by Patrick B.</p>
                                             <div class="reviews-card-icon">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="82" height="24"
-                                                    viewBox="0 0 82 24" fill="none">
-                                                    <rect width="24" height="24" rx="12" fill="#CBDCE8" />
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="82"
+                                                    height="24" viewBox="0 0 82 24" fill="none">
+                                                    <rect width="24" height="24" rx="12"
+                                                        fill="#CBDCE8" />
                                                     <path
                                                         d="M9 17C8.85833 17 8.73967 16.952 8.644 16.856C8.54833 16.76 8.50033 16.6413 8.5 16.5C8.49967 16.3587 8.54767 16.24 8.644 16.144C8.74033 16.048 8.859 16 9 16H15C15.1417 16 15.2605 16.048 15.3565 16.144C15.4525 16.24 15.5003 16.3587 15.5 16.5C15.4997 16.6413 15.4517 16.7602 15.356 16.8565C15.2603 16.9528 15.1417 17.0007 15 17H9ZM9.35 15.25C9.10833 15.25 8.89383 15.1708 8.7065 15.0125C8.51917 14.8542 8.4045 14.6542 8.3625 14.4125L7.8625 11.2375C7.84583 11.2375 7.82717 11.2397 7.8065 11.244C7.78583 11.2483 7.767 11.2503 7.75 11.25C7.54167 11.25 7.36467 11.1772 7.219 11.0315C7.07333 10.8858 7.00033 10.7087 7 10.5C6.99967 10.2913 7.07267 10.1143 7.219 9.969C7.36533 9.82367 7.54233 9.75067 7.75 9.75C7.95767 9.74933 8.13483 9.82233 8.2815 9.969C8.42817 10.1157 8.501 10.2927 8.5 10.5C8.5 10.5583 8.49367 10.6125 8.481 10.6625C8.46833 10.7125 8.45383 10.7583 8.4375 10.8L10 11.5L11.5625 9.3625C11.4708 9.29583 11.3958 9.20833 11.3375 9.1C11.2792 8.99167 11.25 8.875 11.25 8.75C11.25 8.54167 11.323 8.3645 11.469 8.2185C11.615 8.0725 11.792 7.99967 12 8C12.208 8.00033 12.3852 8.07333 12.5315 8.219C12.6778 8.36467 12.7507 8.54167 12.75 8.75C12.75 8.875 12.7208 8.99167 12.6625 9.1C12.6042 9.20833 12.5292 9.29583 12.4375 9.3625L14 11.5L15.5625 10.8C15.5458 10.7583 15.5312 10.7125 15.5185 10.6625C15.5058 10.6125 15.4997 10.5583 15.5 10.5C15.5 10.2917 15.573 10.1145 15.719 9.9685C15.865 9.8225 16.042 9.74967 16.25 9.75C16.458 9.75033 16.6352 9.82333 16.7815 9.969C16.9278 10.1147 17.0007 10.2917 17 10.5C16.9993 10.7083 16.9265 10.8855 16.7815 11.0315C16.6365 11.1775 16.4593 11.2503 16.25 11.25C16.2333 11.25 16.2147 11.248 16.194 11.244C16.1733 11.24 16.1545 11.2378 16.1375 11.2375L15.6375 14.4125C15.5958 14.6542 15.4813 14.8542 15.294 15.0125C15.1067 15.1708 14.892 15.25 14.65 15.25H9.35ZM9.35 14.25H14.65L14.975 12.1625L14.4 12.4125C14.1833 12.5042 13.9625 12.5208 13.7375 12.4625C13.5125 12.4042 13.3292 12.2792 13.1875 12.0875L12 10.45L10.8125 12.0875C10.6708 12.2792 10.4875 12.4042 10.2625 12.4625C10.0375 12.5208 9.81667 12.5042 9.6 12.4125L9.025 12.1625L9.35 14.25Z"
                                                         fill="white" />
-                                                    <rect x="29" width="24" height="24" rx="12" fill="#FFA899" />
+                                                    <rect x="29" width="24" height="24" rx="12"
+                                                        fill="#FFA899" />
                                                     <path fill-rule="evenodd" clip-rule="evenodd"
                                                         d="M43.4127 14.893C43.4417 14.3436 43.3153 13.7971 43.0481 13.3161C42.7809 12.8351 42.3837 12.4391 41.9019 12.1733C41.8164 12.1238 41.715 12.1095 41.619 12.1333C41.5231 12.1572 41.4402 12.2173 41.3877 12.3011L40.775 13.2818L40.2653 12.6653C40.2373 12.6315 40.2026 12.6038 40.1634 12.5841C40.1242 12.5644 40.0813 12.553 40.0375 12.5507C39.9936 12.5484 39.9498 12.5551 39.9087 12.5706C39.8676 12.586 39.8302 12.6098 39.7988 12.6405C39.4987 12.9308 39.2643 13.2821 39.1114 13.6707C38.9584 14.0592 38.8905 14.476 38.9121 14.893C38.9121 15.4897 39.1492 16.062 39.5711 16.484C39.9931 16.9059 40.5654 17.143 41.1621 17.143C41.7588 17.143 42.3311 16.9059 42.7531 16.484C43.175 16.062 43.4121 15.4897 43.4121 14.893M40.0098 13.3549L39.9704 13.407C39.6715 13.8245 39.5217 14.3305 39.5452 14.8434L39.5471 14.8809C39.5471 15.3091 39.7172 15.7197 40.0199 16.0225C40.3227 16.3252 40.7333 16.4953 41.1615 16.4953C41.5896 16.4953 42.0003 16.3252 42.303 16.0225C42.6058 15.7197 42.7759 15.3091 42.7759 14.8809L42.7778 14.8441C42.7822 14.8028 42.8814 13.6663 41.8416 12.8934L41.7901 12.8559L41.1265 13.9174C41.0945 13.9686 41.0507 14.0114 40.9989 14.0424C40.9471 14.0734 40.8886 14.0916 40.8283 14.0956C40.7681 14.0995 40.7077 14.0892 40.6523 14.0652C40.5968 14.0413 40.5478 14.0046 40.5094 13.9581L40.0098 13.3549Z"
                                                         fill="#FEFEFE" />
                                                     <path fill-rule="evenodd" clip-rule="evenodd"
                                                         d="M40.797 7.30821C40.8102 7.23997 40.8419 7.17666 40.8886 7.12514C40.9352 7.07362 40.9951 7.03586 41.0617 7.01595C41.1283 6.99604 41.1991 6.99475 41.2664 7.0122C41.3337 7.02966 41.3949 7.06521 41.4434 7.11499C41.5667 7.24084 41.8038 7.48999 42.0447 7.77727C42.2811 8.05884 42.5392 8.39761 42.6879 8.69951C42.8328 8.99443 42.9866 9.37578 43.108 9.69421L43.673 8.75354C43.7046 8.701 43.7483 8.65683 43.8005 8.62476C43.8527 8.59269 43.9118 8.57367 43.9729 8.56931C44.034 8.56494 44.0953 8.57536 44.1515 8.59969C44.2077 8.62401 44.2573 8.66152 44.2959 8.70905C45.0987 9.70057 45.4985 10.7626 45.6974 11.5736C45.7972 11.9798 45.8474 12.3249 45.8728 12.5703C45.8858 12.6928 45.8942 12.8157 45.8982 12.9389V12.9713C45.8982 15.4482 43.9336 17.4649 41.4479 17.4649C38.9621 17.4649 37 15.4476 37 12.97C37 12.288 37.3222 10.6819 38.2756 9.36498C38.3127 9.31422 38.3617 9.27341 38.4183 9.24615C38.4749 9.2189 38.5373 9.20605 38.6001 9.20876C38.6629 9.21146 38.724 9.22963 38.7781 9.26166C38.8321 9.29368 38.8774 9.33856 38.9099 9.39231L39.5551 10.4671C39.7508 10.1607 40.0127 9.73044 40.2116 9.3332C40.4976 8.76117 40.7246 7.68257 40.797 7.30885M41.3201 7.91265C41.2051 8.42113 41.015 9.14697 40.7798 9.61858C40.4671 10.2434 40.0165 10.9298 39.8614 11.1605C39.8255 11.2134 39.7769 11.2565 39.7201 11.2857C39.6632 11.315 39.5999 11.3294 39.5359 11.3278C39.472 11.3261 39.4095 11.3084 39.3542 11.2763C39.2989 11.2442 39.2526 11.1987 39.2195 11.144L38.5712 10.0648C37.8746 11.1917 37.6356 12.4584 37.6356 12.9713C37.6356 15.1056 39.3224 16.8281 41.4479 16.8281C43.5733 16.8281 45.2627 15.1056 45.2627 12.9713V12.9535L45.2601 12.89C45.2557 12.8048 45.2491 12.7199 45.2404 12.6351C45.2071 12.3287 45.1536 12.0249 45.0802 11.7256C44.8783 10.8916 44.5203 10.1033 44.0252 9.40248L43.3807 10.4753C43.3434 10.5373 43.2892 10.5874 43.2246 10.6199C43.1599 10.6523 43.0874 10.6657 43.0154 10.6585C42.9434 10.6513 42.875 10.6238 42.818 10.5792C42.761 10.5347 42.7179 10.4748 42.6936 10.4067C42.5906 10.1181 42.3383 9.42917 42.1171 8.98044C42.0046 8.751 41.7892 8.46117 41.5578 8.18596C41.4801 8.09353 41.4009 8.00242 41.3201 7.91265Z"
                                                         fill="#FEFEFE" />
-                                                    <rect x="58" width="24" height="24" rx="12" fill="#D8E8B7" />
+                                                    <rect x="58" width="24" height="24" rx="12"
+                                                        fill="#D8E8B7" />
                                                     <path
                                                         d="M70 14.619C69.7348 14.619 69.4804 14.5187 69.2929 14.3401C69.1054 14.1615 69 13.9193 69 13.6667C69 13.1381 69.445 12.7143 70 12.7143C70.2652 12.7143 70.5196 12.8146 70.7071 12.9932C70.8946 13.1718 71 13.4141 71 13.6667C71 13.9193 70.8946 14.1615 70.7071 14.3401C70.5196 14.5187 70.2652 14.619 70 14.619ZM73 16.0476V11.2857H67V16.0476H73ZM73 10.3333C73.2652 10.3333 73.5196 10.4337 73.7071 10.6123C73.8946 10.7909 74 11.0331 74 11.2857V16.0476C74 16.3002 73.8946 16.5424 73.7071 16.7211C73.5196 16.8997 73.2652 17 73 17H67C66.7348 17 66.4804 16.8997 66.2929 16.7211C66.1054 16.5424 66 16.3002 66 16.0476V11.2857C66 10.7571 66.445 10.3333 67 10.3333H67.5V9.38095C67.5 8.74948 67.7634 8.14388 68.2322 7.69736C68.7011 7.25085 69.337 7 70 7C70.3283 7 70.6534 7.06159 70.9567 7.18124C71.26 7.30089 71.5356 7.47627 71.7678 7.69736C71.9999 7.91846 72.1841 8.18093 72.3097 8.4698C72.4353 8.75867 72.5 9.06828 72.5 9.38095V10.3333H73ZM70 7.95238C69.6022 7.95238 69.2206 8.10289 68.9393 8.3708C68.658 8.63871 68.5 9.00207 68.5 9.38095V10.3333H71.5V9.38095C71.5 9.00207 71.342 8.63871 71.0607 8.3708C70.7794 8.10289 70.3978 7.95238 70 7.95238Z"
                                                         fill="white" />
                                                 </svg>
                                             </div>
                                             <div class="review-meta">
-                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10" height="14"
-                                                        viewBox="0 0 10 14" fill="none">
+                                                <span><svg xmlns="http://www.w3.org/2000/svg" width="10"
+                                                        height="14" viewBox="0 0 10 14" fill="none">
                                                         <path
                                                             d="M5 6.65C4.5264 6.65 4.0722 6.46563 3.73731 6.13744C3.40242 5.80925 3.21429 5.36413 3.21429 4.9C3.21429 4.43587 3.40242 3.99075 3.73731 3.66256C4.0722 3.33437 4.5264 3.15 5 3.15C5.4736 3.15 5.9278 3.33437 6.26269 3.66256C6.59758 3.99075 6.78571 4.43587 6.78571 4.9C6.78571 5.12981 6.73953 5.35738 6.64979 5.5697C6.56004 5.78202 6.42851 5.97493 6.26269 6.13744C6.09687 6.29994 5.90002 6.42884 5.68336 6.51679C5.46671 6.60473 5.2345 6.65 5 6.65ZM5 0C3.67392 0 2.40215 0.516248 1.46447 1.43518C0.526784 2.3541 0 3.60044 0 4.9C0 8.575 5 14 5 14C5 14 10 8.575 10 4.9C10 3.60044 9.47322 2.3541 8.53553 1.43518C7.59785 0.516248 6.32608 0 5 0Z"
                                                             fill="#FFC97A" />
@@ -5929,8 +6019,9 @@ line-height: normal;">
                                     <div class="review-content">
 
                                         <div class="review-top">
-                                            <div class="stars"><svg xmlns="http://www.w3.org/2000/svg" width="163"
-                                                    height="30" viewBox="0 0 163 30" fill="none">
+                                            <div class="stars"><svg xmlns="http://www.w3.org/2000/svg"
+                                                    width="163" height="30" viewBox="0 0 163 30"
+                                                    fill="none">
                                                     <path
                                                         d="M12.6642 6.04253C13.2526 4.17853 15.8904 4.17854 16.4787 6.04254L17.4017 8.96675C17.6644 9.79894 18.4363 10.3647 19.309 10.3647H22.4163C24.3397 10.3647 25.1544 12.8144 23.6142 13.9664L21.0015 15.9204C20.3207 16.4296 20.0362 17.3134 20.2921 18.124L21.2664 21.2107C21.8512 23.0636 19.7172 24.578 18.1613 23.4143L15.7693 21.6254C15.0591 21.0942 14.0838 21.0942 13.3736 21.6254L10.9817 23.4143C9.42574 24.578 7.29174 23.0636 7.87658 21.2107L8.85085 18.124C9.10672 17.3134 8.8222 16.4296 8.14146 15.9204L5.52874 13.9664C3.98849 12.8144 4.80322 10.3647 6.7266 10.3647H9.83398C10.7066 10.3647 11.4786 9.79893 11.7412 8.96674L12.6642 6.04253Z"
                                                         fill="#FFC97A" />
@@ -6047,21 +6138,24 @@ line-height: normal;">
                                     </div>
 
                                     <div class="soical-group-icon d-flex align-items-center gap-20">
-                                        <span class="icon-fb"><svg xmlns="http://www.w3.org/2000/svg" width="48"
-                                                height="48" viewBox="0 0 48 48" fill="none">
+                                        <span class="icon-fb"><svg xmlns="http://www.w3.org/2000/svg"
+                                                width="48" height="48" viewBox="0 0 48 48"
+                                                fill="none">
                                                 <path
                                                     d="M48 24C48 10.7452 37.2547 0 24 0C10.7452 0 0 10.7452 0 24C0 35.979 8.7765 45.9081 20.25 47.7084V30.9375H14.1562V24H20.25V18.7125C20.25 12.6975 23.8331 9.375 29.3153 9.375C31.941 9.375 34.6875 9.84375 34.6875 9.84375V15.75H31.6613C28.6798 15.75 27.75 17.6001 27.75 19.4981V24H34.4062L33.3422 30.9375H27.75V47.7084C39.2235 45.9081 48 35.9792 48 24Z"
                                                     fill="#1877F2" />
                                             </svg></span>
-                                        <span class="icon-x"><svg xmlns="http://www.w3.org/2000/svg" width="48"
-                                                height="48" viewBox="0 0 48 48" fill="none">
+                                        <span class="icon-x"><svg xmlns="http://www.w3.org/2000/svg"
+                                                width="48" height="48" viewBox="0 0 48 48"
+                                                fill="none">
                                                 <circle cx="24" cy="24" r="24" fill="black" />
                                                 <path
                                                     d="M31.4337 12L24.7723 19.6147L19.0123 12H10.667L20.6363 25.0347L11.1883 35.8333H15.2337L22.5257 27.5L28.899 35.8333H37.035L26.643 22.0947L35.4763 12H31.4337ZM30.015 33.4133L15.3897 14.292H17.7937L32.255 33.412L30.015 33.4133Z"
                                                     fill="white" />
                                             </svg></span>
-                                        <span class="icon-wa"><svg xmlns="http://www.w3.org/2000/svg" width="48"
-                                                height="48" viewBox="0 0 48 48" fill="none">
+                                        <span class="icon-wa"><svg xmlns="http://www.w3.org/2000/svg"
+                                                width="48" height="48" viewBox="0 0 48 48"
+                                                fill="none">
                                                 <circle cx="24" cy="24" r="24" fill="#25CC64" />
                                                 <path
                                                     d="M24.1401 7.26758C28.6485 7.26947 32.8824 9.01218 36.0679 12.1748C39.2528 15.3375 41.0026 19.5382 41.0015 24.0078C40.9972 33.2255 33.4348 40.7344 24.1343 40.7344H24.1274L23.5601 40.7246C20.7291 40.629 17.9679 39.8308 15.5415 38.4023L14.9028 38.0264L14.689 37.9004L14.4478 37.9629L8.84229 39.4199L10.3315 34.0293L10.4019 33.7734L10.2593 33.5488L9.84326 32.8936C8.15576 30.2311 7.26486 27.1543 7.26611 23.9941C7.26961 14.7768 14.8321 7.26797 24.1401 7.26758Z"
@@ -6070,8 +6164,9 @@ line-height: normal;">
                                                     d="M16.6953 14.6152C16.8714 14.6152 17.0454 14.6148 17.2129 14.6162L17.6914 14.627C17.8819 14.6347 18.0203 14.6443 18.1602 14.7246C18.2809 14.7941 18.4285 14.9333 18.5869 15.2393L18.6553 15.3809C18.8864 15.8908 19.2564 16.7877 19.5869 17.5947C19.9117 18.3877 20.2056 19.1121 20.2783 19.2568V19.2578C20.3938 19.4874 20.4457 19.7003 20.3223 19.9453C20.1866 20.2145 20.1123 20.3856 19.9834 20.5703L19.832 20.7637C19.5533 21.0862 19.2849 21.4361 19.0576 21.6611C18.9326 21.7844 18.7554 21.9574 18.6699 22.1855C18.5873 22.4064 18.5986 22.6482 18.7256 22.9141L18.7871 23.0293C19.0979 23.5586 20.1682 25.2911 21.7588 26.6982C23.7968 28.501 25.534 29.0711 26.0352 29.3203H26.0361C26.315 29.4587 26.576 29.5383 26.8281 29.5078C27.0904 29.4761 27.2945 29.3314 27.4717 29.1299C27.7758 28.785 28.7932 27.6005 29.1543 27.0635C29.3021 26.8432 29.4194 26.7914 29.5166 26.7803C29.6413 26.7661 29.7958 26.8079 30.0439 26.8975C30.2698 26.9791 31.0199 27.3305 31.7979 27.7031C32.5678 28.072 33.3436 28.4512 33.6055 28.5811C33.8823 28.7184 34.0828 28.8076 34.248 28.8975C34.4117 28.9865 34.4798 29.0466 34.5088 29.0938V29.0947C34.5105 29.0991 34.5163 29.1126 34.5225 29.1396C34.5308 29.1766 34.5378 29.2276 34.543 29.293C34.5533 29.4235 34.5524 29.5981 34.5342 29.8076C34.5023 30.174 34.4181 30.6362 34.2559 31.1396L34.1816 31.3584C33.992 31.8857 33.407 32.4454 32.707 32.8945C32.0106 33.3414 31.274 33.6326 30.8506 33.6709H30.8496C30.3499 33.7161 29.9221 33.8181 29.0576 33.7031C28.1859 33.5872 26.872 33.2475 24.6621 32.3828C20.0637 30.5833 16.9442 26.261 16.0469 24.958L15.8008 24.6006C15.6719 24.4297 15.1464 23.7369 14.6533 22.7734C14.1583 21.8061 13.707 20.5872 13.707 19.3623C13.7071 16.9041 14.998 15.7071 15.4785 15.1865C15.904 14.7256 16.4019 14.6152 16.6953 14.6152Z"
                                                     fill="white" stroke="white" stroke-width="0.5" />
                                             </svg></span>
-                                        <span class="icon-tg"><svg xmlns="http://www.w3.org/2000/svg" width="48"
-                                                height="48" viewBox="0 0 48 48" fill="none">
+                                        <span class="icon-tg"><svg xmlns="http://www.w3.org/2000/svg"
+                                                width="48" height="48" viewBox="0 0 48 48"
+                                                fill="none">
                                                 <g clip-path="url(#clip0_50_1863)">
                                                     <path
                                                         d="M24 0C17.6362 0 11.5275 2.53013 7.03125 7.02938C2.5304 11.5304 0.00128793 17.6347 0 24C0 30.3626 2.53125 36.4714 7.03125 40.9706C11.5275 45.4699 17.6362 48 24 48C30.3638 48 36.4725 45.4699 40.9688 40.9706C45.4688 36.4714 48 30.3626 48 24C48 17.6374 45.4688 11.5286 40.9688 7.02938C36.4725 2.53013 30.3638 0 24 0Z"
@@ -6081,8 +6176,9 @@ line-height: normal;">
                                                         fill="white" />
                                                 </g>
                                                 <defs>
-                                                    <linearGradient id="paint0_linear_50_1863" x1="2400" y1="0"
-                                                        x2="2400" y2="4800" gradientUnits="userSpaceOnUse">
+                                                    <linearGradient id="paint0_linear_50_1863" x1="2400"
+                                                        y1="0" x2="2400" y2="4800"
+                                                        gradientUnits="userSpaceOnUse">
                                                         <stop stop-color="#2AABEE" />
                                                         <stop offset="1" stop-color="#229ED9" />
                                                     </linearGradient>
@@ -6091,8 +6187,9 @@ line-height: normal;">
                                                     </clipPath>
                                                 </defs>
                                             </svg></span>
-                                        <span class="icon-in"><svg xmlns="http://www.w3.org/2000/svg" width="48"
-                                                height="48" viewBox="0 0 48 48" fill="none">
+                                        <span class="icon-in"><svg xmlns="http://www.w3.org/2000/svg"
+                                                width="48" height="48" viewBox="0 0 48 48"
+                                                fill="none">
                                                 <circle cx="24" cy="24" r="24" fill="#2667B4" />
                                                 <path
                                                     d="M17.3333 14.668C17.333 15.3752 17.0517 16.0534 16.5513 16.5532C16.051 17.0531 15.3726 17.3337 14.6653 17.3333C13.9581 17.333 13.28 17.0517 12.7801 16.5513C12.2803 16.051 11.9996 15.3726 12 14.6653C12.0004 13.9581 12.2816 13.28 12.782 12.7801C13.2823 12.2803 13.9608 11.9996 14.668 12C15.3752 12.0004 16.0534 12.2816 16.5532 12.782C17.0531 13.2823 17.3337 13.9608 17.3333 14.668ZM17.4133 19.308H12.08V36.0013H17.4133V19.308ZM25.84 19.308H20.5333V36.0013H25.7867V27.2413C25.7867 22.3613 32.1467 21.908 32.1467 27.2413V36.0013H37.4133V25.428C37.4133 17.2013 28 17.508 25.7867 21.548L25.84 19.308Z"
@@ -6121,8 +6218,8 @@ line-height: normal;">
                                                 height="345.305" filterUnits="userSpaceOnUse"
                                                 color-interpolation-filters="sRGB">
                                                 <feFlood flood-opacity="0" result="BackgroundImageFix" />
-                                                <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix"
-                                                    result="shape" />
+                                                <feBlend mode="normal" in="SourceGraphic"
+                                                    in2="BackgroundImageFix" result="shape" />
                                                 <feGaussianBlur stdDeviation="50"
                                                     result="effect1_foregroundBlur_55_951" />
                                             </filter>
@@ -6166,8 +6263,8 @@ line-height: normal;">
                                 </div>
                             </div>
                             <div class="connector curve-down">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="123" height="20" viewBox="0 0 123 20"
-                                    fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="123" height="20"
+                                    viewBox="0 0 123 20" fill="none">
                                     <path d="M0.568359 0.844492C19.9187 14.2238 71.2988 32.9547 122.017 0.844492"
                                         stroke="#3B3731" stroke-width="2" stroke-dasharray="10 10" />
                                 </svg>
@@ -6187,8 +6284,8 @@ line-height: normal;">
                                                 height="345.305" filterUnits="userSpaceOnUse"
                                                 color-interpolation-filters="sRGB">
                                                 <feFlood flood-opacity="0" result="BackgroundImageFix" />
-                                                <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix"
-                                                    result="shape" />
+                                                <feBlend mode="normal" in="SourceGraphic"
+                                                    in2="BackgroundImageFix" result="shape" />
                                                 <feGaussianBlur stdDeviation="50"
                                                     result="effect1_foregroundBlur_55_950" />
                                             </filter>
@@ -6210,8 +6307,8 @@ line-height: normal;">
                                 </div>
                             </div>
                             <div class="connector curve-up">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="121" height="20" viewBox="0 0 121 20"
-                                    fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="121" height="20"
+                                    viewBox="0 0 121 20" fill="none">
                                     <path d="M0.574219 18.7297C19.642 5.35046 70.2721 -13.3805 120.25 18.7297"
                                         stroke="#3B3731" stroke-width="2" stroke-dasharray="10 10" />
                                 </svg>
@@ -6231,8 +6328,8 @@ line-height: normal;">
                                                 height="345.305" filterUnits="userSpaceOnUse"
                                                 color-interpolation-filters="sRGB">
                                                 <feFlood flood-opacity="0" result="BackgroundImageFix" />
-                                                <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix"
-                                                    result="shape" />
+                                                <feBlend mode="normal" in="SourceGraphic"
+                                                    in2="BackgroundImageFix" result="shape" />
                                                 <feGaussianBlur stdDeviation="50"
                                                     result="effect1_foregroundBlur_55_949" />
                                             </filter>
@@ -6277,44 +6374,22 @@ line-height: normal;">
 </div>
 
 @push('script')
-<script>
-    // Handle primary profile tabs (profile, pets, favourites, reviews, rewards)
-    document.addEventListener('DOMContentLoaded', () => {
-        const tabs = document.querySelectorAll('.tab');
+    <script>
+        // Handle primary profile tabs (profile, pets, favourites, reviews, rewards)
+        function initPrimaryProfileTabs() {
+            const tabs = Array.from(document.querySelectorAll('.tab'));
+            if (!tabs.length) return;
 
-        // map the text value to the corresponding section element
-        const sections = {
-            'My Profile': document.getElementById('profile-section'),
-            'My Pets': document.getElementById('pets-view'), // already used elsewhere
-            'Favourites': document.getElementById('favourites-section'),
-            'Reviews': document.getElementById('reviews-section'),
-            'Rewards': document.getElementById('rewards-section')
-        };
+            // map the text value to the corresponding section element
+            const sections = {
+                'My Profile': document.getElementById('profile-section'),
+                'My Pets': document.getElementById('pets-view'),
+                'Favourites': document.getElementById('favourites-section'),
+                'Reviews': document.getElementById('reviews-section'),
+                'Rewards': document.getElementById('rewards-section')
+            };
 
-        // hide all sections initially then show profile section
-        Object.values(sections).forEach(sec => {
-            if (sec) {
-                sec.classList.add('hidden');
-                sec.style.display = 'none';
-            }
-        });
-        if (sections['My Profile']) {
-            sections['My Profile'].classList.remove('hidden');
-            sections['My Profile'].style.display = 'block';
-        }
-
-        // make sure a reasonable tab is active by default
-        tabs.forEach(t => t.classList.remove('active'));
-        const defaultTab = Array.from(tabs).find(t => t.textContent.trim() === 'My Profile') || tabs[0];
-        if (defaultTab) defaultTab.classList.add('active');
-
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                // reset all tab state
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-
-                // hide every section
+            const showSection = (label) => {
                 Object.values(sections).forEach(sec => {
                     if (sec) {
                         sec.classList.add('hidden');
@@ -6322,447 +6397,471 @@ line-height: normal;">
                     }
                 });
 
-                const label = tab.textContent.trim();
                 const target = sections[label];
                 if (target) {
                     target.classList.remove('hidden');
                     target.style.display = 'block';
                 }
-            });
-        });
-    });
+            };
 
-    // Handle profile edit/cancel
-    document.addEventListener('DOMContentLoaded', () => {
-        // Handle dots menu toggle
-        const dotsMenu = document.querySelector('.dots-menu');
-        const editBtn = document.querySelector('.edit-button');
+            // default state each time the page is navigated to
+            tabs.forEach(t => t.classList.remove('active'));
+            const defaultTab = tabs.find(t => t.textContent.trim() === 'My Profile') || tabs[0];
+            if (defaultTab) {
+                defaultTab.classList.add('active');
+                showSection(defaultTab.textContent.trim());
+            }
 
-        if (dotsMenu && editBtn) {
-            dotsMenu.addEventListener('click', () => {
-                editBtn.classList.toggle('show');
+            tabs.forEach(tab => {
+                if (tab.dataset.primaryTabBound === '1') return;
+                tab.dataset.primaryTabBound = '1';
+
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    showSection(tab.textContent.trim());
+                });
             });
         }
-        const editBtnProfile = document.getElementById('edit-btn');
-        const cancelBtn = document.getElementById('cancel-btn');
-        const profileViewForm = document.getElementById('profile-view');
-        const editForm = document.getElementById('edit-form-container');
 
-        if (editBtnProfile && cancelBtn && profileViewForm && editForm) {
-            editBtnProfile.addEventListener('click', () => {
-                profileViewForm.classList.add('hidden');
-                editForm.classList.remove('hidden');
-            });
+        document.addEventListener('DOMContentLoaded', initPrimaryProfileTabs);
+        document.addEventListener('livewire:navigated', initPrimaryProfileTabs);
 
-            cancelBtn.addEventListener('click', () => {
-                editForm.classList.add('hidden');
-                profileViewForm.classList.remove('hidden');
-            });
+        // Handle profile edit/cancel
+        document.addEventListener('DOMContentLoaded', () => {
+            // Handle dots menu toggle
+            const dotsMenu = document.querySelector('.dots-menu');
+            const editBtn = document.querySelector('.edit-button');
 
-            const profileForm = document.getElementById('profile-form');
-            if (profileForm) {
-                profileForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    alert('Profile Updated!');
+            if (dotsMenu && editBtn) {
+                dotsMenu.addEventListener('click', () => {
+                    editBtn.classList.toggle('show');
+                });
+            }
+            const editBtnProfile = document.getElementById('edit-btn');
+            const cancelBtn = document.getElementById('cancel-btn');
+            const profileViewForm = document.getElementById('profile-view');
+            const editForm = document.getElementById('edit-form-container');
+
+            if (editBtnProfile && cancelBtn && profileViewForm && editForm) {
+                editBtnProfile.addEventListener('click', () => {
+                    profileViewForm.classList.add('hidden');
+                    editForm.classList.remove('hidden');
+                });
+
+                cancelBtn.addEventListener('click', () => {
                     editForm.classList.add('hidden');
                     profileViewForm.classList.remove('hidden');
                 });
-            }
-        }
-    });
 
-
-    const reviewButtons = document.querySelectorAll(".pill");
-    const writtenReviews = document.getElementById("written-reviews");
-    const receivedReviews = document.getElementById("received-reviews");
-
-    reviewButtons.forEach(button => {
-        button.addEventListener("click", () => {
-
-            reviewButtons.forEach(btn => btn.classList.remove("active"));
-            button.classList.add("active");
-
-            const type = button.getAttribute("data-review");
-
-            writtenReviews.classList.remove("active");
-            receivedReviews.classList.remove("active");
-
-
-            if (type === "written") {
-                writtenReviews.classList.add("active");
-            } else if (type === "received") {
-                receivedReviews.classList.add("active");
-            } else if (type === "all") {
-                writtenReviews.classList.add("active");
-                receivedReviews.classList.add("active");
-            }
-        });
-    });
-
-    document.querySelector('.pill[data-review="written"]').click();
-
-    function showSection(evt, sectionId) {
-        // 1. Hide all sections
-        var contents = document.getElementsByClassName("tab-content");
-        for (var i = 0; i < contents.length; i++) {
-            contents[i].style.display = "none";
-        }
-
-        // 2. Remove active from ALL tab-link buttons everywhere
-        var links = document.getElementsByClassName("tab-link");
-        for (var i = 0; i < links.length; i++) {
-            links[i].classList.remove("active");
-        }
-
-        // 3. Show the target section
-        document.getElementById(sectionId).style.display = "block";
-
-        // 4. Activate the clicked button
-        evt.currentTarget.classList.add("active");
-
-        // 5. FIX: Also activate the matching button INSIDE the now-visible section
-        var shownSection = document.getElementById(sectionId);
-        var buttonsInSection = shownSection.querySelectorAll(".tab-link");
-        buttonsInSection.forEach(function(btn) {
-            var onclickAttr = btn.getAttribute("onclick") || "";
-            if (onclickAttr.includes(sectionId)) {
-                btn.classList.add("active");
-            }
-        });
-    }
-
-    // ===== Add New Pet: Toggle slider ↔ form =====
-    document.addEventListener('DOMContentLoaded', () => {
-        const addPetBtn = document.getElementById('btn-add-new-pet');
-        const cancelPetBtn = document.getElementById('cancel-add-pet');
-        const sliderContainer = document.getElementById('pets-slider-container');
-        const formContainer = document.getElementById('add-pet-form-container');
-        const petTypeSelect = document.getElementById('pet-type');
-        const petBreedSelect = document.getElementById('pet-breed');
-
-        let petBreedsData = null;
-
-        // Load pet breeds JSON once
-        fetch("{{ asset('data/pet-breeds.json') }}")
-            .then(res => res.json())
-            .then(data => {
-                petBreedsData = data.petTypes;
-
-                if (petTypeSelect) {
-                    petBreedsData.forEach(pt => {
-                        const opt = document.createElement('option');
-                        opt.value = pt.name;
-                        opt.textContent = pt.name;
-                        petTypeSelect.appendChild(opt);
+                const profileForm = document.getElementById('profile-form');
+                if (profileForm) {
+                    profileForm.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        alert('Profile Updated!');
+                        editForm.classList.add('hidden');
+                        profileViewForm.classList.remove('hidden');
                     });
                 }
-            })
-            .catch(err => console.error('Failed to load pet breeds:', err));
+            }
+        });
 
-        // When pet type changes, populate breeds
-        if (petTypeSelect) {
-            petTypeSelect.addEventListener('change', () => {
-                const selectedType = petTypeSelect.value;
-                if (petBreedSelect) {
-                    petBreedSelect.innerHTML = '<option value="" disabled selected>Select breed</option>';
-                    petBreedSelect.disabled = true;
+
+        const reviewButtons = document.querySelectorAll(".pill");
+        const writtenReviews = document.getElementById("written-reviews");
+        const receivedReviews = document.getElementById("received-reviews");
+
+        reviewButtons.forEach(button => {
+            button.addEventListener("click", () => {
+
+                reviewButtons.forEach(btn => btn.classList.remove("active"));
+                button.classList.add("active");
+
+                const type = button.getAttribute("data-review");
+
+                writtenReviews.classList.remove("active");
+                receivedReviews.classList.remove("active");
+
+
+                if (type === "written") {
+                    writtenReviews.classList.add("active");
+                } else if (type === "received") {
+                    receivedReviews.classList.add("active");
+                } else if (type === "all") {
+                    writtenReviews.classList.add("active");
+                    receivedReviews.classList.add("active");
                 }
+            });
+        });
 
-                if (petBreedsData && petBreedSelect) {
-                    const match = petBreedsData.find(pt => pt.name === selectedType);
-                    if (match) {
-                        match.breeds.forEach(breed => {
+        document.querySelector('.pill[data-review="written"]').click();
+
+        function showSection(evt, sectionId) {
+            // 1. Hide all sections
+            var contents = document.getElementsByClassName("tab-content");
+            for (var i = 0; i < contents.length; i++) {
+                contents[i].style.display = "none";
+            }
+
+            // 2. Remove active from ALL tab-link buttons everywhere
+            var links = document.getElementsByClassName("tab-link");
+            for (var i = 0; i < links.length; i++) {
+                links[i].classList.remove("active");
+            }
+
+            // 3. Show the target section
+            document.getElementById(sectionId).style.display = "block";
+
+            // 4. Activate the clicked button
+            evt.currentTarget.classList.add("active");
+
+            // 5. FIX: Also activate the matching button INSIDE the now-visible section
+            var shownSection = document.getElementById(sectionId);
+            var buttonsInSection = shownSection.querySelectorAll(".tab-link");
+            buttonsInSection.forEach(function(btn) {
+                var onclickAttr = btn.getAttribute("onclick") || "";
+                if (onclickAttr.includes(sectionId)) {
+                    btn.classList.add("active");
+                }
+            });
+        }
+
+        // ===== Add New Pet: Toggle slider ↔ form =====
+        document.addEventListener('DOMContentLoaded', () => {
+            const addPetBtn = document.getElementById('btn-add-new-pet');
+            const cancelPetBtn = document.getElementById('cancel-add-pet');
+            const sliderContainer = document.getElementById('pets-slider-container');
+            const formContainer = document.getElementById('add-pet-form-container');
+            const petTypeSelect = document.getElementById('pet-type');
+            const petBreedSelect = document.getElementById('pet-breed');
+
+            let petBreedsData = null;
+
+            // Load pet breeds JSON once
+            fetch("{{ asset('data/pet-breeds.json') }}")
+                .then(res => res.json())
+                .then(data => {
+                    petBreedsData = data.petTypes;
+
+                    if (petTypeSelect) {
+                        petBreedsData.forEach(pt => {
                             const opt = document.createElement('option');
-                            opt.value = breed;
-                            opt.textContent = breed;
-                            petBreedSelect.appendChild(opt);
+                            opt.value = pt.name;
+                            opt.textContent = pt.name;
+                            petTypeSelect.appendChild(opt);
                         });
-                        petBreedSelect.disabled = false;
                     }
-                }
-            });
-        }
+                })
+                .catch(err => console.error('Failed to load pet breeds:', err));
 
-        // Show form, hide slider
-        if (addPetBtn) {
-            addPetBtn.addEventListener('click', () => {
-                sliderContainer.classList.add('hidden');
-                formContainer.classList.remove('hidden');
-                // Scroll to form
-                formContainer.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
+            // When pet type changes, populate breeds
+            if (petTypeSelect) {
+                petTypeSelect.addEventListener('change', () => {
+                    const selectedType = petTypeSelect.value;
+                    if (petBreedSelect) {
+                        petBreedSelect.innerHTML =
+                            '<option value="" disabled selected>Select breed</option>';
+                        petBreedSelect.disabled = true;
+                    }
+
+                    if (petBreedsData && petBreedSelect) {
+                        const match = petBreedsData.find(pt => pt.name === selectedType);
+                        if (match) {
+                            match.breeds.forEach(breed => {
+                                const opt = document.createElement('option');
+                                opt.value = breed;
+                                opt.textContent = breed;
+                                petBreedSelect.appendChild(opt);
+                            });
+                            petBreedSelect.disabled = false;
+                        }
+                    }
                 });
-            });
-        }
-
-        // Cancel: show slider, hide form
-        if (cancelPetBtn) {
-            cancelPetBtn.addEventListener('click', () => {
-                formContainer.classList.add('hidden');
-                sliderContainer.classList.remove('hidden');
-                // Reset the form
-                document.getElementById('add-pet-form').reset();
-                if (petBreedSelect) {
-                    petBreedSelect.innerHTML = '<option value="" disabled selected>Select breed</option>';
-                    petBreedSelect.disabled = true;
-                }
-            });
-        }
-
-        // Handle form submit
-        const addPetForm = document.getElementById('add-pet-form');
-        if (addPetForm) {
-            addPetForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                addPetForm.reset();
-                if (petBreedSelect) {
-                    petBreedSelect.innerHTML = '<option value="" disabled selected>Select breed</option>';
-                    petBreedSelect.disabled = true;
-                }
-                formContainer.classList.add('hidden');
-                sliderContainer.classList.remove('hidden');
-            });
-        }
-    });
-
-
-    const dateToggleBtn = document.getElementById('dateToggleBtn');
-    const calendarCard = document.getElementById('calendarCard');
-
-    // Only wire this legacy toggle if the expected elements exist on the page.
-    // This prevents runtime JS errors that can break other UI scripts.
-    if (dateToggleBtn && calendarCard) {
-        dateToggleBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            calendarCard.classList.toggle('active');
-        });
-
-        // Kahin bhi bahar click karne se calendar band ho jaye
-        document.addEventListener('click', function(e) {
-            if (!dateToggleBtn.contains(e.target) && !calendarCard.contains(e.target)) {
-                calendarCard.classList.remove('active');
-            }
-        });
-    }
-    // ===== Profile Page: Pet Type Auto-Detection (matches booking-groomer pattern) =====
-    let profilePetBreedsData = {};
-
-    async function loadProfilePetBreedsData() {
-        try {
-            const response = await fetch(
-                "{{ asset('data/pet-breeds.json') }}");
-            if (!response.ok) throw new Error('Failed to load pet breeds');
-            const data = await response.json();
-            profilePetBreedsData = data;
-            setupProfilePetTypeAutoDetection();
-        } catch (error) {
-            console.error('Error loading pet breeds data:', error);
-        }
-    }
-
-    function setupProfilePetTypeAutoDetection() {
-        const petTypeInput = document.getElementById('pet_type');
-        const suggestionBox = document.getElementById('petTypeSuggestions_profile');
-        const petBreedSelect = document.getElementById('pet-breed');
-        const checkIcon = document.getElementById('petTypeCheck_profile');
-
-        if (!petTypeInput || !profilePetBreedsData.petTypes) return;
-
-        petTypeInput.addEventListener('input', function() {
-            const inputValue = this.value.trim().toLowerCase();
-            suggestionBox.innerHTML = '';
-
-            if (inputValue.length === 0) {
-                suggestionBox.style.display = 'none';
-                petBreedSelect.innerHTML = '<option value="">Select a Breed</option>';
-                if (petBreedSelect._fursDD) petBreedSelect._fursDD.refresh();
-                if (checkIcon) checkIcon.style.display = 'none';
-                return;
             }
 
-            const matches = profilePetBreedsData.petTypes.filter(pt =>
-                pt.name.toLowerCase().includes(inputValue)
-            );
-
-            if (matches.length > 0) {
-                suggestionBox.style.display = 'block';
-                matches.forEach(match => {
-                    const item = document.createElement('div');
-                    item.style.cssText = 'padding:10px;cursor:pointer;border-bottom:1px solid #EEE;color:#3B3731;font-family:Lato;font-size:16px;';
-                    item.textContent = match.name;
-                    item.addEventListener('mouseover', function() {
-                        this.style.backgroundColor = '#f5f5f5';
+            // Show form, hide slider
+            if (addPetBtn) {
+                addPetBtn.addEventListener('click', () => {
+                    sliderContainer.classList.add('hidden');
+                    formContainer.classList.remove('hidden');
+                    // Scroll to form
+                    formContainer.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
                     });
-                    item.addEventListener('mouseout', function() {
-                        this.style.backgroundColor = 'transparent';
-                    });
-                    item.addEventListener('click', function() {
-                        petTypeInput.value = match.name;
-                        suggestionBox.style.display = 'none';
-                        if (checkIcon) checkIcon.style.display = 'block';
-                        profilePopulateBreeds(match);
-                    });
-                    suggestionBox.appendChild(item);
                 });
-            } else {
-                suggestionBox.style.display = 'none';
-                petBreedSelect.innerHTML = '<option value="">Select a Breed</option>';
-                if (petBreedSelect._fursDD) petBreedSelect._fursDD.refresh();
             }
 
-            // Exact match → auto-populate breeds
-            const exactMatch = profilePetBreedsData.petTypes.find(p => p.name.toLowerCase() === inputValue);
-            if (exactMatch) {
-                profilePopulateBreeds(exactMatch);
-                suggestionBox.style.display = 'none';
-                if (checkIcon) checkIcon.style.display = 'block';
-            } else {
-                if (checkIcon) checkIcon.style.display = 'none';
+            // Cancel: show slider, hide form
+            if (cancelPetBtn) {
+                cancelPetBtn.addEventListener('click', () => {
+                    formContainer.classList.add('hidden');
+                    sliderContainer.classList.remove('hidden');
+                    // Reset the form
+                    document.getElementById('add-pet-form').reset();
+                    if (petBreedSelect) {
+                        petBreedSelect.innerHTML =
+                            '<option value="" disabled selected>Select breed</option>';
+                        petBreedSelect.disabled = true;
+                    }
+                });
+            }
+
+            // Handle form submit
+            const addPetForm = document.getElementById('add-pet-form');
+            if (addPetForm) {
+                addPetForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    addPetForm.reset();
+                    if (petBreedSelect) {
+                        petBreedSelect.innerHTML =
+                            '<option value="" disabled selected>Select breed</option>';
+                        petBreedSelect.disabled = true;
+                    }
+                    formContainer.classList.add('hidden');
+                    sliderContainer.classList.remove('hidden');
+                });
             }
         });
 
-        // Hide suggestions when clicking outside
-        document.addEventListener('click', function(e) {
-            if (e.target !== petTypeInput && !suggestionBox.contains(e.target)) {
-                suggestionBox.style.display = 'none';
-            }
-        });
 
-        petTypeInput.addEventListener('focus', function() {
-            if (this.value.trim().length > 0) suggestionBox.style.display = 'block';
-        });
-    }
+        const dateToggleBtn = document.getElementById('dateToggleBtn');
+        const calendarCard = document.getElementById('calendarCard');
 
-    function profilePopulateBreeds(petType) {
-        const petBreedSelect = document.getElementById('pet-breed');
-        petBreedSelect.innerHTML = '<option value="">Select a Breed</option>';
-        if (petType && petType.breeds) {
-            petType.breeds.forEach(breed => {
-                const option = document.createElement('option');
-                option.value = breed;
-                option.textContent = breed;
-                petBreedSelect.appendChild(option);
+        // Only wire this legacy toggle if the expected elements exist on the page.
+        // This prevents runtime JS errors that can break other UI scripts.
+        if (dateToggleBtn && calendarCard) {
+            dateToggleBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                calendarCard.classList.toggle('active');
+            });
+
+            // Kahin bhi bahar click karne se calendar band ho jaye
+            document.addEventListener('click', function(e) {
+                if (!dateToggleBtn.contains(e.target) && !calendarCard.contains(e.target)) {
+                    calendarCard.classList.remove('active');
+                }
             });
         }
-        if (petBreedSelect._fursDD) petBreedSelect._fursDD.refresh();
-    }
+        // ===== Profile Page: Pet Type Auto-Detection (matches booking-groomer pattern) =====
+        let profilePetBreedsData = {};
 
-    document.addEventListener('DOMContentLoaded', function() {
-        loadProfilePetBreedsData();
-    });
-    // ===== End Profile Page Pet Type Auto-Detection =====
+        async function loadProfilePetBreedsData() {
+            try {
+                const response = await fetch(
+                    "{{ asset('data/pet-breeds.json') }}");
+                if (!response.ok) throw new Error('Failed to load pet breeds');
+                const data = await response.json();
+                profilePetBreedsData = data;
+                setupProfilePetTypeAutoDetection();
+            } catch (error) {
+                console.error('Error loading pet breeds data:', error);
+            }
+        }
 
-    document.addEventListener('DOMContentLoaded', function() {
-
-        // ── Select Pet Type toggle ──────────────────────────────────────────
-        const petTypeGroup = document.querySelector('.pf-toggle-group');
-        if (petTypeGroup) {
-            const typeButtons = petTypeGroup.querySelectorAll('button[type="button"]');
+        function setupProfilePetTypeAutoDetection() {
             const petTypeInput = document.getElementById('pet_type');
+            const suggestionBox = document.getElementById('petTypeSuggestions_profile');
             const petBreedSelect = document.getElementById('pet-breed');
             const checkIcon = document.getElementById('petTypeCheck_profile');
 
-            typeButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    // Deactivate all, activate clicked
-                    typeButtons.forEach(b => {
-                        b.classList.remove('active');
-                        b.querySelector('p') && (b.querySelector('p').style.color = '');
-                    });
-                    this.classList.add('active');
-                    if (this.querySelector('p')) this.querySelector('p').style.color = '#fff';
+            if (!petTypeInput || !profilePetBreedsData.petTypes) return;
 
-                    const selected = this.querySelector('p')?.textContent.trim().toLowerCase();
+            petTypeInput.addEventListener('input', function() {
+                const inputValue = this.value.trim().toLowerCase();
+                suggestionBox.innerHTML = '';
 
-                    if (selected === 'cat' || selected === 'dog') {
-                        // Disable the free-text pet type input
-                        if (petTypeInput) {
-                            petTypeInput.value = '';
-                            petTypeInput.disabled = true;
-                            petTypeInput.style.background = '#f5f5f5';
-                            petTypeInput.style.color = '#9d9b98';
-                            petTypeInput.style.cursor = 'not-allowed';
-                        }
-                        if (checkIcon) checkIcon.style.display = 'none';
-
-                        // Populate breeds from loaded data
-                        const typeName = selected.charAt(0).toUpperCase() + selected.slice(1);
-                        if (profilePetBreedsData?.petTypes) {
-                            const match = profilePetBreedsData.petTypes.find(
-                                pt => pt.name.toLowerCase() === selected
-                            );
-                            if (match) profilePopulateBreeds(match);
-                        }
-                    } else {
-                        // "Other" — enable the free-text input
-                        if (petTypeInput) {
-                            petTypeInput.disabled = false;
-                            petTypeInput.style.background = '';
-                            petTypeInput.style.color = '';
-                            petTypeInput.style.cursor = '';
-                        }
-                        // Clear breeds until user types
-                        if (petBreedSelect) {
-                            petBreedSelect.innerHTML = '<option value="">Select a Breed</option>';
-                            if (petBreedSelect._fursDD) petBreedSelect._fursDD.refresh();
-                        }
-                    }
-                });
-            });
-        }
-
-        // ── Select Pet Size toggle ──────────────────────────────────────────
-        const sizeGroups = document.querySelectorAll('.pf-toggle-group');
-        // The second .pf-toggle-group is the size selector
-        if (sizeGroups.length >= 2) {
-            const sizeButtons = sizeGroups[1].querySelectorAll('button[type="button"]');
-            sizeButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    sizeButtons.forEach(b => {
-                        b.classList.remove('active');
-                        if (b.querySelector('p')) b.querySelector('p').style.color = '';
-                    });
-                    this.classList.add('active');
-                    if (this.querySelector('p')) this.querySelector('p').style.color = '#fff';
-                });
-            });
-        }
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.input-box').forEach(box => {
-            const input = box.querySelector('input[type="number"]');
-            const svg = box.querySelector('.number-icon');
-
-            if (!input || !svg) return;
-
-            svg.addEventListener('click', (e) => {
-                const rect = svg.getBoundingClientRect();
-                const clickY = e.clientY - rect.top;
-                const half = rect.height / 2;
-
-                const step = parseFloat(input.step) || 1;
-                const min = input.min !== "" ? parseFloat(input.min) : -Infinity;
-                const max = input.max !== "" ? parseFloat(input.max) : Infinity;
-                let value = parseFloat(input.value) || 0;
-
-                if (clickY < half) {
-                    value = Math.min(max, value + step);
-                } else {
-                    value = Math.max(min, value - step);
+                if (inputValue.length === 0) {
+                    suggestionBox.style.display = 'none';
+                    petBreedSelect.innerHTML = '<option value="">Select a Breed</option>';
+                    if (petBreedSelect._fursDD) petBreedSelect._fursDD.refresh();
+                    if (checkIcon) checkIcon.style.display = 'none';
+                    return;
                 }
 
-                input.value = value;
-                input.dispatchEvent(new Event('input', {
-                    bubbles: true
-                }));
-                input.dispatchEvent(new Event('change', {
-                    bubbles: true
-                }));
+                const matches = profilePetBreedsData.petTypes.filter(pt =>
+                    pt.name.toLowerCase().includes(inputValue)
+                );
+
+                if (matches.length > 0) {
+                    suggestionBox.style.display = 'block';
+                    matches.forEach(match => {
+                        const item = document.createElement('div');
+                        item.style.cssText =
+                            'padding:10px;cursor:pointer;border-bottom:1px solid #EEE;color:#3B3731;font-family:Lato;font-size:16px;';
+                        item.textContent = match.name;
+                        item.addEventListener('mouseover', function() {
+                            this.style.backgroundColor = '#f5f5f5';
+                        });
+                        item.addEventListener('mouseout', function() {
+                            this.style.backgroundColor = 'transparent';
+                        });
+                        item.addEventListener('click', function() {
+                            petTypeInput.value = match.name;
+                            suggestionBox.style.display = 'none';
+                            if (checkIcon) checkIcon.style.display = 'block';
+                            profilePopulateBreeds(match);
+                        });
+                        suggestionBox.appendChild(item);
+                    });
+                } else {
+                    suggestionBox.style.display = 'none';
+                    petBreedSelect.innerHTML = '<option value="">Select a Breed</option>';
+                    if (petBreedSelect._fursDD) petBreedSelect._fursDD.refresh();
+                }
+
+                // Exact match → auto-populate breeds
+                const exactMatch = profilePetBreedsData.petTypes.find(p => p.name.toLowerCase() === inputValue);
+                if (exactMatch) {
+                    profilePopulateBreeds(exactMatch);
+                    suggestionBox.style.display = 'none';
+                    if (checkIcon) checkIcon.style.display = 'block';
+                } else {
+                    if (checkIcon) checkIcon.style.display = 'none';
+                }
+            });
+
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', function(e) {
+                if (e.target !== petTypeInput && !suggestionBox.contains(e.target)) {
+                    suggestionBox.style.display = 'none';
+                }
+            });
+
+            petTypeInput.addEventListener('focus', function() {
+                if (this.value.trim().length > 0) suggestionBox.style.display = 'block';
+            });
+        }
+
+        function profilePopulateBreeds(petType) {
+            const petBreedSelect = document.getElementById('pet-breed');
+            petBreedSelect.innerHTML = '<option value="">Select a Breed</option>';
+            if (petType && petType.breeds) {
+                petType.breeds.forEach(breed => {
+                    const option = document.createElement('option');
+                    option.value = breed;
+                    option.textContent = breed;
+                    petBreedSelect.appendChild(option);
+                });
+            }
+            if (petBreedSelect._fursDD) petBreedSelect._fursDD.refresh();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProfilePetBreedsData();
+        });
+        // ===== End Profile Page Pet Type Auto-Detection =====
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // ── Select Pet Type toggle ──────────────────────────────────────────
+            const petTypeGroup = document.querySelector('.pf-toggle-group');
+            if (petTypeGroup) {
+                const typeButtons = petTypeGroup.querySelectorAll('button[type="button"]');
+                const petTypeInput = document.getElementById('pet_type');
+                const petBreedSelect = document.getElementById('pet-breed');
+                const checkIcon = document.getElementById('petTypeCheck_profile');
+
+                typeButtons.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        // Deactivate all, activate clicked
+                        typeButtons.forEach(b => {
+                            b.classList.remove('active');
+                            b.querySelector('p') && (b.querySelector('p').style.color = '');
+                        });
+                        this.classList.add('active');
+                        if (this.querySelector('p')) this.querySelector('p').style.color = '#fff';
+
+                        const selected = this.querySelector('p')?.textContent.trim().toLowerCase();
+
+                        if (selected === 'cat' || selected === 'dog') {
+                            // Disable the free-text pet type input
+                            if (petTypeInput) {
+                                petTypeInput.value = '';
+                                petTypeInput.disabled = true;
+                                petTypeInput.style.background = '#f5f5f5';
+                                petTypeInput.style.color = '#9d9b98';
+                                petTypeInput.style.cursor = 'not-allowed';
+                            }
+                            if (checkIcon) checkIcon.style.display = 'none';
+
+                            // Populate breeds from loaded data
+                            const typeName = selected.charAt(0).toUpperCase() + selected.slice(1);
+                            if (profilePetBreedsData?.petTypes) {
+                                const match = profilePetBreedsData.petTypes.find(
+                                    pt => pt.name.toLowerCase() === selected
+                                );
+                                if (match) profilePopulateBreeds(match);
+                            }
+                        } else {
+                            // "Other" — enable the free-text input
+                            if (petTypeInput) {
+                                petTypeInput.disabled = false;
+                                petTypeInput.style.background = '';
+                                petTypeInput.style.color = '';
+                                petTypeInput.style.cursor = '';
+                            }
+                            // Clear breeds until user types
+                            if (petBreedSelect) {
+                                petBreedSelect.innerHTML =
+                                    '<option value="">Select a Breed</option>';
+                                if (petBreedSelect._fursDD) petBreedSelect._fursDD.refresh();
+                            }
+                        }
+                    });
+                });
+            }
+
+            // ── Select Pet Size toggle ──────────────────────────────────────────
+            const sizeGroups = document.querySelectorAll('.pf-toggle-group');
+            // The second .pf-toggle-group is the size selector
+            if (sizeGroups.length >= 2) {
+                const sizeButtons = sizeGroups[1].querySelectorAll('button[type="button"]');
+                sizeButtons.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        sizeButtons.forEach(b => {
+                            b.classList.remove('active');
+                            if (b.querySelector('p')) b.querySelector('p').style.color = '';
+                        });
+                        this.classList.add('active');
+                        if (this.querySelector('p')) this.querySelector('p').style.color = '#fff';
+                    });
+                });
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.input-box').forEach(box => {
+                const input = box.querySelector('input[type="number"]');
+                const svg = box.querySelector('.number-icon');
+
+                if (!input || !svg) return;
+
+                svg.addEventListener('click', (e) => {
+                    const rect = svg.getBoundingClientRect();
+                    const clickY = e.clientY - rect.top;
+                    const half = rect.height / 2;
+
+                    const step = parseFloat(input.step) || 1;
+                    const min = input.min !== "" ? parseFloat(input.min) : -Infinity;
+                    const max = input.max !== "" ? parseFloat(input.max) : Infinity;
+                    let value = parseFloat(input.value) || 0;
+
+                    if (clickY < half) {
+                        value = Math.min(max, value + step);
+                    } else {
+                        value = Math.max(min, value - step);
+                    }
+
+                    input.value = value;
+                    input.dispatchEvent(new Event('input', {
+                        bubbles: true
+                    }));
+                    input.dispatchEvent(new Event('change', {
+                        bubbles: true
+                    }));
+                });
             });
         });
-    });
-</script>
-
+    </script>
 @endpush

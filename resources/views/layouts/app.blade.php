@@ -4,20 +4,22 @@
 
 <head>
     @php
-    $segments = request()->segments();
+        $segments = request()->segments();
 
-    if (empty($segments)) {
-    $pageTitle = 'Fursgo';
-    } else {
-    $pageTitle = 'Fursgo - ' . collect($segments)
-    ->map(fn($s) => ucfirst(str_replace(['-', '_'], ' ', $s)))
-    ->implode(' - ');
-    }
+        if (empty($segments)) {
+            $pageTitle = 'Fursgo';
+        } else {
+            $pageTitle =
+                'Fursgo - ' .
+                collect($segments)->map(fn($s) => ucfirst(str_replace(['-', '_'], ' ', $s)))->implode(' - ');
+        }
     @endphp
 
     <title>@yield('title', $pageTitle)</title>
 
     @include('partials.head')
+    @yield('styles')
+    @stack('styles')
 
 </head>
 
@@ -26,7 +28,7 @@
     <x-common.header />
 
     <main>
-        @if(isset($slot))
+        @if (isset($slot))
             {{ $slot }}
         @else
             @yield('content')
@@ -35,8 +37,6 @@
 
     <x-common.chat-btn />
     <x-common.footer />
-
-    @stack('styles')
 
     <!-- <script src="{{ asset('js/common.js') }}" defer></script> -->
     <script src="{{ asset('js/custom-dropdown.js') }}" defer></script>

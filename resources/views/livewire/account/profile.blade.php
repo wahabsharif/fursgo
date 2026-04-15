@@ -7,5 +7,5 @@ new class extends Component {
 }; ?>
 
 <div>
-    @include('my-profile')
+    @include('pet-owner-profile')
 </div>

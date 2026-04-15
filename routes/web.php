@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PetDetailController;
 
 
@@ -28,9 +29,9 @@ Volt::route('/booking-groomer', 'booking.groomer')
     ->middleware(['auth:web,groomer_spacer'])
     ->name('booking-groomer');
 
-Volt::route('/my-account/my-profile', 'account.profile')
+Volt::route('/my-account/pet-owner-profile', 'account.profile')
     ->middleware(['auth:web,groomer_spacer'])
-    ->name('my-profile');
+    ->name('pet-owner-profile');
 
 Volt::route('/account-and-setting/settings', 'account.settings')
     ->middleware(['auth:web,groomer_spacer'])
@@ -72,6 +73,15 @@ Route::middleware(['auth:web,groomer_spacer'])->group(function () {
 
     // Pet Details form submission (traditional POST for booking-groomer page)
     Route::post('/pet-details', [PetDetailController::class, 'store'])->name('pet-details.store');
+
+    // Bookings
+    Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');
+    Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
+    Route::get('/bookings/{booking}', [BookingController::class, 'show'])->name('bookings.show');
+    Route::put('/bookings/{booking}', [BookingController::class, 'update'])->name('bookings.update');
+    Route::delete('/bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
+    Route::patch('/bookings/{booking}/accept', [BookingController::class, 'accept'])->name('bookings.accept');
+    Route::patch('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
 });
 
 require __DIR__ . '/auth.php';

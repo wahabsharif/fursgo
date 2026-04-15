@@ -247,6 +247,7 @@
             transform: translateY(-5px);
         }
     </style>
+@endsection
 
 
     <!-- Business Landing Content -->
