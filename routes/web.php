@@ -14,7 +14,7 @@ Route::get('/clear', function () {
 
 // Public pages - converted to Volt
 Volt::route('/', 'home')->name('home');
-Volt::route('/business-landing-page', 'business.landing')->name('business-landing-page');
+Route::view('/business-landing-page', 'business-landing-page')->name('business-landing-page');
 Volt::route('/support-and-assistance/help-and-support', 'help.support')->name('help-and-support');
 Volt::route('/support-and-assistance/search', 'help.search')->name('search');
 
@@ -58,7 +58,7 @@ Volt::route('/groomer-unavailability/location-unavailability', 'groomer.unavaila
 // Authenticated Routes
 // ===============================================================
 Volt::route('dashboard', 'dashboard')
-    ->middleware(['auth:web,groomer_spacer', 'verified'])
+    ->middleware(['auth:groomer_spacer', 'verified'])
     ->name('dashboard');
 
 Route::middleware(['auth:web,groomer_spacer'])->group(function () {
