@@ -17,7 +17,7 @@ Route::middleware('guest')->group(function () {
     Volt::route('signup-groomer-space', 'auth.signup-groomer-space')
         ->name('signup-groomer-space');
 
-    Volt::route('forgot-password', 'auth.forgot-password')
+    Route::redirect('forgot-password', 'login')
         ->name('password.request');
 
     Volt::route('reset-password/{token}', 'auth.reset-password')

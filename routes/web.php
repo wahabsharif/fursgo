@@ -64,8 +64,8 @@ Volt::route('dashboard', 'dashboard')
 Route::middleware(['auth:web,groomer_spacer'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
-    Volt::route('settings/profile', 'settings.profile')->name('settings.profile');
-    Volt::route('settings/password', 'settings.password')->name('settings.password');
+    Volt::route('settings/profile', 'account.profile')->name('settings.profile');
+    Volt::route('settings/password', 'account.settings')->name('settings.password');
     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
 
     // Pet Details - handled by LiveWire Volt component
