@@ -102,6 +102,7 @@ new class extends Component {
                 fn($b) => [
                     'id' => 'FG-' . str_pad($b->id, 5, '0', STR_PAD_LEFT),
                     'pet_image' => $b->pets->first()?->photo ?? 'https://i.pravatar.cc/150?img=12',
+                    'pet_images' => $b->pets->pluck('photo')->filter()->values()->all(),
                     'service_type' => $this->visitTypeBadgeLabel($b),
                     'time' => $b->time,
                     'service' => $b->service,
@@ -129,6 +130,7 @@ new class extends Component {
                 fn($b) => [
                     'id' => 'FG-' . str_pad($b->id, 5, '0', STR_PAD_LEFT),
                     'pet_image' => $b->pets->first()?->photo ?? 'https://i.pravatar.cc/150?img=15',
+                    'pet_images' => $b->pets->pluck('photo')->filter()->values()->all(),
                     'pet_type' => $this->resolveBookingPetType($b),
                     'service_type' => $this->visitTypeBadgeLabel($b),
                     'date' => $b->date->format('d/m/Y'),
@@ -443,12 +445,32 @@ new class extends Component {
             position: relative;
             display: inline-flex;
             flex-shrink: 0;
+            align-items: flex-start;
         }
 
         .pet-avatar-wrap .avatar-status-dot {
             position: absolute;
-            top: 0;
-            right: 0;
+            top: 2px;
+            right: 2px;
+            z-index: 3;
+        }
+
+        .pet-avatar-wrap .pet-avatar-stack {
+            position: relative;
+            z-index: 1;
+        }
+
+        .pet-avatar-stack .pet-avatar-dot-wrap {
+            position: relative;
+            display: inline-flex;
+            margin-top: -12px;
+        }
+
+        .pet-avatar-stack .pet-avatar-dot-wrap .avatar-status-dot {
+            position: absolute;
+            top: 1px;
+            right: 1px;
+            z-index: 3;
         }
 
         .pet-avatar-large {
@@ -467,7 +489,7 @@ new class extends Component {
 
         .pet-avatar-stack .pet-avatar-large {
             width: 40px;
-            height: auto;
+            height: 40px;
             padding: 2px;
             border: 2px solid #FFC97A;
             border-radius: 50%;
@@ -477,6 +499,17 @@ new class extends Component {
 
         .pet-avatar-stack .pet-avatar-large+.pet-avatar-large {
             margin-top: -12px;
+        }
+
+        .booking-item .pet-avatar-stack {
+            flex-direction: row;
+            align-items: center;
+            min-width: auto;
+        }
+
+        .booking-item .pet-avatar-stack .pet-avatar-large+.pet-avatar-large {
+            margin-top: 0;
+            margin-left: -12px;
         }
 
         .service-badge {
@@ -832,7 +865,6 @@ new class extends Component {
             display: flex !important;
             justify-content: space-between;
             gap: 1rem;
-            margin-bottom: 2rem;
         }
 
         .price {
@@ -847,6 +879,7 @@ new class extends Component {
         .request-actions {
             display: flex;
             gap: 0.5rem;
+            margin-top: 2rem;
         }
 
         .btn-accept {
@@ -1219,7 +1252,11 @@ new class extends Component {
                 @foreach (collect($todaysBookings)->take(2) as $booking)
                     <div class="booking-item {{ $loop->odd ? 'booking-item--odd' : '' }}">
                         <div class="booking-header">
-                            <img src="{{ $booking['pet_image'] }}" alt="Pet" class="pet-avatar">
+                            <div class="pet-avatar-stack">
+                                @foreach (!empty($booking['pet_images']) ? $booking['pet_images'] : [$booking['pet_image']] as $petImage)
+                                    <img src="{{ $petImage }}" alt="Pet" class="pet-avatar-large">
+                                @endforeach
+                            </div>
                             <span class="service-badge">{{ $booking['service_type'] }}</span>
                         </div>
                         <div class="booking-details">
@@ -1311,11 +1348,18 @@ new class extends Component {
                     <div class="request-item {{ $loop->odd ? 'request-item--odd' : '' }}">
                         <div>
                             <div class="pet-avatar-wrap">
-                                <img src="{{ $request['pet_image'] }}" alt="Pet" class="pet-avatar">
-                                <svg class="avatar-status-dot" xmlns="http://www.w3.org/2000/svg" width="10"
-                                    height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-                                    <circle cx="5" cy="5" r="5" fill="#C9DDA0" />
-                                </svg>
+                                <div class="pet-avatar-stack">
+                                    @foreach (!empty($request['pet_images']) ? $request['pet_images'] : [$request['pet_image']] as $petImage)
+                                        <div class="pet-avatar-dot-wrap">
+                                            <img src="{{ $petImage }}" alt="Pet" class="pet-avatar-large">
+                                            <svg class="avatar-status-dot" xmlns="http://www.w3.org/2000/svg"
+                                                width="10" height="10" viewBox="0 0 10 10" fill="none"
+                                                aria-hidden="true">
+                                                <circle cx="5" cy="5" r="5" fill="#C9DDA0" />
+                                            </svg>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
                             <div class="request-info-wrapper">
                                 <div class="request-info">
@@ -1622,7 +1666,12 @@ new class extends Component {
                                 @foreach ($todaysBookings as $booking)
                                     <div class="booking-item {{ $loop->odd ? 'booking-item--odd' : '' }}">
                                         <div class="booking-header">
-                                            <img src="{{ $booking['pet_image'] }}" alt="Pet" class="pet-avatar">
+                                            <div class="pet-avatar-stack">
+                                                @foreach (!empty($booking['pet_images']) ? $booking['pet_images'] : [$booking['pet_image']] as $petImage)
+                                                    <img src="{{ $petImage }}" alt="Pet"
+                                                        class="pet-avatar-large">
+                                                @endforeach
+                                            </div>
                                             <span class="service-badge">{{ $booking['service_type'] }}</span>
                                         </div>
                                         <div class="booking-details">
@@ -1674,13 +1723,21 @@ new class extends Component {
                                     <div class="request-item {{ $loop->odd ? 'request-item--odd' : '' }}">
                                         <div>
                                             <div class="pet-avatar-wrap">
-                                                <img src="{{ $request['pet_image'] }}" alt="Pet"
-                                                    class="pet-avatar">
-                                                <svg class="avatar-status-dot" xmlns="http://www.w3.org/2000/svg"
-                                                    width="10" height="10" viewBox="0 0 10 10" fill="none"
-                                                    aria-hidden="true">
-                                                    <circle cx="5" cy="5" r="5" fill="#C9DDA0" />
-                                                </svg>
+                                                <div class="pet-avatar-stack">
+                                                    @foreach (!empty($request['pet_images']) ? $request['pet_images'] : [$request['pet_image']] as $petImage)
+                                                        <div class="pet-avatar-dot-wrap">
+                                                            <img src="{{ $petImage }}" alt="Pet"
+                                                                class="pet-avatar-large">
+                                                            <svg class="avatar-status-dot"
+                                                                xmlns="http://www.w3.org/2000/svg" width="10"
+                                                                height="10" viewBox="0 0 10 10" fill="none"
+                                                                aria-hidden="true">
+                                                                <circle cx="5" cy="5" r="5"
+                                                                    fill="#C9DDA0" />
+                                                            </svg>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
                                             </div>
                                             <div class="request-info-wrapper">
                                                 <div class="request-info">
@@ -1904,17 +1961,17 @@ new class extends Component {
 
             function initWeeklyRevenueChart() {
                 const canvas = document.getElementById('weeklyRevenueChart');
-                if (!canvas || typeof Chart === 'undefined') return;
+                if (!canvas || typeof Chart === 'undefined') return false;
 
                 let labels, values;
                 try {
                     labels = JSON.parse(canvas.dataset.labels || '[]');
                     values = JSON.parse(canvas.dataset.values || '[]');
                 } catch (e) {
-                    return;
+                    return false;
                 }
 
-                if (!labels.length || !values.length) return;
+                if (!labels.length || !values.length) return false;
 
                 const fillColor = (canvas.dataset.fill || '').trim() || '#FFC97A';
                 const ctx = canvas.getContext('2d');
@@ -2047,10 +2104,36 @@ new class extends Component {
                     ro.observe(wrap);
                     wrap.__wrcObs = ro;
                 }
+
+                return true;
             }
 
-            document.addEventListener('DOMContentLoaded', initWeeklyRevenueChart);
-            document.addEventListener('livewire:navigated', initWeeklyRevenueChart);
+            function scheduleWeeklyRevenueChartInit() {
+                let attempt = 0;
+                const maxAttempts = 12;
+
+                const tryInit = () => {
+                    const didInit = initWeeklyRevenueChart();
+                    if (didInit || attempt >= maxAttempts) {
+                        return;
+                    }
+
+                    attempt += 1;
+                    setTimeout(tryInit, 100);
+                };
+
+                requestAnimationFrame(() => {
+                    setTimeout(tryInit, 0);
+                });
+            }
+
+            if (!window.__weeklyRevenueChartBindingsRegistered) {
+                document.addEventListener('DOMContentLoaded', scheduleWeeklyRevenueChartInit);
+                document.addEventListener('livewire:navigated', scheduleWeeklyRevenueChartInit);
+                window.__weeklyRevenueChartBindingsRegistered = true;
+            }
+
+            scheduleWeeklyRevenueChartInit();
         })();
 
         (function() {
