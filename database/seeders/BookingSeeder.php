@@ -34,7 +34,7 @@ class BookingSeeder extends Seeder
                     'sex'      => 'male',
                     'birthday' => '2020-03-15',
                     'weight'   => 28.5,
-                    'photo'    => 'https://i.pravatar.cc/150?img=12',
+                    'photo'    => 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=crop&w=600&q=80',
                     'notes'    => 'Friendly and energetic.',
                 ]),
                 PetDetail::create([
@@ -45,7 +45,7 @@ class BookingSeeder extends Seeder
                     'sex'      => 'female',
                     'birthday' => '2022-06-10',
                     'weight'   => 1.8,
-                    'photo'    => 'https://i.pravatar.cc/150?img=13',
+                    'photo'    => 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&w=600&q=80',
                     'notes'    => 'Very calm, loves cuddles.',
                 ]),
                 PetDetail::create([
@@ -56,7 +56,7 @@ class BookingSeeder extends Seeder
                     'sex'      => 'female',
                     'birthday' => '2018-01-20',
                     'weight'   => 0.9,
-                    'photo'    => 'https://i.pravatar.cc/150?img=15',
+                    'photo'    => 'https://images.unsplash.com/photo-1496196614460-48988a57fccf?auto=format&fit=crop&w=600&q=80',
                     'notes'    => 'Needs UV lamp daily.',
                 ]),
             ]);
@@ -72,7 +72,7 @@ class BookingSeeder extends Seeder
                 'amount'         => 65.00,
                 'visit_type'     => 'home_visit',
                 'booking_status' => 'confirmed',
-                'pet_indices'    => [0, 1],
+                'pet_indices'    => [0, 1, 2],
             ],
             // Today — confirmed (second slot)
             [
@@ -94,7 +94,7 @@ class BookingSeeder extends Seeder
                 'amount'         => 65.00,
                 'visit_type'     => 'home_visit',
                 'booking_status' => 'pending',
-                'pet_indices'    => [1],
+                'pet_indices'    => [1, 2],
             ],
             // Pending — future
             [
