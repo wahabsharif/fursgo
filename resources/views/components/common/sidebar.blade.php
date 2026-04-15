@@ -174,7 +174,7 @@
         .dashboard-wrapper {
             display: flex;
             gap: 2rem;
-            padding: 2rem 0;
+            padding-top: 4rem;
             max-width: 110rem;
             margin: 0 auto;
             width: 100%;

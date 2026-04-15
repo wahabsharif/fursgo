@@ -21,11 +21,11 @@
 
 </head>
 
-<body>
+<body x-data="{ activeSection: 'business-hub' }">
 
     <x-common.header variant="dashboard" />
 
-    <div class="dashboard-wrapper" x-data="{ activeSection: 'business-hub' }">
+    <div class="dashboard-wrapper">
         <x-common.sidebar variant="dashboard" />
 
         <main style="width: 100%">

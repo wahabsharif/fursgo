@@ -621,6 +621,21 @@ p.messages-count {
     background: rgba(255, 201, 122, 0.25);
 }
 
+.profile-item--active {
+    background: var(--sidebar-active-bg, #ffc97a);
+}
+
+.profile-item--active p {
+    color: #fff;
+}
+
+.profile-item--active svg path,
+.profile-item--active svg rect,
+.profile-item--active svg circle {
+    stroke: #fff;
+    fill: none;
+}
+
 /* user profile options  */
 
 .header-notifications-header {

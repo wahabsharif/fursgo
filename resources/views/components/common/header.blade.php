@@ -1,5 +1,30 @@
 @props(['variant' => 'default'])
 
+@php
+    $gsp = null;
+    $displayName = null;
+    $displaySubLabel = null;
+
+    if (auth()->check()) {
+        $gsp = \App\Models\GroomerSpacerProfile::where('email', auth()->user()->email)->first();
+
+        if ($gsp) {
+            if ($gsp->account_type === 'registered_business') {
+                $bd = is_array($gsp->business_details) ? $gsp->business_details : [];
+                $displayName = $bd['business_name'] ?? ($gsp->full_name ?: auth()->user()->name);
+                $displaySubLabel = 'Business Account';
+            } elseif ($gsp->account_type === 'freelance') {
+                $fd = is_array($gsp->freelance_details) ? $gsp->freelance_details : [];
+                $displayName = $gsp->full_name ?: auth()->user()->name;
+                $displaySubLabel = $fd['contact_email'] ?? auth()->user()->email;
+            }
+        }
+
+        $displayName = $displayName ?? auth()->user()->name;
+        $displaySubLabel = $displaySubLabel ?? auth()->user()->email;
+    }
+@endphp
+
 @if ($variant === 'dashboard')
     {{-- Dashboard Header --}}
     <header class="dashboard-header">
@@ -601,8 +626,8 @@
                                             <img src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : asset('images/user-placeholder.png') }}"
                                                 alt="Profile Image" class="rounded-image">
                                             <div class="name-email d-flex flex-column">
-                                                <p class="medium-font-bold">{{ Auth::user()->name }}</p>
-                                                <p class="medium-muted-font">{{ Auth::user()->email }}</p>
+                                                <p class="medium-font-bold">{{ $displayName }}</p>
+                                                <p class="medium-muted-font">{{ $displaySubLabel }}</p>
                                             </div>
                                         </div>
                                     @else
@@ -617,24 +642,30 @@
                                     @endauth
                                     <div class="profile-menu">
                                         <a href="#" class="profile-item d-flex align-items-center gap-40"
-                                            wire:navigate>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="22"
-                                                viewBox="0 0 20 22" fill="none">
+                                            :class="{ 'profile-item--active': activeSection === 'business-hub' }"
+                                            @click.prevent="activeSection = 'business-hub'" wire:navigate>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+                                                viewBox="0 0 22 22" fill="none">
                                                 <path
-                                                    d="M11.8613 12.2227C15.9532 12.2228 19.2773 15.5477 19.2773 19.6396V20.75C19.2771 21.164 18.9414 21.5 18.5273 21.5C18.1135 21.4998 17.7776 21.1639 17.7773 20.75V19.6396C17.7773 16.3762 15.1248 13.7228 11.8613 13.7227H7.41699C4.15343 13.7227 1.5 16.3761 1.5 19.6396V20.75C1.49977 21.164 1.16407 21.5 0.75 21.5C0.335929 21.5 0.000230806 21.164 0 20.75V19.6396C0 15.5477 3.325 12.2227 7.41699 12.2227H11.8613ZM9.63867 0C12.5084 0 14.8329 2.32462 14.833 5.19434C14.833 8.06411 12.5084 10.3887 9.63867 10.3887C6.76895 10.3886 4.44434 8.06407 4.44434 5.19434C4.44439 2.32465 6.76899 5.87107e-05 9.63867 0ZM9.63867 1.5C7.59742 1.50006 5.94439 3.15308 5.94434 5.19434C5.94434 7.23564 7.59738 8.88861 9.63867 8.88867C11.68 8.88867 13.333 7.23568 13.333 5.19434C13.3329 3.15304 11.68 1.5 9.63867 1.5Z"
-                                                    fill="#3B3731" />
+                                                    d="M1.19434 15.083H8.36133C8.60382 15.0831 8.80542 15.2849 8.80566 15.5273V20.3057C8.8056 20.5483 8.60393 20.7499 8.36133 20.75H1.19434C0.95169 20.7499 0.75006 20.5483 0.75 20.3057V15.5273C0.75024 15.2848 0.951798 15.0831 1.19434 15.083ZM13.1387 10.3057H20.3057C20.5483 10.3057 20.75 10.5073 20.75 10.75V20.3057C20.7499 20.5483 20.5483 20.7499 20.3057 20.75H13.1387C12.8961 20.7499 12.6944 20.5483 12.6943 20.3057V10.75C12.6943 10.5073 12.896 10.3058 13.1387 10.3057ZM1.19434 0.75H8.36133C8.60393 0.75012 8.8056 0.951726 8.80566 1.19434V10.75C8.80566 10.9927 8.60396 11.1942 8.36133 11.1943H1.19434C0.951654 11.1943 0.75 10.9927 0.75 10.75V1.19434C0.75006 0.95169 0.95169 0.75006 1.19434 0.75ZM13.1387 0.75H20.3057C20.5483 0.75006 20.7499 0.95169 20.75 1.19434V5.97266C20.7498 6.21516 20.5482 6.41693 20.3057 6.41699H13.1387C12.8962 6.41687 12.6946 6.21512 12.6943 5.97266V1.19434C12.6944 0.951725 12.8961 0.75012 13.1387 0.75Z"
+                                                    stroke="white" stroke-width="1.5" />
                                             </svg>
-                                            <p class="medium-light-font">My Account</p>
+                                            <p class="medium-light-font">Business Hub</p>
                                         </a>
                                         <a href="#" class="profile-item d-flex align-items-center gap-40"
                                             wire:navigate>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="22"
-                                                viewBox="0 0 18 22" fill="none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23"
+                                                viewBox="0 0 23 23" fill="none">
                                                 <path
-                                                    d="M6.75 0C7.16421 0 7.5 0.335786 7.5 0.75C7.5 1.16421 7.16421 1.5 6.75 1.5H1.75C1.61193 1.5 1.5 1.61193 1.5 1.75V19.75C1.5 19.8881 1.61193 20 1.75 20H15.75C15.8881 20 16 19.8881 16 19.75V0.75C16 0.335786 16.3358 0 16.75 0C17.1642 0 17.5 0.335786 17.5 0.75V19.75C17.5 20.7165 16.7165 21.5 15.75 21.5H1.75C0.783501 21.5 0 20.7165 0 19.75V1.75C1.28853e-07 0.783502 0.783502 0 1.75 0H6.75ZM13.3506 0.759766C13.5786 0.806292 13.75 1.00829 13.75 1.25V8.73242C13.75 9.12158 13.331 9.35244 13.0078 9.1709L12.9443 9.12891L11.5557 8.05664C11.3757 7.91785 11.1243 7.91785 10.9443 8.05664L9.55566 9.12891L9.49219 9.1709C9.16898 9.35244 8.75 9.12158 8.75 8.73242V1.25C8.75 0.973858 8.97386 0.75 9.25 0.75H13.25L13.3506 0.759766ZM10.25 6.72266C10.8683 6.36491 11.6317 6.36491 12.25 6.72266V2.25H10.25V6.72266Z"
-                                                    fill="#3B3731" />
+                                                    d="M1.57692 11.4985C1.57692 11.4985 0.75 11.1884 0.75 9.84464C0.75 8.5009 1.57692 8.1908 1.57692 8.1908M21.423 10.9817C21.423 10.9817 22.2499 10.7579 22.2499 9.84464C22.2499 8.93141 21.423 8.70763 21.423 8.70763M11.5 6.53696V13.1523M4.05768 6.53696V13.1523M19.3526 0.966623C19.3526 0.966623 14.8748 6.53696 10.673 6.53696H2.40384C2.18453 6.53696 1.9742 6.62409 1.81912 6.77916C1.66404 6.93424 1.57692 7.14457 1.57692 7.36388V12.3254C1.57692 12.5447 1.66404 12.755 1.81912 12.9101C1.9742 13.0652 2.18453 13.1523 2.40384 13.1523H10.673C14.8748 13.1523 19.3526 18.7459 19.3526 18.7459C19.6658 19.1594 20.5961 18.8762 20.5961 18.2379V1.47208C20.5961 0.835866 19.7175 0.499413 19.3526 0.966623Z"
+                                                    stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                                <path
+                                                    d="M5.71143 13.1523V21.835C5.71143 21.9446 5.75499 22.0498 5.83253 22.1274C5.91006 22.2049 6.01523 22.2485 6.12489 22.2485H8.86406C8.9936 22.2485 9.12133 22.2181 9.23697 22.1597C9.35261 22.1013 9.45292 22.0166 9.52981 21.9124C9.6067 21.8081 9.65802 21.6873 9.67964 21.5596C9.70127 21.4318 9.69258 21.3008 9.65428 21.1771C9.22118 19.7878 8.19219 18.2213 8.19219 15.6331H9.01911C9.23842 15.6331 9.44875 15.546 9.60383 15.3909C9.7589 15.2358 9.84603 15.0255 9.84603 14.8062V13.9792C9.84603 13.7599 9.7589 13.5496 9.60383 13.3945C9.44875 13.2394 9.23842 13.1523 9.01911 13.1523H8.19219"
+                                                    stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
                                             </svg>
-                                            <p class="medium-light-font">My Bookings</p>
+                                            <p class="medium-light-font">Marketing Hub</p>
                                         </a>
                                         <a href="#" class="profile-item d-flex align-items-center gap-40"
                                             wire:navigate>
@@ -1739,8 +1770,8 @@
                                                     <img src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : asset('images/user-placeholder.png') }}"
                                                         alt="Profile Image" class="rounded-image">
                                                     <div class="name-email d-flex flex-column">
-                                                        <p class="medium-font-bold">{{ Auth::user()->name }}</p>
-                                                        <p class="medium-muted-font">{{ Auth::user()->email }}</p>
+                                                        <p class="medium-font-bold">{{ $displayName }}</p>
+                                                        <p class="medium-muted-font">{{ $displaySubLabel }}</p>
                                                     </div>
                                                 </div>
                                             @else
