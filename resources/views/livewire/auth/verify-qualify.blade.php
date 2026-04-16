@@ -2178,8 +2178,10 @@ new #[Layout('layouts.app')] class extends Component {
 ?>
 
 <section class="container mt-5 mb-5">
-    <div class="verification-wrapper" wire:loading.class="verification-wrapper--navigating" wire:target="goToSidebarStep">
-        <div class="verification-step-loading-bar" wire:loading wire:target="goToSidebarStep" aria-hidden="true">
+    <div class="verification-wrapper" wire:loading.class="verification-wrapper--navigating"
+        wire:target="goToSidebarStep,submitBusinessBasics,submit,submitPersonalInfo">
+        <div class="verification-step-loading-bar" wire:loading
+            wire:target="goToSidebarStep,submitBusinessBasics,submit,submitPersonalInfo" aria-hidden="true">
             <span class="verification-step-loading-bar__sweep"></span>
         </div>
         <!-- Floating Sidebar (step tracker) -->
