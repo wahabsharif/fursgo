@@ -89,9 +89,22 @@ new class extends Component {
         return $types->implode(', ');
     }
 
+    private function loggedInSpacerId(): ?int
+    {
+        return auth('groomer_spacer')->id();
+    }
+
+    private function bookingsQuery()
+    {
+        $spacerId = $this->loggedInSpacerId();
+
+        return Booking::query()->where('goormer_spacer_id', $spacerId ?? 0);
+    }
+
     public function getTodaysBookings()
     {
-        return Booking::with('pets')
+        return $this->bookingsQuery()
+            ->with('pets')
             ->today()
             ->where('booking_status', '!=', 'cancelled')
             ->orderByDesc('date')
@@ -114,12 +127,13 @@ new class extends Component {
 
     public function getTodaysBookingsCount(): int
     {
-        return Booking::query()->today()->where('booking_status', '!=', 'cancelled')->count();
+        return $this->bookingsQuery()->today()->where('booking_status', '!=', 'cancelled')->count();
     }
 
     public function getPendingRequests()
     {
-        return Booking::with('pets')
+        return $this->bookingsQuery()
+            ->with('pets')
             ->pending()
             ->whereDate('date', '>=', today())
             ->orderByDesc('date')
@@ -144,12 +158,13 @@ new class extends Component {
 
     public function getPendingRequestsCount(): int
     {
-        return Booking::query()->pending()->whereDate('date', '>=', today())->count();
+        return $this->bookingsQuery()->pending()->whereDate('date', '>=', today())->count();
     }
 
     public function getUpcomingBookings()
     {
-        return Booking::with('pets')
+        return $this->bookingsQuery()
+            ->with('pets')
             ->upcoming()
             ->confirmed()
             ->orderByDesc('date')
@@ -176,7 +191,7 @@ new class extends Component {
 
     public function getUpcomingBookingsCount(): int
     {
-        return Booking::query()->upcoming()->confirmed()->count();
+        return $this->bookingsQuery()->upcoming()->confirmed()->count();
     }
 
     public function getWeeklyRevenue()
@@ -184,7 +199,8 @@ new class extends Component {
         $startOfWeek = now()->startOfWeek();
         $endOfWeek = now()->endOfWeek();
 
-        $dailyTotals = Booking::whereIn('booking_status', ['confirmed', 'completed'])
+        $dailyTotals = $this->bookingsQuery()
+            ->whereIn('booking_status', ['confirmed', 'completed'])
             ->whereBetween('date', [$startOfWeek, $endOfWeek])
             ->selectRaw('date, SUM(amount) as total')
             ->groupBy('date')
@@ -193,7 +209,8 @@ new class extends Component {
 
         $total = $dailyTotals->sum('total');
 
-        $lastWeekTotal = Booking::whereIn('booking_status', ['confirmed', 'completed'])
+        $lastWeekTotal = $this->bookingsQuery()
+            ->whereIn('booking_status', ['confirmed', 'completed'])
             ->whereBetween('date', [$startOfWeek->copy()->subWeek(), $endOfWeek->copy()->subWeek()])
             ->sum('amount');
 
@@ -202,7 +219,8 @@ new class extends Component {
         $now = now();
         $startOfMonth = $now->copy()->startOfMonth();
 
-        $monthlySales = Booking::whereIn('booking_status', ['confirmed', 'completed'])
+        $monthlySales = $this->bookingsQuery()
+            ->whereIn('booking_status', ['confirmed', 'completed'])
             ->whereYear('date', $now->year)
             ->whereMonth('date', $now->month)
             ->select(['date', 'amount'])
@@ -244,21 +262,23 @@ new class extends Component {
         $lastMonthStart = $now->copy()->subMonth()->startOfMonth();
         $lastMonthEnd = $now->copy()->subMonth()->endOfMonth();
 
-        $completedBookings = Booking::where('booking_status', 'completed')->count();
-        $lastMonthCompleted = Booking::where('booking_status', 'completed')
+        $completedBookings = $this->bookingsQuery()->where('booking_status', 'completed')->count();
+        $lastMonthCompleted = $this->bookingsQuery()
+            ->where('booking_status', 'completed')
             ->whereBetween('date', [$lastMonthStart, $lastMonthEnd])
             ->count();
-        $thisMonthCompleted = Booking::where('booking_status', 'completed')
+        $thisMonthCompleted = $this->bookingsQuery()
+            ->where('booking_status', 'completed')
             ->whereBetween('date', [$thisMonthStart, $thisMonthEnd])
             ->count();
         $bookingDiff = $thisMonthCompleted - $lastMonthCompleted;
 
-        $totalRevenue = Booking::where('booking_status', 'completed')->sum('amount');
+        $totalRevenue = $this->bookingsQuery()->where('booking_status', 'completed')->sum('amount');
         $avgRevenue = $completedBookings > 0 ? round($totalRevenue / max($completedBookings, 1)) : 0;
 
-        $repeatClients = Booking::query()->where('booking_status', 'completed')->select('pet_owner_id')->groupBy('pet_owner_id')->havingRaw('COUNT(*) > 1')->count();
+        $repeatClients = $this->bookingsQuery()->where('booking_status', 'completed')->select('pet_owner_id')->groupBy('pet_owner_id')->havingRaw('COUNT(*) > 1')->count();
 
-        $totalClients = Booking::query()->where('booking_status', 'completed')->distinct('pet_owner_id')->count('pet_owner_id');
+        $totalClients = $this->bookingsQuery()->where('booking_status', 'completed')->distinct('pet_owner_id')->count('pet_owner_id');
         $repeatPercent = $totalClients > 0 ? round(($repeatClients / $totalClients) * 100) : 0;
 
         return [
@@ -285,7 +305,7 @@ new class extends Component {
 
     public function acceptRequest($bookingId)
     {
-        $booking = Booking::findOrFail($bookingId);
+        $booking = $this->bookingsQuery()->findOrFail($bookingId);
         $booking->update(['booking_status' => 'confirmed']);
         $this->dispatch('request-accepted', requestId: $bookingId);
     }
@@ -312,12 +332,18 @@ new class extends Component {
     }
 }; ?>
 
-<div x-data="{ activeTab: @entangle('activeTab') }" class="business-hub-container">
+<div x-data="{ activeTab: @entangle('activeTab') }" class="business-hub-container" wire:loading.class="business-hub-container--navigating"
+    wire:target="openCardModal,closeCardModal,acceptRequest,viewDetails">
     @php
         $activeColor = auth()->check() && auth()->user()->user_type === 'space' ? '#FFA899' : '#FFC97A';
         $lightColor = auth()->check() && auth()->user()->user_type === 'space' ? '#FFE8E4' : '#FFF8EB';
         $chartColor = auth()->check() && auth()->user()->user_type === 'space' ? '#FFA899' : '#FFC97A';
     @endphp
+
+    <div class="business-hub-step-loading-bar" wire:loading
+        wire:target="openCardModal,closeCardModal,acceptRequest,viewDetails" aria-hidden="true">
+        <span class="business-hub-step-loading-bar__sweep"></span>
+    </div>
 
     <style>
         :root {
@@ -336,6 +362,56 @@ new class extends Component {
             min-height: 0;
             width: 100%;
             align-self: stretch;
+            position: relative;
+        }
+
+        .business-hub-container--navigating {
+            cursor: wait;
+        }
+
+        .business-hub-step-loading-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            overflow: hidden;
+            background: rgba(232, 228, 222, 0.85);
+            z-index: 5;
+            border-radius: 2px;
+            pointer-events: none;
+        }
+
+        .business-hub-step-loading-bar__sweep {
+            position: absolute;
+            top: 0;
+            left: -42%;
+            height: 100%;
+            width: 42%;
+            border-radius: 2px;
+            background: linear-gradient(90deg, #FFC97A 0%, #f6a623 45%, #FFC97A 100%);
+            box-shadow: 0 0 12px rgba(246, 166, 35, 0.45);
+            will-change: left;
+            animation: bh-step-load-sweep 1.1s linear infinite;
+        }
+
+        @keyframes bh-step-load-sweep {
+            0% {
+                left: -42%;
+            }
+
+            100% {
+                left: 100%;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .business-hub-step-loading-bar__sweep {
+                animation: none;
+                left: 0;
+                width: 100%;
+                opacity: 0.85;
+            }
         }
 
         /* Dashboard Cards */
