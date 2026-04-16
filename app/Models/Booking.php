@@ -10,6 +10,7 @@ class Booking extends Model
 {
     protected $fillable = [
         'pet_owner_id',
+        'goormer_spacer_id',
         'time',
         'date',
         'service',
