@@ -5,12 +5,20 @@ namespace Database\Seeders;
 use App\Models\Booking;
 use App\Models\PetDetail;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Seeder;
 
 class BookingSeeder extends Seeder
 {
     public function run(): void
     {
+        $spacerIds = DB::table('goormer_spacer_profiles')->pluck('id')->filter()->values()->all();
+
+        if (empty($spacerIds)) {
+            $this->command?->warn('BookingSeeder skipped: no goormer_spacer_profiles found.');
+            return;
+        }
+
         // Ensure we have a pet owner user
         $owner = User::firstOrCreate(
             ['email' => 'petowner@example.com'],
@@ -61,6 +69,9 @@ class BookingSeeder extends Seeder
                 ]),
             ]);
         }
+
+        // Normalize keys so index-based booking mappings are reliable.
+        $pets = $pets->values();
 
         $bookings = [
             // Today — confirmed
@@ -140,17 +151,118 @@ class BookingSeeder extends Seeder
                 'booking_status' => 'completed',
                 'pet_indices'    => [0],
             ],
+            // Today — pending
+            [
+                'pet_owner_id'   => $owner->id,
+                'time'           => '18:00 - 19:00',
+                'date'           => today()->toDateString(),
+                'service'        => 'Nail Trim',
+                'amount'         => 28.00,
+                'visit_type'     => 'home_visit',
+                'booking_status' => 'pending',
+                'pet_indices'    => [1],
+            ],
+            // Near future — confirmed
+            [
+                'pet_owner_id'   => $owner->id,
+                'time'           => '08:30 - 09:30',
+                'date'           => today()->addDays(1)->toDateString(),
+                'service'        => 'Deshedding Treatment',
+                'amount'         => 72.00,
+                'visit_type'     => 'salon',
+                'booking_status' => 'confirmed',
+                'pet_indices'    => [0, 2],
+            ],
+            // Future — pending
+            [
+                'pet_owner_id'   => $owner->id,
+                'time'           => '12:00 - 13:00',
+                'date'           => today()->addDays(2)->toDateString(),
+                'service'        => 'Puppy Intro Groom',
+                'amount'         => 38.00,
+                'visit_type'     => 'salon',
+                'booking_status' => 'pending',
+                'pet_indices'    => [0],
+            ],
+            // Future — cancelled
+            [
+                'pet_owner_id'   => $owner->id,
+                'time'           => '15:00 - 16:00',
+                'date'           => today()->addDays(4)->toDateString(),
+                'service'        => 'Full Groom',
+                'amount'         => 78.00,
+                'visit_type'     => 'mobile_station',
+                'booking_status' => 'cancelled',
+                'pet_indices'    => [1, 2],
+            ],
+            // Future — confirmed
+            [
+                'pet_owner_id'   => $owner->id,
+                'time'           => '10:30 - 11:30',
+                'date'           => today()->addDays(6)->toDateString(),
+                'service'        => 'Teeth Cleaning',
+                'amount'         => 32.00,
+                'visit_type'     => 'home_visit',
+                'booking_status' => 'confirmed',
+                'pet_indices'    => [2],
+            ],
+            // Future — completed-like history seed
+            [
+                'pet_owner_id'   => $owner->id,
+                'time'           => '17:00 - 18:00',
+                'date'           => today()->subDays(3)->toDateString(),
+                'service'        => 'Bath & Brush',
+                'amount'         => 52.00,
+                'visit_type'     => 'salon',
+                'booking_status' => 'completed',
+                'pet_indices'    => [0, 1],
+            ],
+            // Older past — cancelled
+            [
+                'pet_owner_id'   => $owner->id,
+                'time'           => '11:00 - 12:00',
+                'date'           => today()->subDays(12)->toDateString(),
+                'service'        => 'Nail Trim',
+                'amount'         => 22.00,
+                'visit_type'     => 'home_visit',
+                'booking_status' => 'cancelled',
+                'pet_indices'    => [1],
+            ],
+            // Future — pending
+            [
+                'pet_owner_id'   => $owner->id,
+                'time'           => '09:30 - 10:30',
+                'date'           => today()->addDays(9)->toDateString(),
+                'service'        => 'Full Groom',
+                'amount'         => 82.00,
+                'visit_type'     => 'mobile_station',
+                'booking_status' => 'pending',
+                'pet_indices'    => [0, 1, 2],
+            ],
+            // Far future — confirmed
+            [
+                'pet_owner_id'   => $owner->id,
+                'time'           => '13:30 - 14:30',
+                'date'           => today()->addDays(14)->toDateString(),
+                'service'        => 'De-matting',
+                'amount'         => 58.00,
+                'visit_type'     => 'salon',
+                'booking_status' => 'confirmed',
+                'pet_indices'    => [0],
+            ],
         ];
 
         foreach ($bookings as $data) {
             $petIndices = $data['pet_indices'];
             unset($data['pet_indices']);
+            $data['goormer_spacer_id'] = $spacerIds[array_rand($spacerIds)];
 
             // Idempotent seeding: update existing seeded bookings and always enforce
             // correct pivot mapping instead of creating duplicates.
             $booking = Booking::updateOrCreate(
                 [
                     'pet_owner_id' => $data['pet_owner_id'],
+                    'goormer_spacer_id' => $data['goormer_spacer_id'],
                     'date' => $data['date'],
                     'time' => $data['time'],
                     'service' => $data['service'],
@@ -162,7 +274,17 @@ class BookingSeeder extends Seeder
                 ]
             );
 
-            $petIds = $pets->only($petIndices)->pluck('id')->filter()->values()->toArray();
+            $petIds = collect($petIndices)
+                ->map(fn (int $index) => optional($pets->get($index))->id)
+                ->filter()
+                ->values()
+                ->toArray();
+
+            // Ensure each seeded booking has at least one linked pet.
+            if (empty($petIds) && $pets->isNotEmpty()) {
+                $petIds = [$pets->first()->id];
+            }
+
             $booking->pets()->sync($petIds);
         }
     }
