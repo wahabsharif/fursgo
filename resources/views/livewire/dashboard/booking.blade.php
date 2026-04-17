@@ -10,6 +10,7 @@ new class extends Component {
     public $statusCounts = [];
     public string $activeStatus = 'all';
     public string $pendingSort = 'latest_submitted';
+    public int $visibleRows = 10;
     public ?int $declineBookingId = null;
     public ?int $rescheduleBookingId = null;
     public ?string $rescheduleCalendarMonth = null;
@@ -26,6 +27,12 @@ new class extends Component {
 
     public function refreshBookingsAndCounts(): void
     {
+        // Avoid heavy polling refresh while a modal is open, so calendar
+        // interactions (day/time/month selection) stay responsive.
+        if ($this->declineBookingId !== null || $this->rescheduleBookingId !== null) {
+            return;
+        }
+
         $profileId = Auth::id();
 
         $this->bookings = Booking::with(['petOwner:id,name', 'pets:id,name,pet_type,breed,photo'])
@@ -64,7 +71,9 @@ new class extends Component {
         }
 
         $this->activeStatus = $status;
+        $this->visibleRows = 10;
         $this->dispatch('booking-status-changed', status: $status);
+        $this->dispatch('bookings-tabs-loading-end');
     }
 
     #[On('booking-status-selected')]
@@ -77,7 +86,9 @@ new class extends Component {
     public function onBookingFilterReset(): void
     {
         $this->activeStatus = 'all';
+        $this->visibleRows = 10;
         $this->dispatch('booking-status-changed', status: '');
+        $this->dispatch('bookings-tabs-loading-end');
     }
 
     public function acceptBooking(int $bookingId): void
@@ -190,35 +201,6 @@ new class extends Component {
         $this->dispatch('reschedule-modal-closed');
     }
 
-    public function prevRescheduleMonth(): void
-    {
-        $baseMonth = $this->rescheduleCalendarMonth ?: date('Y-m-01');
-        $this->rescheduleCalendarMonth = date('Y-m-01', strtotime($baseMonth . ' -1 month'));
-    }
-
-    public function nextRescheduleMonth(): void
-    {
-        $baseMonth = $this->rescheduleCalendarMonth ?: date('Y-m-01');
-        $this->rescheduleCalendarMonth = date('Y-m-01', strtotime($baseMonth . ' +1 month'));
-    }
-
-    public function selectRescheduleDay(int $day): void
-    {
-        $month = $this->rescheduleCalendarMonth ?: date('Y-m-01');
-        $year = (int) date('Y', strtotime($month));
-        $monthNum = (int) date('m', strtotime($month));
-        $maxDay = cal_days_in_month(CAL_GREGORIAN, $monthNum, $year);
-        if ($day < 1 || $day > $maxDay) {
-            return;
-        }
-        $this->rescheduleSelectedDate = sprintf('%04d-%02d-%02d', $year, $monthNum, $day);
-    }
-
-    public function selectRescheduleTime(string $time): void
-    {
-        $this->rescheduleSelectedTime = $time;
-    }
-
     public function confirmRescheduleBooking(): void
     {
         if (!$this->rescheduleBookingId || !$this->rescheduleSelectedDate || !$this->rescheduleSelectedTime) {
@@ -251,6 +233,19 @@ new class extends Component {
         $this->closeRescheduleModal();
     }
 
+    public function confirmRescheduleBookingFromClient(?string $selectedDate, ?string $selectedTime): void
+    {
+        if (is_string($selectedDate) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $selectedDate)) {
+            $this->rescheduleSelectedDate = $selectedDate;
+        }
+
+        if (is_string($selectedTime) && preg_match('/^\d{2}:\d{2}\s(?:AM|PM)$/', $selectedTime)) {
+            $this->rescheduleSelectedTime = $selectedTime;
+        }
+
+        $this->confirmRescheduleBooking();
+    }
+
     public function setPendingSort(string $sort): void
     {
         $allowedSorts = ['latest_submitted', 'oldest_submitted', 'amount_high', 'amount_low'];
@@ -260,6 +255,13 @@ new class extends Component {
         }
 
         $this->pendingSort = $sort;
+        $this->visibleRows = 10;
+        $this->dispatch('bookings-tabs-loading-end');
+    }
+
+    public function loadMoreBookings(): void
+    {
+        $this->visibleRows += 10;
         $this->dispatch('bookings-tabs-loading-end');
     }
 }; ?>
@@ -320,38 +322,33 @@ new class extends Component {
         @else
             <div class="booking-pill-row">
                 @if ($activeStatus === 'all')
-                    <button type="button" @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                        wire:click="setActiveStatus('pending')" class="booking-pill pending">Pending
+                    <button type="button" wire:click="setActiveStatus('pending')" class="booking-pill pending">Pending
                         Bookings ({{ $statusCounts['pending'] }})</button>
-                    <button type="button" @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                        wire:click="setActiveStatus('confirmed')" class="booking-pill confirmed">Confirmed
+                    <button type="button" wire:click="setActiveStatus('confirmed')"
+                        class="booking-pill confirmed">Confirmed
                         Bookings ({{ $statusCounts['confirmed'] }})</button>
-                    <button type="button" @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                        wire:click="setActiveStatus('completed')" class="booking-pill completed">Completed
+                    <button type="button" wire:click="setActiveStatus('completed')"
+                        class="booking-pill completed">Completed
                         Bookings ({{ $statusCounts['completed'] }})</button>
-                    <button type="button" @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                        wire:click="setActiveStatus('cancelled')" class="booking-pill cancelled">Cancelled
+                    <button type="button" wire:click="setActiveStatus('cancelled')"
+                        class="booking-pill cancelled">Cancelled
                         Bookings ({{ $statusCounts['cancelled'] }})</button>
                 @else
                     @if ($activeStatus === 'pending')
-                        <button type="button"
-                            @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                            wire:click="setActiveStatus('pending')" class="booking-pill pending is-active">Pending
+                        <button type="button" wire:click="setActiveStatus('pending')"
+                            class="booking-pill pending is-active">Pending
                             Bookings ({{ $statusCounts['pending'] }})</button>
                     @elseif ($activeStatus === 'confirmed')
-                        <button type="button"
-                            @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                            wire:click="setActiveStatus('confirmed')" class="booking-pill confirmed is-active">Confirmed
+                        <button type="button" wire:click="setActiveStatus('confirmed')"
+                            class="booking-pill confirmed is-active">Confirmed
                             Bookings ({{ $statusCounts['confirmed'] }})</button>
                     @elseif ($activeStatus === 'completed')
-                        <button type="button"
-                            @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                            wire:click="setActiveStatus('completed')" class="booking-pill completed is-active">Completed
+                        <button type="button" wire:click="setActiveStatus('completed')"
+                            class="booking-pill completed is-active">Completed
                             Bookings ({{ $statusCounts['completed'] }})</button>
                     @elseif ($activeStatus === 'cancelled')
-                        <button type="button"
-                            @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                            wire:click="setActiveStatus('cancelled')" class="booking-pill cancelled is-active">Cancelled
+                        <button type="button" wire:click="setActiveStatus('cancelled')"
+                            class="booking-pill cancelled is-active">Cancelled
                             Bookings ({{ $statusCounts['cancelled'] }})</button>
                     @endif
                 @endif
@@ -463,417 +460,445 @@ new class extends Component {
         };
     @endphp
 
-    <div class="bookings-table-wrap">
-        @if ($activeStatus === 'pending')
-            <table class="bookings-table pending-bookings-table">
-                <thead>
-                    <tr>
-                        <th>Booking ID</th>
-                        <th>Submitted at</th>
-                        <th>Owner</th>
-                        <th>Pet</th>
-                        <th>Service Type</th>
-                        <th>Booking Details</th>
-                        <th>Payment</th>
-                        <th class="pending-action-col">Action</th>
-                    </tr>
-                </thead>
-                <tbody wire:key="bookings-table-pending" class="bookings-table-body">
-                    @php
-                        $pendingBookings = $bookings->where('booking_status', 'pending')->values();
-                        if ($pendingSort === 'oldest_submitted') {
-                            $pendingBookings = $pendingBookings->sortBy('created_at')->values();
-                        } elseif ($pendingSort === 'amount_high') {
-                            $pendingBookings = $pendingBookings->sortByDesc(fn($b) => (float) $b->amount)->values();
-                        } elseif ($pendingSort === 'amount_low') {
-                            $pendingBookings = $pendingBookings->sortBy(fn($b) => (float) $b->amount)->values();
-                        } else {
-                            $pendingBookings = $pendingBookings->sortByDesc('created_at')->values();
-                        }
-                    @endphp
-                    @forelse ($pendingBookings as $booking)
+    @if ($declineBookingId === null && $rescheduleBookingId === null)
+        <div class="bookings-table-wrap">
+            @if ($activeStatus === 'pending')
+                <table class="bookings-table pending-bookings-table">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Submitted at</th>
+                            <th>Owner</th>
+                            <th>Pet</th>
+                            <th>Service Type</th>
+                            <th>Booking Details</th>
+                            <th>Payment</th>
+                            <th class="pending-action-col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody wire:key="bookings-table-pending" class="bookings-table-body">
                         @php
-                            $petNames = $booking->pets->pluck('name')->filter()->values()->all();
-                            $petTypes = $booking->pets->pluck('pet_type')->filter()->unique()->values()->all();
-
-                            $petName = $petNames[0] ?? 'N/A';
-                            $petMore = count($petNames) > 1 ? '+' . (count($petNames) - 1) : '';
-                            $petType = $petTypes[0] ?? null;
-
-                            // "Submitted at" should reflect when the booking row was created.
-                            $submittedDate = optional($booking->created_at)->format('d/m/y');
-                            $submittedTime = optional($booking->created_at)->format('H:i');
-
-                            // Booking Details keep using your booking date/time fields.
-                            $bookingDetailsDate = optional($booking->date)->format('d/m/y');
-                            $bookingDetailsTimeRaw = (string) $booking->time;
-
-                            // Example output: "08:00 - 09:00 am (1hr)"
-                            // `booking->time` is usually stored like "08:00 - 09:00".
-                            $bookingDetailsTime = $bookingDetailsTimeRaw;
-                            if (str_contains($bookingDetailsTimeRaw, '-')) {
-                                $timeParts = preg_split('/\s*-\s*/', $bookingDetailsTimeRaw, 2);
-                                $startPart = $timeParts[0] ?? '';
-                                $endPart = $timeParts[1] ?? '';
-
-                                preg_match('/(\d{1,2}:\d{2})/', $startPart, $mStart);
-                                preg_match('/(\d{1,2}:\d{2})/', $endPart, $mEnd);
-
-                                if (!empty($mStart[1]) && !empty($mEnd[1])) {
-                                    $startTimeStr = $mStart[1];
-                                    $endTimeStr = $mEnd[1];
-
-                                    try {
-                                        $startDt = new DateTime($startTimeStr);
-                                        $endDt = new DateTime($endTimeStr);
-
-                                        // If end is earlier than start, assume it rolls over (rare for groom slots).
-                                        if ($endDt < $startDt) {
-                                            $endDt->modify('+1 day');
-                                        }
-
-                                        $startHHMM = $startDt->format('H:i');
-                                        $endHHMM = $endDt->format('H:i');
-
-                                        $startMeridiem = strtolower($startDt->format('a'));
-                                        $endMeridiem = strtolower($endDt->format('a'));
-
-                                        $diffMinutes = max(0, ($endDt->getTimestamp() - $startDt->getTimestamp()) / 60);
-                                        $hours = (int) floor($diffMinutes / 60);
-                                        $minutes = (int) ($diffMinutes % 60);
-
-                                        if ($minutes === 0) {
-                                            $durationLabel = $hours . 'hr';
-                                        } else {
-                                            $durationLabel = $hours . 'hr ' . $minutes . 'm';
-                                        }
-
-                                        if ($startMeridiem === $endMeridiem) {
-                                            $bookingDetailsTime =
-                                                $startHHMM .
-                                                ' - ' .
-                                                $endHHMM .
-                                                ' ' .
-                                                $startMeridiem .
-                                                ' (' .
-                                                $durationLabel .
-                                                ')';
-                                        } else {
-                                            $bookingDetailsTime =
-                                                $startDt->format('H:i a') .
-                                                ' - ' .
-                                                $endDt->format('H:i a') .
-                                                ' (' .
-                                                $durationLabel .
-                                                ')';
-                                        }
-                                    } catch (Throwable $e) {
-                                        // Keep raw value on parse failure.
-                                        $bookingDetailsTime = $bookingDetailsTimeRaw;
-                                    }
-                                }
+                            $pendingBookings = $bookings->where('booking_status', 'pending')->values();
+                            if ($pendingSort === 'oldest_submitted') {
+                                $pendingBookings = $pendingBookings->sortBy('created_at')->values();
+                            } elseif ($pendingSort === 'amount_high') {
+                                $pendingBookings = $pendingBookings->sortByDesc(fn($b) => (float) $b->amount)->values();
+                            } elseif ($pendingSort === 'amount_low') {
+                                $pendingBookings = $pendingBookings->sortBy(fn($b) => (float) $b->amount)->values();
+                            } else {
+                                $pendingBookings = $pendingBookings->sortByDesc('created_at')->values();
                             }
                         @endphp
+                        @php
+                            $visiblePendingBookings = $pendingBookings->take($visibleRows);
+                        @endphp
+                        @forelse ($visiblePendingBookings as $booking)
+                            @php
+                                $petNames = $booking->pets->pluck('name')->filter()->values()->all();
+                                $petTypes = $booking->pets->pluck('pet_type')->filter()->unique()->values()->all();
 
-                        <tr wire:key="pending-booking-row-{{ $booking->id }}">
-                            <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
-                            <td>
-                                <div class="pending-submitted-at">
-                                    <div class="pending-submitted-time">{{ $submittedTime }}</div>
-                                    <div class="pending-submitted-date">{{ $submittedDate }}</div>
-                                </div>
-                            </td>
-                            <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
-                            <td>
-                                <div class="filtered-pet-cell">
-                                    <span class="pending-pet-name">{{ $petName }}</span>
-                                    <span>
-                                        @if ($petType)
-                                            <span class="pending-pet-type">{{ $petType }}</span>
-                                        @endif
-                                        @if ($petMore)
-                                            <span class="pending-pet-more">{{ $petMore }}</span>
-                                        @endif
-                                    </span>
-                                </div>
-                            </td>
-                            <td>{{ $booking->service }}</td>
-                            <td>
-                                <div class="pending-booking-details">
-                                    <div class="pending-booking-details-date">{{ $bookingDetailsDate }}</div>
-                                    <div class="pending-booking-details-time">{{ $bookingDetailsTime }}</div>
-                                </div>
-                            </td>
-                            <td>£{{ number_format((float) $booking->amount, 2) }}</td>
-                            <td class="pending-action-col">
-                                <div class="pending-action-cell" x-data="{
-                                    rowId: {{ $booking->id }},
-                                    openMore: false,
-                                    menuLeft: 8,
-                                    menuTop: 8,
-                                    repositionMore() {
-                                        const rect = $refs.moreBtn.getBoundingClientRect();
-                                        const menuWidth = 210;
-                                        this.menuLeft = Math.min(Math.max(8, rect.left), window.innerWidth - menuWidth - 8);
-                                        this.menuTop = Math.max(8, rect.bottom + 8);
-                                    },
-                                    toggleMore() {
-                                        if (!this.openMore) {
-                                            window.dispatchEvent(new CustomEvent('pending-more-opened', { detail: { id: this.rowId } }));
-                                            this.repositionMore();
+                                $petName = $petNames[0] ?? 'N/A';
+                                $petMore = count($petNames) > 1 ? '+' . (count($petNames) - 1) : '';
+                                $petType = $petTypes[0] ?? null;
+
+                                // "Submitted at" should reflect when the booking row was created.
+                                $submittedDate = optional($booking->created_at)->format('d/m/y');
+                                $submittedTime = optional($booking->created_at)->format('H:i');
+
+                                // Booking Details keep using your booking date/time fields.
+                                $bookingDetailsDate = optional($booking->date)->format('d/m/y');
+                                $bookingDetailsTimeRaw = (string) $booking->time;
+
+                                // Example output: "08:00 - 09:00 am (1hr)"
+                                // `booking->time` is usually stored like "08:00 - 09:00".
+                                $bookingDetailsTime = $bookingDetailsTimeRaw;
+                                if (str_contains($bookingDetailsTimeRaw, '-')) {
+                                    $timeParts = preg_split('/\s*-\s*/', $bookingDetailsTimeRaw, 2);
+                                    $startPart = $timeParts[0] ?? '';
+                                    $endPart = $timeParts[1] ?? '';
+
+                                    preg_match('/(\d{1,2}:\d{2})/', $startPart, $mStart);
+                                    preg_match('/(\d{1,2}:\d{2})/', $endPart, $mEnd);
+
+                                    if (!empty($mStart[1]) && !empty($mEnd[1])) {
+                                        $startTimeStr = $mStart[1];
+                                        $endTimeStr = $mEnd[1];
+
+                                        try {
+                                            $startDt = new DateTime($startTimeStr);
+                                            $endDt = new DateTime($endTimeStr);
+
+                                            // If end is earlier than start, assume it rolls over (rare for groom slots).
+                                            if ($endDt < $startDt) {
+                                                $endDt->modify('+1 day');
+                                            }
+
+                                            $startHHMM = $startDt->format('H:i');
+                                            $endHHMM = $endDt->format('H:i');
+
+                                            $startMeridiem = strtolower($startDt->format('a'));
+                                            $endMeridiem = strtolower($endDt->format('a'));
+
+                                            $diffMinutes = max(
+                                                0,
+                                                ($endDt->getTimestamp() - $startDt->getTimestamp()) / 60,
+                                            );
+                                            $hours = (int) floor($diffMinutes / 60);
+                                            $minutes = (int) ($diffMinutes % 60);
+
+                                            if ($minutes === 0) {
+                                                $durationLabel = $hours . 'hr';
+                                            } else {
+                                                $durationLabel = $hours . 'hr ' . $minutes . 'm';
+                                            }
+
+                                            if ($startMeridiem === $endMeridiem) {
+                                                $bookingDetailsTime =
+                                                    $startHHMM .
+                                                    ' - ' .
+                                                    $endHHMM .
+                                                    ' ' .
+                                                    $startMeridiem .
+                                                    ' (' .
+                                                    $durationLabel .
+                                                    ')';
+                                            } else {
+                                                $bookingDetailsTime =
+                                                    $startDt->format('H:i a') .
+                                                    ' - ' .
+                                                    $endDt->format('H:i a') .
+                                                    ' (' .
+                                                    $durationLabel .
+                                                    ')';
+                                            }
+                                        } catch (Throwable $e) {
+                                            // Keep raw value on parse failure.
+                                            $bookingDetailsTime = $bookingDetailsTimeRaw;
                                         }
-                                        this.openMore = !this.openMore;
                                     }
-                                }"
-                                    :class="{ 'is-open': openMore }"
-                                    @pending-more-opened.window="if (($event.detail?.id ?? null) !== rowId) { openMore = false }"
-                                    @keydown.escape.window="openMore = false"
-                                    @resize.window="if (openMore) repositionMore()"
-                                    @scroll.window="if (openMore) repositionMore()"
-                                    @click.window="if (openMore && !$refs.moreBtn.contains($event.target) && (!$refs.moreMenu || !$refs.moreMenu.contains($event.target))) { openMore = false }">
-                                    <button type="button" class="pending-accept-btn"
-                                        wire:click="acceptBooking({{ $booking->id }})" wire:loading.attr="disabled"
-                                        wire:target="acceptBooking({{ $booking->id }})" aria-label="Accept booking">
-                                        <span wire:loading.remove
-                                            wire:target="acceptBooking({{ $booking->id }})">Accept</span>
-                                        <span class="pending-accept-loading" wire:loading.inline-flex
-                                            wire:target="acceptBooking({{ $booking->id }})">
-                                            <span class="pending-accept-spinner" aria-hidden="true"></span>
+                                }
+                            @endphp
+
+                            <tr wire:key="pending-booking-row-{{ $booking->id }}">
+                                <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
+                                <td>
+                                    <div class="pending-submitted-at">
+                                        <div class="pending-submitted-time">{{ $submittedTime }}</div>
+                                        <div class="pending-submitted-date">{{ $submittedDate }}</div>
+                                    </div>
+                                </td>
+                                <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
+                                <td>
+                                    <div class="filtered-pet-cell">
+                                        <span class="pending-pet-name">{{ $petName }}</span>
+                                        <span>
+                                            @if ($petType)
+                                                <span class="pending-pet-type">{{ $petType }}</span>
+                                            @endif
+                                            @if ($petMore)
+                                                <span class="pending-pet-more">{{ $petMore }}</span>
+                                            @endif
                                         </span>
-                                    </button>
-                                    <button type="button" class="pending-decline-btn"
-                                        @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                                        wire:click="openDeclineModal({{ $booking->id }})"
-                                        aria-label="Decline booking">
-                                        <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg"
-                                                width="36" height="36" viewBox="0 0 36 36" fill="none">
+                                    </div>
+                                </td>
+                                <td>{{ $booking->service }}</td>
+                                <td>
+                                    <div class="pending-booking-details">
+                                        <div class="pending-booking-details-date">{{ $bookingDetailsDate }}</div>
+                                        <div class="pending-booking-details-time">{{ $bookingDetailsTime }}</div>
+                                    </div>
+                                </td>
+                                <td>£{{ number_format((float) $booking->amount, 2) }}</td>
+                                <td class="pending-action-col">
+                                    <div class="pending-action-cell" x-data="{
+                                        rowId: {{ $booking->id }},
+                                        openMore: false,
+                                        menuLeft: 8,
+                                        menuTop: 8,
+                                        repositionMore() {
+                                            const rect = $refs.moreBtn.getBoundingClientRect();
+                                            const menuWidth = 210;
+                                            this.menuLeft = Math.min(Math.max(8, rect.left), window.innerWidth - menuWidth - 8);
+                                            this.menuTop = Math.max(8, rect.bottom + 8);
+                                        },
+                                        toggleMore() {
+                                            if (!this.openMore) {
+                                                window.dispatchEvent(new CustomEvent('pending-more-opened', { detail: { id: this.rowId } }));
+                                                this.repositionMore();
+                                            }
+                                            this.openMore = !this.openMore;
+                                        }
+                                    }"
+                                        :class="{ 'is-open': openMore }"
+                                        @pending-more-opened.window="if (($event.detail?.id ?? null) !== rowId) { openMore = false }"
+                                        @keydown.escape.window="openMore = false"
+                                        @resize.window="if (openMore) repositionMore()"
+                                        @scroll.window="if (openMore) repositionMore()"
+                                        @click.window="if (openMore && !$refs.moreBtn.contains($event.target) && (!$refs.moreMenu || !$refs.moreMenu.contains($event.target))) { openMore = false }">
+                                        <button type="button" class="pending-accept-btn"
+                                            wire:click="acceptBooking({{ $booking->id }})"
+                                            wire:loading.attr="disabled"
+                                            wire:target="acceptBooking({{ $booking->id }})"
+                                            aria-label="Accept booking">
+                                            <span wire:loading.remove
+                                                wire:target="acceptBooking({{ $booking->id }})">Accept</span>
+                                            <span class="pending-accept-loading" wire:loading.inline-flex
+                                                wire:target="acceptBooking({{ $booking->id }})">
+                                                <span class="pending-accept-spinner" aria-hidden="true"></span>
+                                            </span>
+                                        </button>
+                                        <button type="button" class="pending-decline-btn"
+                                            @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
+                                            wire:click="openDeclineModal({{ $booking->id }})"
+                                            aria-label="Decline booking">
+                                            <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg"
+                                                    width="36" height="36" viewBox="0 0 36 36"
+                                                    fill="none">
+                                                    <rect width="36" height="36" rx="18"
+                                                        fill="#FF6E6E" />
+                                                    <path d="M13 23L23 13M13 13L23 23" stroke="white"
+                                                        stroke-width="1.5" stroke-linecap="round" />
+                                                </svg></span>
+                                        </button>
+                                        <div class="pending-more-wrap">
+                                            <button type="button" class="pending-more-btn" aria-label="More actions"
+                                                x-ref="moreBtn" @click.stop="toggleMore()">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="5"
+                                                    viewBox="0 0 25 5" fill="none">
+                                                    <circle cx="2.5" cy="2.5" r="2.5" fill="#3B3731" />
+                                                    <circle cx="12.5" cy="2.5" r="2.5" fill="#3B3731" />
+                                                    <circle cx="22.5" cy="2.5" r="2.5" fill="#3B3731" />
+                                                </svg>
+                                            </button>
+
+                                            <template x-teleport="body">
+                                                <div class="pending-more-menu" x-cloak x-show="openMore"
+                                                    x-ref="moreMenu" x-transition.opacity.duration.120ms
+                                                    :style="`position: fixed; left: ${menuLeft}px; top: ${menuTop}px; z-index: 99999;`">
+                                                    <button type="button" class="pending-more-menu-item">
+                                                        <span>Message</span>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="15"
+                                                            height="14" viewBox="0 0 15 14" fill="none">
+                                                            <path
+                                                                d="M7.5 0.75C11.3248 0.75 14.25 3.44368 14.25 6.56348C14.25 9.58586 11.5045 12.2084 7.85547 12.3691L7.5 12.377H7.49805C6.82132 12.3784 6.14689 12.2902 5.49316 12.1152L5.2168 12.041L4.96094 12.1709C4.55369 12.3769 3.6394 12.7709 2.12793 13.0908C2.34446 12.4211 2.52462 11.6686 2.59375 10.9482L2.62695 10.5967L2.37793 10.3467C1.35243 9.3185 0.750021 7.99417 0.75 6.56348C0.75 3.44368 3.67522 0.75 7.5 0.75Z"
+                                                                stroke="#CBDCE8" stroke-width="1.5" />
+                                                        </svg>
+                                                    </button>
+                                                    <button type="button" class="pending-more-menu-item"
+                                                        @click.stop="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); $wire.openRescheduleModal(rowId); openMore = false;">
+                                                        <span>Reschedule</span>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16"
+                                                            height="16" viewBox="0 0 16 16" fill="none">
+                                                            <path d="M2.36584 14.7456V12.0549H5.05648" stroke="#FFC97A"
+                                                                stroke-width="1.5" stroke-linecap="round"
+                                                                stroke-linejoin="round" />
+                                                            <path
+                                                                d="M14.6246 6.46435C14.91 7.98755 14.6817 9.56243 13.9755 10.9419C13.2692 12.3213 12.125 13.4272 10.7223 14.0861C9.31964 14.745 7.7379 14.9196 6.2253 14.5824C4.7127 14.2452 3.35484 13.4154 2.36479 12.2232M0.86975 9.03565C0.58427 7.51245 0.812567 5.93757 1.51882 4.55813C2.22507 3.1787 3.36931 2.07277 4.77199 1.41388C6.17467 0.754998 7.7564 0.580442 9.269 0.917607C10.7816 1.25477 12.1395 2.08458 13.1295 3.27681"
+                                                                stroke="#FFC97A" stroke-width="1.5"
+                                                                stroke-linecap="round" stroke-linejoin="round" />
+                                                            <path
+                                                                d="M13.1284 0.754517V3.44515H10.4377M4.58993 8.11254C4.20912 8.04636 4.20912 7.49956 4.58993 7.43337C5.26397 7.31547 5.88773 6.9998 6.3819 6.52649C6.87608 6.05318 7.21834 5.44361 7.36519 4.77528L7.38798 4.67005C7.47043 4.29357 8.00639 4.2914 8.0921 4.66679L8.12031 4.78939C8.27185 5.45513 8.61692 6.06118 9.1121 6.53126C9.60728 7.00135 10.2304 7.31446 10.9032 7.4312C11.2861 7.49738 11.2861 8.04745 10.9032 8.11471C10.2306 8.23138 9.60753 8.54433 9.11236 9.01421C8.6172 9.48409 8.27204 10.0899 8.12031 10.7554L8.0921 10.877C8.00639 11.2523 7.47043 11.2502 7.38798 10.8737L7.36628 10.7695C7.21928 10.1009 6.87669 9.49114 6.3821 9.0178C5.88751 8.54446 5.26328 8.22897 4.58885 8.11146"
+                                                                stroke="#FFC97A" stroke-width="1.5"
+                                                                stroke-linecap="round" stroke-linejoin="round" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr wire:key="booking-row-{{ $activeStatus }}-empty">
+                                <td colspan="8" class="empty-bookings">No pending bookings found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+                @if ($pendingBookings->count() > $visibleRows)
+                    <div class="bookings-load-more-wrap">
+                        <button type="button" class="bookings-load-more-btn" wire:click="loadMoreBookings"
+                            wire:loading.attr="disabled" wire:target="loadMoreBookings">
+                            <span wire:loading.remove wire:target="loadMoreBookings">Load more</span>
+                            <span class="bookings-load-more-loading" wire:loading.inline-flex
+                                wire:target="loadMoreBookings">
+                                <span class="bookings-load-more-spinner" aria-hidden="true"></span>
+                            </span>
+                        </button>
+                    </div>
+                @endif
+            @endif
+
+            @if ($activeStatus === 'confirmed')
+                <table class="bookings-table confirmed-bookings-table">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Appointment Details</th>
+                            <th>Pet</th>
+                            <th>Service Type</th>
+                            <th>Owner</th>
+                            <th>Location</th>
+                            <th>Staff</th>
+                            <th class="confirmed-action-col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody wire:key="bookings-table-confirmed" class="bookings-table-body">
+                        @php
+                            $confirmedBookings = $bookings->where('booking_status', 'confirmed')->values();
+                            $visibleConfirmedBookings = $confirmedBookings->take($visibleRows);
+                        @endphp
+                        @forelse ($visibleConfirmedBookings as $booking)
+                            @php
+                                $petNames = $booking->pets->pluck('name')->filter()->values()->all();
+                                $petTypes = $booking->pets->pluck('pet_type')->filter()->unique()->values()->all();
+                                $petName = $petNames[0] ?? 'N/A';
+                                $petMore = count($petNames) > 1 ? '+' . (count($petNames) - 1) : '';
+                                $petType = $petTypes[0] ?? null;
+
+                                $appointmentDate = optional($booking->date)->format('d/m/y');
+                                $appointmentTimeRaw = (string) $booking->time;
+                                $appointmentTime = $appointmentTimeRaw;
+
+                                if (str_contains($appointmentTimeRaw, '-')) {
+                                    $parts = preg_split('/\s*-\s*/', $appointmentTimeRaw, 2);
+                                    $startPart = $parts[0] ?? '';
+                                    $endPart = $parts[1] ?? '';
+                                    preg_match('/(\d{1,2}:\d{2})/', $startPart, $mStart);
+                                    preg_match('/(\d{1,2}:\d{2})/', $endPart, $mEnd);
+
+                                    if (!empty($mStart[1]) && !empty($mEnd[1])) {
+                                        try {
+                                            $startDt = new DateTime($mStart[1]);
+                                            $endDt = new DateTime($mEnd[1]);
+                                            if ($endDt < $startDt) {
+                                                $endDt->modify('+1 day');
+                                            }
+                                            $durationMinutes = (int) max(
+                                                0,
+                                                ($endDt->getTimestamp() - $startDt->getTimestamp()) / 60,
+                                            );
+                                            $durationLabel =
+                                                '(' .
+                                                (int) floor($durationMinutes / 60) .
+                                                'hr' .
+                                                ($durationMinutes % 60 ? ' ' . $durationMinutes % 60 . 'm' : '') .
+                                                ')';
+                                            $appointmentTime =
+                                                $startDt->format('H:i') .
+                                                ' - ' .
+                                                $endDt->format('H:i') .
+                                                ' ' .
+                                                strtolower($endDt->format('a')) .
+                                                ' ' .
+                                                $durationLabel;
+                                        } catch (Throwable $e) {
+                                            $appointmentTime = $appointmentTimeRaw;
+                                        }
+                                    }
+                                }
+
+                                $locationLabel = strtolower((string) ($booking->visit_type ?? ''));
+                                $locationLabel = str_replace('_', ' ', $locationLabel);
+                                $locationLabel =
+                                    $locationLabel === 'home' || $locationLabel === 'home visit'
+                                        ? 'Home Visit'
+                                        : ($locationLabel === 'salon' || $locationLabel === 'salon visit'
+                                            ? 'Salon Visit'
+                                            : ucfirst($locationLabel ?: 'N/A'));
+                            @endphp
+                            <tr wire:key="booking-row-confirmed-{{ $booking->id }}">
+                                <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
+                                <td>
+                                    <div class="confirmed-appointment-cell">
+                                        <div>{{ $appointmentDate }}</div>
+                                        <div>{{ $appointmentTime }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="filtered-pet-cell">
+                                        <span class="pending-pet-name">{{ $petName }}</span>
+                                        <span>
+                                            @if ($petType)
+                                                <span class="pending-pet-type">{{ $petType }}</span>
+                                            @endif
+                                            @if ($petMore)
+                                                <span class="pending-pet-more">{{ $petMore }}</span>
+                                            @endif
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>{{ $booking->service }}</td>
+                                <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
+                                <td>{{ $locationLabel }}</td>
+                                <td>—</td>
+                                <td class="confirmed-action-col">
+                                    <div class="confirmed-action-cell" x-data="{
+                                        rowId: {{ $booking->id }},
+                                        openMore: false,
+                                        menuLeft: 8,
+                                        menuTop: 8,
+                                        repositionMore() {
+                                            const rect = $refs.moreBtn.getBoundingClientRect();
+                                            const menuWidth = 210;
+                                            this.menuLeft = Math.min(Math.max(8, rect.left), window.innerWidth - menuWidth - 8);
+                                            this.menuTop = Math.max(8, rect.bottom + 8);
+                                        },
+                                        toggleMore() {
+                                            if (!this.openMore) {
+                                                window.dispatchEvent(new CustomEvent('confirmed-more-opened', { detail: { id: this.rowId } }));
+                                                this.repositionMore();
+                                            }
+                                            this.openMore = !this.openMore;
+                                        }
+                                    }"
+                                        :class="{ 'is-open': openMore }"
+                                        @confirmed-more-opened.window="if (($event.detail?.id ?? null) !== rowId) { openMore = false }"
+                                        @keydown.escape.window="openMore = false"
+                                        @resize.window="if (openMore) repositionMore()"
+                                        @scroll.window="if (openMore) repositionMore()"
+                                        @click.window="if (openMore && !$refs.moreBtn.contains($event.target) && (!$refs.moreMenu || !$refs.moreMenu.contains($event.target))) { openMore = false }">
+                                        <button type="button" class="confirmed-action-btn is-message"
+                                            aria-label="Message">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
+                                                viewBox="0 0 36 36" fill="none">
+                                                <rect width="36" height="36" rx="18" fill="#CBDCE8" />
+                                                <path
+                                                    d="M18.3955 11.25C22.4278 11.25 25.542 14.1354 25.542 17.5137C25.542 20.892 22.4278 23.7773 18.3955 23.7773H18.3945C17.6796 23.779 16.9672 23.6847 16.2764 23.4971L15.9951 23.4209L15.7373 23.5537C15.3001 23.7782 14.314 24.2099 12.6807 24.5547C12.9199 23.8218 13.1163 22.9878 13.1914 22.1934L13.2236 21.8457L12.9795 21.5967C11.8924 20.4903 11.25 19.0614 11.25 17.5137C11.25 14.1355 14.3634 11.2502 18.3955 11.25Z"
+                                                    stroke="white" stroke-width="1.5" />
+                                            </svg>
+                                        </button>
+                                        <button type="button" class="confirmed-action-btn is-reschedule"
+                                            @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
+                                            wire:click="openRescheduleModal({{ $booking->id }})"
+                                            aria-label="Reschedule">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
+                                                viewBox="0 0 36 36" fill="none">
+                                                <rect width="36" height="36" rx="18" fill="#FFC97A" />
+                                                <path d="M12.2312 25.4951V22.6123H15.114" stroke="white"
+                                                    stroke-width="1.5" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                                <path
+                                                    d="M25.3656 16.6225C25.6715 18.2545 25.4269 19.9419 24.6702 21.4199C23.9135 22.8978 22.6875 24.0827 21.1846 24.7887C19.6818 25.4946 17.987 25.6817 16.3664 25.3204C14.7458 24.9592 13.2909 24.0701 12.2301 22.7927M10.6283 19.3775C10.3224 17.7455 10.567 16.0581 11.3237 14.5801C12.0804 13.1022 13.3064 11.9173 14.8093 11.2113C16.3121 10.5054 18.0069 10.3183 19.6275 10.6796C21.2481 11.0408 22.703 11.9299 23.7638 13.2073"
+                                                    stroke="white" stroke-width="1.5" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                                <path
+                                                    d="M23.7626 10.5049V13.3877H20.8797M14.6142 18.3885C14.2062 18.3176 14.2062 17.7317 14.6142 17.6608C15.3364 17.5345 16.0047 17.1963 16.5342 16.6891C17.0637 16.182 17.4304 15.5289 17.5877 14.8128L17.6121 14.7001C17.7005 14.2967 18.2747 14.2944 18.3666 14.6966L18.3968 14.828C18.5592 15.5413 18.9289 16.1906 19.4594 16.6943C19.99 17.1979 20.6576 17.5334 21.3784 17.6585C21.7888 17.7294 21.7888 18.3187 21.3784 18.3908C20.6578 18.5158 19.9902 18.8511 19.4597 19.3546C18.9292 19.858 18.5594 20.5071 18.3968 21.2202L18.3666 21.3504C18.2747 21.7526 17.7005 21.7502 17.6121 21.3469L17.5889 21.2353C17.4314 20.5189 17.0643 19.8655 16.5344 19.3584C16.0045 18.8513 15.3357 18.5132 14.6131 18.3873"
+                                                    stroke="white" stroke-width="1.5" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                            </svg>
+                                        </button>
+                                        <button type="button" class="confirmed-action-btn is-cancel"
+                                            @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
+                                            wire:click="openDeclineModal({{ $booking->id }})" aria-label="Cancel">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
+                                                viewBox="0 0 36 36" fill="none">
                                                 <rect width="36" height="36" rx="18" fill="#FF6E6E" />
                                                 <path d="M13 23L23 13M13 13L23 23" stroke="white" stroke-width="1.5"
                                                     stroke-linecap="round" />
-                                            </svg></span>
-                                    </button>
-                                    <div class="pending-more-wrap">
-                                        <button type="button" class="pending-more-btn" aria-label="More actions"
-                                            x-ref="moreBtn" @click.stop="toggleMore()">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="5"
-                                                viewBox="0 0 25 5" fill="none">
-                                                <circle cx="2.5" cy="2.5" r="2.5" fill="#3B3731" />
-                                                <circle cx="12.5" cy="2.5" r="2.5" fill="#3B3731" />
-                                                <circle cx="22.5" cy="2.5" r="2.5" fill="#3B3731" />
                                             </svg>
                                         </button>
-
-                                        <template x-teleport="body">
-                                            <div class="pending-more-menu" x-cloak x-show="openMore" x-ref="moreMenu"
-                                                x-transition.opacity.duration.120ms
-                                                :style="`position: fixed; left: ${menuLeft}px; top: ${menuTop}px; z-index: 99999;`">
-                                                <button type="button" class="pending-more-menu-item">
-                                                    <span>Message</span>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="15"
-                                                        height="14" viewBox="0 0 15 14" fill="none">
-                                                        <path
-                                                            d="M7.5 0.75C11.3248 0.75 14.25 3.44368 14.25 6.56348C14.25 9.58586 11.5045 12.2084 7.85547 12.3691L7.5 12.377H7.49805C6.82132 12.3784 6.14689 12.2902 5.49316 12.1152L5.2168 12.041L4.96094 12.1709C4.55369 12.3769 3.6394 12.7709 2.12793 13.0908C2.34446 12.4211 2.52462 11.6686 2.59375 10.9482L2.62695 10.5967L2.37793 10.3467C1.35243 9.3185 0.750021 7.99417 0.75 6.56348C0.75 3.44368 3.67522 0.75 7.5 0.75Z"
-                                                            stroke="#CBDCE8" stroke-width="1.5" />
-                                                    </svg>
-                                                </button>
-                                                <button type="button" class="pending-more-menu-item"
-                                                    @click.stop="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); $wire.openRescheduleModal(rowId); openMore = false;">
-                                                    <span>Reschedule</span>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16"
-                                                        height="16" viewBox="0 0 16 16" fill="none">
-                                                        <path d="M2.36584 14.7456V12.0549H5.05648" stroke="#FFC97A"
-                                                            stroke-width="1.5" stroke-linecap="round"
-                                                            stroke-linejoin="round" />
-                                                        <path
-                                                            d="M14.6246 6.46435C14.91 7.98755 14.6817 9.56243 13.9755 10.9419C13.2692 12.3213 12.125 13.4272 10.7223 14.0861C9.31964 14.745 7.7379 14.9196 6.2253 14.5824C4.7127 14.2452 3.35484 13.4154 2.36479 12.2232M0.86975 9.03565C0.58427 7.51245 0.812567 5.93757 1.51882 4.55813C2.22507 3.1787 3.36931 2.07277 4.77199 1.41388C6.17467 0.754998 7.7564 0.580442 9.269 0.917607C10.7816 1.25477 12.1395 2.08458 13.1295 3.27681"
-                                                            stroke="#FFC97A" stroke-width="1.5"
-                                                            stroke-linecap="round" stroke-linejoin="round" />
-                                                        <path
-                                                            d="M13.1284 0.754517V3.44515H10.4377M4.58993 8.11254C4.20912 8.04636 4.20912 7.49956 4.58993 7.43337C5.26397 7.31547 5.88773 6.9998 6.3819 6.52649C6.87608 6.05318 7.21834 5.44361 7.36519 4.77528L7.38798 4.67005C7.47043 4.29357 8.00639 4.2914 8.0921 4.66679L8.12031 4.78939C8.27185 5.45513 8.61692 6.06118 9.1121 6.53126C9.60728 7.00135 10.2304 7.31446 10.9032 7.4312C11.2861 7.49738 11.2861 8.04745 10.9032 8.11471C10.2306 8.23138 9.60753 8.54433 9.11236 9.01421C8.6172 9.48409 8.27204 10.0899 8.12031 10.7554L8.0921 10.877C8.00639 11.2523 7.47043 11.2502 7.38798 10.8737L7.36628 10.7695C7.21928 10.1009 6.87669 9.49114 6.3821 9.0178C5.88751 8.54446 5.26328 8.22897 4.58885 8.11146"
-                                                            stroke="#FFC97A" stroke-width="1.5"
-                                                            stroke-linecap="round" stroke-linejoin="round" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr wire:key="booking-row-{{ $activeStatus }}-empty">
-                            <td colspan="8" class="empty-bookings">No pending bookings found.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        @endif
-
-        @if ($activeStatus === 'confirmed')
-            <table class="bookings-table confirmed-bookings-table">
-                <thead>
-                    <tr>
-                        <th>Booking ID</th>
-                        <th>Appointment Details</th>
-                        <th>Pet</th>
-                        <th>Service Type</th>
-                        <th>Owner</th>
-                        <th>Location</th>
-                        <th>Staff</th>
-                        <th class="confirmed-action-col">Action</th>
-                    </tr>
-                </thead>
-                <tbody wire:key="bookings-table-confirmed" class="bookings-table-body">
-                    @forelse ($bookings->where('booking_status', 'confirmed') as $booking)
-                        @php
-                            $petNames = $booking->pets->pluck('name')->filter()->values()->all();
-                            $petTypes = $booking->pets->pluck('pet_type')->filter()->unique()->values()->all();
-                            $petName = $petNames[0] ?? 'N/A';
-                            $petMore = count($petNames) > 1 ? '+' . (count($petNames) - 1) : '';
-                            $petType = $petTypes[0] ?? null;
-
-                            $appointmentDate = optional($booking->date)->format('d/m/y');
-                            $appointmentTimeRaw = (string) $booking->time;
-                            $appointmentTime = $appointmentTimeRaw;
-
-                            if (str_contains($appointmentTimeRaw, '-')) {
-                                $parts = preg_split('/\s*-\s*/', $appointmentTimeRaw, 2);
-                                $startPart = $parts[0] ?? '';
-                                $endPart = $parts[1] ?? '';
-                                preg_match('/(\d{1,2}:\d{2})/', $startPart, $mStart);
-                                preg_match('/(\d{1,2}:\d{2})/', $endPart, $mEnd);
-
-                                if (!empty($mStart[1]) && !empty($mEnd[1])) {
-                                    try {
-                                        $startDt = new DateTime($mStart[1]);
-                                        $endDt = new DateTime($mEnd[1]);
-                                        if ($endDt < $startDt) {
-                                            $endDt->modify('+1 day');
-                                        }
-                                        $durationMinutes = (int) max(
-                                            0,
-                                            ($endDt->getTimestamp() - $startDt->getTimestamp()) / 60,
-                                        );
-                                        $durationLabel =
-                                            '(' .
-                                            (int) floor($durationMinutes / 60) .
-                                            'hr' .
-                                            ($durationMinutes % 60 ? ' ' . $durationMinutes % 60 . 'm' : '') .
-                                            ')';
-                                        $appointmentTime =
-                                            $startDt->format('H:i') .
-                                            ' - ' .
-                                            $endDt->format('H:i') .
-                                            ' ' .
-                                            strtolower($endDt->format('a')) .
-                                            ' ' .
-                                            $durationLabel;
-                                    } catch (Throwable $e) {
-                                        $appointmentTime = $appointmentTimeRaw;
-                                    }
-                                }
-                            }
-
-                            $locationLabel = strtolower((string) ($booking->visit_type ?? ''));
-                            $locationLabel = str_replace('_', ' ', $locationLabel);
-                            $locationLabel =
-                                $locationLabel === 'home' || $locationLabel === 'home visit'
-                                    ? 'Home Visit'
-                                    : ($locationLabel === 'salon' || $locationLabel === 'salon visit'
-                                        ? 'Salon Visit'
-                                        : ucfirst($locationLabel ?: 'N/A'));
-                        @endphp
-                        <tr wire:key="booking-row-confirmed-{{ $booking->id }}">
-                            <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
-                            <td>
-                                <div class="confirmed-appointment-cell">
-                                    <div>{{ $appointmentDate }}</div>
-                                    <div>{{ $appointmentTime }}</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="filtered-pet-cell">
-                                    <span class="pending-pet-name">{{ $petName }}</span>
-                                    <span>
-                                        @if ($petType)
-                                            <span class="pending-pet-type">{{ $petType }}</span>
-                                        @endif
-                                        @if ($petMore)
-                                            <span class="pending-pet-more">{{ $petMore }}</span>
-                                        @endif
-                                    </span>
-                                </div>
-                            </td>
-                            <td>{{ $booking->service }}</td>
-                            <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
-                            <td>{{ $locationLabel }}</td>
-                            <td>—</td>
-                            <td class="confirmed-action-col">
-                                <div class="confirmed-action-cell" x-data="{
-                                    rowId: {{ $booking->id }},
-                                    openMore: false,
-                                    menuLeft: 8,
-                                    menuTop: 8,
-                                    repositionMore() {
-                                        const rect = $refs.moreBtn.getBoundingClientRect();
-                                        const menuWidth = 210;
-                                        this.menuLeft = Math.min(Math.max(8, rect.left), window.innerWidth - menuWidth - 8);
-                                        this.menuTop = Math.max(8, rect.bottom + 8);
-                                    },
-                                    toggleMore() {
-                                        if (!this.openMore) {
-                                            window.dispatchEvent(new CustomEvent('confirmed-more-opened', { detail: { id: this.rowId } }));
-                                            this.repositionMore();
-                                        }
-                                        this.openMore = !this.openMore;
-                                    }
-                                }"
-                                    :class="{ 'is-open': openMore }"
-                                    @confirmed-more-opened.window="if (($event.detail?.id ?? null) !== rowId) { openMore = false }"
-                                    @keydown.escape.window="openMore = false"
-                                    @resize.window="if (openMore) repositionMore()"
-                                    @scroll.window="if (openMore) repositionMore()"
-                                    @click.window="if (openMore && !$refs.moreBtn.contains($event.target) && (!$refs.moreMenu || !$refs.moreMenu.contains($event.target))) { openMore = false }">
-                                    <button type="button" class="confirmed-action-btn is-message"
-                                        aria-label="Message">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
-                                            viewBox="0 0 36 36" fill="none">
-                                            <rect width="36" height="36" rx="18" fill="#CBDCE8" />
-                                            <path
-                                                d="M18.3955 11.25C22.4278 11.25 25.542 14.1354 25.542 17.5137C25.542 20.892 22.4278 23.7773 18.3955 23.7773H18.3945C17.6796 23.779 16.9672 23.6847 16.2764 23.4971L15.9951 23.4209L15.7373 23.5537C15.3001 23.7782 14.314 24.2099 12.6807 24.5547C12.9199 23.8218 13.1163 22.9878 13.1914 22.1934L13.2236 21.8457L12.9795 21.5967C11.8924 20.4903 11.25 19.0614 11.25 17.5137C11.25 14.1355 14.3634 11.2502 18.3955 11.25Z"
-                                                stroke="white" stroke-width="1.5" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" class="confirmed-action-btn is-reschedule"
-                                        @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                                        wire:click="openRescheduleModal({{ $booking->id }})"
-                                        aria-label="Reschedule">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
-                                            viewBox="0 0 36 36" fill="none">
-                                            <rect width="36" height="36" rx="18" fill="#FFC97A" />
-                                            <path d="M12.2312 25.4951V22.6123H15.114" stroke="white"
-                                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                            <path
-                                                d="M25.3656 16.6225C25.6715 18.2545 25.4269 19.9419 24.6702 21.4199C23.9135 22.8978 22.6875 24.0827 21.1846 24.7887C19.6818 25.4946 17.987 25.6817 16.3664 25.3204C14.7458 24.9592 13.2909 24.0701 12.2301 22.7927M10.6283 19.3775C10.3224 17.7455 10.567 16.0581 11.3237 14.5801C12.0804 13.1022 13.3064 11.9173 14.8093 11.2113C16.3121 10.5054 18.0069 10.3183 19.6275 10.6796C21.2481 11.0408 22.703 11.9299 23.7638 13.2073"
-                                                stroke="white" stroke-width="1.5" stroke-linecap="round"
-                                                stroke-linejoin="round" />
-                                            <path
-                                                d="M23.7626 10.5049V13.3877H20.8797M14.6142 18.3885C14.2062 18.3176 14.2062 17.7317 14.6142 17.6608C15.3364 17.5345 16.0047 17.1963 16.5342 16.6891C17.0637 16.182 17.4304 15.5289 17.5877 14.8128L17.6121 14.7001C17.7005 14.2967 18.2747 14.2944 18.3666 14.6966L18.3968 14.828C18.5592 15.5413 18.9289 16.1906 19.4594 16.6943C19.99 17.1979 20.6576 17.5334 21.3784 17.6585C21.7888 17.7294 21.7888 18.3187 21.3784 18.3908C20.6578 18.5158 19.9902 18.8511 19.4597 19.3546C18.9292 19.858 18.5594 20.5071 18.3968 21.2202L18.3666 21.3504C18.2747 21.7526 17.7005 21.7502 17.6121 21.3469L17.5889 21.2353C17.4314 20.5189 17.0643 19.8655 16.5344 19.3584C16.0045 18.8513 15.3357 18.5132 14.6131 18.3873"
-                                                stroke="white" stroke-width="1.5" stroke-linecap="round"
-                                                stroke-linejoin="round" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" class="confirmed-action-btn is-cancel"
-                                        @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                                        wire:click="openDeclineModal({{ $booking->id }})" aria-label="Cancel">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
-                                            viewBox="0 0 36 36" fill="none">
-                                            <rect width="36" height="36" rx="18" fill="#FF6E6E" />
-                                            <path d="M13 23L23 13M13 13L23 23" stroke="white" stroke-width="1.5"
-                                                stroke-linecap="round" />
-                                        </svg>
-                                    </button>
-                                    {{-- <button type="button" class="confirmed-more-btn" aria-label="More"
+                                        {{-- <button type="button" class="confirmed-more-btn" aria-label="More"
                                         x-ref="moreBtn" @click.stop="toggleMore()">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="25" height="5"
                                             viewBox="0 0 25 5" fill="none">
@@ -911,85 +936,117 @@ new class extends Component {
                                             </button>
                                         </div>
                                     </template> --}}
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="empty-bookings">No confirmed bookings found.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="empty-bookings">No confirmed bookings found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+                @if ($confirmedBookings->count() > $visibleRows)
+                    <div class="bookings-load-more-wrap">
+                        <button type="button" class="bookings-load-more-btn" wire:click="loadMoreBookings"
+                            wire:loading.attr="disabled" wire:target="loadMoreBookings">
+                            <span wire:loading.remove wire:target="loadMoreBookings">Load more</span>
+                            <span class="bookings-load-more-loading" wire:loading.inline-flex
+                                wire:target="loadMoreBookings">
+                                <span class="bookings-load-more-spinner" aria-hidden="true"></span>
+                            </span>
+                        </button>
+                    </div>
+                @endif
+            @endif
 
-        @if ($activeStatus !== 'pending' && $activeStatus !== 'confirmed')
-            <table class="bookings-table">
-                <thead>
-                    <tr>
-                        <th>Booking ID</th>
-                        <th>Owner</th>
-                        <th>Pet</th>
-                        <th>Service Type</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Amount</th>
-                        <th class="view-col">
-                            <span class="view-col-inner">View</span>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody wire:key="bookings-table-{{ $activeStatus }}" class="bookings-table-body">
-                    @forelse (($activeStatus === 'all' ? $bookings : $bookings->where('booking_status', $activeStatus)) as $booking)
+            @if ($activeStatus !== 'pending' && $activeStatus !== 'confirmed')
+                <table class="bookings-table">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Owner</th>
+                            <th>Pet</th>
+                            <th>Service Type</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Amount</th>
+                            <th class="view-col">
+                                <span class="view-col-inner">View</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody wire:key="bookings-table-{{ $activeStatus }}" class="bookings-table-body">
                         @php
-                            $firstPet = $booking->pets->first();
-                            $petName = $firstPet->name ?? 'N/A';
-                            $petType = $firstPet->pet_type ?? null;
+                            $filteredBookings = ($activeStatus === 'all'
+                                ? $bookings
+                                : $bookings->where('booking_status', $activeStatus)
+                            )->values();
+                            $visibleFilteredBookings = $filteredBookings->take($visibleRows);
                         @endphp
-                        <tr>
-                            <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
-                            <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
-                            <td>
-                                <div class="pet-name-wrap">
-                                    <span class="pet-name">{{ $petName }}</span>
-                                    @if ($petType)
-                                        <span class="pet-type">{{ $petType }}</span>
-                                    @endif
-                                </div>
-                            </td>
-                            <td>{{ $booking->service }}</td>
-                            <td>{{ optional($booking->date)->format('d/m/y') }}</td>
-                            <td>
-                                <span class="status-chip {{ $booking->booking_status }}">
-                                    {{ ucfirst($booking->booking_status) }}
-                                </span>
-                            </td>
-                            <td>£{{ number_format((float) $booking->amount, 2) }}</td>
-                            <td class="view-col">
-                                <div class="view-col-inner">
-                                    <button type="button" class="view-btn" aria-label="View booking">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="19" height="13"
-                                            viewBox="0 0 19 13" fill="none">
-                                            <path
-                                                d="M9.49609 12C11.4291 12 12.9961 10.433 12.9961 8.5C12.9961 6.567 11.4291 5 9.49609 5C7.5631 5 5.99609 6.567 5.99609 8.5C5.99609 10.433 7.5631 12 9.49609 12Z"
-                                                stroke="black" />
-                                            <path
-                                                d="M18.4961 8.5C18.4961 8.5 17.4961 0.5 9.49609 0.5C1.49609 0.5 0.496094 8.5 0.496094 8.5"
-                                                stroke="black" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="empty-bookings">No bookings found.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        @endif
-    </div>
+                        @forelse ($visibleFilteredBookings as $booking)
+                            @php
+                                $firstPet = $booking->pets->first();
+                                $petName = $firstPet->name ?? 'N/A';
+                                $petType = $firstPet->pet_type ?? null;
+                            @endphp
+                            <tr>
+                                <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
+                                <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
+                                <td>
+                                    <div class="pet-name-wrap">
+                                        <span class="pet-name">{{ $petName }}</span>
+                                        @if ($petType)
+                                            <span class="pet-type">{{ $petType }}</span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>{{ $booking->service }}</td>
+                                <td>{{ optional($booking->date)->format('d/m/y') }}</td>
+                                <td>
+                                    <span class="status-chip {{ $booking->booking_status }}">
+                                        {{ ucfirst($booking->booking_status) }}
+                                    </span>
+                                </td>
+                                <td>£{{ number_format((float) $booking->amount, 2) }}</td>
+                                <td class="view-col">
+                                    <div class="view-col-inner">
+                                        <button type="button" class="view-btn" aria-label="View booking">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="13"
+                                                viewBox="0 0 19 13" fill="none">
+                                                <path
+                                                    d="M9.49609 12C11.4291 12 12.9961 10.433 12.9961 8.5C12.9961 6.567 11.4291 5 9.49609 5C7.5631 5 5.99609 6.567 5.99609 8.5C5.99609 10.433 7.5631 12 9.49609 12Z"
+                                                    stroke="black" />
+                                                <path
+                                                    d="M18.4961 8.5C18.4961 8.5 17.4961 0.5 9.49609 0.5C1.49609 0.5 0.496094 8.5 0.496094 8.5"
+                                                    stroke="black" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="empty-bookings">No bookings found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+                @if ($filteredBookings->count() > $visibleRows)
+                    <div class="bookings-load-more-wrap">
+                        <button type="button" class="bookings-load-more-btn" wire:click="loadMoreBookings"
+                            wire:loading.attr="disabled" wire:target="loadMoreBookings">
+                            <span wire:loading.remove wire:target="loadMoreBookings">Load more</span>
+                            <span class="bookings-load-more-loading" wire:loading.inline-flex
+                                wire:target="loadMoreBookings">
+                                <span class="bookings-load-more-spinner" aria-hidden="true"></span>
+                            </span>
+                        </button>
+                    </div>
+                @endif
+            @endif
+        </div>
+    @endif
 
     @php
         $declineBooking = $declineBookingId ? $bookings->firstWhere('id', $declineBookingId) : null;
@@ -1151,18 +1208,23 @@ new class extends Component {
                 $selectedYear === $rescheduleYear && $selectedMonth === $rescheduleMonth
                     ? (int) $rescheduleDateObj->format('j')
                     : 0;
-            $bookedDaysInMonth = $bookings
-                ->filter(function ($b) use ($rescheduleYear, $rescheduleMonth) {
-                    if (!$b->date || $b->booking_status === 'cancelled') {
-                        return false;
-                    }
-                    $ts = strtotime((string) $b->date);
-                    return (int) date('Y', $ts) === $rescheduleYear && (int) date('m', $ts) === $rescheduleMonth;
+            $bookedDaysByMonth = $bookings
+                ->filter(function ($b) {
+                    return $b->date && $b->booking_status !== 'cancelled';
                 })
-                ->map(fn($b) => (int) date('j', strtotime((string) $b->date)))
-                ->unique()
-                ->values()
+                ->groupBy(function ($b) {
+                    return date('Y-m', strtotime((string) $b->date));
+                })
+                ->map(function ($rows) {
+                    return $rows
+                        ->map(fn($b) => (int) date('j', strtotime((string) $b->date)))
+                        ->unique()
+                        ->sort()
+                        ->values()
+                        ->all();
+                })
                 ->all();
+            $bookedDaysInMonth = $bookedDaysByMonth[sprintf('%04d-%02d', $rescheduleYear, $rescheduleMonth)] ?? [];
             $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $rescheduleMonth, $rescheduleYear);
             $startDayN = (int) date('N', strtotime(sprintf('%04d-%02d-01', $rescheduleYear, $rescheduleMonth)));
             $prefixBlank = $startDayN - 1;
@@ -1203,12 +1265,16 @@ new class extends Component {
             }
         @endphp
         @teleport('body')
-            <div class="reschedule-modal-overlay" wire:keydown.escape="closeRescheduleModal">
+            <div class="reschedule-modal-overlay" wire:keydown.escape="closeRescheduleModal" x-data="reschedulePicker({
+                initialDate: @js($rescheduleSelectedDate),
+                initialTime: @js($rescheduleSelectedTime),
+                initialMonth: @js(sprintf('%04d-%02d-01', $rescheduleYear, $rescheduleMonth)),
+                bookedDaysByMonth: @js($bookedDaysByMonth)
+            })">
                 <div class="reschedule-modal-card" role="dialog" aria-modal="true"
                     aria-labelledby="reschedule-modal-title">
                     <div class="reschedule-modal-loading-bar" wire:loading.flex
-                        wire:target="prevRescheduleMonth,nextRescheduleMonth,selectRescheduleDay,selectRescheduleTime"
-                        aria-hidden="true">
+                        wire:target="confirmRescheduleBookingFromClient" aria-hidden="true">
                         <span class="reschedule-modal-loading-bar__sweep"></span>
                     </div>
                     <button type="button" class="reschedule-modal-close" wire:click="closeRescheduleModal"
@@ -1274,7 +1340,8 @@ new class extends Component {
                                             <path
                                                 d="M14.2139 12.3975C14.2139 12.6151 14.1236 12.8238 13.9629 12.9777C13.8021 13.1315 13.5841 13.218 13.3568 13.218C13.1295 13.218 12.9114 13.1315 12.7507 12.9777C12.59 12.8238 12.4997 12.6151 12.4997 12.3975C12.4997 12.1799 12.59 11.9712 12.7507 11.8173C12.9114 11.6634 13.1295 11.577 13.3568 11.577C13.5841 11.577 13.8021 11.6634 13.9629 11.8173C14.1236 11.9712 14.2139 12.1799 14.2139 12.3975ZM14.2139 9.11543C14.2139 9.33305 14.1236 9.54175 13.9629 9.69562C13.8021 9.8495 13.5841 9.93595 13.3568 9.93595C13.1295 9.93595 12.9114 9.8495 12.7507 9.69562C12.59 9.54175 12.4997 9.33305 12.4997 9.11543C12.4997 8.89782 12.59 8.68912 12.7507 8.53524C12.9114 8.38137 13.1295 8.29492 13.3568 8.29492C13.5841 8.29492 13.8021 8.38137 13.9629 8.53524C14.1236 8.68912 14.2139 8.89782 14.2139 9.11543ZM9.92822 12.3975C9.92822 12.6151 9.83792 12.8238 9.67717 12.9777C9.51643 13.1315 9.29841 13.218 9.07108 13.218C8.84375 13.218 8.62573 13.1315 8.46499 12.9777C8.30424 12.8238 8.21394 12.6151 8.21394 12.3975C8.21394 12.1799 8.30424 11.9712 8.46499 11.8173C8.62573 11.6634 8.84375 11.577 9.07108 11.577C9.29841 11.577 9.51643 11.6634 9.67717 11.8173C9.83792 11.9712 9.92822 12.1799 9.92822 12.3975ZM9.92822 9.11543C9.92822 9.33305 9.83792 9.54175 9.67717 9.69562C9.51643 9.8495 9.29841 9.93595 9.07108 9.93595C8.84375 9.93595 8.62573 9.8495 8.46499 9.69562C8.30424 9.54175 8.21394 9.33305 8.21394 9.11543C8.21394 8.89782 8.30424 8.68912 8.46499 8.53524C8.62573 8.38137 8.84375 8.29492 9.07108 8.29492C9.29841 8.29492 9.51643 8.38137 9.67717 8.53524C9.83792 8.68912 9.92822 8.89782 9.92822 9.11543ZM5.64251 12.3975C5.64251 12.6151 5.5522 12.8238 5.39146 12.9777C5.23071 13.1315 5.01269 13.218 4.78537 13.218C4.55804 13.218 4.34002 13.1315 4.17927 12.9777C4.01853 12.8238 3.92822 12.6151 3.92822 12.3975C3.92822 12.1799 4.01853 11.9712 4.17927 11.8173C4.34002 11.6634 4.55804 11.577 4.78537 11.577C5.01269 11.577 5.23071 11.6634 5.39146 11.8173C5.5522 11.9712 5.64251 12.1799 5.64251 12.3975ZM5.64251 9.11543C5.64251 9.33305 5.5522 9.54175 5.39146 9.69562C5.23071 9.8495 5.01269 9.93595 4.78537 9.93595C4.55804 9.93595 4.34002 9.8495 4.17927 9.69562C4.01853 9.54175 3.92822 9.33305 3.92822 9.11543C3.92822 8.89782 4.01853 8.68912 4.17927 8.53524C4.34002 8.38137 4.55804 8.29492 4.78537 8.29492C5.01269 8.29492 5.23071 8.38137 5.39146 8.53524C5.5522 8.68912 5.64251 8.89782 5.64251 9.11543Z"
                                                 fill="#3B3731" />
-                                        </svg>Date</span><strong>{{ $rescheduleDateCard }}</strong>
+                                        </svg>Date</span><strong
+                                        x-text="selectedDateLabel">{{ $rescheduleDateCard }}</strong>
                                 </div>
                                 <div class="reschedule-summary-divider" aria-hidden="true"></div>
                                 <div class="reschedule-summary-item">
@@ -1283,7 +1350,8 @@ new class extends Component {
                                                 stroke-width="1.5" />
                                             <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5"
                                                 stroke-linecap="round" />
-                                        </svg>Time</span><strong>{{ $rescheduleTimeCard }}</strong>
+                                        </svg>Time</span><strong
+                                        x-text="selectedTimeLabel">{{ $rescheduleTimeCard }}</strong>
                                 </div>
                                 <div class="reschedule-summary-divider" aria-hidden="true"></div>
                                 <div class="reschedule-summary-item">
@@ -1304,11 +1372,11 @@ new class extends Component {
                             <div class="reschedule-current-panel">
                                 <div class="reschedule-current-block">
                                     <span>Date</span>
-                                    <strong>{{ $rescheduleDateCard }}</strong>
+                                    <strong x-text="selectedDateLabel">{{ $rescheduleDateCard }}</strong>
                                 </div>
                                 <div class="reschedule-current-block">
                                     <span>Time</span>
-                                    <strong>{{ $rescheduleTimeCard }}</strong>
+                                    <strong x-text="selectedTimeLabel">{{ $rescheduleTimeCard }}</strong>
                                     @if ($rescheduleDurationLabel)
                                         <small>{{ $rescheduleDurationLabel }}</small>
                                     @endif
@@ -1317,32 +1385,23 @@ new class extends Component {
 
                             <div class="reschedule-calendar-panel">
                                 <div class="reschedule-calendar-head">
-                                    <button type="button" wire:click="prevRescheduleMonth"
+                                    <button type="button" @click="prevMonth()"
                                         aria-label="Previous month">&#10094;</button>
-                                    <strong>{{ $rescheduleMonthTitle }}</strong>
-                                    <button type="button" wire:click="nextRescheduleMonth"
-                                        aria-label="Next month">&#10095;</button>
+                                    <strong x-text="monthTitle">{{ $rescheduleMonthTitle }}</strong>
+                                    <button type="button" @click="nextMonth()" aria-label="Next month">&#10095;</button>
                                 </div>
                                 <div class="reschedule-weekdays">
                                     <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
                                 </div>
                                 <div class="reschedule-days-grid">
-                                    @for ($i = 0; $i < $prefixBlank; $i++)
+                                    <template x-for="blank in prefixBlank" :key="'blank-' + blank">
                                         <span class="is-empty"></span>
-                                    @endfor
-                                    @for ($day = 1; $day <= $daysInMonth; $day++)
-                                        @php
-                                            $dayClasses = [];
-                                            if (in_array($day, $bookedDaysInMonth, true)) {
-                                                $dayClasses[] = 'is-booked';
-                                            }
-                                            if ($day === $rescheduleSelectedDay) {
-                                                $dayClasses[] = 'is-selected';
-                                            }
-                                        @endphp
-                                        <button type="button" wire:click="selectRescheduleDay({{ $day }})"
-                                            class="{{ implode(' ', $dayClasses) }}">{{ $day }}</button>
-                                    @endfor
+                                    </template>
+                                    <template x-for="day in daysInMonth" :key="'day-' + day">
+                                        <button type="button" @click="selectDay(day)"
+                                            :class="{ 'is-booked': isBooked(day), 'is-selected': day === selectedDay }"
+                                            x-text="day"></button>
+                                    </template>
                                 </div>
                             </div>
 
@@ -1354,8 +1413,8 @@ new class extends Component {
                                             fill="#D8E8B7" />
                                     </svg>My availability</h5>
                                 @foreach ($rescheduleAvailability as $slot)
-                                    <button type="button" wire:click="selectRescheduleTime('{{ $slot }}')"
-                                        class="{{ $rescheduleSelectedTime === $slot ? 'is-active' : '' }}">{{ $slot }}</button>
+                                    <button type="button" @click="selectTime('{{ $slot }}')"
+                                        :class="{ 'is-active': selectedTime === '{{ $slot }}' }">{{ $slot }}</button>
                                 @endforeach
                             </div>
                         </div>
@@ -1364,11 +1423,12 @@ new class extends Component {
                     <div class="reschedule-actions">
                         <button type="button" class="reschedule-cancel-btn"
                             wire:click="closeRescheduleModal">Cancel</button>
-                        <button type="button" class="reschedule-confirm-btn" wire:click="confirmRescheduleBooking"
-                            wire:loading.attr="disabled" wire:target="confirmRescheduleBooking">
-                            <span wire:loading.remove wire:target="confirmRescheduleBooking">Reschedule</span>
+                        <button type="button" class="reschedule-confirm-btn"
+                            @click="$wire.confirmRescheduleBookingFromClient(selectedDate, selectedTime)"
+                            wire:loading.attr="disabled" wire:target="confirmRescheduleBookingFromClient">
+                            <span wire:loading.remove wire:target="confirmRescheduleBookingFromClient">Reschedule</span>
                             <span class="reschedule-btn-loading" wire:loading.inline-flex
-                                wire:target="confirmRescheduleBooking">
+                                wire:target="confirmRescheduleBookingFromClient">
                                 <span class="reschedule-btn-spinner" aria-hidden="true"></span>
                             </span>
                         </button>
@@ -1380,6 +1440,112 @@ new class extends Component {
 </section>
 
 <script>
+    if (!window.reschedulePicker) {
+        window.reschedulePicker = function(config) {
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+
+            const parseYmd = (ymd) => {
+                const [y, m, d] = (ymd || '').split('-').map(Number);
+                if (!y || !m || !d) return null;
+                return {
+                    y,
+                    m,
+                    d
+                };
+            };
+
+            return {
+                selectedDate: config.initialDate,
+                selectedTime: config.initialTime,
+                monthDate: config.initialMonth,
+                bookedDaysByMonth: config.bookedDaysByMonth || {},
+                get monthKey() {
+                    return this.monthDate.slice(0, 7);
+                },
+                get monthMeta() {
+                    const [y, m] = this.monthKey.split('-').map(Number);
+                    return {
+                        y,
+                        m
+                    };
+                },
+                get monthTitle() {
+                    const {
+                        y,
+                        m
+                    } = this.monthMeta;
+                    return `${monthNames[m - 1]} ${y}`;
+                },
+                get daysInMonth() {
+                    const {
+                        y,
+                        m
+                    } = this.monthMeta;
+                    return new Date(y, m, 0).getDate();
+                },
+                get prefixBlank() {
+                    const {
+                        y,
+                        m
+                    } = this.monthMeta;
+                    const mondayFirst = (new Date(y, m - 1, 1).getDay() + 6) % 7;
+                    return Array.from({
+                        length: mondayFirst
+                    }, (_, i) => i);
+                },
+                get selectedDay() {
+                    const parsed = parseYmd(this.selectedDate);
+                    if (!parsed) return 0;
+                    const {
+                        y,
+                        m
+                    } = this.monthMeta;
+                    return parsed.y === y && parsed.m === m ? parsed.d : 0;
+                },
+                get selectedDateLabel() {
+                    const parsed = parseYmd(this.selectedDate);
+                    if (!parsed) return 'N/A';
+                    return `${String(parsed.d).padStart(2, '0')}/${String(parsed.m).padStart(2, '0')}/${parsed.y}`;
+                },
+                get selectedTimeLabel() {
+                    return this.selectedTime || 'N/A';
+                },
+                prevMonth() {
+                    const {
+                        y,
+                        m
+                    } = this.monthMeta;
+                    const d = new Date(y, m - 2, 1);
+                    this.monthDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+                },
+                nextMonth() {
+                    const {
+                        y,
+                        m
+                    } = this.monthMeta;
+                    const d = new Date(y, m, 1);
+                    this.monthDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+                },
+                selectDay(day) {
+                    const {
+                        y,
+                        m
+                    } = this.monthMeta;
+                    this.selectedDate = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                },
+                selectTime(slot) {
+                    this.selectedTime = slot;
+                },
+                isBooked(day) {
+                    return (this.bookedDaysByMonth[this.monthKey] || []).includes(day);
+                }
+            };
+        };
+    }
+
     if (!window.__declineModalScrollLockBound) {
         window.__declineModalScrollLockBound = true;
 
@@ -1480,6 +1646,67 @@ new class extends Component {
         width: 100%;
         border-collapse: collapse;
         min-width: 980px;
+    }
+
+    .bookings-load-more-wrap {
+        display: flex;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+
+    .bookings-load-more-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 133px;
+        height: 48px;
+        background: #FFF;
+        color: #7a5d34;
+        border-radius: 75px;
+        border: 1px solid #3B3731;
+        color: #3B3731;
+        text-align: center;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        cursor: pointer;
+        transition: background-color 0.15s ease, transform 0.15s ease;
+    }
+
+    .bookings-load-more-btn:hover {
+        background: #FFC97A;
+        color: #FFF;
+        border: 1px solid #FFC97A;
+        transform: translateY(-1px);
+    }
+
+    .bookings-load-more-btn[disabled] {
+        opacity: 0.9;
+        cursor: wait;
+        transform: none;
+    }
+
+    .bookings-load-more-loading {
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .bookings-load-more-spinner {
+        width: 18px;
+        height: 18px;
+        border-radius: 9999px;
+        border: 2px solid #3B3731;
+        border-top-color: transparent;
+        animation: bookings-load-more-spin 0.7s linear infinite;
+    }
+
+    @keyframes bookings-load-more-spin {
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     .bookings-table th,
