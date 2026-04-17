@@ -1,3 +1,5 @@
+@extends('layouts.app')
+
 @section('styles')
     <style>
         * {
@@ -249,7 +251,7 @@
     </style>
 @endsection
 
-
+@section('content')
     <!-- Business Landing Content -->
 
     <div>
@@ -433,3 +435,4 @@
         </section>
 
     </div>
+@endsection
