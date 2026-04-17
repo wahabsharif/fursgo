@@ -17,12 +17,18 @@ new class extends Component {
     public ?string $rescheduleSelectedTime = null;
     public int $rescheduleDurationMinutes = 60;
     private array $allowedStatuses = ['all', 'pending', 'confirmed', 'completed', 'cancelled'];
+    private array $reschedulableStatuses = ['pending', 'confirmed'];
+
+    private function scopedBookingQuery(int $bookingId)
+    {
+        return Booking::query()->where('goormer_spacer_id', Auth::id())->where('id', $bookingId);
+    }
 
     public function refreshBookingsAndCounts(): void
     {
         $profileId = Auth::id();
 
-        $this->bookings = Booking::with(['petOwner:id,name', 'pets:id,name,pet_type,photo'])
+        $this->bookings = Booking::with(['petOwner:id,name', 'pets:id,name,pet_type,breed,photo'])
             ->where('goormer_spacer_id', $profileId)
             ->latest('date')
             ->latest('id')
@@ -76,9 +82,7 @@ new class extends Component {
 
     public function acceptBooking(int $bookingId): void
     {
-        $profileId = Auth::id();
-
-        $booking = Booking::query()->where('goormer_spacer_id', $profileId)->where('id', $bookingId)->firstOrFail();
+        $booking = $this->scopedBookingQuery($bookingId)->firstOrFail();
 
         if ($booking->booking_status !== 'pending') {
             return;
@@ -90,11 +94,9 @@ new class extends Component {
 
     public function cancelBooking(int $bookingId): void
     {
-        $profileId = Auth::id();
+        $booking = $this->scopedBookingQuery($bookingId)->firstOrFail();
 
-        $booking = Booking::query()->where('goormer_spacer_id', $profileId)->where('id', $bookingId)->firstOrFail();
-
-        if (!in_array($booking->booking_status, ['pending', 'confirmed'], true)) {
+        if (!in_array($booking->booking_status, $this->reschedulableStatuses, true)) {
             return;
         }
 
@@ -104,12 +106,7 @@ new class extends Component {
 
     public function openDeclineModal(int $bookingId): void
     {
-        $profileId = Auth::id();
-        $bookingExists = Booking::query()
-            ->where('goormer_spacer_id', $profileId)
-            ->where('id', $bookingId)
-            ->whereIn('booking_status', ['pending', 'confirmed'])
-            ->exists();
+        $bookingExists = $this->scopedBookingQuery($bookingId)->whereIn('booking_status', $this->reschedulableStatuses)->exists();
 
         if (!$bookingExists) {
             $this->dispatch('bookings-tabs-loading-end');
@@ -140,14 +137,10 @@ new class extends Component {
 
     public function openRescheduleModal(int $bookingId): void
     {
-        $profileId = Auth::id();
-        $booking = Booking::query()
-            ->where('goormer_spacer_id', $profileId)
-            ->where('id', $bookingId)
-            ->whereIn('booking_status', ['pending', 'confirmed'])
-            ->first();
+        $booking = $this->scopedBookingQuery($bookingId)->whereIn('booking_status', $this->reschedulableStatuses)->first();
 
         if (!$booking) {
+            $this->dispatch('bookings-tabs-loading-end');
             return;
         }
 
@@ -183,6 +176,7 @@ new class extends Component {
             }
         }
 
+        $this->dispatch('bookings-tabs-loading-end');
         $this->dispatch('reschedule-modal-opened');
     }
 
@@ -231,12 +225,7 @@ new class extends Component {
             return;
         }
 
-        $profileId = Auth::id();
-        $booking = Booking::query()
-            ->where('goormer_spacer_id', $profileId)
-            ->where('id', $this->rescheduleBookingId)
-            ->whereIn('booking_status', ['pending', 'confirmed'])
-            ->first();
+        $booking = $this->scopedBookingQuery($this->rescheduleBookingId)->whereIn('booking_status', $this->reschedulableStatuses)->first();
 
         if (!$booking) {
             $this->closeRescheduleModal();
@@ -371,6 +360,109 @@ new class extends Component {
         @endif
     </div>
 
+    @php
+        $extractPetMeta = function ($booking) {
+            $petNames = $booking->pets->pluck('name')->filter()->values()->all();
+            $petTypes = $booking->pets->pluck('pet_type')->filter()->unique()->values()->all();
+
+            return [
+                'name' => $petNames[0] ?? 'N/A',
+                'type' => $petTypes[0] ?? null,
+                'more' => count($petNames) > 1 ? '+' . (count($petNames) - 1) : '',
+            ];
+        };
+
+        $formatPendingTimeRange = function (string $raw): string {
+            if (!str_contains($raw, '-')) {
+                return $raw;
+            }
+
+            $timeParts = preg_split('/\s*-\s*/', $raw, 2);
+            $startPart = $timeParts[0] ?? '';
+            $endPart = $timeParts[1] ?? '';
+            preg_match('/(\d{1,2}:\d{2})/', $startPart, $mStart);
+            preg_match('/(\d{1,2}:\d{2})/', $endPart, $mEnd);
+            if (empty($mStart[1]) || empty($mEnd[1])) {
+                return $raw;
+            }
+
+            try {
+                $startDt = new DateTime($mStart[1]);
+                $endDt = new DateTime($mEnd[1]);
+                if ($endDt < $startDt) {
+                    $endDt->modify('+1 day');
+                }
+
+                $startHHMM = $startDt->format('H:i');
+                $endHHMM = $endDt->format('H:i');
+                $startMeridiem = strtolower($startDt->format('a'));
+                $endMeridiem = strtolower($endDt->format('a'));
+                $diffMinutes = max(0, ($endDt->getTimestamp() - $startDt->getTimestamp()) / 60);
+                $hours = (int) floor($diffMinutes / 60);
+                $minutes = (int) ($diffMinutes % 60);
+                $durationLabel = $minutes === 0 ? $hours . 'hr' : $hours . 'hr ' . $minutes . 'm';
+
+                if ($startMeridiem === $endMeridiem) {
+                    return $startHHMM . ' - ' . $endHHMM . ' ' . $startMeridiem . ' (' . $durationLabel . ')';
+                }
+
+                return $startDt->format('H:i a') . ' - ' . $endDt->format('H:i a') . ' (' . $durationLabel . ')';
+            } catch (Throwable $e) {
+                return $raw;
+            }
+        };
+
+        $formatConfirmedTimeRange = function (string $raw): string {
+            if (!str_contains($raw, '-')) {
+                return $raw;
+            }
+
+            $parts = preg_split('/\s*-\s*/', $raw, 2);
+            $startPart = $parts[0] ?? '';
+            $endPart = $parts[1] ?? '';
+            preg_match('/(\d{1,2}:\d{2})/', $startPart, $mStart);
+            preg_match('/(\d{1,2}:\d{2})/', $endPart, $mEnd);
+            if (empty($mStart[1]) || empty($mEnd[1])) {
+                return $raw;
+            }
+
+            try {
+                $startDt = new DateTime($mStart[1]);
+                $endDt = new DateTime($mEnd[1]);
+                if ($endDt < $startDt) {
+                    $endDt->modify('+1 day');
+                }
+                $durationMinutes = (int) max(0, ($endDt->getTimestamp() - $startDt->getTimestamp()) / 60);
+                $durationLabel =
+                    '(' .
+                    (int) floor($durationMinutes / 60) .
+                    'hr' .
+                    ($durationMinutes % 60 ? ' ' . $durationMinutes % 60 . 'm' : '') .
+                    ')';
+                return $startDt->format('H:i') .
+                    ' - ' .
+                    $endDt->format('H:i') .
+                    ' ' .
+                    strtolower($endDt->format('a')) .
+                    ' ' .
+                    $durationLabel;
+            } catch (Throwable $e) {
+                return $raw;
+            }
+        };
+
+        $formatLocationLabel = function (?string $visitType): string {
+            $label = str_replace('_', ' ', strtolower((string) $visitType));
+            if ($label === 'home' || $label === 'home visit') {
+                return 'Home Visit';
+            }
+            if ($label === 'salon' || $label === 'salon visit') {
+                return 'Salon Visit';
+            }
+            return ucfirst($label ?: 'N/A');
+        };
+    @endphp
+
     <div class="bookings-table-wrap">
         @if ($activeStatus === 'pending')
             <table class="bookings-table pending-bookings-table">
@@ -493,7 +585,7 @@ new class extends Component {
                             </td>
                             <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
                             <td>
-                                <div class="pending-pet-cell">
+                                <div class="filtered-pet-cell">
                                     <span class="pending-pet-name">{{ $petName }}</span>
                                     <span>
                                         @if ($petType)
@@ -585,7 +677,7 @@ new class extends Component {
                                                     </svg>
                                                 </button>
                                                 <button type="button" class="pending-more-menu-item"
-                                                    @click.stop="$wire.openRescheduleModal(rowId); openMore = false;">
+                                                    @click.stop="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); $wire.openRescheduleModal(rowId); openMore = false;">
                                                     <span>Reschedule</span>
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16"
                                                         height="16" viewBox="0 0 16 16" fill="none">
@@ -634,9 +726,11 @@ new class extends Component {
                 <tbody wire:key="bookings-table-confirmed" class="bookings-table-body">
                     @forelse ($bookings->where('booking_status', 'confirmed') as $booking)
                         @php
-                            $firstPet = $booking->pets->first();
-                            $petName = $firstPet->name ?? 'N/A';
-                            $petType = $firstPet->pet_type ?? null;
+                            $petNames = $booking->pets->pluck('name')->filter()->values()->all();
+                            $petTypes = $booking->pets->pluck('pet_type')->filter()->unique()->values()->all();
+                            $petName = $petNames[0] ?? 'N/A';
+                            $petMore = count($petNames) > 1 ? '+' . (count($petNames) - 1) : '';
+                            $petType = $petTypes[0] ?? null;
 
                             $appointmentDate = optional($booking->date)->format('d/m/y');
                             $appointmentTimeRaw = (string) $booking->time;
@@ -698,11 +792,16 @@ new class extends Component {
                                 </div>
                             </td>
                             <td>
-                                <div class="pet-name-wrap">
-                                    <span class="pet-name">{{ $petName }}</span>
-                                    @if ($petType)
-                                        <span class="pet-type">{{ $petType }}</span>
-                                    @endif
+                                <div class="filtered-pet-cell">
+                                    <span class="pending-pet-name">{{ $petName }}</span>
+                                    <span>
+                                        @if ($petType)
+                                            <span class="pending-pet-type">{{ $petType }}</span>
+                                        @endif
+                                        @if ($petMore)
+                                            <span class="pending-pet-more">{{ $petMore }}</span>
+                                        @endif
+                                    </span>
                                 </div>
                             </td>
                             <td>{{ $booking->service }}</td>
@@ -746,6 +845,7 @@ new class extends Component {
                                         </svg>
                                     </button>
                                     <button type="button" class="confirmed-action-btn is-reschedule"
+                                        @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
                                         wire:click="openRescheduleModal({{ $booking->id }})"
                                         aria-label="Reschedule">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
@@ -764,6 +864,7 @@ new class extends Component {
                                         </svg>
                                     </button>
                                     <button type="button" class="confirmed-action-btn is-cancel"
+                                        @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
                                         wire:click="openDeclineModal({{ $booking->id }})" aria-label="Cancel">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
                                             viewBox="0 0 36 36" fill="none">
@@ -772,7 +873,7 @@ new class extends Component {
                                                 stroke-linecap="round" />
                                         </svg>
                                     </button>
-                                    <button type="button" class="confirmed-more-btn" aria-label="More"
+                                    {{-- <button type="button" class="confirmed-more-btn" aria-label="More"
                                         x-ref="moreBtn" @click.stop="toggleMore()">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="25" height="5"
                                             viewBox="0 0 25 5" fill="none">
@@ -809,7 +910,7 @@ new class extends Component {
                                                 </svg>
                                             </button>
                                         </div>
-                                    </template>
+                                    </template> --}}
                                 </div>
                             </td>
                         </tr>
@@ -1011,6 +1112,14 @@ new class extends Component {
             $reschedulePet = $rescheduleBooking->pets->first();
             $reschedulePetName = $reschedulePet->name ?? 'N/A';
             $reschedulePetType = $reschedulePet->pet_type ?? 'N/A';
+            $reschedulePetBreed = $reschedulePet->breed ?? null;
+            $reschedulePetMeta =
+                $reschedulePetType !== 'N/A'
+                    ? ($reschedulePetBreed
+                        ? $reschedulePetType . ' (' . $reschedulePetBreed . ')'
+                        : $reschedulePetType)
+                    : ($reschedulePetBreed ?:
+                    'N/A');
             $reschedulePetPhotoRaw = trim((string) ($reschedulePet->photo ?? ''));
             $reschedulePetPhoto = null;
             if ($reschedulePetPhotoRaw !== '') {
@@ -1183,7 +1292,7 @@ new class extends Component {
                                             <path
                                                 d="M9 6.81579C6.43624 6.81579 4.26995 9.14463 3.57052 12.1358C3.2629 13.4512 3.72676 14.8474 4.86536 15.5034C5.76798 16.0234 7.11057 16.5 9 16.5C10.8894 16.5 12.2324 16.0234 13.135 15.5034C14.2736 14.8474 14.7371 13.4512 14.4295 12.1358C13.73 9.14421 11.5638 6.81579 9 6.81579ZM0.5 6.16063C0.5 7.32358 1.22452 8.5 2.11905 8.5C3.01357 8.5 3.7381 7.32358 3.7381 6.16063C3.7381 4.99768 3.01357 4.28947 2.11905 4.28947C1.22452 4.28947 0.5 4.99811 0.5 6.16063ZM17.5 6.16063C17.5 7.32358 16.7755 8.5 15.881 8.5C14.9864 8.5 14.2619 7.32358 14.2619 6.16063C14.2619 4.99768 14.9864 4.28947 15.881 4.28947C16.7755 4.28947 17.5 4.99811 17.5 6.16063ZM4.75 2.37116C4.75 3.53411 5.47452 4.71053 6.36905 4.71053C7.26357 4.71053 7.9881 3.53411 7.9881 2.37116C7.9881 1.20821 7.26357 0.5 6.36905 0.5C5.47452 0.5 4.75 1.20863 4.75 2.37116ZM13.25 2.37116C13.25 3.53411 12.5255 4.71053 11.631 4.71053C10.7364 4.71053 10.0119 3.53411 10.0119 2.37116C10.0119 1.20821 10.7364 0.5 11.631 0.5C12.5255 0.5 13.25 1.20863 13.25 2.37116Z"
                                                 stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>Other</span><strong>{{ $reschedulePetType }}</strong>
+                                        </svg>Other</span><strong>{{ $reschedulePetMeta }}</strong>
                                 </div>
                             </div>
                         </div>
@@ -1621,7 +1730,7 @@ new class extends Component {
         font-weight: 400;
     }
 
-    .pending-pet-cell {
+    .filtered-pet-cell {
         display: flex;
         flex-direction: column;
         flex-wrap: wrap;
@@ -2026,7 +2135,7 @@ new class extends Component {
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 4.5rem;
+        gap: 3.5rem;
     }
 
     .reschedule-pet-avatar {
