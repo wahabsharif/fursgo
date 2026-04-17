@@ -1,17 +1,48 @@
 @props(['variant' => null])
 
-<div x-data="{ mobileOpen: false }"
-    style="{{ $variant === 'dashboard' ? 'max-width: 12rem; margin: 0; padding: 0; width: 100%; position: relative;' : 'position: relative;' }}">
-    @php
-        $activeBgColor = '#FFC97A';
-        if (auth()->check()) {
-            $userType = auth()->user()->user_type;
-            if ($userType === 'space') {
-                $activeBgColor = '#FFA899';
-            }
+@php
+    $activeBgColor = '#FFC97A';
+    if (auth()->check()) {
+        $userType = auth()->user()->user_type;
+        if ($userType === 'space') {
+            $activeBgColor = '#FFA899';
         }
-    @endphp
+    }
 
+    $spacerId = auth('groomer_spacer')->id();
+    $bookingCounts = \App\Models\Booking::query()
+        ->when($spacerId, fn($query) => $query->where('goormer_spacer_id', $spacerId))
+        ->selectRaw('booking_status, COUNT(*) as total')
+        ->groupBy('booking_status')
+        ->pluck('total', 'booking_status');
+
+    $pendingCount = (int) ($bookingCounts['pending'] ?? 0);
+    $confirmedCount = (int) ($bookingCounts['confirmed'] ?? 0);
+    $completedCount = (int) ($bookingCounts['completed'] ?? 0);
+    $cancelledCount = (int) ($bookingCounts['cancelled'] ?? 0);
+@endphp
+
+<div x-data="{
+    mobileOpen: false,
+    bookingsOpen: false,
+    activeBookingStatus: '',
+    bookingCounts: {
+        pending: {{ $pendingCount }},
+        confirmed: {{ $confirmedCount }},
+        completed: {{ $completedCount }},
+        cancelled: {{ $cancelledCount }},
+    }
+}"
+    @booking-status-changed.window="activeBookingStatus = $event.detail.status; activeSection = 'bookings'; bookingsOpen = true"
+    @booking-counts-updated.window="
+        bookingCounts = {
+            pending: Number($event.detail?.counts?.pending ?? bookingCounts.pending),
+            confirmed: Number($event.detail?.counts?.confirmed ?? bookingCounts.confirmed),
+            completed: Number($event.detail?.counts?.completed ?? bookingCounts.completed),
+            cancelled: Number($event.detail?.counts?.cancelled ?? bookingCounts.cancelled),
+        }
+    "
+    style="{{ $variant === 'dashboard' ? 'max-width: 16rem; margin: 0; padding: 0; width: 100%; position: relative;' : 'position: relative;' }}">
     <style>
         :root {
             --sidebar-active-bg: {{ $activeBgColor }};
@@ -35,7 +66,8 @@
         <ul class="nav-list">
             <!-- Business Hub -->
             <li class="nav-item">
-                <a href="{{ route('dashboard') }}" @click.prevent="activeSection = 'business-hub'"
+                <a href="{{ route('dashboard') }}"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'business-hub'; bookingsOpen = false"
                     :class="{ 'active': activeSection === 'business-hub' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor" class="nav-icon">
@@ -50,7 +82,8 @@
 
             <!-- Bookings -->
             <li class="nav-item">
-                <a href="#" @click.prevent="activeSection = 'bookings'"
+                <a href="#"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = ''; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-filter-reset')"
                     :class="{ 'active': activeSection === 'bookings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14"
                         fill="none">
@@ -63,11 +96,55 @@
                     </svg>
                     <span class="nav-text">Bookings</span>
                 </a>
+                <ul x-show="bookingsOpen" x-transition:enter="bookings-transition-enter"
+                    x-transition:enter-start="bookings-transition-enter-start"
+                    x-transition:enter-end="bookings-transition-enter-end"
+                    x-transition:leave="bookings-transition-leave"
+                    x-transition:leave-start="bookings-transition-leave-start"
+                    x-transition:leave-end="bookings-transition-leave-end" class="booking-status-list">
+                    <li class="booking-status-item">
+                        <span class="booking-status-dot pending"></span>
+                        <button type="button" class="booking-status-trigger pending"
+                            :class="{ 'is-active': activeBookingStatus === 'pending' }"
+                            @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'pending'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'pending' })">
+                            Pending Requests <span class="booking-status-count"
+                                x-text="`(${bookingCounts.pending})`">({{ $pendingCount }})</span>
+                        </button>
+                    </li>
+                    <li class="booking-status-item">
+                        <span class="booking-status-dot confirmed"></span>
+                        <button type="button" class="booking-status-trigger confirmed"
+                            :class="{ 'is-active': activeBookingStatus === 'confirmed' }"
+                            @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'confirmed'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'confirmed' })">
+                            Confirmed Bookings <span class="booking-status-count"
+                                x-text="`(${bookingCounts.confirmed})`">({{ $confirmedCount }})</span>
+                        </button>
+                    </li>
+                    <li class="booking-status-item">
+                        <span class="booking-status-dot completed"></span>
+                        <button type="button" class="booking-status-trigger completed"
+                            :class="{ 'is-active': activeBookingStatus === 'completed' }"
+                            @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'completed'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'completed' })">
+                            Completed Bookings <span class="booking-status-count"
+                                x-text="`(${bookingCounts.completed})`">({{ $completedCount }})</span>
+                        </button>
+                    </li>
+                    <li class="booking-status-item">
+                        <span class="booking-status-dot cancelled"></span>
+                        <button type="button" class="booking-status-trigger cancelled"
+                            :class="{ 'is-active': activeBookingStatus === 'cancelled' }"
+                            @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'cancelled'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'cancelled' })">
+                            Cancelled Bookings <span class="booking-status-count"
+                                x-text="`(${bookingCounts.cancelled})`">({{ $cancelledCount }})</span>
+                        </button>
+                    </li>
+                </ul>
             </li>
 
             <!-- Availability -->
             <li class="nav-item">
-                <a href="#" @click.prevent="activeSection = 'availability'"
+                <a href="#"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'availability'; bookingsOpen = false"
                     :class="{ 'active': activeSection === 'availability' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 14 13"
                         fill="none">
@@ -86,7 +163,8 @@
 
             <!-- Services -->
             <li class="nav-item">
-                <a href="#" @click.prevent="activeSection = 'services'"
+                <a href="#"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; bookingsOpen = false"
                     :class="{ 'active': activeSection === 'services' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14"
                         fill="none">
@@ -103,7 +181,8 @@
 
             <!-- Clients -->
             <li class="nav-item">
-                <a href="#" @click.prevent="activeSection = 'clients'"
+                <a href="#"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'clients'; bookingsOpen = false"
                     :class="{ 'active': activeSection === 'clients' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="10" viewBox="0 0 14 10"
                         fill="none">
@@ -126,7 +205,8 @@
 
             <!-- Earnings -->
             <li class="nav-item">
-                <a href="#" @click.prevent="activeSection = 'earnings'"
+                <a href="#"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'earnings'; bookingsOpen = false"
                     :class="{ 'active': activeSection === 'earnings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="12" viewBox="0 0 14 12"
                         fill="none">
@@ -145,7 +225,8 @@
 
             <!-- Settings -->
             <li class="nav-item">
-                <a href="#" @click.prevent="activeSection = 'settings'"
+                <a href="#"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'settings'; bookingsOpen = false"
                     :class="{ 'active': activeSection === 'settings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
                         fill="none">
@@ -173,7 +254,7 @@
         /* Dashboard Layout */
         .dashboard-wrapper {
             display: flex;
-            gap: 2rem;
+            gap: 4rem;
             padding-top: 4rem;
             max-width: 110rem;
             margin: 0 auto;
@@ -221,6 +302,109 @@
 
         .nav-item {
             position: relative;
+        }
+
+        .booking-status-list {
+            list-style: none;
+            margin: 1rem 0.5rem;
+            padding: 0 0 0 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .bookings-transition-enter {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            transform-origin: top;
+        }
+
+        .bookings-transition-enter-start {
+            opacity: 0;
+            transform: translateY(-4px) scaleY(0.95);
+        }
+
+        .bookings-transition-enter-end {
+            opacity: 1;
+            transform: translateY(0) scaleY(1);
+        }
+
+        .bookings-transition-leave {
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform-origin: top;
+        }
+
+        .bookings-transition-leave-start {
+            opacity: 1;
+            transform: translateY(0) scaleY(1);
+        }
+
+        .bookings-transition-leave-end {
+            opacity: 0;
+            transform: translateY(-4px) scaleY(0.95);
+        }
+
+        .booking-status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .booking-status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 9999px;
+            flex-shrink: 0;
+        }
+
+        .booking-status-dot.pending {
+            background-color: #FFC97A;
+        }
+
+        .booking-status-dot.confirmed {
+            background: #D8E8B7;
+        }
+
+        .booking-status-dot.completed {
+            background: #CBDCE8;
+        }
+
+        .booking-status-dot.cancelled {
+            background: #FFA899;
+        }
+
+        .booking-status-text {
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .booking-status-trigger {
+            background: transparent;
+            border: 0;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+            cursor: pointer;
+            font-family: Lato;
+            font-size: 14px;
+            font-weight: 400;
+            color: #9D9B98;
+        }
+
+        .booking-status-trigger.is-active {
+            color: #000;
+        }
+
+        .booking-status-count {
+            color: #FF6E6E;
         }
 
         .nav-link {
