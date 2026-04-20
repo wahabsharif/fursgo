@@ -15,17 +15,20 @@ class Booking extends Model
         'date',
         'service',
         'amount',
+        'refund_amount',
         'extra_add_ons',
         'staff',
         'rating',
         'visit_type',
         'booking_status',
         'cancelled_by',
+        'refund_status',
     ];
 
     protected $casts = [
         'date' => 'date',
         'amount' => 'decimal:2',
+        'refund_amount' => 'decimal:2',
         'extra_add_ons' => 'array',
         'rating' => 'decimal:1',
     ];
