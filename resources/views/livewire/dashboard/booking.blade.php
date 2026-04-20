@@ -274,83 +274,46 @@ new class extends Component {
                     Pending Bookings ({{ $statusCounts['pending'] }})
                 </div>
 
-                <div class="booking-list-sort">
-                    <div class="sort-dropdown" x-data="{ open: false }" @keydown.escape.window="open = false">
-                        <button type="button" class="sort-trigger" @click="open = !open"
-                            aria-label="Sort pending bookings" :aria-expanded="open.toString()">
-                            <span>Sort</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="7" viewBox="0 0 13 7"
-                                fill="none">
-                                <path d="M11.9103 0.5L6.15684 6.25344L0.499989 0.596581" stroke="#A8A8A8"
-                                    stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </button>
-                        <div class="sort-menu" x-cloak x-show="open" @click.outside="open = false"
-                            x-transition.opacity.duration.100ms>
-                            <button type="button" class="sort-options"
-                                :class="{ 'is-active': @js($pendingSort) === 'latest_submitted' }"
-                                wire:click="setPendingSort('latest_submitted')"
-                                @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); open = false">
-                                <span>Recommended (default)</span>
-                                <span class="sort-indicator"></span>
-                            </button>
-                            <button type="button" class="sort-options"
-                                :class="{ 'is-active': @js($pendingSort) === 'oldest_submitted' }"
-                                wire:click="setPendingSort('oldest_submitted')"
-                                @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); open = false">
-                                <span>New to Old</span>
-                                <span class="sort-indicator"></span>
-                            </button>
-                            <button type="button" class="sort-options"
-                                :class="{ 'is-active': @js($pendingSort) === 'amount_low' }"
-                                wire:click="setPendingSort('amount_low')"
-                                @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); open = false">
-                                <span>Old to New</span>
-                                <span class="sort-indicator"></span>
-                            </button>
-                            <button type="button" class="sort-options"
-                                :class="{ 'is-active': @js($pendingSort) === 'amount_high' }"
-                                wire:click="setPendingSort('amount_high')"
-                                @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); open = false">
-                                <span>Price Descending</span>
-                                <span class="sort-indicator"></span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <x-dashboard.common.sort-dropdown :pending-sort="$pendingSort" />
             </div>
         @else
-            <div class="booking-pill-row">
-                @if ($activeStatus === 'all')
-                    <button type="button" wire:click="setActiveStatus('pending')" class="booking-pill pending">Pending
-                        Bookings ({{ $statusCounts['pending'] }})</button>
-                    <button type="button" wire:click="setActiveStatus('confirmed')"
-                        class="booking-pill confirmed">Confirmed
-                        Bookings ({{ $statusCounts['confirmed'] }})</button>
-                    <button type="button" wire:click="setActiveStatus('completed')"
-                        class="booking-pill completed">Completed
-                        Bookings ({{ $statusCounts['completed'] }})</button>
-                    <button type="button" wire:click="setActiveStatus('cancelled')"
-                        class="booking-pill cancelled">Cancelled
-                        Bookings ({{ $statusCounts['cancelled'] }})</button>
-                @else
-                    @if ($activeStatus === 'pending')
-                        <button type="button" wire:click="setActiveStatus('pending')"
-                            class="booking-pill pending is-active">Pending
+            <div class="booking-list-header">
+                <div class="booking-pill-row">
+                    @if ($activeStatus === 'all')
+                        <button type="button" wire:click="setActiveStatus('pending')" class="booking-pill pending">Pending
                             Bookings ({{ $statusCounts['pending'] }})</button>
-                    @elseif ($activeStatus === 'confirmed')
                         <button type="button" wire:click="setActiveStatus('confirmed')"
-                            class="booking-pill confirmed is-active">Confirmed
+                            class="booking-pill confirmed">Confirmed
                             Bookings ({{ $statusCounts['confirmed'] }})</button>
-                    @elseif ($activeStatus === 'completed')
                         <button type="button" wire:click="setActiveStatus('completed')"
-                            class="booking-pill completed is-active">Completed
+                            class="booking-pill completed">Completed
                             Bookings ({{ $statusCounts['completed'] }})</button>
-                    @elseif ($activeStatus === 'cancelled')
                         <button type="button" wire:click="setActiveStatus('cancelled')"
-                            class="booking-pill cancelled is-active">Cancelled
+                            class="booking-pill cancelled">Cancelled
                             Bookings ({{ $statusCounts['cancelled'] }})</button>
+                    @else
+                        @if ($activeStatus === 'pending')
+                            <button type="button" wire:click="setActiveStatus('pending')"
+                                class="booking-pill pending is-active">Pending
+                                Bookings ({{ $statusCounts['pending'] }})</button>
+                        @elseif ($activeStatus === 'confirmed')
+                            <button type="button" wire:click="setActiveStatus('confirmed')"
+                                class="booking-pill confirmed is-active">Confirmed
+                                Bookings ({{ $statusCounts['confirmed'] }})</button>
+                        @elseif ($activeStatus === 'completed')
+                            <button type="button" wire:click="setActiveStatus('completed')"
+                                class="booking-pill completed is-active">Completed
+                                Bookings ({{ $statusCounts['completed'] }})</button>
+                        @elseif ($activeStatus === 'cancelled')
+                            <button type="button" wire:click="setActiveStatus('cancelled')"
+                                class="booking-pill cancelled is-active">Cancelled
+                                Bookings ({{ $statusCounts['cancelled'] }})</button>
+                        @endif
                     @endif
+                </div>
+
+                @if (in_array($activeStatus, ['confirmed', 'completed', 'cancelled'], true))
+                    <x-dashboard.common.sort-dropdown :pending-sort="$pendingSort" />
                 @endif
             </div>
 
@@ -628,15 +591,13 @@ new class extends Component {
                                             wire:click="openDeclineModal({{ $booking->id }})"
                                             aria-label="Decline booking">
                                             <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg"
-                                                    width="36" height="36" viewBox="0 0 36 36"
-                                                    fill="none">
-                                                    <rect width="36" height="36" rx="18"
-                                                        fill="#FF6E6E" />
-                                                    <path d="M13 23L23 13M13 13L23 23" stroke="white"
-                                                        stroke-width="1.5" stroke-linecap="round" />
+                                                    width="36" height="36" viewBox="0 0 36 36" fill="none">
+                                                    <rect width="36" height="36" rx="18" fill="#FF6E6E" />
+                                                    <path d="M13 23L23 13M13 13L23 23" stroke="white" stroke-width="1.5"
+                                                        stroke-linecap="round" />
                                                 </svg></span>
                                         </button>
-                                        <x-dashboard.common..more-action-btn :row-id="$booking->id" />
+                                        <x-dashboard.common.more-action-btn :row-id="$booking->id" />
                                     </div>
                                 </td>
                             </tr>
@@ -678,6 +639,17 @@ new class extends Component {
                     <tbody wire:key="bookings-table-confirmed" class="bookings-table-body">
                         @php
                             $confirmedBookings = $bookings->where('booking_status', 'confirmed')->values();
+                            if ($pendingSort === 'oldest_submitted') {
+                                $confirmedBookings = $confirmedBookings->sortBy('created_at')->values();
+                            } elseif ($pendingSort === 'amount_high') {
+                                $confirmedBookings = $confirmedBookings
+                                    ->sortByDesc(fn($b) => (float) $b->amount)
+                                    ->values();
+                            } elseif ($pendingSort === 'amount_low') {
+                                $confirmedBookings = $confirmedBookings->sortBy(fn($b) => (float) $b->amount)->values();
+                            } else {
+                                $confirmedBookings = $confirmedBookings->sortByDesc('created_at')->values();
+                            }
                             $visibleConfirmedBookings = $confirmedBookings->take($visibleRows);
                         @endphp
                         @forelse ($visibleConfirmedBookings as $booking)
@@ -876,6 +848,17 @@ new class extends Component {
                                 ? $bookings
                                 : $bookings->where('booking_status', $activeStatus)
                             )->values();
+                            if ($pendingSort === 'oldest_submitted') {
+                                $filteredBookings = $filteredBookings->sortBy('created_at')->values();
+                            } elseif ($pendingSort === 'amount_high') {
+                                $filteredBookings = $filteredBookings
+                                    ->sortByDesc(fn($b) => (float) $b->amount)
+                                    ->values();
+                            } elseif ($pendingSort === 'amount_low') {
+                                $filteredBookings = $filteredBookings->sortBy(fn($b) => (float) $b->amount)->values();
+                            } else {
+                                $filteredBookings = $filteredBookings->sortByDesc('created_at')->values();
+                            }
                             $visibleFilteredBookings = $filteredBookings->take($visibleRows);
                         @endphp
                         @forelse ($visibleFilteredBookings as $booking)
@@ -947,8 +930,8 @@ new class extends Component {
         $rescheduleBooking = $rescheduleBookingId ? $bookings->firstWhere('id', $rescheduleBookingId) : null;
     @endphp
 
-    <x-dashboard.common..decline-modal :decline-booking="$declineBooking" />
-    <x-dashboard.common..reschedule-modal :reschedule-booking="$rescheduleBooking" :bookings="$bookings" :reschedule-selected-date="$rescheduleSelectedDate" :reschedule-selected-time="$rescheduleSelectedTime"
+    <x-dashboard.common.decline-modal :decline-booking="$declineBooking" />
+    <x-dashboard.common.reschedule-modal :reschedule-booking="$rescheduleBooking" :bookings="$bookings" :reschedule-selected-date="$rescheduleSelectedDate" :reschedule-selected-time="$rescheduleSelectedTime"
         :reschedule-calendar-month="$rescheduleCalendarMonth" :reschedule-duration-minutes="$rescheduleDurationMinutes" />
 </section>
 
@@ -1362,95 +1345,6 @@ new class extends Component {
         padding: 0.6rem 1.15rem;
         border: none;
         white-space: nowrap;
-    }
-
-    .booking-list-sort {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .sort-dropdown {
-        position: relative;
-    }
-
-    .sort-trigger {
-        width: 69px;
-        height: 32px;
-        border-radius: 100px;
-        border: 1px solid #A8A8A8;
-        background: transparent;
-        color: #A8A8A8;
-        text-align: center;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.6rem;
-        cursor: pointer;
-    }
-
-    .sort-menu {
-        position: absolute;
-        top: calc(100% + 0.6rem);
-        right: 0;
-        min-width: 250px;
-        background: #F8F8F8;
-        border: 2px solid #e6e6e5;
-        border-radius: 10px 0 10px 10px;
-        box-shadow: none;
-        z-index: 20;
-        overflow: hidden;
-    }
-
-    .sort-options {
-        width: 100%;
-        border: 0;
-        border-bottom: 2px solid #e6e6e5;
-        background: #FFF;
-        padding: 1rem;
-        text-align: left;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        line-height: 1.15;
-    }
-
-    .sort-options:last-child {
-        border-bottom: 0;
-    }
-
-    .sort-options:hover {
-        background: #F2F2F2;
-    }
-
-    .sort-indicator {
-        width: 26px;
-        height: 26px;
-        border-radius: 999px;
-        border: 2px solid #FFC97A;
-        background: transparent;
-        position: relative;
-        flex-shrink: 0;
-    }
-
-    .sort-options.is-active .sort-indicator::after {
-        content: '';
-        position: absolute;
-        inset: 2px;
-        border-radius: 999px;
-        background: #FFC97A;
     }
 
     .submitted-at {
