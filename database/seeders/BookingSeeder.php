@@ -72,6 +72,30 @@ class BookingSeeder extends Seeder
 
         // Normalize keys so index-based booking mappings are reliable.
         $pets = $pets->values();
+        $serviceAddOns = [
+            'Full Groom' => [
+                ['label' => 'Fast-Dry Service', 'amount' => 8.00],
+                ['label' => 'Hypoallergenic Shampoo Upgrade', 'amount' => 20.00],
+            ],
+            'Bath & Brush' => [
+                ['label' => 'De-shedding Booster', 'amount' => 12.00],
+            ],
+            'Nail Trim' => [
+                ['label' => 'Paw Balm Treatment', 'amount' => 6.00],
+            ],
+            'Deshedding Treatment' => [
+                ['label' => 'Coat Conditioning Mask', 'amount' => 15.00],
+            ],
+            'Puppy Intro Groom' => [
+                ['label' => 'Calming Aromatherapy', 'amount' => 7.50],
+            ],
+            'Teeth Cleaning' => [
+                ['label' => 'Breath Freshener Gel', 'amount' => 5.50],
+            ],
+            'De-matting' => [
+                ['label' => 'Coat Recovery Serum', 'amount' => 14.00],
+            ],
+        ];
 
         $bookings = [
             // Today — confirmed
@@ -256,6 +280,7 @@ class BookingSeeder extends Seeder
             $petIndices = $data['pet_indices'];
             unset($data['pet_indices']);
             $data['goormer_spacer_id'] = $spacerIds[array_rand($spacerIds)];
+            $data['extra_add_ons'] = $serviceAddOns[$data['service']] ?? [];
 
             // Idempotent seeding: update existing seeded bookings and always enforce
             // correct pivot mapping instead of creating duplicates.
@@ -269,6 +294,7 @@ class BookingSeeder extends Seeder
                 ],
                 [
                     'amount' => $data['amount'],
+                    'extra_add_ons' => $data['extra_add_ons'],
                     'visit_type' => $data['visit_type'],
                     'booking_status' => $data['booking_status'],
                 ]

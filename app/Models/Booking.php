@@ -15,6 +15,7 @@ class Booking extends Model
         'date',
         'service',
         'amount',
+        'extra_add_ons',
         'visit_type',
         'booking_status',
     ];
@@ -22,6 +23,7 @@ class Booking extends Model
     protected $casts = [
         'date' => 'date',
         'amount' => 'decimal:2',
+        'extra_add_ons' => 'array',
     ];
 
     public function petOwner(): BelongsTo
