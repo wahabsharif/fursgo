@@ -33,7 +33,12 @@
         cancelled: {{ $cancelledCount }},
     }
 }"
-    @booking-status-changed.window="activeBookingStatus = $event.detail.status; activeSection = 'bookings'; bookingsOpen = true"
+    @booking-status-changed.window="
+        activeBookingStatus = $event.detail.status ?? '';
+        if (activeSection === 'bookings') {
+            bookingsOpen = true;
+        }
+    "
     @booking-counts-updated.window="
         bookingCounts = {
             pending: Number($event.detail?.counts?.pending ?? bookingCounts.pending),
@@ -96,7 +101,7 @@
                     </svg>
                     <span class="nav-text">Bookings</span>
                 </a>
-                <ul x-show="bookingsOpen" x-transition:enter="bookings-transition-enter"
+                <ul x-cloak x-show="bookingsOpen" x-transition:enter="bookings-transition-enter"
                     x-transition:enter-start="bookings-transition-enter-start"
                     x-transition:enter-end="bookings-transition-enter-end"
                     x-transition:leave="bookings-transition-leave"
@@ -251,6 +256,10 @@
     </div>
 
     <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
         /* Dashboard Layout */
         .dashboard-wrapper {
             display: flex;
