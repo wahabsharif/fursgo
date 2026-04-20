@@ -13,12 +13,14 @@ new class extends Component {
     public int $visibleRows = 10;
     public ?int $declineBookingId = null;
     public ?int $rescheduleBookingId = null;
+    public ?int $completedBookingId = null;
     public ?string $rescheduleCalendarMonth = null;
     public ?string $rescheduleSelectedDate = null;
     public ?string $rescheduleSelectedTime = null;
     public int $rescheduleDurationMinutes = 60;
     private array $allowedStatuses = ['all', 'pending', 'confirmed', 'completed', 'cancelled'];
-    private array $reschedulableStatuses = ['pending', 'confirmed'];
+    private array $declinableStatuses = ['pending', 'confirmed'];
+    private array $reschedulableStatuses = ['pending', 'confirmed', 'completed'];
 
     private function scopedBookingQuery(int $bookingId)
     {
@@ -29,7 +31,7 @@ new class extends Component {
     {
         // Avoid heavy polling refresh while a modal is open, so calendar
         // interactions (day/time/month selection) stay responsive.
-        if ($this->declineBookingId !== null || $this->rescheduleBookingId !== null) {
+        if ($this->declineBookingId !== null || $this->rescheduleBookingId !== null || $this->completedBookingId !== null) {
             return;
         }
 
@@ -107,7 +109,7 @@ new class extends Component {
     {
         $booking = $this->scopedBookingQuery($bookingId)->firstOrFail();
 
-        if (!in_array($booking->booking_status, $this->reschedulableStatuses, true)) {
+        if (!in_array($booking->booking_status, $this->declinableStatuses, true)) {
             return;
         }
 
@@ -117,7 +119,7 @@ new class extends Component {
 
     public function openDeclineModal(int $bookingId): void
     {
-        $bookingExists = $this->scopedBookingQuery($bookingId)->whereIn('booking_status', $this->reschedulableStatuses)->exists();
+        $bookingExists = $this->scopedBookingQuery($bookingId)->whereIn('booking_status', $this->declinableStatuses)->exists();
 
         if (!$bookingExists) {
             $this->dispatch('bookings-tabs-loading-end');
@@ -199,6 +201,26 @@ new class extends Component {
         $this->rescheduleSelectedTime = null;
         $this->rescheduleDurationMinutes = 60;
         $this->dispatch('reschedule-modal-closed');
+    }
+
+    public function openCompletedBookingModal(int $bookingId): void
+    {
+        $bookingExists = $this->scopedBookingQuery($bookingId)->where('booking_status', 'completed')->exists();
+        if (!$bookingExists) {
+            $this->dispatch('bookings-tabs-loading-end');
+            return;
+        }
+
+        $this->completedBookingId = $bookingId;
+        $this->dispatch('bookings-tabs-loading-end');
+        $this->dispatch('completed-booking-modal-opened');
+    }
+
+    public function closeCompletedBookingModal(): void
+    {
+        $this->completedBookingId = null;
+        $this->dispatch('bookings-tabs-loading-end');
+        $this->dispatch('completed-booking-modal-closed');
     }
 
     public function confirmRescheduleBooking(): void
@@ -564,7 +586,7 @@ new class extends Component {
                                         </span>
                                     </div>
                                 </td>
-                                <td>{{ $booking->service }}</td>
+                                <td class="service-type">{{ $booking->service }}</td>
                                 <td>
                                     <div class="booking-details">
                                         <div class="details-date">{{ $bookingDetailsDate }}</div>
@@ -732,7 +754,7 @@ new class extends Component {
                                         </span>
                                     </div>
                                 </td>
-                                <td>{{ $booking->service }}</td>
+                                <td class="service-type">{{ $booking->service }}</td>
                                 <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
                                 <td>{{ $locationLabel }}</td>
                                 <td>—</td>
@@ -826,7 +848,133 @@ new class extends Component {
                 @endif
             @endif
 
-            @if ($activeStatus !== 'pending' && $activeStatus !== 'confirmed')
+            @if ($activeStatus === 'completed')
+                <table class="bookings-table completed-bookings-table">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Date</th>
+                            <th>Pet</th>
+                            <th>Service Type</th>
+                            <th>Rating</th>
+                            <th>Earnings</th>
+                            <th class="view-col">
+                                <span class="view-col-inner">View</span>
+                            </th>
+                            <th class="invoice-col">
+                                <span class="view-col-inner">Invoice</span>
+                            </th>
+                            <th class="more-col"></th>
+                        </tr>
+                    </thead>
+                    <tbody wire:key="bookings-table-completed" class="bookings-table-body">
+                        @php
+                            $completedBookings = $bookings->where('booking_status', 'completed')->values();
+                            if ($pendingSort === 'oldest_submitted') {
+                                $completedBookings = $completedBookings->sortBy('created_at')->values();
+                            } elseif ($pendingSort === 'amount_high') {
+                                $completedBookings = $completedBookings
+                                    ->sortByDesc(fn($b) => (float) $b->amount)
+                                    ->values();
+                            } elseif ($pendingSort === 'amount_low') {
+                                $completedBookings = $completedBookings->sortBy(fn($b) => (float) $b->amount)->values();
+                            } else {
+                                $completedBookings = $completedBookings->sortByDesc('created_at')->values();
+                            }
+                            $visibleCompletedBookings = $completedBookings->take($visibleRows);
+                        @endphp
+                        @forelse ($visibleCompletedBookings as $booking)
+                            @php
+                                $firstPet = $booking->pets->first();
+                                $petName = $firstPet->name ?? 'N/A';
+                                $petType = $firstPet->pet_type ?? null;
+                                $rating = data_get($booking, 'rating');
+                            @endphp
+                            <tr>
+                                <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
+                                <td>{{ optional($booking->date)->format('d/m/y') }}</td>
+                                <td>
+                                    <div class="pet-name-wrap completed-pet-cell">
+                                        <span class="pet-name completed-pet-name">{{ $petName }}</span>
+                                        @if ($petType)
+                                            <span class="pet-type">{{ $petType }}</span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="service-type">{{ $booking->service }}</td>
+                                <td>
+                                    <span class="completed-rating">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                            viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                            <path
+                                                d="M7.00014 1.16699L8.80195 4.81649L12.8335 5.40528L9.91681 8.24742L10.6051 12.2612L7.00014 10.3662L3.39522 12.2612L4.08348 8.24742L1.16681 5.40528L5.19833 4.81649L7.00014 1.16699Z"
+                                                fill="#FFBA55" />
+                                        </svg>
+                                        <span>{{ is_numeric($rating) ? number_format((float) $rating, 1) : '-' }}</span>
+                                    </span>
+                                </td>
+                                <td>£{{ number_format((float) $booking->amount, 2) }}</td>
+                                <td class="view-col">
+                                    <div class="view-col-inner">
+                                        <button type="button" class="view-btn"
+                                            @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
+                                            wire:click="openCompletedBookingModal({{ $booking->id }})"
+                                            aria-label="View completed booking">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="13"
+                                                viewBox="0 0 19 13" fill="none">
+                                                <path
+                                                    d="M9.49609 12C11.4291 12 12.9961 10.433 12.9961 8.5C12.9961 6.567 11.4291 5 9.49609 5C7.5631 5 5.99609 6.567 5.99609 8.5C5.99609 10.433 7.5631 12 9.49609 12Z"
+                                                    stroke="black" />
+                                                <path
+                                                    d="M18.4961 8.5C18.4961 8.5 17.4961 0.5 9.49609 0.5C1.49609 0.5 0.496094 8.5 0.496094 8.5"
+                                                    stroke="black" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="invoice-col">
+                                    <div class="view-col-inner">
+                                        <button type="button" class="view-btn" aria-label="Download invoice">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                viewBox="0 0 16 16" fill="none">
+                                                <path d="M8 2V10" stroke="#3B3731" stroke-width="1.3"
+                                                    stroke-linecap="round" />
+                                                <path d="M5.5 7.5L8 10L10.5 7.5" stroke="#3B3731" stroke-width="1.3"
+                                                    stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M3 12.5H13" stroke="#3B3731" stroke-width="1.3"
+                                                    stroke-linecap="round" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="more-col">
+                                    <div class="view-col-inner">
+                                        <x-dashboard.common.more-action-btn :row-id="$booking->id" />
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="9" class="empty-bookings">No completed bookings found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+                @if ($completedBookings->count() > $visibleRows)
+                    <div class="bookings-load-more-wrap">
+                        <button type="button" class="bookings-load-more-btn" wire:click="loadMoreBookings"
+                            wire:loading.attr="disabled" wire:target="loadMoreBookings">
+                            <span wire:loading.remove wire:target="loadMoreBookings">Load more</span>
+                            <span class="bookings-load-more-loading" wire:loading.inline-flex
+                                wire:target="loadMoreBookings">
+                                <span class="bookings-load-more-spinner" aria-hidden="true"></span>
+                            </span>
+                        </button>
+                    </div>
+                @endif
+            @endif
+
+            @if ($activeStatus === 'cancelled' || $activeStatus === 'all')
                 <table class="bookings-table">
                     <thead>
                         <tr>
@@ -878,7 +1026,7 @@ new class extends Component {
                                         @endif
                                     </div>
                                 </td>
-                                <td>{{ $booking->service }}</td>
+                                <td class="service-type">{{ $booking->service }}</td>
                                 <td>{{ optional($booking->date)->format('d/m/y') }}</td>
                                 <td>
                                     <span class="status-chip {{ $booking->booking_status }}">
@@ -926,9 +1074,149 @@ new class extends Component {
     @endif
 
     @php
+        $completedBooking = $completedBookingId ? $bookings->firstWhere('id', $completedBookingId) : null;
         $declineBooking = $declineBookingId ? $bookings->firstWhere('id', $declineBookingId) : null;
         $rescheduleBooking = $rescheduleBookingId ? $bookings->firstWhere('id', $rescheduleBookingId) : null;
     @endphp
+
+    @if ($completedBooking)
+        @php
+            $completedBookingIdLabel = 'FG-' . str_pad((string) $completedBooking->id, 5, '0', STR_PAD_LEFT);
+            $completedDateLabel = optional($completedBooking->date)->format('d/m/Y') ?? 'N/A';
+            $completedOwnerName = $completedBooking->petOwner->name ?? 'N/A';
+            $completedFirstPet = $completedBooking->pets->first();
+            $completedPetName = $completedFirstPet->name ?? 'N/A';
+            $completedPetType = $completedFirstPet->pet_type ?? '';
+            $completedService = $completedBooking->service ?: 'N/A';
+            $completedServiceAmount = (float) $completedBooking->amount;
+            $completedExtraAddOnsRaw = $completedBooking->extra_add_ons;
+            $completedExtraAddOns = collect(is_array($completedExtraAddOnsRaw) ? $completedExtraAddOnsRaw : [])
+                ->map(function ($item) {
+                    return [
+                        'label' => trim((string) data_get($item, 'label', '')),
+                        'amount' => (float) data_get($item, 'amount', 0),
+                    ];
+                })
+                ->filter(fn($item) => $item['label'] !== '')
+                ->values();
+            $completedExtrasAmount = (float) $completedExtraAddOns->sum('amount');
+            $completedPromoDiscount = 0.0;
+            $completedTotalAmount = $completedServiceAmount + $completedExtrasAmount - $completedPromoDiscount;
+        @endphp
+        @teleport('body')
+            <div class="completed-booking-modal-overlay" wire:keydown.escape="closeCompletedBookingModal">
+                <div class="completed-booking-modal-card" role="dialog" aria-modal="true"
+                    aria-labelledby="completed-booking-modal-title">
+                    <div class="completed-booking-modal-head">
+                        <h3 class="completed-booking-modal-title" id="completed-booking-modal-title">Completed Booking
+                        </h3>
+                        <button type="button" class="completed-booking-modal-close"
+                            @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
+                            wire:click="closeCompletedBookingModal" aria-label="Close modal">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"
+                                fill="none">
+                                <circle cx="18" cy="18" r="17.5" stroke="#3B3731" />
+                                <path d="M12.8 23.9998L24 12.7998M12.8 12.7998L24 23.9998" stroke="#3B3731"
+                                    stroke-width="1.5" stroke-linecap="round" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="completed-booking-modal-booking-row">
+                        <strong>Booking ID: {{ $completedBookingIdLabel }}</strong>
+                        <div class="completed-booking-modal-booking-meta">
+                            <span>{{ $completedDateLabel }}</span>
+                            <button type="button" class="completed-booking-download-btn" aria-label="Download invoice">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
+                                    viewBox="0 0 16 19" fill="none">
+                                    <path
+                                        d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
+                                        stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M8.00009 0.5V12.875M12.091 8.75L8.00009 13.25L3.90918 8.75" stroke="#3B3731"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="completed-booking-modal-customer">
+                        <div class="completed-booking-modal-user-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="36" viewBox="0 0 32 36"
+                                fill="none">
+                                <ellipse cx="17.3667" cy="18.0807" rx="10.2458" ry="9.64315" fill="white" />
+                                <path
+                                    d="M16.8932 0.202494C16.6132 0.0698256 16.3132 0 15.9998 0C15.6865 0 15.3865 0.0698256 15.1065 0.202494L2.55333 5.78156C1.08668 6.43094 -0.00663626 7.94615 3.03229e-05 9.77559C0.0333633 16.7023 2.75333 29.3756 14.2399 35.1362C15.3532 35.6949 16.6465 35.6949 17.7598 35.1362C29.2463 29.3756 31.9663 16.7023 31.9996 9.77559C32.0063 7.94615 30.913 6.43094 29.4463 5.78156L16.8932 0.202494ZM9.65991 19.9841C9.97991 20.0679 10.3199 20.1098 10.6666 20.1098C13.0199 20.1098 14.9332 18.1058 14.9332 15.6409V11.1721H17.8798C18.6865 11.1721 19.4265 11.6469 19.7865 12.408L20.2665 13.4065H24.5331C25.1197 13.4065 25.5997 13.9093 25.5997 14.5237V16.7581C25.5997 19.8444 23.2131 22.3442 20.2665 22.3442H17.0665V25.8844C17.0665 26.3941 16.6732 26.813 16.1798 26.813C16.0598 26.813 15.9398 26.7851 15.8332 26.7362L9.25325 23.7826C8.81326 23.5871 8.53326 23.1332 8.53326 22.6375C8.53326 22.4419 8.57326 22.2534 8.65993 22.0789L9.65991 19.9841ZM9.59992 11.1721H12.7999V15.6409C12.7999 16.8769 11.8466 17.8754 10.6666 17.8754C9.48658 17.8754 8.53326 16.8769 8.53326 15.6409V12.2893C8.53326 11.6748 9.01326 11.1721 9.59992 11.1721ZM18.1331 14.5237C18.1331 14.2274 18.0208 13.9433 17.8207 13.7337C17.6207 13.5242 17.3494 13.4065 17.0665 13.4065C16.7836 13.4065 16.5123 13.5242 16.3123 13.7337C16.1122 13.9433 15.9998 14.2274 15.9998 14.5237C15.9998 14.82 16.1122 15.1042 16.3123 15.3137C16.5123 15.5232 16.7836 15.6409 17.0665 15.6409C17.3494 15.6409 17.6207 15.5232 17.8207 15.3137C18.0208 15.1042 18.1331 14.82 18.1331 14.5237Z"
+                                    fill="#E2E2E2" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="completed-booking-modal-owner">{{ $completedOwnerName }}</p>
+                            <p class="completed-booking-modal-pet">{{ $completedPetName }}<span
+                                    class="completed-booking-modal-pet-type">{{ $completedPetType }}</span></p>
+                        </div>
+                    </div>
+
+                    <div class="completed-booking-modal-section">
+                        <p class="completed-booking-modal-section-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="13" viewBox="0 0 12 13"
+                                fill="none">
+                                <path
+                                    d="M3.79507 8.7133C4.74998 9.66821 7.07244 8.89426 8.98226 6.98414C10.8924 5.07433 11.6663 2.75186 10.7114 1.79695M6.60477 1.14832L7.03699 1.58084M5.09202 2.66138L5.52423 3.09359M3.79476 4.39054L4.22698 4.82276M3.36255 6.55192L3.79476 6.98414M8.98226 0.5L9.41447 0.932215M8.55004 3.0939L9.41447 3.95833M7.03729 4.60696L7.90172 5.47139M5.30813 5.9036L6.17256 6.76803"
+                                    stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
+                                <path
+                                    d="M3.79466 10.0107C4.15277 9.65258 4.15277 9.07196 3.79466 8.71385C3.43655 8.35574 2.85593 8.35574 2.49782 8.71385L0.768699 10.443C0.410587 10.8011 0.410587 11.3817 0.768699 11.7398C1.12681 12.0979 1.70743 12.0979 2.06554 11.7398L3.79466 10.0107Z"
+                                    stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            Service
+                        </p>
+                        <div class="completed-booking-modal-line">
+                            <div>
+                                <p>{{ $completedService }}</p>
+                                <p class="completed-booking-modal-line-sub">{{ $completedPetName }}</p>
+                            </div>
+                            <span>£{{ number_format($completedServiceAmount, 2) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="completed-booking-modal-section">
+                        <p class="completed-booking-modal-section-title">Extras &amp; Add-ons</p>
+                        @if ($completedExtraAddOns->isNotEmpty())
+                            @foreach ($completedExtraAddOns as $addon)
+                                <div class="completed-booking-modal-line completed-booking-addon-line">
+                                    <p class="completed-booking-modal-line-sub">{{ $addon['label'] }}</p>
+                                    <span>£{{ number_format((float) $addon['amount'], 2) }}</span>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="completed-booking-modal-line">
+                                <p class="completed-booking-modal-line-sub">No add-ons recorded</p>
+                                <span>£{{ number_format($completedExtrasAmount, 2) }}</span>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="completed-booking-modal-total-block">
+                        <div class="completed-booking-modal-total-row">
+                            <span>Service:</span>
+                            <span>£{{ number_format($completedServiceAmount, 2) }}</span>
+                        </div>
+                        <div class="completed-booking-modal-total-row">
+                            <span>Extras &amp; Add-ons:</span>
+                            <span>£{{ number_format($completedExtrasAmount, 2) }}</span>
+                        </div>
+                        <div class="completed-booking-modal-total-row">
+                            <span>Promo discount:</span>
+                            <span>- £{{ number_format($completedPromoDiscount, 2) }}</span>
+                        </div>
+                        <div class="completed-booking-modal-total-row is-grand">
+                            <span>Total</span>
+                            <span>£{{ number_format($completedTotalAmount, 2) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endteleport
+    @endif
 
     <x-dashboard.common.decline-modal :decline-booking="$declineBooking" />
     <x-dashboard.common.reschedule-modal :reschedule-booking="$rescheduleBooking" :bookings="$bookings" :reschedule-selected-date="$rescheduleSelectedDate" :reschedule-selected-time="$rescheduleSelectedTime"
@@ -1064,12 +1352,254 @@ new class extends Component {
             document.body.style.overflow = '';
             document.documentElement.style.overflow = '';
         });
+
+        window.addEventListener('completed-booking-modal-opened', () => {
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+        });
+
+        window.addEventListener('completed-booking-modal-closed', () => {
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+        });
     }
 </script>
 
 <style>
     [x-cloak] {
         display: none !important;
+    }
+
+    .completed-booking-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.22);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        z-index: 100100;
+    }
+
+    .completed-booking-modal-card {
+        width: min(680px, 100%);
+        border-radius: 10px;
+        border: 1px solid #CBDCE8;
+        background: #F8F8F8;
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
+        overflow: hidden;
+    }
+
+    .completed-booking-modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-radius: 10px 10px 0 0;
+        border-bottom: 1px solid #CBDCE8;
+        background: rgba(203, 220, 232, 0.20);
+        padding: 1.2rem 1.65rem;
+    }
+
+    .completed-booking-modal-title {
+        margin: 0;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 20px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: normal;
+    }
+
+    .completed-booking-modal-close {
+        border: none;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+    }
+
+    .completed-booking-modal-booking-row {
+        padding: 1.2rem 1.65rem;
+        border-bottom: 1px solid #DCDCDC;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .completed-booking-modal-booking-row strong {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .completed-booking-modal-booking-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+    }
+
+    .completed-booking-download-btn {
+        border: 0;
+        background: transparent;
+        width: 26px;
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        cursor: pointer;
+    }
+
+    .completed-booking-modal-customer {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        padding: 1.2rem 1.65rem;
+        border-bottom: 1px solid #DCDCDC;
+    }
+
+    .completed-booking-modal-user-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .completed-booking-modal-owner {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .completed-booking-modal-pet {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+    }
+
+    .completed-booking-modal-pet-type {
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        margin-left: 0.35rem;
+    }
+
+    .completed-booking-modal-section {
+        padding: 1.2rem 1.65rem;
+        border-bottom: 1px solid #DCDCDC;
+    }
+
+    .completed-booking-modal-section-label {
+        margin: 0 0 0.5rem;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .completed-booking-modal-section-title {
+        margin: 0 0 0.65rem;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .completed-booking-modal-line {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+    }
+
+    .completed-booking-modal-line p {
+        margin: 0;
+    }
+
+    .completed-booking-modal-line-sub {
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 20px;
+    }
+
+    .completed-booking-modal-total-block {
+        padding: 1.35rem 1.65rem 1.55rem;
+    }
+
+    .completed-booking-modal-total-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 23px;
+        margin-bottom: 1.7rem;
+    }
+
+    .completed-booking-modal-total-row>span:last-child {
+        color: #3B3731;
+        text-align: right;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 23px;
+        /* 127.778% */
+    }
+
+    .completed-booking-modal-total-row.is-grand {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: normal;
+        border-top: 1px solid #DCDCDC;
+        padding-top: 1rem;
+        margin-top: 0.8rem;
+        margin-bottom: 0;
     }
 
     .bookings-board {
@@ -1301,6 +1831,26 @@ new class extends Component {
         padding: 0 !important;
     }
 
+    .service-type {
+        color: #3B3731 !important;
+        font-family: Lato !important;
+        font-size: 16px !important;
+        font-style: normal !important;
+        font-weight: 600 !important;
+        line-height: normal !important;
+    }
+
+    .invoice-col,
+    .more-col {
+        vertical-align: middle;
+        width: 6.2rem;
+        padding: 0 !important;
+    }
+
+    .more-col {
+        width: 4.8rem;
+    }
+
     .view-col-inner {
         width: 100%;
         display: flex;
@@ -1318,6 +1868,27 @@ new class extends Component {
         padding: 0;
         margin: 0 auto;
         cursor: pointer;
+    }
+
+    .completed-bookings-table th,
+    .completed-bookings-table td {
+        white-space: nowrap;
+    }
+
+    .completed-pet-cell {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.15rem;
+    }
+
+    .completed-pet-name {
+        font-weight: 600;
+    }
+
+    .completed-rating {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.32rem;
     }
 
     .empty-bookings {
