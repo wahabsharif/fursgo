@@ -16,14 +16,18 @@ class Booking extends Model
         'service',
         'amount',
         'extra_add_ons',
+        'staff',
+        'rating',
         'visit_type',
         'booking_status',
+        'cancelled_by',
     ];
 
     protected $casts = [
         'date' => 'date',
         'amount' => 'decimal:2',
         'extra_add_ons' => 'array',
+        'rating' => 'decimal:1',
     ];
 
     public function petOwner(): BelongsTo

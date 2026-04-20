@@ -757,7 +757,7 @@ new class extends Component {
                                 <td class="service-type">{{ $booking->service }}</td>
                                 <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
                                 <td>{{ $locationLabel }}</td>
-                                <td>—</td>
+                                <td>{{ $booking->staff ?: 'N/A' }}</td>
                                 <td class="confirmed-action-col">
                                     <div class="confirmed-action-cell" x-data="{
                                         rowId: {{ $booking->id }},

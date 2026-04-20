@@ -96,6 +96,8 @@ class BookingSeeder extends Seeder
                 ['label' => 'Coat Recovery Serum', 'amount' => 14.00],
             ],
         ];
+        $staffRoster = ['Emma Wilson', 'Oliver Brown', 'Sophia Ahmed', 'Liam Carter'];
+        $completedRatings = [4.0, 4.2, 4.3, 4.5, 4.7, 4.8, 5.0];
 
         $bookings = [
             // Today — confirmed
@@ -281,6 +283,13 @@ class BookingSeeder extends Seeder
             unset($data['pet_indices']);
             $data['goormer_spacer_id'] = $spacerIds[array_rand($spacerIds)];
             $data['extra_add_ons'] = $serviceAddOns[$data['service']] ?? [];
+            $data['staff'] = in_array($data['booking_status'], ['confirmed', 'completed'], true)
+                ? $staffRoster[array_rand($staffRoster)]
+                : null;
+            $data['rating'] = $data['booking_status'] === 'completed'
+                ? $completedRatings[array_rand($completedRatings)]
+                : null;
+            $data['cancelled_by'] = $data['booking_status'] === 'cancelled' ? 'Pet Owner' : null;
 
             // Idempotent seeding: update existing seeded bookings and always enforce
             // correct pivot mapping instead of creating duplicates.
@@ -295,8 +304,11 @@ class BookingSeeder extends Seeder
                 [
                     'amount' => $data['amount'],
                     'extra_add_ons' => $data['extra_add_ons'],
+                    'staff' => $data['staff'],
+                    'rating' => $data['rating'],
                     'visit_type' => $data['visit_type'],
                     'booking_status' => $data['booking_status'],
+                    'cancelled_by' => $data['cancelled_by'],
                 ]
             );
 
