@@ -14,6 +14,7 @@ new class extends Component {
     public ?int $declineBookingId = null;
     public ?int $rescheduleBookingId = null;
     public ?int $completedBookingId = null;
+    public ?int $cancelledBookingId = null;
     public ?string $rescheduleCalendarMonth = null;
     public ?string $rescheduleSelectedDate = null;
     public ?string $rescheduleSelectedTime = null;
@@ -31,7 +32,7 @@ new class extends Component {
     {
         // Avoid heavy polling refresh while a modal is open, so calendar
         // interactions (day/time/month selection) stay responsive.
-        if ($this->declineBookingId !== null || $this->rescheduleBookingId !== null || $this->completedBookingId !== null) {
+        if ($this->declineBookingId !== null || $this->rescheduleBookingId !== null || $this->completedBookingId !== null || $this->cancelledBookingId !== null) {
             return;
         }
 
@@ -221,6 +222,26 @@ new class extends Component {
         $this->completedBookingId = null;
         $this->dispatch('bookings-tabs-loading-end');
         $this->dispatch('completed-booking-modal-closed');
+    }
+
+    public function openCancelledBookingModal(int $bookingId): void
+    {
+        $bookingExists = $this->scopedBookingQuery($bookingId)->where('booking_status', 'cancelled')->exists();
+        if (!$bookingExists) {
+            $this->dispatch('bookings-tabs-loading-end');
+            return;
+        }
+
+        $this->cancelledBookingId = $bookingId;
+        $this->dispatch('bookings-tabs-loading-end');
+        $this->dispatch('cancelled-booking-modal-opened');
+    }
+
+    public function closeCancelledBookingModal(): void
+    {
+        $this->cancelledBookingId = null;
+        $this->dispatch('bookings-tabs-loading-end');
+        $this->dispatch('cancelled-booking-modal-closed');
     }
 
     public function confirmRescheduleBooking(): void
@@ -974,7 +995,142 @@ new class extends Component {
                 @endif
             @endif
 
-            @if ($activeStatus === 'cancelled' || $activeStatus === 'all')
+            @if ($activeStatus === 'cancelled')
+                <table class="bookings-table cancelled-bookings-table">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Date</th>
+                            <th>Pet Owner</th>
+                            <th>Pet</th>
+                            <th>Cancelled By</th>
+                            <th>Refund Amount</th>
+                            <th>Refund Status</th>
+                            <th class="view-col">
+                                <span class="view-col-inner">View</span>
+                            </th>
+                            <th class="invoice-col">
+                                <span class="view-col-inner">Invoice</span>
+                            </th>
+                            <th class="more-col"></th>
+                        </tr>
+                    </thead>
+                    <tbody wire:key="bookings-table-cancelled" class="bookings-table-body">
+                        @php
+                            $cancelledBookings = $bookings->where('booking_status', 'cancelled')->values();
+                            if ($pendingSort === 'oldest_submitted') {
+                                $cancelledBookings = $cancelledBookings->sortBy('created_at')->values();
+                            } elseif ($pendingSort === 'amount_high') {
+                                $cancelledBookings = $cancelledBookings
+                                    ->sortByDesc(fn($b) => (float) $b->amount)
+                                    ->values();
+                            } elseif ($pendingSort === 'amount_low') {
+                                $cancelledBookings = $cancelledBookings->sortBy(fn($b) => (float) $b->amount)->values();
+                            } else {
+                                $cancelledBookings = $cancelledBookings->sortByDesc('created_at')->values();
+                            }
+                            $visibleCancelledBookings = $cancelledBookings->take($visibleRows);
+                        @endphp
+                        @forelse ($visibleCancelledBookings as $booking)
+                            @php
+                                $firstPet = $booking->pets->first();
+                                $petName = $firstPet->name ?? 'N/A';
+                                $petType = $firstPet->pet_type ?? null;
+                                $cancelledByRaw = strtolower((string) ($booking->cancelled_by ?? ''));
+                                $cancelledByLabel =
+                                    $cancelledByRaw === 'pet owner' || $cancelledByRaw === 'client' ? 'Client' : 'You';
+                                $refundStatus = (string) ($booking->refund_status ?? 'In Progress');
+                                $refundStatusClass =
+                                    $refundStatus === 'Rejected'
+                                        ? 'rejected'
+                                        : ($refundStatus === 'In Progress'
+                                            ? 'in-progress'
+                                            : 'processed');
+                            @endphp
+                            <tr>
+                                <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
+                                <td>{{ optional($booking->date)->format('d/m/y') }}</td>
+                                <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
+                                <td>
+                                    <div class="pet-name-wrap cancelled-pet-cell">
+                                        <span class="pet-name cancelled-pet-name">{{ $petName }}</span>
+                                        @if ($petType)
+                                            <span class="pet-type">{{ $petType }}</span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="cancelled-by-chip {{ strtolower($cancelledByLabel) }}">
+                                        {{ $cancelledByLabel }}
+                                    </span>
+                                </td>
+                                <td>£{{ number_format((float) ($booking->refund_amount ?? 0), 2) }}</td>
+                                <td>
+                                    <span class="refund-status-chip {{ $refundStatusClass }}">
+                                        {{ $refundStatus }}
+                                    </span>
+                                </td>
+                                <td class="view-col">
+                                    <div class="view-col-inner">
+                                        <button type="button" class="view-btn"
+                                            @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
+                                            wire:click="openCancelledBookingModal({{ $booking->id }})"
+                                            aria-label="View cancelled booking">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="13"
+                                                viewBox="0 0 19 13" fill="none">
+                                                <path
+                                                    d="M9.49609 12C11.4291 12 12.9961 10.433 12.9961 8.5C12.9961 6.567 11.4291 5 9.49609 5C7.5631 5 5.99609 6.567 5.99609 8.5C5.99609 10.433 7.5631 12 9.49609 12Z"
+                                                    stroke="black" />
+                                                <path
+                                                    d="M18.4961 8.5C18.4961 8.5 17.4961 0.5 9.49609 0.5C1.49609 0.5 0.496094 8.5 0.496094 8.5"
+                                                    stroke="black" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="invoice-col">
+                                    <div class="view-col-inner">
+                                        <button type="button" class="view-btn" aria-label="Download invoice">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                viewBox="0 0 16 16" fill="none">
+                                                <path d="M8 2V10" stroke="#3B3731" stroke-width="1.3"
+                                                    stroke-linecap="round" />
+                                                <path d="M5.5 7.5L8 10L10.5 7.5" stroke="#3B3731" stroke-width="1.3"
+                                                    stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M3 12.5H13" stroke="#3B3731" stroke-width="1.3"
+                                                    stroke-linecap="round" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="more-col">
+                                    <div class="view-col-inner">
+                                        <x-dashboard.common.more-action-btn :row-id="$booking->id" />
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="10" class="empty-bookings">No cancelled bookings found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+                @if ($cancelledBookings->count() > $visibleRows)
+                    <div class="bookings-load-more-wrap">
+                        <button type="button" class="bookings-load-more-btn" wire:click="loadMoreBookings"
+                            wire:loading.attr="disabled" wire:target="loadMoreBookings">
+                            <span wire:loading.remove wire:target="loadMoreBookings">Load more</span>
+                            <span class="bookings-load-more-loading" wire:loading.inline-flex
+                                wire:target="loadMoreBookings">
+                                <span class="bookings-load-more-spinner" aria-hidden="true"></span>
+                            </span>
+                        </button>
+                    </div>
+                @endif
+            @endif
+
+            @if ($activeStatus === 'all')
                 <table class="bookings-table">
                     <thead>
                         <tr>
@@ -990,12 +1146,9 @@ new class extends Component {
                             </th>
                         </tr>
                     </thead>
-                    <tbody wire:key="bookings-table-{{ $activeStatus }}" class="bookings-table-body">
+                    <tbody wire:key="bookings-table-all" class="bookings-table-body">
                         @php
-                            $filteredBookings = ($activeStatus === 'all'
-                                ? $bookings
-                                : $bookings->where('booking_status', $activeStatus)
-                            )->values();
+                            $filteredBookings = $bookings->values();
                             if ($pendingSort === 'oldest_submitted') {
                                 $filteredBookings = $filteredBookings->sortBy('created_at')->values();
                             } elseif ($pendingSort === 'amount_high') {
@@ -1075,6 +1228,7 @@ new class extends Component {
 
     @php
         $completedBooking = $completedBookingId ? $bookings->firstWhere('id', $completedBookingId) : null;
+        $cancelledBooking = $cancelledBookingId ? $bookings->firstWhere('id', $cancelledBookingId) : null;
         $declineBooking = $declineBookingId ? $bookings->firstWhere('id', $declineBookingId) : null;
         $rescheduleBooking = $rescheduleBookingId ? $bookings->firstWhere('id', $rescheduleBookingId) : null;
     @endphp
@@ -1172,7 +1326,8 @@ new class extends Component {
                         <div class="completed-booking-modal-line">
                             <div>
                                 <p>{{ $completedService }}</p>
-                                <p class="completed-booking-modal-line-sub">{{ $completedPetName }}</p>
+                                <p class="completed-booking-modal-line-sub" style="color: #9D9B98;">
+                                    {{ $completedPetName }}</p>
                             </div>
                             <span>£{{ number_format($completedServiceAmount, 2) }}</span>
                         </div>
@@ -1206,11 +1361,157 @@ new class extends Component {
                         </div>
                         <div class="completed-booking-modal-total-row">
                             <span>Promo discount:</span>
-                            <span>- £{{ number_format($completedPromoDiscount, 2) }}</span>
+                            <span style="color: #9D9B98;">- £{{ number_format($completedPromoDiscount, 2) }}</span>
                         </div>
                         <div class="completed-booking-modal-total-row is-grand">
                             <span>Total</span>
                             <span>£{{ number_format($completedTotalAmount, 2) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endteleport
+    @endif
+
+    @if ($cancelledBooking)
+        @php
+            $cancelledBookingIdLabel = 'FG-' . str_pad((string) $cancelledBooking->id, 5, '0', STR_PAD_LEFT);
+            $cancelledDateLabel = optional($cancelledBooking->date)->format('d/m/Y') ?? 'N/A';
+            $cancelledOwnerName = $cancelledBooking->petOwner->name ?? 'N/A';
+            $cancelledFirstPet = $cancelledBooking->pets->first();
+            $cancelledPetName = $cancelledFirstPet->name ?? 'N/A';
+            $cancelledPetType = $cancelledFirstPet->pet_type ?? '';
+            $cancelledService = $cancelledBooking->service ?: 'N/A';
+            $cancelledServiceAmount = (float) $cancelledBooking->amount;
+            $cancelledExtraAddOnsRaw = $cancelledBooking->extra_add_ons;
+            $cancelledExtraAddOns = collect(is_array($cancelledExtraAddOnsRaw) ? $cancelledExtraAddOnsRaw : [])
+                ->map(function ($item) {
+                    return [
+                        'label' => trim((string) data_get($item, 'label', '')),
+                        'amount' => (float) data_get($item, 'amount', 0),
+                    ];
+                })
+                ->filter(fn($item) => $item['label'] !== '')
+                ->values();
+            $cancelledExtrasAmount = (float) $cancelledExtraAddOns->sum('amount');
+            $cancelledPromoDiscount = 0.0;
+            $cancelledTotalAmount = $cancelledServiceAmount + $cancelledExtrasAmount - $cancelledPromoDiscount;
+            $cancelledRefundStatus = (string) ($cancelledBooking->refund_status ?? 'In Progress');
+            $cancelledRefundStatusClass =
+                $cancelledRefundStatus === 'Rejected'
+                    ? 'rejected'
+                    : ($cancelledRefundStatus === 'In Progress'
+                        ? 'in-progress'
+                        : 'processed');
+        @endphp
+        @teleport('body')
+            <div class="completed-booking-modal-overlay cancelled-booking-modal-overlay"
+                wire:keydown.escape="closeCancelledBookingModal">
+                <div class="completed-booking-modal-card cancelled-booking-modal-card" role="dialog" aria-modal="true"
+                    aria-labelledby="cancelled-booking-modal-title">
+                    <div class="completed-booking-modal-head cancelled-booking-modal-head">
+                        <h3 class="completed-booking-modal-title" id="cancelled-booking-modal-title">Cancelled Booking
+                        </h3>
+                        <button type="button" class="completed-booking-modal-close"
+                            @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
+                            wire:click="closeCancelledBookingModal" aria-label="Close modal">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"
+                                fill="none">
+                                <circle cx="18" cy="18" r="17.5" stroke="#3B3731" />
+                                <path d="M12.8 23.9998L24 12.7998M12.8 12.7998L24 23.9998" stroke="#3B3731"
+                                    stroke-width="1.5" stroke-linecap="round" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="completed-booking-modal-booking-row">
+                        <div class="cancelled-modal-id-row">
+                            <strong>Booking ID: {{ $cancelledBookingIdLabel }}</strong>
+                            <span
+                                class="refund-status-chip {{ $cancelledRefundStatusClass }}">{{ $cancelledRefundStatus }}</span>
+                        </div>
+                        <div class="completed-booking-modal-booking-meta">
+                            <span>{{ $cancelledDateLabel }}</span>
+                            <button type="button" class="completed-booking-download-btn" aria-label="Download invoice">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
+                                    viewBox="0 0 16 19" fill="none">
+                                    <path
+                                        d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
+                                        stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M8.00009 0.5V12.875M12.091 8.75L8.00009 13.25L3.90918 8.75" stroke="#3B3731"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="completed-booking-modal-customer">
+                        <div class="completed-booking-modal-user-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="36" viewBox="0 0 32 36"
+                                fill="none">
+                                <ellipse cx="17.3667" cy="18.0807" rx="10.2458" ry="9.64315" fill="white" />
+                                <path
+                                    d="M16.8932 0.202494C16.6132 0.0698256 16.3132 0 15.9998 0C15.6865 0 15.3865 0.0698256 15.1065 0.202494L2.55333 5.78156C1.08668 6.43094 -0.00663626 7.94615 3.03229e-05 9.77559C0.0333633 16.7023 2.75333 29.3756 14.2399 35.1362C15.3532 35.6949 16.6465 35.6949 17.7598 35.1362C29.2463 29.3756 31.9663 16.7023 31.9996 9.77559C32.0063 7.94615 30.913 6.43094 29.4463 5.78156L16.8932 0.202494ZM9.65991 19.9841C9.97991 20.0679 10.3199 20.1098 10.6666 20.1098C13.0199 20.1098 14.9332 18.1058 14.9332 15.6409V11.1721H17.8798C18.6865 11.1721 19.4265 11.6469 19.7865 12.408L20.2665 13.4065H24.5331C25.1197 13.4065 25.5997 13.9093 25.5997 14.5237V16.7581C25.5997 19.8444 23.2131 22.3442 20.2665 22.3442H17.0665V25.8844C17.0665 26.3941 16.6732 26.813 16.1798 26.813C16.0598 26.813 15.9398 26.7851 15.8332 26.7362L9.25325 23.7826C8.81326 23.5871 8.53326 23.1332 8.53326 22.6375C8.53326 22.4419 8.57326 22.2534 8.65993 22.0789L9.65991 19.9841ZM9.59992 11.1721H12.7999V15.6409C12.7999 16.8769 11.8466 17.8754 10.6666 17.8754C9.48658 17.8754 8.53326 16.8769 8.53326 15.6409V12.2893C8.53326 11.6748 9.01326 11.1721 9.59992 11.1721ZM18.1331 14.5237C18.1331 14.2274 18.0208 13.9433 17.8207 13.7337C17.6207 13.5242 17.3494 13.4065 17.0665 13.4065C16.7836 13.4065 16.5123 13.5242 16.3123 13.7337C16.1122 13.9433 15.9998 14.2274 15.9998 14.5237C15.9998 14.82 16.1122 15.1042 16.3123 15.3137C16.5123 15.5232 16.7836 15.6409 17.0665 15.6409C17.3494 15.6409 17.6207 15.5232 17.8207 15.3137C18.0208 15.1042 18.1331 14.82 18.1331 14.5237Z"
+                                    fill="#E2E2E2" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="completed-booking-modal-owner">{{ $cancelledOwnerName }}</p>
+                            <p class="completed-booking-modal-pet">{{ $cancelledPetName }}<span
+                                    class="completed-booking-modal-pet-type">{{ $cancelledPetType }}</span></p>
+                        </div>
+                    </div>
+
+                    <div class="completed-booking-modal-section">
+                        <p class="completed-booking-modal-section-label">Service</p>
+                        <div class="completed-booking-modal-line">
+                            <div>
+                                <p class="cancelled-modal-strike">{{ $cancelledService }}</p>
+                                <p class="completed-booking-modal-line-sub"
+                                    style="color: #9D9B98;text-decoration-line: line-through;
+">
+                                    {{ $cancelledPetName }}</p>
+                            </div>
+                            <span class="cancelled-modal-strike">£{{ number_format($cancelledServiceAmount, 2) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="completed-booking-modal-section">
+                        <p class="completed-booking-modal-section-title">Extras &amp; Add-ons</p>
+                        @if ($cancelledExtraAddOns->isNotEmpty())
+                            @foreach ($cancelledExtraAddOns as $addon)
+                                <div class="completed-booking-modal-line completed-booking-addon-line">
+                                    <p class="completed-booking-modal-line-sub cancelled-modal-strike">
+                                        {{ $addon['label'] }}</p>
+                                    <span
+                                        class="cancelled-modal-strike">£{{ number_format((float) $addon['amount'], 2) }}</span>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="completed-booking-modal-line">
+                                <p class="completed-booking-modal-line-sub">No add-ons recorded</p>
+                                <span>£{{ number_format($cancelledExtrasAmount, 2) }}</span>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="completed-booking-modal-total-block">
+                        <div class="completed-booking-modal-total-row">
+                            <span>Service:</span>
+                            <span class="cancelled-modal-strike">£{{ number_format($cancelledServiceAmount, 2) }}</span>
+                        </div>
+                        <div class="completed-booking-modal-total-row">
+                            <span>Extras &amp; Add-ons:</span>
+                            <span class="cancelled-modal-strike">£{{ number_format($cancelledExtrasAmount, 2) }}</span>
+                        </div>
+                        <div class="completed-booking-modal-total-row">
+                            <span>Promo discount:</span>
+                            <span class="cancelled-modal-strike" style="color: #9D9B98;">-
+                                £{{ number_format($cancelledPromoDiscount, 2) }}</span>
+                        </div>
+                        <div class="completed-booking-modal-total-row is-grand">
+                            <span>Total</span>
+                            <span class="cancelled-modal-strike">£{{ number_format($cancelledTotalAmount, 2) }}</span>
                         </div>
                     </div>
                 </div>
@@ -1362,12 +1663,27 @@ new class extends Component {
             document.body.style.overflow = '';
             document.documentElement.style.overflow = '';
         });
+
+        window.addEventListener('cancelled-booking-modal-opened', () => {
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+        });
+
+        window.addEventListener('cancelled-booking-modal-closed', () => {
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+        });
     }
 </script>
 
 <style>
     [x-cloak] {
         display: none !important;
+    }
+
+    :root {
+        --booking-modal-divider-color: #DCDCDC;
+        --booking-modal-divider-height: 1px;
     }
 
     .completed-booking-modal-overlay {
@@ -1424,11 +1740,11 @@ new class extends Component {
 
     .completed-booking-modal-booking-row {
         padding: 1.2rem 1.65rem;
-        border-bottom: 1px solid #DCDCDC;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 1rem;
+        position: relative;
     }
 
     .completed-booking-modal-booking-row strong {
@@ -1469,7 +1785,7 @@ new class extends Component {
         align-items: center;
         gap: 0.8rem;
         padding: 1.2rem 1.65rem;
-        border-bottom: 1px solid #DCDCDC;
+        position: relative;
     }
 
     .completed-booking-modal-user-icon {
@@ -1508,7 +1824,18 @@ new class extends Component {
 
     .completed-booking-modal-section {
         padding: 1.2rem 1.65rem;
-        border-bottom: 1px solid #DCDCDC;
+        position: relative;
+    }
+
+    .completed-booking-modal-booking-row::after,
+    .completed-booking-modal-section::after {
+        content: '';
+        position: absolute;
+        left: 1.65rem;
+        right: 1.65rem;
+        bottom: 0;
+        height: var(--booking-modal-divider-height);
+        background: var(--booking-modal-divider-color);
     }
 
     .completed-booking-modal-section-label {
@@ -1552,12 +1879,12 @@ new class extends Component {
     }
 
     .completed-booking-modal-line-sub {
-        color: #9D9B98;
+        color: #3B3731;
         font-family: Lato;
-        font-size: 16px;
+        font-size: 18px;
         font-style: normal;
         font-weight: 400;
-        line-height: 20px;
+        line-height: 23px;
     }
 
     .completed-booking-modal-total-block {
@@ -1590,16 +1917,48 @@ new class extends Component {
     }
 
     .completed-booking-modal-total-row.is-grand {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 18px;
-        font-style: normal;
-        font-weight: 700;
-        line-height: normal;
-        border-top: 1px solid #DCDCDC;
+        border-top: var(--booking-modal-divider-height) solid var(--booking-modal-divider-color);
         padding-top: 1rem;
         margin-top: 0.8rem;
         margin-bottom: 0;
+    }
+
+    .completed-booking-modal-total-row.is-grand>span {
+        color: #3B3731 !important;
+        font-family: Lato !important;
+        font-size: 18px !important;
+        font-style: normal !important;
+        font-weight: 700 !important;
+        line-height: normal !important;
+    }
+
+    .completed-booking-addon-line {
+        margin-bottom: 0.35rem;
+    }
+
+    .completed-booking-addon-line:last-child {
+        margin-bottom: 0;
+    }
+
+    .cancelled-booking-modal-head {
+        border-bottom-color: #FF8A8A;
+        background: rgba(255, 110, 110, 0.14);
+    }
+
+    .cancelled-booking-modal-card {
+        border-color: #FF8A8A;
+    }
+
+    .cancelled-modal-id-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .cancelled-modal-strike {
+        text-decoration: line-through;
+        text-decoration-thickness: 1.5px;
+        text-decoration-color: rgba(59, 55, 49, 0.8);
     }
 
     .bookings-board {
@@ -1889,6 +2248,62 @@ new class extends Component {
         display: inline-flex;
         align-items: center;
         gap: 0.32rem;
+    }
+
+    .cancelled-bookings-table th,
+    .cancelled-bookings-table td {
+        white-space: nowrap;
+    }
+
+    .cancelled-pet-cell {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.15rem;
+    }
+
+    .cancelled-pet-name {
+        font-weight: 600;
+    }
+
+    .cancelled-by-chip,
+    .refund-status-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 0.18rem 0.62rem;
+        text-align: center;
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 500;
+        line-height: normal;
+    }
+
+    .cancelled-by-chip.client {
+        color: #FFBA55;
+        background: rgba(255, 201, 122, 0.20);
+    }
+
+    .cancelled-by-chip.you {
+        color: #3B3731;
+        background: rgba(157, 155, 152, 0.20);
+
+    }
+
+    .refund-status-chip.rejected {
+        color: #FF6E6E;
+        background: #FFE2E2;
+    }
+
+    .refund-status-chip.in-progress {
+        color: #9FC7E4;
+        background: rgba(203, 220, 232, 0.20);
+    }
+
+    .refund-status-chip.processed {
+        color: #AFCD6F;
+        background: rgba(186, 207, 142, 0.20);
     }
 
     .empty-bookings {
