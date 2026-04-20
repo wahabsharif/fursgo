@@ -99,6 +99,7 @@ class BookingSeeder extends Seeder
         $staffRoster = ['Emma Wilson', 'Oliver Brown', 'Sophia Ahmed', 'Liam Carter'];
         $completedRatings = [4.0, 4.2, 4.3, 4.5, 4.7, 4.8, 5.0];
         $refundStatuses = ['Rejected', 'In Progress', 'Processed'];
+        $discountSamples = [0.0, 5.0, 10.0, 15.0, 20.0, 25.0];
 
         $bookings = [
             // Today — confirmed
@@ -295,6 +296,9 @@ class BookingSeeder extends Seeder
             $data['refund_status'] = $data['booking_status'] === 'cancelled'
                 ? $refundStatuses[array_rand($refundStatuses)]
                 : null;
+            $data['discount'] = in_array($data['booking_status'], ['completed', 'cancelled'], true)
+                ? $discountSamples[array_rand($discountSamples)]
+                : 0.0;
 
             // Idempotent seeding: update existing seeded bookings and always enforce
             // correct pivot mapping instead of creating duplicates.
@@ -309,6 +313,7 @@ class BookingSeeder extends Seeder
                 [
                     'amount' => $data['amount'],
                     'refund_amount' => $data['refund_amount'],
+                    'discount' => $data['discount'],
                     'extra_add_ons' => $data['extra_add_ons'],
                     'staff' => $data['staff'],
                     'rating' => $data['rating'],

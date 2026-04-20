@@ -1254,7 +1254,7 @@ new class extends Component {
                 ->filter(fn($item) => $item['label'] !== '')
                 ->values();
             $completedExtrasAmount = (float) $completedExtraAddOns->sum('amount');
-            $completedPromoDiscount = 0.0;
+            $completedPromoDiscount = (float) ($completedBooking->discount ?? 0);
             $completedTotalAmount = $completedServiceAmount + $completedExtrasAmount - $completedPromoDiscount;
         @endphp
         @teleport('body')
@@ -1394,7 +1394,7 @@ new class extends Component {
                 ->filter(fn($item) => $item['label'] !== '')
                 ->values();
             $cancelledExtrasAmount = (float) $cancelledExtraAddOns->sum('amount');
-            $cancelledPromoDiscount = 0.0;
+            $cancelledPromoDiscount = (float) ($cancelledBooking->discount ?? 0);
             $cancelledTotalAmount = $cancelledServiceAmount + $cancelledExtrasAmount - $cancelledPromoDiscount;
             $cancelledRefundStatus = (string) ($cancelledBooking->refund_status ?? 'In Progress');
             $cancelledRefundStatusClass =

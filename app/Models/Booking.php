@@ -16,6 +16,7 @@ class Booking extends Model
         'service',
         'amount',
         'refund_amount',
+        'discount',
         'extra_add_ons',
         'staff',
         'rating',
@@ -29,6 +30,7 @@ class Booking extends Model
         'date' => 'date',
         'amount' => 'decimal:2',
         'refund_amount' => 'decimal:2',
+        'discount' => 'decimal:2',
         'extra_add_ons' => 'array',
         'rating' => 'decimal:1',
     ];
