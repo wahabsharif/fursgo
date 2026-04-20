@@ -269,14 +269,14 @@ new class extends Component {
 <section class="bookings-board" wire:poll.5s="refreshBookingsAndCounts">
     <div class="bookings-board-header">
         @if ($activeStatus === 'pending')
-            <div class="pending-bookings-header">
-                <div class="pending-bookings-title">
+            <div class="booking-list-header">
+                <div class="booking-list-title">
                     Pending Bookings ({{ $statusCounts['pending'] }})
                 </div>
 
-                <div class="pending-bookings-sort">
-                    <div class="pending-sort-dropdown" x-data="{ open: false }" @keydown.escape.window="open = false">
-                        <button type="button" class="pending-sort-trigger" @click="open = !open"
+                <div class="booking-list-sort">
+                    <div class="sort-dropdown" x-data="{ open: false }" @keydown.escape.window="open = false">
+                        <button type="button" class="sort-trigger" @click="open = !open"
                             aria-label="Sort pending bookings" :aria-expanded="open.toString()">
                             <span>Sort</span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="7" viewBox="0 0 13 7"
@@ -285,35 +285,35 @@ new class extends Component {
                                     stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </button>
-                        <div class="pending-sort-menu" x-cloak x-show="open" @click.outside="open = false"
+                        <div class="sort-menu" x-cloak x-show="open" @click.outside="open = false"
                             x-transition.opacity.duration.100ms>
-                            <button type="button" class="pending-sort-option"
+                            <button type="button" class="sort-options"
                                 :class="{ 'is-active': @js($pendingSort) === 'latest_submitted' }"
                                 wire:click="setPendingSort('latest_submitted')"
                                 @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); open = false">
                                 <span>Recommended (default)</span>
-                                <span class="pending-sort-indicator"></span>
+                                <span class="sort-indicator"></span>
                             </button>
-                            <button type="button" class="pending-sort-option"
+                            <button type="button" class="sort-options"
                                 :class="{ 'is-active': @js($pendingSort) === 'oldest_submitted' }"
                                 wire:click="setPendingSort('oldest_submitted')"
                                 @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); open = false">
                                 <span>New to Old</span>
-                                <span class="pending-sort-indicator"></span>
+                                <span class="sort-indicator"></span>
                             </button>
-                            <button type="button" class="pending-sort-option"
+                            <button type="button" class="sort-options"
                                 :class="{ 'is-active': @js($pendingSort) === 'amount_low' }"
                                 wire:click="setPendingSort('amount_low')"
                                 @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); open = false">
                                 <span>Old to New</span>
-                                <span class="pending-sort-indicator"></span>
+                                <span class="sort-indicator"></span>
                             </button>
-                            <button type="button" class="pending-sort-option"
+                            <button type="button" class="sort-options"
                                 :class="{ 'is-active': @js($pendingSort) === 'amount_high' }"
                                 wire:click="setPendingSort('amount_high')"
                                 @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); open = false">
                                 <span>Price Descending</span>
-                                <span class="pending-sort-indicator"></span>
+                                <span class="sort-indicator"></span>
                             </button>
                         </div>
                     </div>
@@ -463,7 +463,7 @@ new class extends Component {
     @if ($declineBookingId === null && $rescheduleBookingId === null)
         <div class="bookings-table-wrap">
             @if ($activeStatus === 'pending')
-                <table class="bookings-table pending-bookings-table">
+                <table class="bookings-table booking-list-table">
                     <thead>
                         <tr>
                             <th>Booking ID</th>
@@ -473,7 +473,7 @@ new class extends Component {
                             <th>Service Type</th>
                             <th>Booking Details</th>
                             <th>Payment</th>
-                            <th class="pending-action-col">Action</th>
+                            <th class="action-col">Action</th>
                         </tr>
                     </thead>
                     <tbody wire:key="bookings-table-pending" class="bookings-table-body">
@@ -579,38 +579,38 @@ new class extends Component {
                                 }
                             @endphp
 
-                            <tr wire:key="pending-booking-row-{{ $booking->id }}">
+                            <tr wire:key="booking-pending-row-{{ $booking->id }}">
                                 <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
                                 <td>
-                                    <div class="pending-submitted-at">
-                                        <div class="pending-submitted-time">{{ $submittedTime }}</div>
-                                        <div class="pending-submitted-date">{{ $submittedDate }}</div>
+                                    <div class="submitted-at">
+                                        <div class="submitted-time">{{ $submittedTime }}</div>
+                                        <div class="submitted-date">{{ $submittedDate }}</div>
                                     </div>
                                 </td>
                                 <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
                                 <td>
                                     <div class="filtered-pet-cell">
-                                        <span class="pending-pet-name">{{ $petName }}</span>
+                                        <span class="booking-pet-name">{{ $petName }}</span>
                                         <span>
                                             @if ($petType)
-                                                <span class="pending-pet-type">{{ $petType }}</span>
+                                                <span class="booking-pet-type">{{ $petType }}</span>
                                             @endif
                                             @if ($petMore)
-                                                <span class="pending-pet-more">{{ $petMore }}</span>
+                                                <span class="booking-pet-more">{{ $petMore }}</span>
                                             @endif
                                         </span>
                                     </div>
                                 </td>
                                 <td>{{ $booking->service }}</td>
                                 <td>
-                                    <div class="pending-booking-details">
-                                        <div class="pending-booking-details-date">{{ $bookingDetailsDate }}</div>
-                                        <div class="pending-booking-details-time">{{ $bookingDetailsTime }}</div>
+                                    <div class="booking-details">
+                                        <div class="details-date">{{ $bookingDetailsDate }}</div>
+                                        <div class="details-time">{{ $bookingDetailsTime }}</div>
                                     </div>
                                 </td>
                                 <td>£{{ number_format((float) $booking->amount, 2) }}</td>
-                                <td class="pending-action-col">
-                                    <div class="pending-action-cell" x-data="{
+                                <td class="action-col">
+                                    <div class="booking-action-cell" x-data="{
                                         rowId: {{ $booking->id }},
                                         openMore: false,
                                         menuLeft: 8,
@@ -623,31 +623,31 @@ new class extends Component {
                                         },
                                         toggleMore() {
                                             if (!this.openMore) {
-                                                window.dispatchEvent(new CustomEvent('pending-more-opened', { detail: { id: this.rowId } }));
+                                                window.dispatchEvent(new CustomEvent('more-action-opened', { detail: { id: this.rowId } }));
                                                 this.repositionMore();
                                             }
                                             this.openMore = !this.openMore;
                                         }
                                     }"
                                         :class="{ 'is-open': openMore }"
-                                        @pending-more-opened.window="if (($event.detail?.id ?? null) !== rowId) { openMore = false }"
+                                        @more-action-opened.window="if (($event.detail?.id ?? null) !== rowId) { openMore = false }"
                                         @keydown.escape.window="openMore = false"
                                         @resize.window="if (openMore) repositionMore()"
                                         @scroll.window="if (openMore) repositionMore()"
                                         @click.window="if (openMore && !$refs.moreBtn.contains($event.target) && (!$refs.moreMenu || !$refs.moreMenu.contains($event.target))) { openMore = false }">
-                                        <button type="button" class="pending-accept-btn"
+                                        <button type="button" class="booking-accept-btn"
                                             wire:click="acceptBooking({{ $booking->id }})"
                                             wire:loading.attr="disabled"
                                             wire:target="acceptBooking({{ $booking->id }})"
                                             aria-label="Accept booking">
                                             <span wire:loading.remove
                                                 wire:target="acceptBooking({{ $booking->id }})">Accept</span>
-                                            <span class="pending-accept-loading" wire:loading.inline-flex
+                                            <span class="booking-accept-loading" wire:loading.inline-flex
                                                 wire:target="acceptBooking({{ $booking->id }})">
-                                                <span class="pending-accept-spinner" aria-hidden="true"></span>
+                                                <span class="booking-accept-spinner" aria-hidden="true"></span>
                                             </span>
                                         </button>
-                                        <button type="button" class="pending-decline-btn"
+                                        <button type="button" class="booking-decline-btn"
                                             @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
                                             wire:click="openDeclineModal({{ $booking->id }})"
                                             aria-label="Decline booking">
@@ -660,9 +660,9 @@ new class extends Component {
                                                         stroke-width="1.5" stroke-linecap="round" />
                                                 </svg></span>
                                         </button>
-                                        <div class="pending-more-wrap">
-                                            <button type="button" class="pending-more-btn" aria-label="More actions"
-                                                x-ref="moreBtn" @click.stop="toggleMore()">
+                                        <div class="more-action-wrapper">
+                                            <button type="button" class="more-action-trigger"
+                                                aria-label="More actions" x-ref="moreBtn" @click.stop="toggleMore()">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="25" height="5"
                                                     viewBox="0 0 25 5" fill="none">
                                                     <circle cx="2.5" cy="2.5" r="2.5" fill="#3B3731" />
@@ -672,10 +672,10 @@ new class extends Component {
                                             </button>
 
                                             <template x-teleport="body">
-                                                <div class="pending-more-menu" x-cloak x-show="openMore"
+                                                <div class="more-action-menu" x-cloak x-show="openMore"
                                                     x-ref="moreMenu" x-transition.opacity.duration.120ms
                                                     :style="`position: fixed; left: ${menuLeft}px; top: ${menuTop}px; z-index: 99999;`">
-                                                    <button type="button" class="pending-more-menu-item">
+                                                    <button type="button" class="more-action-menu-item">
                                                         <span>Message</span>
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="15"
                                                             height="14" viewBox="0 0 15 14" fill="none">
@@ -684,7 +684,7 @@ new class extends Component {
                                                                 stroke="#CBDCE8" stroke-width="1.5" />
                                                         </svg>
                                                     </button>
-                                                    <button type="button" class="pending-more-menu-item"
+                                                    <button type="button" class="more-action-menu-item"
                                                         @click.stop="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); $wire.openRescheduleModal(rowId); openMore = false;">
                                                         <span>Reschedule</span>
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16"
@@ -817,13 +817,13 @@ new class extends Component {
                                 </td>
                                 <td>
                                     <div class="filtered-pet-cell">
-                                        <span class="pending-pet-name">{{ $petName }}</span>
+                                        <span class="booking-pet-name">{{ $petName }}</span>
                                         <span>
                                             @if ($petType)
-                                                <span class="pending-pet-type">{{ $petType }}</span>
+                                                <span class="booking-pet-type">{{ $petType }}</span>
                                             @endif
                                             @if ($petMore)
-                                                <span class="pending-pet-more">{{ $petMore }}</span>
+                                                <span class="booking-pet-more">{{ $petMore }}</span>
                                             @endif
                                         </span>
                                     </div>
@@ -908,10 +908,10 @@ new class extends Component {
                                         </svg>
                                     </button>
                                     <template x-teleport="body">
-                                        <div class="pending-more-menu" x-cloak x-show="openMore" x-ref="moreMenu"
+                                        <div class="more-action-menu" x-cloak x-show="openMore" x-ref="moreMenu"
                                             x-transition.opacity.duration.120ms
                                             :style="`position: fixed; left: ${menuLeft}px; top: ${menuTop}px; z-index: 99999;`">
-                                            <button type="button" class="pending-more-menu-item">
+                                            <button type="button" class="more-action-menu-item">
                                                 <span>Message</span>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="14"
                                                     viewBox="0 0 15 14" fill="none">
@@ -920,7 +920,7 @@ new class extends Component {
                                                         stroke="#CBDCE8" stroke-width="1.5" />
                                                 </svg>
                                             </button>
-                                            <button type="button" class="pending-more-menu-item"
+                                            <button type="button" class="more-action-menu-item"
                                                 @click.stop="$wire.openRescheduleModal(rowId); openMore = false;">
                                                 <span>Reschedule</span>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -1829,7 +1829,7 @@ new class extends Component {
         color: #8f8b86 !important;
     }
 
-    .pending-bookings-header {
+    .booking-list-header {
         width: 100%;
         display: flex;
         justify-content: space-between;
@@ -1837,7 +1837,7 @@ new class extends Component {
         gap: 1rem;
     }
 
-    .pending-bookings-title {
+    .booking-list-title {
         font-family: Lato;
         font-size: 16px;
         font-style: normal;
@@ -1851,17 +1851,17 @@ new class extends Component {
         white-space: nowrap;
     }
 
-    .pending-bookings-sort {
+    .booking-list-sort {
         display: flex;
         align-items: center;
         gap: 0.5rem;
     }
 
-    .pending-sort-dropdown {
+    .sort-dropdown {
         position: relative;
     }
 
-    .pending-sort-trigger {
+    .sort-trigger {
         width: 69px;
         height: 32px;
         border-radius: 100px;
@@ -1881,7 +1881,7 @@ new class extends Component {
         cursor: pointer;
     }
 
-    .pending-sort-menu {
+    .sort-menu {
         position: absolute;
         top: calc(100% + 0.6rem);
         right: 0;
@@ -1894,7 +1894,7 @@ new class extends Component {
         overflow: hidden;
     }
 
-    .pending-sort-option {
+    .sort-options {
         width: 100%;
         border: 0;
         border-bottom: 2px solid #e6e6e5;
@@ -1914,15 +1914,15 @@ new class extends Component {
         line-height: 1.15;
     }
 
-    .pending-sort-option:last-child {
+    .sort-options:last-child {
         border-bottom: 0;
     }
 
-    .pending-sort-option:hover {
+    .sort-options:hover {
         background: #F2F2F2;
     }
 
-    .pending-sort-indicator {
+    .sort-indicator {
         width: 26px;
         height: 26px;
         border-radius: 999px;
@@ -1932,7 +1932,7 @@ new class extends Component {
         flex-shrink: 0;
     }
 
-    .pending-sort-option.is-active .pending-sort-indicator::after {
+    .sort-options.is-active .sort-indicator::after {
         content: '';
         position: absolute;
         inset: 2px;
@@ -1940,18 +1940,18 @@ new class extends Component {
         background: #FFC97A;
     }
 
-    .pending-submitted-at {
+    .submitted-at {
         display: flex;
         flex-direction: column;
         gap: 0.15rem;
     }
 
-    .pending-submitted-time {
+    .submitted-time {
         font-family: Lato;
         font-weight: 600;
     }
 
-    .pending-submitted-date {
+    .submitted-date {
         color: #9D9B98;
         font-family: Lato;
         font-weight: 400;
@@ -1965,22 +1965,22 @@ new class extends Component {
         align-items: start;
     }
 
-    .pending-pet-name {
+    .booking-pet-name {
         font-weight: 600;
         color: #3B3731;
     }
 
-    .pending-pet-type {
+    .booking-pet-type {
         color: #9D9B98;
         font-weight: 400;
     }
 
-    .pending-pet-more {
+    .booking-pet-more {
         color: #9D9B98;
         font-weight: 400;
     }
 
-    .pending-action-col {
+    .action-col {
         border-left: 1px solid #E5E2DF;
     }
 
@@ -2031,7 +2031,7 @@ new class extends Component {
         padding: 0;
     }
 
-    .pending-action-cell {
+    .booking-action-cell {
         display: flex;
         align-items: center;
         justify-content: start;
@@ -2040,12 +2040,12 @@ new class extends Component {
         overflow: visible;
     }
 
-    .pending-action-cell.is-open {
+    .booking-action-cell.is-open {
         z-index: 10001;
     }
 
 
-    .pending-accept-btn {
+    .booking-accept-btn {
         border-radius: 100px;
         background: #C9DDA0;
         width: 75.939px;
@@ -2065,33 +2065,33 @@ new class extends Component {
         gap: 0.4rem;
     }
 
-    .pending-accept-btn[disabled] {
+    .booking-accept-btn[disabled] {
         cursor: not-allowed;
         opacity: 0.9;
     }
 
-    .pending-accept-loading {
+    .booking-accept-loading {
         align-items: center;
         gap: 0.4rem;
     }
 
-    .pending-accept-spinner {
+    .booking-accept-spinner {
         width: 13px;
         height: 13px;
         border: 2px solid rgba(255, 255, 255, 0.55);
         border-top-color: #FFF;
         border-radius: 50%;
-        animation: pending-accept-spin 0.8s linear infinite;
+        animation: booking-accept-spin 0.8s linear infinite;
         flex: 0 0 auto;
     }
 
-    @keyframes pending-accept-spin {
+    @keyframes booking-accept-spin {
         to {
             transform: rotate(360deg);
         }
     }
 
-    .pending-decline-btn {
+    .booking-decline-btn {
         width: 36px;
         height: 36px;
         aspect-ratio: 1/1;
@@ -2104,8 +2104,8 @@ new class extends Component {
         padding: 0;
     }
 
-    .pending-more-btn,
-    .pending-message-btn {
+    .more-action-trigger,
+    .booking-message-btn {
         width: 26px;
         height: 26px;
         border-radius: 999px;
@@ -2120,12 +2120,12 @@ new class extends Component {
         font-weight: 700;
     }
 
-    .pending-more-btn {
+    .more-action-trigger {
         font-size: 18px;
         line-height: 1;
     }
 
-    .pending-more-wrap {
+    .more-action-wrapper {
         position: relative;
         display: inline-flex;
         align-items: center;
@@ -2133,7 +2133,7 @@ new class extends Component {
         overflow: visible;
     }
 
-    .pending-more-menu {
+    .more-action-menu {
         position: absolute;
         top: calc(100% + 0.45rem);
         left: 0;
@@ -2148,7 +2148,7 @@ new class extends Component {
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
     }
 
-    .pending-more-menu-item {
+    .more-action-menu-item {
         width: 100%;
         border: 0;
         border-bottom: 1px solid #D6D6D6;
@@ -2162,28 +2162,28 @@ new class extends Component {
         cursor: pointer;
     }
 
-    .pending-more-menu-item:last-child {
+    .more-action-menu-item:last-child {
         border-bottom: 0;
     }
 
-    .pending-more-menu-item span {
+    .more-action-menu-item span {
         font-size: 16px;
         font-style: normal;
         font-weight: 500;
         line-height: normal;
     }
 
-    .pending-more-menu-item:hover {
+    .more-action-menu-item:hover {
         background: #ECECEC;
     }
 
-    .pending-booking-details {
+    .booking-details {
         display: flex;
         flex-direction: column;
         gap: 0.15rem;
     }
 
-    .pending-booking-details-date {
+    .details-date {
         color: #3B3731;
         font-family: Lato;
         font-size: 16px;
@@ -2192,7 +2192,7 @@ new class extends Component {
         line-height: normal;
     }
 
-    .pending-booking-details-time {
+    .details-time {
         color: #3B3731;
         font-family: Lato;
         font-size: 16px;
