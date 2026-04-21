@@ -29,6 +29,9 @@
         <div class="section-panel" :class="{ 'section-active': activeSection === 'bookings' }">
             <x-dashboard.bookings />
         </div>
+        <div class="section-panel" :class="{ 'section-active': activeSection === 'availability' }">
+            <x-dashboard.availability />
+        </div>
     </div>
 </section>
 
