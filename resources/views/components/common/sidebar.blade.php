@@ -25,6 +25,7 @@
 <div x-data="{
     mobileOpen: false,
     bookingsOpen: false,
+    availabilityOpen: false,
     activeBookingStatus: '',
     bookingCounts: {
         pending: {{ $pendingCount }},
@@ -67,12 +68,12 @@
     </button>
 
     <!-- Horizontal Navigation (above content) -->
-    <aside>
+    <aside class="aside">
         <ul class="nav-list">
             <!-- Business Hub -->
             <li class="nav-item">
                 <a href="{{ route('dashboard') }}"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'business-hub'; bookingsOpen = false"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'business-hub'; bookingsOpen = false; availabilityOpen = false"
                     :class="{ 'active': activeSection === 'business-hub' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor" class="nav-icon">
@@ -88,7 +89,7 @@
             <!-- Bookings -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = ''; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-filter-reset')"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'bookings'; bookingsOpen = true; availabilityOpen = false; activeBookingStatus = ''; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-filter-reset')"
                     :class="{ 'active': activeSection === 'bookings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14"
                         fill="none">
@@ -149,7 +150,7 @@
             <!-- Availability -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'availability'; bookingsOpen = false"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'availability'; bookingsOpen = false; availabilityOpen = !availabilityOpen"
                     :class="{ 'active': activeSection === 'availability' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 14 13"
                         fill="none">
@@ -164,12 +165,27 @@
                     </svg>
                     <span class="nav-text">Availability</span>
                 </a>
+                <ul x-cloak x-show="availabilityOpen" x-transition:enter="bookings-transition-enter"
+                    x-transition:enter-start="bookings-transition-enter-start"
+                    x-transition:enter-end="bookings-transition-enter-end"
+                    x-transition:leave="bookings-transition-leave"
+                    x-transition:leave-start="bookings-transition-leave-start"
+                    x-transition:leave-end="bookings-transition-leave-end" class="booking-status-list">
+                    <li class="booking-status-item">
+                        <span class="availability-status-dot"></span>
+                        <button type="button" class="booking-status-trigger"
+                            :class="{ 'is-active': activeSection === 'availability' }"
+                            @click="activeSection = 'availability'; availabilityOpen = true;">
+                            Manage Availability
+                        </button>
+                    </li>
+                </ul>
             </li>
 
             <!-- Services -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; bookingsOpen = false"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; bookingsOpen = false; availabilityOpen = false"
                     :class="{ 'active': activeSection === 'services' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14"
                         fill="none">
@@ -187,7 +203,7 @@
             <!-- Clients -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'clients'; bookingsOpen = false"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'clients'; bookingsOpen = false; availabilityOpen = false"
                     :class="{ 'active': activeSection === 'clients' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="10" viewBox="0 0 14 10"
                         fill="none">
@@ -211,7 +227,7 @@
             <!-- Earnings -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'earnings'; bookingsOpen = false"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'earnings'; bookingsOpen = false; availabilityOpen = false"
                     :class="{ 'active': activeSection === 'earnings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="12" viewBox="0 0 14 12"
                         fill="none">
@@ -231,7 +247,7 @@
             <!-- Settings -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'settings'; bookingsOpen = false"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'settings'; bookingsOpen = false; availabilityOpen = false"
                     :class="{ 'active': activeSection === 'settings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
                         fill="none">
@@ -275,7 +291,7 @@
             min-width: 0;
         }
 
-        aside {
+        .aside {
             flex-shrink: 0;
             position: sticky;
             top: 2rem;
@@ -384,6 +400,15 @@
 
         .booking-status-dot.cancelled {
             background: #FFA899;
+        }
+
+        .availability-status-dot {
+            width: 10px;
+            height: 10px;
+            aspect-ratio: 1/1;
+            border-radius: 100px;
+            background: #FFA899;
+            flex-shrink: 0;
         }
 
         .booking-status-text {

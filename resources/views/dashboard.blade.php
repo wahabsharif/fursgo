@@ -4,7 +4,7 @@
         x-on:booking-status-changed.window="tabsLoading = false; activeBookingFilter = $event.detail.status || ''"
         x-on:nav-list-loading-start.window="navLoading = true; setTimeout(() => navLoading = false, 350)">
         <template x-if="activeSection === 'bookings'">
-            <div class="active-section-header-bookings">
+            <div class="active-section-header">
                 <h2
                     x-text="activeBookingFilter === 'pending' ? 'Pending Bookings' : (activeBookingFilter === 'confirmed' ? 'Confirmed Bookings' : (activeBookingFilter === 'completed' ? 'Completed Bookings' : (activeBookingFilter === 'cancelled' ? 'Cancelled Bookings' : 'All Bookings')))">
                 </h2>
@@ -12,7 +12,17 @@
             </div>
         </template>
 
-        <template x-if="activeSection !== 'bookings'">
+        <template x-if="activeSection === 'availability'">
+            <div class="active-section-header active-section-header-availability">
+                <span class="availability-header-pill">Manage Availability</span>
+                <div>
+                    <h2>Availability</h2>
+                    <p>View your schedule and manage when you’re available for bookings.</p>
+                </div>
+            </div>
+        </template>
+
+        <template x-if="activeSection !== 'bookings' && activeSection !== 'availability'">
             <div x-text="activeSection.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())"></div>
         </template>
 
@@ -52,8 +62,31 @@
         font-size: 28px;
         font-weight: 600;
         line-height: normal;
-        text-transform: capitalize;
         position: relative;
+    }
+
+    .active-section-header h2,
+    .active-section-header>div>h2 {
+        color: #3B3731;
+        text-align: right;
+        font-family: "Playfair Display";
+        font-size: 28px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        text-transform: capitalize;
+    }
+
+    .active-section-header p,
+    .active-section-header>div>p {
+        margin: 0.2rem 0 0;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 20px;
+        text-transform: none;
     }
 
     .active-section-loading-bar {
@@ -101,25 +134,33 @@
         }
     }
 
-    .active-section-header-bookings h2 {
-        color: #3B3731;
-        text-align: right;
-        font-family: "Playfair Display";
-        font-size: 28px;
+
+    .availability-header-pill {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 178px;
+        height: 42px;
+        border-radius: 100px;
+        background: #C9DDA0;
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.10);
+        color: #FFF;
+        text-align: center;
+        font-family: Lato;
+        font-size: 16px;
         font-style: normal;
         font-weight: 600;
         line-height: normal;
     }
 
-    .active-section-header-bookings p {
-        margin: 0.2rem 0 0;
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: 20px;
+    .active-section-header-availability {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
     }
+
 
     .section-container {
         position: relative;
