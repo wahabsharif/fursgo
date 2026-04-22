@@ -7,7 +7,7 @@
         }
 
         body {
-            background: #FFF;
+            background: #FFFFFF;
         }
 
 
@@ -140,7 +140,7 @@
             border: 1px solid #e2e8f0;
             background: #fff;
             /* border-radius: 10px; */
-            padding: 45px;
+            padding: 40px;
             width: 300px;
             height: 349px;
             position: relative;
@@ -222,7 +222,7 @@
         .bgs-safety-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 60px;
+            gap: 10px;
             max-width: 1100px;
             align-items: center;
         }
@@ -346,8 +346,8 @@
         }
 
         .works-section {
-            background-color: #fff;
-            width: 100%;
+            background: #FDFCF8;
+            padding: 80px 0;
         }
 
         /* Header Alignment */
@@ -393,12 +393,17 @@
             flex-direction: column;
             justify-content: space-between;
             width: 400px;
-            height: auto;
+            border-radius: 10px;
+            height: 350px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
         }
 
         .card-content {
-            padding: 40px 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px 20px;
+            height: 100%;
         }
 
         .card-content h3 {
@@ -408,7 +413,6 @@
             font-style: normal;
             font-weight: 400;
             line-height: normal;
-            margin-bottom: 4rem;
         }
 
         .card-content h3 strong {
@@ -456,7 +460,7 @@
 
         .left-img-section {
             position: absolute;
-            left: 40px;
+            left: -12px;
             top: -35px;
             width: 50%;
             height: 100%;
@@ -464,7 +468,7 @@
 
         .right-img-section {
             position: absolute;
-            right: 9rem;
+            right: 1rem;
             top: -6px;
             width: 50%;
             height: 100%;
@@ -476,6 +480,7 @@
             justify-content: center;
             position: relative;
             z-index: 10;
+            top: 2rem;
         }
 
         .testimonial-header {
@@ -509,7 +514,7 @@
         .slider-wrapper {
             position: relative;
             margin: 0 auto;
-            width: 420px;
+            width: 480px;
             height: 180px;
             overflow: hidden;
         }
@@ -543,8 +548,11 @@
         }
 
         .card {
-            min-width: 351px;
-            background: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-width: 400px;
+            background: #FBFBFB;
             border: 1px solid #D4D4D4;
             border-radius: 12px;
             padding: 20px;
@@ -552,7 +560,7 @@
         }
 
         .side-card {
-            opacity: 1.3;
+            opacity: 0.5;
             transform: scale(1);
         }
 
@@ -567,8 +575,6 @@
             font-style: normal;
             font-weight: 400;
             line-height: normal;
-            margin-bottom: 15px;
-            margin-top: -0.8rem;
         }
 
         .testimonial-text {
@@ -578,7 +584,6 @@
             font-style: normal;
             font-weight: 400;
             line-height: normal;
-            margin-bottom: 20px;
         }
 
         .user-info {
@@ -668,7 +673,7 @@
             justify-content: end;
             align-items: center;
             gap: 40px;
-            margin-top: 20px;
+            /* margin-top: 20px; */
         }
 
         .dots {
@@ -711,6 +716,22 @@
 
         .active-card {
             transition: opacity 0.3s ease-in-out;
+        }
+
+        .testimonial-slide-in {
+            animation: testimonialSlideIn 0.45s ease;
+        }
+
+        @keyframes testimonialSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateX(24px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         .dot {
@@ -761,11 +782,6 @@
             line-height: normal;
         }
 
-        .bgs-info strong {
-            display: block;
-            margin-top: 5px;
-            color: #000;
-        }
 
         /* GRID */
         .bgs-services-grid {
@@ -800,7 +816,7 @@
             font-style: normal;
             font-weight: 700;
             line-height: normal;
-            margin: 12px 0;
+            margin: 12px 0 25px
         }
 
         .bgs-services-card p {
@@ -841,7 +857,7 @@
 
                 <div class="bgs-buttons">
                     <a href="{{ route('verify-qualify') }}" wire:navigate class="bgs-btn primary"
-                        style="text-decoration: none; display: flex; justify-content: center; align-items: center;">Complete
+                        style="text-decoration: none; display: flex; justify-content: center; align-items: center;">Start
                         your Profile</a>
                     <button class="bgs-btn secondary">Learn more</button>
                 </div>
@@ -1038,19 +1054,19 @@
             <div class="bgs-crm-cards-wrapper">
                 <div class="bgs-crm-card">
                     <h3>Professional CRM tools</h3>
-                    <p>Send follow-ups, manage clients, and recover abandoned bookings.</p>
+                    <p>Send follow-ups, manage clients,<br /> and recover abandoned bookings.</p>
                 </div>
 
                 <div class="bgs-crm-card">
                     <h3>Real-time analytics dashboard</h3>
-                    <p>Track earnings, returning customers, and growth instantly.</p>
+                    <p>Track earnings, returning customers,<br /> and growth instantly.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="container">
-        <div class="works-section">
+    <section class="works-section">
+        <div class="container">
             <div class="header-container">
                 <h2 class="main-title">How it works</h2>
                 <p class="sub-header-text">A simple 3-step process to start earning.</p>
@@ -1059,7 +1075,8 @@
             <div class="steps-wrapper">
                 <div class="step-card">
                     <div class="card-content">
-                        <h3><strong>Create your profile</strong> – Build your profile with FursGo’s onboarding flow.
+                        <h3><strong>Create your profile</strong> – Build<br />your profile with FursGo’s<br />onboarding
+                            flow.
                         </h3>
                         <p>Build a professional profile in minutes. Add photos, services, prices, and availability.</p>
                     </div>
@@ -1072,7 +1089,9 @@
                 <div class="step-card">
                     <div class="card-content">
                         <h3><strong>Accept Bookings</strong> – Set your availability and choose clients.</h3>
-                        <p>Fill your calendar with bookings from real customers. Decide when you want to work and who
+                        <p>Fill your calendar with bookings from<br />real customers. Decide when you want<br />to work
+                            and
+                            who
                             you accept.</p>
                     </div>
                     <div class="step-footer">
@@ -1179,7 +1198,7 @@
                 </div>
                 <div class="bgs-info">
                     <p>Earning potential varies by service and location.</p>
-                    <strong>Top groomers earn £2,000–£4,000/month</strong>
+                    <p>Top groomers earn £2,000–£4,000/month</p>
                 </div>
             </div>
 
@@ -1220,88 +1239,66 @@
     <script>
         let currentIdx = 0;
 
-
         const testimonials = [{
                 date: "1 week ago",
                 text: "FursGo helped me grow my business by 40%.",
                 name: "Sarah T.",
                 role: "Pet Salon Owner",
-                img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100"
+                img: "{{ asset('images/ellipse-68.svg') }}"
             },
             {
                 date: "2 days ago",
-                text: "The interface is so clean and easy to use for my clients.",
+                text: "The interface is clean and easy for my clients to book from.",
                 name: "Zain Riaz",
-                role: "Web Developer",
-                img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100"
+                role: "Dog Walker",
+                img: "{{ asset('images/ellipse-70.svg') }}"
+            },
+            {
+                date: "3 days ago",
+                text: "I get more repeat bookings now and my calendar stays full.",
+                name: "Emma L.",
+                role: "Pet Groomer",
+                img: "{{ asset('images/ellipse-69.svg') }}"
             }
         ];
 
         function updateSlider() {
             const activeCard = document.querySelector('.active-card');
+            const dateEl = activeCard.querySelector('.date');
+            const textEl = activeCard.querySelector('.testimonial-text');
+            const imgEl = activeCard.querySelector('.user-info img');
+            const nameEl = activeCard.querySelector('.user-details h4');
+            const roleEl = activeCard.querySelector('.user-details p');
             const dots = document.querySelectorAll('.dot');
             const data = testimonials[currentIdx];
 
-            activeCard.style.opacity = 0;
+            activeCard.classList.remove('testimonial-slide-in');
+            void activeCard.offsetWidth;
 
-            const slider = document.querySelector('.slider-content');
-            const cards = document.querySelectorAll('.card');
-
-            let index = 1;
-
-            function updateSlider() {
-
-                const cardWidth = cards[2].offsetWidth + 16;
-
-                slider.style.transform = `translateX(-${index * cardWidth}px)`;
-
-                cards.forEach((card, i) => {
-                    card.classList.remove('active-card');
-                    card.classList.add('side-card');
-                });
-
-                cards[index].classList.add('active-card');
-            }
-
-            function changeSlide(direction) {
-                index += direction;
-
-
-                if (index >= cards.length) {
-                    index = 0;
-                }
-
-                if (index < 0) {
-                    index = cards.length - 1;
-                }
-
-                updateSlider();
-            }
-
+            dateEl.textContent = data.date;
+            textEl.textContent = data.text;
+            imgEl.src = data.img;
+            imgEl.alt = data.name;
+            nameEl.textContent = data.name;
+            roleEl.textContent = data.role;
+            activeCard.classList.add('testimonial-slide-in');
 
             dots.forEach((dot, index) => {
                 dot.classList.toggle('active', index === currentIdx);
             });
         }
 
-        function updateSlider() {
-
-            const cardWidth = cards[0].offsetWidth + 16;
-
-            slider.style.transform = `translateX(-${index * cardWidth}px)`;
-
-            cards.forEach(card => {
-                card.classList.remove('active-card');
-                card.classList.add('side-card');
-            });
-
-            cards[index].classList.add('active-card');
+        function changeSlide(direction) {
+            currentIdx = (currentIdx + direction + testimonials.length) % testimonials.length;
+            updateSlider();
         }
 
         function currentSlide(index) {
-            currentIdx = index;
+            currentIdx = index % testimonials.length;
             updateSlider();
         }
+
+        document.addEventListener('DOMContentLoaded', updateSlider);
     </script>
 
 </div>
