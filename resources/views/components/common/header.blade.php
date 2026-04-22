@@ -4,6 +4,7 @@
     $gsp = null;
     $displayName = null;
     $displaySubLabel = null;
+    $isBusinessLandingRoute = request()->routeIs('business-landing-page');
 
     if (auth()->check()) {
         $gsp = \App\Models\GroomerSpacerProfile::where('email', auth()->user()->email)->first();
@@ -42,7 +43,7 @@
                 <div class="dashboard-header-inner">
                     <div class="align-items-center dash-menu-items">
                         <div class="logo-toggle-button d-flex justify-content-between">
-                            <a href="{{ route('home') }}" wire:navigate>
+                            <a href="{{ route('home') }}" wire:navigate class="d-inline-flex align-items-end gap-10">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40"
                                     viewBox="0 0 145 40" fill="none">
                                     <path
@@ -70,11 +71,14 @@
                                         d="M100.537 11.2333C100.537 10.5865 100.882 10.4248 101.208 10.4248C101.579 10.4248 101.879 10.7868 101.879 11.2333C101.879 11.6799 101.847 11.2333 101.477 11.2333C101.106 11.2333 100.537 11.6799 100.537 11.2333Z"
                                         fill="#FFC97A" />
                                 </svg>
+                                @if ($isBusinessLandingRoute)
+                                    <span class="logo-b-text">Business</span>
+                                @endif
                             </a>
                             <button class="menu-toggle">&#9776;</button>
                         </div>
                         <div>
-                            <a href="#" class="active" wire:navigate>How it works</a>
+                            <a href="#" class="active" wire:navigate>Our Mission</a>
                             <a href="#" wire:navigate>For Groomers & Hosts</a>
                             <!-- <a href="#">For Hosts</a> -->
                             <a href="#" wire:navigate>Help Centre</a>
@@ -1158,7 +1162,7 @@
                 <div class="row align-items-center">
                     <div class="col-lg-4">
                         <div class="logo-toggle-button d-flex justify-content-between">
-                            <a href="{{ route('home') }}" wire:navigate>
+                            <a href="{{ route('home') }}" wire:navigate class="d-inline-flex align-items-end gap-10">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40"
                                     viewBox="0 0 145 40" fill="none">
                                     <path
@@ -1186,13 +1190,16 @@
                                         d="M100.537 11.2333C100.537 10.5865 100.882 10.4248 101.208 10.4248C101.579 10.4248 101.879 10.7868 101.879 11.2333C101.879 11.6799 101.847 11.2333 101.477 11.2333C101.106 11.2333 100.537 11.6799 100.537 11.2333Z"
                                         fill="#FFC97A" />
                                 </svg>
+                                @if ($isBusinessLandingRoute)
+                                    <span class="logo-b-text">Business</span>
+                                @endif
                             </a>
                             <button class="menu-toggle">&#9776;</button>
                         </div>
                     </div>
                     <div class="col-lg-8">
                         <ul class="menu-items">
-                            <li><a href="#" class="active" wire:navigate>How it works</a></li>
+                            <li><a href="#" class="active" wire:navigate>Our Mission</a></li>
                             <li><a href="#" wire:navigate>For Groomers & Hosts</a></li>
                             <!-- <li><a href="#">For Hosts</a></li> -->
                             <li><a href="#" wire:navigate>Help Centre</a></li>
