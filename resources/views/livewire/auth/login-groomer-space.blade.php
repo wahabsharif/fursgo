@@ -246,7 +246,7 @@ new #[Layout('layouts.app')] class extends Component {
         }
 
         .gs-login-form .form-group {
-            width: 1010%;
+            width: 100%;
         }
 
         .gs-login-form label {
