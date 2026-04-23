@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PetDetailController;
 
@@ -82,6 +84,22 @@ Route::middleware(['auth:web,groomer_spacer'])->group(function () {
     Route::delete('/bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
     Route::patch('/bookings/{booking}/accept', [BookingController::class, 'accept'])->name('bookings.accept');
     Route::patch('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
+
+    Route::post('/dev-mode/update-meta', function (Request $request) {
+        $request->validate([
+            'user_type' => 'required|in:groomer,space',
+            'account_type' => 'required|in:freelance,registered_business',
+        ]);
+
+        $user = Auth::guard('groomer_spacer')->user() ?? Auth::guard('web')->user();
+        abort_unless((bool) $user, 403);
+
+        $user->user_type = $request->string('user_type')->toString();
+        $user->account_type = $request->string('account_type')->toString();
+        $user->save();
+
+        return redirect()->back();
+    })->name('dev-mode.update-meta');
 });
 
 require __DIR__ . '/auth.php';

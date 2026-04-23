@@ -26,6 +26,7 @@
 <body x-data="{ activeSection: 'business-hub' }">
 
     <x-common.header variant="dashboard" />
+    <x-common.dev-mode-float />
 
     <div class="dashboard-wrapper">
         <x-common.sidebar variant="dashboard" />
