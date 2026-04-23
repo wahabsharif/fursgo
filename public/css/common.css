@@ -1,28 +1,26 @@
 @import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap");
+
 @font-face {
     font-family: "Playfair Display";
-    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-Medium.ttf")
-        format("truetype");
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-Medium.ttf") format("truetype");
     font-weight: 400;
 }
+
 @font-face {
     font-family: "Playfair Display";
-    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-Bold.ttf")
-        format("truetype");
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-Bold.ttf") format("truetype");
     font-weight: 600;
 }
 
 @font-face {
     font-family: "Playfair Display";
-    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-ExtraBold.ttf")
-        format("truetype");
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-ExtraBold.ttf") format("truetype");
     font-weight: 900;
 }
 
 @font-face {
     font-family: "Playfair Display";
-    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-ExtraBoldItalic.ttf")
-        format("truetype");
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-ExtraBoldItalic.ttf") format("truetype");
     font-style: italic;
     font-weight: 900;
 }
@@ -437,6 +435,13 @@ nav ul {
     justify-content: space-between;
     list-style: none;
 }
+nav ul li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    list-style: none;
+    gap: 20px;
+}
 
 nav ul li a {
     color: var(--font-color);
@@ -467,6 +472,7 @@ nav ul a.active {
     text-underline-offset: 4px;
     text-underline-position: from-font;
 }
+
 .logo-b-text {
     color: #3b3731 !important;
     font-family: Lato !important;
@@ -475,9 +481,89 @@ nav ul a.active {
     font-weight: 500 !important;
     line-height: normal !important;
 }
+
 .login-signup-div {
     display: flex;
     gap: 20px;
+}
+
+.nav-login-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 88px;
+    height: 48px;
+    border-radius: 75px;
+    border: 1px solid #3B3731;
+    background: #FFF;
+    color: #3B3731;
+    text-align: center;
+    font-family: Lato;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    cursor: pointer;
+}
+
+.nav-signup-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 102px;
+    height: 48px;
+    border-radius: 96px;
+    background: #FBAC83;
+    border: none;
+    color: #FFF;
+    text-align: center;
+    font-family: Lato;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    cursor: pointer;
+}
+
+.nav-login-btn:hover, .nav-signup-btn:hover {
+    transition: all 0.3s ease;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.menu-items{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    list-style: none;
+    gap: 5rem;
+}
+
+.menu-items a {
+    color: var(--font-color);
+    font-family: "Lato";
+    font-size: 16px;
+    font-weight: 600;
+    /* normal */
+    font-style: normal;
+}
+
+.menu-items a:hover {
+    color: var(--groomer-color);
+    font-weight: 600;
+    transition: all 0.3s ease;
+
+}
+
+.menu-items a.active {
+    color: var(--groomer-color);
+    font-weight: 600;
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-skip-ink: auto;
+    text-decoration-thickness: auto;
+    text-underline-offset: 4px;
+    text-underline-position: from-font;
 }
 
 .login-btn,
@@ -619,7 +705,8 @@ p.messages-count {
     padding: 0 25px 15px 25px;
     cursor: pointer !important;
 }
-.logout-option > form > button {
+
+.logout-option>form>button {
     border: none;
     background: transparent;
     cursor: pointer !important;

@@ -11,6 +11,9 @@ Route::middleware('guest')->group(function () {
     Volt::route('login', 'auth.login')
         ->name('login');
 
+    Volt::route('login-groomer-space', 'auth.login-groomer-space')
+        ->name('login-groomer-space');
+
     Volt::route('signup', 'auth.signup')
         ->name('signup');
 

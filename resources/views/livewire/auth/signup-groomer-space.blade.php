@@ -232,6 +232,10 @@ new #[Layout('layouts.app')] class extends Component {
                 <img src="{{ asset('images/social_media/apple.png') }}" alt="Apple">
             </div>
         </div>
+        <div class="login-cta-text">
+            Already have a Fursgo business account?
+            <a href="{{ route('login-groomer-space') }}" wire:navigate>Log in now</a>
+        </div>
 
     </div>
 </section>
@@ -293,6 +297,34 @@ new #[Layout('layouts.app')] class extends Component {
 
         .btn-disabled:hover {
             background: #ccc !important;
+        }
+
+        .login-cta-text {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            padding-top: 2rem;
+            border-top: 2px solid #D4D4D4;
+            margin-top: 2.5rem;
+            text-align: center;
+        }
+
+        .login-cta-text a {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 700;
+            line-height: normal;
+            text-decoration-line: underline;
+            text-decoration-style: solid;
+            text-decoration-skip-ink: auto;
+            text-decoration-thickness: auto;
+            text-underline-offset: auto;
+            text-underline-position: from-font;
         }
     </style>
 @endpush

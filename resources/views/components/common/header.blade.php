@@ -44,8 +44,8 @@
                     <div class="align-items-center dash-menu-items">
                         <div class="logo-toggle-button d-flex justify-content-between">
                             <a href="{{ route('home') }}" wire:navigate class="d-inline-flex align-items-end gap-10">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40"
-                                    viewBox="0 0 145 40" fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40" viewBox="0 0 145 40"
+                                    fill="none">
                                     <path
                                         d="M132.206 12.7941C134.795 12.7941 137.035 13.2385 138.927 14.1273C140.852 14.9832 142.345 16.3987 143.407 18.3738C144.469 20.349 145 22.9989 145 26.3237C145 29.6485 144.469 32.2985 143.407 34.2736C142.345 36.2487 140.852 37.6642 138.927 38.5201C137.035 39.376 134.795 39.8039 132.206 39.8039C129.651 39.8039 127.41 39.376 125.485 38.5201C123.561 37.6642 122.067 36.2487 121.005 34.2736C119.943 32.2985 119.412 29.6485 119.412 26.3237C119.412 22.9989 119.943 20.349 121.005 18.3738C122.067 16.3987 123.561 14.9832 125.485 14.1273C127.41 13.2385 129.651 12.7941 132.206 12.7941ZM132.206 13.7817C131.21 13.7817 130.381 14.7692 129.717 16.7444C129.053 18.7195 128.721 21.9126 128.721 26.3237C128.721 30.7348 129.053 33.9279 129.717 35.9031C130.381 37.8453 131.21 38.8164 132.206 38.8164C133.202 38.8164 134.031 37.8453 134.695 35.9031C135.359 33.9279 135.691 30.7348 135.691 26.3237C135.691 21.9126 135.359 18.7195 134.695 16.7444C134.031 14.7692 133.202 13.7817 132.206 13.7817Z"
                                         fill="#FFC97A" />
@@ -86,8 +86,8 @@
                         <div class="session-login-signup-div dashboard-header-icons d-flex align-items-center gap-40">
                             <div class="messages-content-tab">
                                 <a class="messages-btn cursor">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="22"
-                                        viewBox="0 0 26 22" fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="22" viewBox="0 0 26 22"
+                                        fill="none">
                                         <path
                                             d="M0.75 10.75C0.75 6.03625 0.75 3.67875 2.215 2.215C3.68 0.75125 6.03625 0.75 10.75 0.75H15.75C20.4637 0.75 22.8212 0.75 24.285 2.215C25.7487 3.68 25.75 6.03625 25.75 10.75C25.75 15.4637 25.75 17.8212 24.285 19.285C22.82 20.7487 20.4637 20.75 15.75 20.75H10.75C6.03625 20.75 3.67875 20.75 2.215 19.285C0.75125 17.82 0.75 15.4637 0.75 10.75Z"
                                             stroke="#3B3731" stroke-width="1.5" />
@@ -118,8 +118,8 @@
                                             </p>
                                         </div>
                                         <div class="tags">
-                                            <p class="simple-font muted-color cursor">Unread <span
-                                                    class="count">5</span></p>
+                                            <p class="simple-font muted-color cursor">Unread <span class="count">5</span>
+                                            </p>
                                         </div>
                                     </div>
                                     <div class="header-notifications-div">
@@ -128,11 +128,11 @@
                                             <div class="profile-pic">
                                                 <div class="profile-image-wrapper">
 
-                                                    <img src="{{ asset('images/message_profile_1.png') }}"
-                                                        alt="Hero Image" class="rounded-image">
+                                                    <img src="{{ asset('images/message_profile_1.png') }}" alt="Hero Image"
+                                                        class="rounded-image">
                                                     <div class="top-left-svg">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20"
-                                                            height="22" viewBox="0 0 20 22" fill="none">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="22"
+                                                            viewBox="0 0 20 22" fill="none">
                                                             <path
                                                                 d="M10.5114 0.120327C10.3372 0.0415119 10.1505 3.05176e-05 9.95555 3.05176e-05C9.76059 3.05176e-05 9.57393 0.0415119 9.3997 0.120327L1.58876 3.43469C0.676166 3.82047 -0.00412927 4.72061 1.88678e-05 5.80743C0.0207596 9.92238 1.7132 17.4513 8.86045 20.8735C9.55319 21.2053 10.3579 21.2053 11.0507 20.8735C18.1979 17.4513 19.8903 9.92238 19.9111 5.80743C19.9152 4.72061 19.2349 3.82047 18.3224 3.43469L10.5114 0.120327Z"
                                                                 fill="#CBDCE8" />
@@ -186,10 +186,10 @@
                                                     <img src="{{ asset('images/groomer-profile.png') }}"
                                                         class="rounded-image" alt="Hero Image">
                                                     <div class="top-left-svg">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="21"
-                                                            height="23" viewBox="0 0 21 23" fill="none">
-                                                            <ellipse cx="10.9241" cy="11.3744" rx="6.44549"
-                                                                ry="6.06626" fill="white" />
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="21" height="23"
+                                                            viewBox="0 0 21 23" fill="none">
+                                                            <ellipse cx="10.9241" cy="11.3744" rx="6.44549" ry="6.06626"
+                                                                fill="white" />
                                                             <path
                                                                 d="M10.6272 0.127384C10.4511 0.0439255 10.2623 0 10.0652 0C9.86812 0 9.6794 0.0439255 9.50326 0.127384L1.60626 3.63703C0.683615 4.04554 -0.00417476 4.99872 1.90757e-05 6.14957C0.0209883 10.507 1.73207 18.4795 8.95806 22.1033C9.65843 22.4547 10.472 22.4547 11.1724 22.1033C18.3984 18.4795 20.1095 10.507 20.1304 6.14957C20.1346 4.99872 19.4469 4.04554 18.5242 3.63703L10.6272 0.127384ZM6.07689 12.5715C6.2782 12.6242 6.49208 12.6505 6.71016 12.6505C8.19059 12.6505 9.39422 11.3899 9.39422 9.83931V7.02808H11.2479C11.7554 7.02808 12.2209 7.32677 12.4473 7.80556L12.7493 8.43369H15.4333C15.8024 8.43369 16.1044 8.74996 16.1044 9.1365V10.5421C16.1044 12.4836 14.603 14.0562 12.7493 14.0562H10.7362V16.2832C10.7362 16.6038 10.4888 16.8674 10.1785 16.8674C10.103 16.8674 10.0275 16.8498 9.96039 16.8191L5.82107 14.961C5.54428 14.838 5.36813 14.5525 5.36813 14.2406C5.36813 14.1177 5.3933 13.9991 5.44782 13.8892L6.07689 12.5715ZM6.03915 7.02808H8.05219V9.83931C8.05219 10.6168 7.45247 11.2449 6.71016 11.2449C5.96785 11.2449 5.36813 10.6168 5.36813 9.83931V7.73089C5.36813 7.34434 5.67009 7.02808 6.03915 7.02808ZM11.4073 9.1365C11.4073 8.9501 11.3366 8.77134 11.2107 8.63954C11.0849 8.50774 10.9142 8.43369 10.7362 8.43369C10.5583 8.43369 10.3876 8.50774 10.2618 8.63954C10.1359 8.77134 10.0652 8.9501 10.0652 9.1365C10.0652 9.3229 10.1359 9.50166 10.2618 9.63346C10.3876 9.76526 10.5583 9.83931 10.7362 9.83931C10.9142 9.83931 11.0849 9.76526 11.2107 9.63346C11.3366 9.50166 11.4073 9.3229 11.4073 9.1365Z"
                                                                 fill="#C9DDA0" />
@@ -220,11 +220,11 @@
 
                                             <div class="profile-pic">
                                                 <div class="profile-image-wrapper">
-                                                    <img src="{{ asset('images/space_card1.png') }}"
-                                                        class="rounded-image" alt="Hero Image">
+                                                    <img src="{{ asset('images/space_card1.png') }}" class="rounded-image"
+                                                        alt="Hero Image">
                                                     <div class="top-left-svg">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20"
-                                                            height="22" viewBox="0 0 20 22" fill="none">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="22"
+                                                            viewBox="0 0 20 22" fill="none">
                                                             <path
                                                                 d="M10.5114 0.120357C10.3372 0.0415424 10.1505 6.10352e-05 9.95555 6.10352e-05C9.76059 6.10352e-05 9.57393 0.0415424 9.3997 0.120357L1.58876 3.43472C0.676166 3.8205 -0.00412927 4.72064 1.88678e-05 5.80746C0.0207596 9.92241 1.7132 17.4513 8.86045 20.8735C9.55319 21.2054 10.3579 21.2054 11.0507 20.8735C18.1979 17.4513 19.8903 9.92241 19.9111 5.80746C19.9152 4.72064 19.2349 3.8205 18.3224 3.43472L10.5114 0.120357Z"
                                                                 fill="#CBDCE8" />
@@ -245,8 +245,7 @@
                                                             <path
                                                                 d="M8.69331 8.0266C8.69331 8.20343 8.62307 8.37302 8.49803 8.49806C8.37299 8.6231 8.2034 8.69334 8.02657 8.69334C7.84974 8.69334 7.68015 8.6231 7.55512 8.49806C7.43008 8.37302 7.35983 8.20343 7.35983 8.0266C7.35983 7.84977 7.43008 7.68018 7.55512 7.55515C7.68015 7.43011 7.84974 7.35986 8.02657 7.35986C8.2034 7.35986 8.37299 7.43011 8.49803 7.55515C8.62307 7.68018 8.69331 7.84977 8.69331 8.0266Z"
                                                                 fill="#CBDCE8" stroke="white" />
-                                                            <path d="M10.0268 6.29364V6.34698V6.29364Z"
-                                                                fill="#CBDCE8" />
+                                                            <path d="M10.0268 6.29364V6.34698V6.29364Z" fill="#CBDCE8" />
                                                             <path d="M10.0268 6.29364V6.34698" stroke="white"
                                                                 stroke-linecap="round" stroke-linejoin="round" />
                                                         </svg>
@@ -270,8 +269,7 @@
 
                                         </div>
                                     </div>
-                                    <div
-                                        class="view-all-mark-read d-flex align-items-center justify-content-between mt-4">
+                                    <div class="view-all-mark-read d-flex align-items-center justify-content-between mt-4">
                                         <a href="{{ url('/messages_notification/messages') }}"
                                             class="dark-color-font link-tag" wire:navigate>View
                                             All</a>
@@ -283,8 +281,7 @@
                                                     stroke-linecap="round" stroke-linejoin="round" />
                                                 <path
                                                     d="M15.5 8V13.625C15.5 14.1223 15.3025 14.5992 14.9508 14.9508C14.5992 15.3025 14.1223 15.5 13.625 15.5H2.375C1.87772 15.5 1.40081 15.3025 1.04917 14.9508C0.697544 14.5992 0.5 14.1223 0.5 13.625V2.375C0.5 1.87772 0.697544 1.40081 1.04917 1.04917C1.40081 0.697544 1.87772 0.5 2.375 0.5H10.8125"
-                                                    stroke="#3B3731" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
+                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
                                             <a href="" class="dark-color-font link-tag" wire:navigate>Mark as
                                                 Read</a>
@@ -295,8 +292,8 @@
 
                             <div class="notification-content-tab">
                                 <a class="notification-btn cursor">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
-                                        viewBox="0 0 22 22" fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22"
+                                        fill="none">
                                         <path
                                             d="M16.134 10C16.715 15.375 19 17 19 17H1C1 17 4 14.867 4 7.4C4 5.703 4.632 4.075 5.757 2.875C6.882 1.675 8.41 1 10 1C10.338 1 10.6713 1.03 11 1.09M11.73 20C11.5542 20.3031 11.3018 20.5547 10.9982 20.7295C10.6946 20.9044 10.3504 20.9965 10 20.9965C9.6496 20.9965 9.3054 20.9044 9.0018 20.7295C8.6982 20.5547 8.4458 20.3031 8.27 20M17 7C17.7956 7 18.5587 6.68393 19.1213 6.12132C19.6839 5.55871 20 4.79565 20 4C20 3.20435 19.6839 2.44129 19.1213 1.87868C18.5587 1.31607 17.7956 1 17 1C16.2044 1 15.4413 1.31607 14.8787 1.87868C14.3161 2.44129 14 3.20435 14 4C14 4.79565 14.3161 5.55871 14.8787 6.12132C15.4413 6.68393 16.2044 7 17 7Z"
                                             stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
@@ -325,48 +322,44 @@
                                             </p>
                                         </div>
                                         <div class="tags">
-                                            <p class="simple-font muted-color cursor">Bookings <span
-                                                    class="count">5</span></p>
+                                            <p class="simple-font muted-color cursor">Bookings <span class="count">5</span>
+                                            </p>
                                         </div>
                                         <div class="tags">
-                                            <p class="simple-font muted-color cursor">Payments <span
-                                                    class="count">3</span></p>
+                                            <p class="simple-font muted-color cursor">Payments <span class="count">3</span>
+                                            </p>
                                         </div>
                                         <div class="tags">
-                                            <p class="simple-font muted-color cursor">Reviews <span
-                                                    class="count">2</span></p>
+                                            <p class="simple-font muted-color cursor">Reviews <span class="count">2</span>
+                                            </p>
                                         </div>
                                         <div class="tags">
-                                            <p class="simple-font muted-color cursor">Updates <span
-                                                    class="count">3</span></p>
+                                            <p class="simple-font muted-color cursor">Updates <span class="count">3</span>
+                                            </p>
                                         </div>
                                     </div>
                                     <div class="header-notifications-div">
                                         <div class="header-notifications-list booking-confirmed cursor mt-4">
                                             <div
                                                 class="header-notification-list-item d-flex align-items-center justify-content-between">
-                                                <div
-                                                    class="notification-list-item-inner-left d-flex align-items-center">
+                                                <div class="notification-list-item-inner-left d-flex align-items-center">
                                                     <div class="notification-list-item-inner-left-icon">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="86"
-                                                            height="86" viewBox="0 0 86 86" fill="none">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="86" height="86"
+                                                            viewBox="0 0 86 86" fill="none">
                                                             <g opacity="0.8" filter="url(#filter0_d_10_2216)">
-                                                                <circle cx="43" cy="39" r="28"
-                                                                    fill="#C9DDA0" />
+                                                                <circle cx="43" cy="39" r="28" fill="#C9DDA0" />
                                                             </g>
                                                             <path
                                                                 d="M33 39.0948C33 35.4849 33 33.6795 34.172 32.5586C35.344 31.4376 37.229 31.4366 41 31.4366H45C48.771 31.4366 50.657 31.4366 51.828 32.5586C52.999 33.6805 53 35.4849 53 39.0948V41.0093C53 44.6191 53 46.4245 51.828 47.5455C50.656 48.6664 48.771 48.6674 45 48.6674H41C37.229 48.6674 35.343 48.6674 34.172 47.5455C33.001 46.4236 33 44.6191 33 41.0093V39.0948Z"
                                                                 stroke="white" stroke-width="1.5" />
                                                             <path d="M38 31.4359V30M48 31.4359V30M33.5 36.2222H52.5"
-                                                                stroke="white" stroke-width="1.5"
-                                                                stroke-linecap="round" />
+                                                                stroke="white" stroke-width="1.5" stroke-linecap="round" />
                                                             <path
                                                                 d="M49.0002 43.8804C49.0002 44.1343 48.8949 44.3778 48.7074 44.5573C48.5198 44.7368 48.2655 44.8377 48.0002 44.8377C47.735 44.8377 47.4807 44.7368 47.2931 44.5573C47.1056 44.3778 47.0002 44.1343 47.0002 43.8804C47.0002 43.6266 47.1056 43.3831 47.2931 43.2035C47.4807 43.024 47.735 42.9232 48.0002 42.9232C48.2655 42.9232 48.5198 43.024 48.7074 43.2035C48.8949 43.3831 49.0002 43.6266 49.0002 43.8804ZM49.0002 40.0514C49.0002 40.3053 48.8949 40.5487 48.7074 40.7283C48.5198 40.9078 48.2655 41.0086 48.0002 41.0086C47.735 41.0086 47.4807 40.9078 47.2931 40.7283C47.1056 40.5487 47.0002 40.3053 47.0002 40.0514C47.0002 39.7975 47.1056 39.554 47.2931 39.3745C47.4807 39.195 47.735 39.0941 48.0002 39.0941C48.2655 39.0941 48.5198 39.195 48.7074 39.3745C48.8949 39.554 49.0002 39.7975 49.0002 40.0514ZM44.0002 43.8804C44.0002 44.1343 43.8949 44.3778 43.7074 44.5573C43.5198 44.7368 43.2655 44.8377 43.0002 44.8377C42.735 44.8377 42.4807 44.7368 42.2931 44.5573C42.1056 44.3778 42.0002 44.1343 42.0002 43.8804C42.0002 43.6266 42.1056 43.3831 42.2931 43.2035C42.4807 43.024 42.735 42.9232 43.0002 42.9232C43.2655 42.9232 43.5198 43.024 43.7074 43.2035C43.8949 43.3831 44.0002 43.6266 44.0002 43.8804ZM44.0002 40.0514C44.0002 40.3053 43.8949 40.5487 43.7074 40.7283C43.5198 40.9078 43.2655 41.0086 43.0002 41.0086C42.735 41.0086 42.4807 40.9078 42.2931 40.7283C42.1056 40.5487 42.0002 40.3053 42.0002 40.0514C42.0002 39.7975 42.1056 39.554 42.2931 39.3745C42.4807 39.195 42.735 39.0941 43.0002 39.0941C43.2655 39.0941 43.5198 39.195 43.7074 39.3745C43.8949 39.554 44.0002 39.7975 44.0002 40.0514ZM39.0002 43.8804C39.0002 44.1343 38.8949 44.3778 38.7074 44.5573C38.5198 44.7368 38.2655 44.8377 38.0002 44.8377C37.735 44.8377 37.4807 44.7368 37.2931 44.5573C37.1056 44.3778 37.0002 44.1343 37.0002 43.8804C37.0002 43.6266 37.1056 43.3831 37.2931 43.2035C37.4807 43.024 37.735 42.9232 38.0002 42.9232C38.2655 42.9232 38.5198 43.024 38.7074 43.2035C38.8949 43.3831 39.0002 43.6266 39.0002 43.8804ZM39.0002 40.0514C39.0002 40.3053 38.8949 40.5487 38.7074 40.7283C38.5198 40.9078 38.2655 41.0086 38.0002 41.0086C37.735 41.0086 37.4807 40.9078 37.2931 40.7283C37.1056 40.5487 37.0002 40.3053 37.0002 40.0514C37.0002 39.7975 37.1056 39.554 37.2931 39.3745C37.4807 39.195 37.735 39.0941 38.0002 39.0941C38.2655 39.0941 38.5198 39.195 38.7074 39.3745C38.8949 39.554 39.0002 39.7975 39.0002 40.0514Z"
                                                                 fill="white" />
                                                             <defs>
-                                                                <filter id="filter0_d_10_2216" x="0" y="0"
-                                                                    width="86" height="86"
-                                                                    filterUnits="userSpaceOnUse"
+                                                                <filter id="filter0_d_10_2216" x="0" y="0" width="86"
+                                                                    height="86" filterUnits="userSpaceOnUse"
                                                                     color-interpolation-filters="sRGB">
                                                                     <feFlood flood-opacity="0"
                                                                         result="BackgroundImageFix" />
@@ -384,8 +377,7 @@
                                                                     <feBlend mode="normal" in2="BackgroundImageFix"
                                                                         result="effect1_dropShadow_10_2216" />
                                                                     <feBlend mode="normal" in="SourceGraphic"
-                                                                        in2="effect1_dropShadow_10_2216"
-                                                                        result="shape" />
+                                                                        in2="effect1_dropShadow_10_2216" result="shape" />
                                                                 </filter>
                                                             </defs>
                                                         </svg>
@@ -401,8 +393,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="notification-list-item-inner-right">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10"
-                                                        height="10" viewBox="0 0 10 10" fill="none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"
+                                                        viewBox="0 0 10 10" fill="none">
                                                         <circle cx="5" cy="5" r="5" fill="#C9DDA0" />
                                                     </svg>
                                                 </div>
@@ -411,22 +403,19 @@
                                         <div class="header-notifications-list booking-reminder cursor mt-4">
                                             <div
                                                 class="header-notification-list-item d-flex align-items-center justify-content-between">
-                                                <div
-                                                    class="notification-list-item-inner-left d-flex align-items-center">
+                                                <div class="notification-list-item-inner-left d-flex align-items-center">
                                                     <div class="notification-list-item-inner-left-icon">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="82"
-                                                            height="82" viewBox="0 0 82 82" fill="none">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="82" height="82"
+                                                            viewBox="0 0 82 82" fill="none">
                                                             <g filter="url(#filter0_d_10_1928)">
-                                                                <circle cx="41" cy="37" r="28"
-                                                                    fill="#FBAC83" />
+                                                                <circle cx="41" cy="37" r="28" fill="#FBAC83" />
                                                             </g>
                                                             <path
                                                                 d="M41 28.2656C41.0605 28.2656 41.1132 28.2837 41.1504 28.3096C41.1824 28.3319 41.2169 28.3701 41.2393 28.4453L42.9014 34.0469C43.1217 34.7896 43.8044 35.2988 44.5791 35.2988H50.1377C50.3741 35.2991 50.4781 35.5978 50.293 35.7451L45.6445 39.4443C45.0864 39.8886 44.8539 40.6267 45.0566 41.3105L46.7939 47.1699C46.8631 47.404 46.5906 47.5881 46.3994 47.4365L42.0898 44.0068C41.452 43.4993 40.548 43.4993 39.9102 44.0068L35.6006 47.4365C35.4094 47.5881 35.1369 47.404 35.2061 47.1699L36.9434 41.3105C37.1461 40.6267 36.9135 39.8886 36.3555 39.4443L31.707 35.7451C31.5219 35.5978 31.6259 35.2991 31.8623 35.2988H37.4209C38.1956 35.2988 38.8783 34.7896 39.0986 34.0469L40.7607 28.4453C40.7831 28.3701 40.8176 28.3319 40.8496 28.3096C40.8868 28.2837 40.9395 28.2656 41 28.2656Z"
                                                                 stroke="white" stroke-width="1.5" />
                                                             <defs>
-                                                                <filter id="filter0_d_10_1928" x="0" y="0"
-                                                                    width="82" height="82"
-                                                                    filterUnits="userSpaceOnUse"
+                                                                <filter id="filter0_d_10_1928" x="0" y="0" width="82"
+                                                                    height="82" filterUnits="userSpaceOnUse"
                                                                     color-interpolation-filters="sRGB">
                                                                     <feFlood flood-opacity="0"
                                                                         result="BackgroundImageFix" />
@@ -444,8 +433,7 @@
                                                                     <feBlend mode="normal" in2="BackgroundImageFix"
                                                                         result="effect1_dropShadow_10_1928" />
                                                                     <feBlend mode="normal" in="SourceGraphic"
-                                                                        in2="effect1_dropShadow_10_1928"
-                                                                        result="shape" />
+                                                                        in2="effect1_dropShadow_10_1928" result="shape" />
                                                                 </filter>
                                                             </defs>
                                                         </svg>
@@ -461,8 +449,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="notification-list-item-inner-right">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10"
-                                                        height="10" viewBox="0 0 10 10" fill="none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"
+                                                        viewBox="0 0 10 10" fill="none">
                                                         <circle cx="5" cy="5" r="5" fill="#FBAC83" />
                                                     </svg>
                                                 </div>
@@ -471,26 +459,23 @@
                                         <div class="header-notifications-list payment-failed cursor mt-4">
                                             <div
                                                 class="header-notification-list-item d-flex align-items-center justify-content-between">
-                                                <div
-                                                    class="notification-list-item-inner-left d-flex align-items-center">
+                                                <div class="notification-list-item-inner-left d-flex align-items-center">
                                                     <div class="notification-list-item-inner-left-icon">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="82"
-                                                            height="82" viewBox="0 0 82 82" fill="none">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="82" height="82"
+                                                            viewBox="0 0 82 82" fill="none">
                                                             <g filter="url(#filter0_d_10_1934)">
-                                                                <circle cx="41" cy="37" r="28"
-                                                                    fill="#FFA899" />
+                                                                <circle cx="41" cy="37" r="28" fill="#FFA899" />
                                                             </g>
                                                             <path
                                                                 d="M31 33.5714V32.6571C31 31.3771 31 30.7371 31.2422 30.248C31.4556 29.8171 31.7944 29.4686 32.2133 29.2491C32.6889 29 33.3111 29 34.5556 29H47.4444C48.6889 29 49.3111 29 49.7856 29.2491C50.2044 29.4686 50.5444 29.8171 50.7578 30.248C51 30.736 51 31.376 51 32.6537V33.5714M31 33.5714H51H31ZM31 33.5714V41.3429C31 42.6229 31 43.2629 31.2422 43.752C31.4553 44.1821 31.7952 44.5317 32.2133 44.7509C32.6878 45 33.31 45 34.5522 45H47.4478C48.69 45 49.3111 45 49.7856 44.7509C50.2044 44.5314 50.5444 44.1817 50.7578 43.752C51 43.2629 51 42.6251 51 41.3474V33.5714M34.3333 40.4286H38.7778H34.3333Z"
                                                                 fill="#FFA899" />
                                                             <path
                                                                 d="M31 33.5714V32.6571C31 31.3771 31 30.7371 31.2422 30.248C31.4556 29.8171 31.7944 29.4686 32.2133 29.2491C32.6889 29 33.3111 29 34.5556 29H47.4444C48.6889 29 49.3111 29 49.7856 29.2491C50.2044 29.4686 50.5444 29.8171 50.7578 30.248C51 30.736 51 31.376 51 32.6537V33.5714M31 33.5714H51M31 33.5714V41.3429C31 42.6229 31 43.2629 31.2422 43.752C31.4553 44.1821 31.7952 44.5317 32.2133 44.7509C32.6878 45 33.31 45 34.5522 45H47.4478C48.69 45 49.3111 45 49.7856 44.7509C50.2044 44.5314 50.5444 44.1817 50.7578 43.752C51 43.2629 51 42.6251 51 41.3474V33.5714M34.3333 40.4286H38.7778"
-                                                                stroke="white" stroke-width="1.5"
-                                                                stroke-linecap="round" stroke-linejoin="round" />
+                                                                stroke="white" stroke-width="1.5" stroke-linecap="round"
+                                                                stroke-linejoin="round" />
                                                             <defs>
-                                                                <filter id="filter0_d_10_1934" x="0" y="0"
-                                                                    width="82" height="82"
-                                                                    filterUnits="userSpaceOnUse"
+                                                                <filter id="filter0_d_10_1934" x="0" y="0" width="82"
+                                                                    height="82" filterUnits="userSpaceOnUse"
                                                                     color-interpolation-filters="sRGB">
                                                                     <feFlood flood-opacity="0"
                                                                         result="BackgroundImageFix" />
@@ -508,8 +493,7 @@
                                                                     <feBlend mode="normal" in2="BackgroundImageFix"
                                                                         result="effect1_dropShadow_10_1934" />
                                                                     <feBlend mode="normal" in="SourceGraphic"
-                                                                        in2="effect1_dropShadow_10_1934"
-                                                                        result="shape" />
+                                                                        in2="effect1_dropShadow_10_1934" result="shape" />
                                                                 </filter>
                                                             </defs>
                                                         </svg>
@@ -523,8 +507,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="notification-list-item-inner-right">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10"
-                                                        height="10" viewBox="0 0 10 10" fill="none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"
+                                                        viewBox="0 0 10 10" fill="none">
                                                         <circle cx="5" cy="5" r="5" fill="#FFA899" />
                                                     </svg>
                                                 </div>
@@ -533,23 +517,20 @@
                                         <div class="header-notifications-list cursor mt-4">
                                             <div
                                                 class="header-notification-list-item d-flex align-items-center justify-content-between">
-                                                <div
-                                                    class="notification-list-item-inner-left d-flex align-items-center">
+                                                <div class="notification-list-item-inner-left d-flex align-items-center">
                                                     <div class="notification-list-item-inner-left-icon">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="82"
-                                                            height="82" viewBox="0 0 82 82" fill="none">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="82" height="82"
+                                                            viewBox="0 0 82 82" fill="none">
                                                             <g filter="url(#filter0_d_10_1940)">
-                                                                <circle cx="41" cy="37" r="28"
-                                                                    fill="white" />
+                                                                <circle cx="41" cy="37" r="28" fill="white" />
                                                             </g>
                                                             <path
                                                                 d="M46.9305 35.4737C47.5421 41.1316 49.9474 42.8421 49.9474 42.8421H31C31 42.8421 34.1579 40.5968 34.1579 32.7368C34.1579 30.9505 34.8232 29.2368 36.0074 27.9737C37.1916 26.7105 38.8 26 40.4737 26C40.8295 26 41.1804 26.0316 41.5263 26.0947M42.2947 46C42.1097 46.319 41.844 46.5838 41.5244 46.7679C41.2049 46.952 40.8425 47.0489 40.4737 47.0489C40.1049 47.0489 39.7425 46.952 39.4229 46.7679C39.1033 46.5838 38.8377 46.319 38.6526 46M47.8421 32.3158C48.6796 32.3158 49.4829 31.9831 50.0751 31.3909C50.6673 30.7986 51 29.9954 51 29.1579C51 28.3204 50.6673 27.5171 50.0751 26.9249C49.4829 26.3327 48.6796 26 47.8421 26C47.0046 26 46.2014 26.3327 45.6091 26.9249C45.0169 27.5171 44.6842 28.3204 44.6842 29.1579C44.6842 29.9954 45.0169 30.7986 45.6091 31.3909C46.2014 31.9831 47.0046 32.3158 47.8421 32.3158Z"
-                                                                stroke="#3B3731" stroke-width="1.5"
-                                                                stroke-linecap="round" stroke-linejoin="round" />
+                                                                stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
+                                                                stroke-linejoin="round" />
                                                             <defs>
-                                                                <filter id="filter0_d_10_1940" x="0" y="0"
-                                                                    width="82" height="82"
-                                                                    filterUnits="userSpaceOnUse"
+                                                                <filter id="filter0_d_10_1940" x="0" y="0" width="82"
+                                                                    height="82" filterUnits="userSpaceOnUse"
                                                                     color-interpolation-filters="sRGB">
                                                                     <feFlood flood-opacity="0"
                                                                         result="BackgroundImageFix" />
@@ -567,8 +548,7 @@
                                                                     <feBlend mode="normal" in2="BackgroundImageFix"
                                                                         result="effect1_dropShadow_10_1940" />
                                                                     <feBlend mode="normal" in="SourceGraphic"
-                                                                        in2="effect1_dropShadow_10_1940"
-                                                                        result="shape" />
+                                                                        in2="effect1_dropShadow_10_1940" result="shape" />
                                                                 </filter>
                                                             </defs>
                                                         </svg>
@@ -587,8 +567,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div
-                                        class="view-all-mark-read d-flex align-items-center justify-content-between mt-4">
+                                    <div class="view-all-mark-read d-flex align-items-center justify-content-between mt-4">
                                         <a href="{{ url('/messages_notification/notifications') }}"
                                             class="dark-color-font link-tag" wire:navigate>View
                                             All</a>
@@ -600,8 +579,7 @@
                                                     stroke-linecap="round" stroke-linejoin="round" />
                                                 <path
                                                     d="M15.5 8V13.625C15.5 14.1223 15.3025 14.5992 14.9508 14.9508C14.5992 15.3025 14.1223 15.5 13.625 15.5H2.375C1.87772 15.5 1.40081 15.3025 1.04917 14.9508C0.697544 14.5992 0.5 14.1223 0.5 13.625V2.375C0.5 1.87772 0.697544 1.40081 1.04917 1.04917C1.40081 0.697544 1.87772 0.5 2.375 0.5H10.8125"
-                                                    stroke="#3B3731" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
+                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
                                             <a href="" class="dark-color-font link-tag" wire:navigate>Mark as
                                                 Read</a>
@@ -612,8 +590,8 @@
 
                             <div class="user-content-tab">
                                 <a class="user-btn cursor">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="22"
-                                        viewBox="0 0 20 22" fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="22" viewBox="0 0 20 22"
+                                        fill="none">
                                         <path
                                             d="M0 20.0004V18.8893C0 15.2115 2.98889 12.2227 6.66667 12.2227H11.1111C14.7889 12.2227 17.7778 15.2115 17.7778 18.8893V20.0004"
                                             stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
@@ -656,8 +634,7 @@
                                             </svg>
                                             <p class="medium-light-font">Business Hub</p>
                                         </a>
-                                        <a href="#" class="profile-item d-flex align-items-center gap-40"
-                                            wire:navigate>
+                                        <a href="#" class="profile-item d-flex align-items-center gap-40" wire:navigate>
                                             <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23"
                                                 viewBox="0 0 23 23" fill="none">
                                                 <path
@@ -671,8 +648,7 @@
                                             </svg>
                                             <p class="medium-light-font">Marketing Hub</p>
                                         </a>
-                                        <a href="#" class="profile-item d-flex align-items-center gap-40"
-                                            wire:navigate>
+                                        <a href="#" class="profile-item d-flex align-items-center gap-40" wire:navigate>
                                             <svg xmlns="http://www.w3.org/2000/svg" width="21" height="22"
                                                 viewBox="0 0 21 22" fill="none">
                                                 <path
@@ -681,8 +657,7 @@
                                             </svg>
                                             <p class="medium-light-font">Account Settings</p>
                                         </a>
-                                        <a href="#" class="profile-item d-flex align-items-center gap-40"
-                                            wire:navigate>
+                                        <a href="#" class="profile-item d-flex align-items-center gap-40" wire:navigate>
                                             <svg xmlns="http://www.w3.org/2000/svg" width="19" height="22"
                                                 viewBox="0 0 19 22" fill="none">
                                                 <path
@@ -710,7 +685,7 @@
                                         </div>
                                     @else
                                         <div class="logout-option">
-                                            <a href="{{ route('login') }}" class="mt-3 d-flex align-items-center gap-40"
+                                            <a href="{{ route('login-groomer-space') }}" class="mt-3 d-flex align-items-center gap-40"
                                                 wire:navigate>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="17" height="22"
                                                     viewBox="0 0 17 22" fill="none">
@@ -738,10 +713,9 @@
                                 <img src="{{ asset('images/groomer-profile.png') }}" alt="Profile"
                                     class="welcome-profile-img">
                                 <div class="verified-badge">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="33"
-                                        viewBox="0 0 30 33" fill="none">
-                                        <ellipse cx="15.873" cy="16.5256" rx="9.3645" ry="8.81365"
-                                            fill="white" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="33" viewBox="0 0 30 33"
+                                        fill="none">
+                                        <ellipse cx="15.873" cy="16.5256" rx="9.3645" ry="8.81365" fill="white" />
                                         <path
                                             d="M15.44 0.185076C15.1841 0.0638192 14.9099 0 14.6235 0C14.3372 0 14.063 0.0638192 13.8071 0.185076L2.3337 5.28423C0.993208 5.87775 -0.00606541 7.26263 2.77146e-05 8.93469C0.0304934 15.2656 2.51649 26.8487 13.015 32.1138C14.0325 32.6244 15.2146 32.6244 16.2321 32.1138C26.7306 26.8487 29.2166 15.2656 29.247 8.93469C29.2531 7.26263 28.2539 5.87775 26.9134 5.28423L15.44 0.185076ZM8.82897 18.2651C9.12144 18.3416 9.43219 18.3799 9.74903 18.3799C11.8999 18.3799 13.6486 16.5483 13.6486 14.2955V10.2111H16.3418C17.0791 10.2111 17.7554 10.645 18.0844 11.3407L18.5231 12.2533H22.4227C22.9589 12.2533 23.3976 12.7128 23.3976 13.2744V15.3166C23.3976 18.1374 21.2163 20.4222 18.5231 20.4222H15.5984V23.6578C15.5984 24.1237 15.2389 24.5066 14.7881 24.5066C14.6784 24.5066 14.5687 24.4811 14.4712 24.4364L8.45729 21.7368C8.05514 21.5581 7.79923 21.1433 7.79923 20.6902C7.79923 20.5115 7.83579 20.3392 7.915 20.1796L8.82897 18.2651ZM8.77413 10.2111H11.6988V14.2955C11.6988 15.4251 10.8275 16.3377 9.74903 16.3377C8.67055 16.3377 7.79923 15.4251 7.79923 14.2955V11.2322C7.79923 10.6706 8.23794 10.2111 8.77413 10.2111ZM16.5733 13.2744C16.5733 13.0036 16.4706 12.7439 16.2878 12.5524C16.105 12.3609 15.857 12.2533 15.5984 12.2533C15.3399 12.2533 15.0919 12.3609 14.9091 12.5524C14.7262 12.7439 14.6235 13.0036 14.6235 13.2744C14.6235 13.5452 14.7262 13.8049 14.9091 13.9964C15.0919 14.1879 15.3399 14.2955 15.5984 14.2955C15.857 14.2955 16.105 14.1879 16.2878 13.9964C16.4706 13.8049 16.5733 13.5452 16.5733 13.2744Z"
                                             fill="#C9DDA0" />
@@ -751,8 +725,7 @@
                             <h1 class="welcome-text">Welcome back, <span>Sarah's Grooming Studio</span></h1>
                         </div>
                         <div class="welcome-right d-flex align-items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                viewBox="0 0 20 20" fill="none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
                                 <path
                                     d="M8.75651 0.943537C9.14791 -0.314515 10.8521 -0.314511 11.2435 0.943541L12.7078 5.65027C12.8829 6.21288 13.3849 6.5938 13.9513 6.5938H18.69C19.9566 6.5938 20.4832 8.2865 19.4585 9.06402L15.6249 11.9729C15.1666 12.3207 14.9748 12.937 15.1499 13.4996L16.6142 18.2063C17.0056 19.4644 15.6269 20.5105 14.6022 19.733L10.7685 16.8241C10.3103 16.4764 9.68974 16.4764 9.23148 16.8241L5.3978 19.733C4.37311 20.5105 2.99439 19.4644 3.38579 18.2063L4.85012 13.4996C5.02516 12.937 4.83341 12.3207 4.37515 11.9729L0.541471 9.06402C-0.483225 8.2865 0.0434023 6.5938 1.31 6.5938H6.04868C6.61512 6.5938 7.11714 6.21288 7.29217 5.65027L8.75651 0.943537Z"
                                     fill="#FFC97A" />
@@ -1159,12 +1132,12 @@
     <header>
         <nav class="navbar">
             <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-lg-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
                         <div class="logo-toggle-button d-flex justify-content-between">
                             <a href="{{ route('home') }}" wire:navigate class="d-inline-flex align-items-end gap-10">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40"
-                                    viewBox="0 0 145 40" fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40" viewBox="0 0 145 40"
+                                    fill="none">
                                     <path
                                         d="M132.206 12.7941C134.795 12.7941 137.035 13.2385 138.927 14.1273C140.852 14.9832 142.345 16.3987 143.407 18.3738C144.469 20.349 145 22.9989 145 26.3237C145 29.6485 144.469 32.2985 143.407 34.2736C142.345 36.2487 140.852 37.6642 138.927 38.5201C137.035 39.376 134.795 39.8039 132.206 39.8039C129.651 39.8039 127.41 39.376 125.485 38.5201C123.561 37.6642 122.067 36.2487 121.005 34.2736C119.943 32.2985 119.412 29.6485 119.412 26.3237C119.412 22.9989 119.943 20.349 121.005 18.3738C122.067 16.3987 123.561 14.9832 125.485 14.1273C127.41 13.2385 129.651 12.7941 132.206 12.7941ZM132.206 13.7817C131.21 13.7817 130.381 14.7692 129.717 16.7444C129.053 18.7195 128.721 21.9126 128.721 26.3237C128.721 30.7348 129.053 33.9279 129.717 35.9031C130.381 37.8453 131.21 38.8164 132.206 38.8164C133.202 38.8164 134.031 37.8453 134.695 35.9031C135.359 33.9279 135.691 30.7348 135.691 26.3237C135.691 21.9126 135.359 18.7195 134.695 16.7444C134.031 14.7692 133.202 13.7817 132.206 13.7817Z"
                                         fill="#FFC97A" />
@@ -1197,683 +1170,14 @@
                             <button class="menu-toggle">&#9776;</button>
                         </div>
                     </div>
-                    <div class="col-lg-8">
-                        <ul class="menu-items">
-                            <li><a href="#" class="active" wire:navigate>Our Mission</a></li>
-                            <li><a href="#" wire:navigate>For Groomers & Hosts</a></li>
-                            <!-- <li><a href="#">For Hosts</a></li> -->
-                            <li><a href="#" wire:navigate>Help Centre</a></li>
-                            <li>
-                                <div class="session-login-signup-div d-flex align-items-center gap-40">
-                                    <div class="messages-content-tab">
-                                        <a class="messages-btn cursor">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="22"
-                                                viewBox="0 0 26 22" fill="none">
-                                                <path
-                                                    d="M0.75 10.75C0.75 6.03625 0.75 3.67875 2.215 2.215C3.68 0.75125 6.03625 0.75 10.75 0.75H15.75C20.4637 0.75 22.8212 0.75 24.285 2.215C25.7487 3.68 25.75 6.03625 25.75 10.75C25.75 15.4637 25.75 17.8212 24.285 19.285C22.82 20.7487 20.4637 20.75 15.75 20.75H10.75C6.03625 20.75 3.67875 20.75 2.215 19.285C0.75125 17.82 0.75 15.4637 0.75 10.75Z"
-                                                    stroke="#3B3731" stroke-width="1.5" />
-                                                <path
-                                                    d="M5.75 5.75L8.44875 8C10.745 9.9125 11.8925 10.8688 13.25 10.8688C14.6075 10.8688 15.7562 9.9125 18.0512 7.99875L20.75 5.75"
-                                                    stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
-                                            </svg>
-                                        </a>
-                                        <div class="messages-notifications" style="display: none;">
-                                            <div
-                                                class="header-notifications-header d-flex align-items-center justify-content-between">
-                                                <p class="medium-font-bold">Messages</p>
-                                                <div class="cursor">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16"
-                                                        height="16" viewBox="0 0 16 16" fill="none">
-                                                        <path
-                                                            d="M7.57129 10.2499C8.81393 10.2499 9.82129 9.24258 9.82129 7.99994C9.82129 6.7573 8.81393 5.74994 7.57129 5.74994C6.32865 5.74994 5.32129 6.7573 5.32129 7.99994C5.32129 9.24258 6.32865 10.2499 7.57129 10.2499Z"
-                                                            stroke="#3B3731" />
-                                                        <path
-                                                            d="M8.89489 0.614C8.61964 0.5 8.27014 0.5 7.57114 0.5C6.87214 0.5 6.52264 0.5 6.24739 0.614C6.06527 0.689385 5.8998 0.799922 5.76043 0.939293C5.62106 1.07866 5.51052 1.24414 5.43514 1.42625C5.36614 1.5935 5.33839 1.78925 5.32789 2.0735C5.32301 2.27895 5.26609 2.4798 5.16247 2.65727C5.05885 2.83473 4.91191 2.98302 4.73539 3.08825C4.55599 3.18858 4.35408 3.24175 4.14854 3.2428C3.943 3.24385 3.74055 3.19274 3.56014 3.09425C3.30814 2.96075 3.12589 2.88725 2.94514 2.86325C2.55088 2.8114 2.15216 2.91823 1.83664 3.16025C1.60114 3.3425 1.42564 3.64475 1.07614 4.25C0.726639 4.85525 0.551139 5.1575 0.512889 5.45375C0.487115 5.64909 0.500079 5.84759 0.551039 6.03792C0.601999 6.22825 0.689957 6.40667 0.809889 6.563C0.920889 6.707 1.07614 6.82775 1.31689 6.97925C1.67164 7.202 1.89964 7.5815 1.89964 8C1.89964 8.4185 1.67164 8.798 1.31689 9.02C1.07614 9.17225 0.920139 9.293 0.809889 9.437C0.689957 9.59333 0.601999 9.77175 0.551039 9.96208C0.500079 10.1524 0.487115 10.3509 0.512889 10.5463C0.551889 10.8418 0.726639 11.1448 1.07539 11.75C1.42564 12.3552 1.60039 12.6575 1.83664 12.8397C1.99297 12.9597 2.17139 13.0476 2.36172 13.0986C2.55205 13.1496 2.75055 13.1625 2.94589 13.1368C3.12589 13.1128 3.30814 13.0393 3.56014 12.9058C3.74055 12.8073 3.943 12.7561 4.14854 12.7572C4.35408 12.7582 4.55599 12.8114 4.73539 12.9117C5.09764 13.1217 5.31289 13.508 5.32789 13.9265C5.33839 14.2115 5.36539 14.4065 5.43514 14.5737C5.51052 14.7559 5.62106 14.9213 5.76043 15.0607C5.8998 15.2001 6.06527 15.3106 6.24739 15.386C6.52264 15.5 6.87214 15.5 7.57114 15.5C8.27014 15.5 8.61964 15.5 8.89489 15.386C9.077 15.3106 9.24247 15.2001 9.38185 15.0607C9.52122 14.9213 9.63175 14.7559 9.70714 14.5737C9.77614 14.4065 9.80389 14.2115 9.81439 13.9265C9.82939 13.508 10.0446 13.121 10.4069 12.9117C10.5863 12.8114 10.7882 12.7582 10.9937 12.7572C11.1993 12.7561 11.4017 12.8073 11.5821 12.9058C11.8341 13.0393 12.0164 13.1128 12.1964 13.1368C12.3917 13.1625 12.5902 13.1496 12.7806 13.0986C12.9709 13.0476 13.1493 12.9597 13.3056 12.8397C13.5419 12.6582 13.7166 12.3552 14.0661 11.75C14.4156 11.1448 14.5911 10.8425 14.6294 10.5463C14.6552 10.3509 14.6422 10.1524 14.5912 9.96208C14.5403 9.77175 14.4523 9.59333 14.3324 9.437C14.2214 9.293 14.0661 9.17225 13.8254 9.02075C13.6498 8.9138 13.5043 8.76405 13.4024 8.58553C13.3004 8.40701 13.2455 8.20555 13.2426 8C13.2426 7.5815 13.4706 7.202 13.8254 6.98C14.0661 6.82775 14.2221 6.707 14.3324 6.563C14.4523 6.40667 14.5403 6.22825 14.5912 6.03792C14.6422 5.84759 14.6552 5.64909 14.6294 5.45375C14.5904 5.15825 14.4156 4.85525 14.0669 4.25C13.7166 3.64475 13.5419 3.3425 13.3056 3.16025C13.1493 3.04032 12.9709 2.95236 12.7806 2.9014C12.5902 2.85044 12.3917 2.83748 12.1964 2.86325C12.0164 2.88725 11.8341 2.96075 11.5814 3.09425C11.4011 3.19261 11.1988 3.24365 10.9934 3.2426C10.788 3.24155 10.5862 3.18844 10.4069 3.08825C10.2304 2.98302 10.0834 2.83473 9.97981 2.65727C9.87619 2.4798 9.81927 2.27895 9.81439 2.0735C9.80389 1.7885 9.77689 1.5935 9.70714 1.42625C9.63175 1.24414 9.52122 1.07866 9.38185 0.939293C9.24247 0.799922 9.077 0.689385 8.89489 0.614Z"
-                                                            stroke="#3B3731" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                            <div class="notification-tags d-flex align-items-center">
-                                                <div class="tags active">
-                                                    <p class="dark-color-font cursor">All <span
-                                                            class="count active">13</span></p>
-                                                </div>
-                                                <div class="tags">
-                                                    <p class="simple-font muted-color cursor">Unread <span
-                                                            class="count">5</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="header-notifications-div">
-                                                <div
-                                                    class="chat-card cursor unread d-flex align-items-center gap-20 mt-4">
-
-                                                    <div class="profile-pic">
-                                                        <div class="profile-image-wrapper">
-
-                                                            <img src="{{ asset('images/message_profile_1.png') }}"
-                                                                alt="Hero Image" class="rounded-image">
-                                                            <div class="top-left-svg">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="20"
-                                                                    height="22" viewBox="0 0 20 22"
-                                                                    fill="none">
-                                                                    <path
-                                                                        d="M10.5114 0.120327C10.3372 0.0415119 10.1505 3.05176e-05 9.95555 3.05176e-05C9.76059 3.05176e-05 9.57393 0.0415119 9.3997 0.120327L1.58876 3.43469C0.676166 3.82047 -0.00412927 4.72061 1.88678e-05 5.80743C0.0207596 9.92238 1.7132 17.4513 8.86045 20.8735C9.55319 21.2053 10.3579 21.2053 11.0507 20.8735C18.1979 17.4513 19.8903 9.92238 19.9111 5.80743C19.9152 4.72061 19.2349 3.82047 18.3224 3.43469L10.5114 0.120327Z"
-                                                                        fill="#CBDCE8" />
-                                                                    <path
-                                                                        d="M15.3611 5.76004L11.094 10.2939L15.3611 5.76004ZM9.19828 10.0725C7.87547 10.5803 6.81775 10.4934 5.76003 10.0741C6.02673 13.5108 7.62904 14.832 9.76527 15.3611C9.76527 15.3611 11.3745 14.2228 11.6065 11.5244C11.6316 11.2321 11.6439 11.0865 11.5836 10.9217C11.5228 10.7569 11.4033 10.639 11.1649 10.4027C10.7723 10.0144 10.5766 9.82022 10.3435 9.77115C10.1104 9.72314 9.80635 9.83942 9.19828 10.0725Z"
-                                                                        fill="#CBDCE8" />
-                                                                    <path
-                                                                        d="M15.3611 5.76004L11.094 10.2939M9.19828 10.0725C7.87547 10.5803 6.81775 10.4934 5.76003 10.0741C6.02673 13.5108 7.62904 14.832 9.76527 15.3611C9.76527 15.3611 11.3745 14.2228 11.6065 11.5244C11.6316 11.2321 11.6439 11.0865 11.5836 10.9217C11.5228 10.7569 11.4033 10.639 11.1649 10.4027C10.7723 10.0144 10.5766 9.82022 10.3435 9.77115C10.1104 9.72314 9.80635 9.83942 9.19828 10.0725Z"
-                                                                        stroke="white" stroke-linecap="round"
-                                                                        stroke-linejoin="round" />
-                                                                    <path
-                                                                        d="M6.5603 12.9327C6.5603 12.9327 7.89378 13.1909 9.22726 12.1614L6.5603 12.9327Z"
-                                                                        fill="#CBDCE8" />
-                                                                    <path
-                                                                        d="M6.5603 12.9327C6.5603 12.9327 7.89378 13.1909 9.22726 12.1614"
-                                                                        stroke="white" stroke-linecap="round"
-                                                                        stroke-linejoin="round" />
-                                                                    <path
-                                                                        d="M8.69331 8.02663C8.69331 8.20346 8.62307 8.37305 8.49803 8.49809C8.37299 8.62313 8.2034 8.69337 8.02657 8.69337C7.84974 8.69337 7.68015 8.62313 7.55512 8.49809C7.43008 8.37305 7.35983 8.20346 7.35983 8.02663C7.35983 7.8498 7.43008 7.68022 7.55512 7.55518C7.68015 7.43014 7.84974 7.35989 8.02657 7.35989C8.2034 7.35989 8.37299 7.43014 8.49803 7.55518C8.62307 7.68022 8.69331 7.8498 8.69331 8.02663Z"
-                                                                        fill="#CBDCE8" stroke="white" />
-                                                                    <path d="M10.0268 6.2937V6.34704V6.2937Z"
-                                                                        fill="#CBDCE8" />
-                                                                    <path d="M10.0268 6.2937V6.34704" stroke="white"
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round" />
-                                                                </svg>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="chat-info">
-                                                        <div class="d-flex justify-content-between">
-                                                            <div class="name">
-                                                                <p class="dark-color-font">The Garden Grooming Spot</p>
-                                                                <p class="simple-light-font">Hosted by Chloe D.</p>
-                                                            </div>
-                                                            <p class="messages-count light-color-font">2</p>
-
-                                                        </div>
-                                                        <div
-                                                            class="d-flex align-items-center justify-content-between mt-2">
-                                                            <p class="simple-font">Hi, just a quick reminder abou...
-                                                            </p>
-                                                            <p class="time light-bold-color-font">10m</p>
-                                                        </div>
-                                                    </div>
-
-                                                </div>
-                                                <div
-                                                    class="chat-card cursor unread d-flex align-items-center gap-20 mt-4">
-
-                                                    <div class="profile-pic">
-                                                        <div class="profile-image-wrapper">
-                                                            <img src="{{ asset('images/groomer-profile.png') }}"
-                                                                class="rounded-image" alt="Hero Image">
-                                                            <div class="top-left-svg">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="21"
-                                                                    height="23" viewBox="0 0 21 23"
-                                                                    fill="none">
-                                                                    <ellipse cx="10.9241" cy="11.3744"
-                                                                        rx="6.44549" ry="6.06626"
-                                                                        fill="white" />
-                                                                    <path
-                                                                        d="M10.6272 0.127384C10.4511 0.0439255 10.2623 0 10.0652 0C9.86812 0 9.6794 0.0439255 9.50326 0.127384L1.60626 3.63703C0.683615 4.04554 -0.00417476 4.99872 1.90757e-05 6.14957C0.0209883 10.507 1.73207 18.4795 8.95806 22.1033C9.65843 22.4547 10.472 22.4547 11.1724 22.1033C18.3984 18.4795 20.1095 10.507 20.1304 6.14957C20.1346 4.99872 19.4469 4.04554 18.5242 3.63703L10.6272 0.127384ZM6.07689 12.5715C6.2782 12.6242 6.49208 12.6505 6.71016 12.6505C8.19059 12.6505 9.39422 11.3899 9.39422 9.83931V7.02808H11.2479C11.7554 7.02808 12.2209 7.32677 12.4473 7.80556L12.7493 8.43369H15.4333C15.8024 8.43369 16.1044 8.74996 16.1044 9.1365V10.5421C16.1044 12.4836 14.603 14.0562 12.7493 14.0562H10.7362V16.2832C10.7362 16.6038 10.4888 16.8674 10.1785 16.8674C10.103 16.8674 10.0275 16.8498 9.96039 16.8191L5.82107 14.961C5.54428 14.838 5.36813 14.5525 5.36813 14.2406C5.36813 14.1177 5.3933 13.9991 5.44782 13.8892L6.07689 12.5715ZM6.03915 7.02808H8.05219V9.83931C8.05219 10.6168 7.45247 11.2449 6.71016 11.2449C5.96785 11.2449 5.36813 10.6168 5.36813 9.83931V7.73089C5.36813 7.34434 5.67009 7.02808 6.03915 7.02808ZM11.4073 9.1365C11.4073 8.9501 11.3366 8.77134 11.2107 8.63954C11.0849 8.50774 10.9142 8.43369 10.7362 8.43369C10.5583 8.43369 10.3876 8.50774 10.2618 8.63954C10.1359 8.77134 10.0652 8.9501 10.0652 9.1365C10.0652 9.3229 10.1359 9.50166 10.2618 9.63346C10.3876 9.76526 10.5583 9.83931 10.7362 9.83931C10.9142 9.83931 11.0849 9.76526 11.2107 9.63346C11.3366 9.50166 11.4073 9.3229 11.4073 9.1365Z"
-                                                                        fill="#C9DDA0" />
-                                                                </svg>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="chat-info">
-                                                        <div class="d-flex justify-content-between">
-                                                            <div class="name">
-                                                                <p class="dark-color-font">Sarah W.</p>
-                                                                <p class="simple-light-font">Sarah’s Grooming Studio
-                                                                </p>
-                                                            </div>
-                                                            <p class="messages-count light-color-font">3</p>
-
-                                                        </div>
-                                                        <div
-                                                            class="d-flex align-items-center justify-content-between mt-2">
-                                                            <p class="simple-font">Thanks for booking! I’m looki...</p>
-                                                            <p class="time light-bold-color-font">10m</p>
-                                                        </div>
-                                                    </div>
-
-                                                </div>
-                                                <div class="chat-card cursor d-flex align-items-center gap-20 mt-4">
-
-                                                    <div class="profile-pic">
-                                                        <div class="profile-image-wrapper">
-                                                            <img src="{{ asset('images/space_card1.png') }}"
-                                                                class="rounded-image" alt="Hero Image">
-                                                            <div class="top-left-svg">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="20"
-                                                                    height="22" viewBox="0 0 20 22"
-                                                                    fill="none">
-                                                                    <path
-                                                                        d="M10.5114 0.120357C10.3372 0.0415424 10.1505 6.10352e-05 9.95555 6.10352e-05C9.76059 6.10352e-05 9.57393 0.0415424 9.3997 0.120357L1.58876 3.43472C0.676166 3.8205 -0.00412927 4.72064 1.88678e-05 5.80746C0.0207596 9.92241 1.7132 17.4513 8.86045 20.8735C9.55319 21.2054 10.3579 21.2054 11.0507 20.8735C18.1979 17.4513 19.8903 9.92241 19.9111 5.80746C19.9152 4.72064 19.2349 3.8205 18.3224 3.43472L10.5114 0.120357Z"
-                                                                        fill="#CBDCE8" />
-                                                                    <path
-                                                                        d="M15.3611 5.76001L11.094 10.2938L15.3611 5.76001ZM9.19828 10.0725C7.87547 10.5803 6.81775 10.4933 5.76003 10.0741C6.02673 13.5107 7.62904 14.8319 9.76527 15.3611C9.76527 15.3611 11.3745 14.2228 11.6065 11.5244C11.6316 11.2321 11.6439 11.0865 11.5836 10.9216C11.5228 10.7568 11.4033 10.6389 11.1649 10.4027C10.7723 10.0143 10.5766 9.82019 10.3435 9.77112C10.1104 9.72311 9.80635 9.83939 9.19828 10.0725Z"
-                                                                        fill="#CBDCE8" />
-                                                                    <path
-                                                                        d="M15.3611 5.76001L11.094 10.2938M9.19828 10.0725C7.87547 10.5803 6.81775 10.4933 5.76003 10.0741C6.02673 13.5107 7.62904 14.8319 9.76527 15.3611C9.76527 15.3611 11.3745 14.2228 11.6065 11.5244C11.6316 11.2321 11.6439 11.0865 11.5836 10.9216C11.5228 10.7568 11.4033 10.6389 11.1649 10.4027C10.7723 10.0143 10.5766 9.82019 10.3435 9.77112C10.1104 9.72311 9.80635 9.83939 9.19828 10.0725Z"
-                                                                        stroke="white" stroke-linecap="round"
-                                                                        stroke-linejoin="round" />
-                                                                    <path
-                                                                        d="M6.5603 12.9327C6.5603 12.9327 7.89378 13.1909 9.22726 12.1614L6.5603 12.9327Z"
-                                                                        fill="#CBDCE8" />
-                                                                    <path
-                                                                        d="M6.5603 12.9327C6.5603 12.9327 7.89378 13.1909 9.22726 12.1614"
-                                                                        stroke="white" stroke-linecap="round"
-                                                                        stroke-linejoin="round" />
-                                                                    <path
-                                                                        d="M8.69331 8.0266C8.69331 8.20343 8.62307 8.37302 8.49803 8.49806C8.37299 8.6231 8.2034 8.69334 8.02657 8.69334C7.84974 8.69334 7.68015 8.6231 7.55512 8.49806C7.43008 8.37302 7.35983 8.20343 7.35983 8.0266C7.35983 7.84977 7.43008 7.68018 7.55512 7.55515C7.68015 7.43011 7.84974 7.35986 8.02657 7.35986C8.2034 7.35986 8.37299 7.43011 8.49803 7.55515C8.62307 7.68018 8.69331 7.84977 8.69331 8.0266Z"
-                                                                        fill="#CBDCE8" stroke="white" />
-                                                                    <path d="M10.0268 6.29364V6.34698V6.29364Z"
-                                                                        fill="#CBDCE8" />
-                                                                    <path d="M10.0268 6.29364V6.34698" stroke="white"
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round" />
-                                                                </svg>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="chat-info">
-                                                        <div class="d-flex justify-content-between">
-                                                            <div class="name">
-                                                                <p class="dark-color-font">Furs & Co. Studio</p>
-                                                                <p class="simple-light-font">Hosted by Dev É.</p>
-                                                            </div>
-
-                                                        </div>
-                                                        <div
-                                                            class="d-flex align-items-center justify-content-between mt-2">
-                                                            <p class="simple-font">Just confirming our booking f...</p>
-
-                                                        </div>
-                                                    </div>
-
-                                                </div>
-                                            </div>
-                                            <div
-                                                class="view-all-mark-read d-flex align-items-center justify-content-between mt-4">
-                                                <a href="{{ url('/messages_notification/messages') }}"
-                                                    class="dark-color-font link-tag" wire:navigate>View
-                                                    All</a>
-
-                                                <div class="d-flex align-items-center gap-10">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16"
-                                                        height="16" viewBox="0 0 16 16" fill="none">
-                                                        <path d="M5.1875 7.0625L8 9.875L15.5 2.375" stroke="#3B3731"
-                                                            stroke-linecap="round" stroke-linejoin="round" />
-                                                        <path
-                                                            d="M15.5 8V13.625C15.5 14.1223 15.3025 14.5992 14.9508 14.9508C14.5992 15.3025 14.1223 15.5 13.625 15.5H2.375C1.87772 15.5 1.40081 15.3025 1.04917 14.9508C0.697544 14.5992 0.5 14.1223 0.5 13.625V2.375C0.5 1.87772 0.697544 1.40081 1.04917 1.04917C1.40081 0.697544 1.87772 0.5 2.375 0.5H10.8125"
-                                                            stroke="#3B3731" stroke-linecap="round"
-                                                            stroke-linejoin="round" />
-                                                    </svg>
-                                                    <a href="" class="dark-color-font link-tag"
-                                                        wire:navigate>Mark as Read</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="notification-content-tab">
-                                        <a class="notification-btn cursor">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
-                                                viewBox="0 0 22 22" fill="none">
-                                                <path
-                                                    d="M16.134 10C16.715 15.375 19 17 19 17H1C1 17 4 14.867 4 7.4C4 5.703 4.632 4.075 5.757 2.875C6.882 1.675 8.41 1 10 1C10.338 1 10.6713 1.03 11 1.09M11.73 20C11.5542 20.3031 11.3018 20.5547 10.9982 20.7295C10.6946 20.9044 10.3504 20.9965 10 20.9965C9.6496 20.9965 9.3054 20.9044 9.0018 20.7295C8.6982 20.5547 8.4458 20.3031 8.27 20M17 7C17.7956 7 18.5587 6.68393 19.1213 6.12132C19.6839 5.55871 20 4.79565 20 4C20 3.20435 19.6839 2.44129 19.1213 1.87868C18.5587 1.31607 17.7956 1 17 1C16.2044 1 15.4413 1.31607 14.8787 1.87868C14.3161 2.44129 14 3.20435 14 4C14 4.79565 14.3161 5.55871 14.8787 6.12132C15.4413 6.68393 16.2044 7 17 7Z"
-                                                    stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
-                                            </svg>
-                                        </a>
-                                        <div class="header-notifications" style="display: none;">
-                                            <div
-                                                class="header-notifications-header d-flex align-items-center justify-content-between">
-                                                <p class="medium-font-bold">Notifications</p>
-                                                <div class="cursor">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16"
-                                                        height="16" viewBox="0 0 16 16" fill="none">
-                                                        <path
-                                                            d="M7.57129 10.2499C8.81393 10.2499 9.82129 9.24258 9.82129 7.99994C9.82129 6.7573 8.81393 5.74994 7.57129 5.74994C6.32865 5.74994 5.32129 6.7573 5.32129 7.99994C5.32129 9.24258 6.32865 10.2499 7.57129 10.2499Z"
-                                                            stroke="#3B3731" />
-                                                        <path
-                                                            d="M8.89489 0.614C8.61964 0.5 8.27014 0.5 7.57114 0.5C6.87214 0.5 6.52264 0.5 6.24739 0.614C6.06527 0.689385 5.8998 0.799922 5.76043 0.939293C5.62106 1.07866 5.51052 1.24414 5.43514 1.42625C5.36614 1.5935 5.33839 1.78925 5.32789 2.0735C5.32301 2.27895 5.26609 2.4798 5.16247 2.65727C5.05885 2.83473 4.91191 2.98302 4.73539 3.08825C4.55599 3.18858 4.35408 3.24175 4.14854 3.2428C3.943 3.24385 3.74055 3.19274 3.56014 3.09425C3.30814 2.96075 3.12589 2.88725 2.94514 2.86325C2.55088 2.8114 2.15216 2.91823 1.83664 3.16025C1.60114 3.3425 1.42564 3.64475 1.07614 4.25C0.726639 4.85525 0.551139 5.1575 0.512889 5.45375C0.487115 5.64909 0.500079 5.84759 0.551039 6.03792C0.601999 6.22825 0.689957 6.40667 0.809889 6.563C0.920889 6.707 1.07614 6.82775 1.31689 6.97925C1.67164 7.202 1.89964 7.5815 1.89964 8C1.89964 8.4185 1.67164 8.798 1.31689 9.02C1.07614 9.17225 0.920139 9.293 0.809889 9.437C0.689957 9.59333 0.601999 9.77175 0.551039 9.96208C0.500079 10.1524 0.487115 10.3509 0.512889 10.5463C0.551889 10.8418 0.726639 11.1448 1.07539 11.75C1.42564 12.3552 1.60039 12.6575 1.83664 12.8397C1.99297 12.9597 2.17139 13.0476 2.36172 13.0986C2.55205 13.1496 2.75055 13.1625 2.94589 13.1368C3.12589 13.1128 3.30814 13.0393 3.56014 12.9058C3.74055 12.8073 3.943 12.7561 4.14854 12.7572C4.35408 12.7582 4.55599 12.8114 4.73539 12.9117C5.09764 13.1217 5.31289 13.508 5.32789 13.9265C5.33839 14.2115 5.36539 14.4065 5.43514 14.5737C5.51052 14.7559 5.62106 14.9213 5.76043 15.0607C5.8998 15.2001 6.06527 15.3106 6.24739 15.386C6.52264 15.5 6.87214 15.5 7.57114 15.5C8.27014 15.5 8.61964 15.5 8.89489 15.386C9.077 15.3106 9.24247 15.2001 9.38185 15.0607C9.52122 14.9213 9.63175 14.7559 9.70714 14.5737C9.77614 14.4065 9.80389 14.2115 9.81439 13.9265C9.82939 13.508 10.0446 13.121 10.4069 12.9117C10.5863 12.8114 10.7882 12.7582 10.9937 12.7572C11.1993 12.7561 11.4017 12.8073 11.5821 12.9058C11.8341 13.0393 12.0164 13.1128 12.1964 13.1368C12.3917 13.1625 12.5902 13.1496 12.7806 13.0986C12.9709 13.0476 13.1493 12.9597 13.3056 12.8397C13.5419 12.6582 13.7166 12.3552 14.0661 11.75C14.4156 11.1448 14.5911 10.8425 14.6294 10.5463C14.6552 10.3509 14.6422 10.1524 14.5912 9.96208C14.5403 9.77175 14.4523 9.59333 14.3324 9.437C14.2214 9.293 14.0661 9.17225 13.8254 9.02075C13.6498 8.9138 13.5043 8.76405 13.4024 8.58553C13.3004 8.40701 13.2455 8.20555 13.2426 8C13.2426 7.5815 13.4706 7.202 13.8254 6.98C14.0661 6.82775 14.2221 6.707 14.3324 6.563C14.4523 6.40667 14.5403 6.22825 14.5912 6.03792C14.6422 5.84759 14.6552 5.64909 14.6294 5.45375C14.5904 5.15825 14.4156 4.85525 14.0669 4.25C13.7166 3.64475 13.5419 3.3425 13.3056 3.16025C13.1493 3.04032 12.9709 2.95236 12.7806 2.9014C12.5902 2.85044 12.3917 2.83748 12.1964 2.86325C12.0164 2.88725 11.8341 2.96075 11.5814 3.09425C11.4011 3.19261 11.1988 3.24365 10.9934 3.2426C10.788 3.24155 10.5862 3.18844 10.4069 3.08825C10.2304 2.98302 10.0834 2.83473 9.97981 2.65727C9.87619 2.4798 9.81927 2.27895 9.81439 2.0735C9.80389 1.7885 9.77689 1.5935 9.70714 1.42625C9.63175 1.24414 9.52122 1.07866 9.38185 0.939293C9.24247 0.799922 9.077 0.689385 8.89489 0.614Z"
-                                                            stroke="#3B3731" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                            <div class="notification-tags d-flex align-items-center">
-                                                <div class="tags active">
-                                                    <p class="dark-color-font cursor">All <span
-                                                            class="count active">13</span></p>
-                                                </div>
-                                                <div class="tags">
-                                                    <p class="simple-font muted-color cursor">Bookings <span
-                                                            class="count">5</span></p>
-                                                </div>
-                                                <div class="tags">
-                                                    <p class="simple-font muted-color cursor">Payments <span
-                                                            class="count">3</span></p>
-                                                </div>
-                                                <div class="tags">
-                                                    <p class="simple-font muted-color cursor">Reviews <span
-                                                            class="count">2</span></p>
-                                                </div>
-                                                <div class="tags">
-                                                    <p class="simple-font muted-color cursor">Updates <span
-                                                            class="count">3</span></p>
-                                                </div>
-                                            </div>
-                                            <div class="header-notifications-div">
-                                                <div class="header-notifications-list booking-confirmed cursor mt-4">
-                                                    <div
-                                                        class="header-notification-list-item d-flex align-items-center justify-content-between">
-                                                        <div
-                                                            class="notification-list-item-inner-left d-flex align-items-center">
-                                                            <div class="notification-list-item-inner-left-icon">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="86"
-                                                                    height="86" viewBox="0 0 86 86"
-                                                                    fill="none">
-                                                                    <g opacity="0.8"
-                                                                        filter="url(#filter0_d_10_2216)">
-                                                                        <circle cx="43" cy="39" r="28"
-                                                                            fill="#C9DDA0" />
-                                                                    </g>
-                                                                    <path
-                                                                        d="M33 39.0948C33 35.4849 33 33.6795 34.172 32.5586C35.344 31.4376 37.229 31.4366 41 31.4366H45C48.771 31.4366 50.657 31.4366 51.828 32.5586C52.999 33.6805 53 35.4849 53 39.0948V41.0093C53 44.6191 53 46.4245 51.828 47.5455C50.656 48.6664 48.771 48.6674 45 48.6674H41C37.229 48.6674 35.343 48.6674 34.172 47.5455C33.001 46.4236 33 44.6191 33 41.0093V39.0948Z"
-                                                                        stroke="white" stroke-width="1.5" />
-                                                                    <path
-                                                                        d="M38 31.4359V30M48 31.4359V30M33.5 36.2222H52.5"
-                                                                        stroke="white" stroke-width="1.5"
-                                                                        stroke-linecap="round" />
-                                                                    <path
-                                                                        d="M49.0002 43.8804C49.0002 44.1343 48.8949 44.3778 48.7074 44.5573C48.5198 44.7368 48.2655 44.8377 48.0002 44.8377C47.735 44.8377 47.4807 44.7368 47.2931 44.5573C47.1056 44.3778 47.0002 44.1343 47.0002 43.8804C47.0002 43.6266 47.1056 43.3831 47.2931 43.2035C47.4807 43.024 47.735 42.9232 48.0002 42.9232C48.2655 42.9232 48.5198 43.024 48.7074 43.2035C48.8949 43.3831 49.0002 43.6266 49.0002 43.8804ZM49.0002 40.0514C49.0002 40.3053 48.8949 40.5487 48.7074 40.7283C48.5198 40.9078 48.2655 41.0086 48.0002 41.0086C47.735 41.0086 47.4807 40.9078 47.2931 40.7283C47.1056 40.5487 47.0002 40.3053 47.0002 40.0514C47.0002 39.7975 47.1056 39.554 47.2931 39.3745C47.4807 39.195 47.735 39.0941 48.0002 39.0941C48.2655 39.0941 48.5198 39.195 48.7074 39.3745C48.8949 39.554 49.0002 39.7975 49.0002 40.0514ZM44.0002 43.8804C44.0002 44.1343 43.8949 44.3778 43.7074 44.5573C43.5198 44.7368 43.2655 44.8377 43.0002 44.8377C42.735 44.8377 42.4807 44.7368 42.2931 44.5573C42.1056 44.3778 42.0002 44.1343 42.0002 43.8804C42.0002 43.6266 42.1056 43.3831 42.2931 43.2035C42.4807 43.024 42.735 42.9232 43.0002 42.9232C43.2655 42.9232 43.5198 43.024 43.7074 43.2035C43.8949 43.3831 44.0002 43.6266 44.0002 43.8804ZM44.0002 40.0514C44.0002 40.3053 43.8949 40.5487 43.7074 40.7283C43.5198 40.9078 43.2655 41.0086 43.0002 41.0086C42.735 41.0086 42.4807 40.9078 42.2931 40.7283C42.1056 40.5487 42.0002 40.3053 42.0002 40.0514C42.0002 39.7975 42.1056 39.554 42.2931 39.3745C42.4807 39.195 42.735 39.0941 43.0002 39.0941C43.2655 39.0941 43.5198 39.195 43.7074 39.3745C43.8949 39.554 44.0002 39.7975 44.0002 40.0514ZM39.0002 43.8804C39.0002 44.1343 38.8949 44.3778 38.7074 44.5573C38.5198 44.7368 38.2655 44.8377 38.0002 44.8377C37.735 44.8377 37.4807 44.7368 37.2931 44.5573C37.1056 44.3778 37.0002 44.1343 37.0002 43.8804C37.0002 43.6266 37.1056 43.3831 37.2931 43.2035C37.4807 43.024 37.735 42.9232 38.0002 42.9232C38.2655 42.9232 38.5198 43.024 38.7074 43.2035C38.8949 43.3831 39.0002 43.6266 39.0002 43.8804ZM39.0002 40.0514C39.0002 40.3053 38.8949 40.5487 38.7074 40.7283C38.5198 40.9078 38.2655 41.0086 38.0002 41.0086C37.735 41.0086 37.4807 40.9078 37.2931 40.7283C37.1056 40.5487 37.0002 40.3053 37.0002 40.0514C37.0002 39.7975 37.1056 39.554 37.2931 39.3745C37.4807 39.195 37.735 39.0941 38.0002 39.0941C38.2655 39.0941 38.5198 39.195 38.7074 39.3745C38.8949 39.554 39.0002 39.7975 39.0002 40.0514Z"
-                                                                        fill="white" />
-                                                                    <defs>
-                                                                        <filter id="filter0_d_10_2216" x="0" y="0"
-                                                                            width="86" height="86"
-                                                                            filterUnits="userSpaceOnUse"
-                                                                            color-interpolation-filters="sRGB">
-                                                                            <feFlood flood-opacity="0"
-                                                                                result="BackgroundImageFix" />
-                                                                            <feColorMatrix in="SourceAlpha"
-                                                                                type="matrix"
-                                                                                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                                                                                result="hardAlpha" />
-                                                                            <feMorphology radius="5"
-                                                                                operator="dilate" in="SourceAlpha"
-                                                                                result="effect1_dropShadow_10_2216" />
-                                                                            <feOffset dy="4" />
-                                                                            <feGaussianBlur stdDeviation="5" />
-                                                                            <feComposite in2="hardAlpha"
-                                                                                operator="out" />
-                                                                            <feColorMatrix type="matrix"
-                                                                                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0" />
-                                                                            <feBlend mode="normal"
-                                                                                in2="BackgroundImageFix"
-                                                                                result="effect1_dropShadow_10_2216" />
-                                                                            <feBlend mode="normal" in="SourceGraphic"
-                                                                                in2="effect1_dropShadow_10_2216"
-                                                                                result="shape" />
-                                                                        </filter>
-                                                                    </defs>
-                                                                </svg>
-                                                            </div>
-                                                            <div class="notification-list-item-inner-left-content">
-                                                                <p class="small-bolder-color-font">Booking Confirmed
-                                                                </p>
-                                                                <p class="dark-color-font mt-1">Your appointment with
-                                                                    [Groomer Name] is confirmed.</p>
-                                                                <p class="simple-font mt-1">20m ago | Bookings</p>
-                                                            </div>
-                                                        </div>
-                                                        <div class="notification-list-item-inner-right">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="10"
-                                                                height="10" viewBox="0 0 10 10" fill="none">
-                                                                <circle cx="5" cy="5" r="5"
-                                                                    fill="#C9DDA0" />
-                                                            </svg>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="header-notifications-list booking-reminder cursor mt-4">
-                                                    <div
-                                                        class="header-notification-list-item d-flex align-items-center justify-content-between">
-                                                        <div
-                                                            class="notification-list-item-inner-left d-flex align-items-center">
-                                                            <div class="notification-list-item-inner-left-icon">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="82"
-                                                                    height="82" viewBox="0 0 82 82"
-                                                                    fill="none">
-                                                                    <g filter="url(#filter0_d_10_1928)">
-                                                                        <circle cx="41" cy="37" r="28"
-                                                                            fill="#FBAC83" />
-                                                                    </g>
-                                                                    <path
-                                                                        d="M41 28.2656C41.0605 28.2656 41.1132 28.2837 41.1504 28.3096C41.1824 28.3319 41.2169 28.3701 41.2393 28.4453L42.9014 34.0469C43.1217 34.7896 43.8044 35.2988 44.5791 35.2988H50.1377C50.3741 35.2991 50.4781 35.5978 50.293 35.7451L45.6445 39.4443C45.0864 39.8886 44.8539 40.6267 45.0566 41.3105L46.7939 47.1699C46.8631 47.404 46.5906 47.5881 46.3994 47.4365L42.0898 44.0068C41.452 43.4993 40.548 43.4993 39.9102 44.0068L35.6006 47.4365C35.4094 47.5881 35.1369 47.404 35.2061 47.1699L36.9434 41.3105C37.1461 40.6267 36.9135 39.8886 36.3555 39.4443L31.707 35.7451C31.5219 35.5978 31.6259 35.2991 31.8623 35.2988H37.4209C38.1956 35.2988 38.8783 34.7896 39.0986 34.0469L40.7607 28.4453C40.7831 28.3701 40.8176 28.3319 40.8496 28.3096C40.8868 28.2837 40.9395 28.2656 41 28.2656Z"
-                                                                        stroke="white" stroke-width="1.5" />
-                                                                    <defs>
-                                                                        <filter id="filter0_d_10_1928" x="0" y="0"
-                                                                            width="82" height="82"
-                                                                            filterUnits="userSpaceOnUse"
-                                                                            color-interpolation-filters="sRGB">
-                                                                            <feFlood flood-opacity="0"
-                                                                                result="BackgroundImageFix" />
-                                                                            <feColorMatrix in="SourceAlpha"
-                                                                                type="matrix"
-                                                                                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                                                                                result="hardAlpha" />
-                                                                            <feMorphology radius="5"
-                                                                                operator="dilate" in="SourceAlpha"
-                                                                                result="effect1_dropShadow_10_1928" />
-                                                                            <feOffset dy="4" />
-                                                                            <feGaussianBlur stdDeviation="4" />
-                                                                            <feComposite in2="hardAlpha"
-                                                                                operator="out" />
-                                                                            <feColorMatrix type="matrix"
-                                                                                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0" />
-                                                                            <feBlend mode="normal"
-                                                                                in2="BackgroundImageFix"
-                                                                                result="effect1_dropShadow_10_1928" />
-                                                                            <feBlend mode="normal" in="SourceGraphic"
-                                                                                in2="effect1_dropShadow_10_1928"
-                                                                                result="shape" />
-                                                                        </filter>
-                                                                    </defs>
-                                                                </svg>
-                                                            </div>
-                                                            <div class="notification-list-item-inner-left-content">
-                                                                <p class="small-bolder-color-font">Review reminder</p>
-                                                                <p class="dark-color-font mt-1">How was your booking
-                                                                    with
-                                                                    Claire Smith? Leave a review.</p>
-                                                                <p class="simple-font mt-1">1d ago | Reviews</p>
-                                                            </div>
-                                                        </div>
-                                                        <div class="notification-list-item-inner-right">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="10"
-                                                                height="10" viewBox="0 0 10 10" fill="none">
-                                                                <circle cx="5" cy="5" r="5"
-                                                                    fill="#FBAC83" />
-                                                            </svg>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="header-notifications-list payment-failed cursor mt-4">
-                                                    <div
-                                                        class="header-notification-list-item d-flex align-items-center justify-content-between">
-                                                        <div
-                                                            class="notification-list-item-inner-left d-flex align-items-center">
-                                                            <div class="notification-list-item-inner-left-icon">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="82"
-                                                                    height="82" viewBox="0 0 82 82"
-                                                                    fill="none">
-                                                                    <g filter="url(#filter0_d_10_1934)">
-                                                                        <circle cx="41" cy="37" r="28"
-                                                                            fill="#FFA899" />
-                                                                    </g>
-                                                                    <path
-                                                                        d="M31 33.5714V32.6571C31 31.3771 31 30.7371 31.2422 30.248C31.4556 29.8171 31.7944 29.4686 32.2133 29.2491C32.6889 29 33.3111 29 34.5556 29H47.4444C48.6889 29 49.3111 29 49.7856 29.2491C50.2044 29.4686 50.5444 29.8171 50.7578 30.248C51 30.736 51 31.376 51 32.6537V33.5714M31 33.5714H51H31ZM31 33.5714V41.3429C31 42.6229 31 43.2629 31.2422 43.752C31.4553 44.1821 31.7952 44.5317 32.2133 44.7509C32.6878 45 33.31 45 34.5522 45H47.4478C48.69 45 49.3111 45 49.7856 44.7509C50.2044 44.5314 50.5444 44.1817 50.7578 43.752C51 43.2629 51 42.6251 51 41.3474V33.5714M34.3333 40.4286H38.7778H34.3333Z"
-                                                                        fill="#FFA899" />
-                                                                    <path
-                                                                        d="M31 33.5714V32.6571C31 31.3771 31 30.7371 31.2422 30.248C31.4556 29.8171 31.7944 29.4686 32.2133 29.2491C32.6889 29 33.3111 29 34.5556 29H47.4444C48.6889 29 49.3111 29 49.7856 29.2491C50.2044 29.4686 50.5444 29.8171 50.7578 30.248C51 30.736 51 31.376 51 32.6537V33.5714M31 33.5714H51M31 33.5714V41.3429C31 42.6229 31 43.2629 31.2422 43.752C31.4553 44.1821 31.7952 44.5317 32.2133 44.7509C32.6878 45 33.31 45 34.5522 45H47.4478C48.69 45 49.3111 45 49.7856 44.7509C50.2044 44.5314 50.5444 44.1817 50.7578 43.752C51 43.2629 51 42.6251 51 41.3474V33.5714M34.3333 40.4286H38.7778"
-                                                                        stroke="white" stroke-width="1.5"
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round" />
-                                                                    <defs>
-                                                                        <filter id="filter0_d_10_1934" x="0" y="0"
-                                                                            width="82" height="82"
-                                                                            filterUnits="userSpaceOnUse"
-                                                                            color-interpolation-filters="sRGB">
-                                                                            <feFlood flood-opacity="0"
-                                                                                result="BackgroundImageFix" />
-                                                                            <feColorMatrix in="SourceAlpha"
-                                                                                type="matrix"
-                                                                                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                                                                                result="hardAlpha" />
-                                                                            <feMorphology radius="5"
-                                                                                operator="dilate" in="SourceAlpha"
-                                                                                result="effect1_dropShadow_10_1934" />
-                                                                            <feOffset dy="4" />
-                                                                            <feGaussianBlur stdDeviation="4" />
-                                                                            <feComposite in2="hardAlpha"
-                                                                                operator="out" />
-                                                                            <feColorMatrix type="matrix"
-                                                                                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0" />
-                                                                            <feBlend mode="normal"
-                                                                                in2="BackgroundImageFix"
-                                                                                result="effect1_dropShadow_10_1934" />
-                                                                            <feBlend mode="normal" in="SourceGraphic"
-                                                                                in2="effect1_dropShadow_10_1934"
-                                                                                result="shape" />
-                                                                        </filter>
-                                                                    </defs>
-                                                                </svg>
-                                                            </div>
-                                                            <div class="notification-list-item-inner-left-content">
-                                                                <p class="small-bolder-color-font">Payment failed</p>
-                                                                <p class="dark-color-font mt-1">There was an issue
-                                                                    processing your payment.</p>
-                                                                <p class="simple-font mt-1">1h ago | Payments</p>
-                                                            </div>
-                                                        </div>
-                                                        <div class="notification-list-item-inner-right">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="10"
-                                                                height="10" viewBox="0 0 10 10" fill="none">
-                                                                <circle cx="5" cy="5" r="5"
-                                                                    fill="#FFA899" />
-                                                            </svg>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="header-notifications-list cursor mt-4">
-                                                    <div
-                                                        class="header-notification-list-item d-flex align-items-center justify-content-between">
-                                                        <div
-                                                            class="notification-list-item-inner-left d-flex align-items-center">
-                                                            <div class="notification-list-item-inner-left-icon">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="82"
-                                                                    height="82" viewBox="0 0 82 82"
-                                                                    fill="none">
-                                                                    <g filter="url(#filter0_d_10_1940)">
-                                                                        <circle cx="41" cy="37" r="28"
-                                                                            fill="white" />
-                                                                    </g>
-                                                                    <path
-                                                                        d="M46.9305 35.4737C47.5421 41.1316 49.9474 42.8421 49.9474 42.8421H31C31 42.8421 34.1579 40.5968 34.1579 32.7368C34.1579 30.9505 34.8232 29.2368 36.0074 27.9737C37.1916 26.7105 38.8 26 40.4737 26C40.8295 26 41.1804 26.0316 41.5263 26.0947M42.2947 46C42.1097 46.319 41.844 46.5838 41.5244 46.7679C41.2049 46.952 40.8425 47.0489 40.4737 47.0489C40.1049 47.0489 39.7425 46.952 39.4229 46.7679C39.1033 46.5838 38.8377 46.319 38.6526 46M47.8421 32.3158C48.6796 32.3158 49.4829 31.9831 50.0751 31.3909C50.6673 30.7986 51 29.9954 51 29.1579C51 28.3204 50.6673 27.5171 50.0751 26.9249C49.4829 26.3327 48.6796 26 47.8421 26C47.0046 26 46.2014 26.3327 45.6091 26.9249C45.0169 27.5171 44.6842 28.3204 44.6842 29.1579C44.6842 29.9954 45.0169 30.7986 45.6091 31.3909C46.2014 31.9831 47.0046 32.3158 47.8421 32.3158Z"
-                                                                        stroke="#3B3731" stroke-width="1.5"
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round" />
-                                                                    <defs>
-                                                                        <filter id="filter0_d_10_1940" x="0" y="0"
-                                                                            width="82" height="82"
-                                                                            filterUnits="userSpaceOnUse"
-                                                                            color-interpolation-filters="sRGB">
-                                                                            <feFlood flood-opacity="0"
-                                                                                result="BackgroundImageFix" />
-                                                                            <feColorMatrix in="SourceAlpha"
-                                                                                type="matrix"
-                                                                                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                                                                                result="hardAlpha" />
-                                                                            <feMorphology radius="5"
-                                                                                operator="dilate" in="SourceAlpha"
-                                                                                result="effect1_dropShadow_10_1940" />
-                                                                            <feOffset dy="4" />
-                                                                            <feGaussianBlur stdDeviation="4" />
-                                                                            <feComposite in2="hardAlpha"
-                                                                                operator="out" />
-                                                                            <feColorMatrix type="matrix"
-                                                                                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0" />
-                                                                            <feBlend mode="normal"
-                                                                                in2="BackgroundImageFix"
-                                                                                result="effect1_dropShadow_10_1940" />
-                                                                            <feBlend mode="normal"
-                                                                                in="SourceGraphic"
-                                                                                in2="effect1_dropShadow_10_1940"
-                                                                                result="shape" />
-                                                                        </filter>
-                                                                    </defs>
-                                                                </svg>
-                                                            </div>
-                                                            <div class="notification-list-item-inner-left-content">
-                                                                <p class="small-bolder-color-font">Promotion</p>
-                                                                <p class="dark-color-font mt-1">🎉 Get 10% off your
-                                                                    next
-                                                                    booking!</p>
-                                                                <p class="simple-font mt-1">1h ago | Updates</p>
-                                                            </div>
-                                                        </div>
-                                                        <div class="notification-list-item-inner-right">
-
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div
-                                                class="view-all-mark-read d-flex align-items-center justify-content-between mt-4">
-                                                <a href="{{ url('/messages_notification/notifications') }}"
-                                                    class="dark-color-font link-tag" wire:navigate>View
-                                                    All</a>
-
-                                                <div class="d-flex align-items-center gap-10">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16"
-                                                        height="16" viewBox="0 0 16 16" fill="none">
-                                                        <path d="M5.1875 7.0625L8 9.875L15.5 2.375" stroke="#3B3731"
-                                                            stroke-linecap="round" stroke-linejoin="round" />
-                                                        <path
-                                                            d="M15.5 8V13.625C15.5 14.1223 15.3025 14.5992 14.9508 14.9508C14.5992 15.3025 14.1223 15.5 13.625 15.5H2.375C1.87772 15.5 1.40081 15.3025 1.04917 14.9508C0.697544 14.5992 0.5 14.1223 0.5 13.625V2.375C0.5 1.87772 0.697544 1.40081 1.04917 1.04917C1.40081 0.697544 1.87772 0.5 2.375 0.5H10.8125"
-                                                            stroke="#3B3731" stroke-linecap="round"
-                                                            stroke-linejoin="round" />
-                                                    </svg>
-                                                    <a href="" class="dark-color-font link-tag"
-                                                        wire:navigate>Mark as Read</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="user-content-tab">
-                                        <a class="user-btn cursor">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="22"
-                                                viewBox="0 0 20 22" fill="none">
-                                                <path
-                                                    d="M0 20.0004V18.8893C0 15.2115 2.98889 12.2227 6.66667 12.2227H11.1111C14.7889 12.2227 17.7778 15.2115 17.7778 18.8893V20.0004"
-                                                    stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
-                                                <path
-                                                    d="M8.88889 8.88889C6.43333 8.88889 4.44444 6.9 4.44444 4.44444C4.44444 1.98889 6.43333 0 8.88889 0C11.3444 0 13.3333 1.98889 13.3333 4.44444C13.3333 6.9 11.3444 8.88889 8.88889 8.88889Z"
-                                                    stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
-                                            </svg>
-                                        </a>
-                                        <div class="user-profile-options" style="display: none;">
-                                            @auth
-                                                <div class="user-profile-image d-flex align-items-center gap-20">
-                                                    <img src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : asset('images/user-placeholder.png') }}"
-                                                        alt="Profile Image" class="rounded-image">
-                                                    <div class="name-email d-flex flex-column">
-                                                        <p class="medium-font-bold">{{ $displayName }}</p>
-                                                        <p class="medium-muted-font">{{ $displaySubLabel }}</p>
-                                                    </div>
-                                                </div>
-                                            @else
-                                                <div class="user-profile-image d-flex align-items-center gap-20">
-                                                    <img src="{{ asset('images/user-placeholder.png') }}"
-                                                        alt="Profile Image" class="rounded-image">
-                                                    <div class="name-email d-flex flex-column">
-                                                        <p class="medium-font-bold">Guest</p>
-                                                        <p class="medium-muted-font">Please log in</p>
-                                                    </div>
-                                                </div>
-                                            @endauth
-                                            <div class="profile-menu">
-                                                <a href="{{ route('pet-owner-profile') }}"
-                                                    class="profile-item d-flex align-items-center gap-40"
-                                                    wire:navigate>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20"
-                                                        height="22" viewBox="0 0 20 22" fill="none">
-                                                        <path
-                                                            d="M11.8613 12.2227C15.9532 12.2228 19.2773 15.5477 19.2773 19.6396V20.75C19.2771 21.164 18.9414 21.5 18.5273 21.5C18.1135 21.4998 17.7776 21.1639 17.7773 20.75V19.6396C17.7773 16.3762 15.1248 13.7228 11.8613 13.7227H7.41699C4.15343 13.7227 1.5 16.3761 1.5 19.6396V20.75C1.49977 21.164 1.16407 21.5 0.75 21.5C0.335929 21.5 0.000230806 21.164 0 20.75V19.6396C0 15.5477 3.325 12.2227 7.41699 12.2227H11.8613ZM9.63867 0C12.5084 0 14.8329 2.32462 14.833 5.19434C14.833 8.06411 12.5084 10.3887 9.63867 10.3887C6.76895 10.3886 4.44434 8.06407 4.44434 5.19434C4.44439 2.32465 6.76899 5.87107e-05 9.63867 0ZM9.63867 1.5C7.59742 1.50006 5.94439 3.15308 5.94434 5.19434C5.94434 7.23564 7.59738 8.88861 9.63867 8.88867C11.68 8.88867 13.333 7.23568 13.333 5.19434C13.3329 3.15304 11.68 1.5 9.63867 1.5Z"
-                                                            fill="#3B3731" />
-                                                    </svg>
-                                                    <p class="medium-light-font">My Account</p>
-                                                </a>
-                                                <a href="#"
-                                                    class="profile-item d-flex align-items-center gap-40"
-                                                    wire:navigate>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18"
-                                                        height="22" viewBox="0 0 18 22" fill="none">
-                                                        <path
-                                                            d="M6.75 0C7.16421 0 7.5 0.335786 7.5 0.75C7.5 1.16421 7.16421 1.5 6.75 1.5H1.75C1.61193 1.5 1.5 1.61193 1.5 1.75V19.75C1.5 19.8881 1.61193 20 1.75 20H15.75C15.8881 20 16 19.8881 16 19.75V0.75C16 0.335786 16.3358 0 16.75 0C17.1642 0 17.5 0.335786 17.5 0.75V19.75C17.5 20.7165 16.7165 21.5 15.75 21.5H1.75C0.783501 21.5 0 20.7165 0 19.75V1.75C1.28853e-07 0.783502 0.783502 0 1.75 0H6.75ZM13.3506 0.759766C13.5786 0.806292 13.75 1.00829 13.75 1.25V8.73242C13.75 9.12158 13.331 9.35244 13.0078 9.1709L12.9443 9.12891L11.5557 8.05664C11.3757 7.91785 11.1243 7.91785 10.9443 8.05664L9.55566 9.12891L9.49219 9.1709C9.16898 9.35244 8.75 9.12158 8.75 8.73242V1.25C8.75 0.973858 8.97386 0.75 9.25 0.75H13.25L13.3506 0.759766ZM10.25 6.72266C10.8683 6.36491 11.6317 6.36491 12.25 6.72266V2.25H10.25V6.72266Z"
-                                                            fill="#3B3731" />
-                                                    </svg>
-                                                    <p class="medium-light-font">My Bookings</p>
-                                                </a>
-                                                <a href="#"
-                                                    class="profile-item d-flex align-items-center gap-40"
-                                                    wire:navigate>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="21"
-                                                        height="22" viewBox="0 0 21 22" fill="none">
-                                                        <path
-                                                            d="M10.1777 0C10.6333 0 11.013 -0.000603796 11.3232 0.0205078C11.6402 0.0420991 11.9403 0.0888118 12.2305 0.208984C12.5642 0.347178 12.8676 0.550265 13.123 0.805664C13.3779 1.06058 13.5796 1.36336 13.7178 1.69629C13.8277 1.95979 13.8773 2.23432 13.9014 2.52441L13.9189 2.82031V2.83008C13.9224 2.97708 13.963 3.12104 14.0371 3.24805C14.1088 3.37091 14.2102 3.47401 14.3311 3.54883C14.458 3.61852 14.6002 3.65647 14.7451 3.65723C14.8921 3.65795 15.037 3.62113 15.166 3.55078L15.1748 3.5459C15.5324 3.35701 15.8711 3.20724 16.2461 3.15723H16.2471C16.6052 3.10998 16.9695 3.13413 17.3184 3.22754C17.5799 3.2976 17.8295 3.40545 18.0586 3.54785L18.2803 3.70215L18.2822 3.70312C18.5303 3.89449 18.7203 4.13009 18.8975 4.39355C19.0708 4.65135 19.2601 4.97965 19.4883 5.37402L19.4893 5.37598C19.7165 5.77035 19.9064 6.09875 20.043 6.37793C20.1825 6.66308 20.2919 6.94566 20.333 7.25684C20.3803 7.61496 20.3561 7.97919 20.2627 8.32812C20.1693 8.67661 20.0076 9.00274 19.7881 9.28906C19.5568 9.59114 19.2546 9.81055 18.918 10.0234L18.915 10.0254C18.6444 10.1948 18.4927 10.4676 18.4902 10.7432C18.4929 10.8891 18.5321 11.0324 18.6045 11.1592C18.6592 11.2549 18.7317 11.3388 18.8174 11.4072L18.9072 11.4707L18.917 11.4766C19.2562 11.6901 19.5558 11.908 19.7871 12.208L19.7881 12.21C20.0078 12.4964 20.1693 12.8231 20.2627 13.1719C20.3561 13.5208 20.3803 13.885 20.333 14.2432C20.2924 14.5554 20.1826 14.8384 20.043 15.123C19.906 15.4023 19.7149 15.7309 19.4873 16.125C19.2596 16.5194 19.0708 16.8484 18.8975 17.1064C18.7204 17.3701 18.5303 17.6065 18.2812 17.7979H18.2803C17.9938 18.0176 17.6671 18.179 17.3184 18.2725C16.9695 18.3659 16.6052 18.39 16.2471 18.3428H16.2461C15.871 18.2927 15.5321 18.1434 15.1748 17.9541L15.167 17.9492C15.0378 17.8787 14.8923 17.842 14.7451 17.8428C14.6011 17.8436 14.4594 17.8802 14.333 17.9492C14.0926 18.0887 13.9305 18.3579 13.9189 18.6787V18.6797C13.9041 19.0838 13.8636 19.452 13.7197 19.8008L13.7188 19.8018C13.5806 20.1355 13.3784 20.4389 13.123 20.6943C12.8676 20.9497 12.5642 21.1528 12.2305 21.291C11.9403 21.4112 11.6402 21.4579 11.3232 21.4795C11.013 21.5006 10.6333 21.5 10.1777 21.5C9.72242 21.5 9.34329 21.5006 9.0332 21.4795C8.7163 21.4579 8.41616 21.4112 8.12598 21.291C7.79225 21.1528 7.48882 20.9498 7.2334 20.6943C6.97825 20.4391 6.77584 20.1361 6.6377 19.8027C6.49144 19.4515 6.45228 19.0809 6.4375 18.6797V18.6787C6.42597 18.3586 6.26447 18.0891 6.02246 17.9482C5.89639 17.8797 5.75494 17.8436 5.61133 17.8428C5.46418 17.842 5.31861 17.8787 5.18945 17.9492L5.18164 17.9541C4.82439 18.1434 4.4855 18.2928 4.11035 18.3428H4.10938C3.75128 18.39 3.38699 18.3659 3.03809 18.2725C2.68928 18.179 2.3617 18.0177 2.0752 17.7979L2.07422 17.7969C1.82617 17.6055 1.63614 17.3699 1.45898 17.1064C1.28566 16.8487 1.09638 16.5204 0.868164 16.126L0.867188 16.124C0.639936 15.7296 0.450079 15.4013 0.313477 15.1221C0.173968 14.8369 0.0645077 14.5543 0.0234375 14.2432C-0.0238107 13.8851 0.000329315 13.5208 0.09375 13.1719C0.187163 12.8231 0.348635 12.4964 0.568359 12.21C0.799612 11.9081 1.10199 11.6894 1.43848 11.4766L1.44141 11.4746C1.71431 11.3038 1.86621 11.0279 1.86621 10.75C1.86621 10.4723 1.71429 10.1964 1.44043 10.0244L1.43945 10.0234C1.10022 9.80994 0.800634 9.592 0.569336 9.29199L0.568359 9.29004C0.348636 9.00357 0.187162 8.67686 0.09375 8.32812C0.000329763 7.9792 -0.0238112 7.61495 0.0234375 7.25684C0.0640824 6.94457 0.173856 6.66163 0.313477 6.37695C0.450442 6.09774 0.641557 5.76912 0.869141 5.375C1.09725 4.97996 1.28644 4.65161 1.45996 4.39355C1.63711 4.13011 1.82639 3.89517 2.07324 3.7041L2.07617 3.70215C2.65458 3.25855 3.38569 3.06221 4.1084 3.15723H4.10938C4.39152 3.19475 4.65239 3.28884 4.91602 3.41309L5.18164 3.5459L5.18945 3.55078C5.31861 3.62129 5.46418 3.65796 5.61133 3.65723C5.75336 3.65643 5.89257 3.61985 6.01758 3.55273C6.14171 3.47759 6.24613 3.37341 6.31934 3.24805C6.39343 3.12104 6.43401 2.97708 6.4375 2.83008V2.82031L6.45508 2.52441C6.47943 2.2342 6.52879 1.96095 6.63672 1.69922L6.6377 1.69824C6.77585 1.36452 6.97804 1.0611 7.2334 0.805664C7.48882 0.550246 7.79225 0.347186 8.12598 0.208984C8.41616 0.0887986 8.7163 0.042104 9.0332 0.0205078C9.34329 -0.000596764 9.72242 -3.47805e-07 10.1777 0ZM10.1777 1.5C9.70178 1.5 9.38214 1.50072 9.13477 1.51758C8.89414 1.53398 8.77697 1.56294 8.7002 1.59473C8.54847 1.65755 8.41007 1.75009 8.29395 1.86621C8.20693 1.95328 8.13397 2.05296 8.07617 2.16113L8.02344 2.27148C7.9835 2.3685 7.94962 2.52149 7.93652 2.87598L7.93555 2.875C7.92455 3.27254 7.81483 3.66136 7.61426 4.00488C7.41219 4.35083 7.12536 4.63953 6.78125 4.84473L6.77246 4.85059L6.76367 4.85547C6.41376 5.05114 6.01907 5.15518 5.61816 5.15723C5.22055 5.15918 4.82917 5.06019 4.47949 4.87109V4.87207C4.165 4.70547 4.01682 4.65856 3.91113 4.64453V4.64355C3.58306 4.60081 3.25083 4.6912 2.98828 4.89258C2.92169 4.94479 2.83687 5.03301 2.7041 5.23047C2.56571 5.43632 2.40566 5.71338 2.16797 6.125C1.9296 6.53781 1.76943 6.81435 1.66016 7.03711C1.55393 7.25366 1.5213 7.3694 1.51074 7.45117V7.45312C1.48928 7.61578 1.50058 7.78096 1.54297 7.93945C1.58525 8.09738 1.65755 8.2461 1.75684 8.37598C1.82139 8.45973 1.93609 8.56371 2.23828 8.75391L2.36133 8.83691C2.96514 9.26854 3.36621 9.96419 3.36621 10.75C3.36621 11.5869 2.91084 12.3217 2.23926 12.7432C1.93419 12.9361 1.82144 13.0402 1.75879 13.1221H1.75781C1.65789 13.2523 1.58543 13.402 1.54297 13.5605C1.50058 13.719 1.48929 13.8842 1.51074 14.0469L1.52344 14.1162C1.54233 14.194 1.58146 14.3001 1.66113 14.4629C1.77009 14.6856 1.9289 14.9625 2.16602 15.374C2.40463 15.7864 2.56552 16.0634 2.7041 16.2695C2.83888 16.47 2.92332 16.5577 2.99023 16.6094H2.98926C3.11911 16.7088 3.26784 16.7809 3.42578 16.8232C3.58405 16.8656 3.74967 16.8768 3.91211 16.8555L4.00098 16.8379C4.06787 16.82 4.15326 16.7884 4.27246 16.7324L4.47949 16.6279C4.82906 16.439 5.2207 16.3408 5.61816 16.3428C5.96887 16.3446 6.31466 16.4243 6.62988 16.5752L6.76367 16.6445L6.77344 16.6504C7.49625 17.0695 7.90767 17.8292 7.93652 18.624C7.94642 18.8926 7.96762 19.044 7.99414 19.1426L8.02246 19.2266L8.02344 19.2285C8.0862 19.38 8.17804 19.5178 8.29395 19.6338C8.41007 19.7499 8.54847 19.8425 8.7002 19.9053C8.77697 19.9371 8.89414 19.966 9.13477 19.9824C9.38214 19.9993 9.70179 20 10.1777 20C10.6539 20 10.9742 19.9993 11.2217 19.9824C11.4623 19.966 11.5795 19.9371 11.6562 19.9053L11.7676 19.8525C11.8758 19.7947 11.9754 19.7208 12.0625 19.6338C12.1784 19.5178 12.2702 19.38 12.333 19.2285L12.3613 19.1436C12.3883 19.0432 12.4101 18.8909 12.4199 18.624C12.4487 17.8299 12.8596 17.0679 13.584 16.6494L13.5928 16.6445C13.9427 16.4488 14.3374 16.3448 14.7383 16.3428C15.1355 16.3408 15.5266 16.4393 15.876 16.6279H15.877C16.1916 16.7946 16.3395 16.8415 16.4443 16.8555H16.4434C16.606 16.8769 16.7712 16.8656 16.9297 16.8232C17.0881 16.7808 17.2371 16.7081 17.3672 16.6084C17.4331 16.5578 17.5177 16.4711 17.6523 16.2705C17.7907 16.0644 17.9504 15.7873 18.1885 15.375C18.4269 14.9622 18.587 14.6857 18.6963 14.4629C18.8025 14.2463 18.8351 14.1306 18.8457 14.0488V14.0469C18.8672 13.8842 18.8559 13.719 18.8135 13.5605C18.771 13.402 18.6976 13.2523 18.5977 13.1221V13.1211C18.5334 13.0386 18.4195 12.9367 18.127 12.752L18.001 12.6689C17.7147 12.4686 17.4756 12.2069 17.3018 11.9023C17.1031 11.5543 16.9959 11.1615 16.9902 10.7607V10.75L16.9951 10.5938C17.0478 9.82091 17.4882 9.14875 18.1191 8.75391C18.4221 8.5621 18.5352 8.45951 18.5977 8.37793L18.668 8.27637C18.7327 8.17217 18.7816 8.05838 18.8135 7.93945C18.8453 7.82049 18.8595 7.69783 18.8555 7.5752L18.8457 7.45312C18.8348 7.37041 18.8015 7.25407 18.6953 7.03711C18.5864 6.81444 18.4275 6.53748 18.1904 6.12598L17.8838 5.60059C17.7965 5.45415 17.7216 5.3335 17.6523 5.23047C17.5182 5.03104 17.4339 4.94333 17.3672 4.8916C17.2371 4.79189 17.0881 4.71916 16.9297 4.67676C16.7713 4.63439 16.606 4.62213 16.4434 4.64355C16.3395 4.65756 16.1931 4.70344 15.8838 4.86621L15.8848 4.86719C15.5331 5.05902 15.1379 5.15927 14.7373 5.15723C14.3368 5.15516 13.9434 5.05081 13.5938 4.85547L13.584 4.85059L13.5752 4.84473C13.2311 4.63953 12.9443 4.35083 12.7422 4.00488C12.5401 3.65883 12.4285 3.26681 12.4189 2.86621V2.86523C12.4055 2.51432 12.373 2.36703 12.334 2.27344L12.333 2.27148C12.2702 2.12 12.1784 1.98219 12.0625 1.86621C11.9754 1.77915 11.8758 1.7053 11.7676 1.64746L11.6562 1.59473C11.5795 1.56295 11.4623 1.53398 11.2217 1.51758C10.9742 1.50072 10.6539 1.5 10.1777 1.5ZM10.1787 7C12.2496 7.00021 13.9287 8.67906 13.9287 10.75C13.9287 12.8209 12.2496 14.4998 10.1787 14.5C8.10764 14.5 6.42871 12.8211 6.42871 10.75C6.42871 8.67893 8.10764 7 10.1787 7ZM10.1787 8.5C8.93607 8.5 7.92871 9.50736 7.92871 10.75C7.92871 11.9926 8.93607 13 10.1787 13C11.4212 12.9998 12.4287 11.9925 12.4287 10.75C12.4287 9.50749 11.4212 8.50021 10.1787 8.5Z"
-                                                            fill="#3B3731" />
-                                                    </svg>
-                                                    <p class="medium-light-font">Account Settings</p>
-                                                </a>
-                                                <a href="#"
-                                                    class="profile-item d-flex align-items-center gap-40"
-                                                    wire:navigate>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="19"
-                                                        height="22" viewBox="0 0 19 22" fill="none">
-                                                        <path
-                                                            d="M9.5 0C13.2443 0 15.6568 1.57687 17.1084 3.59277C18.5324 5.57057 19 7.92165 19 9.5C19 13.793 16.9576 16.332 14.3818 17.6943C12.1988 18.8489 9.66992 19.1428 7.75 19.0576V20.75C7.75 21.0098 7.61547 21.251 7.39453 21.3877C7.17354 21.5243 6.89745 21.5369 6.66504 21.4209C3.96213 20.0694 2.29595 17.7715 1.31152 15.502C0.32954 13.2379 0 10.9473 0 9.5C0 5.75574 1.57687 3.34317 3.59277 1.8916C5.57057 0.467588 7.92165 0 9.5 0ZM9.5 1.5C8.16176 1.5 6.13771 1.90757 4.46973 3.1084C2.83993 4.28185 1.5 6.24444 1.5 9.5C1.5 10.761 1.79552 12.8455 2.68848 14.9043C3.4296 16.613 4.56603 18.2641 6.25 19.4326V18.25C6.25 18.0367 6.34105 17.8337 6.5 17.6914C6.65896 17.5491 6.87098 17.4813 7.08301 17.5049C8.85994 17.7023 11.5093 17.5166 13.6807 16.3682C15.7924 15.2513 17.5 13.2069 17.5 9.5C17.5 8.16176 17.0924 6.13771 15.8916 4.46973C14.7181 2.83993 12.7556 1.5 9.5 1.5ZM9.70801 12.3857C10.1681 12.3857 10.5417 12.7188 10.542 13.1299C10.542 13.5412 10.1682 13.875 9.70801 13.875C9.24792 13.8748 8.875 13.5411 8.875 13.1299C8.87526 12.7189 9.24808 12.3859 9.70801 12.3857ZM9.58984 5.125C9.97399 5.12507 10.5458 5.21306 11.043 5.49805C11.574 5.80248 12 6.32622 12 7.10547C11.9999 7.50804 11.8951 8.11357 11.5752 8.67676C11.3084 9.1463 10.8756 9.60889 10.2148 9.87207V10.8965C10.2147 11.2047 9.93474 11.4549 9.58984 11.4551C9.24474 11.4551 8.96497 11.2048 8.96484 10.8965V9.47461C8.96488 9.21625 9.16319 8.99178 9.44434 8.93164C9.93391 8.82709 10.252 8.53858 10.4609 8.1709C10.6763 7.7917 10.7499 7.36562 10.75 7.10547C10.75 6.74751 10.5811 6.55958 10.3682 6.4375C10.1217 6.29627 9.80088 6.24226 9.58984 6.24219C8.7631 6.24219 8.49691 6.4566 8.39941 6.57715C8.27332 6.73326 8.25 6.94234 8.25 7.17285C8.25 7.48131 7.97018 7.73145 7.625 7.73145C7.27982 7.73145 7 7.48131 7 7.17285C7 6.92954 7.00697 6.39387 7.38672 5.92383C7.79536 5.41824 8.51231 5.125 9.58984 5.125Z"
-                                                            fill="#3B3731" />
-                                                    </svg>
-                                                    <p class="medium-light-font">Help & Support</p>
-                                                </a>
-                                            </div>
-                                            @auth
-                                                <div class="logout-option"
-                                                    onclick="this.querySelector('form').submit()">
-                                                    <form method="POST" action="{{ route('logout') }}"
-                                                        class="d-flex">
-                                                        @csrf
-                                                        <button type="submit"
-                                                            class="mt-3 d-flex align-items-center gap-40 border-0 bg-transparent p-0 w-100 cursor-pointer">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="17"
-                                                                height="22" viewBox="0 0 17 22" fill="none">
-                                                                <path
-                                                                    d="M15.5645 0C15.9787 0 16.3145 0.335786 16.3145 0.75V4.4541C16.3142 4.86813 15.9785 5.2041 15.5645 5.2041C15.1505 5.20391 14.8147 4.86801 14.8145 4.4541V1.5H1.5V20H14.8145V17.0459C14.8147 16.632 15.1505 16.2961 15.5645 16.2959C15.9785 16.2959 16.3142 16.6319 16.3145 17.0459V20.75C16.3145 21.1642 15.9787 21.5 15.5645 21.5H0.75C0.335787 21.5 3.5434e-07 21.1642 0 20.75V0.75C0 0.335786 0.335786 0 0.75 0H15.5645ZM12.0293 6.84473C12.2246 6.64946 12.5411 6.64946 12.7363 6.84473L15.918 10.0264C16.1131 10.2216 16.1132 10.5382 15.918 10.7334L12.7363 13.915C12.5411 14.1101 12.2245 14.1101 12.0293 13.915C11.8342 13.7198 11.8342 13.4032 12.0293 13.208L14.3574 10.8799H5.19434C4.91827 10.8799 4.69447 10.6559 4.69434 10.3799C4.69434 10.1037 4.91819 9.87988 5.19434 9.87988H14.3574L12.0293 7.55176C11.8341 7.35658 11.8343 7.04001 12.0293 6.84473Z"
-                                                                    fill="#3B3731" />
-                                                            </svg>
-                                                            <p class="medium-light-font">Log out</p>
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            @else
-                                                <div class="logout-option">
-                                                    <a href="{{ route('login') }}"
-                                                        class="mt-3 d-flex align-items-center gap-40" wire:navigate>
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="17"
-                                                            height="22" viewBox="0 0 17 22" fill="none">
-                                                            <path
-                                                                d="M15.5645 0C15.9787 0 16.3145 0.335786 16.3145 0.75V4.4541C16.3142 4.86813 15.9785 5.2041 15.5645 5.2041C15.1505 5.20391 14.8147 4.86801 14.8145 4.4541V1.5H1.5V20H14.8145V17.0459C14.8147 16.632 15.1505 16.2961 15.5645 16.2959C15.9785 16.2959 16.3142 16.6319 16.3145 17.0459V20.75C16.3145 21.1642 15.9787 21.5 15.5645 21.5H0.75C0.335787 21.5 3.5434e-07 21.1642 0 20.75V0.75C0 0.335786 0.335786 0 0.75 0H15.5645ZM12.0293 6.84473C12.2246 6.64946 12.5411 6.64946 12.7363 6.84473L15.918 10.0264C16.1131 10.2216 16.1132 10.5382 15.918 10.7334L12.7363 13.915C12.5411 14.1101 12.2245 14.1101 12.0293 13.915C11.8342 13.7198 11.8342 13.4032 12.0293 13.208L14.3574 10.8799H5.19434C4.91827 10.8799 4.69447 10.6559 4.69434 10.3799C4.69434 10.1037 4.91819 9.87988 5.19434 9.87988H14.3574L12.0293 7.55176C11.8341 7.35658 11.8343 7.04001 12.0293 6.84473Z"
-                                                                fill="#3B3731" />
-                                                        </svg>
-                                                        <p class="medium-light-font">Log in</p>
-                                                    </a>
-                                                </div>
-                                            @endauth
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
+                    <div class="menu-items">
+                        <a href="#" class="active" wire:navigate>Our Mission</a>
+                        <a href="#" wire:navigate>For Groomers & Hosts</a>
+                        <a href="#" wire:navigate>Help Centre</a>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center gap-20">
+                        <a href="{{ route('login-groomer-space') }}" class="nav-login-btn" wire:navigate>Log in</a>
+                        <a href="{{ route('signup-groomer-space') }}" class="nav-signup-btn" wire:navigate>Sign Up</a>
                     </div>
                 </div>
             </div>
@@ -1908,7 +1212,7 @@
 
         if (msgsBtn && !msgsBtn._dropdownAttached) {
             msgsBtn._dropdownAttached = true;
-            msgsBtn.addEventListener('click', function(e) {
+            msgsBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 toggleDropdown('.messages-notifications');
@@ -1917,7 +1221,7 @@
 
         if (notifBtn && !notifBtn._dropdownAttached) {
             notifBtn._dropdownAttached = true;
-            notifBtn.addEventListener('click', function(e) {
+            notifBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 toggleDropdown('.header-notifications');
@@ -1926,7 +1230,7 @@
 
         if (userBtn && !userBtn._dropdownAttached) {
             userBtn._dropdownAttached = true;
-            userBtn.addEventListener('click', function(e) {
+            userBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 toggleDropdown('.user-profile-options');
@@ -1935,7 +1239,7 @@
     }
 
     // Close on outside click
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         const target = e.target;
         const isButton = target.closest('.messages-btn') || target.closest('.notification-btn') || target
             .closest('.user-btn');
@@ -1965,7 +1269,7 @@
     }
 
     // Re-initialize after Livewire
-    document.addEventListener('livewire:navigated', function() {
+    document.addEventListener('livewire:navigated', function () {
         setTimeout(initHeaderDropdowns, 100);
     });
 </script>
