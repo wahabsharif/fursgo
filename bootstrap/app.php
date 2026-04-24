@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->redirectUsersTo('/');
+        $middleware->alias([
+            'auth.groomer_spacer' => \App\Http\Middleware\EnsureGroomerSpacerAuthenticated::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (

@@ -327,15 +327,10 @@ new #[Layout('layouts.app')] class extends Component {
             $this->showFreelance = false;
             return;
         }
-
-        $isFreelance = $this->account_type === 'freelance';
-        $this->showVerificationCard = false;
-        $this->showAccountPayoutsForm = false;
-        $this->showRegisteredBusiness = !$isFreelance;
-        $this->showFreelance = $isFreelance;
-
-        session(['verification_current_step' => $isFreelance ? 'freelance_groomer' : 'registered_business']);
-        session()->save();
+        // Keep the user on "Verify Your Account for Payouts" until they click Continue.
+        // This prevents auto-advancing while they are still making multi-select changes.
+        $this->showRegisteredBusiness = false;
+        $this->showFreelance = false;
     }
 
     protected function validationAttributes(): array

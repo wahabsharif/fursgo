@@ -5,6 +5,16 @@
     $displayName = null;
     $displaySubLabel = null;
     $isBusinessLandingRoute = request()->routeIs('business-landing-page');
+    $isBusinessHomepageRoute = request()->routeIs('business-homepage-groomer-space-owner');
+    $isHelpCentreRoute = request()->routeIs('help-and-support');
+    $isBusinessAuthRoute = request()->routeIs([
+        'login-groomer-space',
+        'signup-groomer-space',
+        'verify-qualify',
+        'verify-qualify.*',
+    ]);
+    $isBusinessSiteRoute = $isBusinessLandingRoute || $isBusinessHomepageRoute || $isBusinessAuthRoute;
+    $isForGroomersHostsActive = $isBusinessHomepageRoute || $isBusinessLandingRoute;
 
     if (auth()->check()) {
         $gsp = \App\Models\GroomerSpacerProfile::where('email', auth()->user()->email)->first();
@@ -71,17 +81,28 @@
                                         d="M100.537 11.2333C100.537 10.5865 100.882 10.4248 101.208 10.4248C101.579 10.4248 101.879 10.7868 101.879 11.2333C101.879 11.6799 101.847 11.2333 101.477 11.2333C101.106 11.2333 100.537 11.6799 100.537 11.2333Z"
                                         fill="#FFC97A" />
                                 </svg>
-                                @if ($isBusinessLandingRoute)
+                                @if ($isBusinessSiteRoute)
                                     <span class="logo-b-text">Business</span>
                                 @endif
                             </a>
                             <button class="menu-toggle">&#9776;</button>
                         </div>
                         <div>
-                            <a href="#" class="active" wire:navigate>Our Mission</a>
-                            <a href="#" wire:navigate>For Groomers & Hosts</a>
-                            <!-- <a href="#">For Hosts</a> -->
-                            <a href="#" wire:navigate>Help Centre</a>
+                            @if ($isBusinessSiteRoute)
+                                <a href="{{ route('business-homepage-groomer-space-owner') }}"
+                                    class="{{ $isForGroomersHostsActive ? 'active' : '' }}" wire:navigate>For Groomers &
+                                    Hosts</a>
+                                <a href="{{ route('help-and-support') }}"
+                                    class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
+                            @else
+                                <a href="#"
+                                    class="{{ $isBusinessLandingRoute ? 'active' : '' }}" wire:navigate>Our Mission</a>
+                                <a href="{{ route('business-homepage-groomer-space-owner') }}"
+                                    class="{{ $isBusinessHomepageRoute ? 'active' : '' }}" wire:navigate>For Groomers &
+                                    Hosts</a>
+                                <a href="{{ route('help-and-support') }}"
+                                    class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
+                            @endif
                         </div>
                         <div class="session-login-signup-div dashboard-header-icons d-flex align-items-center gap-40">
                             <div class="messages-content-tab">
@@ -1163,7 +1184,7 @@
                                         d="M100.537 11.2333C100.537 10.5865 100.882 10.4248 101.208 10.4248C101.579 10.4248 101.879 10.7868 101.879 11.2333C101.879 11.6799 101.847 11.2333 101.477 11.2333C101.106 11.2333 100.537 11.6799 100.537 11.2333Z"
                                         fill="#FFC97A" />
                                 </svg>
-                                @if ($isBusinessLandingRoute)
+                                @if ($isBusinessSiteRoute)
                                     <span class="logo-b-text">Business</span>
                                 @endif
                             </a>
@@ -1171,9 +1192,21 @@
                         </div>
                     </div>
                     <div class="menu-items">
-                        <a href="#" class="active" wire:navigate>Our Mission</a>
-                        <a href="#" wire:navigate>For Groomers & Hosts</a>
-                        <a href="#" wire:navigate>Help Centre</a>
+                        @if ($isBusinessSiteRoute)
+                            <a href="{{ route('business-homepage-groomer-space-owner') }}"
+                                class="{{ $isForGroomersHostsActive ? 'active' : '' }}" wire:navigate>For Groomers &
+                                Hosts</a>
+                            <a href="{{ route('help-and-support') }}"
+                                class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
+                        @else
+                            <a href="#"
+                                class="{{ $isBusinessLandingRoute ? 'active' : '' }}" wire:navigate>Our Mission</a>
+                            <a href="{{ route('business-homepage-groomer-space-owner') }}"
+                                class="{{ $isBusinessHomepageRoute ? 'active' : '' }}" wire:navigate>For Groomers &
+                                Hosts</a>
+                            <a href="{{ route('help-and-support') }}"
+                                class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
+                        @endif
                     </div>
                     <div class="d-flex justify-content-between align-items-center gap-20">
                         <a href="{{ route('login-groomer-space') }}" class="nav-login-btn" wire:navigate>Log in</a>

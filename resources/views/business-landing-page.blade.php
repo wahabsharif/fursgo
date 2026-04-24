@@ -262,7 +262,7 @@
                     </p>
                     <h1 class="blp-main-title">Step into a new opportunity — built around your love for animals.</h1>
                     <p class="blp-cta-text">Begin your application.</p>
-                    <a href="{{ route('signup-groomer-space') }}" wire:navigate class="blp-btn">Get Started</a>
+                    <a href="{{ route('login-groomer-space') }}" wire:navigate class="blp-btn">Get Started</a>
                 </div>
             </div>
 

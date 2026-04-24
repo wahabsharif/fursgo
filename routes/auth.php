@@ -40,7 +40,7 @@ Route::middleware('auth')->group(function () {
         ->name('password.confirm');
 });
 
-Route::middleware('auth:groomer_spacer')->group(function () {
+Route::middleware('auth.groomer_spacer')->group(function () {
     Volt::route('verify-qualify', 'auth.verify-qualify')
         ->name('verify-qualify');
 

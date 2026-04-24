@@ -856,7 +856,7 @@
                 </p>
 
                 <div class="bgs-buttons">
-                    <a href="{{ route('verify-qualify') }}" wire:navigate class="bgs-btn primary"
+                    <a href="{{ route('business-landing-page') }}" wire:navigate class="bgs-btn primary"
                         style="text-decoration: none; display: flex; justify-content: center; align-items: center;">Start
                         your Profile</a>
                     <button class="bgs-btn secondary">Learn more</button>
