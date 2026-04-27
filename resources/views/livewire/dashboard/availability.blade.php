@@ -8,9 +8,7 @@ new class extends Component {
 
 <div class="availability-layout" x-data="availabilityCalendarShell()" x-init="init()">
     <div class="availability-header">
-        <div class="availability-toolbar"></div>
-
-        <div class="availability-toolbar-secondary">
+        <div class="availability-toolbar">
             <div class="availability-view-toggle">
                 <button type="button" :class="{ 'is-active': activeView === 'day' }"
                     @click="activeView = 'day'">Day</button>
@@ -56,6 +54,10 @@ new class extends Component {
 
     <div class="availability-content">
         <div>
+            <div x-show="activeView === 'day'" x-cloak>
+                <x-dashboard.availability.day-calendar />
+            </div>
+
             <div x-show="activeView === 'month'" x-cloak>
                 <x-dashboard.availability.monthly-calendar />
             </div>
@@ -176,14 +178,9 @@ new class extends Component {
         margin: 38px 0;
     }
 
-    .availability-toolbar {
-        width: 100%;
-        min-height: 2px;
-        background: #e5ded5;
-        margin-bottom: 16px;
-    }
 
-    .availability-toolbar-secondary {
+
+    .availability-toolbar {
         display: grid;
         grid-template-columns: auto 1fr auto;
         align-items: center;
@@ -224,7 +221,6 @@ new class extends Component {
     .availability-view-toggle .is-active {
         background: #F9FAFC;
         color: #3B3731;
-        font-weight: 600;
     }
 
     .availability-search {
@@ -488,7 +484,7 @@ new class extends Component {
     }
 
     @media (max-width: 768px) {
-        .availability-toolbar-secondary {
+        .availability-toolbar {
             grid-template-columns: 1fr;
             align-items: stretch;
             gap: 10px;
