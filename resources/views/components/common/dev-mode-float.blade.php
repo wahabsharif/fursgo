@@ -1,10 +1,9 @@
 @php
     $devModeEmail = 'dev@dev.com';
-    $authUser = auth()->user();
-
-    if (!$authUser && auth('groomer_spacer')->check()) {
-        $authUser = auth('groomer_spacer')->user();
-    }
+    $groomerSpacerUser = auth('groomer_spacer')->user();
+    $webUser = auth()->user();
+    $authUser = $groomerSpacerUser ?? $webUser;
+    $metaUser = $groomerSpacerUser ?? ($webUser?->groomerSpacerProfile ?? $webUser);
 
     $showDevMode = $authUser && ($authUser->email ?? null) === $devModeEmail;
 @endphp
@@ -210,17 +209,54 @@
         }
     </style>
 
-    <div class="dev-mode-float-wrap"
-        x-data="{
-            open: false,
-            userTypeOpen: false,
-            accountTypeOpen: false,
-            selectedUserType: '{{ $authUser->user_type ?? '' }}',
-            selectedAccountType: '{{ $authUser->account_type ?? '' }}'
-        }"
+    <div class="dev-mode-float-wrap" x-data="{
+        open: false,
+        userTypeOpen: false,
+        accountTypeOpen: false,
+        selectedUserType: '{{ $metaUser->user_type ?? '' }}',
+        selectedAccountType: '{{ $metaUser->account_type ?? '' }}',
+        saveBusy: false,
+        saveError: '',
+        async submitMeta() {
+            this.saveBusy = true;
+            this.saveError = '';
+            try {
+                const response = await fetch('{{ route('dev-mode.update-meta') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({
+                        user_type: this.selectedUserType,
+                        account_type: this.selectedAccountType,
+                    }),
+                });
+    
+                if (!response.ok) {
+                    let message = 'Update failed';
+                    try {
+                        const data = await response.json();
+                        message = data.message || message;
+                    } catch (e) {}
+                    this.saveError = message;
+                    return;
+                }
+    
+                window.location.reload();
+            } catch (e) {
+                this.saveError = 'Network error while updating';
+            } finally {
+                this.saveBusy = false;
+            }
+        }
+    }"
         @click.outside="open = false; userTypeOpen = false; accountTypeOpen = false"
         @keydown.escape.window="open = false; userTypeOpen = false; accountTypeOpen = false">
-        <button type="button" class="dev-mode-float" aria-label="Dev mode menu" @click="open = !open" :aria-expanded="open.toString()">
+        <button type="button" class="dev-mode-float" aria-label="Dev mode menu" @click="open = !open"
+            :aria-expanded="open.toString()">
             <span class="dev-mode-float__dot" aria-hidden="true"></span>
             <span>DEV MODE</span>
             <span class="dev-mode-float__caret" aria-hidden="true">&#9662;</span>
@@ -230,7 +266,7 @@
             <div class="dev-mode-dropdown__label">Developer Menu</div>
 
             <button type="button" class="dev-mode-dropdown__meta" @click="userTypeOpen = !userTypeOpen">
-                <span>User Type:</span></span>
+                <span>User Type:</span>
                 <span class="dev-mode-dropdown__meta-caret" x-text="userTypeOpen ? '▲' : '▼'"></span>
             </button>
             <div class="dev-mode-dropdown__meta-panel" x-show="userTypeOpen" x-transition.opacity>
@@ -247,7 +283,7 @@
             </div>
 
             <button type="button" class="dev-mode-dropdown__meta" @click="accountTypeOpen = !accountTypeOpen">
-                <span>Account Type:</span></span>
+                <span>Account Type:</span>
                 <span class="dev-mode-dropdown__meta-caret" x-text="accountTypeOpen ? '▲' : '▼'"></span>
             </button>
             <div class="dev-mode-dropdown__meta-panel" x-show="accountTypeOpen" x-transition.opacity>
@@ -264,17 +300,14 @@
             </div>
 
             <div class="dev-mode-dropdown__hint">Logged in as {{ $devModeEmail }}</div>
+            <div class="dev-mode-dropdown__hint" x-show="saveError" x-text="saveError" style="color: #b42318;"></div>
             <div class="dev-mode-dropdown__actions">
                 <form method="POST" action="{{ route('logout') }}" style="flex: 1;">
                     @csrf
                     <button type="submit" class="dev-mode-dropdown__logout">Logout</button>
                 </form>
-                <form method="POST" action="{{ route('dev-mode.update-meta') }}" style="flex: 1;">
-                    @csrf
-                    <input type="hidden" name="user_type" x-model="selectedUserType">
-                    <input type="hidden" name="account_type" x-model="selectedAccountType">
-                    <button type="submit" class="dev-mode-dropdown__save">Update</button>
-                </form>
+                <button type="button" class="dev-mode-dropdown__save" style="flex: 1;" :disabled="saveBusy"
+                    @click="submitMeta()" x-text="saveBusy ? 'Updating...' : 'Update'"></button>
             </div>
         </div>
     </div>
