@@ -54,15 +54,27 @@ new class extends Component {
 
     <div class="availability-content">
         <div>
-            <div x-show="activeView === 'day'" x-cloak>
+            <div x-show="activeView === 'day'" x-cloak x-transition:enter="availability-view-enter"
+                x-transition:enter-start="availability-view-enter-start"
+                x-transition:enter-end="availability-view-enter-end" x-transition:leave="availability-view-leave"
+                x-transition:leave-start="availability-view-leave-start"
+                x-transition:leave-end="availability-view-leave-end">
                 <x-dashboard.availability.day-calendar />
             </div>
 
-            <div x-show="activeView === 'month'" x-cloak>
+            <div x-show="activeView === 'month'" x-cloak x-transition:enter="availability-view-enter"
+                x-transition:enter-start="availability-view-enter-start"
+                x-transition:enter-end="availability-view-enter-end" x-transition:leave="availability-view-leave"
+                x-transition:leave-start="availability-view-leave-start"
+                x-transition:leave-end="availability-view-leave-end">
                 <x-dashboard.availability.monthly-calendar />
             </div>
 
-            <div x-show="activeView === 'week'" x-cloak>
+            <div x-show="activeView === 'week'" x-cloak x-transition:enter="availability-view-enter"
+                x-transition:enter-start="availability-view-enter-start"
+                x-transition:enter-end="availability-view-enter-end" x-transition:leave="availability-view-leave"
+                x-transition:leave-start="availability-view-leave-start"
+                x-transition:leave-end="availability-view-leave-end">
                 <x-dashboard.availability.weekly-calendar />
             </div>
         </div>
@@ -471,6 +483,23 @@ new class extends Component {
         cursor: pointer;
         display: block;
         margin: 0 auto;
+    }
+
+    .availability-view-enter,
+    .availability-view-leave {
+        transition: opacity 220ms ease, transform 220ms ease;
+    }
+
+    .availability-view-enter-start,
+    .availability-view-leave-end {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    .availability-view-enter-end,
+    .availability-view-leave-start {
+        opacity: 1;
+        transform: translateY(0);
     }
 
     @media (max-width: 1200px) {
