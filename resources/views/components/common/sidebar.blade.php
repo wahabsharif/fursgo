@@ -151,7 +151,8 @@
             <li class="nav-item">
                 <a href="#"
                     @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'availability'; bookingsOpen = false; availabilityOpen = !availabilityOpen"
-                    :class="{ 'active': activeSection === 'availability' }" class="nav-link">
+                    :class="{ 'active': activeSection === 'availability' || activeSection === 'manage-availability' }"
+                    class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 14 13"
                         fill="none">
                         <path
@@ -173,9 +174,9 @@
                     x-transition:leave-end="bookings-transition-leave-end" class="booking-status-list">
                     <li class="booking-status-item">
                         <span class="availability-status-dot"></span>
-                        <button type="button" class="booking-status-trigger" style="color: #9D9B98;"
-                            :class="{ 'is-active': activeSection === 'availability' }"
-                            @click="activeSection = 'availability'; availabilityOpen = true;">
+                        <button type="button" class="booking-status-trigger availability-manage-trigger"
+                            :class="{ 'is-active': activeSection === 'manage-availability' }"
+                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'manage-availability'; availabilityOpen = true;">
                             Manage Availability
                         </button>
                     </li>
@@ -435,6 +436,10 @@
 
         .booking-status-trigger.is-active {
             color: #000;
+        }
+
+        .availability-manage-trigger.is-active {
+            color: #3B3731;
         }
 
         .booking-status-count {
