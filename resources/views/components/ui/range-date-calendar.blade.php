@@ -19,6 +19,7 @@
     end: @js($endValue),
     startName: @js($startName),
     endName: @js($endName),
+    componentId: @js($componentId),
 })"
     x-init="init()">
     <input type="hidden" :name="startName" :value="startDate">
@@ -644,6 +645,7 @@
                 yearOptions: [],
                 startName: config.startName || 'start_date',
                 endName: config.endName || 'end_date',
+                componentId: config.componentId || null,
                 startDate: config.start || null,
                 endDate: config.end || null,
                 hoverDate: null,
@@ -667,6 +669,7 @@
                         length: 16
                     }, (_, idx) => currentYear + idx);
                     this.syncDraftMonthsFromState();
+                    this.emitRangeChanged();
                 },
                 get rangeTitle() {
                     return `${MONTHS[this.leftDate.getMonth()]} ${this.leftDate.getFullYear()} - ${MONTHS[this.rightDate.getMonth()]} ${this.rightDate.getFullYear()}`;
@@ -815,6 +818,7 @@
                         this.startDate = dateIso;
                         this.endDate = null;
                         this.hoverDate = null;
+                        this.emitRangeChanged();
                         return;
                     }
                     if (dateIso < this.startDate) {
@@ -824,10 +828,16 @@
                         this.endDate = dateIso;
                     }
                     this.hoverDate = null;
+                    this.emitRangeChanged();
+                },
+                emitRangeChanged() {
                     window.dispatchEvent(new CustomEvent('range-calendar-changed', {
                         detail: {
                             start: this.startDate,
-                            end: this.endDate
+                            end: this.endDate,
+                            startName: this.startName,
+                            endName: this.endName,
+                            componentId: this.componentId,
                         },
                     }));
                 },
