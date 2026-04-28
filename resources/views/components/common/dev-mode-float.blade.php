@@ -3,9 +3,10 @@
     $groomerSpacerUser = auth('groomer_spacer')->user();
     $webUser = auth()->user();
     $authUser = $groomerSpacerUser ?? $webUser;
-    $metaUser = $groomerSpacerUser ?? ($webUser?->groomerSpacerProfile ?? $webUser);
 
     $showDevMode = $authUser && ($authUser->email ?? null) === $devModeEmail;
+    // Avoid resolving optional profile relations for normal users/tests.
+    $metaUser = $showDevMode ? $groomerSpacerUser ?? ($webUser?->groomerSpacerProfile ?? $webUser) : $authUser;
 @endphp
 
 @if ($showDevMode)
