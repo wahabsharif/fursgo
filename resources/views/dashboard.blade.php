@@ -80,6 +80,7 @@
     .dashboard-content-wrapper {
         display: flex;
         flex-direction: column;
+        position: relative;
     }
 
     .active-section-header {

@@ -256,6 +256,8 @@
             return {
                 today: null,
                 activeView: 'month',
+                isBookingsDrawerOpen: false,
+                drawerTopOffset: 0,
                 weekdays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
                 currentWeekdayIndex: 0,
                 mainMonth: null,
@@ -267,6 +269,28 @@
                     this.mainMonth = new Date(now.getFullYear(), now.getMonth(), 1);
                     this.weekStart = new Date(this.today);
                     this.weekStart.setDate(this.today.getDate() - this.currentWeekdayIndex);
+                    this.syncDrawerTopOffset();
+                    window.addEventListener('resize', () => this.syncDrawerTopOffset());
+                },
+                syncDrawerTopOffset() {
+                    const curve = document.querySelector('.dashboard-header .curve-shape-container');
+
+                    if (!curve) {
+                        this.drawerTopOffset = 0;
+                        return;
+                    }
+
+                    const curveRect = curve.getBoundingClientRect();
+                    this.drawerTopOffset = Math.max(0, Math.round(curveRect.bottom));
+                },
+                openBookingsDrawer() {
+                    this.syncDrawerTopOffset();
+                    this.isBookingsDrawerOpen = true;
+                    document.body.style.overflow = 'hidden';
+                },
+                closeBookingsDrawer() {
+                    this.isBookingsDrawerOpen = false;
+                    document.body.style.overflow = '';
                 },
                 get mainMonthYearLabel() {
                     return `${MONTHS[this.mainMonth.getMonth()]}, ${this.mainMonth.getFullYear()}`;

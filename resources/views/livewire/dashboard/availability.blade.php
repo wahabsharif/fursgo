@@ -1,12 +1,18 @@
-<?php
+@php
+    $profileId = auth('groomer_spacer')->id();
 
-use Livewire\Volt\Component;
+    $userBookings = $profileId
+        ? \App\Models\Booking::query()
+            ->with(['petOwner:id,name', 'pets:id,name,photo,pet_type,breed,sex,weight,notes'])
+            ->where('goormer_spacer_id', $profileId)
+            ->latest('date')
+            ->latest('time')
+            ->get()
+        : collect();
+@endphp
 
-new class extends Component {
-    //
-}; ?>
-
-<div class="availability-layout" x-data="availabilityCalendarShell()" x-init="init()">
+<div class="availability-layout" x-data="availabilityCalendarShell()" x-init="init()"
+    @keydown.escape.window="closeBookingsDrawer()">
     <div class="availability-header">
         <div class="availability-toolbar">
             <div class="availability-view-toggle">
@@ -162,10 +168,102 @@ new class extends Component {
                         </ul>
                     </div>
                 </article>
-                <button type="button" class="availability-view-all">View All</button>
+                <button type="button" class="availability-view-all" @click="openBookingsDrawer()">View All</button>
             </div>
         </aside>
     </div>
+
+    <template x-teleport=".dashboard-content-wrapper">
+        <div class="availability-bookings-drawer-layer" x-show="isBookingsDrawerOpen" x-cloak
+            :style="{ top: drawerTopOffset + 'px' }">
+            <button type="button" class="availability-bookings-drawer-backdrop" @click="closeBookingsDrawer()"
+                x-show="isBookingsDrawerOpen" x-transition.opacity aria-label="Close bookings drawer"></button>
+
+            <aside class="availability-bookings-drawer" role="dialog" aria-modal="true" aria-label="All bookings"
+                x-show="isBookingsDrawerOpen" x-transition:enter="drawer-enter"
+                x-transition:enter-start="drawer-enter-start" x-transition:enter-end="drawer-enter-end"
+                x-transition:leave="drawer-leave" x-transition:leave-start="drawer-leave-start"
+                x-transition:leave-end="drawer-leave-end">
+                <header class="availability-drawer-head">
+                    <h3>Bookings</h3>
+                    <button type="button" class="availability-drawer-close" @click="closeBookingsDrawer()"
+                        aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 17 17"
+                            fill="none">
+                            <path d="M0.75 15.75L15.75 0.75M0.75 0.75L15.75 15.75" stroke="#3B3731" stroke-width="1.5"
+                                stroke-linecap="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <div class="availability-drawer-body">
+                    @forelse ($userBookings as $booking)
+                        @php
+                            $firstPet = $booking->pets->first();
+                            $petPhoto = trim((string) ($firstPet?->photo ?? ''));
+                            $petPhotoUrl = $petPhoto !== '' ? $petPhoto : asset('images/ellipse-65.svg');
+                            $bookingDate = $booking->date?->format('l, jS F Y') ?? 'No date';
+                            $bookingTime = trim((string) ($booking->time ?? ''));
+                            $bookingStatus = strtolower((string) ($booking->booking_status ?? ''));
+                            $bookingStatusClass = match ($bookingStatus) {
+                                'confirmed' => 'is-confirmed',
+                                'pending' => 'is-pending',
+                                'cancelled' => 'is-cancelled',
+                                default => 'is-default',
+                            };
+                            $bookingStatusLabel = ucfirst((string) ($booking->booking_status ?: 'unknown'));
+                        @endphp
+                        <article class="availability-drawer-booking-card {{ $bookingStatusClass }}">
+                            <div class="availability-drawer-booking-top">
+                                <div class="availability-drawer-client">
+                                    <img src="{{ asset('images/ellipse-65.svg') }}" alt="Client image" />
+                                    <div>
+                                        <strong>{{ $booking->petOwner?->name ?? (auth()->user()?->name ?? 'Client') }}</strong>
+                                        <small>Booking #{{ $booking->id }}</small>
+                                    </div>
+                                </div>
+                                <span class="availability-drawer-status {{ $bookingStatusClass }}">
+                                    {{ $bookingStatusLabel }}
+                                </span>
+                            </div>
+
+                            <div class="availability-drawer-meta">
+                                <div class="availability-drawer-meta-row">
+                                    <span class="availability-drawer-meta-item">{{ $bookingDate }}</span>
+                                </div>
+                                <div class="availability-drawer-meta-row">
+                                    <span
+                                        class="availability-drawer-meta-item">{{ $bookingTime !== '' ? $bookingTime : 'Time not set' }}</span>
+                                    <span
+                                        class="availability-drawer-meta-item">{{ $booking->service ?: 'Service not set' }}</span>
+                                </div>
+                            </div>
+
+                            <div class="availability-drawer-pet">
+                                <img src="{{ $petPhotoUrl }}" alt="Pet image" />
+                                <div class="availability-drawer-pet-copy">
+                                    <strong>{{ $firstPet?->name ?: 'Pet' }}</strong>
+                                    <small>
+                                        {{ $firstPet?->pet_type ?: 'Pet type' }}
+                                        @if ($firstPet?->breed)
+                                            - {{ $firstPet->breed }}
+                                        @endif
+                                    </small>
+                                    @if ($firstPet?->notes)
+                                        <p>{{ $firstPet->notes }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </article>
+                    @empty
+                        <div class="availability-drawer-empty">
+                            <p>No bookings found for your account.</p>
+                        </div>
+                    @endforelse
+                </div>
+            </aside>
+        </div>
+    </template>
 </div>
 
 <style>
@@ -485,6 +583,242 @@ new class extends Component {
         margin: 0 auto;
     }
 
+    .availability-bookings-drawer-layer {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1100;
+        pointer-events: none;
+    }
+
+    .availability-bookings-drawer-backdrop {
+        position: absolute;
+        inset: 0;
+        background: transparent;
+        border: 0;
+        width: 100%;
+        pointer-events: auto;
+    }
+
+    .availability-bookings-drawer {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: min(42rem, 100%);
+        height: 100%;
+        border-radius: 10px 0 0 10px;
+        background: #FFF;
+        box-shadow: -6px 0 16.8px -1px rgba(0, 0, 0, 0.10);
+        pointer-events: auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .availability-drawer-head {
+        padding: 24px 24px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .availability-drawer-head h3 {
+        margin: 0;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 36px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .availability-drawer-close {
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        line-height: 0;
+        padding: 0;
+    }
+
+    .availability-drawer-body {
+        padding: 0 24px 24px;
+        overflow-y: auto;
+        display: grid;
+        gap: 18px;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .availability-drawer-body::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
+    }
+
+    .availability-drawer-booking-card {
+        border: 1px solid #dcd4c8;
+        border-radius: 14px;
+        background: #fff;
+        padding: 18px;
+    }
+
+    .availability-drawer-booking-card.is-confirmed {
+        border-color: #AFCD6F;
+    }
+
+    .availability-drawer-booking-card.is-pending {
+        border-color: #FFBA55;
+    }
+
+    .availability-drawer-booking-card.is-cancelled {
+        border-color: #FF6E6E;
+    }
+
+    .availability-drawer-booking-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid #ebe7e0;
+    }
+
+    .availability-drawer-client {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .availability-drawer-client img {
+        width: 54px;
+        height: 54px;
+        border-radius: 999px;
+        object-fit: cover;
+    }
+
+    .availability-drawer-client strong {
+        display: block;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    .availability-drawer-client small {
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 400;
+    }
+
+    .availability-drawer-status {
+        border-radius: 100px;
+        padding: 6px 14px;
+        text-align: center;
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 500;
+        line-height: normal;
+    }
+
+    .availability-drawer-status.is-confirmed {
+        color: #AFCD6F;
+        background: rgba(201, 221, 160, 0.2);
+    }
+
+    .availability-drawer-status.is-pending {
+        color: #FFBA55;
+        background: rgba(255, 201, 122, 0.2);
+    }
+
+    .availability-drawer-status.is-cancelled {
+        color: #FF6E6E;
+        background: rgba(255, 110, 110, 0.2);
+    }
+
+    .availability-drawer-status.is-default {
+        color: #6f6a64;
+        background: #f0ece6;
+    }
+
+    .availability-drawer-meta {
+        padding: 14px 0;
+        border-bottom: 1px solid #ebe7e0;
+        display: grid;
+        gap: 8px;
+    }
+
+    .availability-drawer-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .availability-drawer-meta-item {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 15px;
+        font-weight: 500;
+    }
+
+    .availability-drawer-pet {
+        margin-top: 14px;
+        border: 1px solid #ede7dc;
+        border-radius: 10px;
+        padding: 14px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .availability-drawer-pet img {
+        width: 54px;
+        height: 54px;
+        border-radius: 999px;
+        object-fit: cover;
+    }
+
+    .availability-drawer-pet-copy strong {
+        display: block;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    .availability-drawer-pet-copy small {
+        color: #8f8a84;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 400;
+    }
+
+    .availability-drawer-pet-copy p {
+        margin: 6px 0 0;
+        color: #5d5852;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 400;
+    }
+
+    .availability-drawer-empty {
+        border: 1px dashed #ddd5c9;
+        border-radius: 12px;
+        background: #fff;
+        padding: 20px;
+    }
+
+    .availability-drawer-empty p {
+        margin: 0;
+        color: #6f685f;
+        font-family: Lato;
+        font-size: 15px;
+    }
+
     .availability-view-enter,
     .availability-view-leave {
         transition: opacity 220ms ease, transform 220ms ease;
@@ -502,34 +836,21 @@ new class extends Component {
         transform: translateY(0);
     }
 
-    @media (max-width: 1200px) {
-        .availability-content {
-            grid-template-columns: minmax(0, 1fr);
-        }
-
-        .availability-side-panel {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
+    .drawer-enter,
+    .drawer-leave {
+        transition: transform 250ms ease, opacity 250ms ease;
     }
 
-    @media (max-width: 768px) {
-        .availability-toolbar {
-            grid-template-columns: 1fr;
-            align-items: stretch;
-            gap: 10px;
-        }
+    .drawer-enter-start,
+    .drawer-leave-end {
+        transform: translateX(100%);
+        opacity: 0;
+    }
 
-        .availability-calendar-title {
-            justify-self: start;
-        }
-
-        .availability-search input {
-            width: 100%;
-        }
-
-        .availability-side-panel {
-            grid-template-columns: minmax(0, 1fr);
-        }
+    .drawer-enter-end,
+    .drawer-leave-start {
+        transform: translateX(0);
+        opacity: 1;
     }
 </style>
 
