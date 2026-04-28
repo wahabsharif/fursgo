@@ -7,10 +7,10 @@
         $segments = request()->segments();
 
         if (empty($segments)) {
-            $pageTitle = 'Fursgo Dashboard';
+            $pageTitle = 'Fursgo';
         } else {
             $pageTitle =
-                'Fursgo Dashboard - ' .
+                'Fursgo - ' .
                 collect($segments)->map(fn($s) => ucfirst(str_replace(['-', '_'], ' ', $s)))->implode(' - ');
         }
     @endphp
