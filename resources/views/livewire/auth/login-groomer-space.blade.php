@@ -29,9 +29,7 @@ new #[Layout('layouts.app')] class extends Component {
 
         $email = Str::lower(trim($this->email));
         if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $this->emailExists = GroomerSpacerProfile::query()
-                ->where('email', $email)
-                ->exists();
+            $this->emailExists = GroomerSpacerProfile::query()->where('email', $email)->exists();
 
             if ($this->emailExists) {
                 $this->resetValidation('email');
@@ -63,7 +61,7 @@ new #[Layout('layouts.app')] class extends Component {
         RateLimiter::clear($this->throttleKey());
         request()->session()->regenerate();
 
-        $default = route('business-homepage-groomer-space-owner');
+        $default = route('verify-qualify');
         $target = session()->pull('url.intended', $default);
         $this->redirect(is_string($target) && $target !== '' ? $target : $default, navigate: true);
     }
@@ -99,9 +97,8 @@ new #[Layout('layouts.app')] class extends Component {
 
         <x-auth-session-status :status="session('status')" />
 
-        <form wire:submit="login" class="gs-login-form-inner"
-            x-data="{ email: @entangle('email').live, password: @entangle('password').live, submitting: false }"
-            x-on:submit="submitting = true" x-on:groomer-login-failed.window="submitting = false">
+        <form wire:submit="login" class="gs-login-form-inner" x-data="{ email: @entangle('email').live, password: @entangle('password').live, submitting: false }" x-on:submit="submitting = true"
+            x-on:groomer-login-failed.window="submitting = false">
             <div class="form-group">
                 <label for="email">Email Address</label>
                 <div class="input-wrapper">
@@ -109,15 +106,16 @@ new #[Layout('layouts.app')] class extends Component {
                         placeholder="email@example.com" required autofocus autocomplete="email">
                     @if ($errors->has('email') && !$loginFailed)
                         <span class="icon error" style="display: block !important;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
+                                fill="none">
                                 <path
                                     d="M9.5 0C14.7467 0 19 4.25329 19 9.5C19 14.7467 14.7467 19 9.5 19C4.25329 19 0 14.7467 0 9.5C0 4.25329 4.25329 0 9.5 0ZM13.1973 6.22559C12.9044 5.9327 12.4296 5.9327 12.1367 6.22559L9.71094 8.65039L7.28613 6.22559C6.99324 5.93269 6.51848 5.93269 6.22559 6.22559C5.93294 6.5185 5.93277 6.99332 6.22559 7.28613L8.65039 9.71094L6.22559 12.1367C5.93295 12.4296 5.93278 12.9045 6.22559 13.1973C6.51841 13.4898 6.9933 13.4898 7.28613 13.1973L9.71094 10.7715L12.1367 13.1973C12.4296 13.4898 12.9044 13.4898 13.1973 13.1973C13.4901 12.9045 13.4899 12.4296 13.1973 12.1367L10.7715 9.71094L13.1973 7.28613C13.4901 6.99332 13.4899 6.5185 13.1973 6.22559Z"
                                     fill="#FF6E6E" />
                             </svg>
                         </span>
                     @elseif ($email && $emailExists)
-                        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
-                            fill="none">
+                        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" width="19" height="19"
+                            viewBox="0 0 19 19" fill="none">
                             <path
                                 d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
                                 fill="#C9DDA0" />
@@ -136,15 +134,16 @@ new #[Layout('layouts.app')] class extends Component {
                         placeholder="••••••••••••••••••••" required autocomplete="current-password">
                     @if ($errors->has('password') || $loginFailed)
                         <span class="icon error" style="display: block !important;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
+                                fill="none">
                                 <path
                                     d="M9.5 0C14.7467 0 19 4.25329 19 9.5C19 14.7467 14.7467 19 9.5 19C4.25329 19 0 14.7467 0 9.5C0 4.25329 4.25329 0 9.5 0ZM13.1973 6.22559C12.9044 5.9327 12.4296 5.9327 12.1367 6.22559L9.71094 8.65039L7.28613 6.22559C6.99324 5.93269 6.51848 5.93269 6.22559 6.22559C5.93294 6.5185 5.93277 6.99332 6.22559 7.28613L8.65039 9.71094L6.22559 12.1367C5.93295 12.4296 5.93278 12.9045 6.22559 13.1973C6.51841 13.4898 6.9933 13.4898 7.28613 13.1973L9.71094 10.7715L12.1367 13.1973C12.4296 13.4898 12.9044 13.4898 13.1973 13.1973C13.4901 12.9045 13.4899 12.4296 13.1973 12.1367L10.7715 9.71094L13.1973 7.28613C13.4901 6.99332 13.4899 6.5185 13.1973 6.22559Z"
                                     fill="#FF6E6E" />
                             </svg>
                         </span>
                     @elseif ($password)
-                        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
-                            fill="none">
+                        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" width="19" height="19"
+                            viewBox="0 0 19 19" fill="none">
                             <path
                                 d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
                                 fill="#C9DDA0" />
