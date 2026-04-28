@@ -110,7 +110,7 @@
     .availability-weekly-column {
         min-height: 640px;
         border-right: 1px solid #D9D9D9;
-        background: #fbfbfb;
+        background: #FFF;
         padding: 8px 8px 14px;
         position: relative;
     }
