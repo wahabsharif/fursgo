@@ -45,8 +45,15 @@
             </div>
         </template>
 
+        <template x-if="activeSection === 'services'">
+            <div class="active-section-header">
+                <h2>Services</h2>
+                <p>Manage your services, pricing, and add-ons.</p>
+            </div>
+        </template>
+
         <template
-            x-if="activeSection !== 'bookings' && activeSection !== 'availability' && activeSection !== 'manage-availability'">
+            x-if="activeSection !== 'bookings' && activeSection !== 'availability' && activeSection !== 'manage-availability' && activeSection !== 'services'">
             <div x-text="activeSection.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())"></div>
         </template>
 
@@ -68,6 +75,9 @@
         </div>
         <div class="section-panel" :class="{ 'section-active': activeSection === 'manage-availability' }">
             <x-dashboard.availability.manage-availability />
+        </div>
+        <div class="section-panel" :class="{ 'section-active': activeSection === 'services' }">
+            <x-dashboard.services />
         </div>
     </div>
 </section>
