@@ -11,10 +11,11 @@ new class extends Component {
     x-on:service-form-cancel.window="showAddService = false">
     @php
         $userType = strtolower((string) data_get(auth()->user(), 'user_type', ''));
+        $addServiceTitle = $userType === 'space' ? 'Hourly' : 'Full Groom';
     @endphp
 
     <header class="service-list-header">
-        <h3 x-text="showAddService ? 'Full Groom' : 'Service List'"></h3>
+        <h3 x-text="showAddService ? '{{ $addServiceTitle }}' : 'Service List'"></h3>
         <button type="button" class="service-add-btn" x-show="!showAddService" x-cloak
             @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); showAddService = true; window.dispatchEvent(new CustomEvent('service-form-opened'))">+
             Add Service</button>
