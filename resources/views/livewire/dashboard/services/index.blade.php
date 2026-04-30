@@ -6,7 +6,8 @@ new class extends Component {
     // Parent Services index component.
 }; ?>
 
-<section class="services-dashboard" aria-label="Services section" x-data="{ showAddService: false }"
+<section class="services-dashboard" aria-label="Services section" x-data="{ showAddService: false, activeServiceMenu: 'services' }"
+    x-on:services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'; if (activeServiceMenu !== 'services') { showAddService = false }"
     x-on:service-form-cancel="showAddService = false; window.dispatchEvent(new CustomEvent('service-form-cancel')); window.dispatchEvent(new CustomEvent('nav-list-loading-start'))"
     x-on:service-form-cancel.window="showAddService = false">
     @php
@@ -15,20 +16,23 @@ new class extends Component {
     @endphp
 
     <header class="service-list-header">
-        <h3 x-text="showAddService ? '{{ $addServiceTitle }}' : 'Service List'"></h3>
-        <button type="button" class="service-add-btn" x-show="!showAddService" x-cloak
+        <h3
+            x-text="activeServiceMenu === 'add-ons' ? 'Add-ons' : (activeServiceMenu === 'pet-preferences' ? 'Pet Preferences' : (activeServiceMenu === 'service-area' ? 'Service Area' : (showAddService ? '{{ $addServiceTitle }}' : 'Service List')))">
+        </h3>
+        <button type="button" class="service-add-btn" x-show="activeServiceMenu === 'services' && !showAddService"
+            x-cloak
             @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); showAddService = true; window.dispatchEvent(new CustomEvent('service-form-opened'))">+
             Add Service</button>
     </header>
 
-    <div x-show="!showAddService" x-cloak x-transition:enter="service-view-enter"
+    <div x-show="activeServiceMenu === 'services' && !showAddService" x-cloak x-transition:enter="service-view-enter"
         x-transition:enter-start="service-view-enter-start" x-transition:enter-end="service-view-enter-end"
         x-transition:leave="service-view-leave" x-transition:leave-start="service-view-leave-start"
         x-transition:leave-end="service-view-leave-end">
         <livewire:dashboard.services.services-list />
     </div>
 
-    <div x-show="showAddService" x-cloak x-transition:enter="service-view-enter"
+    <div x-show="activeServiceMenu === 'services' && showAddService" x-cloak x-transition:enter="service-view-enter"
         x-transition:enter-start="service-view-enter-start" x-transition:enter-end="service-view-enter-end"
         x-transition:leave="service-view-leave" x-transition:leave-start="service-view-leave-start"
         x-transition:leave-end="service-view-leave-end">
@@ -37,6 +41,27 @@ new class extends Component {
         @else
             <livewire:dashboard.services.add-services-form-groomer />
         @endif
+    </div>
+
+    <div x-show="activeServiceMenu === 'add-ons'" x-cloak x-transition:enter="service-view-enter"
+        x-transition:enter-start="service-view-enter-start" x-transition:enter-end="service-view-enter-end"
+        x-transition:leave="service-view-leave" x-transition:leave-start="service-view-leave-start"
+        x-transition:leave-end="service-view-leave-end">
+        <livewire:dashboard.services.add-ons-list />
+    </div>
+
+    <div x-show="activeServiceMenu === 'pet-preferences'" x-cloak x-transition:enter="service-view-enter"
+        x-transition:enter-start="service-view-enter-start" x-transition:enter-end="service-view-enter-end"
+        x-transition:leave="service-view-leave" x-transition:leave-start="service-view-leave-start"
+        x-transition:leave-end="service-view-leave-end">
+        <p class="service-placeholder-copy">Pet Preferences panel coming next.</p>
+    </div>
+
+    <div x-show="activeServiceMenu === 'service-area'" x-cloak x-transition:enter="service-view-enter"
+        x-transition:enter-start="service-view-enter-start" x-transition:enter-end="service-view-enter-end"
+        x-transition:leave="service-view-leave" x-transition:leave-start="service-view-leave-start"
+        x-transition:leave-end="service-view-leave-end">
+        <p class="service-placeholder-copy">Service Area panel coming next.</p>
     </div>
 </section>
 
@@ -104,5 +129,12 @@ new class extends Component {
     .service-view-leave-end {
         opacity: 0;
         transform: translateY(-6px);
+    }
+
+    .service-placeholder-copy {
+        margin-top: 2rem;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 16px;
     }
 </style>
