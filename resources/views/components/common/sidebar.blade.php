@@ -26,7 +26,9 @@
     mobileOpen: false,
     bookingsOpen: false,
     availabilityOpen: false,
+    servicesOpen: false,
     activeBookingStatus: '',
+    activeServiceMenu: 'services',
     bookingCounts: {
         pending: {{ $pendingCount }},
         confirmed: {{ $confirmedCount }},
@@ -186,7 +188,7 @@
             <!-- Services -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; bookingsOpen = false; availabilityOpen = false"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; bookingsOpen = false; availabilityOpen = false; servicesOpen = !servicesOpen; activeServiceMenu = 'services'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'services' } }))"
                     :class="{ 'active': activeSection === 'services' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14"
                         fill="none">
@@ -199,6 +201,38 @@
                     </svg>
                     <span class="nav-text">Services</span>
                 </a>
+                <ul x-cloak x-show="servicesOpen && activeSection === 'services'"
+                    x-transition:enter="bookings-transition-enter"
+                    x-transition:enter-start="bookings-transition-enter-start"
+                    x-transition:enter-end="bookings-transition-enter-end"
+                    x-transition:leave="bookings-transition-leave"
+                    x-transition:leave-start="bookings-transition-leave-start"
+                    x-transition:leave-end="bookings-transition-leave-end" class="booking-status-list">
+                    <li class="booking-status-item">
+                        <span class="services-status-dot add-ons"></span>
+                        <button type="button" class="booking-status-trigger"
+                            :class="{ 'is-active': activeServiceMenu === 'add-ons' }"
+                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'add-ons'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'add-ons' } }))">
+                            Add-ons
+                        </button>
+                    </li>
+                    <li class="booking-status-item">
+                        <span class="services-status-dot pet-preferences"></span>
+                        <button type="button" class="booking-status-trigger"
+                            :class="{ 'is-active': activeServiceMenu === 'pet-preferences' }"
+                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'pet-preferences'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'pet-preferences' } }))">
+                            Pet Preferences
+                        </button>
+                    </li>
+                    <li class="booking-status-item">
+                        <span class="services-status-dot service-area"></span>
+                        <button type="button" class="booking-status-trigger"
+                            :class="{ 'is-active': activeServiceMenu === 'service-area' }"
+                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'service-area'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'service-area' } }))">
+                            Service Area
+                        </button>
+                    </li>
+                </ul>
             </li>
 
             <!-- Clients -->
@@ -410,6 +444,25 @@
             border-radius: 100px;
             background: #FFA899;
             flex-shrink: 0;
+        }
+
+        .services-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 100px;
+            flex-shrink: 0;
+        }
+
+        .services-status-dot.add-ons {
+            background: #CBDCE8;
+        }
+
+        .services-status-dot.pet-preferences {
+            background: #FFC97A;
+        }
+
+        .services-status-dot.service-area {
+            background: #FFA899;
         }
 
         .booking-status-text {
