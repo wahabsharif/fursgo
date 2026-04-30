@@ -72,7 +72,7 @@ new class extends Component {
         x-transition:enter-start="service-view-enter-start" x-transition:enter-end="service-view-enter-end"
         x-transition:leave="service-view-leave" x-transition:leave-start="service-view-leave-start"
         x-transition:leave-end="service-view-leave-end">
-        <p class="service-placeholder-copy">Pet Preferences panel coming next.</p>
+        <livewire:dashboard.services.pet-preferences />
     </div>
 
     <div x-show="activeServiceMenu === 'service-area'" x-cloak x-transition:enter="service-view-enter"
