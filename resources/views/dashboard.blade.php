@@ -1,10 +1,10 @@
 <section class="dashboard-content-wrapper">
-    <div class="active-section-header" x-data="{ tabsLoading: false, navLoading: false, activeBookingFilter: '', serviceFormOpen: false }" x-on:bookings-tabs-loading-start.window="tabsLoading = true"
+    <div class="active-section-header" x-data="{ tabsLoading: false, navLoading: false, activeBookingFilter: '', serviceFormOpen: false, activeServiceMenu: 'services' }" x-on:bookings-tabs-loading-start.window="tabsLoading = true"
         x-on:bookings-tabs-loading-end.window="tabsLoading = false"
         x-on:booking-status-changed.window="tabsLoading = false; activeBookingFilter = $event.detail.status || ''"
         x-on:nav-list-loading-start.window="navLoading = true; setTimeout(() => navLoading = false, 350)"
-        x-on:service-form-opened.window="serviceFormOpen = true"
-        x-on:service-form-cancel.window="serviceFormOpen = false">
+        x-on:service-form-opened.window="serviceFormOpen = true" x-on:service-form-cancel.window="serviceFormOpen = false"
+        x-on:services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'">
         <template x-if="activeSection === 'bookings'">
             <div class="active-section-header">
                 <h2
@@ -57,7 +57,7 @@
                             d="M0 5.202L5.211 0L5.877 0.684C6.015 0.828 6.069 0.972 6.039 1.116C6.015 1.254 5.94 1.386 5.814 1.512L3.609 3.708C3.297 4.02 3.012 4.278 2.754 4.482C3.102 4.434 3.468 4.398 3.852 4.374C4.242 4.344 4.635 4.329 5.031 4.329H16.074V6.084H5.031C4.629 6.084 4.233 6.072 3.843 6.048C3.459 6.024 3.093 5.988 2.745 5.94C2.877 6.042 3.012 6.156 3.15 6.282C3.294 6.408 3.447 6.549 3.609 6.705L5.832 8.919C5.958 9.045 6.033 9.18 6.057 9.324C6.087 9.462 6.033 9.6 5.895 9.738L5.229 10.431L0 5.202Z"
                             fill="black" />
                     </svg>
-                    Service List
+                    <span x-text="activeServiceMenu === 'add-ons' ? 'Add-ons List' : 'Service List'"></span>
                 </button>
                 <div>
                     <h2>Services</h2>
