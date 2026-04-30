@@ -1,22 +1,101 @@
 <?php
 
+use App\Models\GroomerSpacerProfile;
+use App\Models\Service;
 use Livewire\Volt\Component;
 
 new class extends Component {
-    // Add/edit service form scaffold.
+    public string $serviceName = '';
+    public string $description = '';
+    public string $otherPet = '';
+    public array $selectedPets = ['cat', 'dog', 'other'];
+    public array $selectedSizes = ['small', 'medium', 'large'];
+    public bool $addOnsCompatibility = true;
+    public bool $visibilityControls = true;
+    public string $baseDuration = '90 Minutes';
+    public string $bufferTime = '15 min';
+    public string $durationSmall = '15 min';
+    public string $durationMedium = '30 min';
+    public float $basePrice = 35;
+    public float $priceSmall = 35;
+    public float $priceMedium = 45;
+    public float $overtimeCharge = 10;
+    public string $overtimePer = '15 min';
+
+    private function parseMinutes(?string $value): int|string
+    {
+        if ($value === null || trim($value) === '') {
+            return '';
+        }
+
+        preg_match('/\d+/', $value, $matches);
+        return isset($matches[0]) ? (int) $matches[0] : '';
+    }
+
+    public function save(): void
+    {
+        $this->validate([
+            'serviceName' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+        ]);
+
+        $email = (string) data_get(auth()->user(), 'email', '');
+        $profile = GroomerSpacerProfile::where('email', $email)->first();
+
+        if (!$profile) {
+            $this->addError('serviceName', 'Groomer/Spacer profile not found for current user.');
+            return;
+        }
+
+        Service::create([
+            'groomer_spacer_id' => $profile->id,
+            'service_name' => $this->serviceName,
+            'description' => $this->description !== '' ? $this->description : '',
+            'pet_compatibility' => [
+                'pet_types' => array_values($this->selectedPets),
+                'other_pets' => $this->otherPet !== '' ? [$this->otherPet] : '',
+                'pet_sizes' => array_values($this->selectedSizes),
+            ],
+            'duration' => [
+                'base_duration' => $this->parseMinutes($this->baseDuration),
+                'buffer_time' => $this->parseMinutes($this->bufferTime),
+                'duration_by_size' => [
+                    'small' => $this->parseMinutes($this->durationSmall),
+                    'medium' => $this->parseMinutes($this->durationMedium),
+                    'large' => $this->parseMinutes($this->baseDuration),
+                ],
+            ],
+            'pricing' => [
+                'base_price' => (float) $this->basePrice,
+                'overtime_charge' => ['price' => (float) $this->overtimeCharge, 'per' => $this->overtimePer],
+                'pricing_by_size' => [
+                    'small' => (float) $this->priceSmall,
+                    'medium' => (float) $this->priceMedium,
+                    'large' => (float) $this->basePrice,
+                ],
+            ],
+            'add_ons_compatibility' => $this->addOnsCompatibility,
+            'visibility_controls' => $this->visibilityControls,
+        ]);
+
+        $this->dispatch('service-created');
+        $this->reset(['serviceName', 'description', 'otherPet']);
+        $this->dispatch('service-form-cancel');
+    }
 }; ?>
 
-<section class="service-form-wrapper" aria-label="Add service form" x-data="{ selectedPets: ['cat', 'other'], selectedSizes: ['small', 'medium'], baseDuration: '90 Minutes', bufferTime: '15 min', durationSmall: '15 min', durationMedium: '30 min', basePrice: 35, priceSmall: 35, priceMedium: 45, overtimeCharge: 10, overtimePer: '15 min' }">
-    <form class="service-form" action="#" method="post" @submit.prevent>
+<section class="service-form-wrapper" aria-label="Add service form" x-data="{ selectedPets: $wire.entangle('selectedPets').live, selectedSizes: $wire.entangle('selectedSizes').live, addOnsCompatibility: $wire.entangle('addOnsCompatibility').live, visibilityControls: $wire.entangle('visibilityControls').live, baseDuration: $wire.entangle('baseDuration').live, bufferTime: $wire.entangle('bufferTime').live, durationSmall: $wire.entangle('durationSmall').live, durationMedium: $wire.entangle('durationMedium').live, basePrice: $wire.entangle('basePrice').live, priceSmall: $wire.entangle('priceSmall').live, priceMedium: $wire.entangle('priceMedium').live, overtimeCharge: $wire.entangle('overtimeCharge').live, overtimePer: $wire.entangle('overtimePer').live }">
+    <form class="service-form" wire:submit.prevent="save"
+        x-on:submit="window.dispatchEvent(new CustomEvent('nav-list-loading-start'))">
         <div class="service-form-grid">
             <label class="service-field" style="width: 400px;">
                 <span>Service Name</span>
-                <input type="text" placeholder="Full Groom" />
+                <input type="text" placeholder="Full Groom" wire:model="serviceName" />
             </label>
 
             <label class="service-field" style="width: 505px;">
                 <span style="color: #9D9B98;">Description</span>
-                <input type="text"
+                <input type="text" wire:model="description"
                     placeholder="Full grooming service including wash, cut, styling, and nail trim." />
             </label>
         </div>
@@ -116,7 +195,8 @@ new class extends Component {
             <label class="service-field">
                 <span>Other</span>
                 <div class="service-input-with-icon">
-                    <input type="text" placeholder="Specify pet type" style="width: 332px;" />
+                    <input type="text" placeholder="Specify pet type" style="width: 332px;"
+                        wire:model="otherPet" />
                     <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"
                         fill="none">
                         <g filter="url(#filter0_d_3_541)">
@@ -509,14 +589,16 @@ new class extends Component {
             <h4>Add-ons Compatibility</h4>
             <div class="service-toggle-wrap">
                 <p>Allow add-ons with this service</p>
-                <span class="service-toggle"></span>
+                <button type="button" class="service-toggle" :class="{ 'is-on': addOnsCompatibility }"
+                    @click="addOnsCompatibility = !addOnsCompatibility"></button>
             </div>
         </div>
         <div class="service-fieldset">
             <h4>Visibility Controls</h4>
             <div class="service-toggle-wrap">
                 <p>Active Service</p>
-                <span class="service-toggle"></span>
+                <button type="button" class="service-toggle" :class="{ 'is-on': visibilityControls }"
+                    @click="visibilityControls = !visibilityControls"></button>
             </div>
         </div>
 
@@ -1107,6 +1189,38 @@ new class extends Component {
         font-style: normal;
         font-weight: 400;
         line-height: normal;
+    }
+
+    .service-toggle {
+        width: 56px;
+        height: 30px;
+        border-radius: 999px;
+        border: 0;
+        background: #cfcfcf;
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+        transition: background-color 0.24s ease;
+    }
+
+    .service-toggle::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 4px;
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        background: #fff;
+        transition: left 0.24s ease;
+    }
+
+    .service-toggle.is-on {
+        background: #c7d59f;
+    }
+
+    .service-toggle.is-on::after {
+        left: 28px;
     }
 
     .service-form-actions {

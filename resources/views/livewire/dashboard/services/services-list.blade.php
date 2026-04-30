@@ -1,9 +1,76 @@
 <?php
 
+use App\Models\GroomerSpacerProfile;
+use App\Models\Service;
+use Livewire\Attributes\On;
 use Livewire\Volt\Component;
 
 new class extends Component {
-    // Static list UI scaffold.
+    public int $perPage = 10;
+
+    public function getServicesProperty()
+    {
+        $email = (string) data_get(auth()->user(), 'email', '');
+        $profile = GroomerSpacerProfile::where('email', $email)->first();
+
+        if (!$profile) {
+            return collect();
+        }
+
+        return Service::query()->where('groomer_spacer_id', $profile->id)->latest()->limit($this->perPage)->get();
+    }
+
+    public function getTotalServicesProperty(): int
+    {
+        $email = (string) data_get(auth()->user(), 'email', '');
+        $profile = GroomerSpacerProfile::where('email', $email)->first();
+
+        if (!$profile) {
+            return 0;
+        }
+
+        return (int) Service::query()->where('groomer_spacer_id', $profile->id)->count();
+    }
+
+    public function getCanLoadMoreProperty(): bool
+    {
+        return $this->services->count() < $this->totalServices;
+    }
+
+    public function toggleVisibility(int $serviceId): void
+    {
+        $service = Service::find($serviceId);
+
+        if (!$service) {
+            return;
+        }
+
+        $service->update([
+            'visibility_controls' => !(bool) $service->visibility_controls,
+        ]);
+    }
+
+    public function appliesTo(array $petCompatibility): string
+    {
+        $petTypes = data_get($petCompatibility, 'pet_types', []);
+
+        if (!is_array($petTypes) || empty($petTypes)) {
+            return '-';
+        }
+
+        return collect($petTypes)->map(fn($type) => ucfirst((string) $type))->join(', ');
+    }
+
+    public function loadMore(): void
+    {
+        $this->perPage += 10;
+    }
+
+    #[On('service-created')]
+    public function refreshList(): void
+    {
+        $this->perPage = 10;
+    }
 }; ?>
 
 <section class="service-list-wrapper" aria-label="Service list">
@@ -20,149 +87,54 @@ new class extends Component {
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Full Groom</td>
-                    <td>Cat, Dog, Other</td>
-                    <td>1h</td>
-                    <td>£45.00</td>
-                    <td><span class="service-toggle is-on" aria-hidden="true"></span></td>
-                    <td class="service-edit-col">
-                        <button type="button" class="icon-btn" aria-label="Edit service">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                                fill="none">
-                                <path d="M12 20H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                                <path d="M16.5 3.5A2.121 2.121 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z"
-                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                        </button>
-                        <button type="button" class="icon-btn dots-btn" aria-label="Service actions">•••</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Face Trim Only</td>
-                    <td>Cat, Dog, Other</td>
-                    <td>20 mins</td>
-                    <td>£10.00</td>
-                    <td><span class="service-toggle is-on" aria-hidden="true"></span></td>
-                    <td class="service-edit-col">
-                        <button type="button" class="icon-btn" aria-label="Edit service">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                                fill="none">
-                                <path d="M12 20H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                                <path d="M16.5 3.5A2.121 2.121 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z"
-                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                        </button>
-                        <button type="button" class="icon-btn dots-btn" aria-label="Service actions">•••</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Tail Trim Only</td>
-                    <td>Cat, Dog, Other</td>
-                    <td>10 mins</td>
-                    <td>£5.00</td>
-                    <td><span class="service-toggle is-on" aria-hidden="true"></span></td>
-                    <td class="service-edit-col">
-                        <button type="button" class="icon-btn" aria-label="Edit service">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                                fill="none">
-                                <path d="M12 20H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                                <path d="M16.5 3.5A2.121 2.121 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z"
-                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                        </button>
-                        <button type="button" class="icon-btn dots-btn" aria-label="Service actions">•••</button>
-                    </td>
-                </tr>
-                <tr class="is-muted">
-                    <td>Bath &amp; Brush</td>
-                    <td>Cat, Dog, Other</td>
-                    <td>1h</td>
-                    <td>£20.00</td>
-                    <td><span class="service-toggle" aria-hidden="true"></span></td>
-                    <td class="service-edit-col">
-                        <button type="button" class="icon-btn" aria-label="Edit service">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                                fill="none">
-                                <path d="M12 20H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                                <path d="M16.5 3.5A2.121 2.121 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z"
-                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                        </button>
-                        <button type="button" class="icon-btn dots-btn" aria-label="Service actions">•••</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Nail Trim</td>
-                    <td>Cat, Dog, Other</td>
-                    <td>5 mins</td>
-                    <td>£15.00</td>
-                    <td><span class="service-toggle is-on" aria-hidden="true"></span></td>
-                    <td class="service-edit-col">
-                        <button type="button" class="icon-btn" aria-label="Edit service">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                                fill="none">
-                                <path d="M12 20H21" stroke="currentColor" stroke-width="1.5"
-                                    stroke-linecap="round" />
-                                <path d="M16.5 3.5A2.121 2.121 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z"
-                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                        </button>
-                        <button type="button" class="icon-btn dots-btn" aria-label="Service actions">•••</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Ear Cleaning</td>
-                    <td>Cat, Dog</td>
-                    <td>15 mins</td>
-                    <td>£20.00</td>
-                    <td><span class="service-toggle is-on" aria-hidden="true"></span></td>
-                    <td class="service-edit-col">
-                        <button type="button" class="icon-btn" aria-label="Edit service">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                                viewBox="0 0 24 24" fill="none">
-                                <path d="M12 20H21" stroke="currentColor" stroke-width="1.5"
-                                    stroke-linecap="round" />
-                                <path d="M16.5 3.5A2.121 2.121 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z"
-                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                        </button>
-                        <button type="button" class="icon-btn dots-btn" aria-label="Service actions">•••</button>
-                    </td>
-                </tr>
-                <tr class="is-muted">
-                    <td>Luxury Spa</td>
-                    <td>Cat, Dog</td>
-                    <td>90 mins</td>
-                    <td>£60.00</td>
-                    <td><span class="service-toggle" aria-hidden="true"></span></td>
-                    <td class="service-edit-col">
-                        <button type="button" class="icon-btn" aria-label="Edit service">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                                viewBox="0 0 24 24" fill="none">
-                                <path d="M12 20H21" stroke="currentColor" stroke-width="1.5"
-                                    stroke-linecap="round" />
-                                <path d="M16.5 3.5A2.121 2.121 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z"
-                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                        </button>
-                        <button type="button" class="icon-btn dots-btn" aria-label="Service actions">•••</button>
-                    </td>
-                </tr>
+                @forelse ($this->services as $service)
+                    @php
+                        $duration = (int) data_get($service->duration, 'base_duration', 0);
+                        $price = (float) data_get($service->pricing, 'base_price', 0);
+                        $isVisible = (bool) $service->visibility_controls;
+                    @endphp
+                    <tr @class(['is-muted' => !$isVisible])>
+                        <td>{{ $service->service_name }}</td>
+                        <td>{{ $this->appliesTo((array) $service->pet_compatibility) }}</td>
+                        <td>{{ $duration > 0 ? $duration . ' mins' : '-' }}</td>
+                        <td>{{ '£' . number_format($price, 2) }}</td>
+                        <td>
+                            <button type="button" class="service-toggle {{ $isVisible ? 'is-on' : '' }}"
+                                aria-label="Toggle service visibility"
+                                x-on:click="window.dispatchEvent(new CustomEvent('nav-list-loading-start'))"
+                                wire:click="toggleVisibility({{ $service->id }})"></button>
+                        </td>
+                        <td class="service-edit-col">
+                            <button type="button" class="icon-btn" aria-label="Edit service">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                    viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 20H21" stroke="currentColor" stroke-width="1.5"
+                                        stroke-linecap="round" />
+                                    <path d="M16.5 3.5A2.121 2.121 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z"
+                                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <button type="button" class="icon-btn dots-btn" aria-label="Service actions">•••</button>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" style="text-align: center;color: #9D9B98;">No services added yet.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
 
-    <div class="service-load-more-wrap">
-        <button type="button" class="service-load-more-btn">Load More</button>
-    </div>
+    @if ($this->canLoadMore)
+        <div class="service-load-more-wrap">
+            <button type="button" class="service-load-more-btn"
+                x-on:click="window.dispatchEvent(new CustomEvent('nav-list-loading-start'))" wire:click="loadMore">
+                Load More
+            </button>
+        </div>
+    @endif
 </section>
 
 <style>
@@ -230,6 +202,7 @@ new class extends Component {
         width: 56px;
         height: 30px;
         border-radius: 999px;
+        border: none;
         background: #cfcfcf;
         position: relative;
         display: inline-block;
@@ -257,6 +230,7 @@ new class extends Component {
     }
 
     .service-toggle.is-on {
+        border: none;
         background: #c7d59f;
     }
 
@@ -336,22 +310,3 @@ new class extends Component {
         cursor: pointer;
     }
 </style>
-
-@script
-    <script>
-        document.addEventListener('click', (event) => {
-            const toggle = event.target.closest('.service-toggle');
-
-            if (!toggle) {
-                return;
-            }
-
-            const row = toggle.closest('tr');
-            const isOn = toggle.classList.toggle('is-on');
-
-            if (row) {
-                row.classList.toggle('is-muted', !isOn);
-            }
-        });
-    </script>
-@endscript
