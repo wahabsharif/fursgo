@@ -6,10 +6,10 @@ new class extends Component {
     // Parent Services index component.
 }; ?>
 
-<section class="services-dashboard" aria-label="Services section" x-data="{ showAddService: false, activeServiceMenu: 'services' }"
-    x-on:services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'; if (activeServiceMenu !== 'services') { showAddService = false }"
-    x-on:service-form-cancel="showAddService = false; window.dispatchEvent(new CustomEvent('service-form-cancel')); window.dispatchEvent(new CustomEvent('nav-list-loading-start'))"
-    x-on:service-form-cancel.window="showAddService = false">
+<section class="services-dashboard" aria-label="Services section" x-data="{ showAddService: false, showAddOn: false, activeServiceMenu: 'services' }"
+    x-on:services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'; if (activeServiceMenu !== 'services') { showAddService = false } if (activeServiceMenu !== 'add-ons') { showAddOn = false }"
+    x-on:service-form-cancel="showAddService = false; showAddOn = false; window.dispatchEvent(new CustomEvent('service-form-cancel')); window.dispatchEvent(new CustomEvent('nav-list-loading-start'))"
+    x-on:service-form-cancel.window="showAddService = false; showAddOn = false">
     @php
         $userType = strtolower((string) data_get(auth()->user(), 'user_type', ''));
         $addServiceTitle = $userType === 'space' ? 'Hourly' : 'Full Groom';
@@ -17,12 +17,18 @@ new class extends Component {
 
     <header class="service-list-header">
         <h3
-            x-text="activeServiceMenu === 'add-ons' ? 'Add-ons' : (activeServiceMenu === 'pet-preferences' ? 'Pet Preferences' : (activeServiceMenu === 'service-area' ? 'Service Area' : (showAddService ? '{{ $addServiceTitle }}' : 'Service List')))">
+            x-text="showAddOn || activeServiceMenu === 'add-ons' ? 'Add-ons' : (activeServiceMenu === 'pet-preferences' ? 'Pet Preferences' : (activeServiceMenu === 'service-area' ? 'Service Area' : (showAddService ? '{{ $addServiceTitle }}' : 'Service List')))">
         </h3>
-        <button type="button" class="service-add-btn" x-show="activeServiceMenu === 'services' && !showAddService"
-            x-cloak
-            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); showAddService = true; window.dispatchEvent(new CustomEvent('service-form-opened'))">+
-            Add Service</button>
+        <div class="service-list-header-actions">
+            <button type="button" class="service-add-btn" x-show="activeServiceMenu === 'services' && !showAddService"
+                x-cloak
+                @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); showAddService = true; window.dispatchEvent(new CustomEvent('service-form-opened'))">+
+                Add Service</button>
+            <button type="button" class="service-add-btn" x-show="activeServiceMenu === 'add-ons' && !showAddOn"
+                x-cloak
+                @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); showAddOn = true; window.dispatchEvent(new CustomEvent('service-form-opened'))">+
+                Add Add-ons</button>
+        </div>
     </header>
 
     <div x-show="activeServiceMenu === 'services' && !showAddService" x-cloak x-transition:enter="service-view-enter"
@@ -43,11 +49,23 @@ new class extends Component {
         @endif
     </div>
 
-    <div x-show="activeServiceMenu === 'add-ons'" x-cloak x-transition:enter="service-view-enter"
+    <div x-show="activeServiceMenu === 'add-ons' && !showAddOn" x-cloak x-transition:enter="service-view-enter"
         x-transition:enter-start="service-view-enter-start" x-transition:enter-end="service-view-enter-end"
         x-transition:leave="service-view-leave" x-transition:leave-start="service-view-leave-start"
         x-transition:leave-end="service-view-leave-end">
         <livewire:dashboard.services.add-ons-list />
+    </div>
+
+    <div x-show="activeServiceMenu === 'add-ons' && showAddOn" x-cloak x-transition:enter="service-view-enter"
+        x-transition:enter-start="service-view-enter-start" x-transition:enter-end="service-view-enter-end"
+        x-transition:leave="service-view-leave" x-transition:leave-start="service-view-leave-start"
+        x-transition:leave-end="service-view-leave-end">
+        @if ($userType === 'space')
+            <livewire:dashboard.services.add-addons-form-space />
+        @else
+            <livewire:dashboard.services.add-addons-form-groomer />
+        @endif
+
     </div>
 
     <div x-show="activeServiceMenu === 'pet-preferences'" x-cloak x-transition:enter="service-view-enter"
@@ -70,6 +88,8 @@ new class extends Component {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
         padding-bottom: 1.5rem;
         border-bottom: 1px solid #d6d6d6;
         margin-bottom: 2.5rem;
@@ -101,6 +121,13 @@ new class extends Component {
         background: transparent;
         cursor: pointer;
         padding: 0;
+    }
+
+    .service-list-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        margin-left: auto;
     }
 
     .service-view-enter {
