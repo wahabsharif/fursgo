@@ -7,6 +7,9 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Database\Seeders\BookingSeeder;
 use Database\Seeders\DevUserSeeder;
+use Database\Seeders\ServiceSeeder;
+use Database\Seeders\AddOnSeeder;
+use Database\Seeders\PetPreferenceSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -25,6 +28,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             DevUserSeeder::class,
             BookingSeeder::class,
+            ServiceSeeder::class,
+            AddOnSeeder::class,
+            PetPreferenceSeeder::class,
         ]);
     }
 }
