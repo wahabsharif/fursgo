@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class PetPreference extends Model
 {
     protected $fillable = [
+        'groomer_spacer_id',
         'pet_compatibility',
     ];
 
