@@ -188,7 +188,7 @@
             <!-- Services -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; bookingsOpen = false; availabilityOpen = false; servicesOpen = !servicesOpen; activeServiceMenu = 'services'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'services' } }))"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; bookingsOpen = false; availabilityOpen = false; servicesOpen = true; activeServiceMenu = 'services'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'services' } }))"
                     :class="{ 'active': activeSection === 'services' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14"
                         fill="none">
