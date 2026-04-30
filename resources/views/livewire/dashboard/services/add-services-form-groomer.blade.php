@@ -605,7 +605,13 @@ new class extends Component {
         <div class="service-form-actions">
             <button type="button" class="service-form-btn service-form-btn-cancel"
                 @click="$dispatch('service-form-cancel')">Cancel</button>
-            <button type="submit" class="service-form-btn service-form-btn-save">Save Changes</button>
+            <button type="submit" class="service-form-btn service-form-btn-save" wire:loading.attr="disabled"
+                wire:target="save">
+                <span class="save-btn-text" wire:loading.class="hidden" wire:target="save">Save Changes</span>
+                <span class="save-btn-loading hidden" wire:loading.class.remove="hidden" wire:target="save">
+                    <span class="save-spinner"></span>
+                </span>
+            </button>
         </div>
     </form>
 </section>
@@ -1258,5 +1264,30 @@ new class extends Component {
     .service-form-btn-save {
         background: #c9dda0;
         color: #fff;
+    }
+
+    .save-btn-loading {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    .save-spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.45);
+        border-top-color: #fff;
+        border-radius: 999px;
+        animation: save-spin 0.8s linear infinite;
+    }
+
+    @keyframes save-spin {
+        to {
+            transform: rotate(360deg);
+        }
     }
 </style>
