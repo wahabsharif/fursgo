@@ -2,25 +2,29 @@
 
 @font-face {
     font-family: "Playfair Display";
-    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-Medium.ttf") format("truetype");
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-Medium.ttf")
+        format("truetype");
     font-weight: 400;
 }
 
 @font-face {
     font-family: "Playfair Display";
-    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-Bold.ttf") format("truetype");
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-Bold.ttf")
+        format("truetype");
     font-weight: 600;
 }
 
 @font-face {
     font-family: "Playfair Display";
-    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-ExtraBold.ttf") format("truetype");
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-ExtraBold.ttf")
+        format("truetype");
     font-weight: 900;
 }
 
 @font-face {
     font-family: "Playfair Display";
-    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-ExtraBoldItalic.ttf") format("truetype");
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-ExtraBoldItalic.ttf")
+        format("truetype");
     font-style: italic;
     font-weight: 900;
 }
@@ -477,7 +481,6 @@ nav ul a.active {
     color: #3b3731 !important;
     font-family: Lato !important;
     font-size: 18px !important;
-    font-style: italic !important;
     font-weight: 500 !important;
     line-height: normal !important;
 }
@@ -494,9 +497,9 @@ nav ul a.active {
     width: 88px;
     height: 48px;
     border-radius: 75px;
-    border: 1px solid #3B3731;
-    background: #FFF;
-    color: #3B3731;
+    border: 1px solid #3b3731;
+    background: #fff;
+    color: #3b3731;
     text-align: center;
     font-family: Lato;
     font-size: 18px;
@@ -513,9 +516,9 @@ nav ul a.active {
     width: 102px;
     height: 48px;
     border-radius: 96px;
-    background: #FBAC83;
+    background: #fbac83;
     border: none;
-    color: #FFF;
+    color: #fff;
     text-align: center;
     font-family: Lato;
     font-size: 18px;
@@ -525,13 +528,14 @@ nav ul a.active {
     cursor: pointer;
 }
 
-.nav-login-btn:hover, .nav-signup-btn:hover {
+.nav-login-btn:hover,
+.nav-signup-btn:hover {
     transition: all 0.3s ease;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.menu-items{
+.menu-items {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -552,7 +556,6 @@ nav ul a.active {
     color: var(--groomer-color);
     font-weight: 600;
     transition: all 0.3s ease;
-
 }
 
 .menu-items a.active {
@@ -706,7 +709,7 @@ p.messages-count {
     cursor: pointer !important;
 }
 
-.logout-option>form>button {
+.logout-option > form > button {
     border: none;
     background: transparent;
     cursor: pointer !important;
