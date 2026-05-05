@@ -1147,3 +1147,20 @@ input::placeholder {
 .business-basics-wrap .spacer-service-row.spacer-service-row--selected {
     background-color: #fff;
 }
+
+.btn-spinner {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: btn-spin 0.8s linear infinite;
+    vertical-align: middle;
+}
+
+@keyframes btn-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

@@ -36,7 +36,7 @@
         <button type="button" class="submit-btn btn-active verification-approved-cta"
             wire:click="continueToBuildProfile" wire:loading.attr="disabled" wire:target="continueToBuildProfile">
             <span wire:loading.remove wire:target="continueToBuildProfile">Build Your Profile</span>
-            <span wire:loading wire:target="continueToBuildProfile">Loading…</span>
+            <span wire:loading wire:target="continueToBuildProfile" class="btn-spinner" aria-hidden="true"></span>
         </button>
     </div>
 </div>

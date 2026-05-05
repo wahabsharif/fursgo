@@ -13,8 +13,15 @@
                         </label>
                         <div class="input-container">
                             <div class="input-field-wrap">
-                                <input type="text" wire:model.live="full_name" class="form-input" placeholder=" " required>
-                                <span class="input-valid-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none"><path d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z" fill="#C9DDA0"/></svg></span>
+                                <input type="text" wire:model.live="full_name" class="form-input" placeholder=" "
+                                    required>
+                                <span class="input-valid-icon" aria-hidden="true"><svg
+                                        xmlns="http://www.w3.org/2000/svg" width="19" height="19"
+                                        viewBox="0 0 19 19" fill="none">
+                                        <path
+                                            d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
+                                            fill="#C9DDA0" />
+                                    </svg></span>
                             </div>
                         </div>
                     </div>
@@ -32,12 +39,24 @@
                             <div class="input-field-wrap">
                                 <input type="text" wire:model.live="freelance_service_home_address_line1"
                                     class="form-input" placeholder="Address line 1">
-                                <span class="input-valid-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none"><path d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z" fill="#C9DDA0"/></svg></span>
+                                <span class="input-valid-icon" aria-hidden="true"><svg
+                                        xmlns="http://www.w3.org/2000/svg" width="19" height="19"
+                                        viewBox="0 0 19 19" fill="none">
+                                        <path
+                                            d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
+                                            fill="#C9DDA0" />
+                                    </svg></span>
                             </div>
                             <div class="input-field-wrap">
                                 <input type="text" wire:model.live="freelance_service_home_address_line2"
                                     class="form-input" placeholder="Address line 2">
-                                <span class="input-valid-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none"><path d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z" fill="#C9DDA0"/></svg></span>
+                                <span class="input-valid-icon" aria-hidden="true"><svg
+                                        xmlns="http://www.w3.org/2000/svg" width="19" height="19"
+                                        viewBox="0 0 19 19" fill="none">
+                                        <path
+                                            d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
+                                            fill="#C9DDA0" />
+                                    </svg></span>
                             </div>
                         </div>
                     </div>
@@ -45,8 +64,15 @@
                         <label class="form-label">Phone Number</label>
                         <div class="input-container">
                             <div class="input-field-wrap">
-                                <input type="tel" wire:model.live="business_phone" class="form-input" placeholder=" " required>
-                                <span class="input-valid-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none"><path d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z" fill="#C9DDA0"/></svg></span>
+                                <input type="tel" wire:model.live="business_phone" class="form-input"
+                                    placeholder=" " required>
+                                <span class="input-valid-icon" aria-hidden="true"><svg
+                                        xmlns="http://www.w3.org/2000/svg" width="19" height="19"
+                                        viewBox="0 0 19 19" fill="none">
+                                        <path
+                                            d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
+                                            fill="#C9DDA0" />
+                                    </svg></span>
                             </div>
                         </div>
                     </div>
@@ -54,15 +80,23 @@
                         <label class="form-label">Email Address</label>
                         <div class="input-container">
                             <div class="input-field-wrap">
-                                <input type="email" wire:model.live="business_email" class="form-input" placeholder=" " required>
-                                <span class="input-valid-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none"><path d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z" fill="#C9DDA0"/></svg></span>
+                                <input type="email" wire:model.live="business_email" class="form-input"
+                                    placeholder=" " required>
+                                <span class="input-valid-icon" aria-hidden="true"><svg
+                                        xmlns="http://www.w3.org/2000/svg" width="19" height="19"
+                                        viewBox="0 0 19 19" fill="none">
+                                        <path
+                                            d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
+                                            fill="#C9DDA0" />
+                                    </svg></span>
                             </div>
                         </div>
                     </div>
                     <div>
                         <label class="form-label">Government ID</label>
                         <p>Please upload a clear photo or scan of a valid government-issued ID (e.g. passport or driving
-                            licence) and a recent UK utility bill, bank statement, or official letter showing your current
+                            licence) and a recent UK utility bill, bank statement, or official letter showing your
+                            current
                             address. Both documents must be in English and dated within the last 3 months.</p>
 
                         @php
@@ -91,15 +125,15 @@
                             <div class="upload-tabs">
                                 <div>
                                     <button type="button" class="tab-btn active" data-tab="attach"><svg
-                                            xmlns="http://www.w3.org/2000/svg" width="11" height="12" viewBox="0 0 11 12"
-                                            fill="none">
+                                            xmlns="http://www.w3.org/2000/svg" width="11" height="12"
+                                            viewBox="0 0 11 12" fill="none">
                                             <path
                                                 d="M10.5 6.04469L6.17551 10.5107C5.54818 11.1481 4.70239 11.5037 3.82235 11.5C2.94232 11.4963 2.09936 11.1336 1.47707 10.4909C0.854792 9.8483 0.503611 8.97775 0.500028 8.06891C0.496444 7.16008 0.840748 6.2866 1.45794 5.63874L5.78243 1.17272C5.98895 0.95944 6.23412 0.790259 6.50395 0.674834C6.77378 0.559409 7.06298 0.5 7.35504 0.5C7.64711 0.5 7.93631 0.559409 8.20614 0.674834C8.47597 0.790259 8.72114 0.95944 8.92766 1.17272C9.13418 1.386 9.298 1.63919 9.40977 1.91785C9.52153 2.19652 9.57906 2.49518 9.57906 2.7968C9.57906 3.09842 9.52153 3.39709 9.40977 3.67575C9.298 3.95441 9.13418 4.20761 8.92766 4.42089L4.60317 8.88691C4.3946 9.10231 4.1117 9.22333 3.81673 9.22333C3.52175 9.22333 3.23886 9.10231 3.03028 8.88691C2.8217 8.6715 2.70452 8.37935 2.70452 8.07472C2.70452 7.77009 2.8217 7.47794 3.03028 7.26254L6.96168 3.20304"
                                                 stroke="#3B3731" stroke-linecap="round" />
                                         </svg>Attach</button>
                                     <button type="button" class="tab-btn" data-tab="upload"><svg
-                                            xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"
-                                            fill="none">
+                                            xmlns="http://www.w3.org/2000/svg" width="12" height="12"
+                                            viewBox="0 0 12 12" fill="none">
                                             <path
                                                 d="M10.2778 0.5H1.72222C1.04721 0.5 0.5 1.04721 0.5 1.72222V10.2778C0.5 10.9528 1.04721 11.5 1.72222 11.5H10.2778C10.9528 11.5 11.5 10.9528 11.5 10.2778V1.72222C11.5 1.04721 10.9528 0.5 10.2778 0.5Z"
                                                 stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
@@ -150,8 +184,15 @@
                         <label class="form-label">Account Holder Name</label>
                         <div class="input-container">
                             <div class="input-field-wrap">
-                                <input type="text" wire:model.live="account_holder_name" class="form-input" placeholder=" " required>
-                                <span class="input-valid-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none"><path d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z" fill="#C9DDA0"/></svg></span>
+                                <input type="text" wire:model.live="account_holder_name" class="form-input"
+                                    placeholder=" " required>
+                                <span class="input-valid-icon" aria-hidden="true"><svg
+                                        xmlns="http://www.w3.org/2000/svg" width="19" height="19"
+                                        viewBox="0 0 19 19" fill="none">
+                                        <path
+                                            d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
+                                            fill="#C9DDA0" />
+                                    </svg></span>
                             </div>
                         </div>
                     </div>
@@ -159,8 +200,15 @@
                         <label class="form-label">Account Number</label>
                         <div class="input-container">
                             <div class="input-field-wrap">
-                                <input type="text" wire:model.live="account_number" class="form-input" placeholder=" " required>
-                                <span class="input-valid-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none"><path d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z" fill="#C9DDA0"/></svg></span>
+                                <input type="text" wire:model.live="account_number" class="form-input"
+                                    placeholder=" " required>
+                                <span class="input-valid-icon" aria-hidden="true"><svg
+                                        xmlns="http://www.w3.org/2000/svg" width="19" height="19"
+                                        viewBox="0 0 19 19" fill="none">
+                                        <path
+                                            d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
+                                            fill="#C9DDA0" />
+                                    </svg></span>
                             </div>
                         </div>
                     </div>
@@ -168,8 +216,15 @@
                         <label class="form-label">Sort Code</label>
                         <div class="input-container">
                             <div class="input-field-wrap">
-                                <input type="text" wire:model.live="sort_code" class="form-input" placeholder=" " required>
-                                <span class="input-valid-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none"><path d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z" fill="#C9DDA0"/></svg></span>
+                                <input type="text" wire:model.live="sort_code" class="form-input" placeholder=" "
+                                    required>
+                                <span class="input-valid-icon" aria-hidden="true"><svg
+                                        xmlns="http://www.w3.org/2000/svg" width="19" height="19"
+                                        viewBox="0 0 19 19" fill="none">
+                                        <path
+                                            d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
+                                            fill="#C9DDA0" />
+                                    </svg></span>
                             </div>
                         </div>
                     </div>
@@ -177,8 +232,15 @@
                         <label class="form-label">IBAN</label>
                         <div class="input-container">
                             <div class="input-field-wrap">
-                                <input type="text" wire:model.live="iban" class="form-input" placeholder=" " required>
-                                <span class="input-valid-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none"><path d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z" fill="#C9DDA0"/></svg></span>
+                                <input type="text" wire:model.live="iban" class="form-input" placeholder=" "
+                                    required>
+                                <span class="input-valid-icon" aria-hidden="true"><svg
+                                        xmlns="http://www.w3.org/2000/svg" width="19" height="19"
+                                        viewBox="0 0 19 19" fill="none">
+                                        <path
+                                            d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
+                                            fill="#C9DDA0" />
+                                    </svg></span>
                             </div>
                         </div>
                     </div>
@@ -214,15 +276,15 @@
                             <div class="upload-tabs">
                                 <div>
                                     <button type="button" class="tab-btn" data-tab="insurance-attach"><svg
-                                            xmlns="http://www.w3.org/2000/svg" width="11" height="12" viewBox="0 0 11 12"
-                                            fill="none">
+                                            xmlns="http://www.w3.org/2000/svg" width="11" height="12"
+                                            viewBox="0 0 11 12" fill="none">
                                             <path
                                                 d="M10.5 6.04469L6.17551 10.5107C5.54818 11.1481 4.70239 11.5037 3.82235 11.5C2.94232 11.4963 2.09936 11.1336 1.47707 10.4909C0.854792 9.8483 0.503611 8.97775 0.500028 8.06891C0.496444 7.16008 0.840748 6.2866 1.45794 5.63874L5.78243 1.17272C5.98895 0.95944 6.23412 0.790259 6.50395 0.674834C6.77378 0.559409 7.06298 0.5 7.35504 0.5C7.64711 0.5 7.93631 0.559409 8.20614 0.674834C8.47597 0.790259 8.72114 0.95944 8.92766 1.17272C9.13418 1.386 9.298 1.63919 9.40977 1.91785C9.52153 2.19652 9.57906 2.49518 9.57906 2.7968C9.57906 3.09842 9.52153 3.39709 9.40977 3.67575C9.298 3.95441 9.13418 4.20761 8.92766 4.42089L4.60317 8.88691C4.3946 9.10231 4.1117 9.22333 3.81673 9.22333C3.52175 9.22333 3.23886 9.10231 3.03028 8.88691C2.8217 8.6715 2.70452 8.37935 2.70452 8.07472C2.70452 7.77009 2.8217 7.47794 3.03028 7.26254L6.96168 3.20304"
                                                 stroke="#3B3731" stroke-linecap="round" />
                                         </svg>Attach</button>
                                     <button type="button" class="tab-btn active" data-tab="insurance-upload"><svg
-                                            xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"
-                                            fill="none">
+                                            xmlns="http://www.w3.org/2000/svg" width="12" height="12"
+                                            viewBox="0 0 12 12" fill="none">
                                             <path
                                                 d="M10.2778 0.5H1.72222C1.04721 0.5 0.5 1.04721 0.5 1.72222V10.2778C0.5 10.9528 1.04721 11.5 1.72222 11.5H10.2778C10.9528 11.5 11.5 10.9528 11.5 10.2778V1.72222C11.5 1.04721 10.9528 0.5 10.2778 0.5Z"
                                                 stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
@@ -257,8 +319,9 @@
                                         <div class="upload-icon">
                                             Browse File
                                         </div>
-                                        <input type="file" wire:model="insurance_certificate_upload" id="insurance-file-input"
-                                            class="hidden-input" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                                        <input type="file" wire:model="insurance_certificate_upload"
+                                            id="insurance-file-input" class="hidden-input"
+                                            accept=".pdf,.jpg,.jpeg,.png" multiple>
                                     </div>
                                 </div>
                             </div>
@@ -285,7 +348,8 @@
                     class="submit-btn {{ $this->isPersonalInfoFormValid() ? 'btn-active' : 'btn-disabled' }}"
                     wire:loading.attr="disabled" wire:target="submitPersonalInfo">
                     <span wire:loading.remove wire:target="submitPersonalInfo">Submit</span>
-                    <span wire:loading wire:target="submitPersonalInfo">Processing...</span>
+                    <span wire:loading wire:target="submitPersonalInfo" class="btn-spinner"
+                        aria-hidden="true"></span>
                 </button>
             </div>
         </form>

@@ -28,7 +28,7 @@ new #[Layout('layouts.app')] class extends Component {
     public bool $showLegalPolicyForm = false;
 
     /** Step 4 — Success after legal agreements (“Start Grooming & Earning!”). */
-    public bool $showStartGroomingEarningComplete = false;
+    public bool $showStartEarningComplete = false;
 
     public bool $legal_terms_accepted = false;
 
@@ -248,8 +248,7 @@ new #[Layout('layouts.app')] class extends Component {
         $usage = $this->normalizeFursgoUsage((string) ($user->user_type ?? ''));
         $accountType = (string) ($user->account_type ?? '');
 
-        return in_array($usage, ['groomer', 'space'], true)
-            && in_array($accountType, ['registered_business', 'freelance'], true);
+        return in_array($usage, ['groomer', 'space'], true) && in_array($accountType, ['registered_business', 'freelance'], true);
     }
 
     private function persistRealtimeVerificationTypeSelections(): void
@@ -271,10 +270,7 @@ new #[Layout('layouts.app')] class extends Component {
         }
 
         if (Schema::hasColumn($table, 'select_location_type') && is_array($this->location_types)) {
-            $payload['select_location_type'] = array_values(array_unique(array_filter(
-                $this->location_types,
-                fn($value) => is_string($value) && in_array($value, ['space_visits', 'commercial_salon', 'home_studio', 'house_visit', 'mobile_van'], true)
-            )));
+            $payload['select_location_type'] = array_values(array_unique(array_filter($this->location_types, fn($value) => is_string($value) && in_array($value, ['space_visits', 'commercial_salon', 'home_studio', 'house_visit', 'mobile_van'], true))));
         }
 
         if ($payload !== []) {
@@ -383,24 +379,7 @@ new #[Layout('layouts.app')] class extends Component {
      */
     private function resolveVerificationCurrentStepFromDb(?\Illuminate\Contracts\Auth\Authenticatable $user, ?string $sessionStep): string
     {
-        $sessionStep = (string) ($sessionStep ?? '');
-        if (!$user) {
-            return in_array($sessionStep, ['account_payouts', 'registered_business', 'freelance_groomer'], true) ? $sessionStep : '';
-        }
-        $accountType = (string) ($user->account_type ?? '');
-
-        if ($accountType === 'freelance') {
-            return 'freelance_groomer';
-        }
-
-        if ($accountType === 'registered_business') {
-            return 'registered_business';
-        }
-
-        if (in_array($sessionStep, ['account_payouts', 'registered_business', 'freelance_groomer'], true)) {
-            return $sessionStep;
-        }
-
+        // On page reload, always start from the first Verify & Qualify card.
         return '';
     }
 
@@ -561,7 +540,11 @@ new #[Layout('layouts.app')] class extends Component {
             $personalInfoDone = $user->hasCompletedVerifyQualifyPersonalStep();
             $allowBuildProfileResume = $personalInfoDone || $this->shouldUseDevDbPreview($user);
 
-            if (session('verification_build_profile_step', false) && $allowBuildProfileResume && $user instanceof GroomerSpacerProfile) {
+            $showApprovedStep = (bool) session('verify_qualify_show_approved', false);
+            $hasExplicitStepOneNavigation = in_array($currentStep, ['account_payouts', 'registered_business', 'freelance_groomer'], true);
+            $hasBuildProfileSession = (bool) session('verification_build_profile_step', false);
+
+            if ($hasBuildProfileSession && !$showApprovedStep && $allowBuildProfileResume && $user instanceof GroomerSpacerProfile) {
                 $bpSub = (string) session('verification_build_profile_substep', 'business_basics');
                 if ($bpSub === 'complete') {
                     session()->forget(['verification_build_profile_step', 'verification_build_profile_substep']);
@@ -569,10 +552,29 @@ new #[Layout('layouts.app')] class extends Component {
                 }
             }
 
-            if (session('verification_build_profile_step', false) && $allowBuildProfileResume && $user instanceof GroomerSpacerProfile) {
-                $buildProfileSubstep = $this->shouldUseDevDbPreview($user)
-                    ? (string) session('verification_build_profile_substep', 'business_basics')
-                    : $this->inferVerificationBuildProfileSubstep($user);
+            if ($hasExplicitStepOneNavigation && !$showApprovedStep && !$hasBuildProfileSession) {
+                switch ($currentStep) {
+                    case 'registered_business':
+                        $this->showVerificationCard = false;
+                        $this->showAccountPayoutsForm = false;
+                        $this->showRegisteredBusiness = true;
+                        $this->showFreelance = false;
+                        break;
+                    case 'freelance_groomer':
+                        $this->showVerificationCard = false;
+                        $this->showAccountPayoutsForm = false;
+                        $this->showRegisteredBusiness = false;
+                        $this->showFreelance = true;
+                        break;
+                    case 'account_payouts':
+                        $this->showVerificationCard = false;
+                        $this->showAccountPayoutsForm = true;
+                        $this->showRegisteredBusiness = false;
+                        $this->showFreelance = false;
+                        break;
+                }
+            } elseif ($hasBuildProfileSession && !$showApprovedStep && $allowBuildProfileResume && $user instanceof GroomerSpacerProfile) {
+                $buildProfileSubstep = $this->shouldUseDevDbPreview($user) ? (string) session('verification_build_profile_substep', 'business_basics') : $this->inferVerificationBuildProfileSubstep($user);
                 session([
                     'verification_build_profile_step' => true,
                     'verification_build_profile_substep' => $buildProfileSubstep,
@@ -589,19 +591,19 @@ new #[Layout('layouts.app')] class extends Component {
                     $this->showGroomerBusinessProfileForm = true;
                     $this->showSpacerBusinessProfileForm = false;
                     $this->showLegalPolicyForm = false;
-                    $this->showStartGroomingEarningComplete = false;
+                    $this->showStartEarningComplete = false;
                 } elseif ($buildProfileSubstep === 'spacer_profile') {
                     $this->showBusinessBasicsForm = false;
                     $this->showGroomerBusinessProfileForm = false;
                     $this->showSpacerBusinessProfileForm = true;
                     $this->showLegalPolicyForm = false;
-                    $this->showStartGroomingEarningComplete = false;
+                    $this->showStartEarningComplete = false;
                 } elseif ($buildProfileSubstep === 'legal_policy') {
                     $this->showBusinessBasicsForm = false;
                     $this->showGroomerBusinessProfileForm = false;
                     $this->showSpacerBusinessProfileForm = false;
                     $this->showLegalPolicyForm = true;
-                    $this->showStartGroomingEarningComplete = false;
+                    $this->showStartEarningComplete = false;
                     if ($user->legal_policy_agreements) {
                         $this->legal_terms_accepted = true;
                         $this->legal_privacy_accepted = true;
@@ -611,20 +613,18 @@ new #[Layout('layouts.app')] class extends Component {
                     $this->showGroomerBusinessProfileForm = false;
                     $this->showSpacerBusinessProfileForm = false;
                     $this->showLegalPolicyForm = false;
-                    $this->showStartGroomingEarningComplete = true;
+                    $this->showStartEarningComplete = true;
                 }
-            } elseif (session('verify_qualify_show_approved', false) && $allowBuildProfileResume) {
+            } elseif ($showApprovedStep && $allowBuildProfileResume) {
                 $this->showVerificationStatus = true;
                 $this->showVerificationCard = false;
                 $this->showAccountPayoutsForm = false;
                 $this->showRegisteredBusiness = false;
                 $this->showFreelance = false;
-            } elseif ($allowBuildProfileResume) {
+            } elseif ($allowBuildProfileResume && $hasBuildProfileSession) {
                 $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
                 if (($usage === 'space' || $usage === 'groomer') && $user instanceof GroomerSpacerProfile) {
-                    $buildProfileSubstep = $this->shouldUseDevDbPreview($user)
-                        ? (string) session('verification_build_profile_substep', 'business_basics')
-                        : $this->inferVerificationBuildProfileSubstep($user);
+                    $buildProfileSubstep = $this->shouldUseDevDbPreview($user) ? (string) session('verification_build_profile_substep', 'business_basics') : $this->inferVerificationBuildProfileSubstep($user);
                     session([
                         'verification_build_profile_step' => true,
                         'verification_build_profile_substep' => $buildProfileSubstep,
@@ -639,19 +639,19 @@ new #[Layout('layouts.app')] class extends Component {
                         $this->showGroomerBusinessProfileForm = true;
                         $this->showSpacerBusinessProfileForm = false;
                         $this->showLegalPolicyForm = false;
-                        $this->showStartGroomingEarningComplete = false;
+                        $this->showStartEarningComplete = false;
                     } elseif ($buildProfileSubstep === 'spacer_profile') {
                         $this->showBusinessBasicsForm = false;
                         $this->showGroomerBusinessProfileForm = false;
                         $this->showSpacerBusinessProfileForm = true;
                         $this->showLegalPolicyForm = false;
-                        $this->showStartGroomingEarningComplete = false;
+                        $this->showStartEarningComplete = false;
                     } elseif ($buildProfileSubstep === 'legal_policy') {
                         $this->showBusinessBasicsForm = false;
                         $this->showGroomerBusinessProfileForm = false;
                         $this->showSpacerBusinessProfileForm = false;
                         $this->showLegalPolicyForm = true;
-                        $this->showStartGroomingEarningComplete = false;
+                        $this->showStartEarningComplete = false;
                         if ($user->legal_policy_agreements) {
                             $this->legal_terms_accepted = true;
                             $this->legal_privacy_accepted = true;
@@ -661,7 +661,7 @@ new #[Layout('layouts.app')] class extends Component {
                         $this->showGroomerBusinessProfileForm = false;
                         $this->showSpacerBusinessProfileForm = false;
                         $this->showLegalPolicyForm = false;
-                        $this->showStartGroomingEarningComplete = true;
+                        $this->showStartEarningComplete = true;
                     }
                 } else {
                     $this->showVerificationCard = false;
@@ -893,23 +893,17 @@ new #[Layout('layouts.app')] class extends Component {
             ]);
         }
 
-        $usageForSave = in_array($this->fursgo_usage, ['groomer', 'space'], true)
-            ? $this->normalizeFursgoUsage($this->fursgo_usage)
-            : $this->normalizeFursgoUsage((string) ($user->user_type ?? 'groomer'));
+        $usageForSave = in_array($this->fursgo_usage, ['groomer', 'space'], true) ? $this->normalizeFursgoUsage($this->fursgo_usage) : $this->normalizeFursgoUsage((string) ($user->user_type ?? 'groomer'));
         if (!in_array($usageForSave, ['groomer', 'space'], true)) {
             $usageForSave = 'groomer';
         }
 
-        $accountTypeForSave = in_array($this->account_type, ['registered_business', 'freelance'], true)
-            ? $this->account_type
-            : (string) ($user->account_type ?? 'registered_business');
+        $accountTypeForSave = in_array($this->account_type, ['registered_business', 'freelance'], true) ? $this->account_type : (string) ($user->account_type ?? 'registered_business');
         if (!in_array($accountTypeForSave, ['registered_business', 'freelance'], true)) {
             $accountTypeForSave = 'registered_business';
         }
 
-        $locationTypesForSave = is_array($this->location_types)
-            ? array_values(array_filter($this->location_types, fn($value) => is_string($value) && in_array($value, ['space_visits', 'commercial_salon', 'home_studio', 'house_visit', 'mobile_van'], true)))
-            : [];
+        $locationTypesForSave = is_array($this->location_types) ? array_values(array_filter($this->location_types, fn($value) => is_string($value) && in_array($value, ['space_visits', 'commercial_salon', 'home_studio', 'house_visit', 'mobile_van'], true))) : [];
         if ($locationTypesForSave === [] && is_array($user->select_location_type ?? null)) {
             $locationTypesForSave = array_values($user->select_location_type);
         }
@@ -921,16 +915,23 @@ new #[Layout('layouts.app')] class extends Component {
             'select_location_type' => $locationTypesForSave,
         ]);
 
-        // Save the next step to session then trigger a full client-side navigation
+        // Move to personal-info step directly (no full-page reload).
         if ($accountTypeForSave === 'freelance') {
             session(['verification_current_step' => 'freelance_groomer']);
+            $this->showVerificationCard = false;
+            $this->showAccountPayoutsForm = false;
+            $this->showRegisteredBusiness = false;
+            $this->showFreelance = true;
         } else {
             session(['verification_current_step' => 'registered_business']);
+            $this->showVerificationCard = false;
+            $this->showAccountPayoutsForm = false;
+            $this->showRegisteredBusiness = true;
+            $this->showFreelance = false;
         }
 
         session()->forget('verify_qualify_show_approved');
         session()->save();
-        $this->js('window.location.href = ' . json_encode(route('verify-qualify')));
     }
 
     /**
@@ -970,7 +971,7 @@ new #[Layout('layouts.app')] class extends Component {
         $this->showGroomerBusinessProfileForm = false;
         $this->showSpacerBusinessProfileForm = false;
         $this->showLegalPolicyForm = false;
-        $this->showStartGroomingEarningComplete = false;
+        $this->showStartEarningComplete = false;
         $this->legal_agreements_expanded = false;
         session(['verification_current_step' => 'account_payouts']);
         session()->forget('verification_build_profile_step');
@@ -984,12 +985,13 @@ new #[Layout('layouts.app')] class extends Component {
     public function continueToBuildProfile(): void
     {
         $user = Auth::guard('groomer_spacer')->user();
-        if (!$user instanceof GroomerSpacerProfile || !$user->hasCompletedVerifyQualifyPersonalStep()) {
+        if (!$user instanceof GroomerSpacerProfile) {
             return;
         }
 
         session()->forget('verify_qualify_show_approved');
         session([
+            'verification_current_step' => '',
             'verification_build_profile_step' => true,
             'verification_build_profile_substep' => 'business_basics',
         ]);
@@ -1014,7 +1016,7 @@ new #[Layout('layouts.app')] class extends Component {
         $this->showGroomerBusinessProfileForm = false;
         $this->showSpacerBusinessProfileForm = false;
         $this->showLegalPolicyForm = false;
-        $this->showStartGroomingEarningComplete = false;
+        $this->showStartEarningComplete = false;
         $this->legal_agreements_expanded = false;
 
         if ($refreshFromDb) {
@@ -1479,7 +1481,7 @@ new #[Layout('layouts.app')] class extends Component {
 
         $this->legal_agreements_expanded = false;
         $this->showLegalPolicyForm = false;
-        $this->showStartGroomingEarningComplete = true;
+        $this->showStartEarningComplete = true;
 
         session(['verification_build_profile_step' => true]);
         $this->setBuildProfileSubstep('start_grooming');
@@ -1488,7 +1490,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function currentSidebarStep(): int
     {
-        if ($this->showStartGroomingEarningComplete) {
+        if ($this->showStartEarningComplete) {
             return 4;
         }
         if ($this->showLegalPolicyForm) {
@@ -1540,7 +1542,7 @@ new #[Layout('layouts.app')] class extends Component {
             return 1;
         }
 
-        if ($this->showStartGroomingEarningComplete) {
+        if ($this->showStartEarningComplete) {
             return $dbMax;
         }
 
@@ -1638,19 +1640,19 @@ new #[Layout('layouts.app')] class extends Component {
             $this->showGroomerBusinessProfileForm = true;
             $this->showSpacerBusinessProfileForm = false;
             $this->showLegalPolicyForm = false;
-            $this->showStartGroomingEarningComplete = false;
+            $this->showStartEarningComplete = false;
         } elseif ($buildProfileSubstep === 'spacer_profile') {
             $this->showBusinessBasicsForm = false;
             $this->showGroomerBusinessProfileForm = false;
             $this->showSpacerBusinessProfileForm = true;
             $this->showLegalPolicyForm = false;
-            $this->showStartGroomingEarningComplete = false;
+            $this->showStartEarningComplete = false;
         } elseif ($buildProfileSubstep === 'legal_policy') {
             $this->showBusinessBasicsForm = false;
             $this->showGroomerBusinessProfileForm = false;
             $this->showSpacerBusinessProfileForm = false;
             $this->showLegalPolicyForm = true;
-            $this->showStartGroomingEarningComplete = false;
+            $this->showStartEarningComplete = false;
             if ($user->legal_policy_agreements) {
                 $this->legal_terms_accepted = true;
                 $this->legal_privacy_accepted = true;
@@ -1660,13 +1662,13 @@ new #[Layout('layouts.app')] class extends Component {
             $this->showGroomerBusinessProfileForm = false;
             $this->showSpacerBusinessProfileForm = false;
             $this->showLegalPolicyForm = false;
-            $this->showStartGroomingEarningComplete = true;
+            $this->showStartEarningComplete = true;
         } else {
             $this->showBusinessBasicsForm = true;
             $this->showGroomerBusinessProfileForm = false;
             $this->showSpacerBusinessProfileForm = false;
             $this->showLegalPolicyForm = false;
-            $this->showStartGroomingEarningComplete = false;
+            $this->showStartEarningComplete = false;
         }
     }
 
@@ -1677,7 +1679,7 @@ new #[Layout('layouts.app')] class extends Component {
         $this->showGroomerBusinessProfileForm = false;
         $this->showSpacerBusinessProfileForm = false;
         $this->showLegalPolicyForm = false;
-        $this->showStartGroomingEarningComplete = false;
+        $this->showStartEarningComplete = false;
         $this->legal_agreements_expanded = false;
         $this->showVerificationCard = false;
         $this->showRegisteredBusiness = false;
@@ -2048,7 +2050,7 @@ new #[Layout('layouts.app')] class extends Component {
         $user->update($updates);
 
         $this->showSpacerBusinessProfileForm = false;
-        $this->showStartGroomingEarningComplete = false;
+        $this->showStartEarningComplete = false;
         $this->showLegalPolicyForm = true;
         $this->setBuildProfileSubstep('legal_policy');
     }
@@ -2361,6 +2363,7 @@ new #[Layout('layouts.app')] class extends Component {
             $this->insurance_certificate_paths = $insuranceCertificatePaths;
             $this->insurance_certificate_upload = [];
 
+            session()->forget(['verification_build_profile_step', 'verification_build_profile_substep']);
             session(['verify_qualify_show_approved' => true]);
             session()->save();
 
@@ -2409,7 +2412,7 @@ new #[Layout('layouts.app')] class extends Component {
                 'showGroomerBusinessProfileForm' => $this->showGroomerBusinessProfileForm,
                 'showSpacerBusinessProfileForm' => $this->showSpacerBusinessProfileForm,
                 'showLegalPolicyForm' => $this->showLegalPolicyForm,
-                'showStartGroomingEarningComplete' => $this->showStartGroomingEarningComplete,
+                'showStartEarningComplete' => $this->showStartEarningComplete,
                 'showVerificationCard' => $this->showVerificationCard,
                 'showAccountPayoutsForm' => $this->showAccountPayoutsForm,
                 'showRegisteredBusiness' => $this->showRegisteredBusiness,
@@ -2447,7 +2450,7 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function activeSidebarStepLabel(): string
     {
-        if ($this->showStartGroomingEarningComplete) {
+        if ($this->showStartEarningComplete) {
             return 'Start Grooming & Earning!';
         }
         if ($this->showLegalPolicyForm) {
@@ -2518,7 +2521,7 @@ new #[Layout('layouts.app')] class extends Component {
         <div class="main-content">
             @if ($showVerificationStatus)
                 @include('livewire.auth.verify-qualify-verification-status')
-            @elseif ($showStartGroomingEarningComplete)
+            @elseif ($showStartEarningComplete)
                 @include('livewire.auth.verify-qualify-start-grooming-complete')
             @elseif ($showBusinessBasicsForm)
                 <div class="business-basics-wrap" wire:key="verify-qualify-business-basics">
@@ -3039,7 +3042,8 @@ new #[Layout('layouts.app')] class extends Component {
                                 wire:loading.attr="disabled" wire:target="submit"
                                 @if ($this->isFormValid()) @else disabled @endif>
                                 <span wire:loading.remove wire:target="submit">Continue</span>
-                                <span wire:loading wire:target="submit">Processing...</span>
+                                <span wire:loading wire:target="submit" class="btn-spinner"
+                                    aria-hidden="true"></span>
                             </button>
                         </div>
                     </form>
@@ -3417,7 +3421,8 @@ new #[Layout('layouts.app')] class extends Component {
                                 class="submit-btn {{ $this->isPersonalInfoFormValid() ? 'btn-active' : 'btn-disabled' }}"
                                 wire:loading.attr="disabled" wire:target="submitPersonalInfo">
                                 <span wire:loading.remove wire:target="submitPersonalInfo">Submit</span>
-                                <span wire:loading wire:target="submitPersonalInfo">Processing...</span>
+                                <span wire:loading wire:target="submitPersonalInfo" class="btn-spinner"
+                                    aria-hidden="true"></span>
                             </button>
                         </div>
                     </form>
