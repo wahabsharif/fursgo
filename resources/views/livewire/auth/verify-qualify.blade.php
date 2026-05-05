@@ -1723,6 +1723,11 @@ new #[Layout('layouts.app')] class extends Component {
         $this->applyBuildProfileSubstepUi($user, 'start_grooming');
     }
 
+    public function goToDashboard(): void
+    {
+        $this->redirect(route('dashboard', absolute: false), navigate: true);
+    }
+
     /** @return array<string, string> slug => label */
     public function spacerFursgoAddonCatalog(): array
     {

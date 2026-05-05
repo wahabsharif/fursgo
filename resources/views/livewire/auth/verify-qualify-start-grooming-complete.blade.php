@@ -18,8 +18,8 @@
     <p class="vq-sge-lead">We’ve saved your details and you’re ready to start grooming & earning!</p>
     <p class="vq-sge-muted">You can update your details at any time from your account.</p>
 
-    <a href="{{ route('business-homepage-groomer-space-owner') }}" wire:navigate class="vq-sge-cta">My Business
-        Profile</a>
+    <button type="button" wire:click="goToDashboard" wire:loading.attr="disabled" wire:target="goToDashboard"
+        class="vq-sge-cta">My Business Profile</button>
 </div>
 
 <style>
@@ -74,6 +74,7 @@
         justify-content: center;
         width: 179px;
         height: 48px;
+        border: none;
         border-radius: 96px;
         background: #FFC97A;
         box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.10);
@@ -85,5 +86,6 @@
         font-weight: 600;
         line-height: normal;
         margin-top: 2rem;
+        cursor: pointer;
     }
 </style>
