@@ -70,7 +70,7 @@ new #[Layout('layouts.app')] class extends Component {
 };
 ?>
 
-<section class="container mt-5 mb-5">
+<section class="container signup-groomer-section">
     <div class="login-form login-form-container">
         <h1>Just a few details<br /> to get started.</h1>
 
@@ -83,14 +83,16 @@ new #[Layout('layouts.app')] class extends Component {
                     <input type="text" id="name" wire:model.live="name" required>
                     <span class="icon success"
                         style="display: {{ $name && !$errors->has('name') ? 'block' : 'none' }} !important;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
+                            fill="none">
                             <path
                                 d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
                                 fill="#C9DDA0" />
                         </svg>
                     </span>
                     <span class="icon error" style="display: {{ $errors->has('name') ? 'block' : 'none' }} !important;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
+                            fill="none">
                             <path
                                 d="M9.5 0C14.7467 0 19 4.25329 19 9.5C19 14.7467 14.7467 19 9.5 19C4.25329 19 0 14.7467 0 9.5C0 4.25329 4.25329 0 9.5 0ZM13.1973 6.22559C12.9044 5.9327 12.4296 5.9327 12.1367 6.22559L9.71094 8.65039L7.28613 6.22559C6.99324 5.93269 6.51848 5.93269 6.22559 6.22559C5.93294 6.5185 5.93277 6.99332 6.22559 7.28613L8.65039 9.71094L6.22559 12.1367C5.93295 12.4296 5.93278 12.9045 6.22559 13.1973C6.51841 13.4898 6.9933 13.4898 7.28613 13.1973L9.71094 10.7715L12.1367 13.1973C12.4296 13.4898 12.9044 13.4898 13.1973 13.1973C13.4901 12.9045 13.4899 12.4296 13.1973 12.1367L10.7715 9.71094L13.1973 7.28613C13.4901 6.99332 13.4899 6.5185 13.1973 6.22559Z"
                                 fill="#FF6E6E" />
@@ -109,7 +111,8 @@ new #[Layout('layouts.app')] class extends Component {
                     <input type="email" id="email" wire:model.live="email" wire:blur="checkEmail" required>
                     @if ($email && !$errors->has('email') && !$emailExists)
                         <span class="icon success" style="display: block !important;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
+                                fill="none">
                                 <path
                                     d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
                                     fill="#C9DDA0" />
@@ -118,7 +121,8 @@ new #[Layout('layouts.app')] class extends Component {
                     @endif
                     @if ($errors->has('email') || $emailExists)
                         <span class="icon error" style="display: block !important;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
+                                fill="none">
                                 <path
                                     d="M9.5 0C14.7467 0 19 4.25329 19 9.5C19 14.7467 14.7467 19 9.5 19C4.25329 19 0 14.7467 0 9.5C0 4.25329 4.25329 0 9.5 0ZM13.1973 6.22559C12.9044 5.9327 12.4296 5.9327 12.1367 6.22559L9.71094 8.65039L7.28613 6.22559C6.99324 5.93269 6.51848 5.93269 6.22559 6.22559C5.93294 6.5185 5.93277 6.99332 6.22559 7.28613L8.65039 9.71094L6.22559 12.1367C5.93295 12.4296 5.93278 12.9045 6.22559 13.1973C6.51841 13.4898 6.9933 13.4898 7.28613 13.1973L9.71094 10.7715L12.1367 13.1973C12.4296 13.4898 12.9044 13.4898 13.1973 13.1973C13.4901 12.9045 13.4899 12.4296 13.1973 12.1367L10.7715 9.71094L13.1973 7.28613C13.4901 6.99332 13.4899 6.5185 13.1973 6.22559Z"
                                     fill="#FF6E6E" />
@@ -152,15 +156,18 @@ new #[Layout('layouts.app')] class extends Component {
                     <span wire:click="togglePassword"
                         style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; display: flex; align-items: center; color: #9D9B98; z-index: 2;">
                         @if ($showPassword)
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path
+                                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
                                 <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
                                 <line x1="1" y1="1" x2="23" y2="23" />
                             </svg>
                         @else
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                 <circle cx="12" cy="12" r="3" />
                             </svg>
@@ -170,7 +177,8 @@ new #[Layout('layouts.app')] class extends Component {
                     {{-- Success / Error icons shifted left to avoid overlapping eye icon --}}
                     @if ($passwordValid && !$errors->has('password'))
                         <span class="icon success" style="display: block !important; right: 40px;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
+                                fill="none">
                                 <path
                                     d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
                                     fill="#C9DDA0" />
@@ -179,7 +187,8 @@ new #[Layout('layouts.app')] class extends Component {
                     @endif
                     @if ($errors->has('password'))
                         <span class="icon error" style="display: block !important; right: 40px;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
+                                fill="none">
                                 <path
                                     d="M9.5 0C14.7467 0 19 4.25329 19 9.5C19 14.7467 14.7467 19 9.5 19C4.25329 19 0 14.7467 0 9.5C0 4.25329 4.25329 0 9.5 0ZM13.1973 6.22559C12.9044 5.9327 12.4296 5.9327 12.1367 6.22559L9.71094 8.65039L7.28613 6.22559C6.99324 5.93269 6.51848 5.93269 6.22559 6.22559C5.93294 6.5185 5.93277 6.99332 6.22559 7.28613L8.65039 9.71094L6.22559 12.1367C5.93295 12.4296 5.93278 12.9045 6.22559 13.1973C6.51841 13.4898 6.9933 13.4898 7.28613 13.1973L9.71094 10.7715L12.1367 13.1973C12.4296 13.4898 12.9044 13.4898 13.1973 13.1973C13.4901 12.9045 13.4899 12.4296 13.1973 12.1367L10.7715 9.71094L13.1973 7.28613C13.4901 6.99332 13.4899 6.5185 13.1973 6.22559Z"
                                     fill="#FF6E6E" />
@@ -217,9 +226,10 @@ new #[Layout('layouts.app')] class extends Component {
 
             <div class="submit-button d-flex justify-content-center mt-4">
                 <button type="submit"
-                style="width: 105px;height: 48px;padding:0;color: #FFF;text-align: center;font-family: Lato;font-size: 16px;font-style: normal;font-weight: 600;line-height: normal;"
+                    style="width: 105px;height: 48px;padding:0;color: #FFF;text-align: center;font-family: Lato;font-size: 16px;font-style: normal;font-weight: 600;line-height: normal;"
                     class="btn-custom {{ $this->isFormValid() ? 'btn-active-bg' : 'btn-disabled' }} btn-custom-hover btn-shadow login-width text-center"
-                    id="submitBtn" wire:loading.attr="disabled" @if ($this->isFormValid()) @else disabled @endif>Sign
+                    id="submitBtn" wire:loading.attr="disabled"
+                    @if ($this->isFormValid()) @else disabled @endif>Sign
                     Up</button>
             </div>
         </form>
@@ -283,18 +293,36 @@ new #[Layout('layouts.app')] class extends Component {
             margin: 0 auto;
         }
 
+        .signup-groomer-section {
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
         .login-form>h1 {
             color: #3B3731;
             text-align: center;
             font-family: "Playfair Display";
-            font-size: 50px;
+            font-size: 44px;
             font-style: normal;
             font-weight: 700;
-            line-height: normal;
+            line-height: 1.05;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-form form.mt-4 {
+            margin-top: 1rem !important;
+        }
+
+        .login-form .form-field.mt-4 {
+            margin-top: 1rem !important;
+        }
+
+        .login-form .submit-button.mt-4 {
+            margin-top: 1rem !important;
         }
 
         .social-divider {
-            margin: 26px 0 18px;
+            margin: 14px 0 12px;
             color: #9D9B98;
             text-align: center;
             font-family: Lato;
@@ -353,9 +381,9 @@ new #[Layout('layouts.app')] class extends Component {
             font-style: normal;
             font-weight: 600;
             line-height: normal;
-            padding-top: 2rem;
+            padding-top: 1.25rem;
             border-top: 2px solid #D4D4D4;
-            margin-top: 2.5rem;
+            margin-top: 1.25rem;
             text-align: center;
         }
 
