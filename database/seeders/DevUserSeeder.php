@@ -31,6 +31,7 @@ class DevUserSeeder extends Seeder
                 'full_name' => 'Dev',
                 'password' => Hash::make($plainPassword),
                 'user_type' => 'dev',
+                'profile_visit' => 125,
             ]
         );
 

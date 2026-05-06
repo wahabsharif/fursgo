@@ -27,6 +27,7 @@ class GroomerSpacerProfile extends Authenticatable
         'business_basics',
         'groomer_business_profile',
         'spacer_business_profile',
+        'profile_visit',
         'legal_policy_agreements',
     ];
 
@@ -43,6 +44,7 @@ class GroomerSpacerProfile extends Authenticatable
         'business_basics' => 'array',
         'groomer_business_profile' => 'array',
         'spacer_business_profile' => 'array',
+        'profile_visit' => 'integer',
         'legal_policy_agreements' => 'boolean',
     ];
 
