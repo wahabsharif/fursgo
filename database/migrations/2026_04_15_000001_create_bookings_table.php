@@ -15,8 +15,8 @@ return new class extends Migration
             $table->date('date');
             $table->string('service');
             $table->decimal('amount', 8, 2);
-            $table->enum('visit_type', ['home_visit', 'salon', 'mobile_station']);
-            $table->enum('booking_status', ['pending', 'confirmed', 'completed', 'cancelled'])->default('pending');
+            $table->string('visit_type', 64);
+            $table->string('booking_status', 64)->default('pending');
             $table->timestamps();
         });
 

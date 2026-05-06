@@ -26,7 +26,7 @@ class BookingController extends Controller
             'date'           => 'required|date',
             'service'        => 'required|string|max:255',
             'amount'         => 'required|numeric|min:0',
-            'visit_type'     => 'required|in:home_visit,salon,mobile_station',
+            'visit_type'     => 'required|string|max:64',
             'booking_status' => 'sometimes|in:pending,confirmed,completed,cancelled',
         ]);
 
@@ -63,7 +63,7 @@ class BookingController extends Controller
             'date'           => 'sometimes|date',
             'service'        => 'sometimes|string|max:255',
             'amount'         => 'sometimes|numeric|min:0',
-            'visit_type'     => 'sometimes|in:home_visit,salon,mobile_station',
+            'visit_type'     => 'sometimes|string|max:64',
             'booking_status' => 'sometimes|in:pending,confirmed,completed,cancelled',
         ]);
 
