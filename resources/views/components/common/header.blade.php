@@ -81,7 +81,7 @@
                                         d="M100.537 11.2333C100.537 10.5865 100.882 10.4248 101.208 10.4248C101.579 10.4248 101.879 10.7868 101.879 11.2333C101.879 11.6799 101.847 11.2333 101.477 11.2333C101.106 11.2333 100.537 11.6799 100.537 11.2333Z"
                                         fill="#FFC97A" />
                                 </svg>
-                                @if ($isBusinessSiteRoute && !$isBusinessHomepageRoute)
+                                @if ($variant === 'dashboard' || ($isBusinessSiteRoute && !$isBusinessHomepageRoute))
                                     <span class="logo-b-text">Business</span>
                                 @endif
                             </a>
@@ -95,8 +95,10 @@
                                 <a href="{{ route('help-and-support') }}"
                                     class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
                             @else
-                                <a href="#" class="{{ $isBusinessLandingRoute ? 'active' : '' }}"
-                                    wire:navigate>Our Mission</a>
+                                @if ($variant !== 'dashboard')
+                                    <a href="#" class="{{ $isBusinessLandingRoute ? 'active' : '' }}"
+                                        wire:navigate>Our Mission</a>
+                                @endif
                                 <a href="{{ route('business-homepage-groomer-space-owner') }}"
                                     class="{{ $isBusinessHomepageRoute ? 'active' : '' }}" wire:navigate>For Groomers &
                                     Hosts</a>
