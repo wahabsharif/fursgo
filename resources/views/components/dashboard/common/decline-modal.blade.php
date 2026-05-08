@@ -4,9 +4,18 @@
 
 @if ($declineBooking)
     @php
+        $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
         $declinePetName = $declineBooking->pets->pluck('name')->filter()->first() ?? 'N/A';
         $declineDateLabel = optional($declineBooking->date)->format('D j F') ?? 'N/A';
         $declineClient = $declineBooking->petOwner->name ?? 'N/A';
+        $declineVisitType = str_replace('_', ' ', strtolower((string) ($declineBooking->visit_type ?? '')));
+        if ($declineVisitType === 'home' || $declineVisitType === 'home visit') {
+            $declineSpaceLabel = 'Home Visit';
+        } elseif ($declineVisitType === 'salon' || $declineVisitType === 'salon visit') {
+            $declineSpaceLabel = 'Salon Visit';
+        } else {
+            $declineSpaceLabel = ucfirst($declineVisitType ?: 'N/A');
+        }
         $declineBookingIdLabel = 'FG-' . str_pad((string) $declineBooking->id, 5, '0', STR_PAD_LEFT);
         $declineAmountLabel = '£' . number_format((float) $declineBooking->amount, 2);
         $declineTimeRaw = (string) $declineBooking->time;
@@ -38,6 +47,21 @@
                 }
             }
         }
+        $declineTimeLabelForSpace = $declineTimeLabel;
+        if (str_contains($declineTimeRaw, '-')) {
+            $parts = preg_split('/\s*-\s*/', $declineTimeRaw, 2);
+            $start = $parts[0] ?? '';
+            preg_match('/(\d{1,2}:\d{2})/', $start, $mStartOnly);
+            if (!empty($mStartOnly[1])) {
+                try {
+                    $startDt = new DateTimeImmutable($mStartOnly[1]);
+                    $declineTimeLabelForSpace = 'Hourly (' . strtoupper($startDt->format('h:ia')) . ')';
+                } catch (Throwable $e) {
+                    $declineTimeLabelForSpace =
+                        'Hourly (' . strtoupper(str_replace(' ', '', trim((string) $start))) . ')';
+                }
+            }
+        }
     @endphp
     @teleport('body')
         <div class="decline-modal-overlay" wire:keydown.escape="closeDeclineModal">
@@ -51,18 +75,23 @@
                 </button>
 
                 <div class="decline-modal-icon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="80" height="77" viewBox="0 0 80 77"
+                    <svg xmlns="http://www.w3.org/2000/svg" width="80" height="75" viewBox="0 0 80 75"
                         fill="none">
                         <path
-                            d="M3.95918 29C3.79598 31.9412 3.79598 35.4404 3.79598 39.6442V46.2935C3.79598 58.8307 3.79967 65.0976 8.12508 68.9941C12.4505 72.8906 19.4169 72.8906 33.3461 72.8906H48.1213C62.0504 72.8906 69.0132 72.8873 73.3423 68.9941C77.6714 65.101 77.6714 58.8307 77.6714 46.2935V39.6442C77.6714 35.4401 77.6711 31.941 77.5074 29H3.95918Z"
-                            fill="#F2F6F9" />
+                            d="M3.92636 28.2354C3.76636 31.1189 3.76636 34.5495 3.76636 38.6709V45.1898C3.76636 57.4811 3.76998 63.6252 8.01057 67.4453C12.2512 71.2653 19.081 71.2653 32.7371 71.2653H47.2225C60.8786 71.2653 67.7048 71.2621 71.9491 67.4453C76.1933 63.6285 76.1933 57.4811 76.1933 45.1898V38.6709C76.1933 34.5492 76.1929 31.1187 76.0324 28.2354H3.92636Z"
+                            fill="#FFEDED" />
                         <path
-                            d="M0.754211 37.3777C0.754211 22.9384 0.754211 15.7168 5.44221 11.233C10.1302 6.74919 17.6702 6.74536 32.7542 6.74536H48.7542C63.8382 6.74536 71.3822 6.74536 76.0662 11.233C80.7502 15.7206 80.7542 22.9384 80.7542 37.3777V45.0358C80.7542 59.4751 80.7542 66.6967 76.0662 71.1805C71.3782 75.6643 63.8382 75.6681 48.7542 75.6681H32.7542C17.6702 75.6681 10.1262 75.6681 5.44221 71.1805C0.758211 66.6929 0.754211 59.4751 0.754211 45.0358V37.3777Z"
-                            stroke="#3B3731" stroke-width="2" />
-                        <path d="M20.1494 6.71614V1M61.3184 6.71614V1M1.62305 25.7699H79.8441" stroke="#3B3731"
-                            stroke-width="2" stroke-linecap="round" />
-                        <path d="M31.2012 48.3501L49.4999 30.0514M31.2012 30.0514L49.4999 48.3501" stroke="#FF6E6E"
-                            stroke-width="2" stroke-linecap="round" />
+                            d="M78.4314 36.4483C78.4314 29.3475 78.4285 24.1046 77.8631 20.0834C77.3012 16.0884 76.1974 13.4147 74.0771 11.3832C71.9522 9.34738 69.1454 8.28455 64.9548 7.74501C60.745 7.203 55.2585 7.2012 47.8431 7.2012H32.1569C24.7416 7.2012 19.256 7.20331 15.0467 7.74577C10.8566 8.28577 8.04924 9.34877 5.92218 11.3832C3.80034 13.4127 2.69679 16.0863 2.13542 20.0819C1.5704 24.1035 1.56863 29.3474 1.56863 36.4483V43.9567C1.56863 51.0577 1.57141 56.3011 2.13695 60.3224C2.69882 64.3173 3.80257 66.9911 5.92295 69.0226C8.04782 71.0583 10.8546 72.1212 15.0452 72.6608C19.255 73.2028 24.7415 73.2038 32.1569 73.2038H47.8431C55.2584 73.2038 60.744 73.2017 64.9533 72.6592C69.1434 72.1192 71.9508 71.0562 74.0778 69.0218C76.1996 66.9924 77.3032 64.3192 77.8646 60.3239C78.4296 56.3022 78.4314 51.0579 78.4314 43.9567V36.4483ZM80 43.9567C80 51.0114 80.0018 56.3853 79.4179 60.5414C78.8303 64.7238 77.6358 67.789 75.1616 70.1554C72.6927 72.5168 69.5058 73.654 65.154 74.2148C60.8211 74.7732 55.2161 74.7724 47.8431 74.7724H32.1569C24.7842 74.7724 19.1786 74.7742 14.8453 74.2164C10.4928 73.656 7.30489 72.5185 4.83762 70.1546C2.36609 67.7866 1.17177 64.7224 0.58364 60.5407C-0.000812774 56.3849 5.42728e-08 51.0117 6.88498e-08 43.9567V36.4483C1.55774e-08 29.3936 -0.00180258 24.0197 0.582108 19.8636C1.16974 15.6812 2.36421 12.616 4.83839 10.2496C7.30734 7.88825 10.4942 6.75103 14.846 6.19017C19.1789 5.63178 24.7839 5.63257 32.1569 5.63257H47.8431C55.2158 5.63257 60.8214 5.63078 65.1547 6.18863C69.5072 6.74901 72.6951 7.88654 75.1624 10.2504C77.6339 12.6184 78.8282 15.6826 79.4164 19.8643C80.0008 24.0201 80 29.3934 80 36.4483V43.9567Z"
+                            fill="#3B3731" />
+                        <path
+                            d="M78.3237 24.2846C78.7569 24.2846 79.108 24.6358 79.108 25.0689C79.1078 25.5019 78.7567 25.8532 78.3237 25.8532H1.63636C1.20332 25.8532 0.85225 25.5019 0.852051 25.0689C0.852051 24.6358 1.2032 24.2846 1.63636 24.2846H78.3237ZM19.0146 6.38863V0.784314C19.0146 0.351235 19.3659 0.000139025 19.7989 0C20.2321 0 20.5832 0.351149 20.5832 0.784314V6.38863C20.5831 6.82168 20.232 7.17295 19.7989 7.17295C19.3659 7.17281 19.0147 6.82159 19.0146 6.38863ZM59.3769 6.38863V0.784314C59.3769 0.351149 59.728 0 60.1612 0C60.5942 0.000148722 60.9455 0.351241 60.9455 0.784314V6.38863C60.9454 6.82159 60.5941 7.1728 60.1612 7.17295C59.7281 7.17295 59.377 6.82168 59.3769 6.38863Z"
+                            fill="#3B3731" />
+                        <path
+                            d="M48.2354 49.8039C48.2354 45.4723 44.7239 41.9608 40.3923 41.9608C36.0607 41.9608 32.5492 45.4723 32.5492 49.8039C32.5492 54.1356 36.0607 57.6471 40.3923 57.6471V59.6078C34.9777 59.6078 30.5884 55.2185 30.5884 49.8039C30.5884 44.3894 34.9777 40 40.3923 40C45.8069 40 50.1962 44.3894 50.1962 49.8039C50.1962 55.2185 45.8069 59.6078 40.3923 59.6078V57.6471C44.7239 57.6471 48.2354 54.1356 48.2354 49.8039Z"
+                            fill="#FF6E6E" />
+                        <path
+                            d="M42.9666 46.2784C43.3495 45.8955 43.9709 45.8955 44.3537 46.2784C44.7363 46.6612 44.7363 47.2819 44.3537 47.6647L41.9962 50.0215L44.3537 52.3782C44.7365 52.7611 44.7366 53.3825 44.3537 53.7653C43.9709 54.1482 43.3495 54.1482 42.9666 53.7653L40.6098 51.4078L38.2531 53.7653C37.8703 54.1479 37.2496 54.1479 36.8667 53.7653C36.4839 53.3825 36.4839 52.7611 36.8667 52.3782L39.2227 50.0215L36.8667 47.6647C36.4839 47.2818 36.4839 46.6612 36.8667 46.2784C37.2496 45.8955 37.8702 45.8955 38.2531 46.2784L40.6098 48.6344L42.9666 46.2784Z"
+                            fill="#FF6E6E" />
                     </svg>
                 </div>
                 <h3 class="decline-modal-title" id="decline-modal-title">Decline Booking Request</h3>
@@ -71,13 +100,26 @@
                 <div class="decline-modal-details">
                     <div class="decline-modal-detail-row"><span>Booking
                             ID</span><strong>{{ $declineBookingIdLabel }}</strong></div>
-                    <div class="decline-modal-detail-row"><span>Pet</span><strong>{{ $declinePetName }}</strong></div>
-                    <div class="decline-modal-detail-row">
-                        <span>Service</span><strong>{{ $declineBooking->service }}</strong>
-                    </div>
-                    <div class="decline-modal-detail-row"><span>Date</span><strong>{{ $declineDateLabel }}</strong></div>
-                    <div class="decline-modal-detail-row"><span>Time</span><strong>{{ $declineTimeLabel }}</strong></div>
-                    <div class="decline-modal-detail-row"><span>Client</span><strong>{{ $declineClient }}</strong></div>
+                    @if ($isSpaceUser)
+                        <div class="decline-modal-detail-row"><span>Client</span><strong>{{ $declineClient }}</strong></div>
+                        <div class="decline-modal-detail-row"><span>Space</span><strong>{{ $declineSpaceLabel }}</strong>
+                        </div>
+                        <div class="decline-modal-detail-row">
+                            <span>Time</span><strong>{{ $declineTimeLabelForSpace }}</strong>
+                        </div>
+                        <div class="decline-modal-detail-row"><span>Date</span><strong>{{ $declineDateLabel }}</strong>
+                        </div>
+                    @else
+                        <div class="decline-modal-detail-row"><span>Pet</span><strong>{{ $declinePetName }}</strong></div>
+                        <div class="decline-modal-detail-row">
+                            <span>Service</span><strong>{{ $declineBooking->service }}</strong>
+                        </div>
+                        <div class="decline-modal-detail-row"><span>Date</span><strong>{{ $declineDateLabel }}</strong>
+                        </div>
+                        <div class="decline-modal-detail-row"><span>Time</span><strong>{{ $declineTimeLabel }}</strong>
+                        </div>
+                        <div class="decline-modal-detail-row"><span>Client</span><strong>{{ $declineClient }}</strong></div>
+                    @endif
                     <div class="decline-modal-detail-row decline-modal-detail-payment">
                         <span>Payment</span><strong>{{ $declineAmountLabel }}</strong>
                     </div>
@@ -107,8 +149,7 @@
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: rgba(0, 0, 0, 0.28);
-        backdrop-filter: blur(10px);
+        background: rgba(0, 0, 0, 0.10);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -170,7 +211,7 @@
     .decline-modal-details {
         width: 100%;
         border-radius: 10px;
-        background: #F1F1F1;
+        background: #F8F8F8;
         padding: 1.35rem 1.7rem;
     }
 

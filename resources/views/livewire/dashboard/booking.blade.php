@@ -311,56 +311,34 @@ new class extends Component {
 
 <section class="bookings-board" wire:poll.5s="refreshBookingsAndCounts">
     <div class="bookings-board-header">
-        @if ($activeStatus === 'pending')
-            <div class="booking-list-header">
-                <div class="booking-list-title">
-                    Pending Bookings ({{ $statusCounts['pending'] }})
-                </div>
+        <div class="booking-list-header">
+            <div class="booking-pill-row">
+                @php
+                    $bookingPills = [
+                        ['status' => 'pending', 'label' => 'Pending Bookings', 'class' => 'pending'],
+                        ['status' => 'confirmed', 'label' => 'Confirmed Bookings', 'class' => 'confirmed'],
+                        ['status' => 'completed', 'label' => 'Completed Bookings', 'class' => 'completed'],
+                        ['status' => 'cancelled', 'label' => 'Cancelled Bookings', 'class' => 'cancelled'],
+                    ];
+                    if (in_array($activeStatus, ['pending', 'confirmed', 'completed', 'cancelled'], true)) {
+                        usort($bookingPills, function ($a, $b) use ($activeStatus) {
+                            return ($b['status'] === $activeStatus) <=> ($a['status'] === $activeStatus);
+                        });
+                    }
+                @endphp
+                @foreach ($bookingPills as $pill)
+                    <button type="button" wire:click="setActiveStatus('{{ $pill['status'] }}')"
+                        @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
+                        class="booking-pill {{ $pill['class'] }} {{ $activeStatus !== 'all' && $activeStatus !== $pill['status'] ? 'is-muted' : '' }}">
+                        {{ $pill['label'] }} ({{ $statusCounts[$pill['status']] ?? 0 }})
+                    </button>
+                @endforeach
+            </div>
 
+            @if (in_array($activeStatus, ['pending', 'confirmed', 'completed', 'cancelled'], true))
                 <x-dashboard.common.sort-dropdown :pending-sort="$pendingSort" />
-            </div>
-        @else
-            <div class="booking-list-header">
-                <div class="booking-pill-row">
-                    @if ($activeStatus === 'all')
-                        <button type="button" wire:click="setActiveStatus('pending')" class="booking-pill pending">Pending
-                            Bookings ({{ $statusCounts['pending'] }})</button>
-                        <button type="button" wire:click="setActiveStatus('confirmed')"
-                            class="booking-pill confirmed">Confirmed
-                            Bookings ({{ $statusCounts['confirmed'] }})</button>
-                        <button type="button" wire:click="setActiveStatus('completed')"
-                            class="booking-pill completed">Completed
-                            Bookings ({{ $statusCounts['completed'] }})</button>
-                        <button type="button" wire:click="setActiveStatus('cancelled')"
-                            class="booking-pill cancelled">Cancelled
-                            Bookings ({{ $statusCounts['cancelled'] }})</button>
-                    @else
-                        @if ($activeStatus === 'pending')
-                            <button type="button" wire:click="setActiveStatus('pending')"
-                                class="booking-pill pending is-active">Pending
-                                Bookings ({{ $statusCounts['pending'] }})</button>
-                        @elseif ($activeStatus === 'confirmed')
-                            <button type="button" wire:click="setActiveStatus('confirmed')"
-                                class="booking-pill confirmed is-active">Confirmed
-                                Bookings ({{ $statusCounts['confirmed'] }})</button>
-                        @elseif ($activeStatus === 'completed')
-                            <button type="button" wire:click="setActiveStatus('completed')"
-                                class="booking-pill completed is-active">Completed
-                                Bookings ({{ $statusCounts['completed'] }})</button>
-                        @elseif ($activeStatus === 'cancelled')
-                            <button type="button" wire:click="setActiveStatus('cancelled')"
-                                class="booking-pill cancelled is-active">Cancelled
-                                Bookings ({{ $statusCounts['cancelled'] }})</button>
-                        @endif
-                    @endif
-                </div>
-
-                @if (in_array($activeStatus, ['confirmed', 'completed', 'cancelled'], true))
-                    <x-dashboard.common.sort-dropdown :pending-sort="$pendingSort" />
-                @endif
-            </div>
-
-        @endif
+            @endif
+        </div>
     </div>
 
     @php
@@ -469,13 +447,16 @@ new class extends Component {
     @if ($declineBookingId === null && $rescheduleBookingId === null)
         <div class="bookings-table-wrap">
             @if ($activeStatus === 'pending')
+                @php
+                    $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+                @endphp
                 <table class="bookings-table booking-list-table">
                     <thead>
                         <tr>
                             <th>Booking ID</th>
                             <th>Submitted at</th>
-                            <th>Owner</th>
-                            <th>Pet</th>
+                            <th>{{ $isSpaceUser ? 'Client' : 'Owner' }}</th>
+                            <th>{{ $isSpaceUser ? 'Space' : 'Pet' }}</th>
                             <th>Service Type</th>
                             <th>Booking Details</th>
                             <th>Payment</th>
@@ -583,6 +564,15 @@ new class extends Component {
                                         }
                                     }
                                 }
+                                $bookingDetailsTimeDisplay = $bookingDetailsTime;
+                                if ($isSpaceUser) {
+                                    $bookingDetailsTimeDisplay = trim(
+                                        (string) preg_replace('/\s*\([^)]*\)\s*$/', '', $bookingDetailsTimeDisplay),
+                                    );
+                                    $bookingDetailsTimeDisplay = trim(
+                                        (string) preg_replace('/\s+(am|pm)$/i', '', $bookingDetailsTimeDisplay),
+                                    );
+                                }
                             @endphp
 
                             <tr wire:key="booking-pending-row-{{ $booking->id }}">
@@ -595,23 +585,32 @@ new class extends Component {
                                 </td>
                                 <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
                                 <td>
-                                    <div class="filtered-pet-cell">
-                                        <span class="booking-pet-name">{{ $petName }}</span>
-                                        <span>
-                                            @if ($petType)
-                                                <span class="booking-pet-type">{{ $petType }}</span>
-                                            @endif
-                                            @if ($petMore)
-                                                <span class="booking-pet-more">{{ $petMore }}</span>
-                                            @endif
-                                        </span>
-                                    </div>
+                                    @if ($isSpaceUser)
+                                        {{ $formatLocationLabel($booking->visit_type ?? null) }}
+                                    @else
+                                        <div class="filtered-pet-cell">
+                                            <span class="booking-pet-name">{{ $petName }}</span>
+                                            <span>
+                                                @if ($petType)
+                                                    <span class="booking-pet-type">{{ $petType }}</span>
+                                                @endif
+                                                @if ($petMore)
+                                                    <span class="booking-pet-more">{{ $petMore }}</span>
+                                                @endif
+                                            </span>
+                                        </div>
+                                    @endif
                                 </td>
-                                <td class="service-type">{{ $booking->service }}</td>
+                                <td
+                                    class="service-type {{ auth()->check() && in_array(strtolower((string) auth()->user()->user_type), ['groomer', 'space'], true) ? 'service-type-groomer' : '' }}">
+                                    {{ $booking->service }}
+                                </td>
                                 <td>
                                     <div class="booking-details">
                                         <div class="details-date">{{ $bookingDetailsDate }}</div>
-                                        <div class="details-time">{{ $bookingDetailsTime }}</div>
+                                        <div class="details-time {{ $isSpaceUser ? 'details-time-space' : '' }}">
+                                            {{ $bookingDetailsTimeDisplay }}
+                                        </div>
                                     </div>
                                 </td>
                                 <td>£{{ number_format((float) $booking->amount, 2) }}</td>
@@ -666,18 +665,33 @@ new class extends Component {
             @endif
 
             @if ($activeStatus === 'confirmed')
+                @php
+                    $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+                @endphp
                 <table class="bookings-table confirmed-bookings-table">
                     <thead>
-                        <tr>
-                            <th>Booking ID</th>
-                            <th>Appointment Details</th>
-                            <th>Pet</th>
-                            <th>Service Type</th>
-                            <th>Owner</th>
-                            <th>Location</th>
-                            <th>Staff</th>
-                            <th class="confirmed-action-col">Action</th>
-                        </tr>
+                        @if ($isSpaceUser)
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Client</th>
+                                <th>Service Type</th>
+                                <th>Space</th>
+                                <th>Booking Details</th>
+                                <th>Staff</th>
+                                <th class="confirmed-action-col">Action</th>
+                            </tr>
+                        @else
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Appointment Details</th>
+                                <th>Pet</th>
+                                <th>Service Type</th>
+                                <th>Owner</th>
+                                <th>Location</th>
+                                <th>Staff</th>
+                                <th class="confirmed-action-col">Action</th>
+                            </tr>
+                        @endif
                     </thead>
                     <tbody wire:key="bookings-table-confirmed" class="bookings-table-body">
                         @php
@@ -744,6 +758,15 @@ new class extends Component {
                                         }
                                     }
                                 }
+                                $appointmentTimeDisplay = $appointmentTime;
+                                if ($isSpaceUser) {
+                                    $appointmentTimeDisplay = trim(
+                                        (string) preg_replace('/\s*\([^)]*\)\s*$/', '', $appointmentTimeDisplay),
+                                    );
+                                    $appointmentTimeDisplay = trim(
+                                        (string) preg_replace('/\s+(am|pm)$/i', '', $appointmentTimeDisplay),
+                                    );
+                                }
 
                                 $locationLabel = strtolower((string) ($booking->visit_type ?? ''));
                                 $locationLabel = str_replace('_', ' ', $locationLabel);
@@ -756,29 +779,44 @@ new class extends Component {
                             @endphp
                             <tr wire:key="booking-row-confirmed-{{ $booking->id }}">
                                 <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
-                                <td>
-                                    <div class="confirmed-appointment-cell">
-                                        <div>{{ $appointmentDate }}</div>
-                                        <div>{{ $appointmentTime }}</div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="filtered-pet-cell">
-                                        <span class="booking-pet-name">{{ $petName }}</span>
-                                        <span>
-                                            @if ($petType)
-                                                <span class="booking-pet-type">{{ $petType }}</span>
-                                            @endif
-                                            @if ($petMore)
-                                                <span class="booking-pet-more">{{ $petMore }}</span>
-                                            @endif
-                                        </span>
-                                    </div>
-                                </td>
-                                <td class="service-type">{{ $booking->service }}</td>
-                                <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
-                                <td>{{ $locationLabel }}</td>
-                                <td>{{ $booking->staff ?: 'N/A' }}</td>
+                                @if ($isSpaceUser)
+                                    <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
+                                    <td class="service-type">{{ $booking->service }}</td>
+                                    <td><span class="confirmed-space-label">{{ $locationLabel }}</span></td>
+                                    <td>
+                                        <div class="confirmed-appointment-cell">
+                                            <div>{{ $appointmentDate }}</div>
+                                            <div class="{{ $isSpaceUser ? 'confirmed-appointment-time-space' : '' }}">
+                                                {{ $appointmentTimeDisplay }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ $booking->staff ?: 'N/A' }}</td>
+                                @else
+                                    <td>
+                                        <div class="confirmed-appointment-cell">
+                                            <div>{{ $appointmentDate }}</div>
+                                            <div>{{ $appointmentTimeDisplay }}</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="filtered-pet-cell">
+                                            <span class="booking-pet-name">{{ $petName }}</span>
+                                            <span>
+                                                @if ($petType)
+                                                    <span class="booking-pet-type">{{ $petType }}</span>
+                                                @endif
+                                                @if ($petMore)
+                                                    <span class="booking-pet-more">{{ $petMore }}</span>
+                                                @endif
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="service-type">{{ $booking->service }}</td>
+                                    <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
+                                    <td>{{ $locationLabel }}</td>
+                                    <td>{{ $booking->staff ?: 'N/A' }}</td>
+                                @endif
                                 <td class="confirmed-action-col">
                                     <div class="confirmed-action-cell" x-data="{
                                         rowId: {{ $booking->id }},
@@ -850,7 +888,8 @@ new class extends Component {
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="empty-bookings">No confirmed bookings found.</td>
+                                <td colspan="{{ $isSpaceUser ? 7 : 8 }}" class="empty-bookings">No confirmed bookings
+                                    found.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -870,12 +909,15 @@ new class extends Component {
             @endif
 
             @if ($activeStatus === 'completed')
+                @php
+                    $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+                @endphp
                 <table class="bookings-table completed-bookings-table">
                     <thead>
                         <tr>
                             <th>Booking ID</th>
                             <th>Date</th>
-                            <th>Pet</th>
+                            <th>{{ $isSpaceUser ? 'Space' : 'Pet' }}</th>
                             <th>Service Type</th>
                             <th>Rating</th>
                             <th>Earnings</th>
@@ -910,17 +952,30 @@ new class extends Component {
                                 $petName = $firstPet->name ?? 'N/A';
                                 $petType = $firstPet->pet_type ?? null;
                                 $rating = data_get($booking, 'rating');
+                                $completedLocationLabel = strtolower((string) ($booking->visit_type ?? ''));
+                                $completedLocationLabel = str_replace('_', ' ', $completedLocationLabel);
+                                $completedLocationLabel =
+                                    $completedLocationLabel === 'home' || $completedLocationLabel === 'home visit'
+                                        ? 'Home Visit'
+                                        : ($completedLocationLabel === 'salon' ||
+                                        $completedLocationLabel === 'salon visit'
+                                            ? 'Salon Visit'
+                                            : ucfirst($completedLocationLabel ?: 'N/A'));
                             @endphp
                             <tr>
                                 <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
                                 <td>{{ optional($booking->date)->format('d/m/y') }}</td>
                                 <td>
-                                    <div class="pet-name-wrap completed-pet-cell">
-                                        <span class="pet-name completed-pet-name">{{ $petName }}</span>
-                                        @if ($petType)
-                                            <span class="pet-type">{{ $petType }}</span>
-                                        @endif
-                                    </div>
+                                    @if ($isSpaceUser)
+                                        <span class="completed-space-label">{{ $completedLocationLabel }}</span>
+                                    @else
+                                        <div class="pet-name-wrap completed-pet-cell">
+                                            <span class="pet-name completed-pet-name">{{ $petName }}</span>
+                                            @if ($petType)
+                                                <span class="pet-type">{{ $petType }}</span>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="service-type">{{ $booking->service }}</td>
                                 <td>
@@ -955,17 +1010,20 @@ new class extends Component {
                                 </td>
                                 <td class="invoice-col">
                                     <div class="view-col-inner">
-                                        <button type="button" class="view-btn" aria-label="Download invoice">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                viewBox="0 0 16 16" fill="none">
-                                                <path d="M8 2V10" stroke="#3B3731" stroke-width="1.3"
-                                                    stroke-linecap="round" />
-                                                <path d="M5.5 7.5L8 10L10.5 7.5" stroke="#3B3731" stroke-width="1.3"
-                                                    stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M3 12.5H13" stroke="#3B3731" stroke-width="1.3"
-                                                    stroke-linecap="round" />
+                                        <a href="{{ route('dashboard.bookings.invoice-pdf', $booking) }}"
+                                            class="view-btn" target="_blank" rel="noopener noreferrer"
+                                            aria-label="Download invoice">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
+                                                viewBox="0 0 16 19" fill="none">
+                                                <path
+                                                    d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
+                                                    stroke="#3B3731" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                                <path d="M7.99997 0.5V12.875M12.0909 8.75L7.99997 13.25L3.90906 8.75"
+                                                    stroke="#3B3731" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
                                             </svg>
-                                        </button>
+                                        </a>
                                     </div>
                                 </td>
                                 <td class="more-col">
@@ -996,13 +1054,16 @@ new class extends Component {
             @endif
 
             @if ($activeStatus === 'cancelled')
+                @php
+                    $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+                @endphp
                 <table class="bookings-table cancelled-bookings-table">
                     <thead>
                         <tr>
                             <th>Booking ID</th>
                             <th>Date</th>
-                            <th>Pet Owner</th>
-                            <th>Pet</th>
+                            <th>{{ $isSpaceUser ? 'Client' : 'Pet Owner' }}</th>
+                            <th>{{ $isSpaceUser ? 'Space' : 'Pet' }}</th>
                             <th>Cancelled By</th>
                             <th>Refund Amount</th>
                             <th>Refund Status</th>
@@ -1052,12 +1113,16 @@ new class extends Component {
                                 <td>{{ optional($booking->date)->format('d/m/y') }}</td>
                                 <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
                                 <td>
-                                    <div class="pet-name-wrap cancelled-pet-cell">
-                                        <span class="pet-name cancelled-pet-name">{{ $petName }}</span>
-                                        @if ($petType)
-                                            <span class="pet-type">{{ $petType }}</span>
-                                        @endif
-                                    </div>
+                                    @if ($isSpaceUser)
+                                        {{ $formatLocationLabel($booking->visit_type ?? null) }}
+                                    @else
+                                        <div class="pet-name-wrap cancelled-pet-cell">
+                                            <span class="pet-name cancelled-pet-name">{{ $petName }}</span>
+                                            @if ($petType)
+                                                <span class="pet-type">{{ $petType }}</span>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </td>
                                 <td>
                                     <span class="cancelled-by-chip {{ strtolower($cancelledByLabel) }}">
@@ -1090,17 +1155,20 @@ new class extends Component {
                                 </td>
                                 <td class="invoice-col">
                                     <div class="view-col-inner">
-                                        <button type="button" class="view-btn" aria-label="Download invoice">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                viewBox="0 0 16 16" fill="none">
-                                                <path d="M8 2V10" stroke="#3B3731" stroke-width="1.3"
-                                                    stroke-linecap="round" />
-                                                <path d="M5.5 7.5L8 10L10.5 7.5" stroke="#3B3731" stroke-width="1.3"
-                                                    stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M3 12.5H13" stroke="#3B3731" stroke-width="1.3"
-                                                    stroke-linecap="round" />
+                                        <a href="{{ route('dashboard.bookings.invoice-pdf', $booking) }}"
+                                            class="view-btn" target="_blank" rel="noopener noreferrer"
+                                            aria-label="Download invoice">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
+                                                viewBox="0 0 16 19" fill="none">
+                                                <path
+                                                    d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
+                                                    stroke="#3B3731" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                                <path d="M7.99997 0.5V12.875M12.0909 8.75L7.99997 13.25L3.90906 8.75"
+                                                    stroke="#3B3731" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
                                             </svg>
-                                        </button>
+                                        </a>
                                     </div>
                                 </td>
                                 <td class="more-col">
@@ -1131,13 +1199,16 @@ new class extends Component {
             @endif
 
             @if ($activeStatus === 'all')
+                @php
+                    $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+                @endphp
                 <table class="bookings-table">
                     <thead>
                         <tr>
                             <th>Booking ID</th>
-                            <th>Owner</th>
-                            <th>Pet</th>
-                            <th>Service Type</th>
+                            <th>{{ $isSpaceUser ? 'Client' : 'Owner' }}</th>
+                            <th>{{ $isSpaceUser ? 'Space' : 'Pet' }}</th>
+                            <th>{{ $isSpaceUser ? 'Service' : 'Service Type' }}</th>
                             <th>Date</th>
                             <th>Status</th>
                             <th>Amount</th>
@@ -1172,14 +1243,21 @@ new class extends Component {
                                 <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
                                 <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
                                 <td>
-                                    <div class="pet-name-wrap">
-                                        <span class="pet-name">{{ $petName }}</span>
-                                        @if ($petType)
-                                            <span class="pet-type">{{ $petType }}</span>
-                                        @endif
-                                    </div>
+                                    @if ($isSpaceUser)
+                                        {{ $booking->visit_type ? ucfirst((string) $booking->visit_type) : 'N/A' }}
+                                    @else
+                                        <div class="pet-name-wrap">
+                                            <span class="pet-name">{{ $petName }}</span>
+                                            @if ($petType)
+                                                <span class="pet-type">{{ $petType }}</span>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </td>
-                                <td class="service-type">{{ $booking->service }}</td>
+                                <td
+                                    class="service-type {{ auth()->check() && in_array(strtolower((string) auth()->user()->user_type), ['groomer', 'space'], true) ? 'service-type-groomer' : '' }}">
+                                    {{ $booking->service }}
+                                </td>
                                 <td>{{ optional($booking->date)->format('d/m/y') }}</td>
                                 <td>
                                     <span class="status-chip {{ $booking->booking_status }}">
@@ -1235,6 +1313,7 @@ new class extends Component {
 
     @if ($completedBooking)
         @php
+            $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
             $completedBookingIdLabel = 'FG-' . str_pad((string) $completedBooking->id, 5, '0', STR_PAD_LEFT);
             $completedDateLabel = optional($completedBooking->date)->format('d/m/Y') ?? 'N/A';
             $completedOwnerName = $completedBooking->petOwner->name ?? 'N/A';
@@ -1242,6 +1321,33 @@ new class extends Component {
             $completedPetName = $completedFirstPet->name ?? 'N/A';
             $completedPetType = $completedFirstPet->pet_type ?? '';
             $completedService = $completedBooking->service ?: 'N/A';
+            $completedSpaceRaw = str_replace('_', ' ', strtolower((string) ($completedBooking->visit_type ?? '')));
+            $completedSpaceLabel =
+                $completedSpaceRaw === 'home' || $completedSpaceRaw === 'home visit'
+                    ? 'Home Visit'
+                    : ($completedSpaceRaw === 'salon' || $completedSpaceRaw === 'salon visit'
+                        ? 'Salon Visit'
+                        : ucfirst($completedSpaceRaw ?: 'N/A'));
+            $completedTimeRaw = (string) ($completedBooking->time ?? '');
+            $completedTimeLabelForSpace = trim($completedTimeRaw) !== '' ? trim($completedTimeRaw) : 'N/A';
+            if (str_contains($completedTimeRaw, '-')) {
+                $parts = preg_split('/\s*-\s*/', $completedTimeRaw, 2);
+                $start = $parts[0] ?? '';
+                $end = $parts[1] ?? '';
+                preg_match('/(\d{1,2}:\d{2})/', $start, $mStartOnly);
+                preg_match('/(\d{1,2}:\d{2})/', $end, $mEndOnly);
+                if (!empty($mStartOnly[1]) && !empty($mEndOnly[1])) {
+                    try {
+                        $startDt = new DateTimeImmutable($mStartOnly[1]);
+                        $endDt = new DateTimeImmutable($mEndOnly[1]);
+                        $completedTimeLabelForSpace = $startDt->format('H:i') . ' - ' . $endDt->format('H:i');
+                    } catch (Throwable $e) {
+                        $completedTimeLabelForSpace =
+                            trim((string) $mStartOnly[1]) . ' - ' . trim((string) $mEndOnly[1]);
+                    }
+                }
+            }
+            $completedServiceTimeLabelForSpace = $completedService . ' (' . $completedTimeLabelForSpace . ')';
             $completedServiceAmount = (float) $completedBooking->amount;
             $completedExtraAddOnsRaw = $completedBooking->extra_add_ons;
             $completedExtraAddOns = collect(is_array($completedExtraAddOnsRaw) ? $completedExtraAddOnsRaw : [])
@@ -1280,21 +1386,24 @@ new class extends Component {
                         <strong>Booking ID: {{ $completedBookingIdLabel }}</strong>
                         <div class="completed-booking-modal-booking-meta">
                             <span>{{ $completedDateLabel }}</span>
-                            <button type="button" class="completed-booking-download-btn" aria-label="Download invoice">
+                            <a href="{{ route('dashboard.bookings.invoice-pdf', $completedBooking) }}"
+                                class="completed-booking-download-btn" target="_blank" rel="noopener noreferrer"
+                                aria-label="Download invoice">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
                                     viewBox="0 0 16 19" fill="none">
                                     <path
                                         d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
                                         stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M8.00009 0.5V12.875M12.091 8.75L8.00009 13.25L3.90918 8.75" stroke="#3B3731"
+                                    <path d="M7.99997 0.5V12.875M12.0909 8.75L7.99997 13.25L3.90906 8.75" stroke="#3B3731"
                                         stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
-                            </button>
+                            </a>
                         </div>
                     </div>
 
                     <div class="completed-booking-modal-customer">
                         <div class="completed-booking-modal-user-icon" aria-hidden="true">
+
                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="36" viewBox="0 0 32 36"
                                 fill="none">
                                 <ellipse cx="17.3667" cy="18.0807" rx="10.2458" ry="9.64315" fill="white" />
@@ -1305,29 +1414,50 @@ new class extends Component {
                         </div>
                         <div>
                             <p class="completed-booking-modal-owner">{{ $completedOwnerName }}</p>
-                            <p class="completed-booking-modal-pet">{{ $completedPetName }}<span
-                                    class="completed-booking-modal-pet-type">{{ $completedPetType }}</span></p>
+                            @unless ($isSpaceUser)
+                                <p class="completed-booking-modal-pet">{{ $completedPetName }}<span
+                                        class="completed-booking-modal-pet-type">{{ $completedPetType }}</span></p>
+                            @endunless
                         </div>
                     </div>
 
                     <div class="completed-booking-modal-section">
                         <p class="completed-booking-modal-section-label">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="13" viewBox="0 0 12 13"
-                                fill="none">
-                                <path
-                                    d="M3.79507 8.7133C4.74998 9.66821 7.07244 8.89426 8.98226 6.98414C10.8924 5.07433 11.6663 2.75186 10.7114 1.79695M6.60477 1.14832L7.03699 1.58084M5.09202 2.66138L5.52423 3.09359M3.79476 4.39054L4.22698 4.82276M3.36255 6.55192L3.79476 6.98414M8.98226 0.5L9.41447 0.932215M8.55004 3.0939L9.41447 3.95833M7.03729 4.60696L7.90172 5.47139M5.30813 5.9036L6.17256 6.76803"
-                                    stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
-                                <path
-                                    d="M3.79466 10.0107C4.15277 9.65258 4.15277 9.07196 3.79466 8.71385C3.43655 8.35574 2.85593 8.35574 2.49782 8.71385L0.768699 10.443C0.410587 10.8011 0.410587 11.3817 0.768699 11.7398C1.12681 12.0979 1.70743 12.0979 2.06554 11.7398L3.79466 10.0107Z"
-                                    stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                            Service
+                            @if ($isSpaceUser)
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="13"
+                                    viewBox="0 0 15 13" fill="none">
+                                    <path
+                                        d="M13.1097 12.1166V3.83417C13.1097 3.81429 13.1113 3.79482 13.1144 3.77576L10.875 1.86616C10.3988 1.46067 10.0698 1.18119 9.79071 0.998982C9.52119 0.823101 9.34008 0.766834 9.16683 0.766834C8.99372 0.766835 8.81374 0.823306 8.54452 0.998982C8.26536 1.18121 7.93548 1.46044 7.45863 1.86616L5.2177 3.77576C5.22078 3.7949 5.22398 3.81422 5.22398 3.83417V12.1166C5.22364 12.3281 5.04366 12.5 4.82168 12.5C4.59985 12.4998 4.41972 12.328 4.41938 12.1166V4.45573L4.00451 4.81069C3.83888 4.95183 3.58373 4.93709 3.43564 4.77924C3.28813 4.62148 3.30193 4.3796 3.46707 4.23856L6.92118 1.29553H6.92275C7.38366 0.90337 7.75691 0.583679 8.08879 0.366942C8.4307 0.143752 8.77013 2.24995e-07 9.16683 0C9.56348 0 9.90284 0.143743 10.2449 0.366942C10.577 0.583731 10.9518 0.903225 11.4125 1.29553L14.8666 4.23856C15.0317 4.3796 15.0455 4.62148 14.898 4.77924C14.7499 4.93709 14.4948 4.95183 14.3291 4.81069L13.9143 4.45573V12.1166C13.9139 12.328 13.7338 12.4998 13.512 12.5C13.29 12.5 13.11 12.3281 13.1097 12.1166Z"
+                                        fill="#9D9B98" />
+                                    <path
+                                        d="M1.82418 6.66737C1.82418 6.37816 1.74192 6.13002 1.62487 5.96249C1.50777 5.79507 1.37173 5.7247 1.25 5.7247C1.12833 5.7248 0.992145 5.79519 0.875132 5.96249C0.758177 6.13002 0.675818 6.37832 0.675818 6.66737C0.675926 6.95653 0.758033 7.20483 0.875132 7.37226C0.992124 7.53946 1.12837 7.60853 1.25 7.60863C1.37164 7.60863 1.50783 7.53939 1.62487 7.37226C1.74197 7.20483 1.82407 6.95653 1.82418 6.66737ZM2.5 6.66737C2.49989 7.09818 2.37897 7.50235 2.16605 7.80679C1.95294 8.11149 1.63215 8.33333 1.25 8.33333C0.868121 8.33323 0.548331 8.11124 0.335269 7.80679C0.12233 7.50234 0.000106589 7.0982 0 6.66737C0 6.23634 0.122237 5.83113 0.335269 5.52654C0.548331 5.22219 0.868196 5.0001 1.25 5C1.63209 5 1.95294 5.22191 2.16605 5.52654C2.37908 5.83113 2.5 6.23634 2.5 6.66737Z"
+                                        fill="#9D9B98" />
+                                    <path
+                                        d="M0.833008 12.1094V7.8906C0.833008 7.67488 1.01956 7.5 1.24967 7.5C1.47979 7.5 1.66634 7.67488 1.66634 7.8906V12.1094C1.66617 12.325 1.47968 12.5 1.24967 12.5C1.01966 12.5 0.833183 12.325 0.833008 12.1094Z"
+                                        fill="#9D9B98" />
+                                    <path
+                                        d="M10.6579 9.31364C10.6579 8.9734 10.6564 8.75738 10.6348 8.59906C10.6147 8.4523 10.584 8.41411 10.5654 8.39576C10.5468 8.37748 10.5083 8.34577 10.3588 8.32597C10.1978 8.30466 9.97715 8.30473 9.63096 8.30473H8.92167C8.57549 8.30473 8.35488 8.30466 8.19387 8.32597C8.04438 8.34577 8.00583 8.37748 7.98725 8.39576C7.96865 8.41411 7.93793 8.4523 7.91787 8.59906C7.89622 8.75738 7.89474 8.9734 7.89474 9.31364V11.7229H10.6579V9.31364ZM9.98715 5.42972C10.2048 5.42988 10.3816 5.60399 10.3819 5.81811C10.3819 6.03251 10.205 6.20634 9.98715 6.2065H8.56548C8.34762 6.20634 8.17074 6.03251 8.17074 5.81811C8.17108 5.60399 8.34782 5.42988 8.56548 5.42972H9.98715ZM9.98715 3.33301L10.0658 3.34059C10.246 3.37657 10.3819 3.53349 10.3819 3.7214C10.3819 3.90931 10.246 4.06623 10.0658 4.10221L9.98715 4.10979H8.56548C8.34762 4.10963 8.17074 3.9358 8.17074 3.7214C8.17074 3.507 8.34762 3.33317 8.56548 3.33301H9.98715ZM11.4474 11.7229H14.6053C14.8233 11.7229 15 11.8968 15 12.1113C14.9997 12.3255 14.8231 12.4997 14.6053 12.4997H0.394737C0.176935 12.4997 0.000332468 12.3255 0 12.1113C0 11.8968 0.17673 11.7229 0.394737 11.7229H7.10526V9.31364C7.10526 8.99552 7.10427 8.71791 7.13456 8.4959C7.16648 8.26247 7.23958 8.03308 7.42907 7.84655C7.61867 7.66 7.85172 7.58819 8.08902 7.55678C8.31486 7.52691 8.59793 7.52795 8.92167 7.52795H9.63096C9.95471 7.52795 10.2378 7.52691 10.4636 7.55678C10.7009 7.58819 10.934 7.66 11.1236 7.84655C11.313 8.03308 11.3862 8.26247 11.4181 8.4959C11.4484 8.71791 11.4474 8.99552 11.4474 9.31364V11.7229Z"
+                                        fill="#9D9B98" />
+                                </svg>
+                                Space
+                            @else
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="13"
+                                    viewBox="0 0 12 13" fill="none">
+                                    <path
+                                        d="M3.79507 8.7133C4.74998 9.66821 7.07244 8.89426 8.98226 6.98414C10.8924 5.07433 11.6663 2.75186 10.7114 1.79695M6.60477 1.14832L7.03699 1.58084M5.09202 2.66138L5.52423 3.09359M3.79476 4.39054L4.22698 4.82276M3.36255 6.55192L3.79476 6.98414M8.98226 0.5L9.41447 0.932215M8.55004 3.0939L9.41447 3.95833M7.03729 4.60696L7.90172 5.47139M5.30813 5.9036L6.17256 6.76803"
+                                        stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path
+                                        d="M3.79466 10.0107C4.15277 9.65258 4.15277 9.07196 3.79466 8.71385C3.43655 8.35574 2.85593 8.35574 2.49782 8.71385L0.768699 10.443C0.410587 10.8011 0.410587 11.3817 0.768699 11.7398C1.12681 12.0979 1.70743 12.0979 2.06554 11.7398L3.79466 10.0107Z"
+                                        stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                Service
+                            @endif
                         </p>
                         <div class="completed-booking-modal-line">
                             <div>
-                                <p>{{ $completedService }}</p>
+                                <p>{{ $isSpaceUser ? $completedSpaceLabel : $completedService }}</p>
                                 <p class="completed-booking-modal-line-sub" style="color: #9D9B98;">
-                                    {{ $completedPetName }}</p>
+                                    {{ $isSpaceUser ? $completedServiceTimeLabelForSpace : $completedPetName }}</p>
                             </div>
                             <span>£{{ number_format($completedServiceAmount, 2) }}</span>
                         </div>
@@ -1375,6 +1505,7 @@ new class extends Component {
 
     @if ($cancelledBooking)
         @php
+            $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
             $cancelledBookingIdLabel = 'FG-' . str_pad((string) $cancelledBooking->id, 5, '0', STR_PAD_LEFT);
             $cancelledDateLabel = optional($cancelledBooking->date)->format('d/m/Y') ?? 'N/A';
             $cancelledOwnerName = $cancelledBooking->petOwner->name ?? 'N/A';
@@ -1382,6 +1513,26 @@ new class extends Component {
             $cancelledPetName = $cancelledFirstPet->name ?? 'N/A';
             $cancelledPetType = $cancelledFirstPet->pet_type ?? '';
             $cancelledService = $cancelledBooking->service ?: 'N/A';
+            $cancelledTimeRaw = (string) ($cancelledBooking->time ?? '');
+            $cancelledTimeLabelForSpace = trim($cancelledTimeRaw) !== '' ? trim($cancelledTimeRaw) : 'N/A';
+            if (str_contains($cancelledTimeRaw, '-')) {
+                $parts = preg_split('/\s*-\s*/', $cancelledTimeRaw, 2);
+                $start = $parts[0] ?? '';
+                $end = $parts[1] ?? '';
+                preg_match('/(\d{1,2}:\d{2})/', $start, $mStartOnly);
+                preg_match('/(\d{1,2}:\d{2})/', $end, $mEndOnly);
+                if (!empty($mStartOnly[1]) && !empty($mEndOnly[1])) {
+                    try {
+                        $startDt = new DateTimeImmutable($mStartOnly[1]);
+                        $endDt = new DateTimeImmutable($mEndOnly[1]);
+                        $cancelledTimeLabelForSpace = $startDt->format('H:i') . ' - ' . $endDt->format('H:i');
+                    } catch (Throwable $e) {
+                        $cancelledTimeLabelForSpace =
+                            trim((string) $mStartOnly[1]) . ' - ' . trim((string) $mEndOnly[1]);
+                    }
+                }
+            }
+            $cancelledServiceTimeLabelForSpace = $cancelledService . ' (' . $cancelledTimeLabelForSpace . ')';
             $cancelledServiceAmount = (float) $cancelledBooking->amount;
             $cancelledExtraAddOnsRaw = $cancelledBooking->extra_add_ons;
             $cancelledExtraAddOns = collect(is_array($cancelledExtraAddOnsRaw) ? $cancelledExtraAddOnsRaw : [])
@@ -1427,21 +1578,25 @@ new class extends Component {
                     <div class="completed-booking-modal-booking-row">
                         <div class="cancelled-modal-id-row">
                             <strong>Booking ID: {{ $cancelledBookingIdLabel }}</strong>
-                            <span
-                                class="refund-status-chip {{ $cancelledRefundStatusClass }}">{{ $cancelledRefundStatus }}</span>
+                            @unless ($isSpaceUser)
+                                <span
+                                    class="refund-status-chip {{ $cancelledRefundStatusClass }}">{{ $cancelledRefundStatus }}</span>
+                            @endunless
                         </div>
                         <div class="completed-booking-modal-booking-meta">
                             <span>{{ $cancelledDateLabel }}</span>
-                            <button type="button" class="completed-booking-download-btn" aria-label="Download invoice">
+                            <a href="{{ route('dashboard.bookings.invoice-pdf', $cancelledBooking) }}"
+                                class="completed-booking-download-btn" target="_blank" rel="noopener noreferrer"
+                                aria-label="Download invoice">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
                                     viewBox="0 0 16 19" fill="none">
                                     <path
                                         d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
                                         stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M8.00009 0.5V12.875M12.091 8.75L8.00009 13.25L3.90918 8.75" stroke="#3B3731"
+                                    <path d="M7.99997 0.5V12.875M12.0909 8.75L7.99997 13.25L3.90906 8.75" stroke="#3B3731"
                                         stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
-                            </button>
+                            </a>
                         </div>
                     </div>
 
@@ -1457,20 +1612,43 @@ new class extends Component {
                         </div>
                         <div>
                             <p class="completed-booking-modal-owner">{{ $cancelledOwnerName }}</p>
-                            <p class="completed-booking-modal-pet">{{ $cancelledPetName }}<span
-                                    class="completed-booking-modal-pet-type">{{ $cancelledPetType }}</span></p>
+                            @unless ($isSpaceUser)
+                                <p class="completed-booking-modal-pet">{{ $cancelledPetName }}<span
+                                        class="completed-booking-modal-pet-type">{{ $cancelledPetType }}</span></p>
+                            @endunless
                         </div>
                     </div>
 
                     <div class="completed-booking-modal-section">
-                        <p class="completed-booking-modal-section-label">Service</p>
+                        <p class="completed-booking-modal-section-label">
+                            @if ($isSpaceUser)
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="13"
+                                    viewBox="0 0 15 13" fill="none">
+                                    <path
+                                        d="M13.1097 12.1166V3.83417C13.1097 3.81429 13.1113 3.79482 13.1144 3.77576L10.875 1.86616C10.3988 1.46067 10.0698 1.18119 9.79071 0.998982C9.52119 0.823101 9.34008 0.766834 9.16683 0.766834C8.99372 0.766835 8.81374 0.823306 8.54452 0.998982C8.26536 1.18121 7.93548 1.46044 7.45863 1.86616L5.2177 3.77576C5.22078 3.7949 5.22398 3.81422 5.22398 3.83417V12.1166C5.22364 12.3281 5.04366 12.5 4.82168 12.5C4.59985 12.4998 4.41972 12.328 4.41938 12.1166V4.45573L4.00451 4.81069C3.83888 4.95183 3.58373 4.93709 3.43564 4.77924C3.28813 4.62148 3.30193 4.3796 3.46707 4.23856L6.92118 1.29553H6.92275C7.38366 0.90337 7.75691 0.583679 8.08879 0.366942C8.4307 0.143752 8.77013 2.24995e-07 9.16683 0C9.56348 0 9.90284 0.143743 10.2449 0.366942C10.577 0.583731 10.9518 0.903225 11.4125 1.29553L14.8666 4.23856C15.0317 4.3796 15.0455 4.62148 14.898 4.77924C14.7499 4.93709 14.4948 4.95183 14.3291 4.81069L13.9143 4.45573V12.1166C13.9139 12.328 13.7338 12.4998 13.512 12.5C13.29 12.5 13.11 12.3281 13.1097 12.1166Z"
+                                        fill="#9D9B98" />
+                                    <path
+                                        d="M1.82418 6.66737C1.82418 6.37816 1.74192 6.13002 1.62487 5.96249C1.50777 5.79507 1.37173 5.7247 1.25 5.7247C1.12833 5.7248 0.992145 5.79519 0.875132 5.96249C0.758177 6.13002 0.675818 6.37832 0.675818 6.66737C0.675926 6.95653 0.758033 7.20483 0.875132 7.37226C0.992124 7.53946 1.12837 7.60853 1.25 7.60863C1.37164 7.60863 1.50783 7.53939 1.62487 7.37226C1.74197 7.20483 1.82407 6.95653 1.82418 6.66737ZM2.5 6.66737C2.49989 7.09818 2.37897 7.50235 2.16605 7.80679C1.95294 8.11149 1.63215 8.33333 1.25 8.33333C0.868121 8.33323 0.548331 8.11124 0.335269 7.80679C0.12233 7.50234 0.000106589 7.0982 0 6.66737C0 6.23634 0.122237 5.83113 0.335269 5.52654C0.548331 5.22219 0.868196 5.0001 1.25 5C1.63209 5 1.95294 5.22191 2.16605 5.52654C2.37908 5.83113 2.5 6.23634 2.5 6.66737Z"
+                                        fill="#9D9B98" />
+                                    <path
+                                        d="M0.833008 12.1094V7.8906C0.833008 7.67488 1.01956 7.5 1.24967 7.5C1.47979 7.5 1.66634 7.67488 1.66634 7.8906V12.1094C1.66617 12.325 1.47968 12.5 1.24967 12.5C1.01966 12.5 0.833183 12.325 0.833008 12.1094Z"
+                                        fill="#9D9B98" />
+                                    <path
+                                        d="M10.6579 9.31364C10.6579 8.9734 10.6564 8.75738 10.6348 8.59906C10.6147 8.4523 10.584 8.41411 10.5654 8.39576C10.5468 8.37748 10.5083 8.34577 10.3588 8.32597C10.1978 8.30466 9.97715 8.30473 9.63096 8.30473H8.92167C8.57549 8.30473 8.35488 8.30466 8.19387 8.32597C8.04438 8.34577 8.00583 8.37748 7.98725 8.39576C7.96865 8.41411 7.93793 8.4523 7.91787 8.59906C7.89622 8.75738 7.89474 8.9734 7.89474 9.31364V11.7229H10.6579V9.31364ZM9.98715 5.42972C10.2048 5.42988 10.3816 5.60399 10.3819 5.81811C10.3819 6.03251 10.205 6.20634 9.98715 6.2065H8.56548C8.34762 6.20634 8.17074 6.03251 8.17074 5.81811C8.17108 5.60399 8.34782 5.42988 8.56548 5.42972H9.98715ZM9.98715 3.33301L10.0658 3.34059C10.246 3.37657 10.3819 3.53349 10.3819 3.7214C10.3819 3.90931 10.246 4.06623 10.0658 4.10221L9.98715 4.10979H8.56548C8.34762 4.10963 8.17074 3.9358 8.17074 3.7214C8.17074 3.507 8.34762 3.33317 8.56548 3.33301H9.98715ZM11.4474 11.7229H14.6053C14.8233 11.7229 15 11.8968 15 12.1113C14.9997 12.3255 14.8231 12.4997 14.6053 12.4997H0.394737C0.176935 12.4997 0.000332468 12.3255 0 12.1113C0 11.8968 0.17673 11.7229 0.394737 11.7229H7.10526V9.31364C7.10526 8.99552 7.10427 8.71791 7.13456 8.4959C7.16648 8.26247 7.23958 8.03308 7.42907 7.84655C7.61867 7.66 7.85172 7.58819 8.08902 7.55678C8.31486 7.52691 8.59793 7.52795 8.92167 7.52795H9.63096C9.95471 7.52795 10.2378 7.52691 10.4636 7.55678C10.7009 7.58819 10.934 7.66 11.1236 7.84655C11.313 8.03308 11.3862 8.26247 11.4181 8.4959C11.4484 8.71791 11.4474 8.99552 11.4474 9.31364V11.7229Z"
+                                        fill="#9D9B98" />
+                                </svg>
+                                Space
+                            @else
+                                Service
+                            @endif
+                        </p>
                         <div class="completed-booking-modal-line">
                             <div>
                                 <p class="cancelled-modal-strike">{{ $cancelledService }}</p>
                                 <p class="completed-booking-modal-line-sub"
                                     style="color: #9D9B98;text-decoration-line: line-through;
 ">
-                                    {{ $cancelledPetName }}</p>
+                                    {{ $isSpaceUser ? $cancelledServiceTimeLabelForSpace : $cancelledPetName }}</p>
                             </div>
                             <span class="cancelled-modal-strike">£{{ number_format($cancelledServiceAmount, 2) }}</span>
                         </div>
@@ -1690,7 +1868,6 @@ new class extends Component {
         position: fixed;
         inset: 0;
         background: rgba(0, 0, 0, 0.22);
-        backdrop-filter: blur(8px);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1805,6 +1982,15 @@ new class extends Component {
 
     .completed-booking-modal-pet {
         color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+    }
+
+    .completed-booking-modal-space-service {
+        color: #9D9B98;
         font-family: Lato;
         font-size: 18px;
         font-style: normal;
@@ -2014,6 +2200,18 @@ new class extends Component {
         background: #FFE2E2;
     }
 
+    .booking-pill.is-muted {
+        opacity: 0.5;
+        background: #ECEBEB;
+        color: #9D9B98;
+        text-align: center;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 500;
+        line-height: normal;
+    }
+
     .bookings-table-wrap {
         width: 100%;
         overflow-x: auto;
@@ -2199,6 +2397,10 @@ new class extends Component {
         line-height: normal !important;
     }
 
+    .service-type-groomer {
+        font-weight: 400 !important;
+    }
+
     .invoice-col,
     .more-col {
         vertical-align: middle;
@@ -2227,6 +2429,16 @@ new class extends Component {
         padding: 0;
         margin: 0 auto;
         cursor: pointer;
+    }
+
+    a.view-btn {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    a.completed-booking-download-btn {
+        color: inherit;
+        text-decoration: none;
     }
 
     .completed-bookings-table th,
@@ -2317,6 +2529,7 @@ new class extends Component {
         justify-content: space-between;
         align-items: center;
         gap: 1rem;
+        margin: 2rem 0;
     }
 
     .booking-list-title {
@@ -2393,6 +2606,14 @@ new class extends Component {
 
     .confirmed-appointment-cell div:last-child {
         color: #3B3731;
+    }
+
+    .confirmed-appointment-time-space {
+        color: #9D9B98 !important;
+    }
+
+    .confirmed-space-label {
+        font-weight: 600;
     }
 
     .confirmed-action-cell {
@@ -2519,5 +2740,13 @@ new class extends Component {
         font-style: normal;
         font-weight: 400;
         line-height: normal;
+    }
+
+    .details-time-space {
+        color: #9D9B98;
+    }
+
+    .completed-space-label {
+        font-weight: 600;
     }
 </style>
