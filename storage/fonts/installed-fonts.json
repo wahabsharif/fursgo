@@ -1,0 +1,11 @@
+{
+    "lato": {
+        "normal": "D:\\wahab-sharif\\GitHub\\fursgo\\storage\\fonts\/lato_normal_373675fe0fd148be7b617152b373557e",
+        "bold": "D:\\wahab-sharif\\GitHub\\fursgo\\storage\\fonts\/lato_bold_9c2706e8059d65f1bb29378b1e52088e",
+        "italic": "D:\\wahab-sharif\\GitHub\\fursgo\\storage\\fonts\/lato_italic_580d37a6a579ee020e4bf32c2ae5d8a1",
+        "bold_italic": "lato_bold_italic_1fde77c78336cdb97827c428bd3a943a"
+    },
+    "playfair display": {
+        "italic": "playfair_display_italic_8daa2cb42b402d06ad191b0ef1d5177b"
+    }
+}
