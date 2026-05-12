@@ -1010,8 +1010,9 @@ new class extends Component {
                                 </td>
                                 <td class="invoice-col">
                                     <div class="view-col-inner">
-                                        <a href="{{ route('dashboard.bookings.invoice-pdf', $booking) }}"
-                                            class="view-btn" target="_blank" rel="noopener noreferrer"
+                                        <button type="button" class="view-btn"
+                                            data-invoice-url="{{ route('dashboard.bookings.invoice-pdf', $booking) }}"
+                                            onclick="window.downloadBookingInvoicePdf(this.dataset.invoiceUrl)"
                                             aria-label="Download invoice">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
                                                 viewBox="0 0 16 19" fill="none">
@@ -1023,7 +1024,7 @@ new class extends Component {
                                                     stroke="#3B3731" stroke-linecap="round"
                                                     stroke-linejoin="round" />
                                             </svg>
-                                        </a>
+                                        </button>
                                     </div>
                                 </td>
                                 <td class="more-col">
@@ -1155,8 +1156,9 @@ new class extends Component {
                                 </td>
                                 <td class="invoice-col">
                                     <div class="view-col-inner">
-                                        <a href="{{ route('dashboard.bookings.invoice-pdf', $booking) }}"
-                                            class="view-btn" target="_blank" rel="noopener noreferrer"
+                                        <button type="button" class="view-btn"
+                                            data-invoice-url="{{ route('dashboard.bookings.invoice-pdf', $booking) }}"
+                                            onclick="window.downloadBookingInvoicePdf(this.dataset.invoiceUrl)"
                                             aria-label="Download invoice">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
                                                 viewBox="0 0 16 19" fill="none">
@@ -1168,7 +1170,7 @@ new class extends Component {
                                                     stroke="#3B3731" stroke-linecap="round"
                                                     stroke-linejoin="round" />
                                             </svg>
-                                        </a>
+                                        </button>
                                     </div>
                                 </td>
                                 <td class="more-col">
@@ -1386,9 +1388,10 @@ new class extends Component {
                         <strong>Booking ID: {{ $completedBookingIdLabel }}</strong>
                         <div class="completed-booking-modal-booking-meta">
                             <span>{{ $completedDateLabel }}</span>
-                            <a href="{{ route('dashboard.bookings.invoice-pdf', $completedBooking) }}"
-                                class="completed-booking-download-btn" target="_blank" rel="noopener noreferrer"
-                                aria-label="Download invoice">
+                            <button type="button"
+                                data-invoice-url="{{ route('dashboard.bookings.invoice-pdf', $completedBooking) }}"
+                                onclick="window.downloadBookingInvoicePdf(this.dataset.invoiceUrl)"
+                                class="completed-booking-download-btn" aria-label="Download invoice">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
                                     viewBox="0 0 16 19" fill="none">
                                     <path
@@ -1397,7 +1400,7 @@ new class extends Component {
                                     <path d="M7.99997 0.5V12.875M12.0909 8.75L7.99997 13.25L3.90906 8.75" stroke="#3B3731"
                                         stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
-                            </a>
+                            </button>
                         </div>
                     </div>
 
@@ -1585,9 +1588,10 @@ new class extends Component {
                         </div>
                         <div class="completed-booking-modal-booking-meta">
                             <span>{{ $cancelledDateLabel }}</span>
-                            <a href="{{ route('dashboard.bookings.invoice-pdf', $cancelledBooking) }}"
-                                class="completed-booking-download-btn" target="_blank" rel="noopener noreferrer"
-                                aria-label="Download invoice">
+                            <button type="button"
+                                data-invoice-url="{{ route('dashboard.bookings.invoice-pdf', $cancelledBooking) }}"
+                                onclick="window.downloadBookingInvoicePdf(this.dataset.invoiceUrl)"
+                                class="completed-booking-download-btn" aria-label="Download invoice">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
                                     viewBox="0 0 16 19" fill="none">
                                     <path
@@ -1596,7 +1600,7 @@ new class extends Component {
                                     <path d="M7.99997 0.5V12.875M12.0909 8.75L7.99997 13.25L3.90906 8.75" stroke="#3B3731"
                                         stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
-                            </a>
+                            </button>
                         </div>
                     </div>
 
@@ -1703,6 +1707,62 @@ new class extends Component {
 </section>
 
 <script>
+    if (!window.downloadBookingInvoicePdf) {
+        window.downloadBookingInvoicePdf = async function(invoiceUrl) {
+            if (!invoiceUrl) {
+                return;
+            }
+            window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'));
+            try {
+                const res = await fetch(invoiceUrl, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        Accept: 'application/pdf',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+                const ct = (res.headers.get('Content-Type') || '').toLowerCase();
+                if (!res.ok || (!ct.includes('application/pdf') && !ct.includes('octet-stream'))) {
+                    throw new Error('Invoice download failed');
+                }
+                let filename = 'Fursgo-Invoice.pdf';
+                const cd = res.headers.get('Content-Disposition');
+                if (cd) {
+                    const utf = cd.match(/filename\*=(?:UTF-8'')?([^;\n]+)/i);
+                    const quoted = cd.match(/filename="([^"]+)"/i);
+                    const plain = cd.match(/filename=([^;\s]+)/i);
+                    if (utf && utf[1]) {
+                        try {
+                            filename = decodeURIComponent(utf[1].trim().replace(/^"+|"+$/g, ''));
+                        } catch (e) {
+                            filename = utf[1].trim();
+                        }
+                    } else if (quoted && quoted[1]) {
+                        filename = quoted[1];
+                    } else if (plain && plain[1]) {
+                        filename = plain[1].replace(/^"+|"+$/g, '');
+                    }
+                }
+                const blob = await res.blob();
+                const objectUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = objectUrl;
+                a.download = filename;
+                a.rel = 'noopener';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(objectUrl);
+            } catch (e) {
+                console.error(e);
+                window.alert('Could not download the invoice. Please try again.');
+            } finally {
+                window.dispatchEvent(new CustomEvent('bookings-tabs-loading-end'));
+            }
+        };
+    }
+
     if (!window.reschedulePicker) {
         window.reschedulePicker = function(config) {
             const monthNames = [
@@ -1948,6 +2008,7 @@ new class extends Component {
     .completed-booking-download-btn {
         border: 0;
         background: transparent;
+        color: inherit;
         width: 26px;
         height: 26px;
         display: inline-flex;
@@ -2434,6 +2495,10 @@ new class extends Component {
     a.view-btn {
         color: inherit;
         text-decoration: none;
+    }
+
+    button.view-btn {
+        color: inherit;
     }
 
     a.completed-booking-download-btn {
