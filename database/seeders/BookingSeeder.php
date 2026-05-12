@@ -29,6 +29,11 @@ class BookingSeeder extends Seeder
             ]
         );
 
+        // users.address is not mass-assignable on User; set for invoice / Bill To demos
+        $owner->forceFill([
+            'address' => "12 Oak Street\nManchester M1 4DP\nUnited Kingdom",
+        ])->save();
+
         // Create pets for this owner if none exist
         $pets = PetDetail::where('user_id', $owner->id)->get();
 
