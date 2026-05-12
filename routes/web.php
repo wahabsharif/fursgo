@@ -1,18 +1,18 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Livewire\Volt\Volt;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\BookingInvoicePdfController;
 use App\Http\Controllers\PetDetailController;
 use App\Models\GroomerSpacerProfile;
-
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+use Livewire\Volt\Volt;
 
 Route::get('/clear', function () {
     Artisan::call('optimize:clear');
-    return "All caches cleared!";
+    return 'All caches cleared!';
 });
 
 // Public pages - converted to Volt
@@ -63,6 +63,15 @@ Volt::route('/groomer-unavailability/location-unavailability', 'groomer.unavaila
 Volt::route('dashboard', 'dashboard')
     ->middleware(['auth:groomer_spacer', 'verified'])
     ->name('dashboard');
+
+Route::get('dashboard/bookings/{booking}/invoice.pdf', BookingInvoicePdfController::class)
+    ->middleware(['auth:groomer_spacer', 'verified'])
+    ->name('dashboard.bookings.invoice-pdf');
+
+/** Same invoice as HTML for DevTools (local env only). */
+Route::get('dashboard/bookings/{booking}/invoice.html', [BookingInvoicePdfController::class, 'previewHtml'])
+    ->middleware(['auth:groomer_spacer', 'verified'])
+    ->name('dashboard.bookings.invoice-html');
 
 Route::middleware(['auth:web,groomer_spacer'])->group(function () {
     Route::redirect('settings', 'settings/profile');
@@ -143,4 +152,4 @@ Route::middleware(['auth:web,groomer_spacer'])->group(function () {
     })->name('dev-mode.update-meta');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

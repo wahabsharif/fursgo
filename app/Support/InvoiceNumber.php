@@ -47,3 +47,4 @@ final class InvoiceNumber
         return sprintf('%s-%d-%s', $prefix, $calendarYear, $seq);
     }
 }
+

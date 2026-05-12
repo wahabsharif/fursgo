@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'fursgo' => [
+        'platform_fee_percent' => (float) env('FURSGO_PLATFORM_FEE_PERCENT', 5),
+    ],
+
 ];
