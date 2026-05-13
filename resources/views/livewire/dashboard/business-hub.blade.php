@@ -187,6 +187,7 @@ new class extends Component {
                     'pet_image' => $b->pets->first()?->photo ?? 'https://i.pravatar.cc/150?img=15',
                     'pet_images' => $b->pets->pluck('photo')->filter()->values()->all(),
                     'pet_type' => $this->resolveBookingPetType($b),
+                    'weight' => $this->resolveBookingPetWeight($b),
                     'service_type' => $this->visitTypeBadgeLabel($b),
                     'date' => $b->date->format('d/m/Y'),
                     'time' => $b->time,
@@ -984,7 +985,7 @@ new class extends Component {
             font-family: Lato;
             font-size: 14px;
             font-style: normal;
-            font-weight: 600;
+            font-weight: 400;
             line-height: normal;
         }
 
@@ -1376,16 +1377,6 @@ new class extends Component {
                 flex-direction: column;
             }
         }
-
-        .black-dot {
-            width: 6px;
-            height: 6px;
-            display: inline-block;
-            border-radius: 50%;
-            background: #3B3731;
-            margin: 0 3px;
-            vertical-align: middle;
-        }
     </style>
 
     @php
@@ -1561,7 +1552,8 @@ new class extends Component {
                                                 d="M7.5 5.63158C5.38867 5.63158 3.60467 7.52376 3.02867 9.95408C2.77533 11.0228 3.15733 12.1572 4.095 12.6902C4.83833 13.1127 5.944 13.5 7.5 13.5C9.056 13.5 10.162 13.1127 10.9053 12.6902C11.843 12.1572 12.2247 11.0228 11.9713 9.95408C11.3953 7.52342 9.61133 5.63158 7.5 5.63158ZM0.5 5.09926C0.5 6.04416 1.09667 7 1.83333 7C2.57 7 3.16667 6.04416 3.16667 5.09926C3.16667 4.15437 2.57 3.57895 1.83333 3.57895C1.09667 3.57895 0.5 4.15471 0.5 5.09926ZM14.5 5.09926C14.5 6.04416 13.9033 7 13.1667 7C12.43 7 11.8333 6.04416 11.8333 5.09926C11.8333 4.15437 12.43 3.57895 13.1667 3.57895C13.9033 3.57895 14.5 4.15471 14.5 5.09926ZM4 2.02032C4 2.96521 4.59667 3.92105 5.33333 3.92105C6.07 3.92105 6.66667 2.96521 6.66667 2.02032C6.66667 1.07542 6.07 0.5 5.33333 0.5C4.59667 0.5 4 1.07576 4 2.02032ZM11 2.02032C11 2.96521 10.4033 3.92105 9.66667 3.92105C8.93 3.92105 8.33333 2.96521 8.33333 2.02032C8.33333 1.07542 8.93 0.5 9.66667 0.5C10.4033 0.5 11 1.07576 11 2.02032Z"
                                                 stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                         </svg>
-                                        <span>{{ $request['pet_type'] }}</span>
+                                        <span>{{ $request['pet_type'] }} <span class="black-dot"></span>
+                                            {{ $request['weight'] }}</span>
                                     </div>
                                     @if (!$isSpaceAccount)
                                         <span class="service-badge">{{ $request['service_type'] }}</span>
@@ -2073,7 +2065,8 @@ new class extends Component {
                                                                 stroke="#3B3731" stroke-linecap="round"
                                                                 stroke-linejoin="round" />
                                                         </svg>
-                                                        <span>{{ $request['pet_type'] }}</span>
+                                                        <span>{{ $request['pet_type'] }} <span class="black-dot"></span>
+                                                            {{ $request['weight'] }}</span>
                                                     </div>
                                                     @if (!$isSpaceAccount)
                                                         <span class="service-badge">{{ $request['service_type'] }}</span>
