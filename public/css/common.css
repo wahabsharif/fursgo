@@ -1164,3 +1164,13 @@ input::placeholder {
         transform: rotate(360deg);
     }
 }
+
+.black-dot {
+    width: 6px;
+    height: 6px;
+    display: inline-block;
+    border-radius: 50%;
+    background: #3b3731;
+    margin: 0 3px;
+    vertical-align: middle;
+}
