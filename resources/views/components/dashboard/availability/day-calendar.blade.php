@@ -1,9 +1,13 @@
-<section class="availability-day-shell" x-data="availabilityDayCalendar()">
+<section class="availability-day-shell">
     <div class="availability-day-card">
-        <header class="availability-day-header" x-text="dayLabel"></header>
+        <header class="availability-day-header" x-text="dayViewLabel"></header>
 
-        <div class="availability-day-timeline">
-            <template x-for="(slot, slotIndex) in daySlots" :key="'day-slot-' + slotIndex">
+        <div class="availability-drawer-empty availability-day-empty" x-show="dayViewSlots.length === 0" x-cloak>
+            <p>No bookings on this day.</p>
+        </div>
+
+        <div class="availability-day-timeline" x-show="dayViewSlots.length > 0" x-cloak>
+            <template x-for="(slot, slotIndex) in dayViewSlots" :key="slot.key || ('day-slot-' + slotIndex)">
                 <div class="availability-day-row">
                     <div class="availability-day-hour" x-text="slot.hourLabel"></div>
 
@@ -52,6 +56,11 @@
 </section>
 
 <style>
+    .availability-day-empty {
+        padding: 28px 16px;
+        text-align: center;
+    }
+
     .availability-day-card {
         border: 1px solid #d9d9d9;
         border-radius: 12px;
