@@ -15,6 +15,34 @@ Route::get('/clear', function () {
     return 'All caches cleared!';
 });
 
+Route::get('/seed', function () {
+    // Allow long-running migrations + seeds via the web request.
+    @set_time_limit(0);
+    @ini_set('memory_limit', '512M');
+
+    try {
+        // Drops all tables, re-runs migrations, then runs all seeders.
+        // This guarantees existing data is removed before fresh data is inserted.
+        Artisan::call('migrate:fresh', [
+            '--seed'  => true,
+            '--force' => true,
+        ]);
+
+        $output = Artisan::output();
+
+        return response(
+            "<pre>Database wiped, migrated, and seeded successfully.\n\n" .
+            e($output) . "</pre>",
+            200
+        )->header('Content-Type', 'text/html');
+    } catch (\Throwable $e) {
+        return response(
+            "<pre>Seeding failed:\n\n" . e($e->getMessage()) . "</pre>",
+            500
+        )->header('Content-Type', 'text/html');
+    }
+})->name('seed');
+
 // Public pages - converted to Volt
 Volt::route('/', 'home')->name('home');
 Route::view('/business-landing-page', 'business-landing-page')->name('business-landing-page');
