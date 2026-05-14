@@ -11,7 +11,9 @@
                 <div class="availability-day-row">
                     <div class="availability-day-hour" x-text="slot.hourLabel"></div>
 
-                    <article class="availability-day-slot" :class="'is-' + slot.type">
+                    <article class="availability-day-slot"
+                        :class="['is-' + slot.type, slot.bookingId ? 'is-clickable' : '']"
+                        @click.stop="onCalendarSlotClick(slot)">
                         <p class="availability-day-slot-time">
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                                 <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" />
@@ -108,6 +110,16 @@
     .availability-day-slot {
         border-radius: 10px;
         overflow: hidden;
+    }
+
+    .availability-day-slot.is-clickable {
+        cursor: pointer;
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .availability-day-slot.is-clickable:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
     }
 
     .availability-day-slot-time,

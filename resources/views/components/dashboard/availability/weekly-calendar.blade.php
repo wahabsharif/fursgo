@@ -16,7 +16,9 @@
 
                     <div class="availability-weekly-slots">
                         <template x-for="(slot, slotIndex) in day.slots" :key="day.key + '-slot-' + slotIndex">
-                            <div class="availability-weekly-slot" :class="'is-' + slot.type">
+                            <div class="availability-weekly-slot"
+                                :class="['is-' + slot.type, slot.bookingId ? 'is-clickable' : '']"
+                                @click.stop="onCalendarSlotClick(slot)">
                                 <p class="availability-weekly-time">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
                                         aria-hidden="true">
@@ -35,9 +37,9 @@
                                             stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
                                     <span
-                                        x-text="slot.pet.includes(' - ') ? slot.pet.split(' - ')[0] + ' -' : slot.pet"></span>
-                                    <span class="availability-weekly-pet-type"
-                                        x-text="slot.pet.includes(' - ') ? slot.pet.split(' - ')[1] : ''"></span>
+                                        x-text="slot.pet.includes(' - ') ? slot.pet.split(' - ')[0] : slot.pet"></span>
+                                    <span class="availability-weekly-pet-type" x-show="slot.pet.includes(' - ')"
+                                        x-text="' - ' + (slot.pet.split(' - ')[1] || '')"></span>
                                 </p>
                                 <p class="availability-weekly-service">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="13"
@@ -55,6 +57,7 @@
                         </template>
 
                         <button x-show="day.moreCount > 0" type="button" class="availability-weekly-more"
+                            @click.stop="openBookingsDrawerForDate(day.dateKey)"
                             x-text="'+' + ' ' + day.moreCount"></button>
                     </div>
                 </article>
@@ -177,6 +180,16 @@
         border: 1px solid transparent;
     }
 
+    .availability-weekly-slot.is-clickable {
+        cursor: pointer;
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .availability-weekly-slot.is-clickable:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+    }
+
     .availability-weekly-slot p {
         margin: 0;
         text-align: center;
@@ -195,25 +208,29 @@
     .availability-weekly-slot .availability-weekly-time {
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         gap: 6px;
-        padding: 8px 10px;
+        padding: 8px 20px;
     }
 
     .availability-weekly-slot .availability-weekly-pet {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 8px 10px;
+        justify-content: space-between;
+        padding: 8px 20px;
+    }
+
+    .availability-weekly-pet-type {
+        white-space: nowrap;
     }
 
     .availability-weekly-slot .availability-weekly-service {
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         gap: 6px;
-        padding: 8px 10px;
+        padding: 0 22px 8px;
     }
 
     .availability-weekly-slot.is-blue {
@@ -301,7 +318,11 @@
         font-weight: 600;
         line-height: normal;
         letter-spacing: 0.14px;
-        cursor: default;
+        cursor: pointer;
+    }
+
+    .availability-weekly-more:hover {
+        background: #e0e0e0;
     }
 
     @media (max-width: 1450px) {

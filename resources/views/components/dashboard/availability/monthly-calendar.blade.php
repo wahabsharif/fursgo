@@ -493,7 +493,7 @@
                         const hour24 = hm ? parseInt(hm[1], 10) : NaN;
                         const hourLabel = slotHourLabelFromHour(hour24);
                         const petLine = b ?
-                            (b.petName + (b.petBreed ? ' - ' + b.petBreed : '')) :
+                            (b.petName + (b.petType ? ' - ' + b.petType : '')) :
                             'Booking';
                         return {
                             hourLabel,
@@ -501,6 +501,7 @@
                             pet: petLine,
                             service: b?.service || '—',
                             type: r.type || 'blue',
+                            bookingId: r.bookingId || null,
                             key: `day-slot-${dk}-${index}`,
                         };
                     });
@@ -589,95 +590,8 @@
                     return this.buildMonthGrid(this.mainMonth, true);
                 },
                 get weeklyGrid() {
-                    const slotsByWeekday = {
-                        0: [{
-                            time: '11:30-11:45',
-                            pet: 'Surg - Turtle',
-                            service: 'Bath & Brush',
-                            type: 'blue'
-                        }, {
-                            time: '11:30-11:45',
-                            pet: 'Mario - Cat',
-                            service: 'Full Groom',
-                            type: 'red'
-                        }, {
-                            time: '11:30-11:45',
-                            pet: 'Surg - Turtle',
-                            service: 'Bath & Brush',
-                            type: 'blue'
-                        }],
-                        1: [{
-                            time: '11:30-11:45',
-                            pet: 'Surg - Turtle',
-                            service: 'Bath & Brush',
-                            type: 'blue'
-                        }, {
-                            time: '11:30-11:45',
-                            pet: 'Surg - Turtle',
-                            service: 'Bath & Brush',
-                            type: 'blue'
-                        }, {
-                            time: '11:30-11:45',
-                            pet: 'Surg - Turtle',
-                            service: 'Bath & Brush',
-                            type: 'blue'
-                        }, {
-                            time: '11:30-11:45',
-                            pet: 'Surg - Turtle',
-                            service: 'Bath & Brush',
-                            type: 'blue'
-                        }],
-                        2: [{
-                            time: '11:30-11:45',
-                            pet: 'Surg - Turtle',
-                            service: 'Bath & Brush',
-                            type: 'blue'
-                        }],
-                        3: [{
-                            time: '11:30-11:45',
-                            pet: 'Toosie - Cat',
-                            service: 'Nail Trim',
-                            type: 'green'
-                        }, {
-                            time: '11:30-11:45',
-                            pet: 'Toosie - Cat',
-                            service: 'Nail Trim',
-                            type: 'green'
-                        }, {
-                            time: '11:30-11:45',
-                            pet: 'Mario - Cat',
-                            service: 'Full Groom',
-                            type: 'red'
-                        }],
-                        4: [{
-                            time: '11:30-12:45',
-                            pet: 'Daisy - Dog',
-                            service: 'Luxury Spa',
-                            type: 'orange'
-                        }, {
-                            time: '11:30-11:45',
-                            pet: 'Toosie - Cat',
-                            service: 'Nail Trim',
-                            type: 'green'
-                        }, {
-                            time: '11:30-11:45',
-                            pet: 'Toosie - Cat',
-                            service: 'Nail Trim',
-                            type: 'green'
-                        }, {
-                            time: '11:30-11:45',
-                            pet: 'Toosie - Cat',
-                            service: 'Nail Trim',
-                            type: 'green'
-                        }],
-                        5: [],
-                        6: [],
-                    };
-
-                    const moreCountByWeekday = {
-                        0: 2,
-                        3: 2,
-                    };
+                    const byId = window.__availabilityCalendar?.byId || {};
+                    const MAX_SLOTS = 4;
 
                     return Array.from({
                         length: 7
@@ -685,15 +599,41 @@
                         const dateObj = new Date(this.weekStart);
                         dateObj.setDate(this.weekStart.getDate() + index);
                         const dayLabel = this.weekdays[index];
+                        const dateKey =
+                            `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+                        const rows = this.bookingsByDate[dateKey] || [];
+                        const sortedRows = [...rows].sort((a, b) => String(a.label).localeCompare(
+                            String(b
+                                .label)));
+                        const visibleRows = sortedRows.slice(0, MAX_SLOTS);
+                        const slots = visibleRows.map((r, slotIdx) => {
+                            const b = r.bookingId ? byId[String(r.bookingId)] : null;
+                            const timeStr = b?.time && b.time !== 'Time not set' ? b.time :
+                                (r.label ||
+                                    '—');
+                            const petLine = b ?
+                                (b.petName + (b.petType ? ' - ' + b.petType : '')) :
+                                'Booking';
+                            return {
+                                time: timeStr,
+                                pet: petLine,
+                                service: b?.service || '—',
+                                type: r.type || 'blue',
+                                bookingId: r.bookingId || null,
+                                key: `week-slot-${dateKey}-${slotIdx}`,
+                            };
+                        });
+                        const moreCount = Math.max(0, sortedRows.length - MAX_SLOTS);
 
                         return {
-                            key: `${dateObj.getFullYear()}-${dateObj.getMonth()}-${dateObj.getDate()}`,
+                            key: dateKey,
                             label: dayLabel,
                             day: dateObj.getDate(),
                             isToday: this.isToday(dateObj),
                             isMuted: index >= 5,
-                            slots: slotsByWeekday[index] ?? [],
-                            moreCount: moreCountByWeekday[index] ?? 0,
+                            slots,
+                            moreCount,
+                            dateKey,
                         };
                     });
                 },
