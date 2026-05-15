@@ -10,6 +10,7 @@ use Database\Seeders\DevUserSeeder;
 use Database\Seeders\ServiceSeeder;
 use Database\Seeders\AddOnSeeder;
 use Database\Seeders\PetPreferenceSeeder;
+use Database\Seeders\StaffSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -31,6 +32,7 @@ class DatabaseSeeder extends Seeder
             ServiceSeeder::class,
             AddOnSeeder::class,
             PetPreferenceSeeder::class,
+            StaffSeeder::class,
         ]);
     }
 }
