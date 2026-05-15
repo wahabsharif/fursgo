@@ -1,17 +1,167 @@
-<div {{ $attributes->merge(['class' => 'dashboard-section-host']) }}>
-    <section class="ma-board" aria-label="Manage availability board">
+@php
+    $gsp = null;
+    if (auth()->check()) {
+        $gsp = \App\Models\GroomerSpacerProfile::where('email', auth()->user()->email)->first();
+    }
+
+    $maAccentColor =
+        strtolower((string) ($gsp?->user_type ?? (auth()->user()?->user_type ?? ''))) === 'space'
+            ? '#FFA899'
+            : '#FFC97A';
+
+    $staffMembers = $gsp
+        ? \App\Models\Staff::where('goormer_spacer_profile_id', $gsp->id)->orderBy('id')->get()
+        : collect();
+
+    $activeStaff = $staffMembers->first();
+
+    $maDayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+    $maDefaultWorkingHours = collect($maDayKeys)
+        ->mapWithKeys(
+            fn($d) => [
+                $d => [
+                    'status' => in_array($d, ['saturday', 'sunday'], true) ? false : true,
+                    'start' => '10:00',
+                    'end' => '18:00',
+                ],
+            ],
+        )
+        ->all();
+
+    $maNormalizeWorkingHours = static function ($raw) use ($maDayKeys, $maDefaultWorkingHours): array {
+        $raw = is_array($raw) ? $raw : [];
+        $out = [];
+        foreach ($maDayKeys as $key) {
+            $entry = $raw[$key] ?? $maDefaultWorkingHours[$key];
+            $out[$key] = [
+                'status' => (bool) ($entry['status'] ?? false),
+                'start' => (string) ($entry['start'] ?? '10:00'),
+                'end' => (string) ($entry['end'] ?? '18:00'),
+            ];
+        }
+        return $out;
+    };
+
+    $maFirstHoliday = static function ($raw): array {
+        if (!is_array($raw) || empty($raw)) {
+            return ['from' => '', 'to' => '', 'reason' => ''];
+        }
+        $first = $raw[0] ?? $raw;
+        return [
+            'from' => (string) ($first['from'] ?? ''),
+            'to' => (string) ($first['to'] ?? ''),
+            'reason' => (string) ($first['reason'] ?? ''),
+        ];
+    };
+
+    $maStaffPayload = static function ($staff) use ($maNormalizeWorkingHours, $maFirstHoliday): array {
+        return [
+            'workingHours' => $maNormalizeWorkingHours($staff?->working_hours),
+            'holiday' => $maFirstHoliday($staff?->holiday_time_off),
+            'pauseBooking' => (bool) ($staff?->pause_booking ?? false),
+        ];
+    };
+
+    $activePayload = $maStaffPayload($activeStaff);
+    $activeWorkingHours = $activePayload['workingHours'];
+    $activeHoliday = $activePayload['holiday'];
+    $activePauseBooking = $activePayload['pauseBooking'];
+
+    $maTodayIso = now()->toDateString();
+
+    $maFormatTime = static function (string $time): string {
+        if ($time === '') {
+            return '';
+        }
+        $parts = explode(':', $time);
+        $hour = (int) ($parts[0] ?? 0);
+        $minute = $parts[1] ?? '00';
+        $suffix = $hour < 12 ? 'AM' : 'PM';
+        return sprintf('%02d:%s %s', $hour, $minute, $suffix);
+    };
+
+    $maDayLabels = [
+        'monday' => 'Monday',
+        'tuesday' => 'Tuesday',
+        'wednesday' => 'Wednesday',
+        'thursday' => 'Thursday',
+        'friday' => 'Friday',
+        'saturday' => 'Saturday',
+        'sunday' => 'Sunday',
+    ];
+@endphp
+
+<div {{ $attributes->merge(['class' => 'dashboard-section-host']) }} x-data="{ extraStaff: [] }"
+    @staff-added.window="(() => {
+        const payload = {
+            id: $event.detail.id,
+            name: $event.detail.name,
+            job_title: $event.detail.job_title || '',
+            image_url: $event.detail.image_url || null,
+            initial: $event.detail.initial || 'N',
+            staff_payload: $event.detail.staff_payload || null,
+        };
+        extraStaff.push(payload);
+        $nextTick(() => {
+            const newPill = $el.querySelector(`.ma-staff-pill[data-staff-id='${payload.id}']`);
+            if (newPill) newPill.click();
+        });
+    })()">
+    <section class="ma-board" aria-label="Manage availability board" style="--ma-accent: {{ $maAccentColor }};"
+        data-ma-accent="{{ $maAccentColor }}">
         <div class="ma-staff-strip">
             <div class="ma-staff-list">
-                @foreach ([1, 2, 3] as $staffIndex)
-                    <button type="button" class="ma-staff-pill {{ $loop->first ? 'ma-staff-pill--active' : '' }}">
-                        <span class="ma-staff-avatar">N</span>
+                @foreach ($staffMembers as $staff)
+                    @php
+                        $initial = mb_strtoupper(mb_substr(trim((string) $staff->name), 0, 1)) ?: 'N';
+                        $rawImage = trim((string) ($staff->image ?? ''));
+                        $imageUrl = null;
+                        if ($rawImage !== '') {
+                            $imageUrl = preg_match('#^https?://#i', $rawImage)
+                                ? $rawImage
+                                : asset('storage/' . ltrim($rawImage, '/'));
+                        }
+                    @endphp
+                    <button type="button" class="ma-staff-pill {{ $loop->first ? 'ma-staff-pill--active' : '' }}"
+                        data-staff-id="{{ $staff->id }}" data-staff-name="{{ $staff->name }}"
+                        data-staff-job-title="{{ $staff->job_title }}"
+                        data-staff-payload="{{ json_encode($maStaffPayload($staff)) }}">
+                        <span class="ma-staff-avatar">
+                            @if ($imageUrl)
+                                <img src="{{ $imageUrl }}" alt="{{ $staff->name }}">
+                            @else
+                                {{ $initial }}
+                            @endif
+                        </span>
                         <span>
-                            <strong>Name</strong>
-                            <small>Job Title</small>
+                            <strong>{{ $staff->name }}</strong>
+                            <small>{{ $staff->job_title }}</small>
                         </span>
                     </button>
                 @endforeach
-                <button type="button" class="ma-staff-add" aria-label="Add staff">
+
+                <template x-for="staff in extraStaff" :key="staff.id">
+                    <button type="button" class="ma-staff-pill" :data-staff-id="staff.id" :data-staff-name="staff.name"
+                        :data-staff-job-title="staff.job_title"
+                        :data-staff-payload="staff.staff_payload ? JSON.stringify(staff.staff_payload) : ''">
+                        <span class="ma-staff-avatar">
+                            <template x-if="staff.image_url">
+                                <img :src="staff.image_url" :alt="staff.name">
+                            </template>
+                            <template x-if="!staff.image_url">
+                                <span x-text="staff.initial"></span>
+                            </template>
+                        </span>
+                        <span>
+                            <strong x-text="staff.name"></strong>
+                            <small x-text="staff.job_title"></small>
+                        </span>
+                    </button>
+                </template>
+
+                <button type="button" class="ma-staff-add" aria-label="Add staff"
+                    @click="$dispatch('open-add-staff-modal')">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14"
                         fill="none">
                         <path
@@ -22,29 +172,37 @@
             </div>
         </div>
 
+        <livewire:dashboard.availability.add-staff-modal />
+        <livewire:dashboard.availability.staff-actions />
+
+
         <div class="ma-section">
             <div class="ma-title-row">
                 <h3 style="border: none;width: fit-content; padding: 0;">Work Week Hours</h3>
                 <div class="ma-staff-name">
-                    <strong>Staff Name</strong>
-                    <small>Job Title</small>
+                    <strong data-staff-name-target>{{ $activeStaff?->name }}</strong>
+                    <small data-staff-job-title-target>{{ $activeStaff?->job_title }}</small>
                 </div>
             </div>
 
             <div class="ma-week-grid">
                 <div class="ma-week-grid__head">Working Week</div>
-                <div class="ma-week-grid__head">Start Time - End Time</div>
+                <div class="ma-week-grid__head">Start Time — End Time</div>
                 <div class="ma-week-grid__head">Edit</div>
 
-                @foreach (['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as $day)
+                @foreach ($maDayLabels as $dayKey => $dayLabel)
                     @php
-                        $isEnabled = in_array($day, ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], true);
+                        $entry = $activeWorkingHours[$dayKey];
+                        $dayStatus = $entry['status'];
+                        $dayStart = $entry['start'];
+                        $dayEnd = $entry['end'];
                     @endphp
-                    <div class="ma-cell" style="padding-left: 0 !important;">
+                    <div class="ma-cell is-disabled" data-day="{{ $dayKey }}" data-day-cell="name"
+                        style="padding-left: 0 !important;">
                         <div class="ma-day-name">
-                            <span>{{ $day }}</span>
+                            <span>{{ $dayLabel }}</span>
                             <label class="ma-switch" style="height: 24px;">
-                                <input type="checkbox" {{ $isEnabled ? 'checked' : '' }}>
+                                <input type="checkbox" data-day-status {{ $dayStatus ? 'checked' : '' }}>
                                 <span class="ma-switch-slider"></span>
                                 <span class="ma-switch-check-icon" aria-hidden="true">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
@@ -57,55 +215,61 @@
                             </label>
                         </div>
                     </div>
-                    <div class="ma-cell ma-time-range">
-                        @if ($isEnabled)
-                            <span class="ma-time-chip">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                                    viewBox="0 0 24 24" fill="none">
-                                    <circle cx="12" cy="12" r="8.25" stroke="#9D9B98"
+                    <div class="ma-cell ma-time-range is-disabled" data-day="{{ $dayKey }}" data-day-cell="time">
+                        <span class="ma-time-chip" data-time-type="start" data-time-value="{{ $dayStart }}"
+                            role="button" tabindex="0">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1.5" />
+                                <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
+                            </svg>
+                            <span data-time-start>{{ $maFormatTime($dayStart) }}</span>
+                        </span>
+                        <span class="ma-time-separator"></span>
+                        <span class="ma-time-chip" data-time-type="end" data-time-value="{{ $dayEnd }}"
+                            role="button" tabindex="0">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1.5" />
+                                <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
+                            </svg>
+                            <span data-time-end>{{ $maFormatTime($dayEnd) }}</span>
+                        </span>
+                        <div class="ma-time-disabled">
+                            <span class="ma-time-disabled-chip">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <circle cx="8" cy="8" r="6" stroke="#3B3731"
                                         stroke-width="1.5" />
-                                    <path d="M12 8V12L14.75 13.75" stroke="#9D9B98" stroke-width="1.5"
-                                        stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5"
+                                        stroke-linecap="round" />
                                 </svg>
-                                07:00 AM
+                                <span data-time-start-readonly>{{ $maFormatTime($dayStart) }}</span>
                             </span>
-                            <span class="ma-time-separator"></span>
-                            <span class="ma-time-chip">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                                    viewBox="0 0 24 24" fill="none">
-                                    <circle cx="12" cy="12" r="8.25" stroke="#9D9B98"
+                            <span class="ma-time-disabled-separator"></span>
+                            <span class="ma-time-disabled-chip">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <circle cx="8" cy="8" r="6" stroke="#3B3731"
                                         stroke-width="1.5" />
-                                    <path d="M12 8V12L14.75 13.75" stroke="#9D9B98" stroke-width="1.5"
-                                        stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5"
+                                        stroke-linecap="round" />
                                 </svg>
-                                14:00 PM
+                                <span data-time-end-readonly>{{ $maFormatTime($dayEnd) }}</span>
                             </span>
-                        @else
-                            <div class="ma-time-disabled"></div>
-                        @endif
+                        </div>
                     </div>
-                    <div class="ma-cell ma-edit-cell">
-                        <button type="button" class="ma-row-action"
-                            aria-label="{{ $isEnabled ? 'Delete day slot' : 'Edit day slot' }}">
-                            @if ($isEnabled)
-                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="15"
-                                    viewBox="0 0 13 15" fill="none">
-                                    <path
-                                        d="M2.42915 15C2.01624 15 1.66308 14.8494 1.36965 14.5482C1.07622 14.247 0.929196 13.8859 0.928577 13.4648V1.68358H0.464292C0.332435 1.68358 0.222244 1.63792 0.133721 1.54661C0.0451968 1.45529 0.000625407 1.34211 6.36006e-06 1.20704C-0.000612687 1.07197 0.0439588 0.9591 0.133721 0.868421C0.223482 0.777743 0.333673 0.732403 0.464292 0.732403H3.71429C3.71429 0.535827 3.78548 0.364616 3.92786 0.21877C4.07024 0.0729233 4.23738 0 4.42929 0H8.57071C8.76262 0 8.92976 0.0729233 9.07214 0.21877C9.21452 0.364616 9.28571 0.535827 9.28571 0.732403H12.5357C12.6676 0.732403 12.7778 0.77806 12.8663 0.869372C12.9548 0.960685 12.9994 1.07387 13 1.20894C13.0006 1.34401 12.956 1.45688 12.8663 1.54756C12.7765 1.63824 12.6663 1.68358 12.5357 1.68358H12.0714V13.4639C12.0714 13.8862 11.9244 14.2476 11.6304 14.5482C11.3363 14.8488 10.9834 14.9994 10.5718 15H2.42915ZM11.1429 1.68358H1.85715V13.4639C1.85715 13.6344 1.91069 13.7746 2.01779 13.8843C2.12489 13.994 2.262 14.0488 2.42915 14.0488H10.5718C10.7383 14.0488 10.8751 13.994 10.9822 13.8843C11.0893 13.7746 11.1429 13.6344 11.1429 13.4639V1.68358ZM4.92886 12.1465C5.06072 12.1465 5.17122 12.1008 5.26036 12.0095C5.3495 11.9182 5.39376 11.8053 5.39314 11.6709V4.06151C5.39314 3.92644 5.34857 3.81357 5.25943 3.72289C5.17029 3.63221 5.05979 3.58656 4.92793 3.58592C4.79607 3.58529 4.68588 3.63094 4.59736 3.72289C4.50884 3.81484 4.46457 3.92771 4.46457 4.06151V11.6709C4.46457 11.806 4.50914 11.9188 4.59829 12.0095C4.68743 12.1008 4.79762 12.1465 4.92886 12.1465ZM8.07207 12.1465C8.20393 12.1465 8.31412 12.1008 8.40264 12.0095C8.49117 11.9182 8.53543 11.8053 8.53543 11.6709V4.06151C8.53543 3.92644 8.49086 3.81357 8.40171 3.72289C8.31257 3.63158 8.20238 3.58592 8.07114 3.58592C7.93928 3.58592 7.82878 3.63158 7.73964 3.72289C7.6505 3.8142 7.60624 3.92708 7.60686 4.06151V11.6709C7.60686 11.806 7.65143 11.9188 7.74057 12.0095C7.82971 12.1002 7.94021 12.1458 8.07207 12.1465Z"
-                                        fill="#3B3731" />
-                                </svg>
-                            @else
-                                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16"
-                                    viewBox="0 0 17 16" fill="none">
-                                    <path
-                                        d="M10.8529 2.51425L13.6765 5.29691M8.97059 15.5H16.5M1.44118 11.7898L0.5 15.5L4.26471 14.5724L15.1692 3.82581C15.5221 3.47793 15.7203 3.00616 15.7203 2.51425C15.7203 2.02234 15.5221 1.55057 15.1692 1.20269L15.0073 1.04315C14.6543 0.695371 14.1756 0.5 13.6765 0.5C13.1773 0.5 12.6986 0.695371 12.3456 1.04315L1.44118 11.7898Z"
-                                        stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            @endif
+                    <div class="ma-cell ma-edit-cell is-disabled" data-day="{{ $dayKey }}"
+                        data-day-cell="edit">
+                        <button type="button" class="ma-save-mini" data-day-action="save">
+                            <span class="ma-save-mini__label" data-save-label>Save</span>
+                            <span class="ma-save-spinner" data-save-spinner aria-hidden="true"></span>
                         </button>
-                        @if ($isEnabled)
-                            <button type="button" class="ma-save-mini">Save</button>
-                        @endif
+                        <button type="button" class="ma-row-action" data-day-action="edit"
+                            aria-label="Edit day slot">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16"
+                                viewBox="0 0 17 16" fill="none">
+                                <path
+                                    d="M10.8529 2.51425L13.6765 5.29691M8.97059 15.5H16.5M1.44118 11.7898L0.5 15.5L4.26471 14.5724L15.1692 3.82581C15.5221 3.47793 15.7203 3.00616 15.7203 2.51425C15.7203 2.02234 15.5221 1.55057 15.1692 1.20269L15.0073 1.04315C14.6543 0.695371 14.1756 0.5 13.6765 0.5C13.1773 0.5 12.6986 0.695371 12.3456 1.04315L1.44118 11.7898Z"
+                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
                     </div>
                 @endforeach
             </div>
@@ -116,7 +280,7 @@
             <div class="ma-holiday-grid">
                 <div class="ma-holiday-form">
                     <div class="ma-inline-fields">
-                        <label class="ma-field">
+                        <label class="ma-field" data-date-trigger="from">
                             <span>Date From</span>
                             <span class="ma-field-value">
                                 <span class="ma-field-value__icon" aria-hidden="true">
@@ -135,9 +299,9 @@
                                 <span id="manage-availability-date-from"></span>
                             </span>
                         </label>
-                        <label class="ma-field">
+                        <label class="ma-field" data-date-trigger="to">
                             <span>Date To</span>
-                            <span class="ma-field-value">
+                            <span class="ma-field-value" style="background: #F7F7F7;">
                                 <span class="ma-field-value__icon" aria-hidden="true">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="14"
                                         viewBox="0 0 15 14" fill="none">
@@ -156,19 +320,26 @@
                         </label>
                     </div>
                     <label class="ma-field">
-                        <span>Reason (optional)</span>
-                        <textarea rows="3"></textarea>
+                        <span style="margin-top: 1.5rem;">Reason<span
+                                style="font-weight: 400;">(optional)</span></span>
+                        <textarea rows="3" data-holiday-reason></textarea>
                     </label>
                     <div class="ma-form-actions">
-                        <button type="button" class="ma-save-mini">Save</button>
+                        <button type="button" class="ma-save-mini" data-holiday-action="save">
+                            <span class="ma-save-mini__label" data-save-label>Save</span>
+                            <span class="ma-save-spinner" data-save-spinner aria-hidden="true"></span>
+                        </button>
                     </div>
                 </div>
                 <div class="ma-holiday-calendar">
                     <x-ui.range-date-calendar id="dashboard-manage-availability-range"
                         start-name="manage_availability_start_date" end-name="manage_availability_end_date"
-                        start-value="2025-02-02" end-value="2025-03-02" calendar-width="100%" />
+                        start-value="{{ $maTodayIso }}" end-value="{{ $maTodayIso }}" calendar-width="100%" />
                 </div>
             </div>
+
+            <livewire:dashboard.availability.holiday-list :staff-id="$activeStaff?->id" />
+
         </div>
 
         <div class="ma-section">
@@ -176,7 +347,7 @@
             <div class="ma-pause-row">
                 <span>Pause New Bookings <small>(effective today)</small></span>
                 <label class="ma-switch">
-                    <input type="checkbox" checked>
+                    <input type="checkbox" data-pause-booking {{ $activePauseBooking ? 'checked' : '' }}>
                     <span class="ma-switch-slider"></span>
                     <span class="ma-switch-check-icon" aria-hidden="true">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
@@ -228,10 +399,14 @@
         background: transparent;
         display: flex;
         align-items: center;
-        gap: 0.6rem;
+        gap: 1rem;
         cursor: pointer;
         padding: 0.25rem 1rem 1rem;
         position: relative;
+    }
+
+    .ma-staff-pill:last-child {
+        margin-left: 0;
     }
 
     .ma-staff-pill::after {
@@ -239,7 +414,7 @@
         position: absolute;
         left: 50%;
         bottom: 0;
-        width: 147px;
+        width: 100%;
         height: 1px;
         background: #3B3731;
         transform: translateX(-50%) scaleX(0);
@@ -266,6 +441,15 @@
         font-size: 14px;
         font-weight: 700;
         flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .ma-staff-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: inherit;
+        display: block;
     }
 
     .ma-staff-pill strong {
@@ -373,6 +557,10 @@
         border-right: 1px solid #dfd8ce;
     }
 
+    .ma-week-grid__head:first-child {
+        padding-left: 0;
+    }
+
     .ma-week-grid>.ma-week-grid__head:nth-child(3) {
         border-right: 0 !important;
         padding-left: 4.5rem;
@@ -436,6 +624,68 @@
         line-height: 25px;
         min-width: 135px;
         justify-content: center;
+        cursor: pointer;
+        user-select: none;
+        transition: border-color 0.12s ease, background-color 0.12s ease;
+    }
+
+    .ma-time-chip:hover {
+        border-color: var(--ma-accent, #ffc97a);
+        background: color-mix(in srgb, var(--ma-accent, #ffc97a) 14%, #fff);
+    }
+
+    .ma-time-chip.ma-time-chip--open {
+        border-color: var(--ma-accent, #ffc97a);
+        background: color-mix(in srgb, var(--ma-accent, #ffc97a) 22%, #fff);
+    }
+
+    .ma-time-dropdown {
+        position: fixed;
+        z-index: 9999;
+        max-height: 260px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        background: #FFFFFF;
+        border: 1px solid #E5E1D8;
+        border-radius: 12px;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+        padding: 6px;
+        box-sizing: border-box;
+        opacity: 0;
+        transform: translateY(-4px);
+        pointer-events: none;
+        transition: opacity 0.14s ease, transform 0.14s ease;
+    }
+
+    .ma-time-dropdown.is-open {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
+    .ma-time-dropdown__option {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: transparent;
+        border: 0;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-family: Lato, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        color: #3B3731;
+        cursor: pointer;
+        transition: background-color 0.12s ease, color 0.12s ease;
+    }
+
+    .ma-time-dropdown__option:hover {
+        background: color-mix(in srgb, var(--ma-accent, #ffc97a) 18%, #fff);
+    }
+
+    .ma-time-dropdown__option.is-selected {
+        background: var(--ma-accent, #ffc97a);
+        color: #fff;
     }
 
     .ma-time-separator {
@@ -449,13 +699,69 @@
         width: 100%;
         border-radius: 10px;
         background: #F7F7F7;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 7.5rem;
+        padding: 0 0.75rem;
     }
+
+    .ma-time-disabled-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 25px;
+        /* 138.889% */
+    }
+
+    .ma-time-disabled-separator {
+        width: 1px;
+        height: 18px;
+        background: #D4D4D4;
+    }
+
+    .ma-time-range.is-disabled .ma-time-chip,
+    .ma-time-range.is-disabled .ma-time-separator {
+        display: none;
+    }
+
+    .ma-time-range.is-disabled .ma-time-disabled {
+        display: flex;
+    }
+
+    .ma-cell[data-day-cell="name"].is-disabled .ma-switch {
+        cursor: not-allowed;
+    }
+
+    .ma-cell[data-day-cell="name"].is-disabled .ma-switch input,
+    .ma-cell[data-day-cell="name"].is-disabled .ma-switch-slider {
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+
 
     .ma-edit-cell {
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 2rem;
+    }
+
+    .ma-edit-cell .ma-row-action {
+        display: none;
+    }
+
+    .ma-edit-cell.is-disabled .ma-save-mini {
+        display: none;
+    }
+
+    .ma-edit-cell.is-disabled .ma-row-action {
+        display: flex;
     }
 
     .ma-row-action {
@@ -466,6 +772,7 @@
     }
 
     .ma-save-mini {
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -483,12 +790,45 @@
         font-weight: 600;
         line-height: normal;
         cursor: pointer;
+        transition: background-color 0.18s ease, opacity 0.18s ease;
+    }
+
+    .ma-save-mini:hover {
+        background: #A8C076;
+    }
+
+    .ma-save-mini.is-saving {
+        pointer-events: none;
+    }
+
+    .ma-save-mini .ma-save-spinner {
+        display: none;
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.45);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: ma-save-spin 0.7s linear infinite;
+    }
+
+    .ma-save-mini.is-saving .ma-save-mini__label {
+        display: none;
+    }
+
+    .ma-save-mini.is-saving .ma-save-spinner {
+        display: inline-block;
+    }
+
+    @keyframes ma-save-spin {
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     .ma-holiday-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1rem;
+        gap: 3rem;
         align-items: start;
         margin-top: 2.5rem;
     }
@@ -505,7 +845,8 @@
     }
 
     .ma-field span {
-        display: block;
+        display: flex;
+        gap: 5px;
         color: #3B3731;
         font-family: Lato;
         font-size: 18px;
@@ -522,7 +863,7 @@
     .ma-field .ma-field-value,
     .ma-field textarea {
         width: 100%;
-        border: 1px solid #d8d1c7;
+        border: 1px solid #ddd;
         border-radius: 6px;
         background: #fff;
         color: #3B3731;
@@ -563,6 +904,297 @@
 
     .ma-holiday-calendar {
         border-radius: 10px;
+    }
+
+    .ma-holiday-list {
+        margin-top: 1.75rem;
+        padding: 20px;
+        border-radius: 10px;
+        background: #F7F7F7;
+        overflow: hidden;
+        font-family: Lato, sans-serif;
+        color: #3B3731;
+    }
+
+    .ma-holiday-list__header,
+    .ma-holiday-list__row {
+        display: grid;
+        grid-template-columns: 2fr 2fr 90px;
+        align-items: stretch;
+        padding-left: 0;
+    }
+
+    .ma-holiday-list__header>div,
+    .ma-holiday-list__row>div {
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .ma-holiday-list__header>div:not(:last-child),
+    .ma-holiday-list__row>div:not(:last-child) {
+        border-right: 1px solid #D4D4D4;
+    }
+
+    .ma-holiday-list__header>div {
+        padding-top: 0;
+    }
+
+    .ma-holiday-list__header>div:first-child {
+        padding-left: 0;
+    }
+
+    .ma-holiday-list__row:last-child>div {
+        padding-bottom: 0;
+    }
+
+    .ma-holiday-list__range {
+        padding-left: 0 !important;
+    }
+
+    .ma-holiday-list__row:last-child>div:last-child {
+        padding-left: 0;
+    }
+
+    .ma-holiday-list__header {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .ma-holiday-list__edit-col {
+        justify-content: center;
+    }
+
+    .ma-holiday-list__row {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        border-top: 1px solid #D4D4D4;
+    }
+
+    .ma-holiday-list__dates {
+        font-weight: 600;
+    }
+
+    .ma-holiday-list__days {
+        margin-left: 0.35rem;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+    }
+
+    .ma-holiday-list__reason {
+        color: #3B3731;
+    }
+
+    .ma-holiday-list__actions {
+        padding-left: 0 !important;
+        display: flex;
+        justify-content: center;
+    }
+
+    .ma-holiday-list__delete {
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #3B3731;
+        transition: background-color 0.12s ease, transform 0.12s ease;
+    }
+
+    .ma-holiday-list__delete:hover {
+        background: rgba(0, 0, 0, 0.06);
+    }
+
+    .ma-holiday-list__delete.is-deleting,
+    .ma-holiday-list__delete:disabled {
+        pointer-events: none;
+        opacity: 0.6;
+    }
+
+    .ma-holiday-list__delete-spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(59, 55, 49, 0.25);
+        border-top-color: #3B3731;
+        border-radius: 50%;
+        animation: ma-save-spin 0.7s linear infinite;
+    }
+
+    .ma-holiday-list__body.is-loading {
+        opacity: 0.6;
+        transition: opacity 0.18s ease;
+    }
+
+    .ma-holiday-list__empty {
+        padding: 1.25rem 1.5rem;
+        text-align: center;
+        color: #9C9790;
+        font-size: 14px;
+    }
+
+    .ma-field[data-date-trigger] .ma-field-value {
+        cursor: pointer;
+    }
+
+    .ma-mini-cal {
+        position: fixed;
+        z-index: 9999;
+        background: #fff;
+        border: 1px solid #ccc3b7;
+        border-radius: 12px;
+        padding: 14px 16px;
+        box-sizing: border-box;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+        color: #3B3731;
+        font-family: Lato, sans-serif;
+        opacity: 0;
+        transform: translateY(-4px);
+        pointer-events: none;
+        transition: opacity 0.14s ease, transform 0.14s ease;
+    }
+
+    .ma-mini-cal.is-open {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
+    /* When switching Date From ↔ Date To, is-open never toggles off; skip transition to reset enter animation. */
+    .ma-mini-cal.ma-mini-cal--instant {
+        transition: none;
+    }
+
+    .ma-mini-cal__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+
+    .ma-mini-cal__nav {
+        border: 0;
+        background: transparent;
+        padding: 0;
+        margin: 0;
+        cursor: pointer;
+        width: 28px;
+        height: 28px;
+        color: #3B3731;
+        font-family: Lato, sans-serif;
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 180ms ease, transform 180ms ease;
+    }
+
+    .ma-mini-cal__nav:hover {
+        color: #FFC97A;
+        transform: scale(1.1);
+    }
+
+    .ma-mini-cal__title {
+        color: #3B3731;
+        font-family: Lato, sans-serif;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        text-align: center;
+    }
+
+    .ma-mini-cal__weekdays,
+    .ma-mini-cal__grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+
+    .ma-mini-cal__weekdays {
+        margin-bottom: 6px;
+    }
+
+    .ma-mini-cal__weekdays span {
+        text-align: center;
+        color: #9C9790;
+        font-family: Lato, sans-serif;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .ma-mini-cal__day {
+        border: 0;
+        background: transparent;
+        width: 100%;
+        height: 34px;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: #3B3731;
+        font-family: Lato, sans-serif;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        cursor: pointer;
+        border-radius: 0;
+        transition: background-color 180ms ease, color 180ms ease;
+    }
+
+    .ma-mini-cal__day-label {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .ma-mini-cal__day.is-other-month .ma-mini-cal__day-label {
+        color: transparent;
+    }
+
+    .ma-mini-cal__day.is-disabled {
+        cursor: not-allowed;
+    }
+
+    .ma-mini-cal__day.is-disabled .ma-mini-cal__day-label {
+        color: #DBD8D2;
+    }
+
+    .ma-mini-cal__day:not(.is-disabled):not(.is-selected):hover .ma-mini-cal__day-label {
+        transform: scale(1.05);
+    }
+
+    .ma-mini-cal__day.is-selected .ma-mini-cal__day-label {
+        background: #FFC97A;
+        color: #fff;
+        transform: scale(1.02);
+        box-shadow: 0 2px 8px rgba(255, 201, 122, 0.35);
     }
 
     .ma-pause-row {
@@ -676,15 +1308,36 @@
     }
 
     .ma-btn-light {
-        border: 1px solid #D9D9D9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 75px;
+        border: 1px solid #3B3731;
         background: transparent;
-        color: #9D9B98;
+        color: #3B3731;
+        text-align: center;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
     }
 
     .ma-btn-primary {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 96px;
         background: #BACF8E;
-        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.10);
-        color: #fff;
+        box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.10);
+        color: #FFF;
+        text-align: center;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
     }
 </style>
 
@@ -695,15 +1348,668 @@
             if (!root || root.dataset.rangeSyncBound === '1') {
                 return;
             }
-            const staffPills = document.querySelectorAll('.ma-staff-pill');
+            const staffList = root.querySelector('.ma-staff-list');
+            const staffNameTarget = root.querySelector('[data-staff-name-target]');
+            const staffJobTitleTarget = root.querySelector('[data-staff-job-title-target]');
+            const reasonField = root.querySelector('[data-holiday-reason]');
+            const pauseField = root.querySelector('[data-pause-booking]');
 
-            staffPills.forEach((pill) => {
-                pill.addEventListener('click', () => {
-                    staffPills.forEach((item) => item.classList.remove(
-                        'ma-staff-pill--active'));
-                    pill.classList.add('ma-staff-pill--active');
+            const formatTime = (raw) => {
+                if (!raw) return '';
+                const [hStr, mStr = '00'] = String(raw).split(':');
+                const hour = parseInt(hStr, 10);
+                if (Number.isNaN(hour)) return raw;
+                const suffix = hour < 12 ? 'AM' : 'PM';
+                return `${String(hour).padStart(2, '0')}:${mStr} ${suffix}`;
+            };
+
+            const applyWorkingHours = (workingHours) => {
+                if (!workingHours) return;
+                Object.entries(workingHours).forEach(([day, data]) => {
+                    const nameRow = root.querySelector(
+                        `[data-day="${day}"][data-day-cell="name"]`);
+                    const timeRow = root.querySelector(
+                        `[data-day="${day}"][data-day-cell="time"]`);
+                    const editRow = root.querySelector(
+                        `[data-day="${day}"][data-day-cell="edit"]`);
+                    if (!nameRow || !timeRow || !editRow) return;
+                    const checkbox = nameRow.querySelector('input[data-day-status]');
+                    if (checkbox) checkbox.checked = !!data.status;
+                    const startChip = timeRow.querySelector('[data-time-type="start"]');
+                    const endChip = timeRow.querySelector('[data-time-type="end"]');
+                    const startEl = timeRow.querySelector('[data-time-start]');
+                    const endEl = timeRow.querySelector('[data-time-end]');
+                    const startReadOnlyEl = timeRow.querySelector(
+                        '[data-time-start-readonly]');
+                    const endReadOnlyEl = timeRow.querySelector(
+                        '[data-time-end-readonly]');
+                    const startLabel = formatTime(data.start);
+                    const endLabel = formatTime(data.end);
+                    if (startChip) startChip.dataset.timeValue = data.start || '';
+                    if (endChip) endChip.dataset.timeValue = data.end || '';
+                    if (startEl) startEl.textContent = startLabel;
+                    if (endEl) endEl.textContent = endLabel;
+                    if (startReadOnlyEl) startReadOnlyEl.textContent = startLabel;
+                    if (endReadOnlyEl) endReadOnlyEl.textContent = endLabel;
+                    nameRow.classList.add('is-disabled');
+                    timeRow.classList.add('is-disabled');
+                    editRow.classList.add('is-disabled');
+                    const saveBtn = editRow.querySelector('[data-day-action="save"]');
+                    if (saveBtn) saveBtn.classList.remove('is-saving');
                 });
-            });
+            };
+
+            const todayIso = (() => {
+                const d = new Date();
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${dd}`;
+            })();
+
+            const resetHolidayForm = () => {
+                if (reasonField) reasonField.value = '';
+                window.dispatchEvent(new CustomEvent('range-calendar-set', {
+                    detail: {
+                        componentId: 'dashboard-manage-availability-range',
+                        start: todayIso,
+                        end: todayIso,
+                    },
+                }));
+            };
+
+            const applyHoliday = () => {
+                resetHolidayForm();
+            };
+
+            const applyPauseBooking = (paused) => {
+                if (pauseField) pauseField.checked = !!paused;
+            };
+
+            const applyStaffPayload = (pill) => {
+                if (!pill) return;
+                const raw = pill.dataset.staffPayload || '';
+                if (!raw) return;
+                let payload;
+                try {
+                    payload = JSON.parse(raw);
+                } catch (err) {
+                    return;
+                }
+                applyWorkingHours(payload.workingHours);
+                applyHoliday(payload.holiday);
+                applyPauseBooking(payload.pauseBooking);
+            };
+
+            const syncActiveStaff = (pill) => {
+                if (!pill) return;
+                if (staffNameTarget) {
+                    staffNameTarget.textContent = pill.dataset.staffName || '';
+                }
+                if (staffJobTitleTarget) {
+                    staffJobTitleTarget.textContent = pill.dataset.staffJobTitle || '';
+                }
+                applyStaffPayload(pill);
+            };
+
+            syncActiveStaff(root.querySelector('.ma-staff-pill.ma-staff-pill--active'));
+
+            const notifyActiveStaff = (pill) => {
+                if (!pill || !window.Livewire) return;
+                const staffId = parseInt(pill.dataset.staffId || '0', 10) || null;
+                window.Livewire.dispatch('active-staff-changed', {
+                    staffId
+                });
+            };
+
+            if (staffList && !staffList.dataset.pillClickBound) {
+                staffList.dataset.pillClickBound = '1';
+                staffList.addEventListener('click', (event) => {
+                    const pill = event.target.closest('.ma-staff-pill');
+                    if (!pill || !staffList.contains(pill)) return;
+                    staffList.querySelectorAll('.ma-staff-pill').forEach((item) => item
+                        .classList.remove('ma-staff-pill--active'));
+                    pill.classList.add('ma-staff-pill--active');
+                    closeTimeDropdown();
+                    if (typeof closeMiniCalendar === 'function') closeMiniCalendar();
+                    syncActiveStaff(pill);
+                    notifyActiveStaff(pill);
+                });
+            }
+
+            const setRowEditing = (day, editing) => {
+                const nameRow = root.querySelector(
+                    `[data-day="${day}"][data-day-cell="name"]`);
+                const timeRow = root.querySelector(
+                    `[data-day="${day}"][data-day-cell="time"]`);
+                const editRow = root.querySelector(
+                    `[data-day="${day}"][data-day-cell="edit"]`);
+                if (nameRow) nameRow.classList.toggle('is-disabled', !editing);
+                if (timeRow) timeRow.classList.toggle('is-disabled', !editing);
+                if (editRow) editRow.classList.toggle('is-disabled', !editing);
+            };
+
+            const buildTimeOptions = () => {
+                const opts = [];
+                for (let h = 0; h < 24; h += 1) {
+                    for (let m = 0; m < 60; m += 30) {
+                        const value =
+                            `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+                        opts.push({
+                            value,
+                            label: formatTime(value),
+                        });
+                    }
+                }
+                return opts;
+            };
+
+            let timeDropdownEl = null;
+            let activeTimeChip = null;
+
+            const closeTimeDropdown = () => {
+                if (!timeDropdownEl) return;
+                timeDropdownEl.classList.remove('is-open');
+                if (activeTimeChip) {
+                    activeTimeChip.classList.remove('ma-time-chip--open');
+                    activeTimeChip = null;
+                }
+            };
+
+            const syncTimeDropdownAccent = (dropdown) => {
+                const accent =
+                    root.dataset.maAccent ||
+                    getComputedStyle(root).getPropertyValue('--ma-accent').trim() ||
+                    '#FFC97A';
+                dropdown.style.setProperty('--ma-accent', accent);
+            };
+
+            const ensureTimeDropdown = () => {
+                if (timeDropdownEl) return timeDropdownEl;
+                const el = document.createElement('div');
+                el.className = 'ma-time-dropdown';
+                syncTimeDropdownAccent(el);
+                buildTimeOptions().forEach(({
+                    value,
+                    label,
+                }) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'ma-time-dropdown__option';
+                    btn.dataset.timeOption = value;
+                    btn.textContent = label;
+                    el.appendChild(btn);
+                });
+                el.addEventListener('click', (event) => {
+                    const option = event.target.closest('[data-time-option]');
+                    if (!option || !activeTimeChip) return;
+                    const value = option.dataset.timeOption;
+                    const label = option.textContent;
+                    activeTimeChip.dataset.timeValue = value;
+                    const span = activeTimeChip.querySelector(
+                        '[data-time-start], [data-time-end]');
+                    if (span) span.textContent = label;
+                    closeTimeDropdown();
+                });
+                document.body.appendChild(el);
+                timeDropdownEl = el;
+                return el;
+            };
+
+            const positionTimeDropdown = (chip) => {
+                const dropdown = ensureTimeDropdown();
+                const rect = chip.getBoundingClientRect();
+                dropdown.style.width = `${rect.width}px`;
+                dropdown.style.top = `${rect.bottom + 6}px`;
+                let left = rect.left;
+                if (left + rect.width > window.innerWidth - 8) {
+                    left = window.innerWidth - rect.width - 8;
+                }
+                if (left < 8) left = 8;
+                dropdown.style.left = `${left}px`;
+            };
+
+            const openTimeDropdown = (chip) => {
+                const dropdown = ensureTimeDropdown();
+                syncTimeDropdownAccent(dropdown);
+                if (activeTimeChip && activeTimeChip !== chip) {
+                    activeTimeChip.classList.remove('ma-time-chip--open');
+                }
+                activeTimeChip = chip;
+                chip.classList.add('ma-time-chip--open');
+                const current = chip.dataset.timeValue || '';
+                dropdown.querySelectorAll('.ma-time-dropdown__option').forEach((opt) => {
+                    opt.classList.toggle('is-selected', opt.dataset.timeOption ===
+                        current);
+                });
+                dropdown.classList.add('is-open');
+                positionTimeDropdown(chip);
+                const selected = dropdown.querySelector('.ma-time-dropdown__option.is-selected');
+                if (selected) selected.scrollIntoView({
+                    block: 'center'
+                });
+            };
+
+            if (!root.dataset.dayActionsBound) {
+                root.dataset.dayActionsBound = '1';
+
+                root.addEventListener('click', (event) => {
+                    const chip = event.target.closest('.ma-time-chip');
+                    const chipRow = chip?.closest('.ma-time-range');
+                    if (chip && chipRow && !chipRow.classList.contains('is-disabled')) {
+                        event.stopPropagation();
+                        if (activeTimeChip === chip) {
+                            closeTimeDropdown();
+                        } else {
+                            openTimeDropdown(chip);
+                        }
+                        return;
+                    }
+
+                    const editBtn = event.target.closest('[data-day-action="edit"]');
+                    const saveBtn = event.target.closest('[data-day-action="save"]');
+
+                    if (editBtn) {
+                        const cell = editBtn.closest('.ma-cell');
+                        const day = cell?.dataset.day;
+                        if (!day) return;
+                        closeTimeDropdown();
+                        setRowEditing(day, true);
+                        return;
+                    }
+
+                    if (saveBtn) {
+                        if (saveBtn.classList.contains('is-saving')) return;
+                        const cell = saveBtn.closest('.ma-cell');
+                        const day = cell?.dataset.day;
+                        if (!day) return;
+                        closeTimeDropdown();
+                        const activePill = root.querySelector(
+                            '.ma-staff-pill.ma-staff-pill--active');
+                        const staffId = activePill?.dataset.staffId;
+                        if (!staffId) return;
+                        const checkbox = root.querySelector(
+                            `[data-day="${day}"][data-day-cell="name"] input[data-day-status]`);
+                        const startChip = root.querySelector(
+                            `[data-day="${day}"][data-day-cell="time"] [data-time-type="start"]`);
+                        const endChip = root.querySelector(
+                            `[data-day="${day}"][data-day-cell="time"] [data-time-type="end"]`);
+                        const payload = {
+                            staffId: parseInt(staffId, 10),
+                            day,
+                            status: !!(checkbox && checkbox.checked),
+                            start: startChip?.dataset.timeValue || '10:00',
+                            end: endChip?.dataset.timeValue || '18:00',
+                        };
+
+                        if (activePill && activePill.dataset.staffPayload) {
+                            try {
+                                const parsed = JSON.parse(activePill.dataset
+                                    .staffPayload);
+                                parsed.workingHours = parsed.workingHours || {};
+                                parsed.workingHours[day] = {
+                                    status: payload.status,
+                                    start: payload.start,
+                                    end: payload.end,
+                                };
+                                activePill.dataset.staffPayload = JSON.stringify(
+                                    parsed);
+                            } catch (err) {}
+                        }
+
+                        saveBtn.classList.add('is-saving');
+                        if (window.Livewire) {
+                            window.Livewire.dispatch('save-staff-day', payload);
+                        }
+                    }
+                });
+
+                window.addEventListener('staff-day-saved', (event) => {
+                    const detail = event?.detail || {};
+                    const day = detail.day;
+                    if (!day) return;
+                    const editRow = root.querySelector(
+                        `[data-day="${day}"][data-day-cell="edit"]`);
+                    const saveBtn = editRow?.querySelector('[data-day-action="save"]');
+                    if (saveBtn) saveBtn.classList.remove('is-saving');
+                    const timeRow = root.querySelector(
+                        `[data-day="${day}"][data-day-cell="time"]`);
+                    if (timeRow) {
+                        const startEl = timeRow.querySelector('[data-time-start]');
+                        const endEl = timeRow.querySelector('[data-time-end]');
+                        const startReadOnlyEl = timeRow.querySelector(
+                            '[data-time-start-readonly]');
+                        const endReadOnlyEl = timeRow.querySelector(
+                            '[data-time-end-readonly]');
+                        if (startEl && startReadOnlyEl) startReadOnlyEl.textContent =
+                            startEl.textContent;
+                        if (endEl && endReadOnlyEl) endReadOnlyEl.textContent = endEl
+                            .textContent;
+                    }
+                    setRowEditing(day, false);
+                });
+
+                document.addEventListener('click', (event) => {
+                    if (!timeDropdownEl || !timeDropdownEl.classList.contains(
+                            'is-open')) return;
+                    if (event.target.closest('.ma-time-dropdown')) return;
+                    if (event.target.closest('.ma-time-chip')) return;
+                    closeTimeDropdown();
+                });
+
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape') closeTimeDropdown();
+                });
+
+                window.addEventListener('scroll', (event) => {
+                    if (!activeTimeChip) return;
+                    const target = event.target;
+                    if (target && target.nodeType === 1 && target.closest &&
+                        target.closest('.ma-time-dropdown')) return;
+                    positionTimeDropdown(activeTimeChip);
+                }, true);
+                window.addEventListener('resize', () => {
+                    if (activeTimeChip) positionTimeDropdown(activeTimeChip);
+                });
+
+                const holidaySaveBtn = root.querySelector(
+                    '[data-holiday-action="save"]');
+                if (holidaySaveBtn) {
+                    holidaySaveBtn.addEventListener('click', () => {
+                        if (holidaySaveBtn.classList.contains('is-saving')) return;
+                        const activePill = root.querySelector(
+                            '.ma-staff-pill.ma-staff-pill--active');
+                        const staffId = activePill?.dataset.staffId;
+                        if (!staffId) return;
+                        const range = (typeof getInlineRangeValues === 'function') ?
+                            getInlineRangeValues() : {
+                                start: '',
+                                end: ''
+                            };
+                        const reason = reasonField?.value || '';
+                        const payload = {
+                            staffId: parseInt(staffId, 10),
+                            from: range.start || '',
+                            to: range.end || '',
+                            reason,
+                        };
+
+                        holidaySaveBtn.classList.add('is-saving');
+                        if (window.Livewire) {
+                            window.Livewire.dispatch('save-staff-holiday',
+                                payload);
+                        }
+                    });
+                }
+
+                window.addEventListener('staff-holiday-saved', () => {
+                    const btn = root.querySelector(
+                        '[data-holiday-action="save"]');
+                    if (btn) btn.classList.remove('is-saving');
+                    resetHolidayForm();
+                });
+            }
+
+            const dateTriggers = root.querySelectorAll('[data-date-trigger]');
+            const MINI_CAL_MONTHS = ['January', 'February', 'March', 'April', 'May',
+                'June', 'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            let miniCalEl = null;
+            let miniCalView = {
+                year: new Date().getFullYear(),
+                month: new Date().getMonth(),
+            };
+            let activeDateTrigger = null;
+
+            const formatISO = (year, month, day) =>
+                `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2,'0')}`;
+
+            const isoToDate = (iso) => {
+                if (!iso) return null;
+                const [y, m, d] = String(iso).split('-').map(Number);
+                if (!y || !m || !d) return null;
+                const dt = new Date(y, m - 1, d);
+                return Number.isNaN(dt.getTime()) ? null : dt;
+            };
+
+            const getInlineRangeValues = () => {
+                const start = root.querySelector(
+                    '#dashboard-manage-availability-range input[name="manage_availability_start_date"]'
+                );
+                const end = root.querySelector(
+                    '#dashboard-manage-availability-range input[name="manage_availability_end_date"]'
+                );
+                return {
+                    start: start?.value || '',
+                    end: end?.value || '',
+                };
+            };
+
+            const renderMiniCalendar = () => {
+                if (!miniCalEl) return;
+                const grid = miniCalEl.querySelector('[data-mini-cal-grid]');
+                const titleEl = miniCalEl.querySelector('[data-mini-cal-title]');
+                titleEl.textContent =
+                    `${MINI_CAL_MONTHS[miniCalView.month]} ${miniCalView.year}`;
+                grid.innerHTML = '';
+                const type = activeDateTrigger?.dataset.dateTrigger;
+                const range = getInlineRangeValues();
+                const selectedISO = type === 'from' ? range.start : range.end;
+                const otherISO = type === 'from' ? range.end : range.start;
+                const otherDate = isoToDate(otherISO);
+                const firstDay = new Date(miniCalView.year, miniCalView.month, 1);
+                const startWeekday = (firstDay.getDay() + 6) % 7;
+                const daysInMonth = new Date(miniCalView.year, miniCalView.month + 1, 0)
+                    .getDate();
+                const prevMonthDays = new Date(miniCalView.year, miniCalView.month, 0)
+                    .getDate();
+
+                const appendDay = (year, month, day, isOtherMonth) => {
+                    const cell = document.createElement('button');
+                    cell.type = 'button';
+                    cell.className = 'ma-mini-cal__day';
+                    if (isOtherMonth) cell.classList.add('is-other-month');
+                    const label = document.createElement('span');
+                    label.className = 'ma-mini-cal__day-label';
+                    label.textContent = day;
+                    cell.appendChild(label);
+                    const iso = formatISO(year, month, day);
+                    cell.dataset.date = iso;
+                    if (iso === selectedISO) cell.classList.add('is-selected');
+                    if (otherDate) {
+                        const thisDate = new Date(year, month, day);
+                        if (type === 'from' && thisDate > otherDate) {
+                            cell.classList.add('is-disabled');
+                        } else if (type === 'to' && thisDate < otherDate) {
+                            cell.classList.add('is-disabled');
+                        }
+                    }
+                    grid.appendChild(cell);
+                };
+
+                for (let i = startWeekday - 1; i >= 0; i -= 1) {
+                    const d = prevMonthDays - i;
+                    let py = miniCalView.year;
+                    let pm = miniCalView.month - 1;
+                    if (pm < 0) {
+                        pm = 11;
+                        py -= 1;
+                    }
+                    appendDay(py, pm, d, true);
+                }
+                for (let d = 1; d <= daysInMonth; d += 1) {
+                    appendDay(miniCalView.year, miniCalView.month, d, false);
+                }
+                const totalCells = startWeekday + daysInMonth;
+                const remainder = totalCells % 7;
+                if (remainder !== 0) {
+                    const fill = 7 - remainder;
+                    let ny = miniCalView.year;
+                    let nm = miniCalView.month + 1;
+                    if (nm > 11) {
+                        nm = 0;
+                        ny += 1;
+                    }
+                    for (let d = 1; d <= fill; d += 1) appendDay(ny, nm, d, true);
+                }
+            };
+
+            const buildMiniCalendar = () => {
+                const el = document.createElement('div');
+                el.className = 'ma-mini-cal';
+                el.innerHTML = `
+                    <div class="ma-mini-cal__header">
+                        <button type="button" class="ma-mini-cal__nav" data-mini-cal-prev aria-label="Previous month">&lsaquo;</button>
+                        <span class="ma-mini-cal__title" data-mini-cal-title></span>
+                        <button type="button" class="ma-mini-cal__nav" data-mini-cal-next aria-label="Next month">&rsaquo;</button>
+                    </div>
+                    <div class="ma-mini-cal__weekdays">
+                        <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                    </div>
+                    <div class="ma-mini-cal__grid" data-mini-cal-grid></div>
+                `;
+                el.addEventListener('click', (event) => event.stopPropagation());
+                el.querySelector('[data-mini-cal-prev]').addEventListener('click', () => {
+                    miniCalView.month -= 1;
+                    if (miniCalView.month < 0) {
+                        miniCalView.month = 11;
+                        miniCalView.year -= 1;
+                    }
+                    renderMiniCalendar();
+                });
+                el.querySelector('[data-mini-cal-next]').addEventListener('click', () => {
+                    miniCalView.month += 1;
+                    if (miniCalView.month > 11) {
+                        miniCalView.month = 0;
+                        miniCalView.year += 1;
+                    }
+                    renderMiniCalendar();
+                });
+                el.querySelector('[data-mini-cal-grid]').addEventListener('click', (event) => {
+                    const day = event.target.closest('.ma-mini-cal__day');
+                    if (!day || day.classList.contains('is-disabled')) return;
+                    const iso = day.dataset.date;
+                    if (iso) selectMiniCalDate(iso);
+                });
+                document.body.appendChild(el);
+                return el;
+            };
+
+            const ensureMiniCalendar = () => {
+                if (miniCalEl) return miniCalEl;
+                miniCalEl = buildMiniCalendar();
+                return miniCalEl;
+            };
+
+            const positionMiniCalendar = (anchor) => {
+                if (!miniCalEl) return;
+                const target = anchor.querySelector('.ma-field-value') || anchor;
+                const rect = target.getBoundingClientRect();
+                miniCalEl.style.width = `${rect.width}px`;
+                miniCalEl.style.top = `${rect.bottom + 6}px`;
+                const width = rect.width;
+                let left = rect.left;
+                if (left + width > window.innerWidth - 8) {
+                    left = window.innerWidth - width - 8;
+                }
+                if (left < 8) left = 8;
+                miniCalEl.style.left = `${left}px`;
+            };
+
+            const closeMiniCalendar = () => {
+                if (!miniCalEl) return;
+                miniCalEl.classList.remove('is-open');
+                if (activeDateTrigger) {
+                    activeDateTrigger.classList.remove('is-active');
+                    activeDateTrigger = null;
+                }
+            };
+
+            const openMiniCalendar = (trigger) => {
+                const el = ensureMiniCalendar();
+                const switchingAnchorWhileOpen =
+                    el.classList.contains('is-open') &&
+                    activeDateTrigger !== null &&
+                    activeDateTrigger !== trigger;
+
+                if (activeDateTrigger && activeDateTrigger !== trigger) {
+                    activeDateTrigger.classList.remove('is-active');
+                }
+                activeDateTrigger = trigger;
+                trigger.classList.add('is-active');
+                const type = trigger.dataset.dateTrigger;
+                const range = getInlineRangeValues();
+                const currentISO = type === 'from' ? range.start : range.end;
+                const seed = isoToDate(currentISO) || new Date();
+                miniCalView.year = seed.getFullYear();
+                miniCalView.month = seed.getMonth();
+                renderMiniCalendar();
+
+                if (switchingAnchorWhileOpen) {
+                    el.classList.add('ma-mini-cal--instant');
+                    el.classList.remove('is-open');
+                    void el.offsetWidth;
+                    el.classList.remove('ma-mini-cal--instant');
+                }
+
+                positionMiniCalendar(trigger);
+                void el.offsetWidth;
+                el.classList.add('is-open');
+            };
+
+            const selectMiniCalDate = (iso) => {
+                if (!activeDateTrigger) return;
+                const type = activeDateTrigger.dataset.dateTrigger;
+                const range = getInlineRangeValues();
+                const detail = {
+                    componentId: 'dashboard-manage-availability-range',
+                    start: type === 'from' ? iso : range.start,
+                    end: type === 'to' ? iso : range.end,
+                };
+                window.dispatchEvent(new CustomEvent('range-calendar-set', {
+                    detail,
+                }));
+                closeMiniCalendar();
+            };
+
+            if (dateTriggers.length && !root.dataset.dateTriggersBound) {
+                root.dataset.dateTriggersBound = '1';
+                dateTriggers.forEach((trigger) => {
+                    trigger.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (activeDateTrigger === trigger) {
+                            closeMiniCalendar();
+                        } else {
+                            closeTimeDropdown();
+                            openMiniCalendar(trigger);
+                        }
+                    });
+                });
+
+                document.addEventListener('click', (event) => {
+                    if (!miniCalEl || !miniCalEl.classList.contains('is-open')) return;
+                    if (event.target.closest('.ma-mini-cal')) return;
+                    if (event.target.closest('[data-date-trigger]')) return;
+                    closeMiniCalendar();
+                });
+
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape') closeMiniCalendar();
+                });
+
+                window.addEventListener('scroll', (event) => {
+                    if (!activeDateTrigger) return;
+                    const target = event.target;
+                    if (target && target.nodeType === 1 && target.closest &&
+                        target.closest('.ma-mini-cal')) return;
+                    positionMiniCalendar(activeDateTrigger);
+                }, true);
+
+                window.addEventListener('resize', () => {
+                    if (activeDateTrigger) positionMiniCalendar(activeDateTrigger);
+                });
+            }
 
             const calendarRoot = document.getElementById('dashboard-manage-availability-range');
             const dateFromInput = document.getElementById('manage-availability-date-from');

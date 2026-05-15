@@ -70,7 +70,13 @@
                                     :aria-expanded="fromMonthSelectOpen ? 'true' : 'false'">
                                     <span x-text="months[draftFromMonth]"></span>
                                 </button>
-                                <div class="rdc-custom-select-menu" x-cloak x-show="fromMonthSelectOpen">
+                                <div class="rdc-custom-select-menu" x-cloak x-show="fromMonthSelectOpen"
+                                    x-transition:enter="transition ease-out duration-180"
+                                    x-transition:enter-start="opacity-0 -translate-y-2"
+                                    x-transition:enter-end="opacity-100 translate-y-0"
+                                    x-transition:leave="transition ease-in duration-140"
+                                    x-transition:leave-start="opacity-100 translate-y-0"
+                                    x-transition:leave-end="opacity-0 -translate-y-2">
                                     <template x-for="(month, index) in months" :key="'from-month-' + index">
                                         <button type="button" class="rdc-custom-select-option"
                                             :class="{ 'is-active': draftFromMonth === index }"
@@ -83,7 +89,13 @@
                                     :aria-expanded="fromYearSelectOpen ? 'true' : 'false'">
                                     <span x-text="draftFromYear"></span>
                                 </button>
-                                <div class="rdc-custom-select-menu" x-cloak x-show="fromYearSelectOpen">
+                                <div class="rdc-custom-select-menu" x-cloak x-show="fromYearSelectOpen"
+                                    x-transition:enter="transition ease-out duration-180"
+                                    x-transition:enter-start="opacity-0 -translate-y-2"
+                                    x-transition:enter-end="opacity-100 translate-y-0"
+                                    x-transition:leave="transition ease-in duration-140"
+                                    x-transition:leave-start="opacity-100 translate-y-0"
+                                    x-transition:leave-end="opacity-0 -translate-y-2">
                                     <template x-for="year in yearOptions" :key="'from-year-' + year">
                                         <button type="button" class="rdc-custom-select-option"
                                             :class="{ 'is-active': draftFromYear === year }"
@@ -101,7 +113,13 @@
                                     :aria-expanded="toMonthSelectOpen ? 'true' : 'false'">
                                     <span x-text="months[draftToMonth]"></span>
                                 </button>
-                                <div class="rdc-custom-select-menu" x-cloak x-show="toMonthSelectOpen">
+                                <div class="rdc-custom-select-menu" x-cloak x-show="toMonthSelectOpen"
+                                    x-transition:enter="transition ease-out duration-180"
+                                    x-transition:enter-start="opacity-0 -translate-y-2"
+                                    x-transition:enter-end="opacity-100 translate-y-0"
+                                    x-transition:leave="transition ease-in duration-140"
+                                    x-transition:leave-start="opacity-100 translate-y-0"
+                                    x-transition:leave-end="opacity-0 -translate-y-2">
                                     <template x-for="(month, index) in months" :key="'to-month-' + index">
                                         <button type="button" class="rdc-custom-select-option"
                                             :class="{ 'is-active': draftToMonth === index }"
@@ -114,7 +132,13 @@
                                     :aria-expanded="toYearSelectOpen ? 'true' : 'false'">
                                     <span x-text="draftToYear"></span>
                                 </button>
-                                <div class="rdc-custom-select-menu" x-cloak x-show="toYearSelectOpen">
+                                <div class="rdc-custom-select-menu" x-cloak x-show="toYearSelectOpen"
+                                    x-transition:enter="transition ease-out duration-180"
+                                    x-transition:enter-start="opacity-0 -translate-y-2"
+                                    x-transition:enter-end="opacity-100 translate-y-0"
+                                    x-transition:leave="transition ease-in duration-140"
+                                    x-transition:leave-start="opacity-100 translate-y-0"
+                                    x-transition:leave-end="opacity-0 -translate-y-2">
                                     <template x-for="year in yearOptions" :key="'to-year-' + year">
                                         <button type="button" class="rdc-custom-select-option"
                                             :class="{ 'is-active': draftToYear === year }" @click="selectToYear(year)"
@@ -512,7 +536,7 @@
     }
 
     .rdc-panel {
-        border: 1px solid #ccc3b7;
+        border: 1px solid #ddd;
         border-radius: 12px;
         background: #fff;
         padding: 14px 16px;
@@ -670,6 +694,25 @@
                     }, (_, idx) => currentYear + idx);
                     this.syncDraftMonthsFromState();
                     this.emitRangeChanged();
+                    window.addEventListener('range-calendar-set', (event) => {
+                        const detail = event?.detail || {};
+                        if (detail.componentId && detail.componentId !== this.componentId) return;
+                        if (Object.prototype.hasOwnProperty.call(detail, 'start')) {
+                            this.startDate = detail.start || '';
+                        }
+                        if (Object.prototype.hasOwnProperty.call(detail, 'end')) {
+                            this.endDate = detail.end || '';
+                        }
+                        const anchor = this.startDate ?
+                            this.isoToDate(this.startDate) :
+                            (this.endDate ? this.isoToDate(this.endDate) : new Date());
+                        if (anchor) {
+                            this.leftDate = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+                            this.rightDate = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1);
+                            this.syncDraftMonthsFromState();
+                        }
+                        this.emitRangeChanged();
+                    });
                 },
                 get rangeTitle() {
                     return `${MONTHS[this.leftDate.getMonth()]} ${this.leftDate.getFullYear()} - ${MONTHS[this.rightDate.getMonth()]} ${this.rightDate.getFullYear()}`;
