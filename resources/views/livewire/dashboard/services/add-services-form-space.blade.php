@@ -7,11 +7,12 @@ use Livewire\Volt\Component;
 new class extends Component {
     public string $serviceName = '';
     public string $description = '';
-    public string $otherPet = '';
-    public array $selectedPets = ['cat', 'dog', 'other'];
-    public array $selectedSizes = ['small', 'medium', 'large'];
-    public bool $addOnsCompatibility = true;
-    public bool $visibilityControls = true;
+    public array $otherPets = [];
+    public string $otherPetInput = '';
+    public array $selectedPets = [];
+    public array $selectedSizes = [];
+    public bool $addOnsCompatibility = false;
+    public bool $visibilityControls = false;
     public string $baseDuration = '60 Minutes';
     public string $bufferTime = '15 min';
     public float $basePrice = 25;
@@ -49,7 +50,7 @@ new class extends Component {
             'description' => $this->description !== '' ? $this->description : '',
             'pet_compatibility' => [
                 'pet_types' => array_values($this->selectedPets),
-                'other_pets' => $this->otherPet !== '' ? [$this->otherPet] : '',
+                'other_pets' => array_values($this->otherPets),
                 'pet_sizes' => array_values($this->selectedSizes),
             ],
             'duration' => [
@@ -75,7 +76,7 @@ new class extends Component {
         ]);
 
         $this->dispatch('service-created');
-        $this->reset(['serviceName', 'description', 'otherPet']);
+        $this->reset();
         $this->dispatch('service-form-cancel');
     }
 }; ?>
@@ -187,36 +188,7 @@ new class extends Component {
                     </div>
                 </div>
             </div>
-            <label class="service-field">
-                <span>Other</span>
-                <div class="service-input-with-icon">
-                    <input type="text" placeholder="Specify pet type" style="width: 332px;"
-                        wire:model="otherPet" />
-                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"
-                        fill="none">
-                        <g filter="url(#filter0_d_3_541)">
-                            <rect x="8" y="3" width="48" height="48" rx="24" fill="#FFC97A" />
-                        </g>
-                        <path d="M32 19V27.495M32 27.495V35.99M32 27.495H40.495M32 27.495H23.505" stroke="white"
-                            stroke-width="2" stroke-linecap="round" />
-                        <defs>
-                            <filter id="filter0_d_3_541" x="0" y="0" width="64" height="64"
-                                filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                                <feFlood flood-opacity="0" result="BackgroundImageFix" />
-                                <feColorMatrix in="SourceAlpha" type="matrix"
-                                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
-                                <feOffset dy="5" />
-                                <feGaussianBlur stdDeviation="4" />
-                                <feComposite in2="hardAlpha" operator="out" />
-                                <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0" />
-                                <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_3_541" />
-                                <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_3_541"
-                                    result="shape" />
-                            </filter>
-                        </defs>
-                    </svg>
-                </div>
-            </label>
+            <x-ui.other-pets-field input-id="service-other-pet-space" />
         </div>
 
         <div class="service-fieldset">
@@ -674,30 +646,45 @@ new class extends Component {
         line-height: 25px;
         padding: 0.5rem 1.5rem;
         cursor: pointer;
-
+        transition: background-color 220ms ease, color 220ms ease, transform 180ms ease;
+        will-change: transform;
     }
 
     .service-chip.is-active {
         background: rgba(216, 232, 183, 0.20);
         color: #A4C560;
+        transform: translateY(-1px) scale(1.02);
+    }
+
+    .service-chip:active {
+        transform: scale(0.98);
     }
 
     .service-chip-icon {
         color: #D4D4D4;
         flex-shrink: 0;
+        transition: color 220ms ease, transform 220ms ease;
     }
 
     .service-chip.is-active .service-chip-icon {
         color: #A4C560;
+        transform: scale(1.06);
     }
 
     .service-chip-tick {
-        display: none;
         flex-shrink: 0;
+        width: 0;
+        height: 9px;
+        overflow: hidden;
+        opacity: 0;
+        transform: scale(0.6);
+        transition: opacity 180ms ease, transform 180ms ease, width 180ms ease;
     }
 
     .service-chip.is-active .service-chip-tick {
-        display: inline-block;
+        width: 12px;
+        opacity: 1;
+        transform: scale(1);
     }
 
     .service-price-top-row {
@@ -880,7 +867,14 @@ new class extends Component {
         height: 24px;
         border-radius: 999px;
         background: #fff;
+        z-index: 1;
         transition: left 0.24s ease;
+    }
+
+    .service-toggle::before {
+        content: none;
+        opacity: 0;
+        transform: scale(0.88);
     }
 
     .service-toggle.is-on {
@@ -889,6 +883,35 @@ new class extends Component {
 
     .service-toggle.is-on::after {
         left: 28px;
+    }
+
+    .service-toggle.is-on::before {
+        content: "";
+        position: absolute;
+        right: 9px;
+        top: 9px;
+        width: 13px;
+        height: 13px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='11' viewBox='0 0 13 11' fill='none'%3E%3Cpath d='M1.25 5.8L4.4 8.95L11.75 1.6' stroke='%23C7D59F' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+        z-index: 2;
+        opacity: 1;
+        transform: scale(1);
+        animation: toggle-icon-in 0.16s ease-in 0.24s both;
+    }
+
+    @keyframes toggle-icon-in {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
     }
 
     .service-form-actions {
