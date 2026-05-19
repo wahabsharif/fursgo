@@ -6,16 +6,79 @@ new class extends Component {
     // Parent Services index component.
 }; ?>
 
-<section class="services-dashboard" aria-label="Services section" x-data="{ showAddService: false, showAddOn: false, activeServiceMenu: 'services' }"
-    x-on:services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'; if (activeServiceMenu !== 'services') { showAddService = false } if (activeServiceMenu !== 'add-ons') { showAddOn = false }"
-    x-on:service-form-cancel="showAddService = false; showAddOn = false; window.dispatchEvent(new CustomEvent('service-form-cancel')); window.dispatchEvent(new CustomEvent('nav-list-loading-start'))"
-    x-on:service-form-cancel.window="showAddService = false; showAddOn = false">
+<section class="services-dashboard" aria-label="Services section" x-data="{
+    showAddService: false,
+    showAddOn: false,
+    showAddServiceArea: false,
+    activeServiceMenu: 'services',
+    scrollPageToTop(smooth = false) {
+        const root = document.scrollingElement || document.documentElement;
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const behavior = smooth && !reduceMotion ? 'smooth' : 'auto';
+
+        if (smooth && root.scrollTop < 40) {
+            return;
+        }
+
+        const go = () => window.scrollTo({ top: 0, left: 0, behavior });
+
+        if (smooth) {
+            this.$nextTick(() => setTimeout(go, 50));
+            return;
+        }
+
+        root.scrollTop = 0;
+        document.body.scrollTop = 0;
+        go();
+        this.$nextTick(() => {
+            root.scrollTop = 0;
+            document.body.scrollTop = 0;
+            setTimeout(() => {
+                root.scrollTop = 0;
+                document.body.scrollTop = 0;
+            }, 320);
+        });
+    },
+    returnToServiceList() {
+        this.showAddService = false;
+        this.activeServiceMenu = 'services';
+        window.dispatchEvent(new CustomEvent('nav-list-loading-start'));
+        this.scrollPageToTop(true);
+    },
+    returnToAddOnList() {
+        this.showAddOn = false;
+        this.activeServiceMenu = 'add-ons';
+        window.dispatchEvent(new CustomEvent('nav-list-loading-start'));
+        this.scrollPageToTop(true);
+    },
+    returnToServiceAreaList() {
+        this.showAddServiceArea = false;
+        this.activeServiceMenu = 'service-area';
+        window.dispatchEvent(new CustomEvent('nav-list-loading-start'));
+        this.scrollPageToTop(true);
+    },
+    closeAllForms() {
+        const wasFormOpen = this.showAddService || this.showAddOn || this.showAddServiceArea;
+        this.showAddService = false;
+        this.showAddOn = false;
+        this.showAddServiceArea = false;
+        window.dispatchEvent(new CustomEvent('service-form-cancel'));
+        window.dispatchEvent(new CustomEvent('nav-list-loading-start'));
+        if (wasFormOpen) {
+            this.scrollPageToTop(true);
+        }
+    },
+}" x-init="scrollPageToTop(false)"
+    x-on:services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'; if (activeServiceMenu !== 'services') { showAddService = false } if (activeServiceMenu !== 'add-ons') { showAddOn = false } if (activeServiceMenu !== 'service-area') { showAddServiceArea = false }; scrollPageToTop(true)"
+    x-on:service-created.window="returnToServiceList()" x-on:add-on-created.window="returnToAddOnList()"
+    x-on:service-area-created.window="returnToServiceAreaList()" x-on:service-form-cancel.window="closeAllForms()">
     @php
         $userType = strtolower((string) data_get(auth()->user(), 'user_type', ''));
         $addServiceTitle = $userType === 'space' ? 'Hourly' : 'Full Groom';
+        $showServiceArea = $userType !== 'space';
     @endphp
 
-    <header class="service-list-header">
+    <header class="service-list-header" x-ref="servicesHeader">
         <h3
             x-text="showAddOn || activeServiceMenu === 'add-ons' ? 'Add-ons' : (activeServiceMenu === 'pet-preferences' ? 'Pet Preferences' : (activeServiceMenu === 'service-area' ? 'Service Area' : (showAddService ? '{{ $addServiceTitle }}' : 'Service List')))">
         </h3>
@@ -75,12 +138,14 @@ new class extends Component {
         <livewire:dashboard.services.pet-preferences />
     </div>
 
-    <div x-show="activeServiceMenu === 'service-area'" x-cloak x-transition:enter="service-view-enter"
-        x-transition:enter-start="service-view-enter-start" x-transition:enter-end="service-view-enter-end"
-        x-transition:leave="service-view-leave" x-transition:leave-start="service-view-leave-start"
-        x-transition:leave-end="service-view-leave-end">
-        <p class="service-placeholder-copy">Service Area panel coming next.</p>
-    </div>
+    @if ($showServiceArea)
+        <div x-show="activeServiceMenu === 'service-area'" x-cloak x-transition:enter="service-view-enter"
+            x-transition:enter-start="service-view-enter-start" x-transition:enter-end="service-view-enter-end"
+            x-transition:leave="service-view-leave" x-transition:leave-start="service-view-leave-start"
+            x-transition:leave-end="service-view-leave-end">
+            <p class="service-placeholder-copy">Service Area panel coming next.</p>
+        </div>
+    @endif
 </section>
 
 <style>

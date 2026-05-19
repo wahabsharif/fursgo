@@ -2,6 +2,7 @@
 
 @php
     $activeBgColor = '#FFC97A';
+    $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
     if (auth()->check()) {
         $userType = auth()->user()->user_type;
         if ($userType === 'space') {
@@ -224,14 +225,16 @@
                             Pet Preferences
                         </button>
                     </li>
-                    <li class="booking-status-item">
-                        <span class="services-status-dot service-area"></span>
-                        <button type="button" class="booking-status-trigger"
-                            :class="{ 'is-active': activeServiceMenu === 'service-area' }"
-                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'service-area'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'service-area' } }))">
-                            Service Area
-                        </button>
-                    </li>
+                    @unless ($isSpaceUser)
+                        <li class="booking-status-item">
+                            <span class="services-status-dot service-area"></span>
+                            <button type="button" class="booking-status-trigger"
+                                :class="{ 'is-active': activeServiceMenu === 'service-area' }"
+                                @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'service-area'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'service-area' } }))">
+                                Service Area
+                            </button>
+                        </li>
+                    @endunless
                 </ul>
             </li>
 

@@ -8,6 +8,8 @@ use Livewire\Volt\Component;
 new class extends Component {
     public int $perPage = 10;
 
+    public ?int $highlightItemId = null;
+
     public function getServicesProperty()
     {
         $email = (string) data_get(auth()->user(), 'email', '');
@@ -67,9 +69,15 @@ new class extends Component {
     }
 
     #[On('service-created')]
-    public function refreshList(): void
+    public function refreshList(int $itemId = 0): void
     {
         $this->perPage = 10;
+        $this->highlightItemId = $itemId > 0 ? $itemId : null;
+    }
+
+    public function clearHighlight(): void
+    {
+        $this->highlightItemId = null;
     }
 }; ?>
 
@@ -93,10 +101,14 @@ new class extends Component {
                         $price = (float) data_get($service->pricing, 'base_price', 0);
                         $isVisible = (bool) $service->visibility_controls;
                     @endphp
-                    <tr @class(['is-muted' => !$isVisible])>
+                    <tr wire:key="service-row-{{ $service->id }}" @class([
+                        'is-muted' => !$isVisible,
+                        'is-newly-added' => $highlightItemId === $service->id,
+                    ])
+                        @if ($highlightItemId === $service->id) x-init="setTimeout(() => $wire.clearHighlight(), 2000)" @endif>
                         <td>{{ $service->service_name }}</td>
                         <td>{{ $this->appliesTo((array) $service->pet_compatibility) }}</td>
-                        <td>{{ $duration > 0 ? $duration . ' mins' : '-' }}</td>
+                        <td style="font-weight: 600;">{{ $duration > 0 ? $duration . ' mins' : '-' }}</td>
                         <td>{{ '£' . number_format($price, 2) }}</td>
                         <td>
                             <button type="button" class="service-toggle {{ $isVisible ? 'is-on' : '' }}"
@@ -106,13 +118,11 @@ new class extends Component {
                         </td>
                         <td class="service-edit-col">
                             <button type="button" class="icon-btn" aria-label="Edit service">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                                    viewBox="0 0 24 24" fill="none">
-                                    <path d="M12 20H21" stroke="currentColor" stroke-width="1.5"
-                                        stroke-linecap="round" />
-                                    <path d="M16.5 3.5A2.121 2.121 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z"
-                                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                        stroke-linejoin="round" />
+                                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16"
+                                    viewBox="0 0 17 16" fill="none">
+                                    <path
+                                        d="M10.8529 2.51425L13.6765 5.29691M8.97059 15.5H16.5M1.44118 11.7898L0.5 15.5L4.26471 14.5724L15.1692 3.82581C15.5221 3.47793 15.7203 3.00616 15.7203 2.51425C15.7203 2.02234 15.5221 1.55057 15.1692 1.20269L15.0073 1.04315C14.6543 0.695371 14.1756 0.5 13.6765 0.5C13.1773 0.5 12.6986 0.695371 12.3456 1.04315L1.44118 11.7898Z"
+                                        stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </button>
                             <button type="button" class="icon-btn dots-btn" aria-label="Service actions">•••</button>
@@ -198,6 +208,23 @@ new class extends Component {
         opacity: 0.5;
     }
 
+    .service-list-table tr.is-newly-added td {
+        animation: service-row-highlight-blink 2s ease-in-out;
+    }
+
+    @keyframes service-row-highlight-blink {
+
+        0%,
+        100% {
+            background-color: transparent;
+        }
+
+        25%,
+        75% {
+            background-color: rgba(216, 232, 183, 0.55);
+        }
+    }
+
     .service-toggle {
         width: 56px;
         height: 30px;
@@ -231,7 +258,7 @@ new class extends Component {
 
     .service-toggle.is-on {
         border: none;
-        background: #c7d59f;
+        background: #D8E8B7;
     }
 
     .service-toggle.is-on::after {

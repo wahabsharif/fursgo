@@ -281,6 +281,7 @@
 
     .section-container {
         position: relative;
+        overflow: hidden;
     }
 
     .section-panel {
@@ -292,6 +293,9 @@
         top: 0;
         left: 0;
         width: 100%;
+        height: 0;
+        overflow: hidden;
+        visibility: hidden;
     }
 
     .section-panel.section-active {
@@ -299,5 +303,8 @@
         transform: translateY(0);
         pointer-events: auto;
         position: relative;
+        height: auto;
+        overflow: visible;
+        visibility: visible;
     }
 </style>

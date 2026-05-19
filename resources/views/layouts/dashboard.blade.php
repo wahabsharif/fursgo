@@ -23,7 +23,38 @@
 
 </head>
 
-<body x-data="{ activeSection: 'business-hub' }">
+<body x-data="{
+    activeSection: 'business-hub',
+    scrollDashboardToTop(smooth = false) {
+        const root = document.scrollingElement || document.documentElement;
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const behavior = smooth && !reduceMotion ? 'smooth' : 'auto';
+
+        if (smooth && root.scrollTop < 40) {
+            return;
+        }
+
+        const go = () => window.scrollTo({ top: 0, left: 0, behavior });
+
+        if (smooth) {
+            requestAnimationFrame(() => setTimeout(go, 50));
+            return;
+        }
+
+        root.scrollTop = 0;
+        document.body.scrollTop = 0;
+        go();
+        requestAnimationFrame(() => {
+            root.scrollTop = 0;
+            document.body.scrollTop = 0;
+            setTimeout(() => {
+                root.scrollTop = 0;
+                document.body.scrollTop = 0;
+            }, 350);
+        });
+    },
+}" x-init="scrollDashboardToTop(false);
+$watch('activeSection', () => scrollDashboardToTop(true))" @nav-list-loading-start.window="scrollDashboardToTop(true)">
 
     <x-common.header variant="dashboard" />
     <x-common.dev-mode-float />
@@ -57,6 +88,38 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     @stack('script')
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            window.scrollTo(0, 0);
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+        });
+
+        document.addEventListener('livewire:navigated', () => {
+            const root = document.scrollingElement || document.documentElement;
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (root.scrollTop < 40) {
+                return;
+            }
+            const behavior = reduceMotion ? 'auto' : 'smooth';
+            requestAnimationFrame(() => {
+                window.scrollTo({
+                    top: 0,
+                    left: 0,
+                    behavior
+                });
+            });
+        });
+
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                window.scrollTo(0, 0);
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+            }
+        });
+    </script>
 
 </body>
 

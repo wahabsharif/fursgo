@@ -141,30 +141,77 @@ new class extends Component {
 
 <section class="pet-preferences-wrapper">
     <div class="pet-preferences-grid">
-        <article class="pet-preferences-card {{ $editTypes ? 'is-editing' : '' }}">
+        <article class="pet-preferences-card" x-data="{
+            editTypes: @entangle('editTypes').live,
+            petTypes: @entangle('petTypes').live,
+            otherPetsText: @entangle('otherPets').live,
+            otherInput: @entangle('otherPetInput').live,
+            otherList: [],
+            removingKeys: [],
+            toggleType(type) {
+                if (!this.editTypes) return;
+                if (this.petTypes.includes(type)) {
+                    this.petTypes = this.petTypes.filter((item) => item !== type);
+                } else {
+                    this.petTypes.push(type);
+                }
+            },
+            openTypesEdit() {
+                this.otherList = this.otherPetsText
+                    .split(',')
+                    .map((item) => item.trim())
+                    .filter(Boolean);
+                this.editTypes = true;
+            },
+            addByEnter() {
+                const candidate = this.otherInput.trim();
+                if (!candidate) return;
+                this.otherList = this.otherList.filter((item) => item.toLowerCase() !== candidate.toLowerCase());
+                this.otherList.push(candidate);
+                this.otherInput = '';
+            },
+            removeAt(index) {
+                if (!this.otherList[index]) return;
+                const candidate = this.otherList[index];
+                const removeKey = `${candidate}-${index}`;
+                this.removingKeys.push(removeKey);
+                setTimeout(() => {
+                    const targetIndex = this.otherList.findIndex((item) => item.toLowerCase() === candidate.toLowerCase());
+                    if (targetIndex !== -1) {
+                        this.otherList.splice(targetIndex, 1);
+                    }
+                    this.removingKeys = this.removingKeys.filter((key) => key !== removeKey);
+                }, 190);
+            },
+        }" :class="{ 'is-editing': editTypes }">
             <div class="pet-preferences-card-head">
                 <h4>Pet Types Accepted</h4>
-                @if (!$editTypes)
-                    <button type="button" class="pet-pref-edit-btn" wire:click="$toggle('editTypes')"
-                        aria-label="Edit pet types">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16"
-                            fill="none">
-                            <path
-                                d="M10.8529 2.51425L13.6765 5.29691M8.97059 15.5H16.5M1.44118 11.7898L0.5 15.5L4.26471 14.5724L15.1692 3.82581C15.5221 3.47793 15.7203 3.00616 15.7203 2.51425C15.7203 2.02234 15.5221 1.55057 15.1692 1.20269L15.0073 1.04315C14.6543 0.695371 14.1756 0.5 13.6765 0.5C13.1773 0.5 12.6986 0.695371 12.3456 1.04315L1.44118 11.7898Z"
-                                stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </button>
-                @endif
+                <button type="button" class="pet-pref-edit-btn" x-show="!editTypes"
+                    x-transition:enter="pet-pref-fade-enter" x-transition:enter-start="pet-pref-fade-enter-start"
+                    x-transition:enter-end="pet-pref-fade-enter-end" x-transition:leave="pet-pref-fade-leave"
+                    x-transition:leave-start="pet-pref-fade-leave-start"
+                    x-transition:leave-end="pet-pref-fade-leave-end" @click="openTypesEdit()"
+                    aria-label="Edit pet types">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16"
+                        fill="none">
+                        <path
+                            d="M10.8529 2.51425L13.6765 5.29691M8.97059 15.5H16.5M1.44118 11.7898L0.5 15.5L4.26471 14.5724L15.1692 3.82581C15.5221 3.47793 15.7203 3.00616 15.7203 2.51425C15.7203 2.02234 15.5221 1.55057 15.1692 1.20269L15.0073 1.04315C14.6543 0.695371 14.1756 0.5 13.6765 0.5C13.1773 0.5 12.6986 0.695371 12.3456 1.04315L1.44118 11.7898Z"
+                            stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
             </div>
 
-            @if ($editTypes)
-                <p class="pet-pref-sub-label">Select Pet Specialty:</p>
-            @endif
+            <p class="pet-pref-sub-label" x-show="editTypes" x-cloak x-transition:enter="pet-pref-slide-enter"
+                x-transition:enter-start="pet-pref-slide-enter-start" x-transition:enter-end="pet-pref-slide-enter-end"
+                x-transition:leave="pet-pref-slide-leave" x-transition:leave-start="pet-pref-slide-leave-start"
+                x-transition:leave-end="pet-pref-slide-leave-end">
+                Select Pet Specialty:
+            </p>
             <div class="service-chip-row">
                 @foreach (['cat' => 'Cat', 'other' => 'Other', 'dog' => 'Dog'] as $key => $label)
-                    <button type="button"
-                        class="service-chip has-pet-icon {{ in_array($key, $petTypes, true) ? 'is-active' : '' }}"
-                        @if ($editTypes) wire:click="toggleType('{{ $key }}')" @endif>
+                    <button type="button" class="service-chip has-pet-icon"
+                        :class="{ 'is-active': petTypes.includes('{{ $key }}') }"
+                        @click="toggleType('{{ $key }}')">
                         <span class="pref-chip-check-icon" aria-hidden="true">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="10" viewBox="0 0 14 10"
                                 fill="none">
@@ -204,113 +251,107 @@ new class extends Component {
                 @endforeach
             </div>
 
-            <div x-data="{
-                otherInput: $wire.entangle('otherPetInput').live,
-                otherList: @js($this->otherPetsList),
-                removingKeys: [],
-                addByEnter() {
-                    const candidate = this.otherInput.trim();
-                    if (!candidate) return;
-                    this.otherList = this.otherList.filter((item) => item.toLowerCase() !== candidate.toLowerCase());
-                    this.otherList.push(candidate);
-                    this.otherInput = '';
-                },
-                removeAt(index) {
-                    if (!this.otherList[index]) return;
-                    const candidate = this.otherList[index];
-                    const removeKey = `${candidate}-${index}`;
-                    this.removingKeys.push(removeKey);
-            
-                    setTimeout(() => {
-                        const targetIndex = this.otherList.findIndex((item) => item.toLowerCase() === candidate.toLowerCase());
-                        if (targetIndex !== -1) {
-                            this.otherList.splice(targetIndex, 1);
-                        }
-                        this.removingKeys = this.removingKeys.filter((key) => key !== removeKey);
-                    }, 190);
-                }
-            }">
-                <label class="pet-pref-other-wrap">
-                    <span>
-                        @if ($editTypes)
-                            Other <span class="pet-pref-muted-note">(Please specify)</span>
-                        @else
-                            Other includes:
-                        @endif
-                    </span>
-                    @if ($editTypes)
-                        <div class="pet-pref-other-input-row">
-                            <input type="text" x-model="otherInput" @keydown.enter.prevent="addByEnter()"
-                                placeholder="e.g., Luxury grooming with a gentle touch." />
-                        </div>
-                    @else
-                        <p>{{ $otherPets !== '' ? $otherPets . '.' : '-' }}</p>
-                    @endif
-                </label>
-
-                @if ($editTypes)
-                    <div class="pet-pref-list-wrap pet-pref-edit-reveal">
-                        <template x-if="otherList.length === 0">
-                            <p class="pet-pref-empty">No custom pets added yet.</p>
-                        </template>
-                        <template x-for="(item, index) in otherList" :key="`${item}-${index}`">
-                            <div class="pet-pref-list-row pet-pref-row-enter"
-                                :class="{ 'is-removing': removingKeys.includes(`${item}-${index}`) }"
-                                x-transition:enter="pet-pref-transition-enter"
-                                x-transition:enter-start="pet-pref-transition-enter-start"
-                                x-transition:enter-end="pet-pref-transition-enter-end"
-                                x-transition:leave="pet-pref-transition-leave"
-                                x-transition:leave-start="pet-pref-transition-leave-start"
-                                x-transition:leave-end="pet-pref-transition-leave-end">
-                                <span x-text="`${index + 1}. ${item}`"></span>
-                                <button type="button" @click="removeAt(index)"><svg xmlns="http://www.w3.org/2000/svg"
-                                        width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                        <path d="M0.75 10.75L10.75 0.75M0.75 0.75L10.75 10.75" stroke="#9D9B98"
-                                            stroke-width="1.5" stroke-linecap="round" />
-                                    </svg></button>
-                            </div>
-                        </template>
+            <label class="pet-pref-other-wrap">
+                <span>
+                    <template x-if="editTypes">
+                        <span>Other <span class="pet-pref-muted-note">(Please specify)</span></span>
+                    </template>
+                    <template x-if="!editTypes">
+                        <span>Other includes:</span>
+                    </template>
+                </span>
+                <div x-show="editTypes" x-cloak x-transition:enter="pet-pref-slide-enter"
+                    x-transition:enter-start="pet-pref-slide-enter-start"
+                    x-transition:enter-end="pet-pref-slide-enter-end" x-transition:leave="pet-pref-slide-leave"
+                    x-transition:leave-start="pet-pref-slide-leave-start"
+                    x-transition:leave-end="pet-pref-slide-leave-end">
+                    <div class="pet-pref-other-input-row">
+                        <input type="text" x-model="otherInput" @keydown.enter.prevent="addByEnter()"
+                            placeholder="e.g., Luxury grooming with a gentle touch." />
                     </div>
-                @endif
-                @if ($editTypes)
-                    <button type="button" class="pet-pref-save-btn pet-pref-edit-reveal"
-                        @click="$wire.saveTypePreferences(otherList)" wire:loading.attr="disabled"
+                </div>
+                <p x-show="!editTypes" x-cloak x-text="otherPetsText !== '' ? `${otherPetsText}.` : '-'"></p>
+            </label>
+
+            <div x-show="editTypes" x-cloak x-transition:enter="pet-pref-slide-enter"
+                x-transition:enter-start="pet-pref-slide-enter-start" x-transition:enter-end="pet-pref-slide-enter-end"
+                x-transition:leave="pet-pref-slide-leave" x-transition:leave-start="pet-pref-slide-leave-start"
+                x-transition:leave-end="pet-pref-slide-leave-end">
+                <div class="pet-pref-list-wrap">
+                    <template x-if="otherList.length === 0">
+                        <p class="pet-pref-empty">No custom pets added yet.</p>
+                    </template>
+                    <template x-for="(item, index) in otherList" :key="`${item}-${index}`">
+                        <div class="pet-pref-list-row"
+                            :class="{ 'is-removing': removingKeys.includes(`${item}-${index}`) }"
+                            x-transition:enter="pet-pref-transition-enter"
+                            x-transition:enter-start="pet-pref-transition-enter-start"
+                            x-transition:enter-end="pet-pref-transition-enter-end"
+                            x-transition:leave="pet-pref-transition-leave"
+                            x-transition:leave-start="pet-pref-transition-leave-start"
+                            x-transition:leave-end="pet-pref-transition-leave-end">
+                            <span x-text="`${index + 1}. ${item}`"></span>
+                            <button type="button" @click="removeAt(index)"><svg xmlns="http://www.w3.org/2000/svg"
+                                    width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                    <path d="M0.75 10.75L10.75 0.75M0.75 0.75L10.75 10.75" stroke="#9D9B98"
+                                        stroke-width="1.5" stroke-linecap="round" />
+                                </svg></button>
+                        </div>
+                    </template>
+                </div>
+                <button type="button" class="pet-pref-save-btn" @click="$wire.saveTypePreferences(otherList)"
+                    wire:loading.attr="disabled" wire:target="saveTypePreferences">
+                    <span wire:loading.class="hidden" wire:target="saveTypePreferences">Save Changes</span>
+                    <span class="pet-pref-save-loading hidden" wire:loading.class.remove="hidden"
                         wire:target="saveTypePreferences">
-                        <span wire:loading.class="hidden" wire:target="saveTypePreferences">Save Changes</span>
-                        <span class="pet-pref-save-loading hidden" wire:loading.class.remove="hidden"
-                            wire:target="saveTypePreferences">
-                            <span class="pet-pref-save-spinner"></span>
-                        </span>
-                    </button>
-                @endif
+                        <span class="pet-pref-save-spinner"></span>
+                    </span>
+                </button>
             </div>
         </article>
 
-        <article class="pet-preferences-card {{ $editSizes ? 'is-editing' : '' }}"
-            style="max-height: fit-content;min-height: 200px;">
+        <article class="pet-preferences-card" style="max-height: fit-content;min-height: 200px;"
+            x-data="{
+                editSizes: @entangle('editSizes').live,
+                petSizes: @entangle('petSizes').live,
+                toggleSize(size) {
+                    if (!this.editSizes) return;
+                    if (this.petSizes.includes(size)) {
+                        this.petSizes = this.petSizes.filter((item) => item !== size);
+                    } else {
+                        this.petSizes.push(size);
+                    }
+                },
+            }" :class="{ 'is-editing': editSizes }">
             <div class="pet-preferences-card-head">
                 <h4>Pet Size Accepted</h4>
-                @if (!$editSizes)
-                    <button type="button" class="pet-pref-edit-btn" wire:click="$toggle('editSizes')"
-                        aria-label="Edit pet sizes">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16"
-                            fill="none">
-                            <path
-                                d="M10.8529 2.51425L13.6765 5.29691M8.97059 15.5H16.5M1.44118 11.7898L0.5 15.5L4.26471 14.5724L15.1692 3.82581C15.5221 3.47793 15.7203 3.00616 15.7203 2.51425C15.7203 2.02234 15.5221 1.55057 15.1692 1.20269L15.0073 1.04315C14.6543 0.695371 14.1756 0.5 13.6765 0.5C13.1773 0.5 12.6986 0.695371 12.3456 1.04315L1.44118 11.7898Z"
-                                stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </button>
-                @endif
+                <button type="button" class="pet-pref-edit-btn" x-show="!editSizes"
+                    x-transition:enter="pet-pref-fade-enter" x-transition:enter-start="pet-pref-fade-enter-start"
+                    x-transition:enter-end="pet-pref-fade-enter-end" x-transition:leave="pet-pref-fade-leave"
+                    x-transition:leave-start="pet-pref-fade-leave-start"
+                    x-transition:leave-end="pet-pref-fade-leave-end" @click="editSizes = true"
+                    aria-label="Edit pet sizes">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16"
+                        fill="none">
+                        <path
+                            d="M10.8529 2.51425L13.6765 5.29691M8.97059 15.5H16.5M1.44118 11.7898L0.5 15.5L4.26471 14.5724L15.1692 3.82581C15.5221 3.47793 15.7203 3.00616 15.7203 2.51425C15.7203 2.02234 15.5221 1.55057 15.1692 1.20269L15.0073 1.04315C14.6543 0.695371 14.1756 0.5 13.6765 0.5C13.1773 0.5 12.6986 0.695371 12.3456 1.04315L1.44118 11.7898Z"
+                            stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
             </div>
 
-            @if ($editSizes)
-                <p class="pet-pref-sub-label">Select Pet Size:</p>
-            @endif
+            <p class="pet-pref-sub-label" x-show="editSizes" x-cloak x-transition:enter="pet-pref-slide-enter"
+                x-transition:enter-start="pet-pref-slide-enter-start"
+                x-transition:enter-end="pet-pref-slide-enter-end" x-transition:leave="pet-pref-slide-leave"
+                x-transition:leave-start="pet-pref-slide-leave-start"
+                x-transition:leave-end="pet-pref-slide-leave-end">
+                Select Pet Size:
+            </p>
             <div class="service-chip-row">
                 @foreach (['small' => 'Small 0-7 kg', 'medium' => 'Medium 8-18 kg', 'large' => 'Large 19+ kg'] as $key => $label)
-                    <button type="button"
-                        class="service-chip size-chip {{ in_array($key, $petSizes, true) ? 'is-active' : '' }}"
-                        @if ($editSizes) wire:click="toggleSize('{{ $key }}')" @endif>
+                    <button type="button" class="service-chip size-chip"
+                        :class="{ 'is-active': petSizes.includes('{{ $key }}') }"
+                        @click="toggleSize('{{ $key }}')">
                         <span class="pref-chip-check-icon" aria-hidden="true">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="10"
                                 viewBox="0 0 14 10" fill="none">
@@ -325,16 +366,18 @@ new class extends Component {
                 @endforeach
             </div>
 
-            @if ($editSizes)
-                <button type="button" class="pet-pref-save-btn pet-pref-edit-reveal"
-                    wire:click="saveSizePreferences" wire:loading.attr="disabled" wire:target="saveSizePreferences">
-                    <span wire:loading.class="hidden" wire:target="saveSizePreferences">Save Changes</span>
-                    <span class="pet-pref-save-loading hidden" wire:loading.class.remove="hidden"
-                        wire:target="saveSizePreferences">
-                        <span class="pet-pref-save-spinner"></span>
-                    </span>
-                </button>
-            @endif
+            <button type="button" class="pet-pref-save-btn" x-show="editSizes" x-cloak
+                x-transition:enter="pet-pref-slide-enter" x-transition:enter-start="pet-pref-slide-enter-start"
+                x-transition:enter-end="pet-pref-slide-enter-end" x-transition:leave="pet-pref-slide-leave"
+                x-transition:leave-start="pet-pref-slide-leave-start"
+                x-transition:leave-end="pet-pref-slide-leave-end" wire:click="saveSizePreferences"
+                wire:loading.attr="disabled" wire:target="saveSizePreferences">
+                <span wire:loading.class="hidden" wire:target="saveSizePreferences">Save Changes</span>
+                <span class="pet-pref-save-loading hidden" wire:loading.class.remove="hidden"
+                    wire:target="saveSizePreferences">
+                    <span class="pet-pref-save-spinner"></span>
+                </span>
+            </button>
         </article>
     </div>
 </section>
@@ -350,6 +393,67 @@ new class extends Component {
         background: #FAFAFA;
         border-radius: 12px;
         padding: 1.15rem;
+        transition: box-shadow 240ms ease;
+    }
+
+    .pet-preferences-card.is-editing {
+        box-shadow: 0 8px 24px rgba(59, 55, 49, 0.08);
+    }
+
+    .pet-pref-fade-enter {
+        transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .pet-pref-fade-enter-start {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+
+    .pet-pref-fade-enter-end {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .pet-pref-fade-leave {
+        transition: opacity 140ms ease, transform 140ms ease;
+    }
+
+    .pet-pref-fade-leave-start {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .pet-pref-fade-leave-end {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+
+    .pet-pref-slide-enter {
+        transition: opacity 220ms ease, transform 220ms ease;
+    }
+
+    .pet-pref-slide-enter-start {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    .pet-pref-slide-enter-end {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .pet-pref-slide-leave {
+        transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .pet-pref-slide-leave-start {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .pet-pref-slide-leave-end {
+        opacity: 0;
+        transform: translateY(-6px);
     }
 
     .pet-preferences-card-head {
@@ -393,7 +497,7 @@ new class extends Component {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
-        gap: 0.5rem;
+        gap: 1rem;
         margin: 1.5rem 0;
     }
 
@@ -439,11 +543,20 @@ new class extends Component {
         justify-content: center;
         height: 100%;
         text-align: center;
+        color: inherit;
         font-family: Lato;
-        font-size: 16px;
+        font-size: 18px;
         font-style: normal;
-        font-weight: 600;
-        line-height: normal;
+        font-weight: 400;
+        line-height: 25px;
+    }
+
+    .service-chip.is-active .pref-chip-label {
+        color: #A4C560;
+    }
+
+    .pet-preferences-card.is-editing .service-chip.is-active .pref-chip-label {
+        color: #FDFCF8;
     }
 
     .pref-chip-check-icon {
@@ -452,9 +565,10 @@ new class extends Component {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        overflow: hidden;
         opacity: 0;
         transform: scale(0.6);
-        transition: opacity 180ms ease, transform 180ms ease;
+        transition: opacity 180ms ease, transform 180ms ease, width 180ms ease;
     }
 
     .pref-chip-check-icon svg,
@@ -525,12 +639,23 @@ new class extends Component {
         display: none;
     }
 
+    .pet-preferences-card.is-editing .service-chip:not(.is-active) {
+        background: #FFF;
+        color: #D4D4D4;
+        border: 1px solid #E2E2E2;
+    }
+
+    .pet-preferences-card.is-editing .service-chip:not(.is-active) .service-chip-icon {
+        color: #D4D4D4;
+        transform: none;
+    }
+
     .pet-preferences-card.is-editing .service-chip.is-active {
         border-radius: 96px;
-        border: 1px solid #E2E2E2;
         background: #FFC97A;
         color: #FDFCF8;
         border: none;
+        transform: translateY(-1px) scale(1.02);
     }
 
     .pet-preferences-card.is-editing .service-chip.is-active .service-chip-icon {

@@ -8,6 +8,8 @@ use Livewire\Volt\Component;
 new class extends Component {
     public int $perPage = 10;
 
+    public ?int $highlightItemId = null;
+
     public function getAddOnsProperty()
     {
         $email = (string) data_get(auth()->user(), 'email', '');
@@ -67,10 +69,15 @@ new class extends Component {
     }
 
     #[On('add-on-created')]
-    #[On('service-created')]
-    public function refreshList(): void
+    public function refreshList(int $itemId = 0): void
     {
         $this->perPage = 10;
+        $this->highlightItemId = $itemId > 0 ? $itemId : null;
+    }
+
+    public function clearHighlight(): void
+    {
+        $this->highlightItemId = null;
     }
 }; ?>
 
@@ -92,7 +99,11 @@ new class extends Component {
                         $price = (float) data_get($addOn->pricing, 'base_price', 0);
                         $isVisible = (bool) $addOn->visibility_controls;
                     @endphp
-                    <tr @class(['is-muted' => !$isVisible])>
+                    <tr wire:key="addon-row-{{ $addOn->id }}" @class([
+                        'is-muted' => !$isVisible,
+                        'is-newly-added' => $highlightItemId === $addOn->id,
+                    ])
+                        @if ($highlightItemId === $addOn->id) x-init="setTimeout(() => $wire.clearHighlight(), 2000)" @endif>
                         <td>{{ $addOn->add_ons_name }}</td>
                         <td>{{ $this->appliesTo((array) $addOn->pet_compatibility) }}</td>
                         <td>{{ '£' . number_format($price, 2) }}</td>
@@ -194,6 +205,23 @@ new class extends Component {
 
     .service-list-table tr.is-muted td:not(.service-edit-col) {
         opacity: 0.5;
+    }
+
+    .service-list-table tr.is-newly-added td {
+        animation: service-row-highlight-blink 2s ease-in-out;
+    }
+
+    @keyframes service-row-highlight-blink {
+
+        0%,
+        100% {
+            background-color: transparent;
+        }
+
+        25%,
+        75% {
+            background-color: rgba(216, 232, 183, 0.55);
+        }
     }
 
     .service-toggle {
