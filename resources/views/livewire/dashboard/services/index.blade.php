@@ -80,7 +80,7 @@ new class extends Component {
 
     <header class="service-list-header" x-ref="servicesHeader">
         <h3
-            x-text="showAddOn || activeServiceMenu === 'add-ons' ? 'Add-ons' : (activeServiceMenu === 'pet-preferences' ? 'Pet Preferences' : (activeServiceMenu === 'service-area' ? 'Service Area' : (showAddService ? '{{ $addServiceTitle }}' : 'Service List')))">
+            x-text="showAddOn || activeServiceMenu === 'add-ons' ? 'Add-ons' : (activeServiceMenu === 'pet-preferences' ? 'Pet Preferences' : (activeServiceMenu === 'service-area' ? (showAddServiceArea ? 'Add Service Area' : 'Service Area') : (showAddService ? '{{ $addServiceTitle }}' : 'Service List')))">
         </h3>
         <div class="service-list-header-actions">
             <button type="button" class="service-add-btn" x-show="activeServiceMenu === 'services' && !showAddService"
@@ -91,6 +91,10 @@ new class extends Component {
                 x-cloak
                 @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); showAddOn = true; window.dispatchEvent(new CustomEvent('service-form-opened'))">+
                 Add Add-ons</button>
+            <button type="button" class="service-add-btn"
+                x-show="activeServiceMenu === 'service-area' && !showAddServiceArea" x-cloak
+                @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); showAddServiceArea = true; window.dispatchEvent(new CustomEvent('service-form-opened'))">+
+                Add Service Area</button>
         </div>
     </header>
 
@@ -139,12 +143,22 @@ new class extends Component {
     </div>
 
     @if ($showServiceArea)
-        <div x-show="activeServiceMenu === 'service-area'" x-cloak x-transition:enter="service-view-enter"
-            x-transition:enter-start="service-view-enter-start" x-transition:enter-end="service-view-enter-end"
-            x-transition:leave="service-view-leave" x-transition:leave-start="service-view-leave-start"
-            x-transition:leave-end="service-view-leave-end">
-            <p class="service-placeholder-copy">Service Area panel coming next.</p>
+        <div x-show="activeServiceMenu === 'service-area' && !showAddServiceArea" x-cloak
+            x-transition:enter="service-view-enter" x-transition:enter-start="service-view-enter-start"
+            x-transition:enter-end="service-view-enter-end" x-transition:leave="service-view-leave"
+            x-transition:leave-start="service-view-leave-start" x-transition:leave-end="service-view-leave-end"
+            x-init="$watch('$el.style.display', (value) => { if (value !== 'none') { window.dispatchEvent(new CustomEvent('service-area-map-refresh')) } })">
+            <livewire:dashboard.services.service-area-list />
         </div>
+
+        <template x-if="activeServiceMenu === 'service-area' && showAddServiceArea">
+            <div x-cloak x-transition:enter="service-view-enter" x-transition:enter-start="service-view-enter-start"
+                x-transition:enter-end="service-view-enter-end" x-transition:leave="service-view-leave"
+                x-transition:leave-start="service-view-leave-start" x-transition:leave-end="service-view-leave-end"
+                x-init="window.dispatchEvent(new CustomEvent('service-area-form-map-refresh'))">
+                <livewire:dashboard.services.add-service-area-form />
+            </div>
+        </template>
     @endif
 </section>
 

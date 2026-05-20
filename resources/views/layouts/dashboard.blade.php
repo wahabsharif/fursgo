@@ -18,6 +18,7 @@
     <title>@yield('title', $pageTitle)</title>
 
     @include('partials.head')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     @yield('styles')
     @stack('styles')
 
