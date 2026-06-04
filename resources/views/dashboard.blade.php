@@ -47,6 +47,15 @@
             </div>
         </template>
 
+        <template x-if="activeSection === 'clients'">
+            <div class="active-section-header">
+                <div>
+                    <h2>Clients</h2>
+                    <p>Manage your clients and their pets.</p>
+                </div>
+            </div>
+        </template>
+
         <template x-if="activeSection === 'services'">
             <div class="active-section-header active-section-header-services">
                 <button type="button" class="service-list-header-btn" x-cloak x-show="serviceFormOpen"
@@ -67,7 +76,7 @@
         </template>
 
         <template
-            x-if="activeSection !== 'bookings' && activeSection !== 'availability' && activeSection !== 'manage-availability' && activeSection !== 'services'">
+            x-if="activeSection !== 'bookings' && activeSection !== 'availability' && activeSection !== 'manage-availability' && activeSection !== 'services' && activeSection !== 'clients'">
             <div x-text="activeSection.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())"></div>
         </template>
 
@@ -92,6 +101,9 @@
         </div>
         <div class="section-panel" :class="{ 'section-active': activeSection === 'services' }">
             <x-dashboard.services />
+        </div>
+        <div class="section-panel" :class="{ 'section-active': activeSection === 'clients' }">
+            <x-dashboard.clients />
         </div>
     </div>
 </section>

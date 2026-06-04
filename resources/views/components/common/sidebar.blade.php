@@ -241,7 +241,7 @@
             <!-- Clients -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'clients'; bookingsOpen = false; availabilityOpen = false"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'clients'; bookingsOpen = false; availabilityOpen = false; servicesOpen = false"
                     :class="{ 'active': activeSection === 'clients' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="10" viewBox="0 0 14 10"
                         fill="none">
