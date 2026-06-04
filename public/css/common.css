@@ -546,7 +546,7 @@ nav ul a.active {
 .menu-items a {
     color: var(--font-color);
     font-family: "Lato";
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
     /* normal */
     font-style: normal;

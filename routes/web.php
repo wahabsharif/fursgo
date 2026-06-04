@@ -24,20 +24,20 @@ Route::get('/seed', function () {
         // Drops all tables, re-runs migrations, then runs all seeders.
         // This guarantees existing data is removed before fresh data is inserted.
         Artisan::call('migrate:fresh', [
-            '--seed'  => true,
+            '--seed' => true,
             '--force' => true,
         ]);
 
         $output = Artisan::output();
 
         return response(
-            "<pre>Database wiped, migrated, and seeded successfully.\n\n" .
-            e($output) . "</pre>",
+            "<pre>Database wiped, migrated, and seeded successfully.\n\n"
+                . e($output) . '</pre>',
             200
         )->header('Content-Type', 'text/html');
     } catch (\Throwable $e) {
         return response(
-            "<pre>Seeding failed:\n\n" . e($e->getMessage()) . "</pre>",
+            "<pre>Seeding failed:\n\n" . e($e->getMessage()) . '</pre>',
             500
         )->header('Content-Type', 'text/html');
     }
@@ -46,6 +46,10 @@ Route::get('/seed', function () {
 // Public pages - converted to Volt
 Volt::route('/', 'home')->name('home');
 Route::view('/business-landing-page', 'business-landing-page')->name('business-landing-page');
+Route::redirect('/business/support-and-assistance/help-and-support', '/support-and-assistance/help-and-support');
+Route::redirect('/business/support-and-assistance/search', '/support-and-assistance/search');
+Route::redirect('/business/business-homepage-groomer-space-owner', '/business-homepage-groomer-space-owner');
+
 Volt::route('/support-and-assistance/help-and-support', 'help.support')->name('help-and-support');
 Volt::route('/support-and-assistance/search', 'help.search')->name('search');
 
@@ -180,4 +184,4 @@ Route::middleware(['auth:web,groomer_spacer'])->group(function () {
     })->name('dev-mode.update-meta');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
