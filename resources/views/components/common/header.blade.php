@@ -1,13 +1,20 @@
 @props(['variant' => 'default', 'dashboardNavView' => 'hub'])
 
 @php
-    $gsp = null;
+    use App\Models\GroomerSpacerProfile;
+    use Illuminate\Support\Facades\Auth;
+
+    $gsp = Auth::guard('groomer_spacer')->user();
+    $isGroomerSpacerSession = $gsp instanceof GroomerSpacerProfile;
     $displayName = null;
     $displaySubLabel = null;
     $welcomeBusinessName = null;
+    $headerProfileImage = asset('images/user-placeholder.png');
+    $isHeaderAuthenticated = $isGroomerSpacerSession || auth()->check();
     $isBusinessLandingRoute = request()->routeIs('business-landing-page');
     $isBusinessHomepageRoute = request()->routeIs('business-homepage-groomer-space-owner');
     $isHelpCentreRoute = request()->routeIs('help-and-support');
+    $isVerifyQualifyRoute = request()->routeIs('verify-qualify', 'verify-qualify.*');
     $isBusinessAuthRoute = request()->routeIs([
         'login-groomer-space',
         'signup-groomer-space',
@@ -16,38 +23,56 @@
     ]);
     $isBusinessSiteRoute = $isBusinessLandingRoute || $isBusinessHomepageRoute || $isBusinessAuthRoute;
     $isForGroomersHostsActive = $isBusinessHomepageRoute || $isBusinessLandingRoute;
-    if (auth()->check()) {
-        $gsp = \App\Models\GroomerSpacerProfile::where('email', auth()->user()->email)->first();
+    $dashboardLogoHref = $isVerifyQualifyRoute ? route('verify-qualify') : route('dashboard');
 
-        if ($gsp) {
-            $bd = is_array($gsp->business_details) ? $gsp->business_details : [];
-            $welcomeBusinessName = $bd['business_name'] ?? null;
+    if (!$isGroomerSpacerSession && auth()->check()) {
+        $gsp = GroomerSpacerProfile::where('email', auth()->user()->email)->first();
+    }
 
-            if ($gsp->account_type === 'registered_business') {
-                $displayName = $bd['business_name'] ?? ($gsp->full_name ?: auth()->user()->name);
-                $displaySubLabel = 'Business Account';
-            } elseif ($gsp->account_type === 'freelance') {
-                $fd = is_array($gsp->freelance_details) ? $gsp->freelance_details : [];
-                $displayName = $gsp->full_name ?: auth()->user()->name;
-                $displaySubLabel = $fd['contact_email'] ?? auth()->user()->email;
-            }
+    if ($gsp instanceof GroomerSpacerProfile) {
+        $bd = is_array($gsp->business_details) ? $gsp->business_details : [];
+        $welcomeBusinessName = $bd['business_name'] ?? null;
+
+        if ($gsp->account_type === 'registered_business') {
+            $displayName = $bd['business_name'] ?? $gsp->full_name;
+            $displaySubLabel = 'Business Account';
+        } elseif ($gsp->account_type === 'freelance') {
+            $fd = is_array($gsp->freelance_details) ? $gsp->freelance_details : [];
+            $displayName = $gsp->full_name ?: $gsp->email;
+            $displaySubLabel = $fd['contact_email'] ?? $gsp->email;
         }
 
-        $displayName = $displayName ?? auth()->user()->name;
-        $displaySubLabel = $displaySubLabel ?? auth()->user()->email;
+        $bb = is_array($gsp->business_basics) ? $gsp->business_basics : [];
+        $avatarPath = trim((string) ($bb['profile_photo_path'] ?? ''));
+        if ($avatarPath !== '') {
+            $headerProfileImage = asset('storage/' . ltrim($avatarPath, '/'));
+        }
     }
+
+    if ($isHeaderAuthenticated && !$displayName) {
+        $displayName = auth()->user()->name ?? null;
+        $displaySubLabel = $displaySubLabel ?? (auth()->user()->email ?? null);
+    }
+
+    $headerUserType = $isGroomerSpacerSession
+        ? $gsp->user_type ?? 'groomer'
+        : (auth()->check()
+            ? auth()->user()->user_type ?? 'groomer'
+            : 'groomer');
 @endphp
 
 @if ($variant === 'dashboard')
     {{-- Dashboard Header --}}
-    <header class="dashboard-header">
-        {{-- Full-viewport curve (sibling to max-width content wrapper) --}}
-        <div class="curve-shape-container" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 260" fill="none" preserveAspectRatio="none">
-                <path d="M0 0H1440V260H260C116.406 260 0 143.594 0 0Z"
-                    fill="{{ auth()->check() && auth()->user()->user_type === 'space' ? '#FFA89933' : '#FFF4E4' }}" />
-            </svg>
-        </div>
+    <header class="dashboard-header{{ $isVerifyQualifyRoute ? ' dashboard-header--verify-qualify' : '' }}">
+        @unless ($isVerifyQualifyRoute)
+            {{-- Full-viewport curve (sibling to max-width content wrapper) --}}
+            <div class="curve-shape-container" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 260" fill="none" preserveAspectRatio="none">
+                    <path d="M0 0H1440V260H260C116.406 260 0 143.594 0 0Z"
+                        fill="{{ $headerUserType === 'space' ? '#FFA89933' : '#FFF4E4' }}" />
+                </svg>
+            </div>
+        @endunless
 
         <div class="dashboard-header-container">
             {{-- Main Navigation Bar --}}
@@ -55,7 +80,7 @@
                 <div class="dashboard-header-inner">
                     <div class="align-items-center dash-menu-items">
                         <div class="logo-toggle-button d-flex justify-content-between">
-                            <a href="{{ route('dashboard') }}" wire:navigate @click="activeSection = 'business-hub'"
+                            <a href="{{ $dashboardLogoHref }}" wire:navigate @click="activeSection = 'business-hub'"
                                 class="d-inline-flex align-items-end gap-10" aria-label="FursGo Business dashboard">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40"
                                     viewBox="0 0 145 40" fill="none">
@@ -664,9 +689,9 @@
                                     </svg>
                                 </a>
                                 <div class="user-profile-options" style="display: none;">
-                                    @auth
+                                    @if ($isHeaderAuthenticated)
                                         <div class="user-profile-image d-flex align-items-center gap-20">
-                                            <img src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : asset('images/user-placeholder.png') }}"
+                                            <img src="{{ auth()->check() && auth()->user()->profile_image ? asset('storage/' . auth()->user()->profile_image) : $headerProfileImage }}"
                                                 alt="Profile Image" class="rounded-image">
                                             <div class="name-email d-flex flex-column">
                                                 <p class="medium-font-bold">{{ $displayName }}</p>
@@ -682,7 +707,7 @@
                                                 <p class="medium-muted-font">Please log in</p>
                                             </div>
                                         </div>
-                                    @endauth
+                                    @endif
                                     <div class="profile-menu">
                                         <a href="#" class="profile-item d-flex align-items-center gap-40"
                                             :class="{ 'profile-item--active': activeSection === 'business-hub' }"
@@ -731,14 +756,14 @@
                                             <p class="medium-light-font">Help & Support</p>
                                         </a>
                                     </div>
-                                    @auth
+                                    @if ($isHeaderAuthenticated)
                                         <div class="logout-option" onclick="this.querySelector('form').submit()">
                                             <form method="POST" action="{{ route('logout') }}" class="d-flex">
                                                 @csrf
                                                 <button type="submit"
                                                     class="mt-3 d-flex align-items-center gap-40 border-0 bg-transparent p-0 w-100 cursor-pointer">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="22"
-                                                        viewBox="0 0 17 22" fill="none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="17"
+                                                        height="22" viewBox="0 0 17 22" fill="none">
                                                         <path
                                                             d="M15.5645 0C15.9787 0 16.3145 0.335786 16.3145 0.75V4.4541C16.3142 4.86813 15.9785 5.2041 15.5645 5.2041C15.1505 5.20391 14.8147 4.86801 14.8145 4.4541V1.5H1.5V20H14.8145V17.0459C14.8147 16.632 15.1505 16.2961 15.5645 16.2959C15.9785 16.2959 16.3142 16.6319 16.3145 17.0459V20.75C16.3145 21.1642 15.9787 21.5 15.5645 21.5H0.75C0.335787 21.5 3.5434e-07 21.1642 0 20.75V0.75C0 0.335786 0.335786 0 0.75 0H15.5645ZM12.0293 6.84473C12.2246 6.64946 12.5411 6.64946 12.7363 6.84473L15.918 10.0264C16.1131 10.2216 16.1132 10.5382 15.918 10.7334L12.7363 13.915C12.5411 14.1101 12.2245 14.1101 12.0293 13.915C11.8342 13.7198 11.8342 13.4032 12.0293 13.208L14.3574 10.8799H5.19434C4.91827 10.8799 4.69447 10.6559 4.69434 10.3799C4.69434 10.1037 4.91819 9.87988 5.19434 9.87988H14.3574L12.0293 7.55176C11.8341 7.35658 11.8343 7.04001 12.0293 6.84473Z"
                                                             fill="#3B3731" />
@@ -760,7 +785,7 @@
                                                 <p class="medium-light-font">Log in</p>
                                             </a>
                                         </div>
-                                    @endauth
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -957,6 +982,59 @@
                 height: 260px;
                 pointer-events: none;
                 z-index: 1;
+            }
+
+            /* Verify & Qualify: no header curve; align nav width with .verification-wrapper (.container) */
+            .dashboard-header.dashboard-header--verify-qualify {
+                background: transparent;
+            }
+
+            .dashboard-header.dashboard-header--verify-qualify>.dashboard-header-container>.dashboard-navbar {
+                padding: 49px 0;
+            }
+
+            .dashboard-header.dashboard-header--verify-qualify .curve-shape-container {
+                display: none;
+            }
+
+            .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
+                width: 100%;
+                max-width: 100%;
+                margin-left: auto;
+                margin-right: auto;
+                padding-left: var(--bs-gutter-x, 0.75rem);
+                padding-right: var(--bs-gutter-x, 0.75rem);
+                box-sizing: border-box;
+            }
+
+            @media (min-width: 576px) {
+                .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
+                    max-width: 540px;
+                }
+            }
+
+            @media (min-width: 768px) {
+                .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
+                    max-width: 720px;
+                }
+            }
+
+            @media (min-width: 992px) {
+                .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
+                    max-width: 960px;
+                }
+            }
+
+            @media (min-width: 1200px) {
+                .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
+                    max-width: 1140px;
+                }
+            }
+
+            @media (min-width: 1400px) {
+                .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
+                    max-width: 1320px;
+                }
             }
 
             .curve-shape-container svg {

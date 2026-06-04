@@ -17,6 +17,7 @@
         $dashboardNavView = match (true) {
             request()->routeIs('business-homepage-groomer-space-owner') => 'for-groomers-hosts',
             request()->routeIs('help-and-support') => 'help-centre',
+            request()->routeIs('verify-qualify', 'verify-qualify.*') => 'verify-qualify',
             default => 'hub',
         };
 
@@ -94,6 +95,19 @@
 
         .dashboard-shell--for-groomers-hosts .dashboard-info-main .container,
         .dashboard-shell--help-centre .dashboard-info-main .container {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Verify & Qualify: content width matches header (Bootstrap .container only) */
+        .dashboard-shell--verify-qualify .dashboard-info-main {
+            max-width: 100%;
+            width: 100%;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .dashboard-shell--verify-qualify .dashboard-info-main>.container {
             margin-left: auto;
             margin-right: auto;
         }
