@@ -1,5 +1,5 @@
 <div class="legal-policy-wrap" wire:key="verify-qualify-legal-policy">
-    <h1 class="business-basics-title">Legal Agreements</h1>
+    <h1 class="business-basics-title">Legal &amp; Policy Agreements</h1>
     <form wire:submit="submitLegalPolicy">
         <div
             class="legal-agreements-content-card {{ $legal_agreements_expanded ? 'legal-agreements-content-card--expanded' : '' }}">
@@ -38,10 +38,11 @@
                 </a>
             </div>
             <div class="legal-policy-action-btns">
-                <button type="button" class="legal-policy-btn legal-policy-btn--outline" wire:click="goBack">
+                <button type="button" class="legal-policy-btn legal-policy-btn--outline"
+                    wire:click="goBackFromBuildProfile">
                     Decline
                 </button>
-                <button type="submit" style="width: 167px;"
+                <button type="submit" style="width: 167px;background: #C9DDA0 !important;"
                     class="submit-btn legal-policy-submit {{ $this->isLegalPolicyContinueEnabled() ? 'btn-active' : 'btn-disabled' }}"
                     wire:loading.attr="disabled" wire:target="submitLegalPolicy"
                     @if (!$this->isLegalPolicyContinueEnabled()) disabled @endif>

@@ -11,7 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 
-new #[Layout('layouts.app')] class extends Component {
+new #[Layout('layouts.dashboard')] class extends Component {
     use WithFileUploads;
 
     // Form display control
@@ -152,6 +152,9 @@ new #[Layout('layouts.app')] class extends Component {
 
     /** User must check before Submit (stored in information_accuracy_confirmed). */
     public bool $information_accuracy_confirmed = false;
+
+    /** When true, returning from Verification Notices highlights missing personal-step fields. */
+    public bool $verification_review_mode = false;
 
     /**
      * Initialize component with user data
@@ -375,12 +378,177 @@ new #[Layout('layouts.app')] class extends Component {
     }
 
     /**
-     * Resolve non-build-profile step from DB first so reloading reflects manual DB edits.
+     * Resolve Verify & Qualify sub-step (Figma 2.3–2.7) from DB + session.
+     *
+     * @return 'background_checks'|'account_payouts'|'registered_business'|'freelance_groomer'|'verification_notices'|''
      */
     private function resolveVerificationCurrentStepFromDb(?\Illuminate\Contracts\Auth\Authenticatable $user, ?string $sessionStep): string
     {
-        // On page reload, always start from the first Verify & Qualify card.
+        if (!$user instanceof GroomerSpacerProfile) {
+            return 'background_checks';
+        }
+
+        if ($user->hasCompletedVerifyQualifyPersonalStep()) {
+            return 'verification_notices';
+        }
+
+        $validSessionSteps = ['background_checks', 'account_payouts', 'registered_business', 'freelance_groomer', 'verification_notices'];
+        if (in_array($sessionStep, $validSessionSteps, true)) {
+            if (in_array($sessionStep, ['registered_business', 'freelance_groomer'], true)) {
+                return $this->reconcilePersonalInfoSubstepWithDb($user, $sessionStep);
+            }
+
+            return $sessionStep;
+        }
+
+        $usage = $this->normalizeFursgoUsage((string) ($user->user_type ?? ''));
+        $accountType = (string) ($user->account_type ?? '');
+        $hasUsage = in_array($usage, ['groomer', 'space'], true);
+        $hasAccount = in_array($accountType, ['registered_business', 'freelance'], true);
+        $locations = $user->select_location_type ?? [];
+        $hasLocations = is_array($locations) && count($locations) > 0;
+
+        if ($hasUsage && $hasAccount && $hasLocations) {
+            return $this->personalInfoSubstepForAccountType($accountType);
+        }
+
+        if ($hasUsage && $hasAccount) {
+            return 'account_payouts';
+        }
+
+        return 'background_checks';
+    }
+
+    private function resolveVerificationStatus(?GroomerSpacerProfile $user = null): string
+    {
+        $user = $user ?? Auth::guard('groomer_spacer')->user();
+        if (!$user instanceof GroomerSpacerProfile) {
+            return '';
+        }
+
+        if ($this->isFreelanceAccount($user)) {
+            $details = $user->freelance_details ?? [];
+        } else {
+            $details = $user->business_details ?? [];
+        }
+        if (!is_array($details)) {
+            $details = is_string($details) ? (json_decode($details, true) ?: []) : [];
+        }
+
+        $status = strtolower(trim((string) ($details['verification_status'] ?? '')));
+
+        if (in_array($status, ['approved', 'pending', 'rejected'], true)) {
+            return $status;
+        }
+
+        if ($user->hasCompletedVerifyQualifyPersonalStep()) {
+            return 'approved';
+        }
+
         return '';
+    }
+
+    private function persistVerificationStatus(GroomerSpacerProfile $user, string $status): void
+    {
+        if (!in_array($status, ['approved', 'pending', 'rejected'], true)) {
+            return;
+        }
+
+        if ($this->isFreelanceAccount($user)) {
+            $existing = $user->freelance_details ?? [];
+            if (!is_array($existing)) {
+                $existing = is_string($existing) ? (json_decode($existing, true) ?: []) : [];
+            }
+            $user->update([
+                'freelance_details' => array_merge($existing, ['verification_status' => $status]),
+            ]);
+
+            return;
+        }
+
+        $existing = $user->business_details ?? [];
+        if (!is_array($existing)) {
+            $existing = is_string($existing) ? (json_decode($existing, true) ?: []) : [];
+        }
+        $user->update([
+            'business_details' => array_merge($existing, ['verification_status' => $status]),
+        ]);
+    }
+
+    public function verificationIsApproved(): bool
+    {
+        if ((bool) session('verify_qualify_show_approved', false)) {
+            return true;
+        }
+
+        return $this->resolveVerificationStatus() === 'approved';
+    }
+
+    /**
+     * Map persisted account_type to the personal-info wizard sub-step.
+     */
+    private function personalInfoSubstepForAccountType(string $accountType): string
+    {
+        return $accountType === 'freelance' ? 'freelance_groomer' : 'registered_business';
+    }
+
+    /**
+     * Always show the personal-info screen that matches DB account_type (not a stale session key).
+     */
+    private function reconcilePersonalInfoSubstepWithDb(GroomerSpacerProfile $user, string $step): string
+    {
+        $accountType = (string) ($user->account_type ?? '');
+        if (!in_array($accountType, ['registered_business', 'freelance'], true)) {
+            return $step;
+        }
+
+        return $this->personalInfoSubstepForAccountType($accountType);
+    }
+
+    /**
+     * Show a single Verify & Qualify screen (2.3–2.7).
+     */
+    private function applyVerifyQualifySubstep(string $step): void
+    {
+        $user = Auth::guard('groomer_spacer')->user();
+        if ($user instanceof GroomerSpacerProfile && in_array($step, ['registered_business', 'freelance_groomer'], true)) {
+            $step = $this->reconcilePersonalInfoSubstepWithDb($user, $step);
+            $this->syncVerificationTypeSelectionsFromDb();
+            $this->hydratePersonalInfoFieldsFromDb($user);
+        }
+
+        $this->showVerificationStatus = false;
+        $this->showBusinessBasicsForm = false;
+        $this->showGroomerBusinessProfileForm = false;
+        $this->showSpacerBusinessProfileForm = false;
+        $this->showLegalPolicyForm = false;
+        $this->showStartEarningComplete = false;
+        $this->legal_agreements_expanded = false;
+        $this->showVerificationCard = false;
+        $this->showAccountPayoutsForm = false;
+        $this->showRegisteredBusiness = false;
+        $this->showFreelance = false;
+
+        switch ($step) {
+            case 'background_checks':
+                $this->showVerificationCard = true;
+                break;
+            case 'account_payouts':
+                $this->showAccountPayoutsForm = true;
+                break;
+            case 'registered_business':
+                $this->showRegisteredBusiness = true;
+                break;
+            case 'freelance_groomer':
+                $this->showFreelance = true;
+                break;
+            case 'verification_notices':
+                $this->showVerificationStatus = true;
+                break;
+        }
+
+        session(['verification_current_step' => $step]);
+        session()->save();
     }
 
     /**
@@ -456,276 +624,148 @@ new #[Layout('layouts.app')] class extends Component {
     public function loadExistingData(): void
     {
         $user = Auth::guard('groomer_spacer')->user();
-        if ($user) {
-            $this->showVerificationStatus = false;
-            $this->showBusinessBasicsForm = false;
+        if (!$user instanceof GroomerSpacerProfile) {
+            return;
+        }
 
-            // Resolve visible step using DB first, then fallback to session.
-            // This keeps UI in sync when user_type/account_type are edited directly in DB and page reloads.
-            $currentStep = $this->resolveVerificationCurrentStepFromDb($user, session('verification_current_step'));
-            if ($currentStep !== '' && $currentStep !== (string) session('verification_current_step', '')) {
-                session(['verification_current_step' => $currentStep]);
+        $this->showVerificationStatus = false;
+        $this->showBusinessBasicsForm = false;
+
+        // Resolve visible step using DB first, then fallback to session.
+        // This keeps UI in sync when user_type/account_type are edited directly in DB and page reloads.
+        $currentStep = $this->resolveVerificationCurrentStepFromDb($user, session('verification_current_step'));
+        if ($currentStep !== '' && $currentStep !== (string) session('verification_current_step', '')) {
+            session(['verification_current_step' => $currentStep]);
+            session()->save();
+        }
+
+        // Load existing verification data (normalize so "Space", "spacer", etc. match wizard branches)
+        $this->fursgo_usage = $this->normalizeFursgoUsage($user->user_type ?? '');
+        $this->account_type = $user->account_type ?? '';
+        $this->location_types = $user->select_location_type ?? [];
+
+        $this->hydratePersonalInfoFieldsFromDb($user);
+
+        // Which wizard screen to show — Figma order: 2.3 → 2.4 → 2.5/2.6 → 2.7 → build profile → 2.12.
+        $this->verification_review_mode = (bool) session('verification_review_mode', false);
+        $hasBuildProfileSession = (bool) session('verification_build_profile_step', false);
+        $allowBuildProfileResume = $hasBuildProfileSession || ($this->shouldUseDevDbPreview($user) && $user->hasCompletedVerifyQualifyPersonalStep());
+
+        if ($hasBuildProfileSession) {
+            $bpSub = (string) session('verification_build_profile_substep', 'business_basics');
+            if ($bpSub === 'complete') {
+                session()->forget(['verification_build_profile_step', 'verification_build_profile_substep']);
                 session()->save();
-            }
-
-            // Load existing verification data (normalize so "Space", "spacer", etc. match wizard branches)
-            $this->fursgo_usage = $this->normalizeFursgoUsage($user->user_type ?? '');
-            $this->account_type = $user->account_type ?? '';
-            $this->location_types = $user->select_location_type ?? [];
-
-            // Load existing personal information data
-            $this->full_name = $user->full_name ?? '';
-            $this->information_accuracy_confirmed = (bool) ($user->information_accuracy_confirmed ?? false);
-
-            // Load existing files from JSON fields (model may cast to array)
-            $businessDetails = $user->business_details ?? [];
-            if (!is_array($businessDetails)) {
-                $businessDetails = is_string($businessDetails) ? (json_decode($businessDetails, true) ?: []) : [];
-            }
-            $freelanceDetails = $user->freelance_details ?? [];
-            if (!is_array($freelanceDetails)) {
-                $freelanceDetails = is_string($freelanceDetails) ? (json_decode($freelanceDetails, true) ?: []) : [];
-            }
-            $payoutDetails = $user->payout_details ?? [];
-            if (!is_array($payoutDetails)) {
-                $payoutDetails = is_string($payoutDetails) ? (json_decode($payoutDetails, true) ?: []) : [];
-            }
-            $insuranceDetails = $user->insurance_details ?? [];
-            if (!is_array($insuranceDetails)) {
-                $insuranceDetails = is_string($insuranceDetails) ? (json_decode($insuranceDetails, true) ?: []) : [];
-            }
-
-            // Registered business: business_details JSON. Freelance: freelance_details JSON (different keys).
-            if (($user->account_type ?? '') === 'freelance') {
-                $this->freelance_service_home_address_line1 = trim((string) ($freelanceDetails['service_home_address_line1'] ?? ''));
-                $this->freelance_service_home_address_line2 = trim((string) ($freelanceDetails['service_home_address_line2'] ?? ''));
-                if ($this->freelance_service_home_address_line1 === '' && $this->freelance_service_home_address_line2 === '') {
-                    $legacyTrading = trim((string) ($freelanceDetails['trading_name'] ?? ''));
-                    if ($legacyTrading !== '') {
-                        $this->freelance_service_home_address_line1 = $legacyTrading;
-                    }
-                }
-                $this->business_email = trim((string) ($freelanceDetails['contact_email'] ?? ''));
-                $this->business_name = '';
-                $this->business_registration_number = '';
-                $this->business_phone = $freelanceDetails['contact_phone'] ?? '';
-            } else {
-                $this->business_email = trim((string) ($businessDetails['business_email'] ?? ''));
-                $this->business_name = $businessDetails['business_name'] ?? '';
-                $this->business_registration_number = $businessDetails['business_registration_number'] ?? '';
-                $this->business_phone = $businessDetails['business_phone'] ?? '';
-            }
-
-            // Load payout details
-            $this->account_holder_name = $payoutDetails['account_holder_name'] ?? '';
-            $this->account_number = $payoutDetails['account_number'] ?? '';
-            $this->sort_code = $payoutDetails['sort_code'] ?? '';
-            $this->iban = $payoutDetails['iban'] ?? '';
-
-            // Load existing file paths (these are stored separately from actual files)
-            $idPaths = $user->id_document_paths ?? null;
-            if (is_array($idPaths)) {
-                $this->id_documents = $idPaths;
-            } elseif (is_string($idPaths) && $idPaths !== '') {
-                $this->id_documents = json_decode($idPaths, true) ?: [];
-            } else {
-                $this->id_documents = [];
-            }
-            $rawInsPaths = $insuranceDetails['insurance_certificate_paths'] ?? [];
-            $this->insurance_certificate_paths = is_array($rawInsPaths) ? array_values(array_filter($rawInsPaths, fn($p) => is_string($p) && $p !== '')) : [];
-            $this->insurance_certificate_upload = [];
-            $this->business_owner_id_images = ($user->account_type ?? '') === 'freelance' ? $freelanceDetails['id_verification_images'] ?? [] : $businessDetails['business_owner_id_images'] ?? [];
-
-            // Which wizard screen to show (session), or last step if profile data shows onboarding is done.
-            $personalInfoDone = $user->hasCompletedVerifyQualifyPersonalStep();
-            $allowBuildProfileResume = $personalInfoDone || $this->shouldUseDevDbPreview($user);
-
-            $showApprovedStep = (bool) session('verify_qualify_show_approved', false);
-            $hasExplicitStepOneNavigation = in_array($currentStep, ['account_payouts', 'registered_business', 'freelance_groomer'], true);
-            $hasBuildProfileSession = (bool) session('verification_build_profile_step', false);
-
-            if ($hasBuildProfileSession && !$showApprovedStep && $allowBuildProfileResume && $user instanceof GroomerSpacerProfile) {
-                $bpSub = (string) session('verification_build_profile_substep', 'business_basics');
-                if ($bpSub === 'complete') {
-                    session()->forget(['verification_build_profile_step', 'verification_build_profile_substep']);
-                    session()->save();
-                }
-            }
-
-            if ($hasExplicitStepOneNavigation && !$showApprovedStep && !$hasBuildProfileSession) {
-                switch ($currentStep) {
-                    case 'registered_business':
-                        $this->showVerificationCard = false;
-                        $this->showAccountPayoutsForm = false;
-                        $this->showRegisteredBusiness = true;
-                        $this->showFreelance = false;
-                        break;
-                    case 'freelance_groomer':
-                        $this->showVerificationCard = false;
-                        $this->showAccountPayoutsForm = false;
-                        $this->showRegisteredBusiness = false;
-                        $this->showFreelance = true;
-                        break;
-                    case 'account_payouts':
-                        $this->showVerificationCard = false;
-                        $this->showAccountPayoutsForm = true;
-                        $this->showRegisteredBusiness = false;
-                        $this->showFreelance = false;
-                        break;
-                }
-            } elseif ($hasBuildProfileSession && !$showApprovedStep && $allowBuildProfileResume && $user instanceof GroomerSpacerProfile) {
-                $buildProfileSubstep = $this->shouldUseDevDbPreview($user) ? (string) session('verification_build_profile_substep', 'business_basics') : $this->inferVerificationBuildProfileSubstep($user);
-                session([
-                    'verification_build_profile_step' => true,
-                    'verification_build_profile_substep' => $buildProfileSubstep,
-                ]);
-                session()->save();
-                $buildProfileSubstep = $this->coerceBuildProfileSubstepToUserType($user, $buildProfileSubstep);
-                if ($buildProfileSubstep !== (string) session('verification_build_profile_substep', '')) {
-                    session(['verification_build_profile_substep' => $buildProfileSubstep]);
-                    session()->save();
-                }
-                $this->enterBusinessBasicsStep($user, false);
-                if ($buildProfileSubstep === 'groomer_profile') {
-                    $this->showBusinessBasicsForm = false;
-                    $this->showGroomerBusinessProfileForm = true;
-                    $this->showSpacerBusinessProfileForm = false;
-                    $this->showLegalPolicyForm = false;
-                    $this->showStartEarningComplete = false;
-                } elseif ($buildProfileSubstep === 'spacer_profile') {
-                    $this->showBusinessBasicsForm = false;
-                    $this->showGroomerBusinessProfileForm = false;
-                    $this->showSpacerBusinessProfileForm = true;
-                    $this->showLegalPolicyForm = false;
-                    $this->showStartEarningComplete = false;
-                } elseif ($buildProfileSubstep === 'legal_policy') {
-                    $this->showBusinessBasicsForm = false;
-                    $this->showGroomerBusinessProfileForm = false;
-                    $this->showSpacerBusinessProfileForm = false;
-                    $this->showLegalPolicyForm = true;
-                    $this->showStartEarningComplete = false;
-                    if ($user->legal_policy_agreements) {
-                        $this->legal_terms_accepted = true;
-                        $this->legal_privacy_accepted = true;
-                    }
-                } elseif ($buildProfileSubstep === 'start_grooming') {
-                    $this->showBusinessBasicsForm = false;
-                    $this->showGroomerBusinessProfileForm = false;
-                    $this->showSpacerBusinessProfileForm = false;
-                    $this->showLegalPolicyForm = false;
-                    $this->showStartEarningComplete = true;
-                }
-            } elseif ($showApprovedStep && $allowBuildProfileResume) {
-                $this->showVerificationStatus = true;
-                $this->showVerificationCard = false;
-                $this->showAccountPayoutsForm = false;
-                $this->showRegisteredBusiness = false;
-                $this->showFreelance = false;
-            } elseif ($allowBuildProfileResume && $hasBuildProfileSession) {
-                $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
-                if (($usage === 'space' || $usage === 'groomer') && $user instanceof GroomerSpacerProfile) {
-                    $buildProfileSubstep = $this->shouldUseDevDbPreview($user) ? (string) session('verification_build_profile_substep', 'business_basics') : $this->inferVerificationBuildProfileSubstep($user);
-                    session([
-                        'verification_build_profile_step' => true,
-                        'verification_build_profile_substep' => $buildProfileSubstep,
-                    ]);
-                    session()->save();
-                    $buildProfileSubstep = $this->coerceBuildProfileSubstepToUserType($user, $buildProfileSubstep);
-                    session(['verification_build_profile_substep' => $buildProfileSubstep]);
-                    session()->save();
-                    $this->enterBusinessBasicsStep($user, false);
-                    if ($buildProfileSubstep === 'groomer_profile') {
-                        $this->showBusinessBasicsForm = false;
-                        $this->showGroomerBusinessProfileForm = true;
-                        $this->showSpacerBusinessProfileForm = false;
-                        $this->showLegalPolicyForm = false;
-                        $this->showStartEarningComplete = false;
-                    } elseif ($buildProfileSubstep === 'spacer_profile') {
-                        $this->showBusinessBasicsForm = false;
-                        $this->showGroomerBusinessProfileForm = false;
-                        $this->showSpacerBusinessProfileForm = true;
-                        $this->showLegalPolicyForm = false;
-                        $this->showStartEarningComplete = false;
-                    } elseif ($buildProfileSubstep === 'legal_policy') {
-                        $this->showBusinessBasicsForm = false;
-                        $this->showGroomerBusinessProfileForm = false;
-                        $this->showSpacerBusinessProfileForm = false;
-                        $this->showLegalPolicyForm = true;
-                        $this->showStartEarningComplete = false;
-                        if ($user->legal_policy_agreements) {
-                            $this->legal_terms_accepted = true;
-                            $this->legal_privacy_accepted = true;
-                        }
-                    } elseif ($buildProfileSubstep === 'start_grooming') {
-                        $this->showBusinessBasicsForm = false;
-                        $this->showGroomerBusinessProfileForm = false;
-                        $this->showSpacerBusinessProfileForm = false;
-                        $this->showLegalPolicyForm = false;
-                        $this->showStartEarningComplete = true;
-                    }
-                } else {
-                    $this->showVerificationCard = false;
-                    $this->showAccountPayoutsForm = false;
-                    $this->showRegisteredBusiness = $user->account_type === 'registered_business';
-                    $this->showFreelance = $user->account_type === 'freelance';
-                }
-            } else {
-                switch ($currentStep) {
-                    case 'registered_business':
-                        $this->showVerificationCard = false;
-                        $this->showAccountPayoutsForm = false;
-                        $this->showRegisteredBusiness = true;
-                        $this->showFreelance = false;
-                        break;
-                    case 'freelance_groomer':
-                        $this->showVerificationCard = false;
-                        $this->showAccountPayoutsForm = false;
-                        $this->showRegisteredBusiness = false;
-                        $this->showFreelance = true;
-                        break;
-                    case 'account_payouts':
-                        $this->showVerificationCard = false;
-                        $this->showAccountPayoutsForm = true;
-                        $this->showRegisteredBusiness = false;
-                        $this->showFreelance = false;
-                        break;
-                    default:
-                        if ($this->shouldUseDevDbPreview($user)) {
-                            $this->showVerificationCard = false;
-                            $this->showAccountPayoutsForm = false;
-                            $this->showRegisteredBusiness = ($user->account_type ?? '') === 'registered_business';
-                            $this->showFreelance = ($user->account_type ?? '') === 'freelance';
-                        } else {
-                            $this->showVerificationCard = true;
-                            $this->showAccountPayoutsForm = false;
-                            $this->showRegisteredBusiness = false;
-                            $this->showFreelance = false;
-                        }
-                        break;
-                }
-            }
-
-            // Never show the wrong build-profile partial if session substep was stale vs user_type
-            if ($user instanceof GroomerSpacerProfile) {
-                $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
-                $bb = $user->business_basics ?? [];
-                if (!is_array($bb)) {
-                    $bb = is_string($bb) ? (json_decode($bb, true) ?: []) : [];
-                }
-                $hasDisplayName = trim((string) ($bb['display_name'] ?? '')) !== '';
-                if ($usage === 'space' && $this->showGroomerBusinessProfileForm) {
-                    $this->showGroomerBusinessProfileForm = false;
-                    if ($hasDisplayName && !$this->showBusinessBasicsForm) {
-                        $this->showSpacerBusinessProfileForm = true;
-                    }
-                } elseif ($usage === 'groomer' && $this->showSpacerBusinessProfileForm) {
-                    $this->showSpacerBusinessProfileForm = false;
-                    if ($hasDisplayName && !$this->showBusinessBasicsForm) {
-                        $this->showGroomerBusinessProfileForm = true;
-                    }
-                }
+                $hasBuildProfileSession = false;
             }
         }
+
+        if ($hasBuildProfileSession && $allowBuildProfileResume) {
+            $buildProfileSubstep = $this->shouldUseDevDbPreview($user) ? (string) session('verification_build_profile_substep', 'business_basics') : $this->inferVerificationBuildProfileSubstep($user);
+            session([
+                'verification_build_profile_step' => true,
+                'verification_build_profile_substep' => $buildProfileSubstep,
+            ]);
+            session()->save();
+            $buildProfileSubstep = $this->coerceBuildProfileSubstepToUserType($user, $buildProfileSubstep);
+            if ($buildProfileSubstep !== (string) session('verification_build_profile_substep', '')) {
+                session(['verification_build_profile_substep' => $buildProfileSubstep]);
+                session()->save();
+            }
+            $this->applyBuildProfileSubstepUi($user, $buildProfileSubstep);
+        } elseif ($currentStep === 'verification_notices') {
+            $this->applyVerifyQualifySubstep('verification_notices');
+        } elseif ($this->shouldUseDevDbPreview($user) && in_array($currentStep, ['registered_business', 'freelance_groomer', 'account_payouts'], true)) {
+            $this->applyVerifyQualifySubstep($currentStep);
+        } else {
+            $this->applyVerifyQualifySubstep($currentStep !== '' ? $currentStep : 'background_checks');
+        }
+
+        // Never show the wrong build-profile partial if session substep was stale vs user_type
+        $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
+        $bb = $user->business_basics ?? [];
+        if (!is_array($bb)) {
+            $bb = is_string($bb) ? (json_decode($bb, true) ?: []) : [];
+        }
+        $hasDisplayName = trim((string) ($bb['display_name'] ?? '')) !== '';
+        if ($usage === 'space' && $this->showGroomerBusinessProfileForm) {
+            $this->showGroomerBusinessProfileForm = false;
+            if ($hasDisplayName && !$this->showBusinessBasicsForm) {
+                $this->showSpacerBusinessProfileForm = true;
+            }
+        } elseif ($usage === 'groomer' && $this->showSpacerBusinessProfileForm) {
+            $this->showSpacerBusinessProfileForm = false;
+            if ($hasDisplayName && !$this->showBusinessBasicsForm) {
+                $this->showGroomerBusinessProfileForm = true;
+            }
+        }
+    }
+
+    /**
+     * Load personal-info form fields from the JSON column that matches DB account_type.
+     */
+    private function hydratePersonalInfoFieldsFromDb(GroomerSpacerProfile $user): void
+    {
+        $this->full_name = $user->full_name ?? '';
+        $this->information_accuracy_confirmed = (bool) ($user->information_accuracy_confirmed ?? false);
+
+        $businessDetails = $user->business_details ?? [];
+        if (!is_array($businessDetails)) {
+            $businessDetails = is_string($businessDetails) ? (json_decode($businessDetails, true) ?: []) : [];
+        }
+        $freelanceDetails = $user->freelance_details ?? [];
+        if (!is_array($freelanceDetails)) {
+            $freelanceDetails = is_string($freelanceDetails) ? (json_decode($freelanceDetails, true) ?: []) : [];
+        }
+        $payoutDetails = $user->payout_details ?? [];
+        if (!is_array($payoutDetails)) {
+            $payoutDetails = is_string($payoutDetails) ? (json_decode($payoutDetails, true) ?: []) : [];
+        }
+        $insuranceDetails = $user->insurance_details ?? [];
+        if (!is_array($insuranceDetails)) {
+            $insuranceDetails = is_string($insuranceDetails) ? (json_decode($insuranceDetails, true) ?: []) : [];
+        }
+
+        if (($user->account_type ?? '') === 'freelance') {
+            $this->freelance_service_home_address_line1 = trim((string) ($freelanceDetails['service_home_address_line1'] ?? ''));
+            $this->freelance_service_home_address_line2 = trim((string) ($freelanceDetails['service_home_address_line2'] ?? ''));
+            if ($this->freelance_service_home_address_line1 === '' && $this->freelance_service_home_address_line2 === '') {
+                $legacyTrading = trim((string) ($freelanceDetails['trading_name'] ?? ''));
+                if ($legacyTrading !== '') {
+                    $this->freelance_service_home_address_line1 = $legacyTrading;
+                }
+            }
+            $this->business_email = trim((string) ($freelanceDetails['contact_email'] ?? ''));
+            $this->business_name = '';
+            $this->business_registration_number = '';
+            $this->business_phone = $freelanceDetails['contact_phone'] ?? '';
+            $this->business_owner_id_images = is_array($freelanceDetails['id_verification_images'] ?? null) ? $freelanceDetails['id_verification_images'] : [];
+        } else {
+            $this->freelance_service_home_address_line1 = '';
+            $this->freelance_service_home_address_line2 = '';
+            $this->business_email = trim((string) ($businessDetails['business_email'] ?? ''));
+            $this->business_name = $businessDetails['business_name'] ?? '';
+            $this->business_registration_number = $businessDetails['business_registration_number'] ?? '';
+            $this->business_phone = $businessDetails['business_phone'] ?? '';
+            $this->business_owner_id_images = is_array($businessDetails['business_owner_id_images'] ?? null) ? $businessDetails['business_owner_id_images'] : [];
+        }
+
+        $this->account_holder_name = $payoutDetails['account_holder_name'] ?? '';
+        $this->account_number = $payoutDetails['account_number'] ?? '';
+        $this->sort_code = $payoutDetails['sort_code'] ?? '';
+        $this->iban = $payoutDetails['iban'] ?? '';
+
+        $idPaths = $user->id_document_paths ?? null;
+        if (is_array($idPaths)) {
+            $this->id_documents = $idPaths;
+        } elseif (is_string($idPaths) && $idPaths !== '') {
+            $this->id_documents = json_decode($idPaths, true) ?: [];
+        } else {
+            $this->id_documents = [];
+        }
+        $rawInsPaths = $insuranceDetails['insurance_certificate_paths'] ?? [];
+        $this->insurance_certificate_paths = is_array($rawInsPaths) ? array_values(array_filter($rawInsPaths, fn($p) => is_string($p) && $p !== '')) : [];
+        $this->insurance_certificate_upload = [];
     }
 
     /**
@@ -915,23 +955,10 @@ new #[Layout('layouts.app')] class extends Component {
             'select_location_type' => $locationTypesForSave,
         ]);
 
-        // Move to personal-info step directly (no full-page reload).
-        if ($accountTypeForSave === 'freelance') {
-            session(['verification_current_step' => 'freelance_groomer']);
-            $this->showVerificationCard = false;
-            $this->showAccountPayoutsForm = false;
-            $this->showRegisteredBusiness = false;
-            $this->showFreelance = true;
-        } else {
-            session(['verification_current_step' => 'registered_business']);
-            $this->showVerificationCard = false;
-            $this->showAccountPayoutsForm = false;
-            $this->showRegisteredBusiness = true;
-            $this->showFreelance = false;
-        }
+        session()->forget(['verify_qualify_show_approved', 'verification_review_mode']);
+        $this->verification_review_mode = false;
 
-        session()->forget('verify_qualify_show_approved');
-        session()->save();
+        $this->applyVerifyQualifySubstep($this->personalInfoSubstepForAccountType($accountTypeForSave));
     }
 
     /**
@@ -946,37 +973,187 @@ new #[Layout('layouts.app')] class extends Component {
         return $this->fursgo_usage && $this->account_type && count($this->location_types) > 0;
     }
 
-    public function verifyBusiness()
+    public function verifyBusiness(): void
     {
-        $this->showVerificationStatus = false;
-        $this->showVerificationCard = false;
-        $this->showAccountPayoutsForm = true;
-        $this->showRegisteredBusiness = false;
-        $this->showFreelance = false;
-        session(['verification_current_step' => 'account_payouts']);
-        session()->save();
+        $this->verification_review_mode = false;
+        session()->forget('verification_review_mode');
+        $this->applyVerifyQualifySubstep('account_payouts');
     }
 
     /**
-     * Handle back button click - go to previous step
+     * Handle back button — previous screen in Figma order (2.6/2.5 → 2.4 → 2.3).
      */
     public function goBack(): void
     {
-        $this->showVerificationStatus = false;
-        $this->showVerificationCard = false;
-        $this->showAccountPayoutsForm = true;
-        $this->showRegisteredBusiness = false;
-        $this->showFreelance = false;
-        $this->showBusinessBasicsForm = false;
-        $this->showGroomerBusinessProfileForm = false;
-        $this->showSpacerBusinessProfileForm = false;
-        $this->showLegalPolicyForm = false;
-        $this->showStartEarningComplete = false;
-        $this->legal_agreements_expanded = false;
-        session(['verification_current_step' => 'account_payouts']);
-        session()->forget('verification_build_profile_step');
-        session()->forget('verification_build_profile_substep');
-        session()->save();
+        if ($this->showStartEarningComplete) {
+            $this->goBackFromStartGroomingComplete();
+
+            return;
+        }
+
+        if ($this->showVerificationStatus) {
+            $this->goBackFromVerificationNotices();
+
+            return;
+        }
+
+        if ($this->showLegalPolicyForm || $this->showGroomerBusinessProfileForm || $this->showSpacerBusinessProfileForm || $this->showBusinessBasicsForm) {
+            $this->goBackFromBuildProfile();
+
+            return;
+        }
+
+        if ($this->showRegisteredBusiness || $this->showFreelance) {
+            $this->verification_review_mode = false;
+            session()->forget('verification_review_mode');
+            $this->applyVerifyQualifySubstep('account_payouts');
+
+            return;
+        }
+
+        if ($this->showAccountPayoutsForm) {
+            $this->applyVerifyQualifySubstep('background_checks');
+        }
+    }
+
+    /**
+     * Back within Build Your Profile (business basics → groomer/spacer → legal).
+     */
+    public function goBackFromBuildProfile(): void
+    {
+        $user = Auth::guard('groomer_spacer')->user();
+        if (!$user instanceof GroomerSpacerProfile) {
+            return;
+        }
+
+        if ($this->showLegalPolicyForm) {
+            $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
+            $sub = $usage === 'space' ? 'spacer_profile' : 'groomer_profile';
+            session(['verification_build_profile_step' => true]);
+            $this->setBuildProfileSubstep($sub);
+            $this->applyBuildProfileSubstepUi($user, $sub);
+
+            return;
+        }
+
+        if ($this->showGroomerBusinessProfileForm || $this->showSpacerBusinessProfileForm) {
+            session(['verification_build_profile_step' => true]);
+            $this->setBuildProfileSubstep('business_basics');
+            $this->enterBusinessBasicsStep($user, true);
+
+            return;
+        }
+
+        if ($this->showBusinessBasicsForm) {
+            if ($user->hasCompletedVerifyQualifyPersonalStep()) {
+                session()->forget(['verification_build_profile_step', 'verification_build_profile_substep']);
+                $this->applyVerifyQualifySubstep('verification_notices');
+            } else {
+                $this->applyVerifyQualifySubstep('account_payouts');
+            }
+
+            return;
+        }
+    }
+
+    /**
+     * Back from step 4 completion screen → Legal & Policy.
+     */
+    public function goBackFromStartGroomingComplete(): void
+    {
+        $user = Auth::guard('groomer_spacer')->user();
+        if (!$user instanceof GroomerSpacerProfile) {
+            return;
+        }
+
+        session(['verification_build_profile_step' => true]);
+        $this->setBuildProfileSubstep('legal_policy');
+        $this->applyBuildProfileSubstepUi($user, 'legal_policy');
+    }
+
+    /**
+     * Back from Verification Notices → last personal-info screen (DB account_type).
+     */
+    public function goBackFromVerificationNotices(): void
+    {
+        $user = Auth::guard('groomer_spacer')->user();
+        if (!$user instanceof GroomerSpacerProfile) {
+            $this->applyVerifyQualifySubstep('background_checks');
+
+            return;
+        }
+
+        $accountType = (string) ($user->account_type ?? '');
+        if ($accountType === 'freelance') {
+            $this->applyVerifyQualifySubstep('freelance_groomer');
+        } elseif ($accountType === 'registered_business') {
+            $this->applyVerifyQualifySubstep('registered_business');
+        } else {
+            $this->applyVerifyQualifySubstep('account_payouts');
+        }
+    }
+
+    /**
+     * From Verification Notices (not approved) — return to 2.5/2.6 with validation hints.
+     */
+    public function reviewSubmission(): void
+    {
+        $user = Auth::guard('groomer_spacer')->user();
+        if (!$user instanceof GroomerSpacerProfile) {
+            return;
+        }
+
+        $this->verification_review_mode = true;
+        session(['verification_review_mode' => true]);
+        session()->forget('verify_qualify_show_approved');
+
+        $accountType = (string) ($user->account_type ?? '');
+        $step = in_array($accountType, ['registered_business', 'freelance'], true) ? $this->personalInfoSubstepForAccountType($accountType) : ($this->isFreelanceAccount($user) ? 'freelance_groomer' : 'registered_business');
+        $this->applyVerifyQualifySubstep($step);
+        $this->highlightPersonalStepValidationErrors($user);
+    }
+
+    private function highlightPersonalStepValidationErrors(GroomerSpacerProfile $user): void
+    {
+        if ($this->shouldUseDevDbPreview($user)) {
+            return;
+        }
+
+        $rules = $this->isFreelanceAccount($user)
+            ? [
+                'full_name' => ['required', 'string', 'max:255'],
+                'business_email' => ['required', 'email', 'max:255'],
+                'business_phone' => ['required', 'string', 'max:50'],
+                'account_holder_name' => ['required', 'string', 'max:255'],
+                'account_number' => ['required', 'string', 'max:50'],
+                'sort_code' => ['required', 'string', 'max:20'],
+                'iban' => ['required', 'string', 'max:50'],
+                'information_accuracy_confirmed' => ['accepted'],
+            ]
+            : [
+                'full_name' => ['required', 'string', 'max:255'],
+                'business_email' => ['required', 'email', 'max:255'],
+                'business_name' => ['required', 'string', 'max:255'],
+                'business_registration_number' => ['required', 'string', 'max:100'],
+                'business_phone' => ['required', 'string', 'max:50'],
+                'account_holder_name' => ['required', 'string', 'max:255'],
+                'account_number' => ['required', 'string', 'max:50'],
+                'sort_code' => ['required', 'string', 'max:20'],
+                'iban' => ['required', 'string', 'max:50'],
+                'information_accuracy_confirmed' => ['accepted'],
+            ];
+
+        try {
+            $this->validate($rules);
+        } catch (\Illuminate\Validation\ValidationException) {
+            // Surface field errors on the review screen.
+        }
+
+        if (!$this->isPersonalInfoFormValid()) {
+            if (count($this->business_owner_id_images ?? []) === 0 && count($this->id_documents ?? []) === 0) {
+                $this->addError('business_owner_id_images', 'Please upload at least one ID document.');
+            }
+        }
     }
 
     /**
@@ -986,6 +1163,10 @@ new #[Layout('layouts.app')] class extends Component {
     {
         $user = Auth::guard('groomer_spacer')->user();
         if (!$user instanceof GroomerSpacerProfile) {
+            return;
+        }
+
+        if (!$this->verificationIsApproved()) {
             return;
         }
 
@@ -1503,6 +1684,237 @@ new #[Layout('layouts.app')] class extends Component {
         return 1;
     }
 
+    public function currentVerifyQualifySubstepKey(): string
+    {
+        if ($this->showVerificationStatus) {
+            return 'verification_notices';
+        }
+        if ($this->showFreelance) {
+            return 'freelance_groomer';
+        }
+        if ($this->showRegisteredBusiness) {
+            return 'registered_business';
+        }
+        if ($this->showAccountPayoutsForm) {
+            return 'account_payouts';
+        }
+
+        return 'background_checks';
+    }
+
+    /**
+     * @return list<array{key: string, label: string}>
+     */
+    public function verifyQualifySubsteps(?GroomerSpacerProfile $user = null): array
+    {
+        $user = $user ?? Auth::guard('groomer_spacer')->user();
+        $isFreelance = $this->isFreelanceAccount($user);
+
+        return [
+            ['key' => 'background_checks', 'label' => 'Background Checks'],
+            ['key' => 'account_payouts', 'label' => 'Verify Your Account for Payouts'],
+            [
+                'key' => $isFreelance ? 'freelance_groomer' : 'registered_business',
+                'label' => $isFreelance ? 'Freelance Groomer' : 'Registered Business',
+            ],
+            ['key' => 'verification_notices', 'label' => 'Verification Status'],
+        ];
+    }
+
+    /**
+     * @return list<array{key: string, label: string}>
+     */
+    public function buildProfileSubsteps(): array
+    {
+        return [['key' => 'business_basics', 'label' => 'Business Basics'], ['key' => 'about_business', 'label' => 'About Your Business']];
+    }
+
+    public function currentBuildProfileSubstepKey(): string
+    {
+        if ($this->showGroomerBusinessProfileForm || $this->showSpacerBusinessProfileForm) {
+            return 'about_business';
+        }
+
+        return 'business_basics';
+    }
+
+    private function hasEnteredBuildProfilePhase(GroomerSpacerProfile $user): bool
+    {
+        if ((bool) session('verification_build_profile_step', false)) {
+            return true;
+        }
+
+        $bb = $user->business_basics ?? [];
+        if (!is_array($bb)) {
+            $bb = is_string($bb) ? (json_decode($bb, true) ?: []) : [];
+        }
+
+        return trim((string) ($bb['display_name'] ?? '')) !== '';
+    }
+
+    private function maxUnlockedVerifyQualifySubstepIndex(GroomerSpacerProfile $user): int
+    {
+        if ($user->hasCompletedVerifyQualifyPersonalStep()) {
+            return 3;
+        }
+
+        $sessionStep = (string) session('verification_current_step', '');
+        if (in_array($sessionStep, ['registered_business', 'freelance_groomer'], true)) {
+            return 2;
+        }
+        if ($sessionStep === 'account_payouts') {
+            return 1;
+        }
+
+        $usage = $this->normalizeFursgoUsage((string) ($user->user_type ?? ''));
+        $accountType = (string) ($user->account_type ?? '');
+        $locations = $user->select_location_type ?? [];
+        $hasLocations = is_array($locations) && count($locations) > 0;
+
+        if (in_array($usage, ['groomer', 'space'], true) && in_array($accountType, ['registered_business', 'freelance'], true) && $hasLocations) {
+            return 2;
+        }
+
+        if (in_array($usage, ['groomer', 'space'], true) && in_array($accountType, ['registered_business', 'freelance'], true)) {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    private function maxUnlockedBuildProfileSubstepIndex(GroomerSpacerProfile $user): int
+    {
+        $bb = $user->business_basics ?? [];
+        if (!is_array($bb)) {
+            $bb = is_string($bb) ? (json_decode($bb, true) ?: []) : [];
+        }
+        $hasDisplayName = trim((string) ($bb['display_name'] ?? '')) !== '';
+        if (!$hasDisplayName) {
+            return 0;
+        }
+
+        $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
+        if ($usage === 'groomer') {
+            $gp = $user->groomer_business_profile ?? [];
+            if (!is_array($gp)) {
+                $gp = is_string($gp) ? (json_decode($gp, true) ?: []) : [];
+            }
+            $experience = trim((string) ($gp['experience'] ?? ''));
+            $petSpecs = $gp['pet_specialties'] ?? [];
+            $petSizes = $gp['pet_sizes'] ?? [];
+            $profileDone = $experience !== '' && is_array($petSpecs) && count($petSpecs) > 0 && is_array($petSizes) && count($petSizes) > 0;
+
+            return $profileDone ? 1 : 0;
+        }
+
+        if ($usage === 'space') {
+            $sp = $user->spacer_business_profile ?? [];
+            if (!is_array($sp)) {
+                $sp = is_string($sp) ? (json_decode($sp, true) ?: []) : [];
+            }
+            $bio = trim((string) ($sp['bio'] ?? ''));
+            $pricing = $sp['services_pricing'] ?? [];
+            $anyService = false;
+            if (is_array($pricing)) {
+                foreach ($pricing as $row) {
+                    if (is_array($row) && !empty($row['selected'])) {
+                        $anyService = true;
+                        break;
+                    }
+                }
+            }
+
+            return $bio !== '' && $anyService ? 1 : 0;
+        }
+
+        return 0;
+    }
+
+    public function verifyQualifySubstepIsNavigable(string $key, ?GroomerSpacerProfile $user = null): bool
+    {
+        $user = $user ?? Auth::guard('groomer_spacer')->user();
+        if (!$user instanceof GroomerSpacerProfile) {
+            return $key === 'background_checks';
+        }
+        if ($this->shouldUseDevDbPreview($user)) {
+            return true;
+        }
+
+        $maxIdx = $this->maxUnlockedVerifyQualifySubstepIndex($user);
+        foreach ($this->verifyQualifySubsteps($user) as $i => $step) {
+            if ($step['key'] === $key) {
+                return $i <= $maxIdx;
+            }
+        }
+
+        return false;
+    }
+
+    public function buildProfileSubstepIsNavigable(string $key, ?GroomerSpacerProfile $user = null): bool
+    {
+        $user = $user ?? Auth::guard('groomer_spacer')->user();
+        if (!$user instanceof GroomerSpacerProfile) {
+            return false;
+        }
+        if ($this->shouldUseDevDbPreview($user)) {
+            return true;
+        }
+        if (!$this->hasEnteredBuildProfilePhase($user)) {
+            return false;
+        }
+
+        $maxIdx = $this->maxUnlockedBuildProfileSubstepIndex($user);
+
+        return match ($key) {
+            'business_basics' => true,
+            'about_business' => $maxIdx >= 1,
+            default => false,
+        };
+    }
+
+    public function goToVerifyQualifySubstep(string $key): void
+    {
+        $user = Auth::guard('groomer_spacer')->user();
+        if (!$user instanceof GroomerSpacerProfile) {
+            return;
+        }
+        if (!$this->verifyQualifySubstepIsNavigable($key, $user)) {
+            return;
+        }
+
+        session()->forget(['verification_build_profile_step', 'verification_build_profile_substep']);
+        if (in_array($key, ['registered_business', 'freelance_groomer'], true)) {
+            $key = $this->reconcilePersonalInfoSubstepWithDb($user, $key);
+        }
+        $this->applyVerifyQualifySubstep($key);
+    }
+
+    public function goToBuildProfileSubstep(string $key): void
+    {
+        $user = Auth::guard('groomer_spacer')->user();
+        if (!$user instanceof GroomerSpacerProfile) {
+            return;
+        }
+        if (!$this->buildProfileSubstepIsNavigable($key, $user)) {
+            return;
+        }
+
+        session(['verification_build_profile_step' => true]);
+        session()->save();
+
+        if ($key === 'business_basics') {
+            $this->setBuildProfileSubstep('business_basics');
+            $this->enterBusinessBasicsStep($user, true);
+
+            return;
+        }
+
+        $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
+        $sub = $usage === 'space' ? 'spacer_profile' : 'groomer_profile';
+        $this->setBuildProfileSubstep($sub);
+        $this->applyBuildProfileSubstepUi($user, $sub);
+    }
+
     public function sidebarStepIsAvailable(int $step): bool
     {
         if ($step < 1 || $step > 4) {
@@ -1574,10 +1986,20 @@ new #[Layout('layouts.app')] class extends Component {
         if (!$user->hasCompletedVerifyQualifyPersonalStep()) {
             return 1;
         }
+
+        if (!$this->verificationIsApproved() || !$this->hasEnteredBuildProfilePhase($user)) {
+            return 1;
+        }
+
         $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
         if ($usage !== 'groomer' && $usage !== 'space') {
             return 1;
         }
+
+        if ($user->legal_policy_agreements) {
+            return 4;
+        }
+
         $sub = $this->coerceBuildProfileSubstepToUserType($user, $this->inferVerificationBuildProfileSubstep($user));
 
         return match ($sub) {
@@ -1600,33 +2022,37 @@ new #[Layout('layouts.app')] class extends Component {
         if (!$this->sidebarStepIsAvailable($step)) {
             return;
         }
+
+        if ($step === 1) {
+            $this->applySidebarStepOneForGroomerSpaceUser($user);
+
+            return;
+        }
+
         if ($this->currentSidebarStep() === $step) {
             return;
         }
 
         if ($this->shouldUseDevDbPreview($user)) {
             match ($step) {
-                1 => $this->applySidebarStepOneForGroomerSpaceUser($user),
                 2 => $this->applySidebarStepTwoForGroomerSpaceUser($user),
                 3 => $this->applySidebarStepThreeForGroomerSpaceUser($user),
                 4 => $this->applySidebarStepFourForGroomerSpaceUser($user),
+                default => null,
             };
 
             return;
         }
 
-        $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
-        $inBuildProfile = $user->hasCompletedVerifyQualifyPersonalStep() && ($usage === 'groomer' || $usage === 'space');
-
-        if (!$inBuildProfile) {
+        if (!$this->verificationIsApproved() || !$this->hasEnteredBuildProfilePhase($user)) {
             return;
         }
 
         match ($step) {
-            1 => $this->applySidebarStepOneForGroomerSpaceUser($user),
             2 => $this->applySidebarStepTwoForGroomerSpaceUser($user),
             3 => $this->applySidebarStepThreeForGroomerSpaceUser($user),
             4 => $this->applySidebarStepFourForGroomerSpaceUser($user),
+            default => null,
         };
     }
 
@@ -1674,34 +2100,34 @@ new #[Layout('layouts.app')] class extends Component {
 
     private function applySidebarStepOneForGroomerSpaceUser(GroomerSpacerProfile $user): void
     {
-        $this->showVerificationStatus = false;
-        $this->showBusinessBasicsForm = false;
-        $this->showGroomerBusinessProfileForm = false;
-        $this->showSpacerBusinessProfileForm = false;
-        $this->showLegalPolicyForm = false;
-        $this->showStartEarningComplete = false;
-        $this->legal_agreements_expanded = false;
-        $this->showVerificationCard = false;
-        $this->showRegisteredBusiness = false;
-        $this->showFreelance = false;
-        $this->showAccountPayoutsForm = true;
-        session(['verification_current_step' => 'account_payouts']);
-        session()->forget(['verification_build_profile_step', 'verification_build_profile_substep']);
-        session()->save();
+        session()->forget(['verification_build_profile_step', 'verification_build_profile_substep', 'verification_review_mode', 'verify_qualify_show_approved']);
+        $this->verification_review_mode = false;
+        $this->applyVerifyQualifySubstep('background_checks');
     }
 
     private function applySidebarStepTwoForGroomerSpaceUser(GroomerSpacerProfile $user): void
     {
-        $sub = $this->inferVerificationBuildProfileSubstep($user);
-        $sub = $this->coerceBuildProfileSubstepToUserType($user, $sub);
-        if ($sub === 'legal_policy' || $sub === 'start_grooming') {
+        session(['verification_build_profile_step' => true]);
+        session()->save();
+
+        $key = $this->currentBuildProfileSubstepKey();
+        if (!$this->buildProfileSubstepIsNavigable($key, $user)) {
+            $key = 'business_basics';
+        }
+
+        if ($key === 'about_business') {
             $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
             $sub = $usage === 'space' ? 'spacer_profile' : 'groomer_profile';
+            session(['verification_build_profile_substep' => $sub]);
+            session()->save();
+            $this->applyBuildProfileSubstepUi($user, $sub);
+
+            return;
         }
-        session(['verification_build_profile_step' => true]);
-        session(['verification_build_profile_substep' => $sub]);
+
+        session(['verification_build_profile_substep' => 'business_basics']);
         session()->save();
-        $this->applyBuildProfileSubstepUi($user, $sub);
+        $this->enterBusinessBasicsStep($user, true);
     }
 
     private function applySidebarStepThreeForGroomerSpaceUser(GroomerSpacerProfile $user): void
@@ -2150,7 +2576,7 @@ new #[Layout('layouts.app')] class extends Component {
     public function submitPersonalInfo(): void
     {
         $user = Auth::guard('groomer_spacer')->user();
-        if (!$user) {
+        if (!$user instanceof GroomerSpacerProfile) {
             return;
         }
 
@@ -2368,15 +2794,20 @@ new #[Layout('layouts.app')] class extends Component {
             $this->insurance_certificate_paths = $insuranceCertificatePaths;
             $this->insurance_certificate_upload = [];
 
-            session()->forget(['verification_build_profile_step', 'verification_build_profile_substep']);
-            session(['verify_qualify_show_approved' => true]);
+            $status = $this->isPersonalInfoFormValid() ? 'approved' : 'pending';
+            $this->persistVerificationStatus($user, $status);
+
+            session()->forget(['verification_build_profile_step', 'verification_build_profile_substep', 'verification_review_mode']);
+            $this->verification_review_mode = false;
+
+            if ($status === 'approved') {
+                session(['verify_qualify_show_approved' => true]);
+            } else {
+                session()->forget('verify_qualify_show_approved');
+            }
             session()->save();
 
-            $this->showVerificationStatus = true;
-            $this->showRegisteredBusiness = false;
-            $this->showFreelance = false;
-            $this->showVerificationCard = false;
-            $this->showAccountPayoutsForm = false;
+            $this->applyVerifyQualifySubstep('verification_notices');
         }
     }
 
@@ -2455,26 +2886,52 @@ new #[Layout('layouts.app')] class extends Component {
 
     public function activeSidebarStepLabel(): string
     {
+        return match ($this->currentSidebarStep()) {
+            4 => 'Start Grooming & Earning!',
+            3 => 'Legal & Policy Agreement',
+            2 => 'Build Your Profile',
+            default => 'Verify & Qualify',
+        };
+    }
+
+    public function activeContentScreenLabel(): string
+    {
         if ($this->showStartEarningComplete) {
-            return 'Start Grooming & Earning!';
+            return 'Your account is all set!';
         }
         if ($this->showLegalPolicyForm) {
-            return 'Legal & Policy Agreement';
+            return 'Legal & Policy Agreements';
         }
-        if ($this->showBusinessBasicsForm || $this->showGroomerBusinessProfileForm || $this->showSpacerBusinessProfileForm) {
-            return 'Build Your Profile';
+        if ($this->showGroomerBusinessProfileForm || $this->showSpacerBusinessProfileForm) {
+            return 'About Your Business';
+        }
+        if ($this->showBusinessBasicsForm) {
+            return 'Business Basics';
+        }
+        if ($this->showVerificationStatus) {
+            return 'Verification Status';
+        }
+        if ($this->showFreelance) {
+            return 'Freelance Groomer';
+        }
+        if ($this->showRegisteredBusiness) {
+            return 'Registered Business';
+        }
+        if ($this->showAccountPayoutsForm) {
+            return 'Verify Your Account for Payouts';
         }
 
-        return 'Verify & Qualify';
+        return 'Background Checks';
     }
 };
 ?>
 
-<section class="container mt-5 mb-5">
+<section class="container verify-qualify-page mt-5 mb-5">
     <div class="verification-wrapper" wire:loading.class="verification-wrapper--navigating"
-        wire:target="goToSidebarStep,submitBusinessBasics,submit,submitPersonalInfo">
+        wire:target="goToSidebarStep,goToVerifyQualifySubstep,goToBuildProfileSubstep,submitBusinessBasics,submit,submitPersonalInfo">
         <div class="verification-step-loading-bar" wire:loading
-            wire:target="goToSidebarStep,submitBusinessBasics,submit,submitPersonalInfo" aria-hidden="true">
+            wire:target="goToSidebarStep,goToVerifyQualifySubstep,goToBuildProfileSubstep,submitBusinessBasics,submit,submitPersonalInfo"
+            aria-hidden="true">
             <span class="verification-step-loading-bar__sweep"></span>
         </div>
         <!-- Floating Sidebar (step tracker) -->
@@ -2525,7 +2982,11 @@ new #[Layout('layouts.app')] class extends Component {
         <!-- Main Content -->
         <div class="main-content">
             @if ($showVerificationStatus)
-                @include('livewire.auth.verify-qualify-verification-status')
+                @if ($this->verificationIsApproved())
+                    @include('livewire.auth.verify-qualify-verification-status')
+                @else
+                    @include('livewire.auth.verify-qualify-verification-status-pending')
+                @endif
             @elseif ($showStartEarningComplete)
                 @include('livewire.auth.verify-qualify-start-grooming-complete')
             @elseif ($showBusinessBasicsForm)
@@ -2792,7 +3253,10 @@ new #[Layout('layouts.app')] class extends Component {
                             @enderror
                         </div>
 
-                        <div class="basics-actions">
+                        <div class="form-buttons basics-actions">
+                            <button type="button" class="back-btn" wire:click="goBack">
+                                <span>Back</span>
+                            </button>
                             <button type="submit"
                                 class="submit-btn {{ $this->isBusinessBasicsContinueEnabled() ? 'btn-active' : 'btn-disabled' }}"
                                 wire:loading.attr="disabled" wire:target="submitBusinessBasics"
@@ -2893,9 +3357,7 @@ new #[Layout('layouts.app')] class extends Component {
                         </button>
                     </div>
                 </div>
-            @endif
-
-            @if ($showAccountPayoutsForm)
+            @elseif ($showAccountPayoutsForm)
                 <div class="verification-card">
                     <div class="step-heading">
                         <h2>Verify Your Account for Payouts</h2>
@@ -3040,8 +3502,10 @@ new #[Layout('layouts.app')] class extends Component {
                             </div>
                         </div>
 
-                        <!-- Submit Button -->
-                        <div class="submit-section">
+                        <div class="form-buttons verification-form-actions">
+                            <button type="button" class="back-btn" wire:click="goBack">
+                                <span>Back</span>
+                            </button>
                             <button type="submit"
                                 class="submit-btn {{ $this->isFormValid() ? 'btn-active' : 'btn-disabled' }}"
                                 wire:loading.attr="disabled" wire:target="submit"
@@ -3053,13 +3517,17 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
                     </form>
                 </div>
-            @endif
-
-            @if ($showRegisteredBusiness)
+            @elseif ($showRegisteredBusiness)
                 <div class="verification-card" wire:key="verify-qualify-registered">
                     <div class="step-heading">
                         <h2>Registered Business</h2>
                     </div>
+
+                    @if ($verification_review_mode)
+                        <div class="verification-review-banner" role="status">
+                            Please review your submission. Fields that still need attention are highlighted below.
+                        </div>
+                    @endif
 
                     <form wire:submit="submitPersonalInfo" novalidate>
                         <div class="form-grid">
@@ -3432,9 +3900,9 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
                     </form>
                 </div>
+            @elseif ($showFreelance)
+                @include('livewire.auth.verify-qualify-freelance-step')
             @endif
-
-            @include('livewire.auth.verify-qualify-freelance-step')
 
         </div>
     </div>
@@ -3665,7 +4133,7 @@ new #[Layout('layouts.app')] class extends Component {
     }
 
     .sidebar-header h1 {
-        width: 25rem;
+        width: 23rem;
         color: #3B3731;
         font-family: "Playfair Display";
         font-size: 50px;
@@ -3869,7 +4337,44 @@ new #[Layout('layouts.app')] class extends Component {
 
     .verification-approved-actions {
         display: flex;
-        justify-content: center;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        max-width: 32rem;
+        margin: 2rem auto 0;
+        gap: 1rem;
+    }
+
+    .verification-form-actions {
+        margin-top: 2rem;
+    }
+
+    .verification-pending-card .verification-pending-status {
+        color: #B45309;
+        font-family: "Playfair Display";
+        font-size: 36px;
+        font-style: normal;
+        font-weight: 900;
+        line-height: normal;
+    }
+
+    .verification-pending-cta {
+        width: auto;
+        min-width: 220px;
+        padding: 0 1.75rem;
+        box-shadow: 0 4px 14px rgba(59, 55, 49, 0.14);
+    }
+
+    .verification-review-banner {
+        margin: 0 0 1.25rem;
+        padding: 0.875rem 1rem;
+        border-radius: 8px;
+        background: #FFF4E4;
+        border: 1px solid #FFC97A;
+        color: #3B3731;
+        font-family: Lato, sans-serif;
+        font-size: 15px;
+        line-height: 1.45;
     }
 
     .verification-approved-cta {
@@ -4134,7 +4639,7 @@ new #[Layout('layouts.app')] class extends Component {
         width: 105px;
         height: 48px;
         border-radius: 96px;
-        background: #FFC97A;
+        background: #C9DDA0;
         box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.10);
         color: #FFF;
         text-align: center;
@@ -4453,21 +4958,21 @@ new #[Layout('layouts.app')] class extends Component {
     }
 
     .back-btn {
-        color: #3B3731;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 105px;
+        height: 48px;
+        border-radius: 96px;
+        border: 1px solid rgba(59, 55, 49, 0.10);
+        background: #FFF;
+        color: #9D9B98;
         text-align: center;
         font-family: Lato;
         font-size: 16px;
         font-style: normal;
         font-weight: 600;
         line-height: normal;
-        text-decoration-line: underline;
-        text-decoration-style: solid;
-        text-decoration-skip-ink: auto;
-        text-decoration-thickness: auto;
-        text-underline-offset: auto;
-        text-underline-position: from-font;
-        border: none;
-        background: transparent;
         cursor: pointer;
     }
 
@@ -5196,13 +5701,8 @@ new #[Layout('layouts.app')] class extends Component {
     }
 
     .basics-actions {
-        display: flex;
-        justify-content: flex-end;
-        padding-top: 0.5rem;
-    }
-
-    .basics-actions .submit-section {
-        justify-content: flex-end;
+        margin-top: 2rem;
+        padding-top: 0;
     }
 </style>
 

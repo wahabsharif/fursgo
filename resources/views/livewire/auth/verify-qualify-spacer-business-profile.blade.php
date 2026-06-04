@@ -349,7 +349,10 @@
             </div>
         </div>
 
-        <div class="basics-actions">
+        <div class="form-buttons basics-actions">
+            <button type="button" class="back-btn" wire:click="goBack">
+                <span>Back</span>
+            </button>
             <button type="submit"
                 class="submit-btn {{ $this->isSpacerBusinessProfileContinueEnabled() ? 'btn-active' : 'btn-disabled' }}"
                 wire:loading.attr="disabled" wire:target="submitSpacerBusinessProfile"
