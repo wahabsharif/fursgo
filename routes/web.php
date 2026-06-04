@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BookingController;
+use App\Support\BusinessPageShell;
 use App\Http\Controllers\BookingInvoicePdfController;
 use App\Http\Controllers\PetDetailController;
 use App\Models\GroomerSpacerProfile;
@@ -8,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Livewire\Volt\LivewireManager;
 use Livewire\Volt\Volt;
 
 Route::get('/clear', function () {
@@ -43,21 +45,33 @@ Route::get('/seed', function () {
     }
 })->name('seed');
 
-// Public pages - converted to Volt
-Volt::route('/', 'home')->name('home');
-Route::view('/business-landing-page', 'business-landing-page')->name('business-landing-page');
+// Public pages - converted to Volt (web header shell for shared business/help pages)
+Route::middleware('business.shell.web')->group(function () {
+    Volt::route('/', 'home')->name('home');
+    Route::view('/business-landing-page', 'business-landing-page')->name('business-landing-page');
+    Volt::route('/support-and-assistance/search', 'help.search')->name('search');
+    Volt::route('/search-results', 'search.results')->name('search-results');
+});
 Route::redirect('/business/support-and-assistance/help-and-support', '/support-and-assistance/help-and-support');
 Route::redirect('/business/support-and-assistance/search', '/support-and-assistance/search');
 Route::redirect('/business/business-homepage-groomer-space-owner', '/business-homepage-groomer-space-owner');
 
-Volt::route('/support-and-assistance/help-and-support', 'help.support')->name('help-and-support');
-Volt::route('/support-and-assistance/search', 'help.search')->name('search');
+Route::get('/support-and-assistance/help-and-support', function () {
+    BusinessPageShell::applyFromRequest();
 
-// Search results - LiveWire component
-Volt::route('/search-results', 'search.results')->name('search-results');
+    $component = BusinessPageShell::resolveComponent('help.support-dashboard', 'help.support');
+
+    return app(LivewireManager::class)->new($component)->__invoke();
+})->name('help-and-support');
 
 // Business pages
-Volt::route('/business-homepage-groomer-space-owner', 'business.homepage')->name('business-homepage-groomer-space-owner');
+Route::get('/business-homepage-groomer-space-owner', function () {
+    BusinessPageShell::applyFromRequest();
+
+    $component = BusinessPageShell::resolveComponent('business.homepage-dashboard', 'business.homepage');
+
+    return app(LivewireManager::class)->new($component)->__invoke();
+})->name('business-homepage-groomer-space-owner');
 
 // Authenticated pages (web + groomer/spacer guard)
 Volt::route('/booking-groomer', 'booking.groomer')
@@ -93,7 +107,7 @@ Volt::route('/groomer-unavailability/location-unavailability', 'groomer.unavaila
 // Authenticated Routes
 // ===============================================================
 Volt::route('dashboard', 'dashboard')
-    ->middleware(['auth:groomer_spacer', 'verified'])
+    ->middleware(['auth:groomer_spacer', 'verified', 'business.shell.dashboard'])
     ->name('dashboard');
 
 Route::get('dashboard/bookings/{booking}/invoice.pdf', BookingInvoicePdfController::class)

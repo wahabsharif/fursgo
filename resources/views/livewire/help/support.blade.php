@@ -1,18 +1,12 @@
 <?php
 
+use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new class extends Component {
-    public function layout(): string
-    {
-        return auth('groomer_spacer')->check() ? 'layouts.dashboard' : 'layouts.app';
-    }
+new #[Layout('layouts.app')] class extends Component {
+    //
 }; ?>
 
 <div>
-    @auth('groomer_spacer')
-        {{-- Content is rendered in the dashboard header welcome-section --}}
-    @else
-        @include('help-and-support')
-    @endauth
+    @include('help-and-support')
 </div>

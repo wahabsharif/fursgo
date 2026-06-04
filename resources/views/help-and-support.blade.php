@@ -405,47 +405,57 @@
 @push('script')
 <script src="{{ asset('js/common.js') }}"></script>
 <script>
-    // Accordion: only one open at a time per tab panel
-    document.querySelectorAll('.tab-panel').forEach((tabPanel) => {
-        const accordions = tabPanel.querySelectorAll('.accordion');
+    function initHelpCentrePanel(root = document) {
+        root.querySelectorAll('.tab-panel').forEach((tabPanel) => {
+            const accordions = tabPanel.querySelectorAll('.accordion');
 
-        accordions.forEach((btn) => {
-            btn.addEventListener('click', function() {
-                const isActive = this.classList.contains('active');
+            accordions.forEach((btn) => {
+                if (btn.dataset.helpAccordionBound === '1') {
+                    return;
+                }
+                btn.dataset.helpAccordionBound = '1';
 
-                // close all accordions in this tab
-                accordions.forEach((otherBtn) => {
-                    otherBtn.classList.remove('active');
-                    const otherPanel = otherBtn.nextElementSibling;
-                    if (otherPanel && otherPanel.classList.contains('panel')) {
-                        otherPanel.style.maxHeight = null;
-                        otherPanel.style.display = 'none';
+                btn.addEventListener('click', function() {
+                    const isActive = this.classList.contains('active');
+
+                    accordions.forEach((otherBtn) => {
+                        otherBtn.classList.remove('active');
+                        const otherPanel = otherBtn.nextElementSibling;
+                        if (otherPanel && otherPanel.classList.contains('panel')) {
+                            otherPanel.style.maxHeight = null;
+                            otherPanel.style.display = 'none';
+                        }
+                    });
+
+                    if (!isActive) {
+                        this.classList.add('active');
+                        const panel = this.nextElementSibling;
+                        if (panel && panel.classList.contains('panel')) {
+                            panel.style.display = 'block';
+                            panel.style.maxHeight = panel.scrollHeight + 'px';
+                        }
                     }
                 });
-
-                // open clicked accordion if it was not already open
-                if (!isActive) {
-                    this.classList.add('active');
-                    const panel = this.nextElementSibling;
-                    if (panel && panel.classList.contains('panel')) {
-                        panel.style.display = 'block';
-                        panel.style.maxHeight = panel.scrollHeight + 'px';
-                    }
-                }
             });
         });
-    });
+    }
 
-    // Optional: keep your file upload logic here if needed
-    const fileInput = document.getElementById('fileInput');
-    const attachBtn = document.getElementById('attachBtn');
-    const uploadBtn = document.getElementById('uploadBtn');
-    const fileItem = document.getElementById('fileItem');
-    const fileName = document.getElementById('fileName');
-    const fileSize = document.getElementById('fileSize');
-    const removeBtn = document.getElementById('removeBtn');
+    function initHelpCentreFileUpload(root = document) {
+        const fileInput = root.querySelector('#fileInput') || document.getElementById('fileInput');
+        const attachBtn = root.querySelector('#attachBtn') || document.getElementById('attachBtn');
+        const uploadBtn = root.querySelector('#uploadBtn') || document.getElementById('uploadBtn');
+        const fileItem = root.querySelector('#fileItem') || document.getElementById('fileItem');
+        const fileName = root.querySelector('#fileName') || document.getElementById('fileName');
+        const fileSize = root.querySelector('#fileSize') || document.getElementById('fileSize');
+        const removeBtn = root.querySelector('#removeBtn') || document.getElementById('removeBtn');
 
-    if (attachBtn && uploadBtn && fileInput) {
+        if (!attachBtn || !uploadBtn || !fileInput || attachBtn.dataset.helpUploadBound === '1') {
+            return;
+        }
+
+        attachBtn.dataset.helpUploadBound = '1';
+        uploadBtn.dataset.helpUploadBound = '1';
+
         attachBtn.onclick = uploadBtn.onclick = () => fileInput.click();
 
         fileInput.onchange = () => {
@@ -468,5 +478,16 @@
             };
         }
     }
+
+    function initHelpCentreScripts(root = document) {
+        initHelpCentrePanel(root);
+        initHelpCentreFileUpload(root);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => initHelpCentreScripts());
+    document.addEventListener('help-centre-mounted', (event) => {
+        const root = event.target?.closest?.('.dashboard-info-panel--help-centre') || document;
+        initHelpCentreScripts(root);
+    });
 </script>
 @endpush

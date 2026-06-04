@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo('/');
         $middleware->alias([
             'auth.groomer_spacer' => \App\Http\Middleware\EnsureGroomerSpacerAuthenticated::class,
+            'business.shell.web' => \App\Http\Middleware\SetBusinessPageWebShell::class,
+            'business.shell.dashboard' => \App\Http\Middleware\SetBusinessPageDashboardShell::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -3,10 +3,10 @@
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.app')] class extends Component {
+new #[Layout('layouts.dashboard')] class extends Component {
     //
 }; ?>
 
 <div>
-    @include('business-homepage')
+    <x-dashboard.help-centre />
 </div>

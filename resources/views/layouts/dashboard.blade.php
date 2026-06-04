@@ -13,6 +13,14 @@
                 'Fursgo - ' .
                 collect($segments)->map(fn($s) => ucfirst(str_replace(['-', '_'], ' ', $s)))->implode(' - ');
         }
+
+        $dashboardNavView = match (true) {
+            request()->routeIs('business-homepage-groomer-space-owner') => 'for-groomers-hosts',
+            request()->routeIs('help-and-support') => 'help-centre',
+            default => 'hub',
+        };
+
+        $isDashboardHub = $dashboardNavView === 'hub';
     @endphp
 
     <title>@yield('title', $pageTitle)</title>
@@ -24,113 +32,41 @@
 
 </head>
 
-@php
-    $initialDashboardNavView = match (true) {
-        request()->routeIs('business-homepage-groomer-space-owner') => 'for-groomers-hosts',
-        request()->routeIs('help-and-support') => 'help-centre',
-        default => 'hub',
-    };
-@endphp
-
-<body x-data="{
+<body class="dashboard-shell dashboard-shell--{{ $dashboardNavView }}" x-data="{
     activeSection: 'business-hub',
-    dashboardNavView: @js($initialDashboardNavView),
-    dashboardUrls: {
-        hub: @js(route('dashboard')),
-        forGroomers: @js(route('business-homepage-groomer-space-owner')),
-        help: @js(route('help-and-support')),
-    },
-    dashboardUrlForView(view) {
-        if (view === 'for-groomers-hosts') return this.dashboardUrls.forGroomers;
-        if (view === 'help-centre') return this.dashboardUrls.help;
-        return this.dashboardUrls.hub;
-    },
-    syncDashboardNavViewFromUrl() {
-        const path = window.location.pathname.replace(/\/$/, '');
-        const forGroomersPath = new URL(this.dashboardUrls.forGroomers, window.location.origin).pathname.replace(/\/$/, '');
-        const helpPath = new URL(this.dashboardUrls.help, window.location.origin).pathname.replace(/\/$/, '');
-        const hubPath = new URL(this.dashboardUrls.hub, window.location.origin).pathname.replace(/\/$/, '');
-
-        if (path === forGroomersPath) {
-            this.dashboardNavView = 'for-groomers-hosts';
-        } else if (path === helpPath) {
-            this.dashboardNavView = 'help-centre';
-        } else if (path === hubPath) {
-            this.dashboardNavView = 'hub';
-        }
-    },
-    pushDashboardUrl(view) {
-        const url = this.dashboardUrlForView(view);
-        if (window.location.pathname.replace(/\/$/, '') === new URL(url, window.location.origin).pathname.replace(/\/$/, '')) {
-            return;
-        }
-        history.pushState({ dashboardNavView: view }, '', url);
-    },
-    showDashboardHub() {
-        this.dashboardNavView = 'hub';
-        this.pushDashboardUrl('hub');
-        this.scrollDashboardToTop(true);
-    },
-    showDashboardInfoView(view) {
-        this.dashboardNavView = view;
-        this.pushDashboardUrl(view);
-        this.scrollDashboardToTop(true);
-        if (view === 'for-groomers-hosts') {
-            requestAnimationFrame(() => {
-                document.querySelector('.dashboard-info-panel--for-groomers')
-                    ?.dispatchEvent(new CustomEvent('bgs-homepage-mounted'));
-            });
-        }
-    },
     scrollDashboardToTop(smooth = false) {
         const root = document.scrollingElement || document.documentElement;
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const behavior = smooth && !reduceMotion ? 'smooth' : 'auto';
-
-        if (smooth && root.scrollTop < 40) {
-            return;
-        }
-
-        const go = () => window.scrollTo({ top: 0, left: 0, behavior });
-
-        if (smooth) {
-            requestAnimationFrame(() => setTimeout(go, 50));
-            return;
-        }
-
-        root.scrollTop = 0;
-        document.body.scrollTop = 0;
-        go();
-        requestAnimationFrame(() => {
-            root.scrollTop = 0;
-            document.body.scrollTop = 0;
-            setTimeout(() => {
-                root.scrollTop = 0;
-                document.body.scrollTop = 0;
-            }, 350);
-        });
+        if (smooth && root.scrollTop < 40) return;
+        window.scrollTo({ top: 0, left: 0, behavior });
     },
-}" x-init="syncDashboardNavViewFromUrl();
-scrollDashboardToTop(false);
-if (history.state?.dashboardNavView === undefined) {
-    history.replaceState({ dashboardNavView: dashboardNavView }, '', window.location.href);
-}
-$watch('activeSection', () => scrollDashboardToTop(true));" @nav-list-loading-start.window="showDashboardHub()">
+}" x-init="$watch('activeSection', () => scrollDashboardToTop(true));">
 
-    <x-common.header variant="dashboard" />
+    <x-common.header variant="dashboard" :dashboard-nav-view="$dashboardNavView" />
     <x-common.dev-mode-float />
 
-    <div class="dashboard-wrapper" x-show="dashboardNavView === 'hub'" x-cloak>
-        <x-common.sidebar variant="dashboard" />
+    @if ($isDashboardHub)
+        <div class="dashboard-wrapper">
+            <x-common.sidebar variant="dashboard" />
 
-        <main style="width: 100%">
+            <main style="width: 100%">
+                @if (isset($slot))
+                    {{ $slot }}
+                @else
+                    @yield('content')
+                @endif
+            </main>
+        </div>
+    @else
+        <main class="dashboard-info-main">
             @if (isset($slot))
                 {{ $slot }}
             @else
                 @yield('content')
             @endif
         </main>
-    </div>
+    @endif
 
     <x-common.footer variant="dashboard" />
 
@@ -142,19 +78,35 @@ $watch('activeSection', () => scrollDashboardToTop(true));" @nav-list-loading-st
         .dashboard-wrapper {
             position: relative;
         }
+
+        .dashboard-info-main {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: min(100%, max(110rem, 92vw), 2450px);
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: clamp(0.75rem, 4vw, 2rem);
+            padding-right: clamp(0.75rem, 4vw, 2rem);
+            padding-bottom: 2rem;
+            box-sizing: border-box;
+        }
+
+        .dashboard-shell--for-groomers-hosts .dashboard-info-main .container,
+        .dashboard-shell--help-centre .dashboard-info-main .container {
+            margin-left: auto;
+            margin-right: auto;
+        }
     </style>
 
-    <!-- <script src="{{ asset('js/common.js') }}" defer></script> -->
     <script src="{{ asset('js/custom-dropdown.js') }}" defer></script>
     <script src="{{ asset('js/custom.js') }}" defer></script>
-    <!-- <script src="{{ asset('js/customer_journey.js') }}" defer></script> -->
-    <!-- <script src="{{ asset('js/profile.js') }}" defer></script> -->
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    {{-- Pushed from embedded views (e.g. help-and-support); head @stack runs before body --}}
-    @stack('styles')
+    @fluxScripts
 
+    @stack('styles')
     @stack('script')
 
     <script>
@@ -162,61 +114,35 @@ $watch('activeSection', () => scrollDashboardToTop(true));" @nav-list-loading-st
             window.scrollTo(0, 0);
             document.documentElement.scrollTop = 0;
             document.body.scrollTop = 0;
-        });
 
-        window.addEventListener('popstate', (event) => {
-            const body = document.body;
-            if (!body._x_dataStack || typeof Alpine === 'undefined') {
-                return;
+            const panel = document.querySelector('.dashboard-info-panel--for-groomers');
+            if (panel) {
+                panel.dispatchEvent(new CustomEvent('bgs-homepage-mounted'));
             }
 
-            const data = Alpine.$data(body);
-            if (!data || typeof data.syncDashboardNavViewFromUrl !== 'function') {
-                return;
+            const helpPanel = document.querySelector('.dashboard-info-panel--help-centre');
+            if (helpPanel) {
+                helpPanel.dispatchEvent(new CustomEvent('help-centre-mounted'));
             }
-
-            if (event.state?.dashboardNavView) {
-                data.dashboardNavView = event.state.dashboardNavView;
-            } else {
-                data.syncDashboardNavViewFromUrl();
-            }
-
-            if (data.dashboardNavView === 'for-groomers-hosts') {
-                requestAnimationFrame(() => {
-                    document.querySelector('.dashboard-info-panel--for-groomers')
-                        ?.dispatchEvent(new CustomEvent('bgs-homepage-mounted'));
-                });
-            }
-
-            data.scrollDashboardToTop(true);
         });
 
         document.addEventListener('livewire:navigated', () => {
-            const body = document.body;
-            if (body._x_dataStack && typeof Alpine !== 'undefined') {
-                const data = Alpine.$data(body);
-                if (data && typeof data.syncDashboardNavViewFromUrl === 'function') {
-                    data.syncDashboardNavViewFromUrl();
-                    if (history.state?.dashboardNavView === undefined) {
-                        history.replaceState({
-                            dashboardNavView: data.dashboardNavView
-                        }, '', window.location.href);
-                    }
-                }
-            }
+            requestAnimationFrame(() => {
+                document.querySelector('.dashboard-info-panel--for-groomers')
+                    ?.dispatchEvent(new CustomEvent('bgs-homepage-mounted'));
+                document.querySelector('.dashboard-info-panel--help-centre')
+                    ?.dispatchEvent(new CustomEvent('help-centre-mounted'));
+            });
 
             const root = document.scrollingElement || document.documentElement;
-            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             if (root.scrollTop < 40) {
                 return;
             }
-            const behavior = reduceMotion ? 'auto' : 'smooth';
-            requestAnimationFrame(() => {
-                window.scrollTo({
-                    top: 0,
-                    left: 0,
-                    behavior
-                });
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            window.scrollTo({
+                top: 0,
+                left: 0,
+                behavior: reduceMotion ? 'auto' : 'smooth',
             });
         });
 
