@@ -54,9 +54,9 @@
     }
 
     .availability-calendar-title {
-        min-width: 200px;
+        min-width: 280px;
         display: grid;
-        grid-template-columns: 26px 170px 26px;
+        grid-template-columns: 26px minmax(0, max-content) 26px;
         align-items: center;
         justify-content: center;
         column-gap: 8px;
@@ -85,8 +85,6 @@
         font-weight: 500;
         text-align: center;
         white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
 
     .availability-weekdays,
@@ -283,6 +281,27 @@
             return `${weekday}, ${dayNum}${suffix} ${month}`;
         };
 
+        const pad2 = (n) => String(n).padStart(2, '0');
+
+        const getISOWeekNumber = (date) => {
+            const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            const day = (d.getDay() + 6) % 7;
+            d.setDate(d.getDate() - day + 3);
+            const firstThursday = new Date(d.getFullYear(), 0, 4);
+            const firstDay = (firstThursday.getDay() + 6) % 7;
+            firstThursday.setDate(firstThursday.getDate() - firstDay + 3);
+            return 1 + Math.round((d - firstThursday) / 604800000);
+        };
+
+        const formatWeekViewLabel = (weekStart) => {
+            if (!weekStart) return '';
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            const weekNum = getISOWeekNumber(weekStart);
+            const month = MONTHS_SHORT[weekStart.getMonth()];
+            return `Week ${weekNum} , ${month} ${pad2(weekStart.getDate())} - ${pad2(weekEnd.getDate())}`;
+        };
+
         const slotHourLabelFromHour = (hour24) => {
             if (hour24 == null || Number.isNaN(hour24)) return '—';
             const h = Math.min(23, Math.max(0, hour24));
@@ -449,24 +468,14 @@
                     return `${MONTHS[this.mainMonth.getMonth()]}, ${this.mainMonth.getFullYear()}`;
                 },
                 get weekRangeLabel() {
-                    if (!this.weekStart) return '';
-                    const weekEnd = new Date(this.weekStart);
-                    weekEnd.setDate(this.weekStart.getDate() + 6);
-                    const startMonth = MONTHS[this.weekStart.getMonth()].slice(0, 3);
-                    const endMonth = MONTHS[weekEnd.getMonth()].slice(0, 3);
-
-                    if (this.weekStart.getMonth() === weekEnd.getMonth()) {
-                        return `${startMonth} ${this.weekStart.getDate()}-${weekEnd.getDate()}, ${weekEnd.getFullYear()}`;
-                    }
-
-                    return `${startMonth} ${this.weekStart.getDate()} - ${endMonth} ${weekEnd.getDate()}, ${weekEnd.getFullYear()}`;
+                    return formatWeekViewLabel(this.weekStart);
                 },
                 get periodLabel() {
                     if (this.activeView === 'day' && this.dayViewDate) {
                         return formatDayViewLabel(this.dayViewDate);
                     }
                     if (this.activeView === 'week') {
-                        return `${MONTHS[this.weekStart.getMonth()]}, ${this.weekStart.getFullYear()}`;
+                        return this.weekRangeLabel;
                     }
                     return this.mainMonthYearLabel;
                 },
