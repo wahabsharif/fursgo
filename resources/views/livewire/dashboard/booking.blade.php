@@ -75,7 +75,7 @@ new class extends Component {
 
         $this->activeStatus = $status;
         $this->visibleRows = 10;
-        $this->dispatch('booking-status-changed', status: $status);
+        $this->dispatch('booking-status-changed', status: $status === 'all' ? '' : $status);
         $this->dispatch('bookings-tabs-loading-end');
     }
 
@@ -315,22 +315,23 @@ new class extends Component {
             <div class="booking-pill-row">
                 @php
                     $bookingPills = [
+                        ['status' => 'all', 'label' => 'All Bookings', 'class' => 'all'],
                         ['status' => 'pending', 'label' => 'Pending Bookings', 'class' => 'pending'],
                         ['status' => 'confirmed', 'label' => 'Confirmed Bookings', 'class' => 'confirmed'],
                         ['status' => 'completed', 'label' => 'Completed Bookings', 'class' => 'completed'],
                         ['status' => 'cancelled', 'label' => 'Cancelled Bookings', 'class' => 'cancelled'],
                     ];
-                    if (in_array($activeStatus, ['pending', 'confirmed', 'completed', 'cancelled'], true)) {
-                        usort($bookingPills, function ($a, $b) use ($activeStatus) {
-                            return ($b['status'] === $activeStatus) <=> ($a['status'] === $activeStatus);
-                        });
-                    }
+                    $allBookingsCount = $bookings->count();
+                    usort($bookingPills, function ($a, $b) use ($activeStatus) {
+                        return ($b['status'] === $activeStatus) <=> ($a['status'] === $activeStatus);
+                    });
                 @endphp
                 @foreach ($bookingPills as $pill)
                     <button type="button" wire:click="setActiveStatus('{{ $pill['status'] }}')"
                         @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                        class="booking-pill {{ $pill['class'] }} {{ $activeStatus !== 'all' && $activeStatus !== $pill['status'] ? 'is-muted' : '' }}">
-                        {{ $pill['label'] }} ({{ $statusCounts[$pill['status']] ?? 0 }})
+                        class="booking-pill {{ $pill['class'] }} {{ $activeStatus !== $pill['status'] ? 'is-muted' : '' }}">
+                        {{ $pill['label'] }}
+                        ({{ $pill['status'] === 'all' ? $allBookingsCount : ($statusCounts[$pill['status']] ?? 0) }})
                     </button>
                 @endforeach
             </div>
@@ -2239,6 +2240,12 @@ new class extends Component {
         padding: 0.6rem 1.15rem;
         border: none;
         cursor: pointer;
+        text-align: center;
+    }
+
+    .booking-pill.all {
+        background: #3B3731;
+        color: #F7F7F7;
     }
 
     .booking-pill.pending {
@@ -2265,12 +2272,6 @@ new class extends Component {
         opacity: 0.5;
         background: #ECEBEB;
         color: #9D9B98;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
     }
 
     .bookings-table-wrap {
