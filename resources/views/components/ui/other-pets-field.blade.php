@@ -164,6 +164,13 @@
         width: 100%;
     }
 
+    .service-input-with-icon {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        width: calc(332px + 1rem + 64px);
+    }
+
     .service-other-pet-type-wrap {
         position: relative;
         width: 332px;
@@ -259,8 +266,7 @@
         background: #F7F7F7;
         padding: 15px 20px;
         overflow: hidden;
-        width: 100%;
-        max-width: 420px;
+        width: calc(332px + 1rem + 64px);
         transform-origin: top center;
     }
 

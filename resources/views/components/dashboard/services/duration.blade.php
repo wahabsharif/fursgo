@@ -16,6 +16,7 @@
 <div class="service-fieldset service-duration-fieldset" x-data="{
     baseDuration: @entangle('baseDuration').live,
     bufferTime: @entangle('bufferTime').live,
+    showAdvancedDuration: @js(!$showAdvanced),
     @if ($showBySize) durationSmall: @entangle('durationSmall').live,
             durationMedium: @entangle('durationMedium').live,
             @if ($largeMode === 'dropdown')
@@ -47,8 +48,10 @@
 
         @if ($showAdvanced)
             <div class="service-duration-advanced-wrap">
-                <button type="button" class="service-duration-advanced-btn">
-                    <span>+</span>
+                <button type="button" class="service-duration-advanced-btn"
+                    @click="showAdvancedDuration = !showAdvancedDuration"
+                    :aria-expanded="showAdvancedDuration.toString()">
+                    <span x-text="showAdvancedDuration ? '−' : '+'"></span>
                     <span>Advanced Duration Settings</span>
                 </button>
             </div>
@@ -56,6 +59,15 @@
     </div>
 
     @if ($showBySize)
+        @if ($showAdvanced)
+            <div class="service-duration-by-size-reveal" x-cloak x-show="showAdvancedDuration"
+                x-transition:enter="service-duration-by-size-enter"
+                x-transition:enter-start="service-duration-by-size-enter-start"
+                x-transition:enter-end="service-duration-by-size-enter-end"
+                x-transition:leave="service-duration-by-size-leave"
+                x-transition:leave-start="service-duration-by-size-leave-start"
+                x-transition:leave-end="service-duration-by-size-leave-end">
+        @endif
         <div class="service-duration-by-size">
             <div class="service-duration-by-size-head">
                 <p>Duration by Size</p>
@@ -86,6 +98,9 @@
                 </div>
             </div>
         </div>
+        @if ($showAdvanced)
+            </div>
+        @endif
     @endif
 </div>
 
@@ -334,6 +349,52 @@
 
         .service-duration-fieldset .service-duration-by-size-row:has(.service-custom-select.is-open) {
             z-index: 50;
+        }
+
+        .service-duration-fieldset [x-cloak] {
+            display: none !important;
+        }
+
+        .service-duration-fieldset .service-duration-by-size-reveal {
+            overflow: hidden;
+        }
+
+        .service-duration-fieldset .service-duration-by-size-enter {
+            transition: opacity 260ms cubic-bezier(0.4, 0, 0.2, 1),
+                max-height 300ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 260ms cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .service-duration-fieldset .service-duration-by-size-enter-start {
+            opacity: 0;
+            max-height: 0;
+            transform: translateY(-10px);
+        }
+
+        .service-duration-fieldset .service-duration-by-size-enter-end {
+            opacity: 1;
+            max-height: 320px;
+            transform: translateY(0);
+        }
+
+        .service-duration-fieldset .service-duration-by-size-leave {
+            transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                max-height 240ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .service-duration-fieldset .service-duration-by-size-leave-start {
+            opacity: 1;
+            max-height: 320px;
+            transform: translateY(0);
+        }
+
+        .service-duration-fieldset .service-duration-by-size-leave-end {
+            opacity: 0;
+            max-height: 0;
+            transform: translateY(-10px);
         }
     </style>
 @endonce

@@ -13,6 +13,7 @@
 <div class="service-fieldset service-price-fieldset" x-data="{
     basePrice: $wire.entangle('basePrice').live,
     overtimeCharge: $wire.entangle('overtimeCharge').live,
+    showAdvancedPrice: @js(!$showAdvanced),
     @if ($showBySize) priceSmall: $wire.entangle('priceSmall').live,
             priceMedium: $wire.entangle('priceMedium').live,
             @if ($largeMode === 'editable')
@@ -30,8 +31,9 @@
 
         @if ($showAdvanced)
             <div class="service-price-advanced-wrap">
-                <button type="button" class="service-price-advanced-btn">
-                    <span>+</span>
+                <button type="button" class="service-price-advanced-btn"
+                    @click="showAdvancedPrice = !showAdvancedPrice" :aria-expanded="showAdvancedPrice.toString()">
+                    <span x-text="showAdvancedPrice ? '−' : '+'"></span>
                     <span>Advanced Price Settings</span>
                 </button>
             </div>
@@ -39,6 +41,15 @@
     </div>
 
     @if ($showBySize)
+        @if ($showAdvanced)
+            <div class="service-price-layout-reveal" x-cloak x-show="showAdvancedPrice"
+                x-transition:enter="service-price-layout-enter"
+                x-transition:enter-start="service-price-layout-enter-start"
+                x-transition:enter-end="service-price-layout-enter-end"
+                x-transition:leave="service-price-layout-leave"
+                x-transition:leave-start="service-price-layout-leave-start"
+                x-transition:leave-end="service-price-layout-leave-end">
+        @endif
         <div class="service-price-layout">
             <div class="service-price-by-size">
                 <div class="service-price-by-size-head">
@@ -100,8 +111,22 @@
 
             <x-dashboard.services.price-overtime :muted-label="$mutedOvertimeLabel" :options="$overtimeOptions" />
         </div>
+        @if ($showAdvanced)
+            </div>
+        @endif
     @else
-        <x-dashboard.services.price-overtime :muted-label="$mutedOvertimeLabel" :options="$overtimeOptions" />
+        @if ($showAdvanced)
+            <div class="service-overtime-reveal" x-cloak x-show="showAdvancedPrice"
+                x-transition:enter="service-overtime-enter"
+                x-transition:enter-start="service-overtime-enter-start"
+                x-transition:enter-end="service-overtime-enter-end" x-transition:leave="service-overtime-leave"
+                x-transition:leave-start="service-overtime-leave-start"
+                x-transition:leave-end="service-overtime-leave-end">
+                <x-dashboard.services.price-overtime :muted-label="$mutedOvertimeLabel" :options="$overtimeOptions" />
+            </div>
+        @else
+            <x-dashboard.services.price-overtime :muted-label="$mutedOvertimeLabel" :options="$overtimeOptions" />
+        @endif
     @endif
 </div>
 
@@ -453,6 +478,91 @@
             font-style: normal;
             font-weight: 400;
             line-height: normal;
+        }
+
+        .service-price-fieldset [x-cloak] {
+            display: none !important;
+        }
+
+        .service-price-fieldset .service-overtime-reveal,
+        .service-price-fieldset .service-price-layout-reveal {
+            overflow: hidden;
+        }
+
+        .service-price-fieldset .service-price-layout-enter {
+            transition: opacity 260ms cubic-bezier(0.4, 0, 0.2, 1),
+                max-height 300ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 260ms cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .service-price-fieldset .service-price-layout-enter-start {
+            opacity: 0;
+            max-height: 0;
+            transform: translateY(-10px);
+        }
+
+        .service-price-fieldset .service-price-layout-enter-end {
+            opacity: 1;
+            max-height: 360px;
+            transform: translateY(0);
+        }
+
+        .service-price-fieldset .service-price-layout-leave {
+            transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                max-height 240ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .service-price-fieldset .service-price-layout-leave-start {
+            opacity: 1;
+            max-height: 360px;
+            transform: translateY(0);
+        }
+
+        .service-price-fieldset .service-price-layout-leave-end {
+            opacity: 0;
+            max-height: 0;
+            transform: translateY(-10px);
+        }
+
+        .service-price-fieldset .service-overtime-enter {
+            transition: opacity 260ms cubic-bezier(0.4, 0, 0.2, 1),
+                max-height 280ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 260ms cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .service-price-fieldset .service-overtime-enter-start {
+            opacity: 0;
+            max-height: 0;
+            transform: translateY(-10px);
+        }
+
+        .service-price-fieldset .service-overtime-enter-end {
+            opacity: 1;
+            max-height: 140px;
+            transform: translateY(0);
+        }
+
+        .service-price-fieldset .service-overtime-leave {
+            transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                max-height 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .service-price-fieldset .service-overtime-leave-start {
+            opacity: 1;
+            max-height: 140px;
+            transform: translateY(0);
+        }
+
+        .service-price-fieldset .service-overtime-leave-end {
+            opacity: 0;
+            max-height: 0;
+            transform: translateY(-10px);
         }
     </style>
 @endonce
