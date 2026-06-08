@@ -13,7 +13,7 @@ new class extends Component {
 
     public string $sort = 'name_asc';
 
-    public int $perPage = 10;
+    public int $perPage = 6;
 
     private function spacerId(): int
     {
@@ -139,7 +139,7 @@ new class extends Component {
         }
 
         $this->activeFilter = $filter;
-        $this->perPage = 10;
+        $this->perPage = 6;
     }
 
     public function setSort(string $sort): void
@@ -151,36 +151,23 @@ new class extends Component {
         }
 
         $this->sort = $sort;
-        $this->perPage = 10;
+        $this->perPage = 6;
     }
 
     public function updatedSearch(): void
     {
-        $this->perPage = 10;
+        $this->perPage = 6;
     }
 
     public function loadMore(): void
     {
-        $this->perPage += 10;
-    }
-
-    public function formatPetLabel(Collection $pets): string
-    {
-        if ($pets->isEmpty()) {
-            return '—';
-        }
-
-        if ($pets->count() === 1) {
-            $pet = $pets->first();
-            $name = trim((string) ($pet->name ?? ''));
-            $type = trim((string) ($pet->pet_type ?? ''));
-
-            return trim($name . ' ' . $type) ?: '—';
-        }
-
-        return '+' . $pets->count() . ' Pets';
+        $this->perPage += 6;
     }
 }; ?>
+
+@php
+    $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+@endphp
 
 <section class="clients-list-wrapper" aria-label="Clients list">
     <div class="clients-list-toolbar">
@@ -214,10 +201,10 @@ new class extends Component {
                         fill="none">
                         <path
                             d="M5.73535 0.5C8.6267 0.500031 10.9707 2.844 10.9707 5.73535C10.9707 7.22006 10.3528 8.55933 9.35938 9.5127C8.41826 10.4158 7.14221 10.9707 5.73535 10.9707C2.844 10.9707 0.500031 8.6267 0.5 5.73535C0.5 2.84398 2.84398 0.5 5.73535 0.5Z"
-                            stroke="#9D9B98" />
+                            stroke="#A8A8A8" />
                         <path
-                            d="M14.6466 15.3537C14.8419 15.549 15.1585 15.549 15.3537 15.3537C15.549 15.1585 15.549 14.8419 15.3537 14.6466L15.0002 15.0002L14.6466 15.3537ZM9.70605 9.70605L9.3525 10.0596L14.6466 15.3537L15.0002 15.0002L15.3537 14.6466L10.0596 9.3525L9.70605 9.70605Z"
-                            fill="#9D9B98" />
+                            d="M14.6466 15.3547C14.8419 15.55 15.1585 15.55 15.3537 15.3547C15.549 15.1594 15.549 14.8429 15.3537 14.6476L15.0002 15.0011L14.6466 15.3547ZM9.70605 9.70703L9.3525 10.0606L14.6466 15.3547L15.0002 15.0011L15.3537 14.6476L10.0596 9.35348L9.70605 9.70703Z"
+                            fill="#A8A8A8" />
                     </svg>
                 </span>
             </label>
@@ -262,8 +249,10 @@ new class extends Component {
         <table class="clients-list-table">
             <thead>
                 <tr>
-                    <th>Client Name</th>
-                    <th>Pets</th>
+                    <th style="text-align: center;width: 15rem;">Client Name</th>
+                    @unless ($isSpaceUser)
+                        <th>Pets</th>
+                    @endunless
                     <th>Upcoming Booking</th>
                     <th>Total Bookings</th>
                     <th>Total Paid</th>
@@ -284,25 +273,42 @@ new class extends Component {
                                 </div>
                             </div>
                         </td>
-                        <td>{{ $this->formatPetLabel($client['pets']) }}</td>
-                        <td>{{ $client['upcoming_date'] ?? '—' }}</td>
+                        @unless ($isSpaceUser)
+                            <td>
+                                @if ($client['pets']->isEmpty())
+                                    —
+                                @elseif ($client['pets']->count() === 1)
+                                    @php $pet = $client['pets']->first(); @endphp
+                                    <div class="clients-pet-cell">
+                                        <span
+                                            class="clients-pet-name">{{ trim((string) ($pet->name ?? '')) ?: '—' }}</span>
+                                        @if (trim((string) ($pet->pet_type ?? '')) !== '')
+                                            <span style="color: #9D9B98;font-weight: 400;">{{ $pet->pet_type }}</span>
+                                        @endif
+                                    </div>
+                                @else
+                                    +{{ $client['pets']->count() }} Pets
+                                @endif
+                            </td>
+                        @endunless
+                        <td style="font-weight: 400;">{{ $client['upcoming_date'] ?? '—' }}</td>
                         <td>{{ $client['total_bookings'] }}</td>
                         <td>£{{ number_format($client['total_paid'], 2) }}</td>
                         <td class="clients-view-col">
                             <button type="button" class="clients-view-btn"
                                 aria-label="View {{ $client['name'] }} profile">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="12"
-                                    viewBox="0 0 18 12" fill="none" aria-hidden="true">
-                                    <path
-                                        d="M9 1.5C5.25 1.5 2.1225 3.8625 0.75 7.125C2.1225 10.3875 5.25 12.75 9 12.75C12.75 12.75 15.8775 10.3875 17.25 7.125C15.8775 3.8625 12.75 1.5 9 1.5ZM9 10.875C6.93 10.875 5.25 9.195 5.25 7.125C5.25 5.055 6.93 3.375 9 3.375C11.07 3.375 12.75 5.055 12.75 7.125C12.75 9.195 11.07 10.875 9 10.875ZM9 5.25C7.965 5.25 7.125 6.09 7.125 7.125C7.125 8.16 7.965 9 9 9C10.035 9 10.875 8.16 10.875 7.125C10.875 6.09 10.035 5.25 9 5.25Z"
-                                        fill="#3B3731" />
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                    <path d="M1 13A9 9 0 0 1 19 13" stroke="black" stroke-width="1"
+                                        stroke-linecap="butt" />
+                                    <circle cx="10" cy="13" r="4" stroke="black" stroke-width="1" />
                                 </svg>
                             </button>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="clients-empty-cell">No clients found.</td>
+                        <td colspan="{{ $isSpaceUser ? 5 : 6 }}" class="clients-empty-cell">No clients found.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -311,9 +317,12 @@ new class extends Component {
 
     @if ($this->canLoadMore)
         <div class="clients-load-more-wrap">
-            <button type="button" class="clients-load-more-btn"
-                x-on:click="window.dispatchEvent(new CustomEvent('nav-list-loading-start'))" wire:click="loadMore">
-                Load More
+            <button type="button" class="clients-load-more-btn" wire:click="loadMore" wire:loading.attr="disabled"
+                wire:target="loadMore">
+                <span wire:loading.remove wire:target="loadMore">Load More</span>
+                <span class="clients-load-more-loading" wire:loading.inline-flex wire:target="loadMore">
+                    <span class="clients-load-more-spinner" aria-hidden="true"></span>
+                </span>
             </button>
         </div>
     @endif
@@ -340,6 +349,7 @@ new class extends Component {
     }
 
     .clients-pill {
+        text-align: center;
         font-family: Lato;
         font-size: 16px;
         font-style: normal;
@@ -374,9 +384,9 @@ new class extends Component {
 
     .clients-list-actions {
         display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        flex-wrap: wrap;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.5rem;
         margin-left: auto;
     }
 
@@ -384,7 +394,8 @@ new class extends Component {
         position: relative;
         display: flex;
         align-items: center;
-        width: 220px;
+        width: 200px;
+        height: 42px;
         max-width: 100%;
     }
 
@@ -392,8 +403,8 @@ new class extends Component {
         width: 100%;
         min-width: 0;
         height: 42px;
-        border: 1px solid #e5e2de;
-        border-radius: 10px;
+        border-radius: 83px;
+        border: 1px solid #A8A8A8;
         padding: 0 35px 0 15px;
         color: #8b8781;
         font-size: 12px;
@@ -504,25 +515,31 @@ new class extends Component {
         text-align: left;
         padding: 1.2rem 0;
         vertical-align: middle;
+        width: 10rem;
     }
 
     .clients-list-table th {
         color: #000;
         font-family: Lato;
         font-size: 16px;
+        font-style: normal;
         font-weight: 600;
+        line-height: normal;
     }
 
     .clients-list-table td {
         color: #3B3731;
         font-family: Lato;
         font-size: 16px;
-        font-weight: 400;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
     }
 
     .clients-list-table .clients-view-col {
         text-align: center;
         width: 120px;
+        border-left: 1px solid #E2E2E2;
     }
 
     .clients-name-cell {
@@ -554,8 +571,12 @@ new class extends Component {
     }
 
     .clients-name {
-        font-weight: 600;
         color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
     }
 
     .clients-badge {
@@ -564,19 +585,28 @@ new class extends Component {
         width: fit-content;
         border-radius: 100px;
         padding: 0.2rem 0.65rem;
+        text-align: center;
         font-family: Lato;
-        font-size: 12px;
+        font-size: 14px;
+        font-style: normal;
         font-weight: 500;
+        line-height: normal;
     }
 
     .clients-badge.is-new {
         color: #AFCD6F;
-        background: rgba(175, 205, 111, 0.15);
+        background: rgba(186, 207, 142, 0.10);
     }
 
     .clients-badge.is-repeat {
-        color: #9FC7E4;
-        background: rgba(159, 199, 228, 0.15);
+        color: #94BEDB;
+        background: rgba(216, 229, 238, 0.20);
+    }
+
+    .clients-pet-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
     }
 
     .clients-view-btn {
@@ -598,7 +628,7 @@ new class extends Component {
     .clients-load-more-wrap {
         display: flex;
         justify-content: center;
-        margin-top: 3rem;
+        margin-top: 4rem;
     }
 
     .clients-load-more-btn {
@@ -611,9 +641,38 @@ new class extends Component {
         border: 1px solid #3B3731;
         background: transparent;
         color: #3B3731;
+        text-align: center;
         font-family: Lato;
         font-size: 18px;
+        font-style: normal;
         font-weight: 600;
+        line-height: normal;
         cursor: pointer;
+    }
+
+    .clients-load-more-btn[disabled] {
+        opacity: 0.9;
+        cursor: wait;
+    }
+
+    .clients-load-more-loading {
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .clients-load-more-spinner {
+        width: 18px;
+        height: 18px;
+        border-radius: 9999px;
+        border: 2px solid #3B3731;
+        border-top-color: transparent;
+        animation: clients-load-more-spin 0.7s linear infinite;
+    }
+
+    @keyframes clients-load-more-spin {
+        to {
+            transform: rotate(360deg);
+        }
     }
 </style>
