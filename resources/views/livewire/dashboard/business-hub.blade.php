@@ -408,7 +408,7 @@ new class extends Component {
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
-            padding: 1rem;
+            padding: 1rem 0;
             flex: 1 1 0;
             min-height: 0;
             width: 100%;
@@ -467,7 +467,7 @@ new class extends Component {
 
         /* Dashboard Cards */
         .dashboard-card {
-            padding: 0 1.25rem 1.25rem 1.25rem;
+            padding: 0 1.25rem 1.25rem 1.25rem 0;
         }
 
         .card-header h3 {

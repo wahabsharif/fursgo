@@ -76,7 +76,7 @@
 
         <div class="dashboard-header-container">
             {{-- Main Navigation Bar --}}
-            <nav class="navbar dashboard-navbar">
+            <nav class="navbar dashboard-navbar" style="padding: 50px 0;">
                 <div class="dashboard-header-inner">
                     <div class="align-items-center dash-menu-items">
                         <div class="logo-toggle-button d-flex justify-content-between">
@@ -873,12 +873,9 @@
             .dashboard-header .dashboard-header-container {
                 position: relative;
                 width: 100%;
-                /* Grow past 110rem on ultra-wide (e.g. 2560px); vw scales; cap keeps layout readable */
-                max-width: min(100%, max(110rem, 92vw), 2450px);
+                max-width: 110rem;
                 margin-left: auto;
                 margin-right: auto;
-                padding-left: clamp(0.75rem, 4vw, 2rem);
-                padding-right: clamp(0.75rem, 4vw, 2rem);
                 box-sizing: border-box;
             }
 
