@@ -1,9 +1,13 @@
 <section class="dashboard-content-wrapper">
-    <div class="active-section-header" x-data="{ tabsLoading: false, navLoading: false, activeBookingFilter: '', serviceFormOpen: false, activeServiceMenu: 'services' }" x-on:bookings-tabs-loading-start.window="tabsLoading = true"
+    <div class="active-section-header" x-data="{ tabsLoading: false, navLoading: false, navLoadingTimeout: null, activeBookingFilter: '', serviceFormOpen: false, activeServiceMenu: 'services', clientProfileOpen: false }" x-show="activeSection !== 'clients' || !clientProfileOpen"
+        x-cloak x-on:bookings-tabs-loading-start.window="tabsLoading = true"
         x-on:bookings-tabs-loading-end.window="tabsLoading = false"
         x-on:booking-status-changed.window="tabsLoading = false; activeBookingFilter = $event.detail.status || ''"
-        x-on:nav-list-loading-start.window="navLoading = true; setTimeout(() => navLoading = false, 350)"
-        x-on:service-form-opened.window="serviceFormOpen = true" x-on:service-form-cancel.window="serviceFormOpen = false"
+        x-on:nav-list-loading-start.window="navLoading = true; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; } if (!$event.detail?.persistent) { navLoadingTimeout = setTimeout(() => { navLoading = false; navLoadingTimeout = null; }, 350); }"
+        x-on:nav-list-loading-end.window="navLoading = false; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; }"
+        x-on:client-profile-visible.window="clientProfileOpen = !!$event.detail?.visible"
+        x-on:service-form-opened.window="serviceFormOpen = true"
+        x-on:service-form-cancel.window="serviceFormOpen = false"
         x-on:services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'">
         <template x-if="activeSection === 'bookings'">
             <div class="active-section-header">

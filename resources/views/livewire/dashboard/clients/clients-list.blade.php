@@ -2,11 +2,15 @@
 
 use App\Models\Booking;
 use App\Models\PetDetail;
+use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Livewire\Volt\Component;
 
 new class extends Component {
+    public ?int $selectedClientId = null;
+
     public string $activeFilter = 'all';
 
     public string $search = '';
@@ -15,26 +19,127 @@ new class extends Component {
 
     public int $perPage = 6;
 
+    public string $profileActiveTab = 'upcoming';
+
+    public string $profileSort = 'date_asc';
+
+    public int $profilePerPage = 6;
+
+    private ?Collection $spacerBookingsCache = null;
+
+    private ?Collection $allClientRowsCache = null;
+
+    private ?Collection $profilePetsCache = null;
+
+    private ?User $profileClientCache = null;
+
+    private function invalidateListCaches(): void
+    {
+        $this->allClientRowsCache = null;
+    }
+
     private function spacerId(): int
     {
         return (int) (auth('groomer_spacer')->id() ?? 0);
     }
 
-    private function bookingsForSpacer(): Collection
+    private function spacerBookings(): Collection
     {
-        return Booking::query()
+        if ($this->spacerBookingsCache !== null) {
+            return $this->spacerBookingsCache;
+        }
+
+        $this->spacerBookingsCache = Booking::query()
             ->where('goormer_spacer_id', $this->spacerId())
             ->whereNotNull('pet_owner_id')
             ->with(['petOwner:id,name', 'pets:id,name,pet_type,photo,user_id'])
             ->get();
+
+        return $this->spacerBookingsCache;
+    }
+
+    private function bookingsForSpacer(): Collection
+    {
+        return $this->spacerBookings();
+    }
+
+    private function profileBookings(): Collection
+    {
+        if (!$this->selectedClientId) {
+            return collect();
+        }
+
+        return $this->spacerBookings()->where('pet_owner_id', $this->selectedClientId)->values();
+    }
+
+    private function profileClient(): ?User
+    {
+        if (!$this->selectedClientId) {
+            return null;
+        }
+
+        if ($this->profileClientCache !== null) {
+            return $this->profileClientCache;
+        }
+
+        $columns = ['id', 'name', 'address', 'email_verified_at', 'created_at'];
+
+        if (Schema::hasColumn('users', 'profile_image')) {
+            $columns[] = 'profile_image';
+        }
+
+        $this->profileClientCache = User::query()->select($columns)->find($this->selectedClientId);
+
+        return $this->profileClientCache;
+    }
+
+    private function clientAvatarUrl(?User $client): ?string
+    {
+        if (!$client || !Schema::hasColumn('users', 'profile_image')) {
+            return null;
+        }
+
+        $profileImage = $client->profile_image ?? null;
+
+        return filled($profileImage) ? asset('storage/' . ltrim((string) $profileImage, '/')) : null;
+    }
+
+    private function profilePets(): Collection
+    {
+        if (!$this->selectedClientId) {
+            return collect();
+        }
+
+        if ($this->profilePetsCache !== null) {
+            return $this->profilePetsCache;
+        }
+
+        $pets = PetDetail::query()
+            ->select(['id', 'user_id', 'name', 'pet_type', 'photo'])
+            ->where('user_id', $this->selectedClientId)
+            ->get();
+
+        if ($pets->isNotEmpty()) {
+            $this->profilePetsCache = $pets;
+
+            return $this->profilePetsCache;
+        }
+
+        $this->profilePetsCache = $this->profileBookings()->flatMap(fn($booking) => $booking->pets)->unique('id')->values();
+
+        return $this->profilePetsCache;
     }
 
     public function getAllClientRowsProperty(): Collection
     {
+        if ($this->allClientRowsCache !== null) {
+            return $this->allClientRowsCache;
+        }
+
         $bookings = $this->bookingsForSpacer();
 
         if ($bookings->isEmpty()) {
-            return collect();
+            return $this->allClientRowsCache = collect();
         }
 
         $petsByUser = PetDetail::query()
@@ -42,7 +147,7 @@ new class extends Component {
             ->get()
             ->groupBy('user_id');
 
-        return $bookings
+        $this->allClientRowsCache = $bookings
             ->groupBy('pet_owner_id')
             ->map(function (Collection $ownerBookings, $ownerId) use ($petsByUser) {
                 $owner = $ownerBookings->first()->petOwner;
@@ -81,6 +186,8 @@ new class extends Component {
                 ];
             })
             ->values();
+
+        return $this->allClientRowsCache;
     }
 
     public function getTabCountsProperty(): array
@@ -140,6 +247,7 @@ new class extends Component {
 
         $this->activeFilter = $filter;
         $this->perPage = 6;
+        $this->invalidateListCaches();
     }
 
     public function setSort(string $sort): void
@@ -152,16 +260,244 @@ new class extends Component {
 
         $this->sort = $sort;
         $this->perPage = 6;
+        $this->invalidateListCaches();
     }
 
     public function updatedSearch(): void
     {
         $this->perPage = 6;
+        $this->invalidateListCaches();
     }
 
     public function loadMore(): void
     {
         $this->perPage += 6;
+    }
+
+    public function viewProfile(int $clientId): void
+    {
+        $this->selectedClientId = $clientId;
+        $this->profileActiveTab = 'upcoming';
+        $this->profileSort = 'date_asc';
+        $this->profilePerPage = 6;
+        $this->profilePetsCache = null;
+        $this->profileClientCache = null;
+    }
+
+    public function closeProfile(): void
+    {
+        $this->selectedClientId = null;
+    }
+
+    public function setProfileTab(string $tab): void
+    {
+        $allowed = ['upcoming', 'pets', 'bookings', 'reviews', 'payments'];
+        $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+
+        if (!in_array($tab, $allowed, true)) {
+            return;
+        }
+
+        if ($isSpaceUser && $tab === 'pets') {
+            $tab = 'upcoming';
+        }
+
+        $this->profileActiveTab = $tab;
+        $this->profilePerPage = 6;
+    }
+
+    public function setProfileSort(string $sort): void
+    {
+        $allowed = ['date_asc', 'date_desc', 'amount_high', 'amount_low'];
+
+        if (!in_array($sort, $allowed, true)) {
+            return;
+        }
+
+        $this->profileSort = $sort;
+        $this->profilePerPage = 6;
+    }
+
+    public function loadMoreProfile(): void
+    {
+        $this->profilePerPage += 6;
+    }
+
+    public function getProfileMetaProperty(): array
+    {
+        $client = $this->profileClient();
+        $bookings = $this->profileBookings();
+        $pets = $this->profilePets();
+        $completed = $bookings->where('booking_status', 'completed');
+        $upcoming = $bookings->filter(function ($booking) {
+            if (!in_array($booking->booking_status, ['pending', 'confirmed'], true)) {
+                return false;
+            }
+
+            return $booking->date && $booking->date->gte(today());
+        });
+
+        $ratings = $completed->pluck('rating')->filter(fn($rating) => $rating !== null && $rating !== '');
+        $avgRating = $ratings->isNotEmpty() ? round((float) $ratings->avg(), 1) : null;
+
+        $firstBookingAt = $bookings->min(fn($booking) => $booking->created_at?->timestamp ?? PHP_INT_MAX);
+        $clientSince = $firstBookingAt && $firstBookingAt < PHP_INT_MAX ? \Carbon\Carbon::createFromTimestamp($firstBookingAt)->format('d M Y') : optional($client?->created_at)->format('d M Y');
+
+        $petCount = $pets->count();
+        $petsLabel = $petCount > 3 ? '3+' : (string) $petCount;
+        return [
+            'name' => $client?->name ?? 'Unknown',
+            'initials' => $client ? Str::upper(Str::substr($client->initials(), 0, 2)) : '??',
+            'is_verified' => filled($client?->email_verified_at),
+            'location' => trim((string) ($client?->address ?? '')) ?: 'Location not set',
+            'client_since' => $clientSince ?? '—',
+            'pets_label' => $petsLabel,
+            'avatar_url' => $this->clientAvatarUrl($client),
+            'upcoming_count' => $upcoming->count(),
+            'completed_count' => $completed->count(),
+            'total_paid' => (float) $completed->sum('amount'),
+            'avg_rating' => $avgRating,
+            'is_active' => $upcoming->isNotEmpty(),
+        ];
+    }
+
+    public function getProfileTabCountsProperty(): array
+    {
+        $bookings = $this->profileBookings();
+        $upcoming = $bookings->filter(function ($booking) {
+            if (!in_array($booking->booking_status, ['pending', 'confirmed'], true)) {
+                return false;
+            }
+
+            return $booking->date && $booking->date->gte(today());
+        });
+
+        return [
+            'upcoming' => $upcoming->count(),
+            'pets' => $this->profilePets()->count(),
+            'bookings' => $bookings->count(),
+            'reviews' => $bookings->whereNotNull('rating')->count(),
+            'payments' => $bookings->where('booking_status', 'completed')->count(),
+        ];
+    }
+
+    public function getProfileTabBookingsProperty(): Collection
+    {
+        $bookings = $this->profileBookings();
+
+        $rows = match ($this->profileActiveTab) {
+            'upcoming' => $bookings->filter(function ($booking) {
+                if (!in_array($booking->booking_status, ['pending', 'confirmed'], true)) {
+                    return false;
+                }
+
+                return $booking->date && $booking->date->gte(today());
+            }),
+            'bookings' => $bookings,
+            'payments' => $bookings->where('booking_status', 'completed'),
+            default => collect(),
+        };
+
+        $rows = match ($this->profileSort) {
+            'date_desc' => $rows->sortByDesc(fn($booking) => $booking->date?->timestamp ?? 0),
+            'amount_high' => $rows->sortByDesc(fn($booking) => (float) $booking->amount),
+            'amount_low' => $rows->sortBy(fn($booking) => (float) $booking->amount),
+            default => $rows->sortBy(fn($booking) => $booking->date?->timestamp ?? PHP_INT_MAX),
+        };
+
+        return $rows->values();
+    }
+
+    public function getProfileVisibleTabBookingsProperty(): Collection
+    {
+        return $this->profileTabBookings->take($this->profilePerPage);
+    }
+
+    public function getProfileCanLoadMoreProperty(): bool
+    {
+        return in_array($this->profileActiveTab, ['upcoming', 'bookings', 'payments'], true) && $this->profileVisibleTabBookings->count() < $this->profileTabBookings->count();
+    }
+
+    public function formatProfileLocationLabel(?string $visitType): string
+    {
+        $label = str_replace('_', ' ', strtolower((string) $visitType));
+
+        if ($label === 'home' || $label === 'home visit') {
+            return 'Home Visit';
+        }
+
+        if ($label === 'salon' || $label === 'salon visit') {
+            return 'Salon Visit';
+        }
+
+        return ucfirst($label ?: 'N/A');
+    }
+
+    public function formatProfileSpaceLabel(?string $visitType): string
+    {
+        $raw = trim((string) $visitType);
+
+        if ($raw === '') {
+            return 'N/A';
+        }
+
+        if (str_contains($raw, '/') || str_contains($raw, ' ')) {
+            return $raw;
+        }
+
+        $normalized = str_replace('_', ' ', strtolower($raw));
+
+        return match ($normalized) {
+            'garden shed', 'garden/shed' => 'Garden / Shed',
+            'salon', 'salon visit' => 'Salon',
+            default => ucwords($normalized),
+        };
+    }
+
+    public function formatProfileBookingTimeDisplay(string $raw, bool $stripExtras = false): string
+    {
+        if (!str_contains($raw, '-')) {
+            return $raw;
+        }
+
+        $parts = preg_split('/\s*-\s*/', $raw, 2);
+        $startPart = $parts[0] ?? '';
+        $endPart = $parts[1] ?? '';
+
+        preg_match('/(\d{1,2}:\d{2})/', $startPart, $mStart);
+        preg_match('/(\d{1,2}:\d{2})/', $endPart, $mEnd);
+
+        if (empty($mStart[1]) || empty($mEnd[1])) {
+            return $raw;
+        }
+
+        try {
+            $startDt = new DateTime($mStart[1]);
+            $endDt = new DateTime($mEnd[1]);
+
+            if ($endDt < $startDt) {
+                $endDt->modify('+1 day');
+            }
+
+            $diffMinutes = max(0, ($endDt->getTimestamp() - $startDt->getTimestamp()) / 60);
+            $hours = (int) floor($diffMinutes / 60);
+            $minutes = (int) ($diffMinutes % 60);
+            $durationLabel = $minutes === 0 ? $hours . 'hr' : $hours . 'hr ' . $minutes . 'm';
+
+            $startMeridiem = strtolower($startDt->format('a'));
+            $endMeridiem = strtolower($endDt->format('a'));
+
+            $display = $startMeridiem === $endMeridiem ? $startDt->format('H:i') . ' - ' . $endDt->format('H:i') . ' ' . $startMeridiem . ' (' . $durationLabel . ')' : $startDt->format('H:i a') . ' - ' . $endDt->format('H:i a') . ' (' . $durationLabel . ')';
+
+            if ($stripExtras) {
+                $display = trim((string) preg_replace('/\s*\([^)]*\)\s*$/', '', $display));
+                $display = trim((string) preg_replace('/\s+(am|pm)$/i', '', $display));
+            }
+
+            return $display;
+        } catch (\Throwable $e) {
+            return $raw;
+        }
     }
 }; ?>
 
@@ -169,60 +505,112 @@ new class extends Component {
     $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
 @endphp
 
-<section class="clients-list-wrapper" aria-label="Clients list">
-    <div class="clients-list-toolbar">
-        <div class="clients-pill-row">
-            @php
-                $clientPills = [
-                    ['filter' => 'all', 'label' => 'All Clients', 'class' => 'all'],
-                    ['filter' => 'repeat', 'label' => 'Repeat Clients', 'class' => 'repeat'],
-                    ['filter' => 'recent', 'label' => 'Recently Booked', 'class' => 'recent'],
-                ];
-                if (in_array($activeFilter, ['all', 'repeat', 'recent'], true)) {
-                    usort($clientPills, function ($a, $b) use ($activeFilter) {
-                        return ($b['filter'] === $activeFilter) <=> ($a['filter'] === $activeFilter);
-                    });
-                }
-            @endphp
-            @foreach ($clientPills as $pill)
-                <button type="button" wire:click="setActiveFilter('{{ $pill['filter'] }}')"
-                    @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start'))"
-                    class="clients-pill {{ $pill['class'] }} {{ $activeFilter !== $pill['filter'] ? 'is-muted' : '' }}">
-                    {{ $pill['label'] }} ({{ $this->tabCounts[$pill['filter']] ?? 0 }})
-                </button>
-            @endforeach
-        </div>
+<div class="clients-section" x-data="{
+    forceList: false,
+    openProfile(clientId) {
+        this.forceList = false;
+        window.dispatchEvent(new CustomEvent('nav-list-loading-start', { detail: { persistent: true } }));
+        $wire.viewProfile(clientId);
+    },
+    closeProfileView() {
+        this.forceList = true;
+        window.dispatchEvent(new CustomEvent('nav-list-loading-start'));
+        $wire.closeProfile();
+    },
+}"
+    x-effect="
+    const profileVisible = $wire.selectedClientId && !forceList;
+    window.dispatchEvent(new CustomEvent('client-profile-visible', { detail: { visible: profileVisible } }));
+    if (profileVisible) {
+        window.dispatchEvent(new CustomEvent('nav-list-loading-end'));
+    }
+    if (!$wire.selectedClientId) forceList = false;
+">
+    <div x-show="$wire.selectedClientId && !forceList" x-cloak class="clients-profile-host"
+        x-transition:enter="client-profile-panel-enter" x-transition:enter-start="client-profile-panel-enter-start"
+        x-transition:enter-end="client-profile-panel-enter-end" x-transition:leave="client-profile-panel-leave"
+        x-transition:leave-start="client-profile-panel-leave-start"
+        x-transition:leave-end="client-profile-panel-leave-end">
+        @if ($selectedClientId)
+            @include('livewire.dashboard.clients.partials.profile-panel')
+        @endif
+    </div>
 
-        <div class="clients-list-actions">
-            <label class="clients-search">
-                <input type="search" wire:model.live.debounce.300ms="search" placeholder="Type to search..." />
-                <span class="clients-search-icon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
-                        fill="none">
-                        <path
-                            d="M5.73535 0.5C8.6267 0.500031 10.9707 2.844 10.9707 5.73535C10.9707 7.22006 10.3528 8.55933 9.35938 9.5127C8.41826 10.4158 7.14221 10.9707 5.73535 10.9707C2.844 10.9707 0.500031 8.6267 0.5 5.73535C0.5 2.84398 2.84398 0.5 5.73535 0.5Z"
-                            stroke="#A8A8A8" />
-                        <path
-                            d="M14.6466 15.3547C14.8419 15.55 15.1585 15.55 15.3537 15.3547C15.549 15.1594 15.549 14.8429 15.3537 14.6476L15.0002 15.0011L14.6466 15.3547ZM9.70605 9.70703L9.3525 10.0606L14.6466 15.3547L15.0002 15.0011L15.3537 14.6476L10.0596 9.35348L9.70605 9.70703Z"
-                            fill="#A8A8A8" />
-                    </svg>
-                </span>
-            </label>
-
-            <div class="clients-list-sort" x-data="{ open: false }" @keydown.escape.window="open = false">
-                <div class="sort-dropdown">
-                    <button type="button" class="sort-trigger" @click="open = !open" aria-label="Sort clients"
-                        :aria-expanded="open.toString()">
-                        <span>Sort</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="7" viewBox="0 0 13 7"
-                            fill="none">
-                            <path d="M11.9103 0.5L6.15684 6.25344L0.499989 0.596581" stroke="#A8A8A8"
-                                stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
+    <section class="clients-list-wrapper" aria-label="Clients list" x-show="!$wire.selectedClientId || forceList"
+        x-cloak>
+        <div class="clients-list-toolbar">
+            <div class="clients-pill-row">
+                @php
+                    $clientPills = [
+                        ['filter' => 'all', 'label' => 'All Clients', 'class' => 'all'],
+                        ['filter' => 'repeat', 'label' => 'Repeat Clients', 'class' => 'repeat'],
+                        ['filter' => 'recent', 'label' => 'Recently Booked', 'class' => 'recent'],
+                    ];
+                    if (in_array($activeFilter, ['all', 'repeat', 'recent'], true)) {
+                        usort($clientPills, function ($a, $b) use ($activeFilter) {
+                            return ($b['filter'] === $activeFilter) <=> ($a['filter'] === $activeFilter);
+                        });
+                    }
+                @endphp
+                @foreach ($clientPills as $pill)
+                    <button type="button" wire:click="setActiveFilter('{{ $pill['filter'] }}')"
+                        @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start'))"
+                        class="clients-pill {{ $pill['class'] }} {{ $activeFilter !== $pill['filter'] ? 'is-muted' : '' }}">
+                        {{ $pill['label'] }} ({{ $this->tabCounts[$pill['filter']] ?? 0 }})
                     </button>
-                    <div class="sort-menu" x-cloak x-show="open" @click.outside="open = false"
-                        x-transition.opacity.duration.100ms>
-                        @foreach ([
+                @endforeach
+            </div>
+
+            <div class="clients-list-actions">
+                <label class="clients-search">
+                    <input type="search" wire:model.live.debounce.300ms="search" placeholder="Type to search..." />
+                    <span class="clients-search-icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
+                            fill="none">
+                            <path
+                                d="M5.73535 0.5C8.6267 0.500031 10.9707 2.844 10.9707 5.73535C10.9707 7.22006 10.3528 8.55933 9.35938 9.5127C8.41826 10.4158 7.14221 10.9707 5.73535 10.9707C2.844 10.9707 0.500031 8.6267 0.5 5.73535C0.5 2.84398 2.84398 0.5 5.73535 0.5Z"
+                                stroke="#A8A8A8" />
+                            <path
+                                d="M14.6466 15.3547C14.8419 15.55 15.1585 15.55 15.3537 15.3547C15.549 15.1594 15.549 14.8429 15.3537 14.6476L15.0002 15.0011L14.6466 15.3547ZM9.70605 9.70703L9.3525 10.0606L14.6466 15.3547L15.0002 15.0011L15.3537 14.6476L10.0596 9.35348L9.70605 9.70703Z"
+                                fill="#A8A8A8" />
+                        </svg>
+                    </span>
+                </label>
+
+                <div class="clients-list-sort" x-data="{
+                    open: false,
+                    menuLeft: 0,
+                    menuTop: 0,
+                    menuWidth: 220,
+                    repositionMenu() {
+                        const rect = $refs.sortBtn.getBoundingClientRect();
+                        this.menuLeft = Math.max(8, rect.right - this.menuWidth);
+                        this.menuTop = rect.bottom + 8;
+                    },
+                    toggleMenu() {
+                        if (!this.open) {
+                            this.repositionMenu();
+                        }
+                        this.open = !this.open;
+                    }
+                }" @keydown.escape.window="open = false"
+                    @resize.window="if (open) repositionMenu()" @scroll.window="if (open) repositionMenu()"
+                    @click.window="if (open && !$refs.sortBtn.contains($event.target) && (!$refs.sortMenu || !$refs.sortMenu.contains($event.target))) { open = false }">
+                    <div class="sort-dropdown">
+                        <button type="button" class="sort-trigger" x-ref="sortBtn" @click.stop="toggleMenu()"
+                            aria-label="Sort clients" :aria-expanded="open.toString()">
+                            <span>Sort</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="7" viewBox="0 0 13 7"
+                                fill="none">
+                                <path d="M11.9103 0.5L6.15684 6.25344L0.499989 0.596581" stroke="#A8A8A8"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <template x-teleport="body">
+                            <div class="sort-menu clients-list-sort-menu" x-cloak x-show="open" x-ref="sortMenu"
+                                x-transition.opacity.duration.100ms
+                                :style="`position: fixed; left: ${menuLeft}px; top: ${menuTop}px; z-index: 99999;`">
+                                @foreach ([
         'name_asc' => 'Name (A–Z)',
         'name_desc' => 'Name (Z–A)',
         'bookings_desc' => 'Most Bookings',
@@ -231,104 +619,150 @@ new class extends Component {
         'paid_asc' => 'Lowest Paid',
         'upcoming_asc' => 'Upcoming Booking',
     ] as $sortKey => $sortLabel)
-                            <button type="button" class="sort-options"
-                                :class="{ 'is-active': @js($sort) === '{{ $sortKey }}' }"
-                                wire:click="setSort('{{ $sortKey }}')"
-                                @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); open = false">
-                                <span>{{ $sortLabel }}</span>
-                                <span class="sort-indicator"></span>
-                            </button>
-                        @endforeach
+                                    <button type="button" class="sort-options"
+                                        :class="{ 'is-active': @js($sort) === '{{ $sortKey }}' }"
+                                        wire:click="setSort('{{ $sortKey }}')"
+                                        @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); open = false">
+                                        <span>{{ $sortLabel }}</span>
+                                        <span class="sort-indicator"></span>
+                                    </button>
+                                @endforeach
+                            </div>
+                        </template>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="clients-list-table-shell">
-        <table class="clients-list-table">
-            <thead>
-                <tr>
-                    <th style="text-align: center;width: 15rem;">Client Name</th>
-                    @unless ($isSpaceUser)
-                        <th>Pets</th>
-                    @endunless
-                    <th>Upcoming Booking</th>
-                    <th>Total Bookings</th>
-                    <th>Total Paid</th>
-                    <th class="clients-view-col">View Profile</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($this->visibleClients as $client)
-                    <tr wire:key="client-row-{{ $client['id'] }}">
-                        <td>
-                            <div class="clients-name-cell">
-                                <span class="clients-avatar" aria-hidden="true">{{ $client['initials'] }}</span>
-                                <div class="clients-name-meta">
-                                    <span class="clients-name">{{ $client['name'] }}</span>
-                                    <span class="clients-badge {{ $client['is_repeat'] ? 'is-repeat' : 'is-new' }}">
-                                        {{ $client['is_repeat'] ? 'Repeat Client' : 'New Client' }}
-                                    </span>
-                                </div>
-                            </div>
-                        </td>
-                        @unless ($isSpaceUser)
-                            <td>
-                                @if ($client['pets']->isEmpty())
-                                    —
-                                @elseif ($client['pets']->count() === 1)
-                                    @php $pet = $client['pets']->first(); @endphp
-                                    <div class="clients-pet-cell">
-                                        <span
-                                            class="clients-pet-name">{{ trim((string) ($pet->name ?? '')) ?: '—' }}</span>
-                                        @if (trim((string) ($pet->pet_type ?? '')) !== '')
-                                            <span style="color: #9D9B98;font-weight: 400;">{{ $pet->pet_type }}</span>
-                                        @endif
-                                    </div>
-                                @else
-                                    +{{ $client['pets']->count() }} Pets
-                                @endif
-                            </td>
-                        @endunless
-                        <td style="font-weight: 400;">{{ $client['upcoming_date'] ?? '—' }}</td>
-                        <td>{{ $client['total_bookings'] }}</td>
-                        <td>£{{ number_format($client['total_paid'], 2) }}</td>
-                        <td class="clients-view-col">
-                            <button type="button" class="clients-view-btn"
-                                aria-label="View {{ $client['name'] }} profile">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                    viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                                    <path d="M1 13A9 9 0 0 1 19 13" stroke="black" stroke-width="1"
-                                        stroke-linecap="butt" />
-                                    <circle cx="10" cy="13" r="4" stroke="black" stroke-width="1" />
-                                </svg>
-                            </button>
-                        </td>
-                    </tr>
-                @empty
+        <div class="clients-list-table-shell">
+            <table class="clients-list-table">
+                <thead>
                     <tr>
-                        <td colspan="{{ $isSpaceUser ? 5 : 6 }}" class="clients-empty-cell">No clients found.</td>
+                        <th style="text-align: center;width: 15rem;">Client Name</th>
+                        @unless ($isSpaceUser)
+                            <th>Pets</th>
+                        @endunless
+                        <th>Upcoming Booking</th>
+                        <th>Total Bookings</th>
+                        <th>Total Paid</th>
+                        <th class="clients-view-col">View Profile</th>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    @if ($this->canLoadMore)
-        <div class="clients-load-more-wrap">
-            <button type="button" class="clients-load-more-btn" wire:click="loadMore" wire:loading.attr="disabled"
-                wire:target="loadMore">
-                <span wire:loading.remove wire:target="loadMore">Load More</span>
-                <span class="clients-load-more-loading" wire:loading.inline-flex wire:target="loadMore">
-                    <span class="clients-load-more-spinner" aria-hidden="true"></span>
-                </span>
-            </button>
+                </thead>
+                <tbody>
+                    @forelse ($this->visibleClients as $client)
+                        <tr wire:key="client-row-{{ $client['id'] }}">
+                            <td>
+                                <div class="clients-name-cell">
+                                    <span class="clients-avatar" aria-hidden="true">{{ $client['initials'] }}</span>
+                                    <div class="clients-name-meta">
+                                        <span class="clients-name">{{ $client['name'] }}</span>
+                                        <span
+                                            class="clients-badge {{ $client['is_repeat'] ? 'is-repeat' : 'is-new' }}">
+                                            {{ $client['is_repeat'] ? 'Repeat Client' : 'New Client' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </td>
+                            @unless ($isSpaceUser)
+                                <td>
+                                    @if ($client['pets']->isEmpty())
+                                        —
+                                    @elseif ($client['pets']->count() === 1)
+                                        @php $pet = $client['pets']->first(); @endphp
+                                        <div class="clients-pet-cell">
+                                            <span
+                                                class="clients-pet-name">{{ trim((string) ($pet->name ?? '')) ?: '—' }}</span>
+                                            @if (trim((string) ($pet->pet_type ?? '')) !== '')
+                                                <span style="color: #9D9B98;font-weight: 400;">{{ $pet->pet_type }}</span>
+                                            @endif
+                                        </div>
+                                    @else
+                                        +{{ $client['pets']->count() }} Pets
+                                    @endif
+                                </td>
+                            @endunless
+                            <td style="font-weight: 400;">{{ $client['upcoming_date'] ?? '—' }}</td>
+                            <td>{{ $client['total_bookings'] }}</td>
+                            <td>£{{ number_format($client['total_paid'], 2) }}</td>
+                            <td class="clients-view-col">
+                                <button type="button" class="clients-view-btn"
+                                    @click="openProfile({{ $client['id'] }})"
+                                    aria-label="View {{ $client['name'] }} profile">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                        viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                        <path d="M1 13A9 9 0 0 1 19 13" stroke="black" stroke-width="1"
+                                            stroke-linecap="butt" />
+                                        <circle cx="10" cy="13" r="4" stroke="black" stroke-width="1" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="{{ $isSpaceUser ? 5 : 6 }}" class="clients-empty-cell">No clients found.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-    @endif
-</section>
+
+        @if ($this->canLoadMore)
+            <div class="clients-load-more-wrap">
+                <button type="button" class="clients-load-more-btn"
+                    x-on:click="window.dispatchEvent(new CustomEvent('nav-list-loading-start'))" wire:click="loadMore"
+                    wire:loading.attr="disabled" wire:target="loadMore">
+                    <span wire:loading.remove wire:target="loadMore">Load More</span>
+                    <span class="clients-load-more-loading" wire:loading.inline-flex wire:target="loadMore">
+                        <span class="clients-load-more-spinner" aria-hidden="true"></span>
+                    </span>
+                </button>
+            </div>
+        @endif
+    </section>
+</div>
 
 <style>
+    [x-cloak] {
+        display: none !important;
+    }
+
+    .clients-section {
+        width: 100%;
+    }
+
+    .clients-profile-host {
+        margin-top: 0;
+    }
+
+    .client-profile-panel-enter {
+        transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .client-profile-panel-enter-start {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    .client-profile-panel-enter-end {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .client-profile-panel-leave {
+        transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .client-profile-panel-leave-start {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .client-profile-panel-leave-end {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
     .clients-list-wrapper {
         margin-top: 4rem;
     }
@@ -445,19 +879,16 @@ new class extends Component {
         gap: 0.6rem;
     }
 
-    .clients-list-sort .sort-menu {
-        position: absolute;
-        top: calc(100% + 0.6rem);
-        right: 0;
+    .clients-list-sort-menu {
         min-width: 220px;
+        width: max-content;
         background: #F8F8F8;
         border: 2px solid #e6e6e5;
         border-radius: 10px 0 10px 10px;
-        z-index: 20;
         overflow: hidden;
     }
 
-    .clients-list-sort .sort-options {
+    .clients-list-sort-menu .sort-options {
         width: 100%;
         border: 0;
         border-bottom: 2px solid #e6e6e5;
@@ -473,15 +904,15 @@ new class extends Component {
         justify-content: space-between;
     }
 
-    .clients-list-sort .sort-options:last-child {
+    .clients-list-sort-menu .sort-options:last-child {
         border-bottom: none;
     }
 
-    .clients-list-sort .sort-options:hover {
+    .clients-list-sort-menu .sort-options:hover {
         background: #F2F2F2;
     }
 
-    .clients-list-sort .sort-indicator {
+    .clients-list-sort-menu .sort-indicator {
         width: 26px;
         height: 26px;
         border-radius: 999px;
@@ -491,7 +922,7 @@ new class extends Component {
         flex-shrink: 0;
     }
 
-    .clients-list-sort .sort-options.is-active .sort-indicator::after {
+    .clients-list-sort-menu .sort-options.is-active .sort-indicator::after {
         content: '';
         position: absolute;
         inset: 2px;
