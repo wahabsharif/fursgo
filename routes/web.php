@@ -1,10 +1,10 @@
 <?php
 
 use App\Http\Controllers\BookingController;
-use App\Support\BusinessPageShell;
 use App\Http\Controllers\BookingInvoicePdfController;
 use App\Http\Controllers\PetDetailController;
 use App\Models\GroomerSpacerProfile;
+use App\Support\BusinessPageShell;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -197,5 +197,9 @@ Route::middleware(['auth:web,groomer_spacer'])->group(function () {
         return redirect()->back();
     })->name('dev-mode.update-meta');
 });
+
+if (app()->environment('local')) {
+    Route::get('/__dev/hot-reload', App\Http\Controllers\Dev\HotReloadController::class);
+}
 
 require __DIR__ . '/auth.php';
