@@ -2,13 +2,21 @@
 
 use App\Models\Booking;
 use App\Models\PetDetail;
+use App\Models\PetMedicationDetail;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Computed;
 use Livewire\Volt\Component;
 
 new class extends Component {
+    private const BOOKING_LIST_COLUMNS = ['id', 'pet_owner_id', 'goormer_spacer_id', 'date', 'time', 'service', 'amount', 'staff', 'rating', 'visit_type', 'booking_status', 'created_at'];
+
+    private const PET_LIST_COLUMNS = ['id', 'user_id', 'name', 'pet_type', 'breed', 'sex', 'birthday', 'weight', 'notes', 'photo'];
+
     public ?int $selectedClientId = null;
 
     public string $activeFilter = 'all';
@@ -23,19 +31,53 @@ new class extends Component {
 
     public string $profileSort = 'date_asc';
 
+    public string $profilePetSort = 'name_asc';
+
     public int $profilePerPage = 6;
 
-    private ?Collection $spacerBookingsCache = null;
+    public ?int $selectedPetId = null;
 
-    private ?Collection $allClientRowsCache = null;
+    private static ?bool $usersHaveProfileImage = null;
 
-    private ?Collection $profilePetsCache = null;
-
-    private ?User $profileClientCache = null;
-
-    private function invalidateListCaches(): void
+    private function usersHaveProfileImage(): bool
     {
-        $this->allClientRowsCache = null;
+        if (self::$usersHaveProfileImage !== null) {
+            return self::$usersHaveProfileImage;
+        }
+
+        return self::$usersHaveProfileImage = Cache::rememberForever('users_has_profile_image', fn() => Schema::hasColumn('users', 'profile_image'));
+    }
+
+    private function profilePetCount(): int
+    {
+        if (!$this->selectedClientId) {
+            return 0;
+        }
+
+        $row = $this->allClientRows->firstWhere('id', $this->selectedClientId);
+
+        if ($row !== null) {
+            return $row['pets']->count();
+        }
+
+        $count = PetDetail::query()->where('user_id', $this->selectedClientId)->count();
+
+        if ($count > 0) {
+            return $count;
+        }
+
+        return $this->profileBookings->flatMap(fn($booking) => $booking->pets)->unique('id')->count();
+    }
+
+    private function filterUpcomingBookings(Collection $bookings): Collection
+    {
+        return $bookings->filter(function ($booking) {
+            if (!in_array($booking->booking_status, ['pending', 'confirmed'], true)) {
+                return false;
+            }
+
+            return $booking->date && $booking->date->gte(today());
+        });
     }
 
     private function spacerId(): int
@@ -43,111 +85,33 @@ new class extends Component {
         return (int) (auth('groomer_spacer')->id() ?? 0);
     }
 
-    private function spacerBookings(): Collection
+    #[Computed(persist: true)]
+    public function spacerBookings(): Collection
     {
-        if ($this->spacerBookingsCache !== null) {
-            return $this->spacerBookingsCache;
-        }
-
-        $this->spacerBookingsCache = Booking::query()
+        return Booking::query()
+            ->select(self::BOOKING_LIST_COLUMNS)
             ->where('goormer_spacer_id', $this->spacerId())
             ->whereNotNull('pet_owner_id')
-            ->with(['petOwner:id,name', 'pets:id,name,pet_type,photo,user_id'])
+            ->with(['petOwner:id,name', 'pets:' . implode(',', self::PET_LIST_COLUMNS)])
             ->get();
-
-        return $this->spacerBookingsCache;
     }
 
-    private function bookingsForSpacer(): Collection
+    #[Computed(persist: true)]
+    public function allClientRows(): Collection
     {
-        return $this->spacerBookings();
-    }
-
-    private function profileBookings(): Collection
-    {
-        if (!$this->selectedClientId) {
-            return collect();
-        }
-
-        return $this->spacerBookings()->where('pet_owner_id', $this->selectedClientId)->values();
-    }
-
-    private function profileClient(): ?User
-    {
-        if (!$this->selectedClientId) {
-            return null;
-        }
-
-        if ($this->profileClientCache !== null) {
-            return $this->profileClientCache;
-        }
-
-        $columns = ['id', 'name', 'address', 'email_verified_at', 'created_at'];
-
-        if (Schema::hasColumn('users', 'profile_image')) {
-            $columns[] = 'profile_image';
-        }
-
-        $this->profileClientCache = User::query()->select($columns)->find($this->selectedClientId);
-
-        return $this->profileClientCache;
-    }
-
-    private function clientAvatarUrl(?User $client): ?string
-    {
-        if (!$client || !Schema::hasColumn('users', 'profile_image')) {
-            return null;
-        }
-
-        $profileImage = $client->profile_image ?? null;
-
-        return filled($profileImage) ? asset('storage/' . ltrim((string) $profileImage, '/')) : null;
-    }
-
-    private function profilePets(): Collection
-    {
-        if (!$this->selectedClientId) {
-            return collect();
-        }
-
-        if ($this->profilePetsCache !== null) {
-            return $this->profilePetsCache;
-        }
-
-        $pets = PetDetail::query()
-            ->select(['id', 'user_id', 'name', 'pet_type', 'photo'])
-            ->where('user_id', $this->selectedClientId)
-            ->get();
-
-        if ($pets->isNotEmpty()) {
-            $this->profilePetsCache = $pets;
-
-            return $this->profilePetsCache;
-        }
-
-        $this->profilePetsCache = $this->profileBookings()->flatMap(fn($booking) => $booking->pets)->unique('id')->values();
-
-        return $this->profilePetsCache;
-    }
-
-    public function getAllClientRowsProperty(): Collection
-    {
-        if ($this->allClientRowsCache !== null) {
-            return $this->allClientRowsCache;
-        }
-
-        $bookings = $this->bookingsForSpacer();
+        $bookings = $this->spacerBookings;
 
         if ($bookings->isEmpty()) {
-            return $this->allClientRowsCache = collect();
+            return collect();
         }
 
         $petsByUser = PetDetail::query()
+            ->select(self::PET_LIST_COLUMNS)
             ->whereIn('user_id', $bookings->pluck('pet_owner_id')->unique())
             ->get()
             ->groupBy('user_id');
 
-        $this->allClientRowsCache = $bookings
+        return $bookings
             ->groupBy('pet_owner_id')
             ->map(function (Collection $ownerBookings, $ownerId) use ($petsByUser) {
                 $owner = $ownerBookings->first()->petOwner;
@@ -186,11 +150,69 @@ new class extends Component {
                 ];
             })
             ->values();
-
-        return $this->allClientRowsCache;
     }
 
-    public function getTabCountsProperty(): array
+    #[Computed]
+    public function profileBookings(): Collection
+    {
+        if (!$this->selectedClientId) {
+            return collect();
+        }
+
+        return $this->spacerBookings->where('pet_owner_id', $this->selectedClientId)->values();
+    }
+
+    #[Computed]
+    public function profileClient(): ?User
+    {
+        if (!$this->selectedClientId) {
+            return null;
+        }
+
+        $columns = ['id', 'name', 'address', 'email_verified_at', 'created_at'];
+
+        if ($this->usersHaveProfileImage()) {
+            $columns[] = 'profile_image';
+        }
+
+        return User::query()->select($columns)->find($this->selectedClientId);
+    }
+
+    private function clientAvatarUrl(?User $client): ?string
+    {
+        if (!$client || !$this->usersHaveProfileImage()) {
+            return null;
+        }
+
+        $profileImage = $client->profile_image ?? null;
+
+        return filled($profileImage) ? asset('storage/' . ltrim((string) $profileImage, '/')) : null;
+    }
+
+    #[Computed]
+    public function profilePetsBase(): Collection
+    {
+        if (!$this->selectedClientId) {
+            return collect();
+        }
+
+        $row = $this->allClientRows->firstWhere('id', $this->selectedClientId);
+
+        if ($row !== null && $row['pets']->isNotEmpty()) {
+            return $row['pets']->values();
+        }
+
+        $pets = PetDetail::query()->select(self::PET_LIST_COLUMNS)->where('user_id', $this->selectedClientId)->get();
+
+        if ($pets->isNotEmpty()) {
+            return $pets;
+        }
+
+        return $this->profileBookings->flatMap(fn($booking) => $booking->pets)->unique('id')->values();
+    }
+
+    #[Computed]
+    public function tabCounts(): array
     {
         $rows = $this->allClientRows;
 
@@ -201,7 +223,8 @@ new class extends Component {
         ];
     }
 
-    public function getClientsProperty(): Collection
+    #[Computed]
+    public function clients(): Collection
     {
         $rows = $this->allClientRows;
 
@@ -229,12 +252,14 @@ new class extends Component {
         return $rows->values();
     }
 
-    public function getVisibleClientsProperty(): Collection
+    #[Computed]
+    public function visibleClients(): Collection
     {
         return $this->clients->take($this->perPage);
     }
 
-    public function getCanLoadMoreProperty(): bool
+    #[Computed]
+    public function canLoadMore(): bool
     {
         return $this->visibleClients->count() < $this->clients->count();
     }
@@ -247,7 +272,6 @@ new class extends Component {
 
         $this->activeFilter = $filter;
         $this->perPage = 6;
-        $this->invalidateListCaches();
     }
 
     public function setSort(string $sort): void
@@ -260,13 +284,11 @@ new class extends Component {
 
         $this->sort = $sort;
         $this->perPage = 6;
-        $this->invalidateListCaches();
     }
 
     public function updatedSearch(): void
     {
         $this->perPage = 6;
-        $this->invalidateListCaches();
     }
 
     public function loadMore(): void
@@ -277,16 +299,99 @@ new class extends Component {
     public function viewProfile(int $clientId): void
     {
         $this->selectedClientId = $clientId;
+        $this->selectedPetId = null;
         $this->profileActiveTab = 'upcoming';
         $this->profileSort = 'date_asc';
+        $this->profilePetSort = 'name_asc';
         $this->profilePerPage = 6;
-        $this->profilePetsCache = null;
-        $this->profileClientCache = null;
     }
 
     public function closeProfile(): void
     {
         $this->selectedClientId = null;
+        $this->selectedPetId = null;
+    }
+
+    public function viewPetDetails(int $petId): void
+    {
+        if (!$this->selectedClientId) {
+            return;
+        }
+
+        if (!$this->profilePetsBase->contains('id', $petId)) {
+            return;
+        }
+
+        $this->selectedPetId = $petId;
+    }
+
+    public function closePetDetails(): void
+    {
+        $this->selectedPetId = null;
+        $this->profileActiveTab = 'pets';
+    }
+
+    public function updateGroomerGuidanceNotes(string $notes): void
+    {
+        if (!$this->selectedPetId || !$this->selectedClientId) {
+            return;
+        }
+
+        $pet = PetDetail::query()->where('user_id', $this->selectedClientId)->find($this->selectedPetId);
+
+        if (!$pet) {
+            return;
+        }
+
+        $value = trim($notes) ?: null;
+
+        if ($pet->medicationDetail) {
+            $pet->medicationDetail->update(['groomer_guidance_notes' => $value]);
+        } else {
+            PetMedicationDetail::create([
+                'pet_detail_id' => $pet->id,
+                'pet_owner_id' => $this->selectedClientId,
+                'groomer_guidance_notes' => $value,
+            ]);
+        }
+
+        unset($this->selectedPet, $this->selectedPetMedication);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function vaccinationRowsFor(?PetMedicationDetail $medication): array
+    {
+        return $medication?->vaccinationRows() ?? [];
+    }
+
+    #[Computed]
+    public function selectedPet(): ?PetDetail
+    {
+        if (!$this->selectedPetId || !$this->selectedClientId) {
+            return null;
+        }
+
+        return PetDetail::query()->with('medicationDetail')->where('user_id', $this->selectedClientId)->find($this->selectedPetId);
+    }
+
+    #[Computed]
+    public function selectedPetMedication(): ?PetMedicationDetail
+    {
+        return $this->selectedPet?->medicationDetail;
+    }
+
+    #[Computed]
+    public function petVaccinationRows(): array
+    {
+        return $this->vaccinationRowsFor($this->selectedPetMedication);
+    }
+
+    #[Computed]
+    public function petOverdueVaccinationCount(): int
+    {
+        return collect($this->petVaccinationRows)->where('is_overdue', true)->count();
     }
 
     public function setProfileTab(string $tab): void
@@ -318,81 +423,100 @@ new class extends Component {
         $this->profilePerPage = 6;
     }
 
+    public function setProfilePetSort(string $sort): void
+    {
+        $allowed = ['name_asc', 'name_desc', 'type_asc', 'type_desc', 'weight_high', 'weight_low'];
+
+        if (!in_array($sort, $allowed, true)) {
+            return;
+        }
+
+        $this->profilePetSort = $sort;
+    }
+
+    #[Computed]
+    public function profilePets(): Collection
+    {
+        $pets = $this->profilePetsBase->loadMissing('medicationDetail');
+
+        $sorted = match ($this->profilePetSort) {
+            'name_desc' => $pets->sortByDesc(fn($pet) => Str::lower((string) ($pet->name ?? ''))),
+            'type_asc' => $pets->sortBy(fn($pet) => Str::lower((string) ($pet->pet_type ?? ''))),
+            'type_desc' => $pets->sortByDesc(fn($pet) => Str::lower((string) ($pet->pet_type ?? ''))),
+            'weight_high' => $pets->sortByDesc(fn($pet) => (float) ($pet->weight ?? 0)),
+            'weight_low' => $pets->sortBy(fn($pet) => (float) ($pet->weight ?? 0)),
+            default => $pets->sortBy(fn($pet) => Str::lower((string) ($pet->name ?? ''))),
+        };
+
+        return $sorted->values();
+    }
+
     public function loadMoreProfile(): void
     {
         $this->profilePerPage += 6;
     }
 
-    public function getProfileMetaProperty(): array
+    #[Computed]
+    public function profileSummary(): array
     {
-        $client = $this->profileClient();
-        $bookings = $this->profileBookings();
-        $pets = $this->profilePets();
+        $client = $this->profileClient;
+        $bookings = $this->profileBookings;
         $completed = $bookings->where('booking_status', 'completed');
-        $upcoming = $bookings->filter(function ($booking) {
-            if (!in_array($booking->booking_status, ['pending', 'confirmed'], true)) {
-                return false;
-            }
-
-            return $booking->date && $booking->date->gte(today());
-        });
+        $upcoming = $this->filterUpcomingBookings($bookings);
 
         $ratings = $completed->pluck('rating')->filter(fn($rating) => $rating !== null && $rating !== '');
         $avgRating = $ratings->isNotEmpty() ? round((float) $ratings->avg(), 1) : null;
 
         $firstBookingAt = $bookings->min(fn($booking) => $booking->created_at?->timestamp ?? PHP_INT_MAX);
-        $clientSince = $firstBookingAt && $firstBookingAt < PHP_INT_MAX ? \Carbon\Carbon::createFromTimestamp($firstBookingAt)->format('d M Y') : optional($client?->created_at)->format('d M Y');
+        $clientSince = $firstBookingAt && $firstBookingAt < PHP_INT_MAX ? Carbon::createFromTimestamp($firstBookingAt)->format('d M Y') : optional($client?->created_at)->format('d M Y');
 
-        $petCount = $pets->count();
+        $petCount = $this->profilePetCount();
         $petsLabel = $petCount > 3 ? '3+' : (string) $petCount;
+
         return [
-            'name' => $client?->name ?? 'Unknown',
-            'initials' => $client ? Str::upper(Str::substr($client->initials(), 0, 2)) : '??',
-            'is_verified' => filled($client?->email_verified_at),
-            'location' => trim((string) ($client?->address ?? '')) ?: 'Location not set',
-            'client_since' => $clientSince ?? '—',
-            'pets_label' => $petsLabel,
-            'avatar_url' => $this->clientAvatarUrl($client),
-            'upcoming_count' => $upcoming->count(),
-            'completed_count' => $completed->count(),
-            'total_paid' => (float) $completed->sum('amount'),
-            'avg_rating' => $avgRating,
-            'is_active' => $upcoming->isNotEmpty(),
+            'meta' => [
+                'name' => $client?->name ?? 'Unknown',
+                'initials' => $client ? Str::upper(Str::substr($client->initials(), 0, 2)) : '??',
+                'is_verified' => filled($client?->email_verified_at),
+                'location' => trim((string) ($client?->address ?? '')) ?: 'Location not set',
+                'client_since' => $clientSince ?? '—',
+                'pets_label' => $petsLabel,
+                'avatar_url' => $this->clientAvatarUrl($client),
+                'upcoming_count' => $upcoming->count(),
+                'completed_count' => $completed->count(),
+                'total_paid' => (float) $completed->sum('amount'),
+                'avg_rating' => $avgRating,
+                'is_active' => $upcoming->isNotEmpty(),
+            ],
+            'tab_counts' => [
+                'upcoming' => $upcoming->count(),
+                'pets' => $petCount,
+                'bookings' => $bookings->count(),
+                'reviews' => $bookings->whereNotNull('rating')->count(),
+                'payments' => $completed->count(),
+            ],
         ];
     }
 
-    public function getProfileTabCountsProperty(): array
+    #[Computed]
+    public function profileMeta(): array
     {
-        $bookings = $this->profileBookings();
-        $upcoming = $bookings->filter(function ($booking) {
-            if (!in_array($booking->booking_status, ['pending', 'confirmed'], true)) {
-                return false;
-            }
-
-            return $booking->date && $booking->date->gte(today());
-        });
-
-        return [
-            'upcoming' => $upcoming->count(),
-            'pets' => $this->profilePets()->count(),
-            'bookings' => $bookings->count(),
-            'reviews' => $bookings->whereNotNull('rating')->count(),
-            'payments' => $bookings->where('booking_status', 'completed')->count(),
-        ];
+        return $this->profileSummary['meta'];
     }
 
-    public function getProfileTabBookingsProperty(): Collection
+    #[Computed]
+    public function profileTabCounts(): array
     {
-        $bookings = $this->profileBookings();
+        return $this->profileSummary['tab_counts'];
+    }
+
+    #[Computed]
+    public function profileTabBookings(): Collection
+    {
+        $bookings = $this->profileBookings;
 
         $rows = match ($this->profileActiveTab) {
-            'upcoming' => $bookings->filter(function ($booking) {
-                if (!in_array($booking->booking_status, ['pending', 'confirmed'], true)) {
-                    return false;
-                }
-
-                return $booking->date && $booking->date->gte(today());
-            }),
+            'upcoming' => $this->filterUpcomingBookings($bookings),
             'bookings' => $bookings,
             'payments' => $bookings->where('booking_status', 'completed'),
             default => collect(),
@@ -408,12 +532,14 @@ new class extends Component {
         return $rows->values();
     }
 
-    public function getProfileVisibleTabBookingsProperty(): Collection
+    #[Computed]
+    public function profileVisibleTabBookings(): Collection
     {
         return $this->profileTabBookings->take($this->profilePerPage);
     }
 
-    public function getProfileCanLoadMoreProperty(): bool
+    #[Computed]
+    public function profileCanLoadMore(): bool
     {
         return in_array($this->profileActiveTab, ['upcoming', 'bookings', 'payments'], true) && $this->profileVisibleTabBookings->count() < $this->profileTabBookings->count();
     }
@@ -503,41 +629,48 @@ new class extends Component {
 
 @php
     $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+    $profileWireTargets =
+        'viewProfile, closeProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, closePetDetails';
 @endphp
 
 <div class="clients-section" x-data="{
-    forceList: false,
+    profileLoading: false,
     openProfile(clientId) {
-        this.forceList = false;
-        window.dispatchEvent(new CustomEvent('nav-list-loading-start', { detail: { persistent: true } }));
-        $wire.viewProfile(clientId);
+        this.profileLoading = true;
+        $wire.viewProfile(clientId).finally(() => {
+            this.profileLoading = false;
+        });
     },
     closeProfileView() {
-        this.forceList = true;
-        window.dispatchEvent(new CustomEvent('nav-list-loading-start'));
-        $wire.closeProfile();
+        $wire.set('selectedClientId', null);
+        $wire.set('selectedPetId', null);
+    },
+    closePetDetailsView() {
+        $wire.set('selectedPetId', null);
+        $wire.set('profileActiveTab', 'pets');
     },
 }"
-    x-effect="
-    const profileVisible = $wire.selectedClientId && !forceList;
-    window.dispatchEvent(new CustomEvent('client-profile-visible', { detail: { visible: profileVisible } }));
-    if (profileVisible) {
-        window.dispatchEvent(new CustomEvent('nav-list-loading-end'));
-    }
-    if (!$wire.selectedClientId) forceList = false;
-">
-    <div x-show="$wire.selectedClientId && !forceList" x-cloak class="clients-profile-host"
-        x-transition:enter="client-profile-panel-enter" x-transition:enter-start="client-profile-panel-enter-start"
-        x-transition:enter-end="client-profile-panel-enter-end" x-transition:leave="client-profile-panel-leave"
-        x-transition:leave-start="client-profile-panel-leave-start"
-        x-transition:leave-end="client-profile-panel-leave-end">
-        @if ($selectedClientId)
-            @include('livewire.dashboard.clients.partials.profile-panel')
-        @endif
+    x-effect="window.dispatchEvent(new CustomEvent('client-profile-visible', { detail: { visible: !!$wire.selectedClientId } }))">
+    <div x-show="profileLoading && !$wire.selectedClientId" x-cloak class="clients-profile-opening" aria-busy="true"
+        aria-label="Loading client profile">
+        <div class="client-profile-back-loader is-visible" aria-hidden="true">
+            <div class="active-section-loading-bar">
+                <span class="active-section-loading-bar__sweep"></span>
+            </div>
+        </div>
     </div>
 
-    <section class="clients-list-wrapper" aria-label="Clients list" x-show="!$wire.selectedClientId || forceList"
-        x-cloak>
+    @if ($selectedClientId)
+        <div class="clients-profile-host" x-show="$wire.selectedClientId" x-cloak
+            x-transition:enter="client-profile-panel-enter" x-transition:enter-start="client-profile-panel-enter-start"
+            x-transition:enter-end="client-profile-panel-enter-end" wire:loading.class="is-profile-loading"
+            wire:target="viewProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, closePetDetails">
+            @include('livewire.dashboard.clients.partials.profile-panel')
+        </div>
+    @endif
+
+    <section class="clients-list-wrapper" wire:key="clients-list-panel" aria-label="Clients list"
+        x-show="!$wire.selectedClientId" x-cloak>
         <div class="clients-list-toolbar">
             <div class="clients-pill-row">
                 @php
@@ -692,7 +825,8 @@ new class extends Component {
                                         viewBox="0 0 20 20" fill="none" aria-hidden="true">
                                         <path d="M1 13A9 9 0 0 1 19 13" stroke="black" stroke-width="1"
                                             stroke-linecap="butt" />
-                                        <circle cx="10" cy="13" r="4" stroke="black" stroke-width="1" />
+                                        <circle cx="10" cy="13" r="4" stroke="black"
+                                            stroke-width="1" />
                                     </svg>
                                 </button>
                             </td>
@@ -733,6 +867,52 @@ new class extends Component {
 
     .clients-profile-host {
         margin-top: 0;
+        position: relative;
+    }
+
+    .clients-profile-host.is-profile-loading {
+        pointer-events: none;
+    }
+
+    .client-profile-back-block {
+        margin-bottom: 4rem;
+    }
+
+    .client-profile-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        border: 0;
+        background: transparent;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0;
+        margin-bottom: 0.75rem;
+    }
+
+    .clients-profile-opening {
+        margin-bottom: 1.5rem;
+    }
+
+    .client-profile-back-loader {
+        display: none;
+        position: relative;
+        height: 4px;
+    }
+
+    .client-profile-back-loader.is-visible {
+        display: block;
+    }
+
+    .client-profile-back-loader .active-section-loading-bar {
+        position: relative;
+        left: 0;
+        right: 0;
+        bottom: auto;
+        height: 4px;
     }
 
     .client-profile-panel-enter {

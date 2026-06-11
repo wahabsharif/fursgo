@@ -11,10 +11,20 @@
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
+        "blade-ui-kit/blade-heroicons": "*",
+        "blade-ui-kit/blade-icons": "^1.10",
+        "codeat3/blade-phosphor-icons": "*",
+        "codeat3/blade-unicons": "*",
+        "davidhsianturi/blade-bootstrap-icons": "*",
+        "faisal50x/blade-ionicons": "^1.1",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "livewire/flux": "^2.0",
-        "livewire/volt": "^1.6.7"
+        "livewire/volt": "^1.6.7",
+        "mallardduck/blade-lucide-icons": "*",
+        "owenvoke/blade-fontawesome": "*",
+        "postare/blade-mdi": "*",
+        "secondnetwork/blade-tabler-icons": "^3.44"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
