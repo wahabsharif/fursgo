@@ -21,7 +21,6 @@
         </div>
     </div>
     @fluxScripts
-    @include('partials.dev-hot-reload')
 </body>
 
 </html>

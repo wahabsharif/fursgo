@@ -76,6 +76,10 @@
             display: none !important;
         }
 
+        .dashboard-shell {
+            background-color: #fff;
+        }
+
         .dashboard-wrapper {
             position: relative;
         }
@@ -119,7 +123,6 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     @fluxScripts
-    @include('partials.dev-hot-reload')
 
     @stack('styles')
     @stack('script')

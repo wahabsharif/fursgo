@@ -198,8 +198,4 @@ Route::middleware(['auth:web,groomer_spacer'])->group(function () {
     })->name('dev-mode.update-meta');
 });
 
-if (app()->environment('local')) {
-    Route::get('/__dev/hot-reload', App\Http\Controllers\Dev\HotReloadController::class);
-}
-
 require __DIR__ . '/auth.php';
