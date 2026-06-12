@@ -9,6 +9,7 @@ use Database\Seeders\BookingSeeder;
 use Database\Seeders\DevUserSeeder;
 use Database\Seeders\PetMedicationDetailSeeder;
 use Database\Seeders\PetPreferenceSeeder;
+use Database\Seeders\ReviewSeeder;
 use Database\Seeders\ServiceAreaSeeder;
 use Database\Seeders\ServiceSeeder;
 use Database\Seeders\StaffSeeder;
@@ -31,6 +32,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             DevUserSeeder::class,
             BookingSeeder::class,
+            ReviewSeeder::class,
             PetMedicationDetailSeeder::class,
             ServiceSeeder::class,
             ServiceAreaSeeder::class,

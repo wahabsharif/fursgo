@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Model;
 
 class Booking extends Model
 {
@@ -45,6 +46,11 @@ class Booking extends Model
         return $this->belongsToMany(PetDetail::class, 'booking_pet', 'booking_id', 'pet_detail_id')->withTimestamps();
     }
 
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class);
+    }
+
     public function scopeToday($query)
     {
         return $query->whereDate('date', today());
@@ -62,7 +68,8 @@ class Booking extends Model
 
     public function scopeUpcoming($query)
     {
-        return $query->whereDate('date', '>=', today())
+        return $query
+            ->whereDate('date', '>=', today())
             ->whereIn('booking_status', ['pending', 'confirmed']);
     }
 }
