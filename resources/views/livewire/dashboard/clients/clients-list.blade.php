@@ -2,6 +2,7 @@
 
 use App\Models\Booking;
 use App\Models\PetDetail;
+use App\Models\Payment;
 use App\Models\Review;
 use App\Models\PetMedicationDetail;
 use App\Models\User;
@@ -652,7 +653,7 @@ new class extends Component {
                 'pets' => $petCount,
                 'bookings' => $bookings->count(),
                 'reviews' => $this->profileReviews->count(),
-                'payments' => $completed->count(),
+                'payments' => $this->profilePayments->count(),
             ],
         ];
     }
@@ -677,7 +678,6 @@ new class extends Component {
         $rows = match ($this->profileActiveTab) {
             'upcoming' => $this->filterUpcomingBookings($bookings),
             'bookings' => $bookings,
-            'payments' => $bookings->where('booking_status', 'completed'),
             default => collect(),
         };
 
@@ -733,13 +733,52 @@ new class extends Component {
     }
 
     #[Computed]
+    public function profilePayments(): Collection
+    {
+        if (!$this->selectedClientId) {
+            return collect();
+        }
+
+        return Payment::query()
+            ->where('pet_owner_id', $this->selectedClientId)
+            ->whereHas('booking', fn($query) => $query->where('goormer_spacer_id', $this->spacerId()))
+            ->with(['booking:' . implode(',', self::BOOKING_LIST_COLUMNS), 'pet:' . implode(',', self::PET_LIST_COLUMNS)])
+            ->get();
+    }
+
+    #[Computed]
+    public function profileTabPayments(): Collection
+    {
+        $payments = $this->profilePayments;
+
+        $rows = match ($this->profileSort) {
+            'date_desc' => $payments->sortByDesc(fn($payment) => $payment->date?->timestamp ?? 0),
+            'amount_high' => $payments->sortByDesc(fn($payment) => (float) $payment->amount),
+            'amount_low' => $payments->sortBy(fn($payment) => (float) $payment->amount),
+            default => $payments->sortBy(fn($payment) => $payment->date?->timestamp ?? PHP_INT_MAX),
+        };
+
+        return $rows->values();
+    }
+
+    #[Computed]
+    public function profileVisibleTabPayments(): Collection
+    {
+        return $this->profileTabPayments->take($this->profilePerPage);
+    }
+
+    #[Computed]
     public function profileCanLoadMore(): bool
     {
         if ($this->profileActiveTab === 'reviews') {
             return $this->profileVisibleTabReviews->count() < $this->profileTabReviews->count();
         }
 
-        return in_array($this->profileActiveTab, ['upcoming', 'bookings', 'payments'], true) && $this->profileVisibleTabBookings->count() < $this->profileTabBookings->count();
+        if ($this->profileActiveTab === 'payments') {
+            return $this->profileVisibleTabPayments->count() < $this->profileTabPayments->count();
+        }
+
+        return in_array($this->profileActiveTab, ['upcoming', 'bookings'], true) && $this->profileVisibleTabBookings->count() < $this->profileTabBookings->count();
     }
 
     #[Computed]
@@ -994,7 +1033,9 @@ new class extends Component {
                         <tr wire:key="client-row-{{ $client['id'] }}">
                             <td>
                                 <div class="clients-name-cell">
-                                    <span class="clients-avatar" aria-hidden="true">{{ $client['initials'] }}</span>
+                                    <span class="clients-avatar-wrap" aria-hidden="true">
+                                        <span class="clients-avatar">{{ $client['initials'] }}</span>
+                                    </span>
                                     <div class="clients-name-meta">
                                         <span class="clients-name">{{ $client['name'] }}</span>
                                         <span
@@ -1369,9 +1410,22 @@ new class extends Component {
         gap: 0.85rem;
     }
 
-    .clients-avatar {
+    .clients-avatar-wrap {
         width: 44px;
         height: 44px;
+        box-sizing: border-box;
+        padding: 2px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: #FFF;
+        border: 1px solid #FFC97A;
+        display: inline-flex;
+        flex-shrink: 0;
+    }
+
+    .clients-avatar {
+        width: 100%;
+        height: 100%;
         border-radius: 999px;
         background: #f0ebe4;
         color: #3B3731;
@@ -1381,7 +1435,6 @@ new class extends Component {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        flex-shrink: 0;
     }
 
     .clients-name-meta {
@@ -1404,6 +1457,7 @@ new class extends Component {
         display: inline-flex;
         align-items: center;
         width: fit-content;
+        height: 32px;
         border-radius: 100px;
         padding: 0.2rem 0.65rem;
         text-align: center;
