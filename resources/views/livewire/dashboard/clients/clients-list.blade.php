@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Renderless;
 use Livewire\Volt\Component;
 
 new class extends Component {
@@ -36,6 +37,8 @@ new class extends Component {
     public int $profilePerPage = 6;
 
     public ?int $selectedPetId = null;
+
+    public bool $profileIsBlocked = false;
 
     private static ?bool $usersHaveProfileImage = null;
 
@@ -304,6 +307,7 @@ new class extends Component {
         $this->profileSort = 'date_asc';
         $this->profilePetSort = 'name_asc';
         $this->profilePerPage = 6;
+        $this->profileIsBlocked = ($this->profileClient?->user_status ?? 'active') === 'blocked';
     }
 
     public function closeProfile(): void
@@ -456,25 +460,24 @@ new class extends Component {
         $this->profilePerPage += 6;
     }
 
+    #[Renderless]
     public function toggleClientBlock(): void
     {
         if (!$this->selectedClientId) {
+            $this->profileIsBlocked = !$this->profileIsBlocked;
+
             return;
         }
 
-        $isClient = $this->spacerBookings->contains('pet_owner_id', $this->selectedClientId);
+        if (!$this->spacerBookings->contains('pet_owner_id', $this->selectedClientId)) {
+            $this->profileIsBlocked = !$this->profileIsBlocked;
 
-        if (!$isClient) {
             return;
         }
-
-        $currentStatus = User::query()->whereKey($this->selectedClientId)->value('user_status') ?? 'active';
-
-        $newStatus = $currentStatus === 'blocked' ? 'active' : 'blocked';
 
         User::query()
             ->whereKey($this->selectedClientId)
-            ->update(['user_status' => $newStatus]);
+            ->update(['user_status' => $this->profileIsBlocked ? 'blocked' : 'active']);
     }
 
     #[Computed]
@@ -493,7 +496,7 @@ new class extends Component {
 
         $petCount = $this->profilePetCount();
         $petsLabel = $petCount > 3 ? '3+' : (string) $petCount;
-        $isBlocked = ($client?->user_status ?? 'active') === 'blocked';
+        $isBlocked = $this->profileIsBlocked;
 
         return [
             'meta' => [
@@ -687,7 +690,7 @@ new class extends Component {
         <div class="clients-profile-host" x-show="$wire.selectedClientId" x-cloak
             x-transition:enter="client-profile-panel-enter" x-transition:enter-start="client-profile-panel-enter-start"
             x-transition:enter-end="client-profile-panel-enter-end" wire:loading.class="is-profile-loading"
-            wire:target="viewProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, closePetDetails, toggleClientBlock">
+            wire:target="viewProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, closePetDetails">
             @include('livewire.dashboard.clients.partials.profile-panel')
         </div>
     @endif
