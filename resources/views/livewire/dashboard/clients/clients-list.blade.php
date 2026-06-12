@@ -14,7 +14,9 @@ use Livewire\Attributes\Renderless;
 use Livewire\Volt\Component;
 
 new class extends Component {
-    private const BOOKING_LIST_COLUMNS = ['id', 'pet_owner_id', 'goormer_spacer_id', 'date', 'time', 'service', 'amount', 'staff', 'rating', 'visit_type', 'booking_status', 'created_at'];
+    private const BOOKING_LIST_COLUMNS = ['id', 'pet_owner_id', 'goormer_spacer_id', 'date', 'time', 'service', 'amount', 'staff', 'rating', 'visit_type', 'booking_status', 'created_at', 'extra_add_ons', 'discount'];
+
+    public ?int $completedBookingId = null;
 
     private const PET_LIST_COLUMNS = ['id', 'user_id', 'name', 'pet_type', 'breed', 'sex', 'birthday', 'weight', 'notes', 'photo'];
 
@@ -326,6 +328,7 @@ new class extends Component {
         $this->profileSort = 'date_asc';
         $this->profilePetSort = 'name_asc';
         $this->profilePerPage = 6;
+        $this->completedBookingId = null;
         $this->profileIsBlocked = ($this->profileClient?->user_status ?? 'active') === 'blocked';
     }
 
@@ -333,6 +336,27 @@ new class extends Component {
     {
         $this->selectedClientId = null;
         $this->selectedPetId = null;
+        $this->completedBookingId = null;
+    }
+
+    public function openCompletedBookingModal(int $bookingId): void
+    {
+        if (!$this->selectedClientId) {
+            return;
+        }
+
+        $bookingExists = Booking::query()->where('goormer_spacer_id', $this->spacerId())->where('pet_owner_id', $this->selectedClientId)->whereKey($bookingId)->where('booking_status', 'completed')->exists();
+
+        if (!$bookingExists) {
+            return;
+        }
+
+        $this->completedBookingId = $bookingId;
+    }
+
+    public function closeCompletedBookingModal(): void
+    {
+        $this->completedBookingId = null;
     }
 
     public function viewPetDetails(int $petId): void
@@ -591,6 +615,16 @@ new class extends Component {
         return in_array($this->profileActiveTab, ['upcoming', 'bookings', 'payments'], true) && $this->profileVisibleTabBookings->count() < $this->profileTabBookings->count();
     }
 
+    #[Computed]
+    public function profileCompletedBooking(): ?Booking
+    {
+        if (!$this->completedBookingId) {
+            return null;
+        }
+
+        return $this->profileBookings->firstWhere('id', $this->completedBookingId);
+    }
+
     public function formatProfileLocationLabel(?string $visitType): string
     {
         $label = str_replace('_', ' ', strtolower((string) $visitType));
@@ -677,7 +711,7 @@ new class extends Component {
 @php
     $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
     $profileWireTargets =
-        'viewProfile, closeProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, closePetDetails';
+        'viewProfile, closeProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, closePetDetails, openCompletedBookingModal, closeCompletedBookingModal';
 @endphp
 
 <div class="clients-section" x-data="{
@@ -901,6 +935,8 @@ new class extends Component {
             </div>
         @endif
     </section>
+
+    <x-dashboard.common.completed-booking-modal :booking="$this->profileCompletedBooking" />
 </div>
 
 <style>
