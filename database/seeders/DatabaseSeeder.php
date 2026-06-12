@@ -7,6 +7,7 @@ use App\Models\User;
 use Database\Seeders\AddOnSeeder;
 use Database\Seeders\BookingSeeder;
 use Database\Seeders\DevUserSeeder;
+use Database\Seeders\PaymentSeeder;
 use Database\Seeders\PetMedicationDetailSeeder;
 use Database\Seeders\PetPreferenceSeeder;
 use Database\Seeders\ReviewSeeder;
@@ -33,6 +34,7 @@ class DatabaseSeeder extends Seeder
             DevUserSeeder::class,
             BookingSeeder::class,
             ReviewSeeder::class,
+            PaymentSeeder::class,
             PetMedicationDetailSeeder::class,
             ServiceSeeder::class,
             ServiceAreaSeeder::class,
