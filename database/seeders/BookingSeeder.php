@@ -169,6 +169,7 @@ class BookingSeeder extends Seeder
                     'name' => $clientSeed['owner']['name'],
                     'password' => bcrypt('password'),
                     'user_type' => 'pet_owner',
+                    'user_status' => 'active',
                 ]
             );
 

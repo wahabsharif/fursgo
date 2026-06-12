@@ -22,6 +22,7 @@ class DevUserSeeder extends Seeder
                 'name' => 'Dev',
                 'password' => Hash::make($plainPassword),
                 'user_type' => 'dev',
+                'user_status' => 'active',
             ]
         );
 
