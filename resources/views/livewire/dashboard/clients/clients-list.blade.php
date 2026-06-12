@@ -169,7 +169,7 @@ new class extends Component {
             return null;
         }
 
-        $columns = ['id', 'name', 'address', 'email_verified_at', 'created_at'];
+        $columns = ['id', 'name', 'address', 'email_verified_at', 'created_at', 'user_status'];
 
         if ($this->usersHaveProfileImage()) {
             $columns[] = 'profile_image';
@@ -456,6 +456,27 @@ new class extends Component {
         $this->profilePerPage += 6;
     }
 
+    public function toggleClientBlock(): void
+    {
+        if (!$this->selectedClientId) {
+            return;
+        }
+
+        $isClient = $this->spacerBookings->contains('pet_owner_id', $this->selectedClientId);
+
+        if (!$isClient) {
+            return;
+        }
+
+        $currentStatus = User::query()->whereKey($this->selectedClientId)->value('user_status') ?? 'active';
+
+        $newStatus = $currentStatus === 'blocked' ? 'active' : 'blocked';
+
+        User::query()
+            ->whereKey($this->selectedClientId)
+            ->update(['user_status' => $newStatus]);
+    }
+
     #[Computed]
     public function profileSummary(): array
     {
@@ -472,6 +493,7 @@ new class extends Component {
 
         $petCount = $this->profilePetCount();
         $petsLabel = $petCount > 3 ? '3+' : (string) $petCount;
+        $isBlocked = ($client?->user_status ?? 'active') === 'blocked';
 
         return [
             'meta' => [
@@ -487,6 +509,7 @@ new class extends Component {
                 'total_paid' => (float) $completed->sum('amount'),
                 'avg_rating' => $avgRating,
                 'is_active' => $upcoming->isNotEmpty(),
+                'is_blocked' => $isBlocked,
             ],
             'tab_counts' => [
                 'upcoming' => $upcoming->count(),
@@ -664,7 +687,7 @@ new class extends Component {
         <div class="clients-profile-host" x-show="$wire.selectedClientId" x-cloak
             x-transition:enter="client-profile-panel-enter" x-transition:enter-start="client-profile-panel-enter-start"
             x-transition:enter-end="client-profile-panel-enter-end" wire:loading.class="is-profile-loading"
-            wire:target="viewProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, closePetDetails">
+            wire:target="viewProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, closePetDetails, toggleClientBlock">
             @include('livewire.dashboard.clients.partials.profile-panel')
         </div>
     @endif

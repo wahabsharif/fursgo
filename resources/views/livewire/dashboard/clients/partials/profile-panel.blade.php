@@ -1,7 +1,7 @@
 @php
     $profileWireTargets =
         $profileWireTargets ??
-        'viewProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, updateGroomerGuidanceNotes';
+        'viewProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, updateGroomerGuidanceNotes, toggleClientBlock';
 @endphp
 
 @if ($selectedPetId && $this->selectedPet)
@@ -52,8 +52,8 @@
             </div>
         </div>
 
-        <article class="client-profile-card">
-            <span class="client-profile-accent" aria-hidden="true"></span>
+        <article class="client-profile-card {{ $meta['is_blocked'] ? 'is-blocked' : '' }}">
+            <span class="client-profile-accent {{ $meta['is_blocked'] ? 'is-blocked' : '' }}" aria-hidden="true"></span>
 
             <div class="client-profile-avatar-wrap">
                 @if ($meta['avatar_url'])
@@ -67,33 +67,16 @@
                 <div class="client-profile-top">
                     <div class="client-profile-info">
                         <div class="client-profile-header-row">
-                            <span class="client-profile-status {{ $meta['is_active'] ? 'is-active' : 'is-inactive' }}">
-                                {{ $meta['is_active'] ? 'Active' : 'Inactive' }}
+                            <span
+                                class="client-profile-status {{ $meta['is_blocked'] ? 'is-blocked' : ($meta['is_active'] ? 'is-active' : 'is-inactive') }}">
+                                {{ $meta['is_blocked'] ? 'Blocked' : ($meta['is_active'] ? 'Active' : 'Inactive') }}
                             </span>
 
-                            <div class="client-profile-more-wrap" x-data="{
-                                openMenu: false,
-                                menuLeft: 0,
-                                menuTop: 0,
-                                menuWidth: 160,
-                                repositionMenu() {
-                                    const rect = $refs.moreBtn.getBoundingClientRect();
-                                    this.menuLeft = Math.max(8, rect.right - this.menuWidth);
-                                    this.menuTop = rect.bottom + 8;
-                                },
-                                toggleMenu() {
-                                    if (!this.openMenu) {
-                                        this.repositionMenu();
-                                    }
-                                    this.openMenu = !this.openMenu;
-                                }
-                            }"
+                            <div class="client-profile-more-wrap" x-data="{ openMenu: false }"
                                 @keydown.escape.window="openMenu = false"
-                                @resize.window="if (openMenu) repositionMenu()"
-                                @scroll.window="if (openMenu) repositionMenu()"
                                 @click.window="if (openMenu && !$refs.moreBtn.contains($event.target) && (!$refs.moreMenu || !$refs.moreMenu.contains($event.target))) { openMenu = false }">
                                 <button type="button" class="client-profile-more-btn" x-ref="moreBtn"
-                                    @click.stop="toggleMenu()" aria-label="More options"
+                                    @click.stop="openMenu = !openMenu" aria-label="More options"
                                     :aria-expanded="openMenu.toString()">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="25" height="5"
                                         viewBox="0 0 25 5" fill="none" aria-hidden="true">
@@ -104,18 +87,41 @@
                                 </button>
                                 <template x-teleport="body">
                                     <div class="client-profile-more-menu" x-cloak x-show="openMenu" x-ref="moreMenu"
-                                        x-transition.opacity.duration.100ms
-                                        :style="`position: fixed; right: 2.5rem; top: ${menuTop}px; z-index: 99999;`">
-                                        <button type="button" class="client-profile-more-item">
-                                            <span>Block</span>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15"
-                                                viewBox="0 0 15 15" fill="none">
-                                                <path
-                                                    d="M7.05664 0.375C7.86761 0.375004 8.63276 0.509461 9.35449 0.777344L9.66113 0.900391C10.4786 1.25264 11.1862 1.72915 11.7871 2.3291C12.3879 2.92892 12.8651 3.63584 13.2178 4.45312C13.5673 5.26324 13.7432 6.12989 13.7432 7.05664C13.7432 7.98354 13.5669 8.85036 13.2178 9.66113C12.8656 10.4789 12.3889 11.1868 11.7881 11.7871C11.187 12.3876 10.4798 12.8646 9.66406 13.2178C8.8559 13.5676 7.98971 13.7437 7.06152 13.7432C6.13461 13.7432 5.26684 13.5669 4.45605 13.2178C3.63899 12.8651 2.93181 12.3883 2.33105 11.7881C1.73017 11.1877 1.25306 10.4812 0.900391 9.66504C0.550891 8.85611 0.375027 7.98939 0.375 7.06152C0.375 6.24972 0.509614 5.4845 0.777344 4.76367L0.900391 4.45703C1.25262 3.63963 1.72876 2.93196 2.32812 2.33105C2.92737 1.73033 3.63433 1.25309 4.45215 0.900391C5.26288 0.550756 6.12982 0.375 7.05664 0.375Z"
-                                                    stroke="#3B3731" stroke-width="0.75" />
-                                                <line x1="1.92621" y1="2.22629" x2="11.8918" y2="12.1919"
-                                                    stroke="#3B3731" stroke-width="0.75" />
-                                            </svg>
+                                        wire:loading.class="is-loading" wire:target="toggleClientBlock"
+                                        x-transition.opacity.duration.100ms>
+                                        <button type="button"
+                                            class="client-profile-more-item {{ $meta['is_blocked'] ? 'is-activate' : 'is-block' }}"
+                                            wire:click="toggleClientBlock" wire:loading.attr="disabled"
+                                            wire:loading.class="is-loading" wire:target="toggleClientBlock">
+                                            <span wire:loading.remove wire:target="toggleClientBlock">
+                                                {{ $meta['is_blocked'] ? 'Activate' : 'Block' }}
+                                            </span>
+                                            <span class="client-profile-more-item-loading" wire:loading.inline-flex
+                                                wire:target="toggleClientBlock">
+                                                <span class="client-profile-load-more-spinner"
+                                                    aria-hidden="true"></span>
+                                            </span>
+                                            @if ($meta['is_blocked'])
+                                                <svg wire:loading.remove wire:target="toggleClientBlock"
+                                                    xmlns="http://www.w3.org/2000/svg" width="15" height="15"
+                                                    viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                                                    <circle cx="7.5" cy="7.5" r="7.125" stroke="#3B3731"
+                                                        stroke-width="0.75" />
+                                                    <path d="M4.5 7.6L6.7 9.8L10.5 5.5" stroke="#3B3731"
+                                                        stroke-width="0.75" stroke-linecap="round"
+                                                        stroke-linejoin="round" />
+                                                </svg>
+                                            @else
+                                                <svg wire:loading.remove wire:target="toggleClientBlock"
+                                                    xmlns="http://www.w3.org/2000/svg" width="15" height="15"
+                                                    viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                                                    <path
+                                                        d="M7.05664 0.375C7.86761 0.375004 8.63276 0.509461 9.35449 0.777344L9.66113 0.900391C10.4786 1.25264 11.1862 1.72915 11.7871 2.3291C12.3879 2.92892 12.8651 3.63584 13.2178 4.45312C13.5673 5.26324 13.7432 6.12989 13.7432 7.05664C13.7432 7.98354 13.5669 8.85036 13.2178 9.66113C12.8656 10.4789 12.3889 11.1868 11.7881 11.7871C11.187 12.3876 10.4798 12.8646 9.66406 13.2178C8.8559 13.5676 7.98971 13.7437 7.06152 13.7432C6.13461 13.7432 5.26684 13.5669 4.45605 13.2178C3.63899 12.8651 2.93181 12.3883 2.33105 11.7881C1.73017 11.1877 1.25306 10.4812 0.900391 9.66504C0.550891 8.85611 0.375027 7.98939 0.375 7.06152C0.375 6.24972 0.509614 5.4845 0.777344 4.76367L0.900391 4.45703C1.25262 3.63963 1.72876 2.93196 2.32812 2.33105C2.92737 1.73033 3.63433 1.25309 4.45215 0.900391C5.26288 0.550756 6.12982 0.375 7.05664 0.375Z"
+                                                        stroke="#3B3731" stroke-width="0.75" />
+                                                    <line x1="1.92621" y1="2.22629" x2="11.8918" y2="12.1919"
+                                                        stroke="#3B3731" stroke-width="0.75" />
+                                                </svg>
+                                            @endif
                                         </button>
                                     </div>
                                 </template>
@@ -540,12 +546,17 @@
 
         .client-profile-card {
             position: relative;
-            border-radius: 12px;
-            border: 1px solid #E6E6E6;
+            border-radius: 10px;
+            border: 1px solid #C9DDA0;
+            box-shadow: 0 4px 15px 5px rgba(0, 0, 0, 0.05);
             background: #FFF;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
             overflow: hidden;
             margin-bottom: 2rem;
+            transition: border-color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .client-profile-card.is-blocked {
+            border-color: #A8A8A8;
         }
 
         .client-profile-accent {
@@ -556,6 +567,15 @@
             bottom: 0;
             z-index: 1;
             background: #C9DDA0;
+            box-sizing: border-box;
+            border-right: 1px solid #C9DDA0;
+            transition: background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .client-profile-accent.is-blocked {
+            background: #A8A8A8;
+            border-right-color: #A8A8A8;
         }
 
         .client-profile-avatar-wrap {
@@ -657,6 +677,8 @@
             line-height: normal;
             width: 80px;
             height: 32px;
+            transition: background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .client-profile-status.is-active {
@@ -667,6 +689,11 @@
         .client-profile-status.is-inactive {
             color: #9D9B98;
             background: #ECEBEB;
+        }
+
+        .client-profile-status.is-blocked {
+            background: #ECEBEB;
+            color: #9D9B98;
         }
 
         .client-profile-name-row {
@@ -739,29 +766,64 @@
         }
 
         .client-profile-more-menu {
-            min-width: 160px;
-            width: max-content;
-
+            position: fixed;
+            left: calc(100vw - 4.5rem - 130px);
+            top: 495px;
+            z-index: 99999;
+            width: 130px;
+            height: 32px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
             overflow: hidden;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .client-profile-more-menu.is-loading {
+            width: 32px;
         }
 
         .client-profile-more-item {
             width: 100%;
+            height: 100%;
+            box-sizing: border-box;
             border-radius: 5px;
             border: 1px solid #D9D9D9;
             background: #F8F8F8;
-            padding: 0.85rem 1rem;
+            padding: 0 0.75rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 0.5rem;
             color: #3B3731;
             font-family: Lato;
             font-size: 14px;
+            line-height: 1;
             cursor: pointer;
+            white-space: nowrap;
+            transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), gap 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .client-profile-more-item.is-loading {
+            justify-content: center;
+            gap: 0;
+            padding: 0;
         }
 
         .client-profile-more-item:hover {
+            background: #F8F8F8;
+        }
+
+        .client-profile-more-item[disabled] {
+            opacity: 0.7;
+            cursor: wait;
+        }
+
+        .client-profile-more-item-loading {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
             background: #F8F8F8;
         }
 
