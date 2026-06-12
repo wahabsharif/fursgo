@@ -2,6 +2,7 @@
 
 use App\Models\Booking;
 use App\Models\PetDetail;
+use App\Models\Review;
 use App\Models\PetMedicationDetail;
 use App\Models\User;
 use Carbon\Carbon;
@@ -41,6 +42,12 @@ new class extends Component {
     public ?int $selectedPetId = null;
 
     public bool $profileIsBlocked = false;
+
+    public ?int $openReviewReplyId = null;
+
+    public string $reviewReplyMessage = '';
+
+    public int $reviewReplyClientRating = 0;
 
     private static ?bool $usersHaveProfileImage = null;
 
@@ -330,6 +337,7 @@ new class extends Component {
         $this->profilePerPage = 6;
         $this->completedBookingId = null;
         $this->profileIsBlocked = ($this->profileClient?->user_status ?? 'active') === 'blocked';
+        $this->resetReviewReplyDraft();
     }
 
     public function closeProfile(): void
@@ -337,6 +345,85 @@ new class extends Component {
         $this->selectedClientId = null;
         $this->selectedPetId = null;
         $this->completedBookingId = null;
+        $this->resetReviewReplyDraft();
+    }
+
+    private function resetReviewReplyDraft(): void
+    {
+        $this->openReviewReplyId = null;
+        $this->reviewReplyMessage = '';
+        $this->reviewReplyClientRating = 0;
+    }
+
+    private function findProfileReview(int $reviewId): ?Review
+    {
+        if (!$this->selectedClientId) {
+            return null;
+        }
+
+        return Review::query()->whereKey($reviewId)->where('pet_owner_id', $this->selectedClientId)->whereHas('booking', fn($query) => $query->where('goormer_spacer_id', $this->spacerId()))->first();
+    }
+
+    public function closeReviewReply(): void
+    {
+        $this->resetReviewReplyDraft();
+    }
+
+    public function toggleReviewReply(int $reviewId): void
+    {
+        if ($this->openReviewReplyId === $reviewId) {
+            $this->resetReviewReplyDraft();
+
+            return;
+        }
+
+        $review = $this->findProfileReview($reviewId);
+
+        if (!$review) {
+            return;
+        }
+
+        $this->openReviewReplyId = $reviewId;
+        $this->reviewReplyMessage = (string) ($review->reply ?? '');
+        $this->reviewReplyClientRating = (int) round((float) ($review->rating ?? 0));
+    }
+
+    public function submitReviewReply(int $reviewId): void
+    {
+        if ($this->openReviewReplyId !== $reviewId) {
+            return;
+        }
+
+        $this->validate(
+            [
+                'reviewReplyMessage' => ['required', 'string', 'max:3000'],
+                'reviewReplyClientRating' => ['required', 'integer', 'min:1', 'max:5'],
+            ],
+            [
+                'reviewReplyMessage.required' => 'Please write a reply message.',
+                'reviewReplyClientRating.min' => 'Please rate the client.',
+            ],
+        );
+
+        $review = $this->findProfileReview($reviewId);
+
+        if (!$review) {
+            return;
+        }
+
+        $spacerId = $this->spacerId();
+
+        if ($spacerId === 0) {
+            return;
+        }
+
+        $review->update([
+            'reply' => trim($this->reviewReplyMessage),
+            'rating' => $this->reviewReplyClientRating,
+            'reply_from' => $spacerId,
+        ]);
+
+        $this->resetReviewReplyDraft();
     }
 
     public function openCompletedBookingModal(int $bookingId): void
@@ -456,6 +543,7 @@ new class extends Component {
 
         $this->profileActiveTab = $tab;
         $this->profilePerPage = 6;
+        $this->resetReviewReplyDraft();
     }
 
     public function setProfileSort(string $sort): void
@@ -563,7 +651,7 @@ new class extends Component {
                 'upcoming' => $upcoming->count(),
                 'pets' => $petCount,
                 'bookings' => $bookings->count(),
-                'reviews' => $bookings->whereNotNull('rating')->count(),
+                'reviews' => $this->profileReviews->count(),
                 'payments' => $completed->count(),
             ],
         ];
@@ -604,14 +692,53 @@ new class extends Component {
     }
 
     #[Computed]
+    public function profileReviews(): Collection
+    {
+        if (!$this->selectedClientId) {
+            return collect();
+        }
+
+        return Review::query()
+            ->where('pet_owner_id', $this->selectedClientId)
+            ->whereHas('booking', fn($query) => $query->where('goormer_spacer_id', $this->spacerId()))
+            ->with(['booking:' . implode(',', self::BOOKING_LIST_COLUMNS)])
+            ->get();
+    }
+
+    #[Computed]
+    public function profileTabReviews(): Collection
+    {
+        $reviews = $this->profileReviews;
+
+        $rows = match ($this->profileSort) {
+            'date_desc' => $reviews->sortByDesc(fn($review) => $review->booking?->date?->timestamp ?? 0),
+            'amount_high' => $reviews->sortByDesc(fn($review) => (float) ($review->booking?->amount ?? 0)),
+            'amount_low' => $reviews->sortBy(fn($review) => (float) ($review->booking?->amount ?? 0)),
+            default => $reviews->sortBy(fn($review) => $review->booking?->date?->timestamp ?? PHP_INT_MAX),
+        };
+
+        return $rows->values();
+    }
+
+    #[Computed]
     public function profileVisibleTabBookings(): Collection
     {
         return $this->profileTabBookings->take($this->profilePerPage);
     }
 
     #[Computed]
+    public function profileVisibleTabReviews(): Collection
+    {
+        return $this->profileTabReviews->take($this->profilePerPage);
+    }
+
+    #[Computed]
     public function profileCanLoadMore(): bool
     {
+        if ($this->profileActiveTab === 'reviews') {
+            return $this->profileVisibleTabReviews->count() < $this->profileTabReviews->count();
+        }
+
         return in_array($this->profileActiveTab, ['upcoming', 'bookings', 'payments'], true) && $this->profileVisibleTabBookings->count() < $this->profileTabBookings->count();
     }
 
@@ -711,7 +838,7 @@ new class extends Component {
 @php
     $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
     $profileWireTargets =
-        'viewProfile, closeProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, closePetDetails, openCompletedBookingModal, closeCompletedBookingModal';
+        'viewProfile, closeProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, closePetDetails, openCompletedBookingModal, closeCompletedBookingModal, toggleReviewReply, closeReviewReply, submitReviewReply';
 @endphp
 
 <div class="clients-section" x-data="{

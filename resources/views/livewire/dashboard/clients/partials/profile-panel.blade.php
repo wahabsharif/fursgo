@@ -1,7 +1,7 @@
 @php
     $profileWireTargets =
         $profileWireTargets ??
-        'viewProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, updateGroomerGuidanceNotes, openCompletedBookingModal, closeCompletedBookingModal';
+        'viewProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, updateGroomerGuidanceNotes, openCompletedBookingModal, closeCompletedBookingModal, toggleReviewReply, closeReviewReply, submitReviewReply';
 @endphp
 
 @if ($selectedPetId && $this->selectedPet)
@@ -374,7 +374,20 @@
             @if ($profileActiveTab === 'pets')
                 <x-dashboard.clients.client-pet-view :pets="$this->profilePets" />
             @elseif ($profileActiveTab === 'reviews')
-                <p class="client-profile-empty">No reviews yet.</p>
+                <x-dashboard.clients.client-reviews-view :reviews="$this->profileVisibleTabReviews" :client-name="$meta['name']" :open-reply-id="$openReviewReplyId" />
+
+                @if ($this->profileCanLoadMore)
+                    <div class="client-profile-load-more-wrap">
+                        <button type="button" class="client-profile-load-more-btn" wire:click="loadMoreProfile"
+                            wire:loading.attr="disabled" wire:target="loadMoreProfile">
+                            <span wire:loading.remove wire:target="loadMoreProfile">Load More</span>
+                            <span class="client-profile-load-more-loading" wire:loading.inline-flex
+                                wire:target="loadMoreProfile">
+                                <span class="client-profile-load-more-spinner" aria-hidden="true"></span>
+                            </span>
+                        </button>
+                    </div>
+                @endif
             @elseif (in_array($profileActiveTab, ['bookings', 'payments'], true))
                 <x-dashboard.clients.client-bookings-view :bookings="$this->profileVisibleTabBookings" :is-space-user="$isSpaceUser" />
 
