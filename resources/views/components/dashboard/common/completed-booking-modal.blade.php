@@ -57,8 +57,8 @@
     @endphp
     @teleport('body')
         <div class="completed-booking-modal-overlay" wire:keydown.escape="{{ $closeMethod }}">
-            <div class="completed-booking-modal-card" role="dialog" aria-modal="true"
-                aria-labelledby="completed-booking-modal-title">
+            <div class="completed-booking-modal-card {{ $isSpaceUser ? 'is-space-user' : '' }}" role="dialog"
+                aria-modal="true" aria-labelledby="completed-booking-modal-title">
                 <div class="completed-booking-modal-head">
                     <h3 class="completed-booking-modal-title" id="completed-booking-modal-title">Completed Booking</h3>
                     <button type="button" class="completed-booking-modal-close"
@@ -146,7 +146,7 @@
                     <div class="completed-booking-modal-line">
                         <div>
                             <p>{{ $isSpaceUser ? $completedSpaceLabel : $completedService }}</p>
-                            <p class="completed-booking-modal-line-sub" style="color: #9D9B98;">
+                            <p class="completed-booking-modal-line-sub">
                                 {{ $isSpaceUser ? $completedServiceTimeLabelForSpace : $completedPetName }}</p>
                         </div>
                         <span>£{{ number_format($completedServiceAmount, 2) }}</span>
@@ -400,6 +400,10 @@
             font-style: normal;
             font-weight: 400;
             line-height: 20px;
+        }
+
+        .completed-booking-modal-card.is-space-user .completed-booking-modal-line-sub {
+            color: #3B3731;
         }
 
         .completed-booking-modal-total-block {

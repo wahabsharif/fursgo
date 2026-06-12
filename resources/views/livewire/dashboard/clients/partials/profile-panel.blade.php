@@ -15,15 +15,15 @@
         $activeTab = $this->profileActiveTab;
         $profileTabs = $isSpaceUser
             ? [
-                'bookings' => 'Bookings',
                 'upcoming' => 'Upcoming Bookings',
+                'bookings' => 'Bookings',
                 'reviews' => 'Reviews',
                 'payments' => 'Payments',
             ]
             : [
-                'bookings' => 'Bookings',
                 'upcoming' => 'Upcoming Bookings',
                 'pets' => 'Pets',
+                'bookings' => 'Bookings',
                 'reviews' => 'Reviews',
                 'payments' => 'Payments',
             ];
@@ -241,10 +241,14 @@
                         {{ $tabLabel }}
                         @if ($tabKey === 'upcoming' && ($tabCounts['upcoming'] ?? 0) > 0)
                             ({{ $tabCounts['upcoming'] }})
-                        @elseif ($tabKey === 'bookings' && ($tabCounts['bookings'] ?? 0) > 0)
-                            ({{ $tabCounts['bookings'] }})
                         @elseif (!$isSpaceUser && $tabKey === 'pets' && ($tabCounts['pets'] ?? 0) > 0)
                             ({{ $tabCounts['pets'] }})
+                        @elseif ($tabKey === 'bookings' && ($tabCounts['bookings'] ?? 0) > 0)
+                            ({{ $tabCounts['bookings'] }})
+                        @elseif ($tabKey === 'reviews' && ($tabCounts['reviews'] ?? 0) > 0)
+                            ({{ $tabCounts['reviews'] }})
+                        @elseif ($tabKey === 'payments' && ($tabCounts['payments'] ?? 0) > 0)
+                            ({{ $tabCounts['payments'] }})
                         @endif
                     </button>
                 @endforeach
@@ -388,7 +392,22 @@
                         </button>
                     </div>
                 @endif
-            @elseif (in_array($profileActiveTab, ['bookings', 'payments'], true))
+            @elseif ($profileActiveTab === 'payments')
+                <x-dashboard.clients.client-payments-view :payments="$this->profileVisibleTabPayments" :is-space-user="$isSpaceUser" />
+
+                @if ($this->profileCanLoadMore)
+                    <div class="client-profile-load-more-wrap">
+                        <button type="button" class="client-profile-load-more-btn" wire:click="loadMoreProfile"
+                            wire:loading.attr="disabled" wire:target="loadMoreProfile">
+                            <span wire:loading.remove wire:target="loadMoreProfile">Load More</span>
+                            <span class="client-profile-load-more-loading" wire:loading.inline-flex
+                                wire:target="loadMoreProfile">
+                                <span class="client-profile-load-more-spinner" aria-hidden="true"></span>
+                            </span>
+                        </button>
+                    </div>
+                @endif
+            @elseif ($profileActiveTab === 'bookings')
                 <x-dashboard.clients.client-bookings-view :bookings="$this->profileVisibleTabBookings" :is-space-user="$isSpaceUser" />
 
                 @if ($this->profileCanLoadMore)

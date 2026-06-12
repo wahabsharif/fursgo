@@ -93,7 +93,7 @@ class PetMedicationDetail extends Model
 
     public function vaccinationStatusLabel(): string
     {
-        return $this->hasOverdueVaccinations() ? 'Overdue' : 'Up to Date';
+        return $this->hasOverdueVaccinations() ? 'Over Due' : 'Up to Date';
     }
 
     /**
@@ -202,7 +202,7 @@ class PetMedicationDetail extends Model
 
                 return [
                     'name' => trim((string) ($vaccination['name'] ?? 'Vaccine')) ?: 'Vaccine',
-                    'status_label' => $isOverdue ? 'Overdue' : 'Up to Date',
+                    'status_label' => $isOverdue ? 'Over Due' : 'Up to Date',
                     'is_overdue' => $isOverdue,
                     'last_given' => static::formatVaccinationDate($vaccination['date'] ?? null),
                     'next_due' => static::formatVaccinationDate($vaccination['next_due'] ?? null),
