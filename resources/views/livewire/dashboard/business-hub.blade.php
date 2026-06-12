@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\Booking;
-use App\Models\PetDetail;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Livewire\Attributes\Computed;
 use Livewire\Volt\Component;
 
 new class extends Component {
@@ -62,45 +64,24 @@ new class extends Component {
         return $type !== '' ? $type : null;
     }
 
+    private function bookingPets($booking): Collection
+    {
+        return $booking->relationLoaded('pets') ? $booking->pets : $booking->pets()->get();
+    }
+
     private function resolveBookingPetType($booking): string
     {
-        // Strict mapping: booking_pet.pet_detail_id -> pet_details.id
-        $pets = PetDetail::query()->join('booking_pet', 'booking_pet.pet_detail_id', '=', 'pet_details.id')->where('booking_pet.booking_id', $booking->id)->select('pet_details.*')->get();
+        $types = $this->bookingPets($booking)->map(fn($pet) => $this->resolvePetTypeForList($pet))->filter()->unique()->values();
 
-        if (!$pets || $pets->isEmpty()) {
-            return '—';
-        }
-
-        $types = $pets
-            ->map(function ($p) {
-                $type = $this->resolvePetTypeForList($p);
-                if (!$type) {
-                    return null;
-                }
-                return $type;
-            })
-            ->filter()
-            ->unique()
-            ->values();
-
-        if ($types->isEmpty()) {
-            return '—';
-        }
-
-        return $types->implode(', ');
+        return $types->isEmpty() ? '—' : $types->implode(', ');
     }
 
     private function resolveBookingPetWeight($booking): string
     {
-        $pets = PetDetail::query()->join('booking_pet', 'booking_pet.pet_detail_id', '=', 'pet_details.id')->where('booking_pet.booking_id', $booking->id)->select('pet_details.*')->get();
+        $weights = $this->bookingPets($booking)
+            ->map(function ($pet) {
+                $weight = trim((string) ($pet->weight ?? ''));
 
-        if (!$pets || $pets->isEmpty()) {
-            return '—';
-        }
-
-        $weights = $pets
-            ->map(function ($p) {
-                $weight = trim((string) ($p->weight ?? ''));
                 return $weight !== '' ? $weight : null;
             })
             ->filter()
@@ -112,14 +93,15 @@ new class extends Component {
         }
 
         $labels = $weights
-            ->map(function ($w) {
-                $n = (float) $w;
+            ->map(function ($weight) {
+                $n = (float) $weight;
                 if ($n <= 7) {
                     return 'small';
                 }
                 if ($n <= 18) {
                     return 'medium';
                 }
+
                 return 'large';
             })
             ->unique()
@@ -264,22 +246,18 @@ new class extends Component {
         $now = now();
         $startOfMonth = $now->copy()->startOfMonth();
 
+        $weekBuckets = [1 => 0.0, 2 => 0.0, 3 => 0.0, 4 => 0.0];
         $monthlySales = $this->bookingsQuery()
             ->whereIn('booking_status', ['confirmed', 'completed'])
             ->whereYear('date', $now->year)
             ->whereMonth('date', $now->month)
-            ->select(['date', 'amount'])
-            ->get();
+            ->selectRaw('CEIL(DAY(date) / 7) as week_bucket, COALESCE(SUM(amount), 0) as total')
+            ->groupBy('week_bucket')
+            ->pluck('total', 'week_bucket');
 
-        // Auto-calculate weekly sales sums from booking dates.
-        // 4 fixed week buckets in current month:
-        // 01/mm => days 1-7, 02/mm => days 8-14, 03/mm => days 15-21, 04/mm => days 22-end
-        $weekBuckets = [1 => 0.0, 2 => 0.0, 3 => 0.0, 4 => 0.0];
-        foreach ($monthlySales as $row) {
-            $date = \Carbon\Carbon::parse($row->date);
-            $weekIndex = (int) ceil($date->day / 7);
-            $weekIndex = max(1, min(4, $weekIndex));
-            $weekBuckets[$weekIndex] += (float) $row->amount;
+        foreach ($monthlySales as $weekIndex => $total) {
+            $weekIndex = max(1, min(4, (int) $weekIndex));
+            $weekBuckets[$weekIndex] = (float) $total;
         }
 
         $monthNumber = $startOfMonth->format('m');
@@ -307,22 +285,27 @@ new class extends Component {
         $lastMonthStart = $now->copy()->subMonth()->startOfMonth();
         $lastMonthEnd = $now->copy()->subMonth()->endOfMonth();
 
-        $completedBookings = $this->bookingsQuery()->where('booking_status', 'completed')->count();
-        $lastMonthCompleted = $this->bookingsQuery()
+        $completedStats = $this->bookingsQuery()
             ->where('booking_status', 'completed')
-            ->whereBetween('date', [$lastMonthStart, $lastMonthEnd])
-            ->count();
-        $thisMonthCompleted = $this->bookingsQuery()
-            ->where('booking_status', 'completed')
-            ->whereBetween('date', [$thisMonthStart, $thisMonthEnd])
-            ->count();
+            ->selectRaw(
+                'COUNT(*) as completed_count,
+                COALESCE(SUM(amount), 0) as total_revenue,
+                SUM(CASE WHEN date BETWEEN ? AND ? THEN 1 ELSE 0 END) as this_month_completed,
+                SUM(CASE WHEN date BETWEEN ? AND ? THEN 1 ELSE 0 END) as last_month_completed',
+                [$thisMonthStart, $thisMonthEnd, $lastMonthStart, $lastMonthEnd],
+            )
+            ->first();
+
+        $completedBookings = (int) ($completedStats->completed_count ?? 0);
+        $thisMonthCompleted = (int) ($completedStats->this_month_completed ?? 0);
+        $lastMonthCompleted = (int) ($completedStats->last_month_completed ?? 0);
         $bookingDiff = $thisMonthCompleted - $lastMonthCompleted;
 
-        $totalRevenue = $this->bookingsQuery()->where('booking_status', 'completed')->sum('amount');
+        $totalRevenue = (float) ($completedStats->total_revenue ?? 0);
         $avgRevenue = $completedBookings > 0 ? round($totalRevenue / max($completedBookings, 1)) : 0;
         $profileVisits = (int) (auth('groomer_spacer')->user()?->profile_visit ?? 0);
 
-        $repeatClients = $this->bookingsQuery()->where('booking_status', 'completed')->select('pet_owner_id')->groupBy('pet_owner_id')->havingRaw('COUNT(*) > 1')->count();
+        $repeatClients = $this->bookingsQuery()->where('booking_status', 'completed')->select('pet_owner_id')->groupBy('pet_owner_id')->havingRaw('COUNT(*) > 1')->get()->count();
 
         $totalClients = $this->bookingsQuery()->where('booking_status', 'completed')->distinct('pet_owner_id')->count('pet_owner_id');
         $repeatPercent = $totalClients > 0 ? round(($repeatClients / $totalClients) * 100) : 0;
@@ -358,6 +341,12 @@ new class extends Component {
     {
         $booking = $this->bookingsQuery()->findOrFail($bookingId);
         $booking->update(['booking_status' => 'confirmed']);
+
+        $spacerId = $this->loggedInSpacerId();
+        if ($spacerId) {
+            Cache::forget("dashboard_sidebar_booking_counts_{$spacerId}");
+        }
+
         $this->dispatch('request-accepted', requestId: $bookingId);
     }
 
@@ -366,20 +355,52 @@ new class extends Component {
         $this->dispatch('view-details', bookingId: $bookingId);
     }
 
-    public function with(): array
+    #[Computed]
+    public function weeklyRevenue(): array
     {
-        $weeklyRevenue = $this->getWeeklyRevenue();
+        return $this->getWeeklyRevenue();
+    }
 
-        return [
-            'todaysBookings' => $this->getTodaysBookings(),
-            'todaysBookingsCount' => $this->getTodaysBookingsCount(),
-            'pendingRequests' => $this->getPendingRequests(),
-            'pendingRequestsCount' => $this->getPendingRequestsCount(),
-            'upcomingBookings' => $this->getUpcomingBookings(),
-            'upcomingBookingsCount' => $this->getUpcomingBookingsCount(),
-            'weeklyRevenue' => $weeklyRevenue,
-            'stats' => $this->getStats(),
-        ];
+    #[Computed]
+    public function stats(): array
+    {
+        return $this->getStats();
+    }
+
+    #[Computed]
+    public function todaysBookings(): array
+    {
+        return $this->getTodaysBookings();
+    }
+
+    #[Computed]
+    public function todaysBookingsCount(): int
+    {
+        return $this->getTodaysBookingsCount();
+    }
+
+    #[Computed]
+    public function pendingRequests(): array
+    {
+        return $this->getPendingRequests();
+    }
+
+    #[Computed]
+    public function pendingRequestsCount(): int
+    {
+        return $this->getPendingRequestsCount();
+    }
+
+    #[Computed]
+    public function upcomingBookings(): array
+    {
+        return $this->getUpcomingBookings();
+    }
+
+    #[Computed]
+    public function upcomingBookingsCount(): int
+    {
+        return $this->getUpcomingBookingsCount();
     }
 }; ?>
 
@@ -1388,10 +1409,10 @@ new class extends Component {
         <!-- Today's Bookings -->
         <div class="dashboard-card todays-bookings">
             <div class="card-header">
-                <h3>Today's Bookings <span class="count">({{ $todaysBookingsCount }})</span></h3>
+                <h3>Today's Bookings <span class="count">({{ $this->todaysBookingsCount }})</span></h3>
             </div>
             <div class="card-content">
-                @foreach (collect($todaysBookings)->take(2) as $booking)
+                @foreach (collect($this->todaysBookings)->take(2) as $booking)
                     <div class="booking-item {{ $loop->odd ? 'booking-item--odd' : '' }}">
                         <div class="booking-header">
                             <div class="pet-avatar-stack">
@@ -1499,22 +1520,22 @@ new class extends Component {
             </div>
             <div class="card-content">
                 <div class="revenue-header">
-                    <span class="revenue-amount">£{{ number_format($weeklyRevenue['total'], 2) }}</span>
+                    <span class="revenue-amount">£{{ number_format($this->weeklyRevenue['total'], 2) }}</span>
                     <span class="revenue-period">/ week</span>
                     <span class="revenue-change positive"><svg xmlns="http://www.w3.org/2000/svg" width="6"
                             height="9" viewBox="0 0 6 9" fill="none" aria-hidden="true">
                             <path
                                 d="M2.91 0L5.8 2.895L5.415 3.265C5.33833 3.34167 5.26167 3.37333 5.185 3.36C5.105 3.34333 5.02833 3.3 4.955 3.23L3.74 2.005C3.65333 1.91833 3.575 1.835 3.505 1.755C3.43167 1.675 3.36667 1.59833 3.31 1.525C3.33333 1.72167 3.35333 1.92833 3.37 2.145C3.38333 2.35833 3.39 2.575 3.39 2.795L3.39 8.93H2.415L2.415 2.795C2.415 2.575 2.42333 2.35667 2.44 2.14C2.45333 1.92333 2.47333 1.71667 2.5 1.52C2.44333 1.59667 2.38 1.675 2.31 1.755C2.23667 1.835 2.15667 1.91833 2.07 2.005L0.845 3.24C0.775 3.31 0.7 3.35333 0.62 3.37C0.54 3.38333 0.461667 3.35167 0.385 3.275L0 2.905L2.91 0Z"
                                 fill="currentColor" />
-                        </svg> + £{{ number_format($weeklyRevenue['change'], 0) }} / last
+                        </svg> + £{{ number_format($this->weeklyRevenue['change'], 0) }} / last
                         week</span>
                 </div>
                 <div class="chart-container">
                     <div class="weekly-chart-js-wrap" wire:ignore>
                         <canvas id="weeklyRevenueChart" class="revenue-chart" role="img"
                             aria-label="Weekly revenue chart" data-fill="{{ $chartColor }}"
-                            data-labels='@json(array_column($weeklyRevenue['chart_data'], 'date'))'
-                            data-values='@json(array_column($weeklyRevenue['chart_data'], 'amount'))'></canvas>
+                            data-labels='@json(array_column($this->weeklyRevenue['chart_data'], 'date'))'
+                            data-values='@json(array_column($this->weeklyRevenue['chart_data'], 'amount'))'></canvas>
                     </div>
                 </div>
             </div>
@@ -1523,10 +1544,10 @@ new class extends Component {
         <!-- Pending Requests -->
         <div class="dashboard-card pending-requests">
             <div class="card-header">
-                <h3>Pending Requests <span class="count">({{ $pendingRequestsCount }})</span></h3>
+                <h3>Pending Requests <span class="count">({{ $this->pendingRequestsCount }})</span></h3>
             </div>
             <div class="card-content">
-                @foreach (collect($pendingRequests)->take(2) as $request)
+                @foreach (collect($this->pendingRequests)->take(2) as $request)
                     <div class="request-item {{ $loop->odd ? 'request-item--odd' : '' }}">
                         <div>
                             <div class="pet-avatar-wrap">
@@ -1624,10 +1645,10 @@ new class extends Component {
         <!-- Upcoming Bookings -->
         <div class="dashboard-card upcoming-bookings">
             <div class="card-header">
-                <h3>Upcoming Bookings <span class="count">({{ $upcomingBookingsCount }})</span></h3>
+                <h3>Upcoming Bookings <span class="count">({{ $this->upcomingBookingsCount }})</span></h3>
             </div>
             <div class="card-content">
-                @foreach (collect($upcomingBookings)->take(2) as $booking)
+                @foreach (collect($this->upcomingBookings)->take(2) as $booking)
                     <div class="upcoming-booking-item">
                         <div class="booking-status-bar">
                             <div class="status-badge confirmed">
@@ -1838,11 +1859,11 @@ new class extends Component {
                 </div>
                 <div class="stat-body">
                     <div class="stat-main">
-                        <span class="stat-value">{{ $stats['total_bookings']['value'] }}</span>
-                        <span class="stat-label">/ {{ $stats['total_bookings']['label'] }}</span>
+                        <span class="stat-value">{{ $this->stats['total_bookings']['value'] }}</span>
+                        <span class="stat-label">/ {{ $this->stats['total_bookings']['label'] }}</span>
                     </div>
                     <div class="stat-change positive">
-                        ↑ {{ $stats['total_bookings']['change'] }}
+                        ↑ {{ $this->stats['total_bookings']['change'] }}
                     </div>
                 </div>
                 <div class="stat-icon">
@@ -1875,15 +1896,15 @@ new class extends Component {
                 <div class="stat-body">
                     <div class="stat-main">
                         @if ($isSpaceAccount)
-                            <span class="stat-value">{{ $stats['profile_views']['value'] }}</span>
-                            <span class="stat-label">/ {{ $stats['profile_views']['label'] }}</span>
+                            <span class="stat-value">{{ $this->stats['profile_views']['value'] }}</span>
+                            <span class="stat-label">/ {{ $this->stats['profile_views']['label'] }}</span>
                         @else
-                            <span class="stat-value">£{{ $stats['avg_revenue']['value'] }}</span>
+                            <span class="stat-value">£{{ $this->stats['avg_revenue']['value'] }}</span>
                             <span class="stat-label">/ per booking revenue</span>
                         @endif
                     </div>
                     <div class="stat-change avg-revenue">
-                        {{ $isSpaceAccount ? $stats['profile_views']['sublabel'] : $stats['avg_revenue']['sublabel'] }}
+                        {{ $isSpaceAccount ? $this->stats['profile_views']['sublabel'] : $this->stats['avg_revenue']['sublabel'] }}
                     </div>
                 </div>
                 <div class="stat-icon">
@@ -1911,11 +1932,11 @@ new class extends Component {
                 </div>
                 <div class="stat-body">
                     <div class="stat-main">
-                        <span class="stat-value">{{ $stats['repeat_clients']['value'] }}</span>
-                        <span class="stat-label">/ {{ $stats['repeat_clients']['label'] }}</span>
+                        <span class="stat-value">{{ $this->stats['repeat_clients']['value'] }}</span>
+                        <span class="stat-label">/ {{ $this->stats['repeat_clients']['label'] }}</span>
                     </div>
                     <div class="stat-change repeat-clients">
-                        {{ $stats['repeat_clients']['sublabel'] }}
+                        {{ $this->stats['repeat_clients']['sublabel'] }}
                     </div>
                 </div>
                 <div class="stat-icon">
@@ -1963,7 +1984,7 @@ new class extends Component {
 
                         <div class="card-modal-body">
                             @if ($activeModal === 'todays')
-                                @foreach ($todaysBookings as $booking)
+                                @foreach ($this->todaysBookings as $booking)
                                     <div class="booking-item {{ $loop->odd ? 'booking-item--odd' : '' }}">
                                         <div class="booking-header">
                                             <div class="pet-avatar-stack">
@@ -2035,7 +2056,7 @@ new class extends Component {
                                     @endif
                                 @endforeach
                             @elseif ($activeModal === 'pending')
-                                @foreach ($pendingRequests as $request)
+                                @foreach ($this->pendingRequests as $request)
                                     <div class="request-item {{ $loop->odd ? 'request-item--odd' : '' }}">
                                         <div>
                                             <div class="pet-avatar-wrap">
@@ -2134,7 +2155,7 @@ new class extends Component {
                                     @endif
                                 @endforeach
                             @else
-                                @foreach ($upcomingBookings as $booking)
+                                @foreach ($this->upcomingBookings as $booking)
                                     <div class="upcoming-booking-item">
                                         <div class="booking-status-bar">
                                             <div class="status-badge confirmed">

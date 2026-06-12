@@ -1,6 +1,12 @@
 @props(['variant' => null])
 
 @php
+    use App\Support\DashboardNav;
+    use Illuminate\Support\Facades\Cache;
+
+    $dashboardNav = DashboardNav::fromSession();
+    $dashboardActiveSection = $dashboardNav['active_section'];
+
     $activeBgColor = '#FFC97A';
     $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
     if (auth()->check()) {
@@ -11,11 +17,17 @@
     }
 
     $spacerId = auth('groomer_spacer')->id();
-    $bookingCounts = \App\Models\Booking::query()
-        ->when($spacerId, fn($query) => $query->where('goormer_spacer_id', $spacerId))
-        ->selectRaw('booking_status, COUNT(*) as total')
-        ->groupBy('booking_status')
-        ->pluck('total', 'booking_status');
+    $bookingCounts = $spacerId
+        ? Cache::remember(
+            "dashboard_sidebar_booking_counts_{$spacerId}",
+            60,
+            fn() => \App\Models\Booking::query()
+                ->where('goormer_spacer_id', $spacerId)
+                ->selectRaw('booking_status, COUNT(*) as total')
+                ->groupBy('booking_status')
+                ->pluck('total', 'booking_status'),
+        )
+        : collect();
 
     $pendingCount = (int) ($bookingCounts['pending'] ?? 0);
     $confirmedCount = (int) ($bookingCounts['confirmed'] ?? 0);
@@ -25,11 +37,11 @@
 
 <div x-data="{
     mobileOpen: false,
-    bookingsOpen: false,
-    availabilityOpen: false,
-    servicesOpen: false,
-    activeBookingStatus: '',
-    activeServiceMenu: 'services',
+    bookingsOpen: @js($dashboardActiveSection === 'bookings'),
+    availabilityOpen: @js(in_array($dashboardActiveSection, ['availability', 'manage-availability'], true)),
+    servicesOpen: @js($dashboardActiveSection === 'services'),
+    activeBookingStatus: @js($dashboardNav['active_booking_status']),
+    activeServiceMenu: @js($dashboardNav['active_service_menu']),
     bookingCounts: {
         pending: {{ $pendingCount }},
         confirmed: {{ $confirmedCount }},
@@ -92,7 +104,7 @@
             <!-- Bookings -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'bookings'; bookingsOpen = true; availabilityOpen = false; activeBookingStatus = ''; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-filter-reset')"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'bookings'; bookingsOpen = true; availabilityOpen = false; activeBookingStatus = ''; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-filter-reset'); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: '' } }))"
                     :class="{ 'active': activeSection === 'bookings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14"
                         fill="none">
@@ -115,7 +127,7 @@
                         <span class="booking-status-dot pending"></span>
                         <button type="button" class="booking-status-trigger pending"
                             :class="{ 'is-active': activeBookingStatus === 'pending' }"
-                            @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'pending'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'pending' })">
+                            @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'pending'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'pending' }); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'pending' } }))">
                             Pending Requests <span class="booking-status-count"
                                 x-text="`(${bookingCounts.pending})`">({{ $pendingCount }})</span>
                         </button>
@@ -124,7 +136,7 @@
                         <span class="booking-status-dot confirmed"></span>
                         <button type="button" class="booking-status-trigger confirmed"
                             :class="{ 'is-active': activeBookingStatus === 'confirmed' }"
-                            @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'confirmed'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'confirmed' })">
+                            @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'confirmed'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'confirmed' }); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'confirmed' } }))">
                             Confirmed Bookings <span class="booking-status-count"
                                 x-text="`(${bookingCounts.confirmed})`">({{ $confirmedCount }})</span>
                         </button>
@@ -133,7 +145,7 @@
                         <span class="booking-status-dot completed"></span>
                         <button type="button" class="booking-status-trigger completed"
                             :class="{ 'is-active': activeBookingStatus === 'completed' }"
-                            @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'completed'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'completed' })">
+                            @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'completed'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'completed' }); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'completed' } }))">
                             Completed Bookings <span class="booking-status-count"
                                 x-text="`(${bookingCounts.completed})`">({{ $completedCount }})</span>
                         </button>
@@ -142,7 +154,7 @@
                         <span class="booking-status-dot cancelled"></span>
                         <button type="button" class="booking-status-trigger cancelled"
                             :class="{ 'is-active': activeBookingStatus === 'cancelled' }"
-                            @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'cancelled'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'cancelled' })">
+                            @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'cancelled'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'cancelled' }); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'cancelled' } }))">
                             Cancelled Bookings <span class="booking-status-count"
                                 x-text="`(${bookingCounts.cancelled})`">({{ $cancelledCount }})</span>
                         </button>
@@ -189,7 +201,7 @@
             <!-- Services -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; bookingsOpen = false; availabilityOpen = false; servicesOpen = true; activeServiceMenu = 'services'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'services' } }))"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; bookingsOpen = false; availabilityOpen = false; servicesOpen = true; activeServiceMenu = 'services'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'services' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'services', active_service_menu: 'services' } }))"
                     :class="{ 'active': activeSection === 'services' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14"
                         fill="none">
@@ -213,7 +225,7 @@
                         <span class="services-status-dot add-ons"></span>
                         <button type="button" class="booking-status-trigger"
                             :class="{ 'is-active': activeServiceMenu === 'add-ons' }"
-                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'add-ons'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'add-ons' } }))">
+                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'add-ons'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'add-ons' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'services', active_service_menu: 'add-ons' } }))">
                             Add-ons
                         </button>
                     </li>
@@ -221,7 +233,7 @@
                         <span class="services-status-dot pet-preferences"></span>
                         <button type="button" class="booking-status-trigger"
                             :class="{ 'is-active': activeServiceMenu === 'pet-preferences' }"
-                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'pet-preferences'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'pet-preferences' } }))">
+                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'pet-preferences'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'pet-preferences' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'services', active_service_menu: 'pet-preferences' } }))">
                             Pet Preferences
                         </button>
                     </li>
@@ -230,7 +242,7 @@
                             <span class="services-status-dot service-area"></span>
                             <button type="button" class="booking-status-trigger"
                                 :class="{ 'is-active': activeServiceMenu === 'service-area' }"
-                                @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'service-area'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'service-area' } }))">
+                                @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'service-area'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'service-area' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'services', active_service_menu: 'service-area' } }))">
                                 Service Area
                             </button>
                         </li>

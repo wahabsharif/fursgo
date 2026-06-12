@@ -1,16 +1,21 @@
 <?php
 
+use App\Support\DashboardNav;
 use Livewire\Volt\Component;
 
 new class extends Component {
     // Parent Services index component.
 }; ?>
 
+@php
+    $dashboardServiceMenu = DashboardNav::fromSession()['active_service_menu'];
+@endphp
+
 <section class="services-dashboard" aria-label="Services section" x-data="{
     showAddService: false,
     showAddOn: false,
     showAddServiceArea: false,
-    activeServiceMenu: 'services',
+    activeServiceMenu: @js($dashboardServiceMenu),
     scrollPageToTop(smooth = false) {
         const root = document.scrollingElement || document.documentElement;
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -98,58 +103,63 @@ new class extends Component {
         </div>
     </header>
 
-    <div x-show="activeServiceMenu === 'services' && !showAddService" x-cloak x-transition:enter="service-view-enter"
-        x-transition:enter-start="service-view-enter-start" x-transition:enter-end="service-view-enter-end"
-        x-transition:leave="service-view-leave" x-transition:leave-start="service-view-leave-start"
-        x-transition:leave-end="service-view-leave-end">
-        <livewire:dashboard.services.services-list />
-    </div>
+    <template x-if="activeServiceMenu === 'services' && !showAddService">
+        <div x-cloak x-transition:enter="service-view-enter" x-transition:enter-start="service-view-enter-start"
+            x-transition:enter-end="service-view-enter-end" x-transition:leave="service-view-leave"
+            x-transition:leave-start="service-view-leave-start" x-transition:leave-end="service-view-leave-end">
+            <livewire:dashboard.services.services-list />
+        </div>
+    </template>
 
-    <div x-show="activeServiceMenu === 'services' && showAddService" x-cloak x-transition:enter="service-view-enter"
-        x-transition:enter-start="service-view-enter-start" x-transition:enter-end="service-view-enter-end"
-        x-transition:leave="service-view-leave" x-transition:leave-start="service-view-leave-start"
-        x-transition:leave-end="service-view-leave-end">
-        @if ($userType === 'space')
-            <livewire:dashboard.services.add-services-form-space />
-        @else
-            <livewire:dashboard.services.add-services-form-groomer />
-        @endif
-    </div>
+    <template x-if="activeServiceMenu === 'services' && showAddService">
+        <div x-cloak x-transition:enter="service-view-enter" x-transition:enter-start="service-view-enter-start"
+            x-transition:enter-end="service-view-enter-end" x-transition:leave="service-view-leave"
+            x-transition:leave-start="service-view-leave-start" x-transition:leave-end="service-view-leave-end">
+            @if ($userType === 'space')
+                <livewire:dashboard.services.add-services-form-space />
+            @else
+                <livewire:dashboard.services.add-services-form-groomer />
+            @endif
+        </div>
+    </template>
 
-    <div x-show="activeServiceMenu === 'add-ons' && !showAddOn" x-cloak x-transition:enter="service-view-enter"
-        x-transition:enter-start="service-view-enter-start" x-transition:enter-end="service-view-enter-end"
-        x-transition:leave="service-view-leave" x-transition:leave-start="service-view-leave-start"
-        x-transition:leave-end="service-view-leave-end">
-        <livewire:dashboard.services.add-ons-list />
-    </div>
+    <template x-if="activeServiceMenu === 'add-ons' && !showAddOn">
+        <div x-cloak x-transition:enter="service-view-enter" x-transition:enter-start="service-view-enter-start"
+            x-transition:enter-end="service-view-enter-end" x-transition:leave="service-view-leave"
+            x-transition:leave-start="service-view-leave-start" x-transition:leave-end="service-view-leave-end">
+            <livewire:dashboard.services.add-ons-list />
+        </div>
+    </template>
 
-    <div x-show="activeServiceMenu === 'add-ons' && showAddOn" x-cloak x-transition:enter="service-view-enter"
-        x-transition:enter-start="service-view-enter-start" x-transition:enter-end="service-view-enter-end"
-        x-transition:leave="service-view-leave" x-transition:leave-start="service-view-leave-start"
-        x-transition:leave-end="service-view-leave-end">
-        @if ($userType === 'space')
-            <livewire:dashboard.services.add-addons-form-space />
-        @else
-            <livewire:dashboard.services.add-addons-form-groomer />
-        @endif
+    <template x-if="activeServiceMenu === 'add-ons' && showAddOn">
+        <div x-cloak x-transition:enter="service-view-enter" x-transition:enter-start="service-view-enter-start"
+            x-transition:enter-end="service-view-enter-end" x-transition:leave="service-view-leave"
+            x-transition:leave-start="service-view-leave-start" x-transition:leave-end="service-view-leave-end">
+            @if ($userType === 'space')
+                <livewire:dashboard.services.add-addons-form-space />
+            @else
+                <livewire:dashboard.services.add-addons-form-groomer />
+            @endif
+        </div>
+    </template>
 
-    </div>
-
-    <div x-show="activeServiceMenu === 'pet-preferences'" x-cloak x-transition:enter="service-view-enter"
-        x-transition:enter-start="service-view-enter-start" x-transition:enter-end="service-view-enter-end"
-        x-transition:leave="service-view-leave" x-transition:leave-start="service-view-leave-start"
-        x-transition:leave-end="service-view-leave-end">
-        <livewire:dashboard.services.pet-preferences />
-    </div>
+    <template x-if="activeServiceMenu === 'pet-preferences'">
+        <div x-cloak x-transition:enter="service-view-enter" x-transition:enter-start="service-view-enter-start"
+            x-transition:enter-end="service-view-enter-end" x-transition:leave="service-view-leave"
+            x-transition:leave-start="service-view-leave-start" x-transition:leave-end="service-view-leave-end">
+            <livewire:dashboard.services.pet-preferences />
+        </div>
+    </template>
 
     @if ($showServiceArea)
-        <div x-show="activeServiceMenu === 'service-area' && !showAddServiceArea" x-cloak
-            x-transition:enter="service-view-enter" x-transition:enter-start="service-view-enter-start"
-            x-transition:enter-end="service-view-enter-end" x-transition:leave="service-view-leave"
-            x-transition:leave-start="service-view-leave-start" x-transition:leave-end="service-view-leave-end"
-            x-init="$watch('$el.style.display', (value) => { if (value !== 'none') { window.dispatchEvent(new CustomEvent('service-area-map-refresh')) } })">
-            <livewire:dashboard.services.service-area-list />
-        </div>
+        <template x-if="activeServiceMenu === 'service-area' && !showAddServiceArea">
+            <div x-cloak x-transition:enter="service-view-enter" x-transition:enter-start="service-view-enter-start"
+                x-transition:enter-end="service-view-enter-end" x-transition:leave="service-view-leave"
+                x-transition:leave-start="service-view-leave-start" x-transition:leave-end="service-view-leave-end"
+                x-init="window.dispatchEvent(new CustomEvent('service-area-map-refresh'))">
+                <livewire:dashboard.services.service-area-list />
+            </div>
+        </template>
 
         <template x-if="activeServiceMenu === 'service-area' && showAddServiceArea">
             <div x-cloak x-transition:enter="service-view-enter" x-transition:enter-start="service-view-enter-start"

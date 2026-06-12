@@ -88,68 +88,82 @@ new class extends Component {
         return (int) (auth('groomer_spacer')->id() ?? 0);
     }
 
-    #[Computed(persist: true)]
-    public function spacerBookings(): Collection
+    private function clientInitialsFromName(?string $name): string
     {
-        return Booking::query()
-            ->select(self::BOOKING_LIST_COLUMNS)
-            ->where('goormer_spacer_id', $this->spacerId())
-            ->whereNotNull('pet_owner_id')
-            ->with(['petOwner:id,name', 'pets:' . implode(',', self::PET_LIST_COLUMNS)])
-            ->get();
+        if (!filled($name)) {
+            return '??';
+        }
+
+        return Str::upper(Str::substr(Str::of($name)->explode(' ')->map(fn(string $part) => Str::substr($part, 0, 1))->implode(''), 0, 2));
     }
 
     #[Computed(persist: true)]
     public function allClientRows(): Collection
     {
-        $bookings = $this->spacerBookings;
-
-        if ($bookings->isEmpty()) {
+        $spacerId = $this->spacerId();
+        if ($spacerId === 0) {
             return collect();
         }
 
-        $petsByUser = PetDetail::query()
-            ->select(self::PET_LIST_COLUMNS)
-            ->whereIn('user_id', $bookings->pluck('pet_owner_id')->unique())
-            ->get()
-            ->groupBy('user_id');
+        $recentCutoff = now()->subDays(60)->getTimestamp();
+        $today = today()->toDateString();
 
-        return $bookings
+        $ownerStats = Booking::query()
+            ->where('goormer_spacer_id', $spacerId)
+            ->whereNotNull('pet_owner_id')
+            ->selectRaw(
+                'pet_owner_id,
+                COUNT(*) as total_bookings,
+                SUM(CASE WHEN booking_status = ? THEN 1 ELSE 0 END) as completed_count,
+                COALESCE(SUM(CASE WHEN booking_status = ? THEN amount ELSE 0 END), 0) as total_paid,
+                MAX(created_at) as last_booking_at',
+                ['completed', 'completed'],
+            )
             ->groupBy('pet_owner_id')
-            ->map(function (Collection $ownerBookings, $ownerId) use ($petsByUser) {
-                $owner = $ownerBookings->first()->petOwner;
-                $completed = $ownerBookings->where('booking_status', 'completed');
-                $completedCount = $completed->count();
+            ->get()
+            ->keyBy('pet_owner_id');
 
-                $upcoming = $ownerBookings
-                    ->filter(function ($booking) {
-                        if (!in_array($booking->booking_status, ['pending', 'confirmed'], true)) {
-                            return false;
-                        }
+        if ($ownerStats->isEmpty()) {
+            return collect();
+        }
 
-                        return $booking->date && $booking->date->gte(today());
-                    })
-                    ->sortBy(fn($booking) => $booking->date?->timestamp ?? PHP_INT_MAX)
-                    ->first();
+        $ownerIds = $ownerStats->keys();
 
-                $userPets = $petsByUser->get($ownerId) ?? collect();
-                if ($userPets->isEmpty()) {
-                    $userPets = $ownerBookings->flatMap(fn($booking) => $booking->pets)->unique('id')->values();
-                }
+        $upcomingByOwner = Booking::query()
+            ->where('goormer_spacer_id', $spacerId)
+            ->whereIn('pet_owner_id', $ownerIds)
+            ->whereIn('booking_status', ['pending', 'confirmed'])
+            ->whereDate('date', '>=', $today)
+            ->selectRaw('pet_owner_id, MIN(date) as upcoming_date')
+            ->groupBy('pet_owner_id')
+            ->pluck('upcoming_date', 'pet_owner_id');
 
-                $lastBookingAt = $ownerBookings->max(fn($booking) => $booking->created_at?->timestamp ?? 0);
+        $owners = User::query()
+            ->select(['id', 'name'])
+            ->whereIn('id', $ownerIds)
+            ->get()
+            ->keyBy('id');
+
+        $petsByUser = PetDetail::query()->select(self::PET_LIST_COLUMNS)->whereIn('user_id', $ownerIds)->get()->groupBy('user_id');
+
+        return $ownerStats
+            ->map(function ($stat) use ($owners, $petsByUser, $upcomingByOwner, $recentCutoff) {
+                $ownerId = (int) $stat->pet_owner_id;
+                $owner = $owners->get($ownerId);
+                $lastBookingAt = $stat->last_booking_at ? strtotime((string) $stat->last_booking_at) : 0;
+                $upcomingDate = $upcomingByOwner->get($ownerId);
 
                 return [
-                    'id' => (int) $ownerId,
+                    'id' => $ownerId,
                     'name' => $owner?->name ?? 'Unknown',
-                    'initials' => $owner ? Str::upper(Str::substr($owner->initials(), 0, 2)) : '??',
-                    'is_repeat' => $completedCount > 1,
-                    'pets' => $userPets,
-                    'upcoming_date' => $upcoming?->date?->format('d/m/Y'),
-                    'total_bookings' => $ownerBookings->count(),
-                    'total_paid' => (float) $completed->sum('amount'),
-                    'last_booking_at' => (int) $lastBookingAt,
-                    'recently_booked' => $lastBookingAt >= now()->subDays(60)->getTimestamp(),
+                    'initials' => $this->clientInitialsFromName($owner?->name),
+                    'is_repeat' => (int) $stat->completed_count > 1,
+                    'pets' => $petsByUser->get($ownerId) ?? collect(),
+                    'upcoming_date' => $upcomingDate ? Carbon::parse($upcomingDate)->format('d/m/Y') : null,
+                    'total_bookings' => (int) $stat->total_bookings,
+                    'total_paid' => (float) $stat->total_paid,
+                    'last_booking_at' => $lastBookingAt,
+                    'recently_booked' => $lastBookingAt >= $recentCutoff,
                 ];
             })
             ->values();
@@ -162,7 +176,12 @@ new class extends Component {
             return collect();
         }
 
-        return $this->spacerBookings->where('pet_owner_id', $this->selectedClientId)->values();
+        return Booking::query()
+            ->select(self::BOOKING_LIST_COLUMNS)
+            ->where('goormer_spacer_id', $this->spacerId())
+            ->where('pet_owner_id', $this->selectedClientId)
+            ->with(['petOwner:id,name', 'pets:' . implode(',', self::PET_LIST_COLUMNS)])
+            ->get();
     }
 
     #[Computed]
@@ -469,7 +488,9 @@ new class extends Component {
             return;
         }
 
-        if (!$this->spacerBookings->contains('pet_owner_id', $this->selectedClientId)) {
+        $hasBookings = Booking::query()->where('goormer_spacer_id', $this->spacerId())->where('pet_owner_id', $this->selectedClientId)->exists();
+
+        if (!$hasBookings) {
             $this->profileIsBlocked = !$this->profileIsBlocked;
 
             return;

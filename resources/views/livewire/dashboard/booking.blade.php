@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\Booking;
+use App\Support\DashboardNav;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\On;
 use Livewire\Volt\Component;
 
@@ -51,6 +53,8 @@ new class extends Component {
             'cancelled' => $this->bookings->where('booking_status', 'cancelled')->count(),
         ];
 
+        Cache::forget("dashboard_sidebar_booking_counts_{$profileId}");
+
         // Keep sidebar status counters in sync without a full page refresh.
         $this->dispatch('booking-counts-updated', counts: $this->statusCounts);
     }
@@ -59,7 +63,11 @@ new class extends Component {
     {
         $this->refreshBookingsAndCounts();
 
-        $requestedStatus = strtolower((string) request()->query('booking_status', 'all'));
+        $requestedStatus = strtolower((string) request()->query('booking_status', ''));
+        if ($requestedStatus === '') {
+            $requestedStatus = DashboardNav::fromSession()['active_booking_status'];
+        }
+
         $this->activeStatus = in_array($requestedStatus, $this->allowedStatuses, true) ? $requestedStatus : 'all';
 
         // Sync dashboard header with the initial filter (e.g. ?booking_status=pending).
@@ -309,7 +317,7 @@ new class extends Component {
     }
 }; ?>
 
-<section class="bookings-board" wire:poll.5s="refreshBookingsAndCounts">
+<section class="bookings-board" wire:poll.visible.30s="refreshBookingsAndCounts">
     <div class="bookings-board-header">
         <div class="booking-list-header">
             <div class="booking-pill-row">
@@ -331,7 +339,7 @@ new class extends Component {
                         @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
                         class="booking-pill {{ $pill['class'] }} {{ $activeStatus !== $pill['status'] ? 'is-muted' : '' }}">
                         {{ $pill['label'] }}
-                        ({{ $pill['status'] === 'all' ? $allBookingsCount : ($statusCounts[$pill['status']] ?? 0) }})
+                        ({{ $pill['status'] === 'all' ? $allBookingsCount : $statusCounts[$pill['status']] ?? 0 }})
                     </button>
                 @endforeach
             </div>

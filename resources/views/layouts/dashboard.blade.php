@@ -4,6 +4,8 @@
 
 <head>
     @php
+        use App\Support\DashboardNav;
+
         $segments = request()->segments();
 
         if (empty($segments)) {
@@ -22,6 +24,8 @@
         };
 
         $isDashboardHub = $dashboardNavView === 'hub';
+        $dashboardNav = $isDashboardHub ? DashboardNav::fromSession() : null;
+        $dashboardActiveSection = $dashboardNav['active_section'] ?? 'business-hub';
     @endphp
 
     <title>@yield('title', $pageTitle)</title>
@@ -34,7 +38,7 @@
 </head>
 
 <body class="dashboard-shell dashboard-shell--{{ $dashboardNavView }}" x-data="{
-    activeSection: 'business-hub',
+    activeSection: @js($dashboardActiveSection),
     scrollDashboardToTop(smooth = false) {
         const root = document.scrollingElement || document.documentElement;
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -42,7 +46,31 @@
         if (smooth && root.scrollTop < 40) return;
         window.scrollTo({ top: 0, left: 0, behavior });
     },
-}" x-init="$watch('activeSection', () => scrollDashboardToTop(true));">
+    persistDashboardNav(detail = {}) {
+        if (!window.__dashboardNavUrl) return;
+        const payload = { section: detail.section ?? this.activeSection };
+        if (detail.active_booking_status !== undefined) {
+            payload.active_booking_status = detail.active_booking_status;
+        }
+        if (detail.active_service_menu !== undefined) {
+            payload.active_service_menu = detail.active_service_menu;
+        }
+        fetch(window.__dashboardNavUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': window.__dashboardNavCsrf,
+                Accept: 'application/json',
+            },
+            body: JSON.stringify(payload),
+            keepalive: true,
+        }).catch(() => {});
+    },
+}" x-init="$watch('activeSection', (section) => {
+    scrollDashboardToTop(true);
+    persistDashboardNav({ section });
+});
+window.addEventListener('dashboard-nav-changed', (event) => persistDashboardNav(event.detail ?? {}));">
 
     <x-common.header variant="dashboard" :dashboard-nav-view="$dashboardNavView" />
     <x-common.dev-mode-float />
@@ -128,6 +156,9 @@
     @stack('script')
 
     <script>
+        window.__dashboardNavUrl = @json(route('dashboard.nav'));
+        window.__dashboardNavCsrf = @json(csrf_token());
+
         document.addEventListener('DOMContentLoaded', () => {
             window.scrollTo(0, 0);
             document.documentElement.scrollTop = 0;

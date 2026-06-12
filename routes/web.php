@@ -5,6 +5,7 @@ use App\Http\Controllers\BookingInvoicePdfController;
 use App\Http\Controllers\PetDetailController;
 use App\Models\GroomerSpacerProfile;
 use App\Support\BusinessPageShell;
+use App\Support\DashboardNav;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -109,6 +110,12 @@ Volt::route('/groomer-unavailability/location-unavailability', 'groomer.unavaila
 Volt::route('dashboard', 'dashboard')
     ->middleware(['auth:groomer_spacer', 'verified', 'business.shell.dashboard'])
     ->name('dashboard');
+
+Route::post('dashboard/nav', function (Request $request) {
+    DashboardNav::persist(DashboardNav::mergeFromRequest($request));
+
+    return response()->noContent();
+})->middleware(['auth:groomer_spacer'])->name('dashboard.nav');
 
 Route::get('dashboard/bookings/{booking}/invoice.pdf', BookingInvoicePdfController::class)
     ->middleware(['auth:groomer_spacer', 'verified'])

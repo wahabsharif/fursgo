@@ -1,5 +1,12 @@
+@php
+    use App\Support\DashboardNav;
+
+    $dashboardNav = DashboardNav::fromSession();
+    $dashboardActiveSection = $dashboardNav['active_section'];
+@endphp
+
 <section class="dashboard-content-wrapper">
-    <div class="active-section-header" x-data="{ tabsLoading: false, navLoading: false, navLoadingTimeout: null, activeBookingFilter: '', serviceFormOpen: false, activeServiceMenu: 'services', clientProfileOpen: false }" x-show="activeSection !== 'clients' || !clientProfileOpen"
+    <div class="active-section-header" x-data="{ tabsLoading: false, navLoading: false, navLoadingTimeout: null, activeBookingFilter: @js($dashboardNav['active_booking_status']), serviceFormOpen: false, activeServiceMenu: @js($dashboardNav['active_service_menu']), clientProfileOpen: false }" x-show="activeSection !== 'clients' || !clientProfileOpen"
         x-cloak x-on:bookings-tabs-loading-start.window="tabsLoading = true"
         x-on:bookings-tabs-loading-end.window="tabsLoading = false"
         x-on:booking-status-changed.window="tabsLoading = false; activeBookingFilter = $event.detail.status || ''"
@@ -90,25 +97,50 @@
         </div>
     </div>
 
-    <div class="section-container">
-        <div class="section-panel" :class="{ 'section-active': activeSection === 'business-hub' }">
-            <x-dashboard.business-hub />
-        </div>
-        <div class="section-panel" :class="{ 'section-active': activeSection === 'bookings' }">
-            <x-dashboard.bookings />
-        </div>
-        <div class="section-panel" :class="{ 'section-active': activeSection === 'availability' }">
-            <x-dashboard.availability />
-        </div>
-        <div class="section-panel" :class="{ 'section-active': activeSection === 'manage-availability' }">
-            <x-dashboard.availability.manage-availability />
-        </div>
-        <div class="section-panel" :class="{ 'section-active': activeSection === 'services' }">
-            <x-dashboard.services />
-        </div>
-        <div class="section-panel" :class="{ 'section-active': activeSection === 'clients' }">
-            <x-dashboard.clients />
-        </div>
+    <div class="section-container" x-data="{ mountedSections: [@js($dashboardActiveSection)] }" x-init="const restoreServicesMenu = () => {
+        if (activeSection === 'services') {
+            window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: @js($dashboardNav['active_service_menu']) } }));
+        }
+    };
+    restoreServicesMenu();
+    $watch('activeSection', (section) => {
+        if (!mountedSections.includes(section)) {
+            mountedSections.push(section);
+        }
+        if (section === 'services') {
+            restoreServicesMenu();
+        }
+    });">
+        <template x-if="mountedSections.includes('business-hub')">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'business-hub' }">
+                <x-dashboard.business-hub />
+            </div>
+        </template>
+        <template x-if="mountedSections.includes('bookings')">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'bookings' }">
+                <x-dashboard.bookings />
+            </div>
+        </template>
+        <template x-if="mountedSections.includes('availability')">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'availability' }">
+                <x-dashboard.availability />
+            </div>
+        </template>
+        <template x-if="mountedSections.includes('manage-availability')">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'manage-availability' }">
+                <x-dashboard.availability.manage-availability />
+            </div>
+        </template>
+        <template x-if="mountedSections.includes('services')">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'services' }">
+                <x-dashboard.services />
+            </div>
+        </template>
+        <template x-if="mountedSections.includes('clients')">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'clients' }">
+                <x-dashboard.clients />
+            </div>
+        </template>
     </div>
 </section>
 

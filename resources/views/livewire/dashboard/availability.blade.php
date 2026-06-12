@@ -5,6 +5,7 @@
         ? \App\Models\Booking::query()
             ->with(['petOwner:id,name,created_at', 'pets:id,name,photo,pet_type,breed,sex,weight,notes'])
             ->where('goormer_spacer_id', $profileId)
+            ->whereBetween('date', [now()->subMonths(3)->startOfDay(), now()->addYear()->endOfDay()])
             ->latest('date')
             ->latest('time')
             ->get()
