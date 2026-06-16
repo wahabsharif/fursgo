@@ -67,6 +67,15 @@
             </div>
         </template>
 
+        <template x-if="activeSection === 'earnings'">
+            <div class="active-section-header">
+                <div>
+                    <h2>Earnings Overview</h2>
+                    <p>View your earnings, transactions, pay-outs and statement reports.</p>
+                </div>
+            </div>
+        </template>
+
         <template x-if="activeSection === 'services'">
             <div class="active-section-header active-section-header-services">
                 <button type="button" class="service-list-header-btn" x-cloak x-show="serviceFormOpen"
@@ -87,7 +96,7 @@
         </template>
 
         <template
-            x-if="activeSection !== 'bookings' && activeSection !== 'availability' && activeSection !== 'manage-availability' && activeSection !== 'services' && activeSection !== 'clients'">
+            x-if="activeSection !== 'bookings' && activeSection !== 'availability' && activeSection !== 'manage-availability' && activeSection !== 'services' && activeSection !== 'clients' && activeSection !== 'earnings'">
             <div x-text="activeSection.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())"></div>
         </template>
 
@@ -114,6 +123,12 @@
             requestAnimationFrame(() => {
                 window.dispatchEvent(new CustomEvent('business-hub-mounted'));
                 window.scheduleWeeklyRevenueChartInit?.();
+            });
+        }
+        if (section === 'earnings') {
+            requestAnimationFrame(() => {
+                window.dispatchEvent(new CustomEvent('earnings-mounted'));
+                window.scheduleEarningsChartsInit?.();
             });
         }
     });">
@@ -151,6 +166,17 @@
         <template x-if="mountedSections.includes('clients')">
             <div class="section-panel" :class="{ 'section-active': activeSection === 'clients' }">
                 <x-dashboard.clients />
+            </div>
+        </template>
+        <template x-if="mountedSections.includes('earnings')">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'earnings' }"
+                x-init="$nextTick(() => {
+                    requestAnimationFrame(() => {
+                        window.dispatchEvent(new CustomEvent('earnings-mounted'));
+                        window.scheduleEarningsChartsInit?.();
+                    });
+                })">
+                <x-dashboard.earnings />
             </div>
         </template>
     </div>

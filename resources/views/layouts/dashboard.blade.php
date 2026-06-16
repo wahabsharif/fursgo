@@ -151,6 +151,7 @@ window.addEventListener('dashboard-nav-changed', (event) => persistDashboardNav(
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
     <script src="{{ asset('js/weekly-revenue-chart.js') }}"></script>
+    <script src="{{ asset('js/earnings-charts.js') }}"></script>
 
     @fluxScripts
 
@@ -184,6 +185,7 @@ window.addEventListener('dashboard-nav-changed', (event) => persistDashboardNav(
                 document.querySelector('.dashboard-info-panel--help-centre')
                     ?.dispatchEvent(new CustomEvent('help-centre-mounted'));
                 window.scheduleWeeklyRevenueChartInit?.();
+                window.scheduleEarningsChartsInit?.();
             });
 
             const root = document.scrollingElement || document.documentElement;
