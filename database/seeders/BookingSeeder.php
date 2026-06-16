@@ -170,11 +170,18 @@ class BookingSeeder extends Seeder
                     'password' => bcrypt('password'),
                     'user_type' => 'pet_owner',
                     'user_status' => 'active',
+                    'profile_image' => $clientSeed['owner']['profile_image'] ?? ($clientSeed['pets'][0]['photo'] ?? null),
                 ]
             );
 
             if (!empty($clientSeed['owner']['address'])) {
                 $owner->forceFill(['address' => $clientSeed['owner']['address']])->save();
+            }
+
+            if (filled($clientSeed['owner']['profile_image'] ?? null) || filled($clientSeed['pets'][0]['photo'] ?? null)) {
+                $owner->forceFill([
+                    'profile_image' => $clientSeed['owner']['profile_image'] ?? ($clientSeed['pets'][0]['photo'] ?? null),
+                ])->save();
             }
 
             $pets = $this->ensurePets($owner, $clientSeed['pets']);

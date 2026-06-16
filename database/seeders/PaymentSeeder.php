@@ -28,8 +28,12 @@ class PaymentSeeder extends Seeder
                 'password' => bcrypt('password'),
                 'user_type' => 'pet_owner',
                 'user_status' => 'active',
+                'profile_image' => 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80',
             ],
         );
+        $owner->forceFill([
+            'profile_image' => 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80',
+        ])->save();
 
         $petDefinitions = [
             ['name' => 'Bella', 'pet_type' => 'Rabbit', 'breed' => 'Mini Lop', 'sex' => 'female', 'birthday' => '2021-04-12', 'weight' => 1.6],
@@ -138,8 +142,12 @@ class PaymentSeeder extends Seeder
                 'password' => bcrypt('password'),
                 'user_type' => 'groomer',
                 'user_status' => 'active',
+                'profile_image' => 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=600&q=80',
             ],
         );
+        $spaceClient->forceFill([
+            'profile_image' => 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=600&q=80',
+        ])->save();
 
         $spaceBooking = Booking::updateOrCreate(
             [
