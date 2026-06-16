@@ -149,6 +149,8 @@ window.addEventListener('dashboard-nav-changed', (event) => persistDashboardNav(
     <script src="{{ asset('js/custom.js') }}" defer></script>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+    <script src="{{ asset('js/weekly-revenue-chart.js') }}"></script>
 
     @fluxScripts
 
@@ -181,6 +183,7 @@ window.addEventListener('dashboard-nav-changed', (event) => persistDashboardNav(
                     ?.dispatchEvent(new CustomEvent('bgs-homepage-mounted'));
                 document.querySelector('.dashboard-info-panel--help-centre')
                     ?.dispatchEvent(new CustomEvent('help-centre-mounted'));
+                window.scheduleWeeklyRevenueChartInit?.();
             });
 
             const root = document.scrollingElement || document.documentElement;

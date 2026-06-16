@@ -110,9 +110,21 @@
         if (section === 'services') {
             restoreServicesMenu();
         }
+        if (section === 'business-hub') {
+            requestAnimationFrame(() => {
+                window.dispatchEvent(new CustomEvent('business-hub-mounted'));
+                window.scheduleWeeklyRevenueChartInit?.();
+            });
+        }
     });">
         <template x-if="mountedSections.includes('business-hub')">
-            <div class="section-panel" :class="{ 'section-active': activeSection === 'business-hub' }">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'business-hub' }"
+                x-init="$nextTick(() => {
+                    requestAnimationFrame(() => {
+                        window.dispatchEvent(new CustomEvent('business-hub-mounted'));
+                        window.scheduleWeeklyRevenueChartInit?.();
+                    });
+                })">
                 <x-dashboard.business-hub />
             </div>
         </template>
