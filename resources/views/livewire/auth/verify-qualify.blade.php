@@ -2720,6 +2720,11 @@ new #[Layout('layouts.dashboard')] class extends Component {
             }
 
             $table = $user->getTable();
+            $existingPayoutDetails = $user->payout_details ?? [];
+            if (!is_array($existingPayoutDetails)) {
+                $existingPayoutDetails = is_string($existingPayoutDetails) ? (json_decode($existingPayoutDetails, true) ?: []) : [];
+            }
+            $payoutFrequency = $existingPayoutDetails['payout_frequency'] ?? 'Weekly';
 
             if ($isFreelance) {
                 $existingFreelance = $user->freelance_details ?? [];
@@ -2746,10 +2751,12 @@ new #[Layout('layouts.dashboard')] class extends Component {
                     'full_name' => $this->full_name,
                     'freelance_details' => $mergedFreelance,
                     'payout_details' => [
+                        'bank' => $this->bank,
                         'account_holder_name' => $this->account_holder_name,
                         'account_number' => $this->account_number,
                         'sort_code' => $this->sort_code,
                         'iban' => $this->iban,
+                        'payout_frequency' => $payoutFrequency,
                     ],
                     'insurance_details' => [
                         'insurance_certificate_paths' => $insuranceCertificatePaths,
@@ -2773,10 +2780,12 @@ new #[Layout('layouts.dashboard')] class extends Component {
                     'full_name' => $this->full_name,
                     'business_details' => array_merge($existingBusiness, $businessDetailsPayload),
                     'payout_details' => [
+                        'bank' => $this->bank,
                         'account_holder_name' => $this->account_holder_name,
                         'account_number' => $this->account_number,
                         'sort_code' => $this->sort_code,
                         'iban' => $this->iban,
+                        'payout_frequency' => $payoutFrequency,
                     ],
                     'insurance_details' => [
                         'insurance_certificate_paths' => $insuranceCertificatePaths,

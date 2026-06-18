@@ -10,6 +10,24 @@ use Livewire\Attributes\Computed;
 use Livewire\Volt\Component;
 
 new class extends Component {
+    public string $payoutBank = '';
+
+    public string $payoutAccountHolderName = '';
+
+    public string $payoutAccountNumber = '';
+
+    public string $payoutSortCode = '';
+
+    public string $payoutIban = '';
+
+    public string $payoutFrequency = 'Weekly';
+
+    public function mount(): void
+    {
+        $this->refreshPayoutBankDetails();
+        $this->refreshPayoutFrequency();
+    }
+
     private function loggedInSpacerId(): ?int
     {
         return auth('groomer_spacer')->id();
@@ -160,6 +178,119 @@ new class extends Component {
             'refunded' => ['label' => 'Refunded', 'key' => 'refunded'],
             default => ['label' => 'Paid', 'key' => 'paid'],
         };
+    }
+
+    private function payoutEligiblePaymentsQuery()
+    {
+        return Payment::query()
+            ->whereHas('booking', function ($query) {
+                $query->where(['goormer_spacer_id' => $this->loggedInSpacerId() ?? 0])->where(['booking_status' => 'completed']);
+            })
+            ->where(function ($query) {
+                $query->whereNull('status')->orWhereNotIn('status', ['failed', 'refunded']);
+            });
+    }
+
+    private function payoutDetails(): array
+    {
+        $details = auth('groomer_spacer')->user()?->payout_details ?? [];
+
+        if (!is_array($details)) {
+            $details = is_string($details) ? (json_decode($details, true) ?: []) : [];
+        }
+
+        return $details;
+    }
+
+    public function refreshPayoutBankDetails(): void
+    {
+        $details = $this->payoutDetails();
+
+        $this->payoutBank = (string) ($details['bank'] ?? '');
+        $this->payoutAccountHolderName = (string) ($details['account_holder_name'] ?? '');
+        $this->payoutAccountNumber = (string) ($details['account_number'] ?? '');
+        $this->payoutSortCode = (string) ($details['sort_code'] ?? '');
+        $this->payoutIban = (string) ($details['iban'] ?? '');
+    }
+
+    public function refreshPayoutFrequency(): void
+    {
+        $details = $this->payoutDetails();
+        $frequency = (string) ($details['payout_frequency'] ?? 'Weekly');
+
+        $this->payoutFrequency = in_array($frequency, ['Weekly', 'Fortnightly', 'Monthly'], true) ? $frequency : 'Weekly';
+    }
+
+    public function updatePayoutBankDetails(): void
+    {
+        $validated = $this->validate([
+            'payoutBank' => ['required', 'string', 'max:100'],
+            'payoutAccountHolderName' => ['required', 'string', 'max:255'],
+            'payoutAccountNumber' => ['required', 'string', 'max:50'],
+            'payoutSortCode' => ['required', 'string', 'max:20'],
+            'payoutIban' => ['required', 'string', 'max:50'],
+        ]);
+
+        $user = auth('groomer_spacer')->user();
+
+        if (!$user) {
+            return;
+        }
+
+        $details = $this->payoutDetails();
+        $details = array_merge($details, [
+            'bank' => $validated['payoutBank'],
+            'account_holder_name' => $validated['payoutAccountHolderName'],
+            'account_number' => $validated['payoutAccountNumber'],
+            'sort_code' => $validated['payoutSortCode'],
+            'iban' => $validated['payoutIban'],
+        ]);
+
+        $user->update(['payout_details' => $details]);
+
+        $this->dispatch('payout-bank-details-saved');
+    }
+
+    public function updatePayoutFrequency(): void
+    {
+        $validated = $this->validate([
+            'payoutFrequency' => ['required', 'string', 'in:Weekly,Fortnightly,Monthly'],
+        ]);
+
+        $user = auth('groomer_spacer')->user();
+
+        if (!$user) {
+            return;
+        }
+
+        $details = $this->payoutDetails();
+        $details['payout_frequency'] = $validated['payoutFrequency'];
+
+        $user->update(['payout_details' => $details]);
+
+        $this->dispatch('payout-frequency-saved');
+    }
+
+    private function nextPayoutDateForFrequency(string $frequency): string
+    {
+        $nextTuesday = now()->next('Tuesday');
+
+        return match ($frequency) {
+            'Fortnightly' => $nextTuesday->addWeek()->format('d F Y'),
+            'Monthly' => now()->addMonthNoOverflow()->next('Tuesday')->format('d F Y'),
+            default => $nextTuesday->format('d F Y'),
+        };
+    }
+
+    private function maskedAccountNumber(?string $accountNumber): string
+    {
+        $digits = preg_replace('/\D+/', '', (string) $accountNumber);
+
+        if ($digits === '') {
+            return 'Not added';
+        }
+
+        return '**** **** **** ' . substr($digits, -4);
     }
 
     private function recentBookingAvatar(Booking $booking, bool $preferOwnerPhoto = false): array
@@ -462,6 +593,72 @@ new class extends Component {
             })
             ->all();
     }
+
+    #[Computed]
+    public function payouts(): array
+    {
+        $pendingStart = now()->subDays(7)->startOfDay();
+        $payoutDetails = $this->payoutDetails();
+
+        $pendingAmount = (clone $this->payoutEligiblePaymentsQuery())->whereDate('date', '>=', $pendingStart)->sum('amount');
+
+        $totalPayouts = (clone $this->payoutEligiblePaymentsQuery())->sum('amount');
+
+        $futureBookings = $this->bookingsQuery()
+            ->whereIn('booking_status', ['pending', 'confirmed'])
+            ->whereDate('date', '>=', now()->startOfDay())
+            ->orderBy('date')
+            ->get(['id', 'date', 'amount'])
+            ->map(
+                fn(Booking $booking) => [
+                    'date' => $booking->date?->format('d/m/Y') ?? '--/--/----',
+                    'amount' => (float) $booking->amount,
+                    'arrival_date' => $booking->date?->copy()->addWeekdays(2)->format('d/m/Y') ?? '--/--/----',
+                ],
+            )
+            ->all();
+
+        $futureAmount = collect($futureBookings)->sum(fn(array $booking) => (float) $booking['amount']);
+        $futurePreviewBookings = array_slice($futureBookings, 0, 2);
+
+        $history = $this->payoutEligiblePaymentsQuery()
+            ->with('booking:id,date')
+            ->orderByDesc('date')
+            ->limit(7)
+            ->get(['id', 'booking_id', 'date', 'amount'])
+            ->map(
+                fn(Payment $payment) => [
+                    'date' => $payment->date?->format('d/m/y') ?? '--/--/--',
+                    'amount' => (float) $payment->amount,
+                    'status' => 'Completed',
+                    'reference' => 'FG-' . str_pad((string) $payment->booking_id, 5, '0', STR_PAD_LEFT),
+                    'invoice_url' => $payment->booking ? route('dashboard.bookings.invoice-pdf', $payment->booking) : null,
+                ],
+            )
+            ->all();
+
+        $frequency = (string) ($payoutDetails['payout_frequency'] ?? 'Weekly');
+        if (!in_array($frequency, ['Weekly', 'Fortnightly', 'Monthly'], true)) {
+            $frequency = 'Weekly';
+        }
+
+        return [
+            'pending_amount' => (float) $pendingAmount,
+            'total_amount' => (float) $totalPayouts,
+            'future_amount' => (float) $futureAmount,
+            'future_items' => $futurePreviewBookings,
+            'future_items_all' => $futureBookings,
+            'history' => $history,
+            'frequency' => $frequency,
+            'next_payout_date' => $this->nextPayoutDateForFrequency($frequency),
+            'bank' => [
+                'verified' => filled($payoutDetails['bank'] ?? null) && filled($payoutDetails['account_holder_name'] ?? null) && filled($payoutDetails['account_number'] ?? null),
+                'name' => filled($payoutDetails['bank'] ?? null) ? $payoutDetails['bank'] : 'Bank details',
+                'account_number' => $this->maskedAccountNumber($payoutDetails['account_number'] ?? null),
+                'account_holder' => $payoutDetails['account_holder_name'] ?? 'Not added',
+            ],
+        ];
+    }
 }; ?>
 
 @php
@@ -473,6 +670,7 @@ new class extends Component {
     $summary = $this->summary;
     $chartBookings = $this->chartBookings;
     $transactions = $this->transactions;
+    $payouts = $this->payouts;
     $now = now();
     $dashboardEarningsMenu = DashboardNav::fromSession()['active_earnings_menu'];
 @endphp
@@ -1570,7 +1768,12 @@ new class extends Component {
         <x-dashboard.earnings.transactions :transactions="$transactions" :is-space-user="$isSpaceAccount" />
     </div>
 
-    <div class="earnings-layout" x-show="activeEarningsMenu !== 'transactions'" x-cloak>
+    <div x-show="activeEarningsMenu === 'pay-outs'" x-cloak>
+        <x-dashboard.earnings.payouts :payouts="$payouts" />
+    </div>
+
+    <div class="earnings-layout" x-show="activeEarningsMenu !== 'transactions' && activeEarningsMenu !== 'pay-outs'"
+        x-cloak>
         <div class="earnings-layout-left" style="width: 60%;">
             <div class="earnings-summary-cards">
                 <div class="earnings-stat-card">
