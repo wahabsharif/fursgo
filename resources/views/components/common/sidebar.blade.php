@@ -22,7 +22,7 @@
             "dashboard_sidebar_booking_counts_{$spacerId}",
             60,
             fn() => \App\Models\Booking::query()
-                ->where('goormer_spacer_id', $spacerId)
+                ->where(['goormer_spacer_id' => $spacerId])
                 ->selectRaw('booking_status, COUNT(*) as total')
                 ->groupBy('booking_status')
                 ->pluck('total', 'booking_status'),
@@ -40,8 +40,10 @@
     bookingsOpen: @js($dashboardActiveSection === 'bookings'),
     availabilityOpen: @js(in_array($dashboardActiveSection, ['availability', 'manage-availability'], true)),
     servicesOpen: @js($dashboardActiveSection === 'services'),
+    earningsOpen: @js($dashboardActiveSection === 'earnings'),
     activeBookingStatus: @js($dashboardNav['active_booking_status']),
     activeServiceMenu: @js($dashboardNav['active_service_menu']),
+    activeEarningsMenu: @js($dashboardNav['active_earnings_menu']),
     bookingCounts: {
         pending: {{ $pendingCount }},
         confirmed: {{ $confirmedCount }},
@@ -63,6 +65,7 @@
             cancelled: Number($event.detail?.counts?.cancelled ?? bookingCounts.cancelled),
         }
     "
+    @earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'"
     style="{{ $variant === 'dashboard' ? 'max-width: 16rem; margin: 0; padding: 0; width: 100%; position: relative;' : 'position: relative;' }}">
     <style>
         :root {
@@ -277,7 +280,7 @@
             <!-- Earnings -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'earnings'; bookingsOpen = false; availabilityOpen = false"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'earnings'; bookingsOpen = false; availabilityOpen = false; servicesOpen = false; earningsOpen = true; activeEarningsMenu = 'overview'; window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: 'overview' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: 'overview' } }))"
                     :class="{ 'active': activeSection === 'earnings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="12" viewBox="0 0 14 12"
                         fill="none">
@@ -292,6 +295,38 @@
                     </svg>
                     <span class="nav-text">Earnings</span>
                 </a>
+                <ul x-cloak x-show="earningsOpen && activeSection === 'earnings'"
+                    x-transition:enter="bookings-transition-enter"
+                    x-transition:enter-start="bookings-transition-enter-start"
+                    x-transition:enter-end="bookings-transition-enter-end"
+                    x-transition:leave="bookings-transition-leave"
+                    x-transition:leave-start="bookings-transition-leave-start"
+                    x-transition:leave-end="bookings-transition-leave-end" class="booking-status-list">
+                    <li class="booking-status-item">
+                        <span class="services-status-dot transactions"></span>
+                        <button type="button" class="booking-status-trigger"
+                            :class="{ 'is-active': activeEarningsMenu === 'transactions' }"
+                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'earnings'; earningsOpen = true; activeEarningsMenu = 'transactions'; window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: 'transactions' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: 'transactions' } }))">
+                            Transactions
+                        </button>
+                    </li>
+                    <li class="booking-status-item">
+                        <span class="services-status-dot pay-outs"></span>
+                        <button type="button" class="booking-status-trigger"
+                            :class="{ 'is-active': activeEarningsMenu === 'pay-outs' }"
+                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'earnings'; earningsOpen = true; activeEarningsMenu = 'pay-outs'; window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: 'pay-outs' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: 'pay-outs' } }))">
+                            Pay-outs
+                        </button>
+                    </li>
+                    <li class="booking-status-item">
+                        <span class="services-status-dot invoices"></span>
+                        <button type="button" class="booking-status-trigger"
+                            :class="{ 'is-active': activeEarningsMenu === 'invoices' }"
+                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'earnings'; earningsOpen = true; activeEarningsMenu = 'invoices'; window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: 'invoices' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: 'invoices' } }))">
+                            Invoices
+                        </button>
+                    </li>
+                </ul>
             </li>
 
             <!-- Settings -->
@@ -478,6 +513,18 @@
 
         .services-status-dot.service-area {
             background: #FFA899;
+        }
+
+        .services-status-dot.transactions {
+            background: #F4A47C;
+        }
+
+        .services-status-dot.pay-outs {
+            background: #EFA7A0;
+        }
+
+        .services-status-dot.invoices {
+            background: #CBDCE8;
         }
 
         .booking-status-text {

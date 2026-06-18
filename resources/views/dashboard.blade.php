@@ -6,7 +6,7 @@
 @endphp
 
 <section class="dashboard-content-wrapper">
-    <div class="active-section-header" x-data="{ tabsLoading: false, navLoading: false, navLoadingTimeout: null, activeBookingFilter: @js($dashboardNav['active_booking_status']), serviceFormOpen: false, activeServiceMenu: @js($dashboardNav['active_service_menu']), clientProfileOpen: false }" x-show="activeSection !== 'clients' || !clientProfileOpen"
+    <div class="active-section-header" x-data="{ tabsLoading: false, navLoading: false, navLoadingTimeout: null, activeBookingFilter: @js($dashboardNav['active_booking_status']), serviceFormOpen: false, activeServiceMenu: @js($dashboardNav['active_service_menu']), activeEarningsMenu: @js($dashboardNav['active_earnings_menu']), clientProfileOpen: false }" x-show="activeSection !== 'clients' || !clientProfileOpen"
         x-cloak x-on:bookings-tabs-loading-start.window="tabsLoading = true"
         x-on:bookings-tabs-loading-end.window="tabsLoading = false"
         x-on:booking-status-changed.window="tabsLoading = false; activeBookingFilter = $event.detail.status || ''"
@@ -15,7 +15,8 @@
         x-on:client-profile-visible.window="clientProfileOpen = !!$event.detail?.visible"
         x-on:service-form-opened.window="serviceFormOpen = true"
         x-on:service-form-cancel.window="serviceFormOpen = false"
-        x-on:services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'">
+        x-on:services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'"
+        x-on:earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'">
         <template x-if="activeSection === 'bookings'">
             <div class="active-section-header">
                 <h2
@@ -70,8 +71,12 @@
         <template x-if="activeSection === 'earnings'">
             <div class="active-section-header">
                 <div>
-                    <h2>Earnings Overview</h2>
-                    <p>View your earnings, transactions, pay-outs and statement reports.</p>
+                    <h2
+                        x-text="activeEarningsMenu === 'transactions' ? 'Transactions' : (activeEarningsMenu === 'pay-outs' ? 'Pay-outs' : (activeEarningsMenu === 'invoices' ? 'Invoices' : 'Earnings'))">
+                    </h2>
+                    <p
+                        x-text="activeEarningsMenu === 'transactions' ? 'View all your payment and pay-out transactions.' : (activeEarningsMenu === 'pay-outs' ? 'Review all your completed and scheduled pay-outs.' : (activeEarningsMenu === 'invoices' ? 'View all generated invoices and statements.' : 'Track revenue, bookings, and payment activity.'))">
+                    </p>
                 </div>
             </div>
         </template>
@@ -111,13 +116,22 @@
             window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: @js($dashboardNav['active_service_menu']) } }));
         }
     };
+    const restoreEarningsMenu = () => {
+        if (activeSection === 'earnings') {
+            window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: @js($dashboardNav['active_earnings_menu']) } }));
+        }
+    };
     restoreServicesMenu();
+    restoreEarningsMenu();
     $watch('activeSection', (section) => {
         if (!mountedSections.includes(section)) {
             mountedSections.push(section);
         }
         if (section === 'services') {
             restoreServicesMenu();
+        }
+        if (section === 'earnings') {
+            restoreEarningsMenu();
         }
         if (section === 'business-hub') {
             requestAnimationFrame(() => {

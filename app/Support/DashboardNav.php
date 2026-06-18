@@ -33,7 +33,12 @@ class DashboardNav
     public const SERVICE_MENUS = ['services', 'add-ons', 'pet-preferences', 'service-area'];
 
     /**
-     * @return array{active_section: string, active_booking_status: string, active_service_menu: string}
+     * @var list<string>
+     */
+    public const EARNINGS_MENUS = ['overview', 'transactions', 'pay-outs', 'invoices'];
+
+    /**
+     * @return array{active_section: string, active_booking_status: string, active_service_menu: string, active_earnings_menu: string}
      */
     public static function fromSession(): array
     {
@@ -54,10 +59,16 @@ class DashboardNav
             $serviceMenu = 'services';
         }
 
+        $earningsMenu = (string) ($nav['active_earnings_menu'] ?? 'overview');
+        if (!in_array($earningsMenu, self::EARNINGS_MENUS, true)) {
+            $earningsMenu = 'overview';
+        }
+
         return [
             'active_section' => $section,
             'active_booking_status' => $bookingStatus,
             'active_service_menu' => $serviceMenu,
+            'active_earnings_menu' => $earningsMenu,
         ];
     }
 
@@ -67,7 +78,7 @@ class DashboardNav
     }
 
     /**
-     * @return array{active_section: string, active_booking_status: string, active_service_menu: string}
+     * @return array{active_section: string, active_booking_status: string, active_service_menu: string, active_earnings_menu: string}
      */
     public static function mergeFromRequest(Request $request): array
     {
@@ -98,6 +109,15 @@ class DashboardNav
             }
 
             $nav['active_service_menu'] = $serviceMenu;
+        }
+
+        if ($request->has('active_earnings_menu')) {
+            $earningsMenu = (string) $request->input('active_earnings_menu');
+            if (!in_array($earningsMenu, self::EARNINGS_MENUS, true)) {
+                abort(422);
+            }
+
+            $nav['active_earnings_menu'] = $earningsMenu;
         }
 
         return $nav;

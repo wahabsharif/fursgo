@@ -55,6 +55,9 @@
         if (detail.active_service_menu !== undefined) {
             payload.active_service_menu = detail.active_service_menu;
         }
+        if (detail.active_earnings_menu !== undefined) {
+            payload.active_earnings_menu = detail.active_earnings_menu;
+        }
         fetch(window.__dashboardNavUrl, {
             method: 'POST',
             headers: {
