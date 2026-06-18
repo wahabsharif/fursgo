@@ -4,6 +4,7 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Support\BookingReceiptViewData;
 use App\Support\DashboardNav;
+use App\Support\InvoiceNumber;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -595,6 +596,49 @@ new class extends Component {
     }
 
     #[Computed]
+    public function invoices(): array
+    {
+        $platformPercent = (float) config('services.fursgo.platform_fee_percent', 5);
+        $platformPercent = max(0, min(100, $platformPercent));
+
+        return Payment::query()
+            ->whereHas('booking', function ($query) {
+                $query->where(['goormer_spacer_id' => $this->loggedInSpacerId() ?? 0])->where(['booking_status' => 'completed']);
+            })
+            ->with(['booking:id,goormer_spacer_id,pet_owner_id,date,service,amount,discount,extra_add_ons,booking_status', 'petOwner:id,name'])
+            ->orderByDesc('date')
+            ->limit(40)
+            ->get(['id', 'booking_id', 'pet_owner_id', 'date', 'amount', 'status'])
+            ->values()
+            ->map(function (Payment $payment) use ($platformPercent) {
+                $booking = $payment->booking;
+                $bookingDate = $booking?->date ?? $payment->date;
+                $serviceAmount = (float) ($booking?->amount ?? $payment->amount);
+                $extrasAmount = (float) collect(is_array($booking?->extra_add_ons) ? $booking->extra_add_ons : [])->sum(fn($addon) => (float) ($addon['amount'] ?? 0));
+                $discount = (float) ($booking?->discount ?? 0);
+                $gross = max(0, $serviceAmount + $extrasAmount - $discount);
+                $tax = round($gross * ($platformPercent / 100), 2);
+                $status = $this->transactionStatusPill($payment->status);
+
+                return [
+                    'date' => $bookingDate?->format('d/m/y') ?? '--/--/--',
+                    'date_iso' => $bookingDate?->format('Y-m-d') ?? '',
+                    'invoice_no' => InvoiceNumber::customerBooking((int) $payment->booking_id, $bookingDate),
+                    'booking_reference' => 'FG-' . str_pad((string) $payment->booking_id, 5, '0', STR_PAD_LEFT),
+                    'client' => trim((string) ($payment->petOwner?->name ?? 'Unknown Client')),
+                    'reference' => filled($booking?->service) ? (string) $booking->service : 'Booking',
+                    'gross' => $gross,
+                    'tax' => $tax,
+                    'total' => round($gross + $tax, 2),
+                    'status_label' => $status['label'],
+                    'status_key' => $status['key'],
+                    'invoice_url' => $booking ? route('dashboard.bookings.invoice-pdf', $booking) : null,
+                ];
+            })
+            ->all();
+    }
+
+    #[Computed]
     public function payouts(): array
     {
         $pendingStart = now()->subDays(7)->startOfDay();
@@ -670,6 +714,7 @@ new class extends Component {
     $summary = $this->summary;
     $chartBookings = $this->chartBookings;
     $transactions = $this->transactions;
+    $invoices = $this->invoices;
     $payouts = $this->payouts;
     $now = now();
     $dashboardEarningsMenu = DashboardNav::fromSession()['active_earnings_menu'];
@@ -1772,7 +1817,12 @@ new class extends Component {
         <x-dashboard.earnings.payouts :payouts="$payouts" />
     </div>
 
-    <div class="earnings-layout" x-show="activeEarningsMenu !== 'transactions' && activeEarningsMenu !== 'pay-outs'"
+    <div x-show="activeEarningsMenu === 'invoices'" x-cloak>
+        <x-dashboard.earnings.invoices :invoices="$invoices" />
+    </div>
+
+    <div class="earnings-layout"
+        x-show="activeEarningsMenu !== 'transactions' && activeEarningsMenu !== 'pay-outs' && activeEarningsMenu !== 'invoices'"
         x-cloak>
         <div class="earnings-layout-left" style="width: 60%;">
             <div class="earnings-summary-cards">
