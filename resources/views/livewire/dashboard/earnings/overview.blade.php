@@ -1,6 +1,9 @@
 <?php
 
 use App\Models\Booking;
+use App\Models\Payment;
+use App\Support\BookingReceiptViewData;
+use App\Support\DashboardNav;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -14,12 +17,12 @@ new class extends Component {
 
     private function bookingsQuery()
     {
-        return Booking::query()->where('goormer_spacer_id', $this->loggedInSpacerId() ?? 0);
+        return Booking::query()->where(['goormer_spacer_id' => $this->loggedInSpacerId() ?? 0]);
     }
 
     private function completedBookingsQuery()
     {
-        return $this->bookingsQuery()->where('booking_status', 'completed');
+        return $this->bookingsQuery()->where(['booking_status' => 'completed']);
     }
 
     public function isSpaceAccount(): bool
@@ -102,7 +105,7 @@ new class extends Component {
             return '??';
         }
 
-        return Str::upper(Str::substr(Str::of($name)->explode(' ')->map(fn(string $part) => Str::substr($part, 0, 1))->implode(''), 0, 2));
+        return Str::upper(Str::substr(Str::of($name)->explode(' ')->map(fn(string $part) => Str::substr($part, 0, 1))->join(''), 0, 2));
     }
 
     private function usersHaveProfileImage(): bool
@@ -145,6 +148,17 @@ new class extends Component {
             'salon', 'salon visit' => 'Salon',
             'mobile station', 'mobile_station' => 'Mobile Station',
             default => ucwords($normalized),
+        };
+    }
+
+    private function transactionStatusPill(?string $status): array
+    {
+        $normalized = strtolower(trim((string) $status));
+
+        return match ($normalized) {
+            'failed' => ['label' => 'Failed', 'key' => 'failed'],
+            'refunded' => ['label' => 'Refunded', 'key' => 'refunded'],
+            default => ['label' => 'Paid', 'key' => 'paid'],
         };
     }
 
@@ -401,6 +415,53 @@ new class extends Component {
             })
             ->all();
     }
+
+    #[Computed]
+    public function transactions(): array
+    {
+        $isSpaceAccount = $this->isSpaceAccount();
+
+        return Payment::query()
+            ->whereHas('booking', fn($query) => $query->where(['goormer_spacer_id' => $this->loggedInSpacerId() ?? 0]))
+            ->with(['booking:id,goormer_spacer_id,time,service,visit_type,amount,discount,extra_add_ons,date,pet_owner_id', 'petOwner:id,name', 'pet:id,name,pet_type'])
+            ->orderByDesc('date')
+            ->limit(8)
+            ->get(['id', 'booking_id', 'pet_owner_id', 'pet_detail_id', 'date', 'amount', 'status', 'payment_method', 'service_type'])
+            ->values()
+            ->map(function (Payment $payment) use ($isSpaceAccount) {
+                $bookingTime = trim((string) ($payment->booking?->time ?? ''));
+                $time = $this->normalizedBookingTime($bookingTime);
+                $status = $this->transactionStatusPill($payment->status);
+                $method = filled($payment->payment_method) ? $payment->payment_method : 'N/A';
+
+                $row = [
+                    'date' => $payment->date?->format('d/m/y') ?? '--/--/--',
+                    'time' => $time !== '' ? $time : '--:--',
+                    'amount' => (float) $payment->amount,
+                    'payment_method' => $method,
+                    'status_label' => $status['label'],
+                    'status_key' => $status['key'],
+                    'booking_id' => (int) $payment->booking_id,
+                    'booking_reference' => 'FG-' . str_pad((string) $payment->booking_id, 5, '0', STR_PAD_LEFT),
+                ];
+
+                if ($isSpaceAccount) {
+                    $row['service_type'] = filled($payment->service_type) ? $payment->service_type : $this->spaceDurationCategory($payment->booking?->service, $payment->booking?->time);
+                    $row['space'] = $this->visitTypeLabel($payment->booking?->visit_type);
+                } else {
+                    $row['client'] = trim((string) ($payment->petOwner?->name ?? 'Unknown Client'));
+                    $row['pet'] = trim((string) ($payment->pet?->name ?? 'Unknown Pet'));
+                    $row['pet_type'] = trim((string) ($payment->pet?->pet_type ?? 'Pet'));
+                }
+
+                if ($payment->booking) {
+                    $row['receipt'] = BookingReceiptViewData::fromBooking($payment->booking, $isSpaceAccount, trim((string) ($payment->petOwner?->name ?? '')) ?: null, trim((string) ($payment->pet?->name ?? '')) ?: null, trim((string) ($payment->pet?->pet_type ?? '')) ?: null);
+                }
+
+                return $row;
+            })
+            ->all();
+    }
 }; ?>
 
 @php
@@ -411,10 +472,13 @@ new class extends Component {
     $breakdown = $this->revenueBreakdown;
     $summary = $this->summary;
     $chartBookings = $this->chartBookings;
+    $transactions = $this->transactions;
     $now = now();
+    $dashboardEarningsMenu = DashboardNav::fromSession()['active_earnings_menu'];
 @endphp
 
-<div class="earnings-overview" x-init="$nextTick(() => window.mountEarningsCharts?.($el))">
+<div class="earnings-overview" x-data="{ activeEarningsMenu: @js($dashboardEarningsMenu) }"
+    x-on:earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'" x-init="$nextTick(() => window.mountEarningsCharts?.($el))">
     <style>
         .earnings-overview {
             --earnings-primary: {{ $primaryColor }};
@@ -1085,9 +1149,428 @@ new class extends Component {
             text-align: center;
             padding: 1.5rem 1rem;
         }
+
+        .earnings-transactions-card {
+            margin-top: 1.6rem;
+            padding-top: 0.6rem;
+        }
+
+        .earnings-transactions-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .earnings-transactions-table {
+            width: 100%;
+            min-width: 980px;
+            border-collapse: separate;
+            border-spacing: 0;
+            table-layout: fixed;
+        }
+
+        .earnings-transactions-table th,
+        .earnings-transactions-table td {
+            padding: 1.2rem 0.95rem;
+            text-align: left;
+            border-bottom: 1px solid #E3E3E3;
+            color: #3B3731;
+            font-family: Lato, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            vertical-align: middle;
+        }
+
+        .earnings-transactions-table th {
+            font-weight: 600;
+            color: #111;
+            white-space: nowrap;
+        }
+
+        .earnings-transactions-date,
+        .earnings-transactions-time {
+            display: block;
+            line-height: 1.3;
+        }
+
+        .earnings-transactions-client {
+            font-weight: 600;
+        }
+
+        .earnings-transactions-pet-cell {
+            display: flex;
+            gap: 4px;
+            align-items: baseline;
+        }
+
+        .earnings-transactions-pet {
+            font-weight: 600;
+        }
+
+        .earnings-transactions-pet-type {
+            color: #9D9B98;
+        }
+
+        .earnings-transactions-status {
+            min-width: 96px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            padding: 0.45rem 1rem;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+        }
+
+        .earnings-transactions-status.is-paid {
+            background: rgba(186, 207, 142, 0.10);
+            color: #AFCD6F;
+        }
+
+        .earnings-transactions-status.is-failed {
+            background: #FFE2E2;
+            color: #FF6E6E;
+        }
+
+        .earnings-transactions-status.is-refunded {
+            background: #FFF4E4;
+            color: #FFAE37;
+        }
+
+        .earnings-transactions-table__receipt {
+            text-align: center !important;
+            border-left: 1px solid #DCDCDC;
+        }
+
+        .earnings-transactions-receipt-btn {
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            padding: 0.2rem;
+            line-height: 0;
+        }
+
+        .completed-booking-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.22);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            z-index: 100100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 180ms ease;
+        }
+
+        .completed-booking-modal-overlay.is-open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .completed-booking-modal-card {
+            width: min(680px, 100%);
+            border-radius: 10px;
+            border: 1px solid #CBDCE8;
+            background: #F8F8F8;
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
+            opacity: 0;
+            transform: translateY(12px) scale(0.98);
+            transition:
+                opacity 180ms ease,
+                transform 180ms ease;
+        }
+
+        .completed-booking-modal-overlay.is-open .completed-booking-modal-card {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .completed-booking-modal-overlay,
+            .completed-booking-modal-card {
+                transition: none;
+            }
+        }
+
+        .completed-booking-modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 10px 10px 0 0;
+            border-bottom: 1px solid #CBDCE8;
+            background: rgba(203, 220, 232, 0.20);
+            padding: 1.2rem 1.65rem;
+        }
+
+        .completed-booking-modal-title {
+            margin: 0;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 20px;
+            font-style: normal;
+            font-weight: 700;
+            line-height: normal;
+        }
+
+        .completed-booking-modal-close {
+            border: none;
+            background: transparent;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .completed-booking-modal-booking-row {
+            padding: 1.2rem 1.65rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .completed-booking-modal-booking-row strong {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 18px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .completed-booking-modal-booking-meta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #9D9B98;
+            font-family: Lato, sans-serif;
+            font-size: 18px;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .completed-booking-download-btn {
+            border: 0;
+            background: transparent;
+            color: inherit;
+            width: 26px;
+            height: 26px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .completed-booking-modal-customer {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 1.2rem 1.65rem;
+            position: relative;
+        }
+
+        .completed-booking-modal-user-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .completed-booking-modal-owner {
+            margin: 0;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 18px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .completed-booking-modal-pet {
+            margin: 0;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 18px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .completed-booking-modal-pet-type {
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 18px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+            margin-left: 0.35rem;
+        }
+
+        .completed-booking-modal-section {
+            padding: 1.2rem 1.65rem;
+            position: relative;
+        }
+
+        .completed-booking-modal-booking-row::after,
+        .completed-booking-modal-section::after {
+            content: '';
+            position: absolute;
+            left: 1.65rem;
+            right: 1.65rem;
+            bottom: 0;
+            height: 1px;
+            background: #DCDCDC;
+        }
+
+        .completed-booking-modal-section-label {
+            margin: 0 0 1rem;
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 18px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .completed-booking-modal-section-label-inner {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .completed-booking-modal-section-title {
+            margin: 0 0 0.65rem;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 18px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .completed-booking-modal-line {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 18px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .completed-booking-modal-line p {
+            margin: 0;
+        }
+
+        .completed-booking-modal-line-sub {
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 20px;
+        }
+
+        .completed-booking-modal-space-name {
+            margin: 0;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 18px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 23px;
+        }
+
+        .completed-booking-modal-total-block {
+            padding: 1.35rem 1.65rem 1.55rem;
+        }
+
+        .completed-booking-modal-total-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            color: #9D9B98;
+            font-family: Lato, sans-serif;
+            font-size: 18px;
+            font-weight: 400;
+            line-height: 23px;
+            margin-bottom: 1.7rem;
+        }
+
+        .completed-booking-modal-total-row>span:last-child {
+            color: #3B3731;
+            text-align: right;
+            font-family: Lato, sans-serif;
+            font-size: 18px;
+            font-weight: 400;
+            line-height: 23px;
+        }
+
+        .completed-booking-modal-total-row.is-grand {
+            border-top: 1px solid #DCDCDC;
+            padding-top: 1rem;
+            margin-top: 0.8rem;
+            margin-bottom: 0;
+        }
+
+        .completed-booking-modal-total-row.is-grand>span {
+            color: #3B3731 !important;
+            font-family: Lato !important;
+            font-style: normal !important;
+            font-size: 18px !important;
+            font-weight: 700 !important;
+            line-height: normal !important;
+        }
+
+        .completed-booking-addon-line {
+            margin-bottom: 0.35rem;
+        }
+
+        .completed-booking-addon-line .completed-booking-modal-line-sub,
+        .completed-booking-addon-line>span {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 18px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 23px;
+        }
+
+        .completed-booking-addon-line:last-child {
+            margin-bottom: 0;
+        }
+
+        .earnings-transactions-empty {
+            text-align: center !important;
+            color: #9D9B98 !important;
+            font-size: 15px !important;
+        }
     </style>
 
-    <div class="earnings-layout">
+    <div x-show="activeEarningsMenu === 'transactions'" x-cloak>
+        <x-dashboard.earnings.transactions :transactions="$transactions" :is-space-user="$isSpaceAccount" />
+    </div>
+
+    <div class="earnings-layout" x-show="activeEarningsMenu !== 'transactions'" x-cloak>
         <div class="earnings-layout-left" style="width: 60%;">
             <div class="earnings-summary-cards">
                 <div class="earnings-stat-card">
