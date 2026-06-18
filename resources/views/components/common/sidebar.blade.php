@@ -41,9 +41,11 @@
     availabilityOpen: @js(in_array($dashboardActiveSection, ['availability', 'manage-availability'], true)),
     servicesOpen: @js($dashboardActiveSection === 'services'),
     earningsOpen: @js($dashboardActiveSection === 'earnings'),
+    settingsOpen: @js($dashboardActiveSection === 'settings'),
     activeBookingStatus: @js($dashboardNav['active_booking_status']),
     activeServiceMenu: @js($dashboardNav['active_service_menu']),
     activeEarningsMenu: @js($dashboardNav['active_earnings_menu']),
+    activeSettingsMenu: 'business-details',
     bookingCounts: {
         pending: {{ $pendingCount }},
         confirmed: {{ $confirmedCount }},
@@ -332,7 +334,7 @@
             <!-- Settings -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'settings'; bookingsOpen = false; availabilityOpen = false"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'settings'; bookingsOpen = false; availabilityOpen = false; servicesOpen = false; earningsOpen = false; settingsOpen = true; activeSettingsMenu = 'business-details'"
                     :class="{ 'active': activeSection === 'settings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
                         fill="none">
@@ -345,6 +347,30 @@
                     </svg>
                     <span class="nav-text">Settings</span>
                 </a>
+                <ul x-cloak x-show="settingsOpen && activeSection === 'settings'"
+                    x-transition:enter="bookings-transition-enter"
+                    x-transition:enter-start="bookings-transition-enter-start"
+                    x-transition:enter-end="bookings-transition-enter-end"
+                    x-transition:leave="bookings-transition-leave"
+                    x-transition:leave-start="bookings-transition-leave-start"
+                    x-transition:leave-end="bookings-transition-leave-end" class="booking-status-list">
+                    <li class="booking-status-item">
+                        <span class="settings-status-dot business-details"></span>
+                        <button type="button" class="booking-status-trigger"
+                            :class="{ 'is-active': activeSettingsMenu === 'business-details' }"
+                            @click="activeSection = 'settings'; settingsOpen = true; activeSettingsMenu = 'business-details'">
+                            Business Details
+                        </button>
+                    </li>
+                    <li class="booking-status-item">
+                        <span class="settings-status-dot service-policies"></span>
+                        <button type="button" class="booking-status-trigger"
+                            :class="{ 'is-active': activeSettingsMenu === 'service-policies' }"
+                            @click="activeSection = 'settings'; settingsOpen = true; activeSettingsMenu = 'service-policies'">
+                            Service Policies
+                        </button>
+                    </li>
+                </ul>
             </li>
         </ul>
     </aside>
@@ -525,6 +551,21 @@
 
         .services-status-dot.invoices {
             background: #CBDCE8;
+        }
+
+        .settings-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 100px;
+            flex-shrink: 0;
+        }
+
+        .settings-status-dot.business-details {
+            background: #FFA899;
+        }
+
+        .settings-status-dot.service-policies {
+            background: #FFA899;
         }
 
         .booking-status-text {

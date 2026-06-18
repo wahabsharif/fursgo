@@ -81,6 +81,15 @@
             </div>
         </template>
 
+        <template x-if="activeSection === 'settings'">
+            <div class="active-section-header">
+                <div>
+                    <h2>Settings</h2>
+                    <p>Manage account controls.</p>
+                </div>
+            </div>
+        </template>
+
         <template x-if="activeSection === 'services'">
             <div class="active-section-header active-section-header-services">
                 <button type="button" class="service-list-header-btn" x-cloak x-show="serviceFormOpen"
@@ -101,7 +110,7 @@
         </template>
 
         <template
-            x-if="activeSection !== 'bookings' && activeSection !== 'availability' && activeSection !== 'manage-availability' && activeSection !== 'services' && activeSection !== 'clients' && activeSection !== 'earnings'">
+            x-if="activeSection !== 'bookings' && activeSection !== 'availability' && activeSection !== 'manage-availability' && activeSection !== 'services' && activeSection !== 'clients' && activeSection !== 'earnings' && activeSection !== 'settings'">
             <div x-text="activeSection.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())"></div>
         </template>
 
@@ -191,6 +200,11 @@
                     });
                 })">
                 <x-dashboard.earnings />
+            </div>
+        </template>
+        <template x-if="mountedSections.includes('settings')">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'settings' }">
+                <x-dashboard.settings />
             </div>
         </template>
     </div>
