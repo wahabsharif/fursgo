@@ -8,6 +8,10 @@ use Livewire\Attributes\On;
 use Livewire\Volt\Component;
 
 new class extends Component {
+    private const SPACER_ID_COLUMN = 'goormer_spacer_id';
+    private const BOOKING_ID_COLUMN = 'id';
+    private const BOOKING_STATUS_COLUMN = 'booking_status';
+
     public $bookings;
     public $statusCounts = [];
     public string $activeStatus = 'all';
@@ -27,7 +31,7 @@ new class extends Component {
 
     private function scopedBookingQuery(int $bookingId)
     {
-        return Booking::query()->where('goormer_spacer_id', Auth::id())->where('id', $bookingId);
+        return Booking::query()->where(self::SPACER_ID_COLUMN, Auth::id())->where(self::BOOKING_ID_COLUMN, $bookingId);
     }
 
     public function refreshBookingsAndCounts(): void
@@ -41,16 +45,16 @@ new class extends Component {
         $profileId = Auth::id();
 
         $this->bookings = Booking::with(['petOwner:id,name', 'pets:id,name,pet_type,breed,photo'])
-            ->where('goormer_spacer_id', $profileId)
+            ->where(self::SPACER_ID_COLUMN, $profileId)
             ->latest('date')
-            ->latest('id')
+            ->latest(self::BOOKING_ID_COLUMN)
             ->get();
 
         $this->statusCounts = [
-            'pending' => $this->bookings->where('booking_status', 'pending')->count(),
-            'confirmed' => $this->bookings->where('booking_status', 'confirmed')->count(),
-            'completed' => $this->bookings->where('booking_status', 'completed')->count(),
-            'cancelled' => $this->bookings->where('booking_status', 'cancelled')->count(),
+            'pending' => $this->bookings->where(self::BOOKING_STATUS_COLUMN, 'pending')->count(),
+            'confirmed' => $this->bookings->where(self::BOOKING_STATUS_COLUMN, 'confirmed')->count(),
+            'completed' => $this->bookings->where(self::BOOKING_STATUS_COLUMN, 'completed')->count(),
+            'cancelled' => $this->bookings->where(self::BOOKING_STATUS_COLUMN, 'cancelled')->count(),
         ];
 
         Cache::forget("dashboard_sidebar_booking_counts_{$profileId}");
@@ -214,7 +218,7 @@ new class extends Component {
 
     public function openCompletedBookingModal(int $bookingId): void
     {
-        $bookingExists = $this->scopedBookingQuery($bookingId)->where('booking_status', 'completed')->exists();
+        $bookingExists = $this->scopedBookingQuery($bookingId)->where(self::BOOKING_STATUS_COLUMN, 'completed')->exists();
         if (!$bookingExists) {
             $this->dispatch('bookings-tabs-loading-end');
             return;
@@ -234,7 +238,7 @@ new class extends Component {
 
     public function openCancelledBookingModal(int $bookingId): void
     {
-        $bookingExists = $this->scopedBookingQuery($bookingId)->where('booking_status', 'cancelled')->exists();
+        $bookingExists = $this->scopedBookingQuery($bookingId)->where(self::BOOKING_STATUS_COLUMN, 'cancelled')->exists();
         if (!$bookingExists) {
             $this->dispatch('bookings-tabs-loading-end');
             return;
@@ -1322,8 +1326,7 @@ new class extends Component {
         $rescheduleBooking = $rescheduleBookingId ? $bookings->firstWhere('id', $rescheduleBookingId) : null;
     @endphp
 
-    <x-dashboard.common.completed-booking-modal :booking="$completedBooking"
-        loading-event="bookings-tabs-loading-start" />
+    <x-dashboard.common.completed-booking-modal :booking="$completedBooking" loading-event="bookings-tabs-loading-start" />
 
     @if ($cancelledBooking)
         @php
@@ -1366,7 +1369,7 @@ new class extends Component {
                 })
                 ->filter(fn($item) => $item['label'] !== '')
                 ->values();
-            $cancelledExtrasAmount = (float) $cancelledExtraAddOns->sum('amount');
+            $cancelledExtrasAmount = (float) $cancelledExtraAddOns->sum(fn($item) => $item['amount']);
             $cancelledPromoDiscount = (float) ($cancelledBooking->discount ?? 0);
             $cancelledTotalAmount = $cancelledServiceAmount + $cancelledExtrasAmount - $cancelledPromoDiscount;
             $cancelledRefundStatus = (string) ($cancelledBooking->refund_status ?? 'In Progress');
@@ -1755,7 +1758,7 @@ new class extends Component {
     }
 
     .completed-booking-modal-card {
-        width: min(680px, 100%);
+        width: min(610px, 100%);
         border-radius: 10px;
         border: 1px solid #CBDCE8;
         background: #F8F8F8;

@@ -72,10 +72,10 @@
             <div class="active-section-header">
                 <div>
                     <h2
-                        x-text="activeEarningsMenu === 'transactions' ? 'Transactions' : (activeEarningsMenu === 'pay-outs' ? 'Pay-outs' : (activeEarningsMenu === 'invoices' ? 'Invoices' : 'Earnings'))">
+                        x-text="activeEarningsMenu === 'transactions' ? 'Transactions' : (activeEarningsMenu === 'pay-outs' ? 'Pay-outs' : (activeEarningsMenu === 'invoices' ? 'Invoices' : 'Earnings Overview'))">
                     </h2>
                     <p
-                        x-text="activeEarningsMenu === 'transactions' ? 'View all your payment and pay-out transactions.' : (activeEarningsMenu === 'pay-outs' ? 'Review all your completed and scheduled pay-outs.' : (activeEarningsMenu === 'invoices' ? 'View and download invoices generated for completed bookings.' : 'Track revenue, bookings, and payment activity.'))">
+                        x-text="activeEarningsMenu === 'transactions' ? 'View all your payment and pay-out transactions.' : (activeEarningsMenu === 'pay-outs' ? 'Payouts are processed 2–3 business days after release' : (activeEarningsMenu === 'invoices' ? 'View and download invoices generated for completed bookings.' : 'View your earnings, transactions, pay-outs and statement reports.'))">
                     </p>
                 </div>
             </div>

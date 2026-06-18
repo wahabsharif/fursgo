@@ -11,9 +11,9 @@
         if (empty($segments)) {
             $pageTitle = 'Fursgo';
         } else {
-            $pageTitle =
-                'Fursgo - ' .
-                collect($segments)->map(fn($s) => ucfirst(str_replace(['-', '_'], ' ', $s)))->implode(' - ');
+            $formattedSegments = array_map(fn($segment) => ucfirst(str_replace(['-', '_'], ' ', $segment)), $segments);
+
+            $pageTitle = 'Fursgo - ' . implode(' - ', $formattedSegments);
         }
 
         $dashboardNavView = match (true) {

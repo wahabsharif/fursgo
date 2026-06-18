@@ -212,7 +212,7 @@
         }
 
         .completed-booking-modal-card {
-            width: min(680px, 100%);
+            width: min(610px, 100%);
             border-radius: 10px;
             border: 1px solid #CBDCE8;
             background: #F8F8F8;

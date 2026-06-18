@@ -365,7 +365,7 @@
         .dashboard-wrapper {
             display: flex;
             gap: 4rem;
-            padding-top: 4rem;
+            padding-top: 2rem;
             max-width: 110rem;
             margin: 0 auto;
             width: 100%;

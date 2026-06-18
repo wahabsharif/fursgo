@@ -250,6 +250,7 @@
             font: inherit;
             font-size: 14px;
             padding: 0.65rem 1rem;
+            transition: background-color 180ms ease, color 180ms ease;
         }
 
         .earnings-invoices-period-toggle button:last-child {
@@ -266,6 +267,14 @@
             overflow-x: auto;
             position: relative;
             z-index: 1;
+            transition: opacity 180ms ease, transform 180ms ease, filter 180ms ease;
+            will-change: opacity, transform;
+        }
+
+        .earnings-invoices-table-wrap.is-switching {
+            opacity: 0;
+            transform: translateY(8px);
+            filter: blur(1px);
         }
 
         .earnings-invoices-table {
@@ -469,7 +478,8 @@
         </div>
     </div>
 
-    <div class="earnings-invoices-table-wrap">
+    <div class="earnings-invoices-table-wrap" :class="{ 'is-switching': tableSwitching }"
+        :aria-busy="tableSwitching ? 'true' : 'false'">
         <table class="earnings-invoices-table">
             <thead>
                 <tr>
@@ -499,8 +509,9 @@
                                 x-text="invoice.status_label"></span>
                         </td>
                         <td class="earnings-invoices-download-cell">
-                            <button type="button" class="earnings-invoices-icon-btn" :disabled="!invoice.invoice_url"
-                                @click="download(invoice.invoice_url)" aria-label="Download invoice">
+                            <button type="button" class="earnings-invoices-icon-btn"
+                                :disabled="!invoice.invoice_url" @click="download(invoice.invoice_url)"
+                                aria-label="Download invoice">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
                                     viewBox="0 0 16 19" fill="none">
                                     <path
@@ -545,6 +556,7 @@
                         left: -9999,
                     },
                     period: 'all',
+                    tableSwitching: false,
                     limit: 8,
                     init() {
                         window.addEventListener('scroll', () => {
@@ -606,8 +618,22 @@
                         return this.filteredRows.slice(0, this.limit);
                     },
                     setPeriod(period) {
-                        this.period = period;
-                        this.limit = 8;
+                        if (this.period === period || this.tableSwitching) {
+                            return;
+                        }
+
+                        this.tableSwitching = true;
+
+                        window.setTimeout(() => {
+                            this.period = period;
+                            this.limit = 8;
+
+                            this.$nextTick(() => {
+                                window.requestAnimationFrame(() => {
+                                    this.tableSwitching = false;
+                                });
+                            });
+                        }, 160);
                     },
                     toggleDateDropdown() {
                         if (this.dateDropdownOpen) {
