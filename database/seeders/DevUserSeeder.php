@@ -88,6 +88,7 @@ class DevUserSeeder extends Seeder
                 'spacer_business_profile' => null,
                 'profile_visit' => 125,
                 'legal_policy_agreements' => true,
+                'auto_accept_booking' => true,
             ]
         );
     }

@@ -29,6 +29,7 @@ class GroomerSpacerProfile extends Authenticatable
         'spacer_business_profile',
         'profile_visit',
         'legal_policy_agreements',
+        'auto_accept_booking',
     ];
 
     protected $casts = [
@@ -46,6 +47,7 @@ class GroomerSpacerProfile extends Authenticatable
         'spacer_business_profile' => 'array',
         'profile_visit' => 'integer',
         'legal_policy_agreements' => 'boolean',
+        'auto_accept_booking' => 'boolean',
     ];
 
     /**
