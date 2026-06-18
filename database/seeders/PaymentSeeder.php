@@ -13,10 +13,13 @@ class PaymentSeeder extends Seeder
 {
     public function run(): void
     {
-        $groomerSpacer = GroomerSpacerProfile::where('email', 'dev@dev.com')->first();
+        $devEmail = 'dev@dev.com';
+        $groomerSpacer = GroomerSpacerProfile::query()
+            ->where(['email' => $devEmail])
+            ->first();
 
         if (!$groomerSpacer) {
-            $this->command?->warn('PaymentSeeder skipped: dev@dev.com not found in goormer_spacer_profiles.');
+            $this->command?->warn("PaymentSeeder skipped: {$devEmail} not found in goormer_spacer_profiles.");
 
             return;
         }
@@ -67,17 +70,17 @@ class PaymentSeeder extends Seeder
             ],
         );
 
-        $booking->pets()->sync($pets->pluck('id')->all());
+        $booking->pets()->sync($pets->map(fn(PetDetail $pet) => $pet->id)->all());
 
         $paymentSamples = [
-            ['date' => '2025-02-05', 'pet_name' => 'Bella', 'amount' => 50.0, 'status' => 'paid'],
-            ['date' => '2025-02-06', 'pet_name' => 'Louis', 'amount' => 50.0, 'status' => 'failed'],
-            ['date' => '2025-02-07', 'pet_name' => 'Surf', 'amount' => 25.0, 'status' => 'refunded'],
-            ['date' => '2025-02-07', 'pet_name' => 'Bella', 'amount' => 25.0, 'status' => 'paid'],
+            ['date' => '2025-02-05', 'pet_name' => 'Bella', 'amount' => 50.0, 'status' => 'paid', 'payment_method' => 'Debit/Credit Card'],
+            ['date' => '2025-02-06', 'pet_name' => 'Louis', 'amount' => 50.0, 'status' => 'failed', 'payment_method' => 'PayPal'],
+            ['date' => '2025-02-07', 'pet_name' => 'Surf', 'amount' => 25.0, 'status' => 'refunded', 'payment_method' => 'Debit/Credit Card'],
+            ['date' => '2025-02-07', 'pet_name' => 'Bella', 'amount' => 25.0, 'status' => 'paid', 'payment_method' => 'PayPal'],
         ];
 
         foreach ($paymentSamples as $sample) {
-            $pet = $pets->firstWhere('name', $sample['pet_name']);
+            $pet = $pets->first(fn(PetDetail $pet) => $pet->name === $sample['pet_name']);
 
             Payment::updateOrCreate(
                 [
@@ -90,17 +93,21 @@ class PaymentSeeder extends Seeder
                 [
                     'service_type' => 'Full Groom',
                     'amount' => $sample['amount'],
+                    'payment_method' => $sample['payment_method'],
                 ],
             );
         }
 
+        $petOwnerIdColumn = 'pet_owner_id';
         $completedBookings = Booking::query()
-            ->where('booking_status', 'completed')
-            ->where('pet_owner_id', '!=', $owner->id)
+            ->where(['booking_status' => 'completed'])
+            ->whereNot($petOwnerIdColumn, $owner->id)
             ->with('pets')
             ->get();
 
-        foreach ($completedBookings as $completedBooking) {
+        $paymentMethods = ['Debit/Credit Card', 'PayPal'];
+
+        foreach ($completedBookings as $index => $completedBooking) {
             $pet = $completedBooking->pets->first();
 
             Payment::updateOrCreate(
@@ -114,6 +121,7 @@ class PaymentSeeder extends Seeder
                     'service_type' => $completedBooking->service,
                     'amount' => $completedBooking->amount,
                     'status' => 'paid',
+                    'payment_method' => $paymentMethods[$index % count($paymentMethods)],
                 ],
             );
         }
@@ -163,16 +171,20 @@ class PaymentSeeder extends Seeder
                 'booking_status' => 'completed',
                 'staff' => 'Emma Wilson',
                 'rating' => 4.9,
-                'discount' => 0.0,
-                'extra_add_ons' => [],
+                'discount' => 25.0,
+                'extra_add_ons' => [
+                    ['label' => 'Storage Locker', 'amount' => 8],
+                    ['label' => 'Deep Clean', 'amount' => 20],
+                    ['label' => 'After-Hours Access', 'amount' => 10],
+                ],
             ],
         );
 
         $spacePaymentSamples = [
-            ['date' => '2025-02-05', 'service_type' => 'Half-Day', 'amount' => 80.0, 'status' => 'paid'],
-            ['date' => '2025-02-06', 'service_type' => 'Full-Day', 'amount' => 120.0, 'status' => 'failed'],
-            ['date' => '2025-02-07', 'service_type' => 'Hourly', 'amount' => 20.0, 'status' => 'refunded'],
-            ['date' => '2025-02-08', 'service_type' => 'Half-Day', 'amount' => 80.0, 'status' => 'paid'],
+            ['date' => '2025-02-05', 'service_type' => 'Half-Day', 'amount' => 80.0, 'status' => 'paid', 'payment_method' => 'Debit/Credit Card'],
+            ['date' => '2025-02-06', 'service_type' => 'Full-Day', 'amount' => 120.0, 'status' => 'failed', 'payment_method' => 'PayPal'],
+            ['date' => '2025-02-07', 'service_type' => 'Hourly', 'amount' => 20.0, 'status' => 'refunded', 'payment_method' => 'Debit/Credit Card'],
+            ['date' => '2025-02-08', 'service_type' => 'Half-Day', 'amount' => 80.0, 'status' => 'paid', 'payment_method' => 'PayPal'],
         ];
 
         foreach ($spacePaymentSamples as $sample) {
@@ -187,6 +199,7 @@ class PaymentSeeder extends Seeder
                 [
                     'service_type' => $sample['service_type'],
                     'amount' => $sample['amount'],
+                    'payment_method' => $sample['payment_method'],
                 ],
             );
         }
