@@ -47,10 +47,12 @@ class DevUserSeeder extends Seeder
                     'business_owner_id_images' => [$idProofPath],
                 ],
                 'payout_details' => [
+                    'bank' => 'Barclays',
                     'account_holder_name' => 'Dev User',
                     'account_number' => '12345678',
                     'sort_code' => '12-34-56',
                     'iban' => 'GB82WEST12345698765432',
+                    'payout_frequency' => 'Weekly',
                 ],
                 'insurance_details' => [
                     'insurance_certificate_paths' => ['dev-seed/insurance/certificate-sample.pdf'],

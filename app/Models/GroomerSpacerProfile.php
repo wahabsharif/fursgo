@@ -58,10 +58,10 @@ class GroomerSpacerProfile extends Authenticatable
         }
 
         $payout = $this->payout_details ?? [];
-        if (! is_array($payout)) {
+        if (!is_array($payout)) {
             $payout = is_string($payout) ? (json_decode($payout, true) ?: []) : [];
         }
-        foreach (['account_holder_name', 'account_number', 'sort_code', 'iban'] as $key) {
+        foreach (['bank', 'account_holder_name', 'account_number', 'sort_code', 'iban'] as $key) {
             if (trim((string) ($payout[$key] ?? '')) === '') {
                 return false;
             }
@@ -69,7 +69,7 @@ class GroomerSpacerProfile extends Authenticatable
 
         if (($this->account_type ?? '') === 'freelance') {
             $fd = $this->freelance_details ?? [];
-            if (! is_array($fd)) {
+            if (!is_array($fd)) {
                 $fd = is_string($fd) ? (json_decode($fd, true) ?: []) : [];
             }
             if (trim((string) ($fd['contact_email'] ?? '')) === '') {
@@ -88,7 +88,7 @@ class GroomerSpacerProfile extends Authenticatable
         }
 
         $bd = $this->business_details ?? [];
-        if (! is_array($bd)) {
+        if (!is_array($bd)) {
             $bd = is_string($bd) ? (json_decode($bd, true) ?: []) : [];
         }
         foreach (['business_email', 'business_name', 'business_registration_number', 'business_phone'] as $key) {
