@@ -26,7 +26,10 @@
     $dashboardLogoHref = $isVerifyQualifyRoute ? route('verify-qualify') : route('dashboard');
 
     if (!$isGroomerSpacerSession && auth()->check()) {
-        $gsp = GroomerSpacerProfile::where('email', auth()->user()->email)->first();
+        $authUser = auth()->user();
+        $authEmail = (string) ($authUser->email ?? '');
+        $emailColumn = 'email';
+        $gsp = $authEmail !== '' ? GroomerSpacerProfile::where($emailColumn, $authEmail)->first() : null;
     }
 
     if ($gsp instanceof GroomerSpacerProfile) {
@@ -45,7 +48,17 @@
         $bb = is_array($gsp->business_basics) ? $gsp->business_basics : [];
         $avatarPath = trim((string) ($bb['profile_photo_path'] ?? ''));
         if ($avatarPath !== '') {
-            $headerProfileImage = asset('storage/' . ltrim($avatarPath, '/'));
+            $avatarAssetPath = ltrim(str_replace('\\', '/', $avatarPath), '/');
+            if (str_starts_with($avatarAssetPath, 'public/')) {
+                $avatarAssetPath = substr($avatarAssetPath, strlen('public/'));
+            }
+
+            $headerProfileImage = match (true) {
+                (bool) filter_var($avatarPath, FILTER_VALIDATE_URL) => $avatarPath,
+                file_exists(public_path($avatarAssetPath)) => asset($avatarAssetPath),
+                str_starts_with($avatarAssetPath, 'storage/') => asset($avatarAssetPath),
+                default => asset('storage/' . $avatarAssetPath),
+            };
         }
     }
 
