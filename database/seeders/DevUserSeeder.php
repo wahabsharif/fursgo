@@ -56,13 +56,14 @@ class DevUserSeeder extends Seeder
                 ],
                 'insurance_details' => [
                     'insurance_certificate_paths' => ['dev-seed/insurance/certificate-sample.pdf'],
+                    'insurance_certificate_expiry_date' => '2026-01-12',
                 ],
                 'freelance_details' => null,
                 'business_basics' => [
                     'display_name' => 'Dev Grooming',
                     'tagline' => 'Calm, kind grooms for every coat.',
                     'bio' => 'Development seed profile with representative business basics data.',
-                    'profile_photo_path' => 'dev-seed/avatars/profile-sample.jpg',
+                    'profile_photo_path' => 'images/groomer-profile.png',
                     'gallery_paths' => [
                         'dev-seed/gallery/sample-1.jpg',
                         'dev-seed/gallery/sample-2.jpg',

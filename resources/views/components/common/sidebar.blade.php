@@ -45,7 +45,7 @@
     activeBookingStatus: @js($dashboardNav['active_booking_status']),
     activeServiceMenu: @js($dashboardNav['active_service_menu']),
     activeEarningsMenu: @js($dashboardNav['active_earnings_menu']),
-    activeSettingsMenu: 'business-details',
+    activeSettingsMenu: @js($dashboardNav['active_settings_menu']),
     bookingCounts: {
         pending: {{ $pendingCount }},
         confirmed: {{ $confirmedCount }},
@@ -68,6 +68,7 @@
         }
     "
     @earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'"
+    @settings-menu-selected.window="activeSettingsMenu = $event.detail?.menu || 'general'"
     style="{{ $variant === 'dashboard' ? 'max-width: 16rem; margin: 0; padding: 0; width: 100%; position: relative;' : 'position: relative;' }}">
     <style>
         :root {
@@ -77,8 +78,8 @@
 
     <!-- Mobile Toggle Button -->
     <button @click="mobileOpen = !mobileOpen" class="mobile-toggle" aria-label="Toggle Sidebar">
-        <svg x-show="!mobileOpen" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-            stroke="currentColor" class="w-6 h-6">
+        <svg x-show="!mobileOpen" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
         </svg>
         <svg x-show="mobileOpen" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -334,7 +335,7 @@
             <!-- Settings -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'settings'; bookingsOpen = false; availabilityOpen = false; servicesOpen = false; earningsOpen = false; settingsOpen = true; activeSettingsMenu = 'business-details'"
+                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'settings'; bookingsOpen = false; availabilityOpen = false; servicesOpen = false; earningsOpen = false; settingsOpen = true; activeSettingsMenu = 'general'; window.dispatchEvent(new CustomEvent('settings-menu-selected', { detail: { menu: 'general' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'settings', active_settings_menu: 'general' } }))"
                     :class="{ 'active': activeSection === 'settings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
                         fill="none">
@@ -358,7 +359,7 @@
                         <span class="settings-status-dot business-details"></span>
                         <button type="button" class="booking-status-trigger"
                             :class="{ 'is-active': activeSettingsMenu === 'business-details' }"
-                            @click="activeSection = 'settings'; settingsOpen = true; activeSettingsMenu = 'business-details'">
+                            @click="activeSection = 'settings'; settingsOpen = true; activeSettingsMenu = 'business-details'; window.dispatchEvent(new CustomEvent('settings-menu-selected', { detail: { menu: 'business-details' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'settings', active_settings_menu: 'business-details' } }))">
                             Business Details
                         </button>
                     </li>
@@ -366,7 +367,7 @@
                         <span class="settings-status-dot service-policies"></span>
                         <button type="button" class="booking-status-trigger"
                             :class="{ 'is-active': activeSettingsMenu === 'service-policies' }"
-                            @click="activeSection = 'settings'; settingsOpen = true; activeSettingsMenu = 'service-policies'">
+                            @click="activeSection = 'settings'; settingsOpen = true; activeSettingsMenu = 'service-policies'; window.dispatchEvent(new CustomEvent('settings-menu-selected', { detail: { menu: 'service-policies' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'settings', active_settings_menu: 'service-policies' } }))">
                             Service Policies
                         </button>
                     </li>

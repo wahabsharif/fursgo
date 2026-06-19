@@ -38,7 +38,12 @@ class DashboardNav
     public const EARNINGS_MENUS = ['overview', 'transactions', 'pay-outs', 'invoices'];
 
     /**
-     * @return array{active_section: string, active_booking_status: string, active_service_menu: string, active_earnings_menu: string}
+     * @var list<string>
+     */
+    public const SETTINGS_MENUS = ['general', 'business-details', 'service-policies'];
+
+    /**
+     * @return array{active_section: string, active_booking_status: string, active_service_menu: string, active_earnings_menu: string, active_settings_menu: string}
      */
     public static function fromSession(): array
     {
@@ -64,11 +69,17 @@ class DashboardNav
             $earningsMenu = 'overview';
         }
 
+        $settingsMenu = (string) ($nav['active_settings_menu'] ?? 'general');
+        if (!in_array($settingsMenu, self::SETTINGS_MENUS, true)) {
+            $settingsMenu = 'general';
+        }
+
         return [
             'active_section' => $section,
             'active_booking_status' => $bookingStatus,
             'active_service_menu' => $serviceMenu,
             'active_earnings_menu' => $earningsMenu,
+            'active_settings_menu' => $settingsMenu,
         ];
     }
 
@@ -78,7 +89,7 @@ class DashboardNav
     }
 
     /**
-     * @return array{active_section: string, active_booking_status: string, active_service_menu: string, active_earnings_menu: string}
+     * @return array{active_section: string, active_booking_status: string, active_service_menu: string, active_earnings_menu: string, active_settings_menu: string}
      */
     public static function mergeFromRequest(Request $request): array
     {
@@ -118,6 +129,15 @@ class DashboardNav
             }
 
             $nav['active_earnings_menu'] = $earningsMenu;
+        }
+
+        if ($request->has('active_settings_menu')) {
+            $settingsMenu = (string) $request->input('active_settings_menu');
+            if (!in_array($settingsMenu, self::SETTINGS_MENUS, true)) {
+                abort(422);
+            }
+
+            $nav['active_settings_menu'] = $settingsMenu;
         }
 
         return $nav;

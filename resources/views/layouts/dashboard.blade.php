@@ -58,6 +58,9 @@
         if (detail.active_earnings_menu !== undefined) {
             payload.active_earnings_menu = detail.active_earnings_menu;
         }
+        if (detail.active_settings_menu !== undefined) {
+            payload.active_settings_menu = detail.active_settings_menu;
+        }
         fetch(window.__dashboardNavUrl, {
             method: 'POST',
             headers: {
