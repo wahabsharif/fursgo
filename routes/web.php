@@ -19,22 +19,36 @@ Route::get('/clear', function () {
 });
 
 Route::get('/seed', function () {
+    if (app()->isProduction()) {
+        abort(403, 'The seed route is disabled in production.');
+    }
+
     // Allow long-running migrations + seeds via the web request.
     @set_time_limit(0);
     @ini_set('memory_limit', '512M');
 
     try {
-        // Drops all tables, re-runs migrations, then runs all seeders.
-        // This guarantees existing data is removed before fresh data is inserted.
-        Artisan::call('migrate:fresh', [
-            '--seed' => true,
-            '--force' => true,
-        ]);
+        $commands = [
+            ['optimize:clear'],
+            ['storage:link', [
+                '--force' => true,
+            ]],
+            ['migrate:fresh', [
+                '--seed' => true,
+                '--force' => true,
+            ]],
+        ];
 
-        $output = Artisan::output();
+        $output = collect($commands)->map(function (array $command) {
+            [$name, $parameters] = [$command[0], $command[1] ?? []];
+
+            Artisan::call($name, $parameters);
+
+            return ">>> php artisan {$name}\n" . trim(Artisan::output());
+        })->implode("\n\n");
 
         return response(
-            "<pre>Database wiped, migrated, and seeded successfully.\n\n"
+            "<pre>Setup commands completed successfully.\n\n"
                 . e($output) . '</pre>',
             200
         )->header('Content-Type', 'text/html');
