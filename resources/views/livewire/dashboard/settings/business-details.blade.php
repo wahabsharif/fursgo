@@ -23,6 +23,9 @@ new class extends Component {
     public $profilePhotoUpload = null;
 
     public string $galleryPathsText = '';
+    public array $galleryPaths = [];
+    public $galleryUpload = null;
+    public ?int $galleryReplaceIndex = null;
 
     public string $accountHolderName = '';
     public string $accountNumber = '';
@@ -47,7 +50,7 @@ new class extends Component {
         $insuranceDetails = $this->arrayValue($profile?->insurance_details);
 
         $profileImage = $this->fileCard($businessBasics['profile_photo_path'] ?? null);
-        $gallery = $this->fileCards($businessBasics['gallery_paths'] ?? [], 5);
+        $gallery = $this->fileCards($businessBasics['gallery_paths'] ?? [], PHP_INT_MAX);
         $businessIdFiles = $this->fileCards($businessDetails['business_owner_id_images'] ?? ($profile?->id_document_paths ?? []), 4);
         $insuranceFiles = $this->fileCards($insuranceDetails['insurance_certificate_paths'] ?? [], 4, [
             'expires_at' => $this->firstString($insuranceDetails, ['expires_at', 'expiry_date', 'expiration_date', 'insurance_expiry_date', 'insurance_certificate_expiry_date', 'insurance_certificate_expires_at']),
@@ -146,6 +149,11 @@ new class extends Component {
         return strtolower((string) $profile->user_type) === 'space' ? 'spacer-assets/profile-image' : 'groomer-assets/profile-image';
     }
 
+    private function galleryImageUploadDirectory(GroomerSpacerProfile $profile): string
+    {
+        return strtolower((string) $profile->user_type) === 'space' ? 'spacer-assets/pets-images' : 'groomer-assets/pets-images';
+    }
+
     public function saveGalleryDetails(): void
     {
         $profile = $this->profile();
@@ -154,14 +162,83 @@ new class extends Component {
         }
 
         $this->validate([
-            'galleryPathsText' => ['nullable', 'string', 'max:5000'],
+            'galleryUpload' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp,avif', 'max:2048'],
         ]);
 
+        $this->persistGalleryUpload($profile);
+        $this->editingSection = null;
+        $this->hydrateEditableFields();
+    }
+
+    public function updatedGalleryUpload(): void
+    {
+        $this->validateOnly('galleryUpload', [
+            'galleryUpload' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp,avif', 'max:2048'],
+        ]);
+
+        $profile = $this->profile();
+        if (!$profile) {
+            return;
+        }
+
+        $this->persistGalleryUpload($profile);
+        $this->editingSection = 'gallery';
+        $this->hydrateEditableFields();
+    }
+
+    private function persistGalleryUpload(GroomerSpacerProfile $profile): void
+    {
+        if (!$this->galleryUpload) {
+            return;
+        }
+
+        $profile->refresh();
         $businessBasics = $this->arrayValue($profile->business_basics);
-        $businessBasics['gallery_paths'] = $this->linesToArray($this->galleryPathsText);
+        $galleryPaths = $this->arrayStrings($businessBasics['gallery_paths'] ?? []);
+        $storedPath = $this->galleryUpload->store($this->galleryImageUploadDirectory($profile), 'public');
+        $replaceIndex = $this->galleryReplaceIndex;
+
+        if ($replaceIndex !== null && $replaceIndex >= 0) {
+            $galleryPaths[$replaceIndex] = $storedPath;
+            ksort($galleryPaths);
+            $galleryPaths = array_values($galleryPaths);
+        } else {
+            $galleryPaths[] = $storedPath;
+        }
+
+        $businessBasics['gallery_paths'] = $galleryPaths;
         $profile->update(['business_basics' => $businessBasics]);
 
-        $this->editingSection = null;
+        $this->galleryPaths = $businessBasics['gallery_paths'];
+        $this->galleryPathsText = implode("\n", $this->galleryPaths);
+        $this->galleryUpload = null;
+        $this->galleryReplaceIndex = null;
+    }
+
+    public function removeGalleryImage(int $index): void
+    {
+        $profile = $this->profile();
+        if (!$profile || $index < 0) {
+            return;
+        }
+
+        $profile->refresh();
+        $businessBasics = $this->arrayValue($profile->business_basics);
+        $galleryPaths = $this->arrayStrings($businessBasics['gallery_paths'] ?? []);
+
+        if (!array_key_exists($index, $galleryPaths)) {
+            return;
+        }
+
+        unset($galleryPaths[$index]);
+        $businessBasics['gallery_paths'] = array_values($galleryPaths);
+        $profile->update(['business_basics' => $businessBasics]);
+
+        $this->galleryPaths = $businessBasics['gallery_paths'];
+        $this->galleryPathsText = implode("\n", $this->galleryPaths);
+        $this->galleryUpload = null;
+        $this->galleryReplaceIndex = null;
+        $this->editingSection = 'gallery';
         $this->hydrateEditableFields();
     }
 
@@ -269,7 +346,8 @@ new class extends Component {
         $this->bio = (string) ($businessBasics['bio'] ?? '');
         $this->profilePhotoPath = (string) ($businessBasics['profile_photo_path'] ?? '');
 
-        $this->galleryPathsText = implode("\n", $this->arrayStrings($businessBasics['gallery_paths'] ?? []));
+        $this->galleryPaths = $this->arrayStrings($businessBasics['gallery_paths'] ?? []);
+        $this->galleryPathsText = implode("\n", $this->galleryPaths);
 
         $this->accountHolderName = (string) ($payoutDetails['account_holder_name'] ?? '');
         $this->accountNumber = (string) ($payoutDetails['account_number'] ?? '');
@@ -341,6 +419,7 @@ new class extends Component {
             $extension = strtolower(pathinfo($urlPath, PATHINFO_EXTENSION));
 
             return [
+                'path' => $path,
                 'name' => basename($urlPath) ?: 'profile-picture',
                 'url' => $path,
                 'size' => null,
@@ -358,6 +437,7 @@ new class extends Component {
         $publicExtension = strtolower(pathinfo($publicPath, PATHINFO_EXTENSION));
         if ($publicExists && in_array($publicExtension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'], true)) {
             return [
+                'path' => $path,
                 'name' => basename($publicPath),
                 'url' => asset($publicPath),
                 'size' => filesize(public_path($publicPath)) ?: null,
@@ -376,6 +456,7 @@ new class extends Component {
         $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'], true);
 
         return [
+            'path' => $path,
             'name' => basename($normalizedPath ?: $path),
             'url' => $isImage ? Storage::url($normalizedPath) : ($exists ? Storage::url($normalizedPath) : null),
             'size' => $exists ? $this->formatFileSize(Storage::disk('public')->size($normalizedPath)) : null,
@@ -713,17 +794,238 @@ new class extends Component {
     </section>
 
     <section class="business-details-block">
+        @php
+            $isSpaceGallery = strtolower((string) ($profile?->user_type ?? '')) === 'space';
+        @endphp
         <x-dashboard.settings.business-details.section-title title="Photo Gallery" section="gallery" :is-editing="$editingSection === 'gallery'"
             save-action="saveGalleryDetails" />
-        <div class="business-details-card business-details-card--editing business-details-fade-panel" x-cloak
-            x-show="editingSection === 'gallery'">
-            <label class="business-details-input-field">
-                <span>Gallery Image Paths</span>
-                <textarea rows="5" wire:model.defer="galleryPathsText"
-                    placeholder="One path per line, e.g. dev-seed/gallery/sample-1.jpg"></textarea>
-            </label>
+        <div class="business-details-fade-panel" x-cloak x-show="editingSection === 'gallery'">
+            <div class="business-details-gallery business-details-gallery--editable">
+                @php
+                    $galleryCount = count($gallery);
+                    $nextAddSlot = $galleryCount;
+                @endphp
+                @for ($i = 0; $i <= $galleryCount; $i++)
+                    @php
+                        $image = $gallery[$i] ?? null;
+                        $hasUsableImage = $image && ($image['is_image'] ?? false) && ($image['available'] ?? true) && !empty($image['url']);
+                        $hasExistingPath = $image && !empty($image['path']);
+                        $shouldShowSlot = $i < $galleryCount || $i === $nextAddSlot;
+                    @endphp
+                    @if ($shouldShowSlot)
+                    <div class="business-details-gallery__slot"
+                        wire:key="business-gallery-edit-slot-{{ $i }}-{{ md5((string) ($image['path'] ?? 'add-slot')) }}"
+                        x-data="{
+                        previewUrl: null,
+                        uploading: false,
+                        removing: false,
+                        progress: 0,
+                        targetProgress: 0,
+                        progressFrame: null,
+                        pick() {
+                            this.progress = 0;
+                            this.targetProgress = 0;
+                            $wire.set('galleryReplaceIndex', {{ $hasExistingPath ? $i : 'null' }}).then(() => {
+                                this.$refs.galleryUploadInput.click();
+                            });
+                        },
+                        preview(event) {
+                            if (this.previewUrl) {
+                                URL.revokeObjectURL(this.previewUrl);
+                            }
+                            const file = event.target.files[0] || null;
+                            this.previewUrl = file ? URL.createObjectURL(file) : null;
+                        },
+                        startProgress() {
+                            this.cancelProgressFrame();
+                            this.uploading = true;
+                            this.progress = 1;
+                            this.targetProgress = 1;
+                        },
+                        setProgress(value) {
+                            const nextTarget = Math.max(this.targetProgress, Math.min(100, Number(value || 0)));
+                            const startValue = this.progress;
+                            const delta = nextTarget - startValue;
+                    
+                            if (delta <= 0) {
+                                return;
+                            }
+                    
+                            this.targetProgress = nextTarget;
+                            this.cancelProgressFrame();
+                    
+                            const startedAt = performance.now();
+                            const duration = Math.min(900, Math.max(260, delta * 14));
+                            const easeInOut = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+                    
+                            const step = (now) => {
+                                const elapsed = Math.min(1, (now - startedAt) / duration);
+                                this.progress = startValue + delta * easeInOut(elapsed);
+                    
+                                if (elapsed < 1) {
+                                    this.progressFrame = requestAnimationFrame(step);
+                                    return;
+                                }
+                    
+                                this.progress = nextTarget;
+                                this.progressFrame = null;
+                    
+                                if (this.progress >= 100 && this.targetProgress >= 100) {
+                                    setTimeout(() => {
+                                        this.uploading = false;
+                                        this.progress = 0;
+                                        this.targetProgress = 0;
+                                    }, 250);
+                                }
+                            };
+                    
+                            this.progressFrame = requestAnimationFrame(step);
+                        },
+                        cancelProgressFrame() {
+                            if (this.progressFrame) {
+                                cancelAnimationFrame(this.progressFrame);
+                                this.progressFrame = null;
+                            }
+                        },
+                        reset() {
+                            this.cancelProgressFrame();
+                            this.uploading = false;
+                            this.progress = 0;
+                            this.targetProgress = 0;
+                        },
+                        remove(index) {
+                            if (this.removing) {
+                                return;
+                            }
+                            this.removing = true;
+                            setTimeout(() => $wire.removeGalleryImage(index), 240);
+                        },
+                    }" x-on:livewire-upload-start="startProgress()"
+                        x-on:livewire-upload-progress="setProgress($event.detail.progress)"
+                        x-on:livewire-upload-finish="setProgress(100)"
+                        x-on:livewire-upload-error="reset()" :class="{ 'business-details-gallery__slot--removing': removing }">
+                    <input x-ref="galleryUploadInput" type="file" class="business-details-gallery__input"
+                        wire:model="galleryUpload" accept="image/*" @change="preview($event)">
+                    <button type="button" class="business-details-gallery__item business-details-gallery__upload-tile"
+                        @click="pick()"
+                        aria-label="{{ $hasUsableImage ? 'Replace gallery image ' . ($i + 1) : 'Upload gallery image ' . ($i + 1) }}">
+                        <template x-if="previewUrl">
+                            <span class="business-details-gallery__preview">
+                                <img :src="previewUrl" alt="Selected gallery image">
+                                <span class="business-details-gallery-progress" x-cloak x-show="uploading"
+                                    :style="`--progress: ${progress}`">
+                                    <span x-text="`${Math.round(progress)}%`"></span>
+                                </span>
+                            </span>
+                        </template>
+                        <span x-show="!previewUrl" class="business-details-gallery__current">
+                            @if ($hasUsableImage)
+                                <img src="{{ $image['url'] }}" alt="Business gallery image {{ $i + 1 }}"
+                                    onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
+                                <span class="business-details-gallery-add" hidden aria-hidden="true">
+                                    @if ($isSpaceGallery)
+                                        <x-dashboard.settings.business-details.space-gallery-placeholder />
+                                    @else
+                                        <svg class="business-details-gallery-paw" xmlns="http://www.w3.org/2000/svg"
+                                        width="61" height="48" viewBox="0 0 61 48" fill="none">
+                                        <path fill-rule="evenodd" clip-rule="evenodd"
+                                            d="M19.5692 0C17.4166 0 15.7293 1.29255 14.6856 2.84275C13.6289 4.40583 13.0461 6.44557 13.0461 8.58837C13.0461 10.7312 13.6289 12.7709 14.6856 14.334C15.7293 15.8799 17.4166 17.1767 19.5692 17.1767C21.7218 17.1767 23.4091 15.8842 24.4528 14.334C25.5096 12.7709 26.0923 10.7312 26.0923 8.58837C26.0923 6.44557 25.5096 4.40583 24.4528 2.84275C23.4091 1.29684 21.7218 0 19.5692 0ZM41.3128 0C39.1602 0 37.4729 1.29255 36.4292 2.84275C35.3724 4.40583 34.7897 6.44557 34.7897 8.58837C34.7897 10.7312 35.3724 12.7709 36.4292 14.334C37.4729 15.8799 39.1602 17.1767 41.3128 17.1767C43.4654 17.1767 45.1527 15.8842 46.1964 14.334C47.2531 12.7709 47.8359 10.7312 47.8359 8.58837C47.8359 6.44557 47.2531 4.40583 46.1964 2.84275C45.1527 1.29684 43.4654 0 41.3128 0ZM6.52307 19.3238C4.37046 19.3238 2.68316 20.6164 1.63947 22.1666C0.582728 23.7297 0 25.7694 0 27.9122C0 30.055 0.582728 32.0947 1.63947 33.6578C2.68316 35.2037 4.37046 36.5006 6.52307 36.5006C8.67568 36.5006 10.363 35.208 11.4067 33.6578C12.4634 32.0947 13.0461 30.055 13.0461 27.9122C13.0461 25.7694 12.4634 23.7297 11.4067 22.1666C10.363 20.6207 8.67568 19.3238 6.52307 19.3238ZM30.441 19.3238C25.2225 19.3238 21.3565 22.0893 18.8865 25.5203C16.4468 28.8999 15.2205 33.0953 15.2205 36.5006C15.2205 40.4684 17.634 43.2296 20.5955 44.8828C23.5091 46.5146 27.1621 47.236 30.441 47.236C33.7199 47.236 37.3728 46.5189 40.2865 44.8828C43.2436 43.2253 45.6615 40.4684 45.6615 36.5006C45.6615 33.0953 44.4352 28.8999 41.9955 25.5203C39.5298 22.085 35.6638 19.3238 30.441 19.3238ZM54.3589 19.3238C52.2063 19.3238 50.519 20.6164 49.4753 22.1666C48.4186 23.7297 47.8359 25.7694 47.8359 27.9122C47.8359 30.055 48.4186 32.0947 49.4753 33.6578C50.519 35.2037 52.2063 36.5006 54.3589 36.5006C56.5115 36.5006 58.1988 35.208 59.2425 33.6578C60.2993 32.0947 60.882 30.055 60.882 27.9122C60.882 25.7694 60.2993 23.7297 59.2425 22.1666C58.1988 20.6207 56.5115 19.3238 54.3589 19.3238Z"
+                                            fill="#E5E5E5" />
+                                        </svg>
+                                    @endif
+                                    <span class="business-details-gallery-add__plus">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                            viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                            <path
+                                                d="M9.72378 19.4476C4.36181 19.4476 0 15.0857 0 9.72378C0 4.36181 4.36181 0 9.72378 0C15.0857 0 19.4476 4.36181 19.4476 9.72378C19.4476 15.0857 15.0857 19.4476 9.72378 19.4476Z"
+                                                fill="#9D9B98" />
+                                        </svg>
+                                    </span>
+                                </span>
+                            @else
+                                <span class="business-details-gallery-add" aria-hidden="true">
+                                    @if ($isSpaceGallery)
+                                        <x-dashboard.settings.business-details.space-gallery-placeholder />
+                                    @else
+                                        <svg class="business-details-gallery-paw" xmlns="http://www.w3.org/2000/svg"
+                                        width="61" height="48" viewBox="0 0 61 48" fill="none">
+                                        <path fill-rule="evenodd" clip-rule="evenodd"
+                                            d="M19.5692 0C17.4166 0 15.7293 1.29255 14.6856 2.84275C13.6289 4.40583 13.0461 6.44557 13.0461 8.58837C13.0461 10.7312 13.6289 12.7709 14.6856 14.334C15.7293 15.8799 17.4166 17.1767 19.5692 17.1767C21.7218 17.1767 23.4091 15.8842 24.4528 14.334C25.5096 12.7709 26.0923 10.7312 26.0923 8.58837C26.0923 6.44557 25.5096 4.40583 24.4528 2.84275C23.4091 1.29684 21.7218 0 19.5692 0ZM41.3128 0C39.1602 0 37.4729 1.29255 36.4292 2.84275C35.3724 4.40583 34.7897 6.44557 34.7897 8.58837C34.7897 10.7312 35.3724 12.7709 36.4292 14.334C37.4729 15.8799 39.1602 17.1767 41.3128 17.1767C43.4654 17.1767 45.1527 15.8842 46.1964 14.334C47.2531 12.7709 47.8359 10.7312 47.8359 8.58837C47.8359 6.44557 47.2531 4.40583 46.1964 2.84275C45.1527 1.29684 43.4654 0 41.3128 0ZM6.52307 19.3238C4.37046 19.3238 2.68316 20.6164 1.63947 22.1666C0.582728 23.7297 0 25.7694 0 27.9122C0 30.055 0.582728 32.0947 1.63947 33.6578C2.68316 35.2037 4.37046 36.5006 6.52307 36.5006C8.67568 36.5006 10.363 35.208 11.4067 33.6578C12.4634 32.0947 13.0461 30.055 13.0461 27.9122C13.0461 25.7694 12.4634 23.7297 11.4067 22.1666C10.363 20.6207 8.67568 19.3238 6.52307 19.3238ZM30.441 19.3238C25.2225 19.3238 21.3565 22.0893 18.8865 25.5203C16.4468 28.8999 15.2205 33.0953 15.2205 36.5006C15.2205 40.4684 17.634 43.2296 20.5955 44.8828C23.5091 46.5146 27.1621 47.236 30.441 47.236C33.7199 47.236 37.3728 46.5189 40.2865 44.8828C43.2436 43.2253 45.6615 40.4684 45.6615 36.5006C45.6615 33.0953 44.4352 28.8999 41.9955 25.5203C39.5298 22.085 35.6638 19.3238 30.441 19.3238ZM54.3589 19.3238C52.2063 19.3238 50.519 20.6164 49.4753 22.1666C48.4186 23.7297 47.8359 25.7694 47.8359 27.9122C47.8359 30.055 48.4186 32.0947 49.4753 33.6578C50.519 35.2037 52.2063 36.5006 54.3589 36.5006C56.5115 36.5006 58.1988 35.208 59.2425 33.6578C60.2993 32.0947 60.882 30.055 60.882 27.9122C60.882 25.7694 60.2993 23.7297 59.2425 22.1666C58.1988 20.6207 56.5115 19.3238 54.3589 19.3238Z"
+                                            fill="#E5E5E5" />
+                                        </svg>
+                                    @endif
+                                    <span class="business-details-gallery-add__plus">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                            viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                            <path
+                                                d="M9.72378 19.4476C4.36181 19.4476 0 15.0857 0 9.72378C0 4.36181 4.36181 0 9.72378 0C15.0857 0 19.4476 4.36181 19.4476 9.72378C19.4476 15.0857 15.0857 19.4476 9.72378 19.4476Z"
+                                                fill="#9D9B98" />
+                                        </svg>
+                                    </span>
+                                </span>
+                            @endif
+                        </span>
+                    </button>
+                    @if ($hasExistingPath)
+                        <span class="business-details-gallery-remove-spinner" x-cloak x-show="removing"
+                            aria-hidden="true"></span>
+                        <button type="button" class="business-details-gallery-remove"
+                            @click.stop="remove({{ $i }})" :disabled="removing"
+                            aria-label="Remove gallery image {{ $i + 1 }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"
+                                viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                                <path d="M1.2 1.2L10.8 10.8M10.8 1.2L1.2 10.8" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" />
+                            </svg>
+                        </button>
+                    @endif
+                    </div>
+                    @endif
+                @endfor
+            </div>
+            @error('galleryUpload')
+                <span class="business-details-avatar-upload__error">{{ $message }}</span>
+            @enderror
         </div>
         <div class="business-details-gallery business-details-fade-panel" x-show="editingSection !== 'gallery'">
+            @foreach ($gallery as $i => $image)
+                @php
+                    $hasUsableImage = $image && ($image['is_image'] ?? false) && ($image['available'] ?? true) && !empty($image['url']);
+                @endphp
+                <div class="business-details-gallery__item">
+                    @if ($hasUsableImage)
+                        <img src="{{ $image['url'] }}" alt="Business gallery image {{ $i + 1 }}"
+                            onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
+                        <span class="business-details-gallery-add" hidden aria-hidden="true">
+                            @if ($isSpaceGallery)
+                                <x-dashboard.settings.business-details.space-gallery-placeholder />
+                            @else
+                                <svg class="business-details-gallery-paw" xmlns="http://www.w3.org/2000/svg"
+                                width="61" height="48" viewBox="0 0 61 48" fill="none">
+                                <path fill-rule="evenodd" clip-rule="evenodd"
+                                    d="M19.5692 0C17.4166 0 15.7293 1.29255 14.6856 2.84275C13.6289 4.40583 13.0461 6.44557 13.0461 8.58837C13.0461 10.7312 13.6289 12.7709 14.6856 14.334C15.7293 15.8799 17.4166 17.1767 19.5692 17.1767C21.7218 17.1767 23.4091 15.8842 24.4528 14.334C25.5096 12.7709 26.0923 10.7312 26.0923 8.58837C26.0923 6.44557 25.5096 4.40583 24.4528 2.84275C23.4091 1.29684 21.7218 0 19.5692 0ZM41.3128 0C39.1602 0 37.4729 1.29255 36.4292 2.84275C35.3724 4.40583 34.7897 6.44557 34.7897 8.58837C34.7897 10.7312 35.3724 12.7709 36.4292 14.334C37.4729 15.8799 39.1602 17.1767 41.3128 17.1767C43.4654 17.1767 45.1527 15.8842 46.1964 14.334C47.2531 12.7709 47.8359 10.7312 47.8359 8.58837C47.8359 6.44557 47.2531 4.40583 46.1964 2.84275C45.1527 1.29684 43.4654 0 41.3128 0ZM6.52307 19.3238C4.37046 19.3238 2.68316 20.6164 1.63947 22.1666C0.582728 23.7297 0 25.7694 0 27.9122C0 30.055 0.582728 32.0947 1.63947 33.6578C2.68316 35.2037 4.37046 36.5006 6.52307 36.5006C8.67568 36.5006 10.363 35.208 11.4067 33.6578C12.4634 32.0947 13.0461 30.055 13.0461 27.9122C13.0461 25.7694 12.4634 23.7297 11.4067 22.1666C10.363 20.6207 8.67568 19.3238 6.52307 19.3238ZM30.441 19.3238C25.2225 19.3238 21.3565 22.0893 18.8865 25.5203C16.4468 28.8999 15.2205 33.0953 15.2205 36.5006C15.2205 40.4684 17.634 43.2296 20.5955 44.8828C23.5091 46.5146 27.1621 47.236 30.441 47.236C33.7199 47.236 37.3728 46.5189 40.2865 44.8828C43.2436 43.2253 45.6615 40.4684 45.6615 36.5006C45.6615 33.0953 44.4352 28.8999 41.9955 25.5203C39.5298 22.085 35.6638 19.3238 30.441 19.3238ZM54.3589 19.3238C52.2063 19.3238 50.519 20.6164 49.4753 22.1666C48.4186 23.7297 47.8359 25.7694 47.8359 27.9122C47.8359 30.055 48.4186 32.0947 49.4753 33.6578C50.519 35.2037 52.2063 36.5006 54.3589 36.5006C56.5115 36.5006 58.1988 35.208 59.2425 33.6578C60.2993 32.0947 60.882 30.055 60.882 27.9122C60.882 25.7694 60.2993 23.7297 59.2425 22.1666C58.1988 20.6207 56.5115 19.3238 54.3589 19.3238Z"
+                                    fill="#E5E5E5" />
+                                </svg>
+                            @endif
+                        </span>
+                    @else
+                        <span class="business-details-gallery-add" aria-hidden="true">
+                            @if ($isSpaceGallery)
+                                <x-dashboard.settings.business-details.space-gallery-placeholder />
+                            @else
+                                <svg class="business-details-gallery-paw" xmlns="http://www.w3.org/2000/svg"
+                                width="61" height="48" viewBox="0 0 61 48" fill="none">
+                                <path fill-rule="evenodd" clip-rule="evenodd"
+                                    d="M19.5692 0C17.4166 0 15.7293 1.29255 14.6856 2.84275C13.6289 4.40583 13.0461 6.44557 13.0461 8.58837C13.0461 10.7312 13.6289 12.7709 14.6856 14.334C15.7293 15.8799 17.4166 17.1767 19.5692 17.1767C21.7218 17.1767 23.4091 15.8842 24.4528 14.334C25.5096 12.7709 26.0923 10.7312 26.0923 8.58837C26.0923 6.44557 25.5096 4.40583 24.4528 2.84275C23.4091 1.29684 21.7218 0 19.5692 0ZM41.3128 0C39.1602 0 37.4729 1.29255 36.4292 2.84275C35.3724 4.40583 34.7897 6.44557 34.7897 8.58837C34.7897 10.7312 35.3724 12.7709 36.4292 14.334C37.4729 15.8799 39.1602 17.1767 41.3128 17.1767C43.4654 17.1767 45.1527 15.8842 46.1964 14.334C47.2531 12.7709 47.8359 10.7312 47.8359 8.58837C47.8359 6.44557 47.2531 4.40583 46.1964 2.84275C45.1527 1.29684 43.4654 0 41.3128 0ZM6.52307 19.3238C4.37046 19.3238 2.68316 20.6164 1.63947 22.1666C0.582728 23.7297 0 25.7694 0 27.9122C0 30.055 0.582728 32.0947 1.63947 33.6578C2.68316 35.2037 4.37046 36.5006 6.52307 36.5006C8.67568 36.5006 10.363 35.208 11.4067 33.6578C12.4634 32.0947 13.0461 30.055 13.0461 27.9122C13.0461 25.7694 12.4634 23.7297 11.4067 22.1666C10.363 20.6207 8.67568 19.3238 6.52307 19.3238ZM30.441 19.3238C25.2225 19.3238 21.3565 22.0893 18.8865 25.5203C16.4468 28.8999 15.2205 33.0953 15.2205 36.5006C15.2205 40.4684 17.634 43.2296 20.5955 44.8828C23.5091 46.5146 27.1621 47.236 30.441 47.236C33.7199 47.236 37.3728 46.5189 40.2865 44.8828C43.2436 43.2253 45.6615 40.4684 45.6615 36.5006C45.6615 33.0953 44.4352 28.8999 41.9955 25.5203C39.5298 22.085 35.6638 19.3238 30.441 19.3238ZM54.3589 19.3238C52.2063 19.3238 50.519 20.6164 49.4753 22.1666C48.4186 23.7297 47.8359 25.7694 47.8359 27.9122C47.8359 30.055 48.4186 32.0947 49.4753 33.6578C50.519 35.2037 52.2063 36.5006 54.3589 36.5006C56.5115 36.5006 58.1988 35.208 59.2425 33.6578C60.2993 32.0947 60.882 30.055 60.882 27.9122C60.882 25.7694 60.2993 23.7297 59.2425 22.1666C58.1988 20.6207 56.5115 19.3238 54.3589 19.3238Z"
+                                    fill="#E5E5E5" />
+                                </svg>
+                            @endif
+                        </span>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+        <div class="business-details-gallery business-details-fade-panel" x-show="false" hidden>
             @forelse ($gallery as $i => $image)
                 <div class="business-details-gallery__item">
                     @if ($image && $image['is_image'])
@@ -749,7 +1051,7 @@ new class extends Component {
                     @endif
                 </div>
             @empty
-                @for ($i = 0; $i < 5; $i++)
+                @foreach ([] as $i)
                     <div class="business-details-gallery__item">
                         <span class="business-details-gallery-placeholder" aria-hidden="true">
                             <svg xmlns="http://www.w3.org/2000/svg" width="61" height="48"
@@ -760,7 +1062,7 @@ new class extends Component {
                             </svg>
                         </span>
                     </div>
-                @endfor
+                @endforeach
             @endforelse
         </div>
     </section>
@@ -1443,21 +1745,254 @@ new class extends Component {
         }
 
         .business-details-gallery {
-            display: grid;
-            grid-template-columns: repeat(7, minmax(0, 1fr));
-            gap: 1.8rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2.5rem;
+        }
+        
+        .business-details-gallery__input {
+            display: none;
+        }
+
+        .business-details-gallery__slot {
+            position: relative;
+            width: 170px;
+            height: 170px;
+            animation: business-details-gallery-tile-enter 0.28s ease-out both;
+            transition: opacity 0.22s ease, transform 0.22s ease;
+            will-change: opacity, transform;
+        }
+
+        .business-details-gallery__slot--removing {
+            pointer-events: none;
+        }
+
+        .business-details-gallery__slot--removing .business-details-gallery__item::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            background: rgba(59, 55, 49, 0.24);
+            backdrop-filter: blur(3px);
+            animation: business-details-gallery-remove-overlay 0.18s ease-out both;
+        }
+
+        .business-details-gallery__slot--removing .business-details-gallery__item img {
+            filter: blur(1px);
+        }
+
+        @keyframes business-details-gallery-remove-overlay {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes business-details-gallery-tile-enter {
+            from {
+                opacity: 0;
+                transform: translateY(8px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         .business-details-gallery__item {
+            position: relative;
             width: 170px;
             height: 170px;
             aspect-ratio: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 6px;
+            border: 1px solid #E2E2E2;
+            border-radius: 10px;
             overflow: hidden;
-            background: #FAFAFA;
+            background: #FFFFFF;
+            box-sizing: border-box;
+        }
+
+        .business-details-gallery:not(.business-details-gallery--editable) .business-details-gallery__item {
+            background: #FBFBFB;
+        }
+
+        .business-details-gallery__upload-tile {
+            padding: 0;
+            color: inherit;
+            cursor: pointer;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+        }
+
+        .business-details-gallery__upload-tile:hover {
+            border-color: #FFC97A;
+            box-shadow: 0 10px 24px rgba(59, 55, 49, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .business-details-gallery__upload-tile:focus-visible {
+            outline: 3px solid rgba(201, 221, 160, 0.5);
+            outline-offset: 3px;
+        }
+
+        .business-details-gallery-remove {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            z-index: 3;
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            border-radius: 999px;
+            background: #9D9B98;
+            color: #FFFFFF;
+            cursor: pointer;
+            transition: background-color 0.18s ease, transform 0.18s ease;
+        }
+
+        .business-details-gallery-remove:hover {
+            background: #9D9B98;
+            transform: scale(1.05);
+        }
+
+        .business-details-gallery-remove:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
+
+        .business-details-gallery-remove-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            z-index: 4;
+            width: 34px;
+            height: 34px;
+            border: 3px solid rgba(255, 255, 255, 0.65);
+            border-top-color: #FFC97A;
+            border-radius: 999px;
+            box-shadow: 0 8px 20px rgba(59, 55, 49, 0.18);
+            transform: translate(-50%, -50%);
+            animation: business-details-gallery-spinner 0.75s linear infinite;
+        }
+
+        @keyframes business-details-gallery-spinner {
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        .business-details-gallery__current,
+        .business-details-gallery__preview {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .business-details-gallery-add {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .business-details-gallery-add[hidden] {
+            display: none;
+        }
+
+        .business-details-gallery-paw {
+            width: 61px;
+            height: 48px;
+            display: block;
+            flex: 0 0 auto;
+        }
+
+        .business-details-gallery-space-placeholder {
+            width: 100%;
+            height: 100%;
+            display: block;
+            flex: 0 0 auto;
+        }
+
+        .business-details-gallery-add__plus {
+            position: absolute;
+            left: 50%;
+            bottom: 26px;
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            color: #FFFFFF;
+            font-family: Lato;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1;
+            transform: translateX(-50%);
+        }
+
+        .business-details-gallery:not(.business-details-gallery--editable) .business-details-gallery-add__plus {
+            display: none;
+        }
+
+        .business-details-gallery-add__plus svg {
+            position: absolute;
+            inset: 0;
+            width: 20px;
+            height: 20px;
+            display: block;
+        }
+
+        .business-details-gallery-add__plus::after {
+            content: "+";
+            position: relative;
+            z-index: 1;
+            margin-top: -1px;
+        }
+
+        .business-details-gallery-progress {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 64px;
+            height: 64px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: conic-gradient(#FFC97A calc(var(--progress, 0) * 1%), rgba(255, 255, 255, 0.72) 0);
+            box-shadow: 0 8px 24px rgba(59, 55, 49, 0.18);
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 14px;
+            font-weight: 700;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        .business-details-gallery-progress::before {
+            content: "";
+            position: absolute;
+            inset: 6px;
+            border-radius: inherit;
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        .business-details-gallery-progress span {
+            position: relative;
+            z-index: 1;
         }
 
         .business-details-gallery-placeholder {
