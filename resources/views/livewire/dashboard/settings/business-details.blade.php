@@ -1178,18 +1178,18 @@ new class extends Component {
             'business-details-card--editing' => $editingSection === 'payout',
         ]) :class="{ 'business-details-card--editing': editingSection === 'payout' }">
             <div class="business-details-toggle-panel" x-cloak x-show="editingSection === 'payout'">
-                <div class="business-details-edit-grid business-details-edit-grid--four">
+                <div class="business-details-edit-grid business-details-edit-grid--two">
                     <label class="business-details-input-field">
                         <span>Account Holder Name</span>
                         <input type="text" wire:model.defer="accountHolderName">
                     </label>
                     <label class="business-details-input-field">
-                        <span>Account Number</span>
-                        <input type="text" wire:model.defer="accountNumber">
-                    </label>
-                    <label class="business-details-input-field">
                         <span>Sort Code</span>
                         <input type="text" wire:model.defer="sortCode">
+                    </label>
+                    <label class="business-details-input-field">
+                        <span>Account Number</span>
+                        <input type="text" wire:model.defer="accountNumber">
                     </label>
                     <label class="business-details-input-field">
                         <span>IBAN</span>
@@ -1612,6 +1612,10 @@ new class extends Component {
         .business-details-edit-grid {
             display: grid;
             gap: 1rem;
+        }
+
+        .business-details-edit-grid--two {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .business-details-edit-grid--three {
