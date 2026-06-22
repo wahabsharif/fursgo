@@ -2496,7 +2496,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
             return '';
         }
         $path = ltrim($path, '/');
-        foreach (['public/', 'storage/'] as $prefix) {
+        foreach (['storage/app/public/', 'public/', 'storage/'] as $prefix) {
             if (str_starts_with($path, $prefix)) {
                 $path = substr($path, strlen($prefix));
             }

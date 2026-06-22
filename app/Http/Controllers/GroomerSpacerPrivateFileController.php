@@ -16,7 +16,7 @@ class GroomerSpacerPrivateFileController extends Controller
     public function businessOwnerIdImage(Request $request)
     {
         $token = $request->query('t');
-        if (! is_string($token) || $token === '') {
+        if (!is_string($token) || $token === '') {
             abort(404);
         }
 
@@ -31,22 +31,22 @@ class GroomerSpacerPrivateFileController extends Controller
         }
 
         $user = Auth::guard('groomer_spacer')->user();
-        if (! $user) {
+        if (!$user) {
             abort(403);
         }
 
         $businessDetails = $user->business_details ?? [];
-        if (! is_array($businessDetails)) {
+        if (!is_array($businessDetails)) {
             $businessDetails = is_string($businessDetails) ? (json_decode($businessDetails, true) ?: []) : [];
         }
 
         $freelanceDetails = $user->freelance_details ?? [];
-        if (! is_array($freelanceDetails)) {
+        if (!is_array($freelanceDetails)) {
             $freelanceDetails = is_string($freelanceDetails) ? (json_decode($freelanceDetails, true) ?: []) : [];
         }
 
         $allowed = $businessDetails['business_owner_id_images'] ?? [];
-        if (! is_array($allowed)) {
+        if (!is_array($allowed)) {
             $allowed = [];
         }
 
@@ -63,13 +63,13 @@ class GroomerSpacerPrivateFileController extends Controller
             $idPaths = json_decode($idPathsRaw, true) ?: [];
         }
 
-        $allowedList = array_values(array_filter(array_merge($allowed, $idPaths), fn ($p) => is_string($p) && $p !== ''));
+        $allowedList = array_values(array_filter(array_merge($allowed, $idPaths), fn($p) => is_string($p) && $p !== ''));
 
-        if (! in_array($path, $allowedList, true)) {
+        if (!in_array($path, $allowedList, true)) {
             abort(403);
         }
 
-        if (! Storage::disk('public')->exists($path)) {
+        if (!Storage::disk('public')->exists($path)) {
             abort(404);
         }
 
@@ -82,7 +82,7 @@ class GroomerSpacerPrivateFileController extends Controller
     public function businessBasicsFile(Request $request)
     {
         $token = $request->query('t');
-        if (! is_string($token) || $token === '') {
+        if (!is_string($token) || $token === '') {
             abort(404);
         }
 
@@ -99,12 +99,12 @@ class GroomerSpacerPrivateFileController extends Controller
         $path = $this->normalizePublicDiskRelativePath($path);
 
         $user = Auth::guard('groomer_spacer')->user();
-        if (! $user) {
+        if (!$user) {
             abort(403);
         }
 
         $bb = $user->business_basics ?? [];
-        if (! is_array($bb)) {
+        if (!is_array($bb)) {
             $bb = is_string($bb) ? (json_decode($bb, true) ?: []) : [];
         }
 
@@ -120,7 +120,7 @@ class GroomerSpacerPrivateFileController extends Controller
         }
         if (is_array($gallery)) {
             foreach ($gallery as $p) {
-                if (! is_string($p) || $p === '') {
+                if (!is_string($p) || $p === '') {
                     continue;
                 }
                 $n = $this->normalizePublicDiskRelativePath($p);
@@ -130,11 +130,11 @@ class GroomerSpacerPrivateFileController extends Controller
             }
         }
 
-        if (! in_array($path, $allowed, true)) {
+        if (!in_array($path, $allowed, true)) {
             abort(403);
         }
 
-        if (! Storage::disk('public')->exists($path)) {
+        if (!Storage::disk('public')->exists($path)) {
             abort(404);
         }
 
@@ -147,7 +147,7 @@ class GroomerSpacerPrivateFileController extends Controller
     public function insuranceCertificate(Request $request)
     {
         $token = $request->query('t');
-        if (! is_string($token) || $token === '') {
+        if (!is_string($token) || $token === '') {
             abort(404);
         }
 
@@ -162,27 +162,27 @@ class GroomerSpacerPrivateFileController extends Controller
         }
 
         $user = Auth::guard('groomer_spacer')->user();
-        if (! $user) {
+        if (!$user) {
             abort(403);
         }
 
         $insuranceDetails = $user->insurance_details ?? [];
-        if (! is_array($insuranceDetails)) {
+        if (!is_array($insuranceDetails)) {
             $insuranceDetails = is_string($insuranceDetails) ? (json_decode($insuranceDetails, true) ?: []) : [];
         }
 
         $allowed = $insuranceDetails['insurance_certificate_paths'] ?? [];
-        if (! is_array($allowed)) {
+        if (!is_array($allowed)) {
             $allowed = [];
         }
 
-        $allowedList = array_values(array_filter($allowed, fn ($p) => is_string($p) && $p !== ''));
+        $allowedList = array_values(array_filter($allowed, fn($p) => is_string($p) && $p !== ''));
 
-        if (! in_array($path, $allowedList, true)) {
+        if (!in_array($path, $allowedList, true)) {
             abort(403);
         }
 
-        if (! Storage::disk('public')->exists($path)) {
+        if (!Storage::disk('public')->exists($path)) {
             abort(404);
         }
 
@@ -196,14 +196,17 @@ class GroomerSpacerPrivateFileController extends Controller
      */
     private function publicDiskFileResponse(string $relativePath): BinaryFileResponse
     {
-        return response()->file(Storage::disk('public')->path($relativePath));
+        return response()
+            ->file(Storage::disk('public')->path($relativePath))
+            ->setPrivate()
+            ->setMaxAge(86400);
     }
 
     private function normalizePublicDiskRelativePath(string $path): string
     {
         $path = trim(str_replace('\\', '/', $path));
         $path = ltrim($path, '/');
-        foreach (['public/', 'storage/'] as $prefix) {
+        foreach (['storage/app/public/', 'public/', 'storage/'] as $prefix) {
             if (str_starts_with($path, $prefix)) {
                 $path = substr($path, strlen($prefix));
             }
