@@ -12,6 +12,7 @@ use Database\Seeders\PetMedicationDetailSeeder;
 use Database\Seeders\PetPreferenceSeeder;
 use Database\Seeders\ReviewSeeder;
 use Database\Seeders\ServiceAreaSeeder;
+use Database\Seeders\ServicePolicySeeder;
 use Database\Seeders\ServiceSeeder;
 use Database\Seeders\StaffSeeder;
 use Illuminate\Database\Seeder;
@@ -38,6 +39,7 @@ class DatabaseSeeder extends Seeder
             PetMedicationDetailSeeder::class,
             ServiceSeeder::class,
             ServiceAreaSeeder::class,
+            ServicePolicySeeder::class,
             AddOnSeeder::class,
             PetPreferenceSeeder::class,
             StaffSeeder::class,
