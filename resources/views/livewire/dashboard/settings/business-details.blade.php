@@ -34,7 +34,9 @@ new class extends Component {
     public string $iban = '';
 
     public string $businessIdPathsText = '';
+    public $businessIdUpload = [];
     public string $insurancePathsText = '';
+    public $insuranceUpload = [];
     public string $insuranceExpiryDate = '';
 
     public function mount(): void
@@ -52,9 +54,12 @@ new class extends Component {
 
         $profileImage = $this->fileCard($businessBasics['profile_photo_path'] ?? null, [], true);
         $gallery = $this->fileCards($businessBasics['gallery_paths'] ?? [], PHP_INT_MAX, [], true);
-        $businessIdFiles = $this->fileCards($businessDetails['business_owner_id_images'] ?? ($profile?->id_document_paths ?? []), 4);
+        $businessIdFiles = $this->fileCards($businessDetails['business_owner_id_images'] ?? ($profile?->id_document_paths ?? []), 4, [
+            'names' => $this->arrayValue($businessDetails['business_owner_id_file_names'] ?? []),
+        ]);
         $insuranceFiles = $this->fileCards($insuranceDetails['insurance_certificate_paths'] ?? [], 4, [
             'expires_at' => $this->firstString($insuranceDetails, ['expires_at', 'expiry_date', 'expiration_date', 'insurance_expiry_date', 'insurance_certificate_expiry_date', 'insurance_certificate_expires_at']),
+            'names' => $this->arrayValue($insuranceDetails['insurance_certificate_file_names'] ?? []),
         ]);
         $businessIdHasIssue = $this->filesHaveIssue($businessIdFiles);
         $insuranceHasIssue = $this->filesHaveIssue($insuranceFiles);
@@ -89,6 +94,8 @@ new class extends Component {
         $this->profilePhotoUpload = null;
         $this->galleryUpload = null;
         $this->galleryReplaceIndex = null;
+        $this->businessIdUpload = [];
+        $this->insuranceUpload = [];
         $this->editingSection = null;
         $this->hydrateEditableFields();
     }
@@ -292,6 +299,7 @@ new class extends Component {
         $paths = $this->linesToArray($this->businessIdPathsText);
         $businessDetails = $this->arrayValue($profile->business_details);
         $businessDetails['business_owner_id_images'] = $paths;
+        $businessDetails['business_owner_id_file_names'] = array_intersect_key($this->arrayValue($businessDetails['business_owner_id_file_names'] ?? []), array_flip($paths));
 
         $profile->update([
             'business_details' => $businessDetails,
@@ -300,6 +308,95 @@ new class extends Component {
 
         $this->editingSection = null;
         $this->hydrateEditableFields();
+    }
+
+    public function updatedBusinessIdUpload(): void
+    {
+        $this->validate([
+            'businessIdUpload' => ['nullable', 'array'],
+            'businessIdUpload.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:51200'],
+        ]);
+
+        $profile = $this->profile();
+        if (!$profile) {
+            return;
+        }
+
+        $profile->refresh();
+        $businessDetails = $this->arrayValue($profile->business_details);
+        $paths = $this->arrayStrings($businessDetails['business_owner_id_images'] ?? ($profile->id_document_paths ?? []));
+        $fileNames = $this->arrayValue($businessDetails['business_owner_id_file_names'] ?? []);
+
+        foreach ((array) $this->businessIdUpload as $file) {
+            if (!$file) {
+                continue;
+            }
+
+            $storedPath = $file->store($this->businessIdUploadDirectory($file), 'public');
+            $paths[] = $storedPath;
+            $fileNames[$storedPath] = $file->getClientOriginalName();
+        }
+
+        $paths = array_values(array_unique($paths));
+        $businessDetails['business_owner_id_images'] = $paths;
+        $businessDetails['business_owner_id_file_names'] = array_intersect_key($fileNames, array_flip($paths));
+
+        $profile->update([
+            'business_details' => $businessDetails,
+            'id_document_paths' => $paths,
+        ]);
+
+        $this->businessIdPathsText = implode("\n", $paths);
+        $this->businessIdUpload = [];
+        $this->editingSection = 'business-id';
+    }
+
+    public function removeBusinessIdFile(int $index): void
+    {
+        $profile = $this->profile();
+        if (!$profile || $index < 0) {
+            return;
+        }
+
+        $profile->refresh();
+        $businessDetails = $this->arrayValue($profile->business_details);
+        $paths = $this->arrayStrings($businessDetails['business_owner_id_images'] ?? ($profile->id_document_paths ?? []));
+
+        if (!array_key_exists($index, $paths)) {
+            return;
+        }
+
+        $removedPath = $paths[$index];
+        unset($paths[$index]);
+        $paths = array_values($paths);
+        $businessDetails['business_owner_id_images'] = $paths;
+        $fileNames = $this->arrayValue($businessDetails['business_owner_id_file_names'] ?? []);
+        unset($fileNames[$removedPath]);
+        $businessDetails['business_owner_id_file_names'] = array_intersect_key($fileNames, array_flip($paths));
+
+        if ($removedPath !== '' && Storage::disk('public')->exists($removedPath)) {
+            Storage::disk('public')->delete($removedPath);
+        }
+
+        $profile->update([
+            'business_details' => $businessDetails,
+            'id_document_paths' => $paths,
+        ]);
+
+        $this->businessIdPathsText = implode("\n", $paths);
+        $this->businessIdUpload = [];
+        $this->editingSection = 'business-id';
+    }
+
+    private function businessIdUploadDirectory(mixed $file): string
+    {
+        $mime = (string) ($file?->getMimeType() ?? '');
+
+        return match (true) {
+            str_contains($mime, 'pdf') => 'business_owner_id_images/pdfs',
+            str_starts_with($mime, 'image/') => 'business_owner_id_images/images',
+            default => 'business_owner_id_images/files',
+        };
     }
 
     public function saveInsuranceDetails(): void
@@ -311,17 +408,122 @@ new class extends Component {
 
         $validated = $this->validate([
             'insurancePathsText' => ['nullable', 'string', 'max:5000'],
-            'insuranceExpiryDate' => ['nullable', 'date'],
         ]);
 
         $insuranceDetails = $this->arrayValue($profile->insurance_details);
         $insuranceDetails['insurance_certificate_paths'] = $this->linesToArray($validated['insurancePathsText']);
-        $insuranceDetails['insurance_certificate_expiry_date'] = $validated['insuranceExpiryDate'];
+        $insuranceDetails['insurance_certificate_file_names'] = array_intersect_key($this->arrayValue($insuranceDetails['insurance_certificate_file_names'] ?? []), array_flip($insuranceDetails['insurance_certificate_paths']));
+        $insuranceDetails = $this->withInsuranceExpiryFields($insuranceDetails);
 
         $profile->update(['insurance_details' => $insuranceDetails]);
 
         $this->editingSection = null;
         $this->hydrateEditableFields();
+    }
+
+    public function updatedInsuranceUpload(): void
+    {
+        $this->validate([
+            'insuranceUpload' => ['nullable', 'array'],
+            'insuranceUpload.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:51200'],
+        ]);
+
+        $profile = $this->profile();
+        if (!$profile) {
+            return;
+        }
+
+        $profile->refresh();
+        $insuranceDetails = $this->arrayValue($profile->insurance_details);
+        $paths = $this->arrayStrings($insuranceDetails['insurance_certificate_paths'] ?? []);
+        $fileNames = $this->arrayValue($insuranceDetails['insurance_certificate_file_names'] ?? []);
+
+        foreach ((array) $this->insuranceUpload as $file) {
+            if (!$file) {
+                continue;
+            }
+
+            $storedPath = $file->store($this->insuranceUploadDirectory($file), 'public');
+            $paths[] = $storedPath;
+            $fileNames[$storedPath] = $file->getClientOriginalName();
+        }
+
+        $paths = array_values(array_unique($paths));
+        $insuranceDetails['insurance_certificate_paths'] = $paths;
+        $insuranceDetails['insurance_certificate_file_names'] = array_intersect_key($fileNames, array_flip($paths));
+        $insuranceDetails = $this->withInsuranceExpiryFields($insuranceDetails);
+
+        $profile->update(['insurance_details' => $insuranceDetails]);
+
+        $this->insurancePathsText = implode("\n", $paths);
+        $this->insuranceUpload = [];
+        $this->editingSection = 'insurance';
+    }
+
+    public function removeInsuranceFile(int $index): void
+    {
+        $profile = $this->profile();
+        if (!$profile || $index < 0) {
+            return;
+        }
+
+        $profile->refresh();
+        $insuranceDetails = $this->arrayValue($profile->insurance_details);
+        $paths = $this->arrayStrings($insuranceDetails['insurance_certificate_paths'] ?? []);
+
+        if (!array_key_exists($index, $paths)) {
+            return;
+        }
+
+        $removedPath = $paths[$index];
+        unset($paths[$index]);
+        $paths = array_values($paths);
+        $insuranceDetails['insurance_certificate_paths'] = $paths;
+        $fileNames = $this->arrayValue($insuranceDetails['insurance_certificate_file_names'] ?? []);
+        unset($fileNames[$removedPath]);
+        $insuranceDetails['insurance_certificate_file_names'] = array_intersect_key($fileNames, array_flip($paths));
+        $insuranceDetails = $paths === [] ? $this->withoutInsuranceExpiryFields($insuranceDetails) : $this->withInsuranceExpiryFields($insuranceDetails, false);
+
+        if ($removedPath !== '' && Storage::disk('public')->exists($removedPath)) {
+            Storage::disk('public')->delete($removedPath);
+        }
+
+        $profile->update(['insurance_details' => $insuranceDetails]);
+
+        $this->insurancePathsText = implode("\n", $paths);
+        $this->insuranceUpload = [];
+        $this->editingSection = 'insurance';
+    }
+
+    private function insuranceUploadDirectory(mixed $file): string
+    {
+        $mime = (string) ($file?->getMimeType() ?? '');
+
+        return match (true) {
+            str_contains($mime, 'pdf') => 'insurance_certificates/pdfs',
+            str_starts_with($mime, 'image/') => 'insurance_certificates/images',
+            default => 'insurance_certificates/files',
+        };
+    }
+
+    private function withoutInsuranceExpiryFields(array $insuranceDetails): array
+    {
+        foreach (['expires_at', 'expiry_date', 'expiration_date', 'insurance_expiry_date', 'insurance_certificate_expiry_date', 'insurance_certificate_expires_at'] as $key) {
+            unset($insuranceDetails[$key]);
+        }
+
+        return $insuranceDetails;
+    }
+
+    private function withInsuranceExpiryFields(array $insuranceDetails, bool $resetExpiry = true): array
+    {
+        $existingExpiry = $this->firstString($insuranceDetails, ['expires_at', 'expiry_date', 'expiration_date', 'insurance_expiry_date', 'insurance_certificate_expiry_date', 'insurance_certificate_expires_at']);
+        $expiryDate = $resetExpiry || !$existingExpiry ? now()->addMonthsNoOverflow(3)->toDateString() : $this->dateString($existingExpiry);
+
+        $insuranceDetails = $this->withoutInsuranceExpiryFields($insuranceDetails);
+        $insuranceDetails['insurance_certificate_expiry_date'] = $expiryDate;
+
+        return $insuranceDetails;
     }
 
     private function profile(): ?GroomerSpacerProfile
@@ -421,6 +623,7 @@ new class extends Component {
         }
 
         $path = trim($path);
+        $displayName = $this->displayFileName($path, $metadata);
         $expiresAt = $this->dateString($metadata['expires_at'] ?? null);
         $expired = $this->isExpired($expiresAt);
 
@@ -430,7 +633,7 @@ new class extends Component {
 
             return [
                 'path' => $path,
-                'name' => basename($urlPath) ?: 'profile-picture',
+                'name' => $displayName ?: (basename($urlPath) ?: 'profile-picture'),
                 'url' => $path,
                 'size' => null,
                 'uploaded' => null,
@@ -450,7 +653,7 @@ new class extends Component {
         if ($useBusinessBasicsFileRoute && $exists && $isImage) {
             return [
                 'path' => $path,
-                'name' => basename($normalizedPath),
+                'name' => $displayName ?: basename($normalizedPath),
                 'url' => Storage::url($normalizedPath),
                 'fallback_url' => $this->fileUrl($normalizedPath, true),
                 'size' => null,
@@ -469,7 +672,7 @@ new class extends Component {
         if ($publicExists && in_array($publicExtension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'], true)) {
             return [
                 'path' => $path,
-                'name' => basename($publicPath),
+                'name' => $displayName ?: basename($publicPath),
                 'url' => asset($publicPath),
                 'size' => filesize(public_path($publicPath)) ?: null,
                 'uploaded' => date('d M Y', filemtime(public_path($publicPath))),
@@ -483,7 +686,7 @@ new class extends Component {
 
         return [
             'path' => $path,
-            'name' => basename($normalizedPath ?: $path),
+            'name' => $displayName ?: basename($normalizedPath ?: $path),
             'url' => $isImage && $useBusinessBasicsFileRoute ? Storage::url($normalizedPath) : ($isImage ? $this->fileUrl($normalizedPath, false) : ($exists ? Storage::url($normalizedPath) : null)),
             'fallback_url' => $isImage && $useBusinessBasicsFileRoute && $normalizedPath !== '' ? $this->fileUrl($normalizedPath, true) : null,
             'size' => $exists ? $this->formatFileSize(Storage::disk('public')->size($normalizedPath)) : null,
@@ -494,6 +697,14 @@ new class extends Component {
             'expires_at' => $expiresAt,
             'expired' => $expired,
         ];
+    }
+
+    private function displayFileName(string $path, array $metadata): ?string
+    {
+        $names = $this->arrayValue($metadata['names'] ?? []);
+        $name = $names[$path] ?? ($names[$this->normalizePublicDiskPath($path)] ?? null);
+
+        return is_string($name) && trim($name) !== '' ? trim($name) : null;
     }
 
     private function fileUrl(string $path, bool $useBusinessBasicsFileRoute): string
@@ -1224,10 +1435,162 @@ new class extends Component {
             :class="{ 'business-details-card--editing': editingSection === 'business-id' }">
             <span class="business-details-files__label">Business Owner ID</span>
             <div class="business-details-toggle-panel" x-cloak x-show="editingSection === 'business-id'">
-                <label class="business-details-input-field business-details-input-field--full">
-                    <span>Business Owner ID Paths</span>
-                    <textarea rows="4" wire:model.defer="businessIdPathsText" placeholder="One file path per line"></textarea>
-                </label>
+                <div class="business-details-upload-layout" x-data="{
+                    uploading: false,
+                    progress: 0,
+                    targetProgress: 0,
+                    progressTimer: null,
+                    startUpload() {
+                        this.clearProgressTimer();
+                        this.uploading = true;
+                        this.progress = 1;
+                        this.targetProgress = 12;
+                        this.progressTimer = setInterval(() => {
+                            if (!this.uploading) {
+                                this.clearProgressTimer();
+                                return;
+                            }
+                
+                            const ceiling = Math.max(this.targetProgress, 90);
+                            if (this.progress < ceiling) {
+                                this.progress += Math.max(1, Math.round((ceiling - this.progress) * 0.08));
+                            }
+                        }, 120);
+                    },
+                    setUploadProgress(value) {
+                        const nextProgress = Math.min(95, Math.max(this.targetProgress, Number(value || 0)));
+                        this.targetProgress = nextProgress;
+                        this.progress = Math.max(this.progress, Math.min(nextProgress, this.progress + 8));
+                    },
+                    finishUpload() {
+                        this.clearProgressTimer();
+                        this.progress = 100;
+                        this.targetProgress = 100;
+                        setTimeout(() => {
+                            this.uploading = false;
+                            this.progress = 0;
+                            this.targetProgress = 0;
+                        }, 250);
+                    },
+                    resetUpload() {
+                        this.clearProgressTimer();
+                        this.uploading = false;
+                        this.progress = 0;
+                        this.targetProgress = 0;
+                    },
+                    clearProgressTimer() {
+                        if (this.progressTimer) {
+                            clearInterval(this.progressTimer);
+                            this.progressTimer = null;
+                        }
+                    },
+                }"
+                    x-on:livewire-upload-start="startUpload()" x-on:livewire-upload-finish="finishUpload()"
+                    x-on:livewire-upload-error="resetUpload()"
+                    x-on:livewire-upload-progress="setUploadProgress($event.detail.progress)">
+                    <textarea class="business-details-sr-field" rows="4" wire:model.defer="businessIdPathsText"
+                        aria-label="Business Owner ID Paths"></textarea>
+                    <input x-ref="businessIdInput" type="file" class="business-details-sr-field"
+                        wire:model="businessIdUpload" accept=".pdf,image/jpeg,image/png" multiple>
+                    <div class="business-details-upload-card" @click="$refs.businessIdInput.click()" @dragover.prevent
+                        @drop.prevent="$refs.businessIdInput.files = $event.dataTransfer.files; $refs.businessIdInput.dispatchEvent(new Event('change', { bubbles: true }))">
+                        <div class="business-details-upload-tabs">
+                            <button type="button" class="business-details-upload-tab"
+                                @click.stop="$refs.businessIdInput.click()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path
+                                        d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                                </svg>
+                                Attach
+                            </button>
+                            <button type="button" class="business-details-upload-tab"
+                                @click.stop="$refs.businessIdInput.click()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                    <circle cx="9" cy="9" r="2" />
+                                    <path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21" />
+                                </svg>
+                                Upload
+                            </button>
+                        </div>
+                        <div class="business-details-upload-dropzone">
+                            <p>Choose a file or drag &amp; drop it here.</p>
+                            <span>JPEG, PNG, and PDF formats, up to 50 MB.</span>
+                            <button type="button" @click.stop="$refs.businessIdInput.click()">
+                                <span x-show="!uploading">Browse File</span>
+                                <span x-cloak x-show="uploading" x-text="`Uploading ${Math.round(progress)}%`"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="business-details-upload-list">
+                        @forelse ($businessIdFiles as $index => $file)
+                            @php
+                                $fileExtension = strtolower((string) ($file['extension'] ?? ''));
+                                $isPdfFile = $fileExtension === 'pdf';
+                            @endphp
+                            <div class="business-details-upload-list__item">
+                                <span class="business-details-upload-list__icon" aria-hidden="true">
+                                    @if ($isPdfFile)
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="23" height="27"
+                                            viewBox="0 0 21 25" fill="none">
+                                            <path
+                                                d="M5.04074 24.501H15.9593C17.1635 24.501 18.3185 24.0226 19.1701 23.1711C20.0216 22.3195 20.5 21.1646 20.5 19.9603V12.7859C20.5004 11.5818 20.0226 10.4268 19.1715 9.57499L11.4276 1.82979C11.0059 1.40815 10.5053 1.0737 9.95439 0.845536C9.40346 0.61737 8.81297 0.499957 8.21666 0.5H5.04074C3.83646 0.5 2.6815 0.978398 1.82995 1.82995C0.978398 2.6815 0.5 3.83646 0.5 5.04074V19.9603C0.5 21.1646 0.978398 22.3195 1.82995 23.1711C2.6815 24.0226 3.83646 24.501 5.04074 24.501Z"
+                                                stroke="currentColor" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                            <path
+                                                d="M10.0952 0.966797V8.30982C10.0952 8.99798 10.3686 9.65795 10.8552 10.1446C11.3418 10.6312 12.0018 10.9045 12.6899 10.9045H20.0355"
+                                                stroke="currentColor" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                            <path
+                                                d="M4.33759 18.3383V17.041M4.33759 17.041V14.4463H5.63494C5.97902 14.4463 6.30901 14.583 6.55231 14.8263C6.79561 15.0696 6.93229 15.3996 6.93229 15.7436C6.93229 16.0877 6.79561 16.4177 6.55231 16.661C6.30901 16.9043 5.97902 17.041 5.63494 17.041H4.33759ZM14.7164 18.3383V16.7167M14.7164 16.7167V14.4463H16.6624M14.7164 16.7167H16.6624M9.527 18.3383V14.4463H10.1757C10.6918 14.4463 11.1868 14.6513 11.5517 15.0163C11.9167 15.3812 12.1217 15.8762 12.1217 16.3923C12.1217 16.9084 11.9167 17.4034 11.5517 17.7684C11.1868 18.1333 10.6918 18.3383 10.1757 18.3383H9.527Z"
+                                                stroke="currentColor" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                        </svg>
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="4" width="18" height="16" rx="2" />
+                                            <circle cx="8.5" cy="9.5" r="1.5" />
+                                            <path d="M21 16l-5-5L5 20" />
+                                        </svg>
+                                    @endif
+                                </span>
+                                <span class="business-details-upload-list__copy">
+                                    <span>{{ $file['name'] ?? 'business_id.pdf' }}</span>
+                                    <small>{{ $file['size'] ?? 'Size unavailable' }}</small>
+                                </span>
+                                <button type="button" class="business-details-upload-list__remove"
+                                    wire:click="removeBusinessIdFile({{ $index }})"
+                                    wire:loading.attr="disabled"
+                                    wire:target="removeBusinessIdFile({{ $index }})"
+                                    aria-label="Remove {{ $file['name'] ?? 'business ID file' }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                        viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                        <path d="M1.4 1.4L12.6 12.6M12.6 1.4L1.4 12.6" stroke="currentColor"
+                                            stroke-width="1.8" stroke-linecap="round" />
+                                    </svg>
+                                </button>
+                                <div class="business-details-upload-list__delete-progress" x-cloak wire:loading.flex
+                                    wire:target="removeBusinessIdFile({{ $index }})" aria-hidden="true">
+                                    <span></span>
+                                </div>
+                            </div>
+                        @empty
+                            <x-dashboard.settings.business-details.empty-file text="No business ID uploaded yet." />
+                        @endforelse
+                        @error('businessIdUpload.*')
+                            <span class="business-details-avatar-upload__error">{{ $message }}</span>
+                        @enderror
+                        @error('businessIdUpload')
+                            <span class="business-details-avatar-upload__error">{{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
             </div>
             <div class="business-details-toggle-panel" x-show="editingSection !== 'business-id'">
                 <div class="business-details-edit-stack">
@@ -1252,17 +1615,165 @@ new class extends Component {
             'business-details-card--warning' => $insuranceHasIssue,
         ])
             :class="{ 'business-details-card--editing': editingSection === 'insurance' }">
-            <span class="business-details-files__label">Insurance Certificate <span>(Optional)</span></span>
+            @if ($insuranceFiles !== [])
+                <span class="business-details-files__label">Insurance Certificate <span>(Optional)</span></span>
+            @endif
             <div class="business-details-toggle-panel" x-cloak x-show="editingSection === 'insurance'">
-                <div class="business-details-edit-stack">
-                    <label class="business-details-input-field business-details-input-field--full">
-                        <span>Insurance Certificate Paths</span>
-                        <textarea rows="4" wire:model.defer="insurancePathsText" placeholder="One file path per line"></textarea>
-                    </label>
-                    <label class="business-details-input-field">
-                        <span>Expiry Date</span>
-                        <input type="date" wire:model.defer="insuranceExpiryDate">
-                    </label>
+                <div class="business-details-upload-layout" x-data="{
+                    uploading: false,
+                    progress: 0,
+                    targetProgress: 0,
+                    progressTimer: null,
+                    startUpload() {
+                        this.clearProgressTimer();
+                        this.uploading = true;
+                        this.progress = 1;
+                        this.targetProgress = 12;
+                        this.progressTimer = setInterval(() => {
+                            if (!this.uploading) {
+                                this.clearProgressTimer();
+                                return;
+                            }
+                            const ceiling = Math.max(this.targetProgress, 90);
+                            if (this.progress < ceiling) {
+                                this.progress += Math.max(1, Math.round((ceiling - this.progress) * 0.08));
+                            }
+                        }, 120);
+                    },
+                    setUploadProgress(value) {
+                        const nextProgress = Math.min(95, Math.max(this.targetProgress, Number(value || 0)));
+                        this.targetProgress = nextProgress;
+                        this.progress = Math.max(this.progress, Math.min(nextProgress, this.progress + 8));
+                    },
+                    finishUpload() {
+                        this.clearProgressTimer();
+                        this.progress = 100;
+                        this.targetProgress = 100;
+                        setTimeout(() => {
+                            this.uploading = false;
+                            this.progress = 0;
+                            this.targetProgress = 0;
+                        }, 250);
+                    },
+                    resetUpload() {
+                        this.clearProgressTimer();
+                        this.uploading = false;
+                        this.progress = 0;
+                        this.targetProgress = 0;
+                    },
+                    clearProgressTimer() {
+                        if (this.progressTimer) {
+                            clearInterval(this.progressTimer);
+                            this.progressTimer = null;
+                        }
+                    },
+                }"
+                    x-on:livewire-upload-start="startUpload()" x-on:livewire-upload-finish="finishUpload()"
+                    x-on:livewire-upload-error="resetUpload()"
+                    x-on:livewire-upload-progress="setUploadProgress($event.detail.progress)">
+                    <textarea class="business-details-sr-field" rows="4" wire:model.defer="insurancePathsText"
+                        aria-label="Insurance Certificate Paths"></textarea>
+                    <input x-ref="insuranceInput" type="file" class="business-details-sr-field"
+                        wire:model="insuranceUpload" accept=".pdf,image/jpeg,image/png" multiple>
+                    <div class="business-details-upload-card" @click="$refs.insuranceInput.click()" @dragover.prevent
+                        @drop.prevent="$refs.insuranceInput.files = $event.dataTransfer.files; $refs.insuranceInput.dispatchEvent(new Event('change', { bubbles: true }))">
+                        <div class="business-details-upload-tabs">
+                            <button type="button" class="business-details-upload-tab"
+                                @click.stop="$refs.insuranceInput.click()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path
+                                        d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                                </svg>
+                                Attach
+                            </button>
+                            <button type="button" class="business-details-upload-tab"
+                                @click.stop="$refs.insuranceInput.click()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                    <circle cx="9" cy="9" r="2" />
+                                    <path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21" />
+                                </svg>
+                                Upload
+                            </button>
+                        </div>
+                        <div class="business-details-upload-dropzone">
+                            <p>Choose a file or drag &amp; drop it here.</p>
+                            <span>JPEG, PNG, and PDF formats, up to 50 MB.</span>
+                            <button type="button" @click.stop="$refs.insuranceInput.click()">
+                                <span x-show="!uploading">Browse File</span>
+                                <span x-cloak x-show="uploading" x-text="`Uploading ${Math.round(progress)}%`"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="business-details-upload-list">
+                        @forelse ($insuranceFiles as $index => $file)
+                            @php
+                                $fileExtension = strtolower((string) ($file['extension'] ?? ''));
+                                $isPdfFile = $fileExtension === 'pdf';
+                            @endphp
+                            <div class="business-details-upload-list__item">
+                                <span class="business-details-upload-list__icon" aria-hidden="true">
+                                    @if ($isPdfFile)
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="23" height="27"
+                                            viewBox="0 0 21 25" fill="none">
+                                            <path
+                                                d="M5.04074 24.501H15.9593C17.1635 24.501 18.3185 24.0226 19.1701 23.1711C20.0216 22.3195 20.5 21.1646 20.5 19.9603V12.7859C20.5004 11.5818 20.0226 10.4268 19.1715 9.57499L11.4276 1.82979C11.0059 1.40815 10.5053 1.0737 9.95439 0.845536C9.40346 0.61737 8.81297 0.499957 8.21666 0.5H5.04074C3.83646 0.5 2.6815 0.978398 1.82995 1.82995C0.978398 2.6815 0.5 3.83646 0.5 5.04074V19.9603C0.5 21.1646 0.978398 22.3195 1.82995 23.1711C2.6815 24.0226 3.83646 24.501 5.04074 24.501Z"
+                                                stroke="currentColor" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                            <path
+                                                d="M10.0952 0.966797V8.30982C10.0952 8.99798 10.3686 9.65795 10.8552 10.1446C11.3418 10.6312 12.0018 10.9045 12.6899 10.9045H20.0355"
+                                                stroke="currentColor" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                            <path
+                                                d="M4.33759 18.3383V17.041M4.33759 17.041V14.4463H5.63494C5.97902 14.4463 6.30901 14.583 6.55231 14.8263C6.79561 15.0696 6.93229 15.3996 6.93229 15.7436C6.93229 16.0877 6.79561 16.4177 6.55231 16.661C6.30901 16.9043 5.97902 17.041 5.63494 17.041H4.33759ZM14.7164 18.3383V16.7167M14.7164 16.7167V14.4463H16.6624M14.7164 16.7167H16.6624M9.527 18.3383V14.4463H10.1757C10.6918 14.4463 11.1868 14.6513 11.5517 15.0163C11.9167 15.3812 12.1217 15.8762 12.1217 16.3923C12.1217 16.9084 11.9167 17.4034 11.5517 17.7684C11.1868 18.1333 10.6918 18.3383 10.1757 18.3383H9.527Z"
+                                                stroke="currentColor" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                        </svg>
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="4" width="18" height="16" rx="2" />
+                                            <circle cx="8.5" cy="9.5" r="1.5" />
+                                            <path d="M21 16l-5-5L5 20" />
+                                        </svg>
+                                    @endif
+                                </span>
+                                <span class="business-details-upload-list__copy">
+                                    <span>{{ $file['name'] ?? 'insurance_certificate.pdf' }}</span>
+                                    <small>{{ $file['size'] ?? 'Size unavailable' }}</small>
+                                </span>
+                                <button type="button" class="business-details-upload-list__remove"
+                                    wire:click="removeInsuranceFile({{ $index }})"
+                                    wire:loading.attr="disabled"
+                                    wire:target="removeInsuranceFile({{ $index }})"
+                                    aria-label="Remove {{ $file['name'] ?? 'insurance certificate' }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                        viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                        <path d="M1.4 1.4L12.6 12.6M12.6 1.4L1.4 12.6" stroke="currentColor"
+                                            stroke-width="1.8" stroke-linecap="round" />
+                                    </svg>
+                                </button>
+                                <div class="business-details-upload-list__delete-progress" x-cloak wire:loading.flex
+                                    wire:target="removeInsuranceFile({{ $index }})" aria-hidden="true">
+                                    <span></span>
+                                </div>
+                            </div>
+                        @empty
+                            <x-dashboard.settings.business-details.empty-file
+                                text="No insurance certificate uploaded yet." />
+                        @endforelse
+                        @error('insuranceUpload.*')
+                            <span class="business-details-avatar-upload__error">{{ $message }}</span>
+                        @enderror
+                        @error('insuranceUpload')
+                            <span class="business-details-avatar-upload__error">{{ $message }}</span>
+                        @enderror
+                    </div>
                 </div>
             </div>
             <div class="business-details-toggle-panel" x-show="editingSection !== 'insurance'">
@@ -1634,7 +2145,202 @@ new class extends Component {
         .business-details-files .business-details-edit-stack {
             display: flex;
             flex-wrap: wrap;
-            gap: 2rem;
+            gap: 4rem;
+        }
+
+        .business-details-sr-field {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .business-details-upload-layout {
+            display: grid;
+            grid-template-columns: minmax(280px, 47%) 1fr;
+            align-items: end;
+            gap: 2.75rem;
+            width: 100%;
+        }
+
+        .business-details-upload-card {
+            overflow: hidden;
+            min-height: 184px;
+            border: 1px solid #E2E2E2;
+            border-radius: 8px;
+            background: #FFFFFF;
+            cursor: pointer;
+        }
+
+        .business-details-upload-tabs {
+            height: 46px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #E2E2E2;
+            background: #F8F8F8;
+        }
+
+        .business-details-upload-tab {
+            height: 100%;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0 1.1rem;
+            border: 0;
+            border-right: 1px solid #E2E2E2;
+            background: transparent;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .business-details-upload-tab svg {
+            color: #6E6B67;
+        }
+
+        .business-details-upload-dropzone {
+            min-height: 136px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .business-details-upload-dropzone p {
+            margin: 0;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .business-details-upload-dropzone span {
+            margin-top: 0.1rem;
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .business-details-upload-dropzone button {
+            min-width: 113px;
+            height: 36px;
+            margin-top: 1.2rem;
+            padding: 0 1.1rem;
+            border: 1px solid #E2E2E2;
+            border-radius: 999px;
+            background: #FFFFFF;
+            color: #3B3731;
+            text-align: center;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            box-shadow: 0 3px 8px rgba(59, 55, 49, 0.06);
+            cursor: pointer;
+        }
+
+        .business-details-upload-list {
+            display: grid;
+            gap: 1.05rem;
+        }
+
+        .business-details-upload-list__item {
+            position: relative;
+            display: grid;
+            grid-template-columns: 28px minmax(0, 1fr) 24px;
+            align-items: center;
+            gap: 0.9rem;
+            padding-bottom: 0.35rem;
+        }
+
+        .business-details-upload-list__icon {
+            color: #B8B4AE;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .business-details-upload-list__copy {
+            min-width: 0;
+            display: grid;
+            gap: 0.1rem;
+        }
+
+        .business-details-upload-list__copy span {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .business-details-upload-list__copy small {
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.2;
+        }
+
+        .business-details-upload-list__remove {
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            background: transparent;
+            color: #3B3731;
+            cursor: pointer;
+        }
+
+        .business-details-upload-list__remove:disabled {
+            cursor: wait;
+            opacity: 0.55;
+        }
+
+        .business-details-upload-list__delete-progress {
+            position: absolute;
+            left: 38px;
+            right: 34px;
+            bottom: 0;
+            height: 3px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #ECECEC;
+        }
+
+        .business-details-upload-list__delete-progress span {
+            width: 42%;
+            height: 100%;
+            display: block;
+            border-radius: inherit;
+            background: #C9DDA0;
+            animation: business-details-delete-progress 0.8s ease-in-out infinite;
+        }
+
+        @keyframes business-details-delete-progress {
+            0% {
+                transform: translateX(-110%);
+            }
+
+            100% {
+                transform: translateX(260%);
+            }
         }
 
         .business-details-action-enter,
@@ -2246,6 +2952,11 @@ new class extends Component {
             .business-details-gallery {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
+
+            .business-details-upload-layout {
+                grid-template-columns: 1fr;
+                align-items: stretch;
+            }
         }
 
         @media (max-width: 640px) {
@@ -2261,6 +2972,14 @@ new class extends Component {
                 width: 12rem;
                 height: 12rem;
                 padding: 10px;
+            }
+
+            .business-details-upload-tabs {
+                height: 42px;
+            }
+
+            .business-details-upload-tab {
+                padding: 0 0.85rem;
             }
         }
     </style>

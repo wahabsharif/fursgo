@@ -55,13 +55,7 @@
         @if (!empty($file['url']))
             <a class="business-details-file__download" href="{{ $file['url'] }}" download
                 aria-label="Download {{ $file['name'] ?? 'document' }}">
-                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
-                    aria-hidden="true">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <path d="M7 10l5 5 5-5" />
-                    <path d="M12 15V3" />
-                </svg>
+                <x-radix-download style="color: #3B3731;" aria-hidden="true" />
             </a>
         @endif
     </div>
@@ -87,7 +81,7 @@
         @endif
         <span>
             <span class="business-details-file__status">Uploaded: {{ $file['uploaded'] ?? 'date unavailable' }}</span>
-            <span class="business-details-file__status">Status: {{ $displayStatus }}</span>
+            <span class="business-details-file__status" style="font-weight: 700;">Status: {{ $displayStatus }}</span>
         </span>
     </div>
 </div>
