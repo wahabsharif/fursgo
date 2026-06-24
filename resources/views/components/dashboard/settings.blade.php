@@ -39,7 +39,7 @@
         x-transition:enter-start="settings-panel-enter-start" x-transition:enter-end="settings-panel-enter-end"
         x-transition:leave="settings-panel-leave" x-transition:leave-start="settings-panel-leave-start"
         x-transition:leave-end="settings-panel-leave-end">
-        <livewire:dashboard.settings />
+        <livewire:dashboard.settings.service-policies />
     </div>
 
     <style>

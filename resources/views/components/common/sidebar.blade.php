@@ -562,7 +562,7 @@
         }
 
         .settings-status-dot.business-details {
-            background: #FFA899;
+            background: #FBAC83;
         }
 
         .settings-status-dot.service-policies {
