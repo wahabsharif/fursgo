@@ -21,8 +21,14 @@ new class extends Component {
 
     public bool $refundPolicy = true;
     public string $serviceLimitationsText = '';
+    public array $selectedServiceLimitations = [];
+    public array $customServiceLimitations = [];
+    public string $customServiceLimitation = '';
     public bool $animalWelfareStatement = true;
     public string $hygieneSafetyStandardsText = '';
+    public array $selectedHygieneSafetyStandards = [];
+    public array $customHygieneSafetyStandards = [];
+    public string $customHygieneSafetyStandard = '';
     public bool $complianceDeclaration = true;
     public string $complianceVerifyDatesText = '';
 
@@ -45,9 +51,11 @@ new class extends Component {
             'refundPolicyEnabled' => (bool) ($data['refund_policy'] ?? false),
             'refundPolicyUploadedDate' => $policy?->created_at?->format('d M Y') ?? 'Not uploaded',
             'serviceLimitations' => $this->nonEmptyStrings($data['service_limitations'] ?? []),
+            'serviceLimitationPresets' => $this->serviceLimitationPresets(),
             'animalWelfareEnabled' => (bool) ($data['animal_welfare_statement'] ?? false),
             'animalWelfareUploadedDate' => $policy?->created_at?->format('d M Y') ?? 'Not uploaded',
             'hygieneSafetyStandards' => $this->nonEmptyStrings($data['hygiene_safety_standards'] ?? []),
+            'hygieneSafetyPresets' => $this->hygieneSafetyPresets(),
             'complianceDeclarationEnabled' => (bool) ($data['compliance_declaration'] ?? false),
             'complianceDeclarationUploadedDate' => $policy?->created_at?->format('d M Y') ?? 'Not uploaded',
             'verifyDates' => $this->nonEmptyStrings($timeline),
@@ -85,12 +93,8 @@ new class extends Component {
             'cancellation_policy' => [
                 [
                     'Cancellation Window' => $validated['cancellationWindow'] ?? '',
-                    'Cancellation Fee' => $this->lateCancellationFeeEnabled
-                        ? $this->feeText('Late Cancellation Fee', $validated['cancellationFee'] ?? '')
-                        : '',
-                    'No Show Fee' => $this->noShowFeeEnabled
-                        ? $this->feeText('', $validated['noShowFee'] ?? '')
-                        : '',
+                    'Cancellation Fee' => $this->lateCancellationFeeEnabled ? $this->feeText('Late Cancellation Fee', $validated['cancellationFee'] ?? '') : '',
+                    'No Show Fee' => $this->noShowFeeEnabled ? $this->feeText('', $validated['noShowFee'] ?? '') : '',
                 ],
             ],
         ]);
@@ -109,9 +113,7 @@ new class extends Component {
             'late_arrival_policy' => [
                 [
                     'Grace Period' => $validated['gracePeriod'] ?? '',
-                    'Late Arrival Fee (Optional)' => $this->lateArrivalFeeEnabled
-                        ? $this->lateArrivalFeeText($validated['lateArrivalFeeAmount'] ?? '', $validated['lateArrivalFeeMinutes'] ?? '')
-                        : '',
+                    'Late Arrival Fee (Optional)' => $this->lateArrivalFeeEnabled ? $this->lateArrivalFeeText($validated['lateArrivalFeeAmount'] ?? '', $validated['lateArrivalFeeMinutes'] ?? '') : '',
                 ],
             ],
         ]);
@@ -139,12 +141,41 @@ new class extends Component {
     public function saveServiceLimitations(): void
     {
         $this->validate([
-            'serviceLimitationsText' => ['nullable', 'string', 'max:2000'],
+            'selectedServiceLimitations' => ['array'],
+            'selectedServiceLimitations.*' => ['string', 'max:255'],
+            'customServiceLimitations' => ['array'],
+            'customServiceLimitations.*' => ['string', 'max:255'],
+            'customServiceLimitation' => ['nullable', 'string', 'max:255'],
         ]);
 
+        $this->addCustomServiceLimitation();
+
         $this->savePolicyAttributes([
-            'service_limitations' => $this->linesToArray($this->serviceLimitationsText),
+            'service_limitations' => $this->serviceLimitationsForSave(),
         ]);
+    }
+
+    public function addCustomServiceLimitation(): void
+    {
+        $limitation = trim($this->customServiceLimitation);
+
+        if ($limitation === '') {
+            return;
+        }
+
+        $existing = array_merge($this->selectedServiceLimitations, $this->customServiceLimitations);
+
+        if (!in_array($limitation, $existing, true)) {
+            $this->customServiceLimitations[] = $limitation;
+        }
+
+        $this->customServiceLimitation = '';
+    }
+
+    public function removeCustomServiceLimitation(int $index): void
+    {
+        unset($this->customServiceLimitations[$index]);
+        $this->customServiceLimitations = array_values($this->customServiceLimitations);
     }
 
     public function saveAnimalWelfareStatement(): void
@@ -154,15 +185,56 @@ new class extends Component {
         ]);
     }
 
+    public function declineAnimalWelfareStatement(): void
+    {
+        $this->animalWelfareStatement = false;
+        $this->saveAnimalWelfareStatement();
+    }
+
+    public function acceptAnimalWelfareStatement(): void
+    {
+        $this->animalWelfareStatement = true;
+        $this->saveAnimalWelfareStatement();
+    }
+
     public function saveHygieneSafetyStandards(): void
     {
         $this->validate([
-            'hygieneSafetyStandardsText' => ['nullable', 'string', 'max:2000'],
+            'selectedHygieneSafetyStandards' => ['array'],
+            'selectedHygieneSafetyStandards.*' => ['string', 'max:255'],
+            'customHygieneSafetyStandards' => ['array'],
+            'customHygieneSafetyStandards.*' => ['string', 'max:255'],
+            'customHygieneSafetyStandard' => ['nullable', 'string', 'max:255'],
         ]);
 
+        $this->addCustomHygieneSafetyStandard();
+
         $this->savePolicyAttributes([
-            'hygiene_safety_standards' => $this->linesToArray($this->hygieneSafetyStandardsText),
+            'hygiene_safety_standards' => $this->hygieneSafetyStandardsForSave(),
         ]);
+    }
+
+    public function addCustomHygieneSafetyStandard(): void
+    {
+        $standard = trim($this->customHygieneSafetyStandard);
+
+        if ($standard === '') {
+            return;
+        }
+
+        $existing = array_merge($this->selectedHygieneSafetyStandards, $this->customHygieneSafetyStandards);
+
+        if (!in_array($standard, $existing, true)) {
+            $this->customHygieneSafetyStandards[] = $standard;
+        }
+
+        $this->customHygieneSafetyStandard = '';
+    }
+
+    public function removeCustomHygieneSafetyStandard(int $index): void
+    {
+        unset($this->customHygieneSafetyStandards[$index]);
+        $this->customHygieneSafetyStandards = array_values($this->customHygieneSafetyStandards);
     }
 
     public function saveComplianceDeclaration(): void
@@ -170,6 +242,18 @@ new class extends Component {
         $this->savePolicyAttributes([
             'compliance_declaration' => $this->complianceDeclaration,
         ]);
+    }
+
+    public function declineComplianceDeclaration(): void
+    {
+        $this->complianceDeclaration = false;
+        $this->saveComplianceDeclaration();
+    }
+
+    public function acceptComplianceDeclaration(): void
+    {
+        $this->complianceDeclaration = true;
+        $this->saveComplianceDeclaration();
     }
 
     public function saveComplianceTimeline(): void
@@ -204,8 +288,10 @@ new class extends Component {
         $this->lateArrivalFeeMinutes = $this->minuteValue($this->lateArrivalFee);
         $this->refundPolicy = (bool) ($data['refund_policy'] ?? true);
         $this->serviceLimitationsText = implode(PHP_EOL, $this->nonEmptyStrings($data['service_limitations'] ?? []));
+        $this->hydrateServiceLimitations($data['service_limitations'] ?? []);
         $this->animalWelfareStatement = (bool) ($data['animal_welfare_statement'] ?? true);
         $this->hygieneSafetyStandardsText = implode(PHP_EOL, $this->nonEmptyStrings($data['hygiene_safety_standards'] ?? []));
+        $this->hydrateHygieneSafetyStandards($data['hygiene_safety_standards'] ?? []);
         $this->complianceDeclaration = (bool) ($data['compliance_declaration'] ?? true);
         $this->complianceVerifyDatesText = implode(PHP_EOL, $this->nonEmptyStrings($timeline));
     }
@@ -307,7 +393,61 @@ new class extends Component {
 
     private function editableSections(): array
     {
-        return ['cancellation', 'late-arrival', 'refund', 'limitations', 'animal-welfare', 'hygiene-safety', 'compliance', 'timeline'];
+        return ['cancellation', 'late-arrival', 'refund', 'limitations', 'animal-welfare', 'hygiene-safety', 'compliance'];
+    }
+
+    private function serviceLimitationPresets(): array
+    {
+        return ['No sedated pets', 'No aggressive pets without consultation', 'No severe matting without assessment', 'Weight or size restrictions apply'];
+    }
+
+    private function hygieneSafetyPresets(): array
+    {
+        return ['Tools sanitised between pets', 'Clean grooming table after each appointment', 'Fresh towels used per pet', 'Equipment safety checked'];
+    }
+
+    private function hydrateServiceLimitations(mixed $limitations): void
+    {
+        $limitations = $this->nonEmptyStrings($limitations);
+        $presets = $this->serviceLimitationPresets();
+
+        $this->selectedServiceLimitations = array_values(array_filter($presets, static fn($preset) => in_array($preset, $limitations, true)));
+        $this->customServiceLimitations = array_values(array_filter($limitations, static fn($limitation) => !in_array($limitation, $presets, true)));
+        $this->customServiceLimitation = '';
+    }
+
+    private function serviceLimitationsForSave(): array
+    {
+        $presets = $this->serviceLimitationPresets();
+        $selectedPresets = array_values(array_filter($presets, fn($preset) => in_array($preset, $this->selectedServiceLimitations, true)));
+        $customLimitations = $this->nonEmptyStrings($this->customServiceLimitations);
+
+        $limitations = array_merge($selectedPresets, $customLimitations);
+        $this->serviceLimitationsText = implode(PHP_EOL, $limitations);
+
+        return $limitations;
+    }
+
+    private function hydrateHygieneSafetyStandards(mixed $standards): void
+    {
+        $standards = $this->nonEmptyStrings($standards);
+        $presets = $this->hygieneSafetyPresets();
+
+        $this->selectedHygieneSafetyStandards = array_values(array_filter($presets, static fn($preset) => in_array($preset, $standards, true)));
+        $this->customHygieneSafetyStandards = array_values(array_filter($standards, static fn($standard) => !in_array($standard, $presets, true)));
+        $this->customHygieneSafetyStandard = '';
+    }
+
+    private function hygieneSafetyStandardsForSave(): array
+    {
+        $presets = $this->hygieneSafetyPresets();
+        $selectedPresets = array_values(array_filter($presets, fn($preset) => in_array($preset, $this->selectedHygieneSafetyStandards, true)));
+        $customStandards = $this->nonEmptyStrings($this->customHygieneSafetyStandards);
+
+        $standards = array_merge($selectedPresets, $customStandards);
+        $this->hygieneSafetyStandardsText = implode(PHP_EOL, $standards);
+
+        return $standards;
     }
 
     private function linesToArray(string $value): array
@@ -503,8 +643,7 @@ new class extends Component {
                     '7 days before appointment',
                 ];
             @endphp
-            <div class="service-policies-cancellation-editor" x-cloak
-                x-show="isEditing('cancellation')">
+            <div class="service-policies-cancellation-editor" x-cloak x-show="isEditing('cancellation')">
                 <label class="service-policies-window-field">
                     <span>Cancellation Window</span>
                     <x-dashboard.services.duration-select model="cancellationWindowValue"
@@ -522,14 +661,43 @@ new class extends Component {
                         </label>
                         <strong>Late Cancellation Fee</strong>
                         <span class="service-policies-percent-input" x-data="{
+                            shakePercent: false,
                             syncWidth() {
                                 const input = this.$refs.input;
-                                input.style.width = `${Math.max((input.value || '0').length, 1)}ch`;
+                                input.style.width = `${Math.min(Math.max((input.value || '0').length + 0.35, 1.35), 4)}ch`;
+                            },
+                            triggerPercentShake() {
+                                this.shakePercent = false;
+                                this.$nextTick(() => {
+                                    this.shakePercent = true;
+                                    setTimeout(() => this.shakePercent = false, 360);
+                                });
+                            },
+                            clampPercent() {
+                                const input = this.$refs.input;
+                                if (Number(input.value) > 100) {
+                                    input.value = 100;
+                                    this.triggerPercentShake();
+                                }
                             }
-                        }" x-init="$nextTick(() => syncWidth())">
-                            <input type="number" min="0" max="100" step="1" wire:model.defer="cancellationFee"
-                                aria-label="Late cancellation fee percentage" x-ref="input" @input="syncWidth()"
-                                @change="syncWidth()" @disabled(!$lateCancellationFeeEnabled)>
+                        }" x-init="$nextTick(() => syncWidth())"
+                            :class="{ 'service-policies-percent-input--shake': shakePercent }">
+                            <input type="number" min="0" max="100" step="1"
+                                wire:model.defer="cancellationFee" aria-label="Late cancellation fee percentage"
+                                x-ref="input" @input="clampPercent(); syncWidth()"
+                                @change="clampPercent(); syncWidth()"
+                                @wheel.prevent="
+                                    if (!$el.disabled) {
+                                        if ($event.deltaY < 0 && Number($el.value || 0) >= Number($el.max || 100)) {
+                                            triggerPercentShake();
+                                        } else {
+                                            $event.deltaY < 0 ? $el.stepUp() : $el.stepDown();
+                                            $el.dispatchEvent(new Event('input', { bubbles: true }));
+                                            $el.dispatchEvent(new Event('change', { bubbles: true }));
+                                        }
+                                    }
+                                "
+                                @disabled(!$lateCancellationFeeEnabled)>
                             <span class="service-policies-percent-symbol" aria-hidden="true">%</span>
                             <span class="service-policies-stepper">
                                 <button type="button" aria-label="Increase late cancellation fee"
@@ -540,8 +708,8 @@ new class extends Component {
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                     ">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 11 6"
-                                        fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
+                                        viewBox="0 0 11 6" fill="none" aria-hidden="true">
                                         <path d="M10.374 5.479L5.3952 0.500185L0.499963 5.39543" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
@@ -554,8 +722,8 @@ new class extends Component {
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                     ">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 11 6"
-                                        fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
+                                        viewBox="0 0 11 6" fill="none" aria-hidden="true">
                                         <path d="M10.374 0.5L5.3952 5.47882L0.499963 0.583578" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
@@ -570,19 +738,48 @@ new class extends Component {
                 <div class="service-policies-fee-group">
                     <div class="service-policies-fee-row">
                         <label class="service-policies-fee-dot">
-                            <input type="checkbox" wire:model.live="noShowFeeEnabled" aria-label="Enable no show fee">
+                            <input type="checkbox" wire:model.live="noShowFeeEnabled"
+                                aria-label="Enable no show fee">
                             <span aria-hidden="true"></span>
                         </label>
                         <strong>No Show Fee</strong>
                         <span class="service-policies-percent-input" x-data="{
+                            shakePercent: false,
                             syncWidth() {
                                 const input = this.$refs.input;
-                                input.style.width = `${Math.max((input.value || '0').length, 1)}ch`;
+                                input.style.width = `${Math.min(Math.max((input.value || '0').length + 0.35, 1.35), 4)}ch`;
+                            },
+                            triggerPercentShake() {
+                                this.shakePercent = false;
+                                this.$nextTick(() => {
+                                    this.shakePercent = true;
+                                    setTimeout(() => this.shakePercent = false, 360);
+                                });
+                            },
+                            clampPercent() {
+                                const input = this.$refs.input;
+                                if (Number(input.value) > 100) {
+                                    input.value = 100;
+                                    this.triggerPercentShake();
+                                }
                             }
-                        }" x-init="$nextTick(() => syncWidth())">
-                            <input type="number" min="0" max="100" step="1" wire:model.defer="noShowFee"
-                                aria-label="No show fee percentage" x-ref="input" @input="syncWidth()"
-                                @change="syncWidth()" @disabled(!$noShowFeeEnabled)>
+                        }" x-init="$nextTick(() => syncWidth())"
+                            :class="{ 'service-policies-percent-input--shake': shakePercent }">
+                            <input type="number" min="0" max="100" step="1"
+                                wire:model.defer="noShowFee" aria-label="No show fee percentage" x-ref="input"
+                                @input="clampPercent(); syncWidth()" @change="clampPercent(); syncWidth()"
+                                @wheel.prevent="
+                                    if (!$el.disabled) {
+                                        if ($event.deltaY < 0 && Number($el.value || 0) >= Number($el.max || 100)) {
+                                            triggerPercentShake();
+                                        } else {
+                                            $event.deltaY < 0 ? $el.stepUp() : $el.stepDown();
+                                            $el.dispatchEvent(new Event('input', { bubbles: true }));
+                                            $el.dispatchEvent(new Event('change', { bubbles: true }));
+                                        }
+                                    }
+                                "
+                                @disabled(!$noShowFeeEnabled)>
                             <span class="service-policies-percent-symbol" aria-hidden="true">%</span>
                             <span class="service-policies-stepper">
                                 <button type="button" aria-label="Increase no show fee"
@@ -593,8 +790,8 @@ new class extends Component {
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                     ">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 11 6"
-                                        fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
+                                        viewBox="0 0 11 6" fill="none" aria-hidden="true">
                                         <path d="M10.374 5.479L5.3952 0.500185L0.499963 5.39543" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
@@ -607,8 +804,8 @@ new class extends Component {
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                     ">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 11 6"
-                                        fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
+                                        viewBox="0 0 11 6" fill="none" aria-hidden="true">
                                         <path d="M10.374 0.5L5.3952 5.47882L0.499963 0.583578" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
@@ -624,15 +821,18 @@ new class extends Component {
                 x-show="!isEditing('cancellation')">
                 <div>
                     <span>Cancellation Window</span>
-                    <p>{{ blank($cancellation['Cancellation Window'] ?? null) ? 'No data found' : $cancellation['Cancellation Window'] }}</p>
+                    <p>{{ blank($cancellation['Cancellation Window'] ?? null) ? 'No data found' : $cancellation['Cancellation Window'] }}
+                    </p>
                 </div>
                 <div>
                     <span>Cancellation Fee</span>
-                    <p>{{ blank($cancellation['Cancellation Fee'] ?? null) ? 'No data found' : $cancellation['Cancellation Fee'] }}</p>
+                    <p>{{ blank($cancellation['Cancellation Fee'] ?? null) ? 'No data found' : $cancellation['Cancellation Fee'] }}
+                    </p>
                 </div>
                 <div>
                     <span>No Show Fee</span>
-                    <p>{{ blank($cancellation['No Show Fee'] ?? null) ? 'No data found' : $cancellation['No Show Fee'] }}</p>
+                    <p>{{ blank($cancellation['No Show Fee'] ?? null) ? 'No data found' : $cancellation['No Show Fee'] }}
+                    </p>
                 </div>
             </div>
         </div>
@@ -642,17 +842,17 @@ new class extends Component {
         <div class="service-policies-section-title">
             <h3>Late Arrival Policy</h3>
             <div class="service-policies-title-actions">
-                <button type="button" class="service-policies-save" x-cloak x-show="editingSection === 'late-arrival'"
-                    @click="saveSection('saveLateArrivalPolicy')" wire:loading.attr="disabled"
-                    wire:target="saveLateArrivalPolicy">
+                <button type="button" class="service-policies-save" x-cloak
+                    x-show="editingSection === 'late-arrival'" @click="saveSection('saveLateArrivalPolicy')"
+                    wire:loading.attr="disabled" wire:target="saveLateArrivalPolicy">
                     <span wire:loading.remove wire:target="saveLateArrivalPolicy">Save Details</span>
                     <span class="service-policies-saving" wire:loading.flex wire:target="saveLateArrivalPolicy">
                         <span class="service-policies-spinner" aria-hidden="true"></span>
                         Saving
                     </span>
                 </button>
-                <button type="button" class="service-policies-edit" x-cloak x-show="editingSection !== 'late-arrival'"
-                    @click="editSection('late-arrival')">
+                <button type="button" class="service-policies-edit" x-cloak
+                    x-show="editingSection !== 'late-arrival'" @click="editSection('late-arrival')">
                     <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="15"
                             viewBox="0 0 16 15" fill="none">
                             <path
@@ -678,24 +878,33 @@ new class extends Component {
                             <input type="checkbox" wire:model.live="lateArrivalFeeEnabled"
                                 aria-label="Enable late arrival fee">
                             <span aria-hidden="true">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="11" viewBox="0 0 14 11"
-                                    fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="11"
+                                    viewBox="0 0 14 11" fill="none">
                                     <path d="M1 5.5L5.07143 9.5L13 1" stroke="white" stroke-width="2"
                                         stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </span>
                         </label>
 
-                        <span class="service-policies-number-input service-policies-money-input" x-data="{
-                            syncWidth() {
-                                const input = this.$refs.input;
-                                input.style.width = `${Math.max((input.value || '0').length, 1)}ch`;
-                            }
-                        }" x-init="$nextTick(() => syncWidth())">
+                        <span class="service-policies-number-input service-policies-money-input"
+                            x-data="{
+                                syncWidth() {
+                                    const input = this.$refs.input;
+                                    input.style.width = '4ch';
+                                }
+                            }" x-init="$nextTick(() => syncWidth())">
                             <span aria-hidden="true">£</span>
-                            <input type="number" min="0" max="999" step="1" wire:model.defer="lateArrivalFeeAmount"
-                                aria-label="Late arrival fee amount" x-ref="input" @input="syncWidth()"
-                                @change="syncWidth()" @disabled(!$lateArrivalFeeEnabled)>
+                            <input type="number" min="0" max="999" step="1"
+                                wire:model.defer="lateArrivalFeeAmount" aria-label="Late arrival fee amount"
+                                x-ref="input" @input="syncWidth()" @change="syncWidth()"
+                                @wheel.prevent="
+                                    if (!$el.disabled) {
+                                        $event.deltaY < 0 ? $el.stepUp() : $el.stepDown();
+                                        $el.dispatchEvent(new Event('input', { bubbles: true }));
+                                        $el.dispatchEvent(new Event('change', { bubbles: true }));
+                                    }
+                                "
+                                @disabled(!$lateArrivalFeeEnabled)>
                             <span class="service-policies-stepper">
                                 <button type="button" aria-label="Increase late arrival fee"
                                     @click.prevent="
@@ -705,8 +914,8 @@ new class extends Component {
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                     ">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 11 6"
-                                        fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
+                                        viewBox="0 0 11 6" fill="none" aria-hidden="true">
                                         <path d="M10.374 5.479L5.3952 0.500185L0.499963 5.39543" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
@@ -719,8 +928,8 @@ new class extends Component {
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                     ">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 11 6"
-                                        fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
+                                        viewBox="0 0 11 6" fill="none" aria-hidden="true">
                                         <path d="M10.374 0.5L5.3952 5.47882L0.499963 0.583578" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
@@ -730,15 +939,24 @@ new class extends Component {
 
                         <em>after</em>
 
-                        <span class="service-policies-number-input service-policies-minutes-input" x-data="{
-                            syncWidth() {
-                                const input = this.$refs.input;
-                                input.style.width = `${Math.max((input.value || '0').length, 1)}ch`;
-                            }
-                        }" x-init="$nextTick(() => syncWidth())">
-                            <input type="number" min="0" max="999" step="1" wire:model.defer="lateArrivalFeeMinutes"
-                                aria-label="Late arrival fee minutes" x-ref="input" @input="syncWidth()"
-                                @change="syncWidth()" @disabled(!$lateArrivalFeeEnabled)>
+                        <span class="service-policies-number-input service-policies-minutes-input"
+                            x-data="{
+                                syncWidth() {
+                                    const input = this.$refs.input;
+                                    input.style.width = `${Math.min(Math.max((input.value || '0').length + 0.35, 1.35), 4)}ch`;
+                                }
+                            }" x-init="$nextTick(() => syncWidth())">
+                            <input type="number" min="0" max="999" step="1"
+                                wire:model.defer="lateArrivalFeeMinutes" aria-label="Late arrival fee minutes"
+                                x-ref="input" @input="syncWidth()" @change="syncWidth()"
+                                @wheel.prevent="
+                                    if (!$el.disabled) {
+                                        $event.deltaY < 0 ? $el.stepUp() : $el.stepDown();
+                                        $el.dispatchEvent(new Event('input', { bubbles: true }));
+                                        $el.dispatchEvent(new Event('change', { bubbles: true }));
+                                    }
+                                "
+                                @disabled(!$lateArrivalFeeEnabled)>
                             <span aria-hidden="true">mins</span>
                             <span class="service-policies-stepper">
                                 <button type="button" aria-label="Increase late arrival fee minutes"
@@ -749,8 +967,8 @@ new class extends Component {
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                     ">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 11 6"
-                                        fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
+                                        viewBox="0 0 11 6" fill="none" aria-hidden="true">
                                         <path d="M10.374 5.479L5.3952 0.500185L0.499963 5.39543" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
@@ -763,8 +981,8 @@ new class extends Component {
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                     ">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 11 6"
-                                        fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
+                                        viewBox="0 0 11 6" fill="none" aria-hidden="true">
                                         <path d="M10.374 0.5L5.3952 5.47882L0.499963 0.583578" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
@@ -778,11 +996,13 @@ new class extends Component {
                 x-show="!isEditing('late-arrival')">
                 <div>
                     <span>Grace Period</span>
-                    <p>{{ blank($lateArrival['Grace Period'] ?? null) ? 'No data found' : $lateArrival['Grace Period'] }}</p>
+                    <p>{{ blank($lateArrival['Grace Period'] ?? null) ? 'No data found' : $lateArrival['Grace Period'] }}
+                    </p>
                 </div>
                 <div>
                     <span>Late Arrival Fee (Optional)</span>
-                    <p>{{ blank($lateArrival['Late Arrival Fee (Optional)'] ?? null) ? 'No data found' : $lateArrival['Late Arrival Fee (Optional)'] }}</p>
+                    <p>{{ blank($lateArrival['Late Arrival Fee (Optional)'] ?? null) ? 'No data found' : $lateArrival['Late Arrival Fee (Optional)'] }}
+                    </p>
                 </div>
             </div>
         </div>
@@ -812,31 +1032,38 @@ new class extends Component {
                 </button>
             </div>
         </div>
-        <div class="service-policies-card service-policies-document" :class="{ 'service-policies-card--editing': isEditing('refund') }">
+        <div class="service-policies-card service-policies-document service-policies-refund-card"
+            :class="{ 'service-policies-card--editing': isEditing('refund') }">
             <div x-cloak x-show="isEditing('refund')">
                 <div class="service-policies-refund-editor">
                     <article class="service-policies-refund-document">
                         <h4>FursGo Refund Policy (24-Hour Window)</h4>
                         <h5>FursGo Refund Policy</h5>
-                        <p>FursGo offers customers a refund window of up to 24 hours after a booking is made, provided the service has not yet taken place.</p>
-                        <p>If a customer cancels their booking within 24 hours of confirming the booking, they may be eligible for a full refund.</p>
-                        <p>After this 24-hour period, refunds may be subject to the service provider's cancellation policy.</p>
-                        <p>Businesses agree to honour this refund window when accepting bookings through the FursGo platform.</p>
+                        <p>FursGo offers customers a refund window of up to 24 hours after a booking is made, provided
+                            the service has not yet taken place.</p>
+                        <p>If a customer cancels their booking within 24 hours of confirming the booking, they may be
+                            eligible for a full refund.</p>
+                        <p>After this 24-hour period, refunds may be subject to the service provider's cancellation
+                            policy.</p>
+                        <p>Businesses agree to honour this refund window when accepting bookings through the FursGo
+                            platform.</p>
                     </article>
 
                     <label class="service-policies-refund-ack">
                         <input type="checkbox" wire:model.live="refundPolicy">
                         <span aria-hidden="true"></span>
-                        <p>I acknowledge and agree to follow the FursGo 24-hour refund policy for bookings made through the platform.</p>
+                        <p>I acknowledge and agree to follow the FursGo 24-hour refund policy for bookings made through
+                            the platform.</p>
                     </label>
 
-                    <p class="service-policies-refund-note">Refunds requested within 24 hours of booking may be processed automatically through FursGo.</p>
+                    <p class="service-policies-refund-note">Refunds requested within 24 hours of booking may be
+                        processed automatically through FursGo.</p>
 
                     <div class="service-policies-refund-actions">
                         <button type="button" class="service-policies-refund-download">
-                            <span>Download Documents</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21" viewBox="0 0 18 21"
-                                fill="none" aria-hidden="true">
+                            <span style="color: #3B3731;font-weight: 400;">Download Documents</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21"
+                                viewBox="0 0 18 21" fill="none" aria-hidden="true">
                                 <path
                                     d="M0.75 16.583V18.1663C0.75 18.5863 0.90165 18.989 1.17159 19.2859C1.44153 19.5829 1.80764 19.7497 2.18939 19.7497H15.1439C15.5257 19.7497 15.8918 19.5829 16.1617 19.2859C16.4317 18.989 16.5833 18.5863 16.5833 18.1663V16.583"
                                     stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
@@ -852,7 +1079,8 @@ new class extends Component {
                                 wire:target="declineRefundPolicy,acceptRefundPolicy,saveRefundPolicy">Decline</button>
                             <button type="button" class="service-policies-refund-agree"
                                 wire:click="acceptRefundPolicy" wire:loading.attr="disabled"
-                                wire:target="declineRefundPolicy,acceptRefundPolicy,saveRefundPolicy">Agree &amp; Continue</button>
+                                wire:target="declineRefundPolicy,acceptRefundPolicy,saveRefundPolicy">Agree &amp;
+                                Continue</button>
                         </div>
                     </div>
                 </div>
@@ -914,10 +1142,48 @@ new class extends Component {
             </div>
         </div>
         <div class="service-policies-card" :class="{ 'service-policies-card--editing': isEditing('limitations') }">
-            <label class="service-policies-textarea" x-cloak x-show="isEditing('limitations')">
-                <span>Service Limitations</span>
-                <textarea rows="5" wire:model.defer="serviceLimitationsText"></textarea>
-            </label>
+            <div class="service-policies-limitations-editor" x-cloak x-show="isEditing('limitations')">
+                <div class="service-policies-limitations-presets">
+                    <span>Service Limitations</span>
+                    @foreach ($serviceLimitationPresets as $limitation)
+                        <label class="service-policies-limitation-option">
+                            <input type="checkbox" wire:model.defer="selectedServiceLimitations"
+                                value="{{ $limitation }}">
+                            <span aria-hidden="true"></span>
+                            <p>{{ $limitation }}</p>
+                        </label>
+                    @endforeach
+                </div>
+
+                <div class="service-policies-limitations-custom">
+                    <span>Add custom limitations</span>
+                    <div class="service-policies-limitations-add">
+                        <input type="text" wire:model.defer="customServiceLimitation" placeholder="Optional"
+                            maxlength="255" wire:keydown.enter.prevent="addCustomServiceLimitation">
+                        <button type="button" wire:click="addCustomServiceLimitation"
+                            aria-label="Add custom limitation">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M12 5V19M5 12H19" stroke="white" stroke-width="1.5"
+                                    stroke-linecap="round" />
+                            </svg>
+                        </button>
+                    </div>
+                    @if ($customServiceLimitations !== [])
+                        <div class="service-policies-limitations-custom-list">
+                            @foreach ($customServiceLimitations as $index => $limitation)
+                                <button type="button"
+                                    wire:click="removeCustomServiceLimitation({{ $index }})">
+                                    <span>{{ $limitation }}</span>
+                                    <strong aria-hidden="true">&times;</strong>
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
+                <small>This tells customers what the business does not accept.</small>
+            </div>
             <div class="service-policies-list" x-show="!isEditing('limitations')">
                 <span>Service Limitations</span>
                 @forelse ($serviceLimitations as $limitation)
@@ -933,15 +1199,6 @@ new class extends Component {
         <div class="service-policies-section-title">
             <h3>Animal Welfare Statement</h3>
             <div class="service-policies-title-actions">
-                <button type="button" class="service-policies-save" x-cloak
-                    x-show="editingSection === 'animal-welfare'" @click="saveSection('saveAnimalWelfareStatement')"
-                    wire:loading.attr="disabled" wire:target="saveAnimalWelfareStatement">
-                    <span wire:loading.remove wire:target="saveAnimalWelfareStatement">Save Details</span>
-                    <span class="service-policies-saving" wire:loading.flex wire:target="saveAnimalWelfareStatement">
-                        <span class="service-policies-spinner" aria-hidden="true"></span>
-                        Saving
-                    </span>
-                </button>
                 <button type="button" class="service-policies-edit" x-cloak
                     x-show="editingSection !== 'animal-welfare'" @click="editSection('animal-welfare')">
                     <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="15"
@@ -953,12 +1210,62 @@ new class extends Component {
                 </button>
             </div>
         </div>
-        <div class="service-policies-card service-policies-document" :class="{ 'service-policies-card--editing': isEditing('animal-welfare') }">
+        <div class="service-policies-card service-policies-document service-policies-animal-welfare-card"
+            :class="{ 'service-policies-card--editing': isEditing('animal-welfare') }">
             <div x-cloak x-show="isEditing('animal-welfare')">
-                <label class="service-policies-check">
-                    <input type="checkbox" wire:model.defer="animalWelfareStatement">
-                    <span>Animal welfare statement is acknowledged and active</span>
-                </label>
+                <div class="service-policies-refund-editor">
+                    <article class="service-policies-refund-document service-policies-animal-welfare-document">
+                        <h4>Animal Welfare Statement</h4>
+                        <h5>Animal Welfare Commitment</h5>
+                        <p>As a service provider on FursGo, I confirm that I will handle all animals with care,
+                            patience,
+                            and respect for their wellbeing.</p>
+                        <p>I agree to:</p>
+                        <p>&bull; Treat all pets humanely and avoid causing unnecessary stress, injury, or
+                            discomfort.<br>
+                            &bull; Follow safe and gentle grooming or handling practices appropriate to each animal's
+                            breed, age, and condition.<br>
+                            &bull; Ensure all equipment and grooming environments are clean, safe, and suitable for
+                            animal
+                            care.<br>
+                            &bull; Monitor animals for signs of distress, illness, or injury and stop services if a
+                            pet's
+                            welfare may be at risk.<br>
+                            &bull; Inform the pet owner immediately if any health or welfare concerns arise.</p>
+                    </article>
+
+                    <label class="service-policies-refund-ack service-policies-animal-welfare-ack">
+                        <input type="checkbox" wire:model.live="animalWelfareStatement">
+                        <span aria-hidden="true"></span>
+                        <p>I confirm that I will follow these animal welfare standards when providing services through
+                            FursGo.</p>
+                    </label>
+
+                    <div class="service-policies-refund-actions">
+                        <button type="button" class="service-policies-refund-download">
+                            <span style="color: #3B3731;font-weight: 400;">Download Documents</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21"
+                                viewBox="0 0 18 21" fill="none" aria-hidden="true">
+                                <path
+                                    d="M0.75 16.583V18.1663C0.75 18.5863 0.90165 18.989 1.17159 19.2859C1.44153 19.5829 1.80764 19.7497 2.18939 19.7497H15.1439C15.5257 19.7497 15.8918 19.5829 16.1617 19.2859C16.4317 18.989 16.5833 18.5863 16.5833 18.1663V16.583"
+                                    stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path d="M8.66663 0.749674V13.8122M12.9848 9.45801L8.66663 14.208L4.34845 9.45801"
+                                    stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <div>
+                            <button type="button" class="service-policies-refund-decline"
+                                wire:click="declineAnimalWelfareStatement" wire:loading.attr="disabled"
+                                wire:target="declineAnimalWelfareStatement,acceptAnimalWelfareStatement,saveAnimalWelfareStatement">Decline</button>
+                            <button type="button" class="service-policies-refund-agree"
+                                wire:click="acceptAnimalWelfareStatement" wire:loading.attr="disabled"
+                                wire:target="declineAnimalWelfareStatement,acceptAnimalWelfareStatement,saveAnimalWelfareStatement">Agree
+                                &amp; Continue</button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div x-show="!isEditing('animal-welfare')">
                 <span>Animal Welfare Commitment</span>
@@ -1018,10 +1325,46 @@ new class extends Component {
             </div>
         </div>
         <div class="service-policies-card" :class="{ 'service-policies-card--editing': isEditing('hygiene-safety') }">
-            <label class="service-policies-textarea" x-cloak x-show="isEditing('hygiene-safety')">
-                <span>Hygiene &amp; Safety Standards</span>
-                <textarea rows="5" wire:model.defer="hygieneSafetyStandardsText"></textarea>
-            </label>
+            <div class="service-policies-limitations-editor" x-cloak x-show="isEditing('hygiene-safety')">
+                <div class="service-policies-limitations-presets">
+                    <span>Hygiene &amp; Safety Standards</span>
+                    @foreach ($hygieneSafetyPresets as $standard)
+                        <label class="service-policies-limitation-option">
+                            <input type="checkbox" wire:model.defer="selectedHygieneSafetyStandards"
+                                value="{{ $standard }}">
+                            <span aria-hidden="true"></span>
+                            <p>{{ $standard }}</p>
+                        </label>
+                    @endforeach
+                </div>
+
+                <div class="service-policies-limitations-custom">
+                    <span>Add custom Hygiene &amp; Safety Standards</span>
+                    <div class="service-policies-limitations-add">
+                        <input type="text" wire:model.defer="customHygieneSafetyStandard" placeholder="Optional"
+                            maxlength="255" wire:keydown.enter.prevent="addCustomHygieneSafetyStandard">
+                        <button type="button" wire:click="addCustomHygieneSafetyStandard"
+                            aria-label="Add custom hygiene and safety standard">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M12 5V19M5 12H19" stroke="white" stroke-width="1.5"
+                                    stroke-linecap="round" />
+                            </svg>
+                        </button>
+                    </div>
+                    @if ($customHygieneSafetyStandards !== [])
+                        <div class="service-policies-limitations-custom-list">
+                            @foreach ($customHygieneSafetyStandards as $index => $standard)
+                                <button type="button"
+                                    wire:click="removeCustomHygieneSafetyStandard({{ $index }})">
+                                    <span>{{ $standard }}</span>
+                                    <strong aria-hidden="true">&times;</strong>
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
             <div class="service-policies-list" x-show="!isEditing('hygiene-safety')">
                 <span>Hygiene &amp; Safety Standards</span>
                 @forelse ($hygieneSafetyStandards as $standard)
@@ -1037,15 +1380,6 @@ new class extends Component {
         <div class="service-policies-section-title">
             <h3>Compliance Declaration</h3>
             <div class="service-policies-title-actions">
-                <button type="button" class="service-policies-save" x-cloak x-show="editingSection === 'compliance'"
-                    @click="saveSection('saveComplianceDeclaration')" wire:loading.attr="disabled"
-                    wire:target="saveComplianceDeclaration">
-                    <span wire:loading.remove wire:target="saveComplianceDeclaration">Save Details</span>
-                    <span class="service-policies-saving" wire:loading.flex wire:target="saveComplianceDeclaration">
-                        <span class="service-policies-spinner" aria-hidden="true"></span>
-                        Saving
-                    </span>
-                </button>
                 <button type="button" class="service-policies-edit" x-cloak x-show="editingSection !== 'compliance'"
                     @click="editSection('compliance')">
                     <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="15"
@@ -1057,12 +1391,76 @@ new class extends Component {
                 </button>
             </div>
         </div>
-        <div class="service-policies-card service-policies-document" :class="{ 'service-policies-card--editing': isEditing('compliance') }">
+        <div class="service-policies-card service-policies-document service-policies-compliance-card"
+            :class="{ 'service-policies-card--editing': isEditing('compliance') }">
             <div x-cloak x-show="isEditing('compliance')">
-                <label class="service-policies-check">
-                    <input type="checkbox" wire:model.defer="complianceDeclaration">
-                    <span>Compliance declaration is acknowledged and active</span>
-                </label>
+                <div class="service-policies-refund-editor">
+                    <article class="service-policies-refund-document service-policies-compliance-document">
+                        <h4>FursGo Compliance Declaration</h4>
+                        <h5>Compliance Declaration</h5>
+                        <p>By operating on the FursGo platform, I confirm that my business complies with all relevant
+                            local laws, regulations, and professional standards applicable to pet care services.</p>
+                        <p>This includes ensuring that:</p>
+                        <p>&bull; My services are provided in a safe and responsible environment.<br>
+                            &bull; I follow appropriate animal welfare standards.<br>
+                            &bull; Any required licences, permits, or insurance relevant to my services are obtained and
+                            maintained where applicable.<br>
+                            &bull; My business information and services listed on FursGo are accurate and up to date.
+                        </p>
+                    </article>
+
+                    <label class="service-policies-refund-ack service-policies-compliance-ack">
+                        <input type="checkbox" wire:model.live="complianceDeclaration">
+                        <span aria-hidden="true"></span>
+                        <p>I confirm that my business complies with applicable laws and regulations and will operate
+                            responsibly on the FursGo platform.</p>
+                    </label>
+
+                    <div class="service-policies-refund-actions">
+                        <button type="button" class="service-policies-refund-download">
+                            <span style="color: #3B3731;font-weight: 400;">Download Documents</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21"
+                                viewBox="0 0 18 21" fill="none" aria-hidden="true">
+                                <path
+                                    d="M0.75 16.583V18.1663C0.75 18.5863 0.90165 18.989 1.17159 19.2859C1.44153 19.5829 1.80764 19.7497 2.18939 19.7497H15.1439C15.5257 19.7497 15.8918 19.5829 16.1617 19.2859C16.4317 18.989 16.5833 18.5863 16.5833 18.1663V16.583"
+                                    stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path d="M8.66663 0.749674V13.8122M12.9848 9.45801L8.66663 14.208L4.34845 9.45801"
+                                    stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <div>
+                            <button type="button" class="service-policies-refund-decline"
+                                wire:click="declineComplianceDeclaration" wire:loading.attr="disabled"
+                                wire:target="declineComplianceDeclaration,acceptComplianceDeclaration,saveComplianceDeclaration">Decline</button>
+                            <button type="button" class="service-policies-refund-agree"
+                                wire:click="acceptComplianceDeclaration" wire:loading.attr="disabled"
+                                wire:target="declineComplianceDeclaration,acceptComplianceDeclaration,saveComplianceDeclaration">Agree
+                                &amp; Continue</button>
+                        </div>
+                    </div>
+
+                    <div class="service-policies-compliance-publish">
+                        <label class="service-policies-refund-ack service-policies-compliance-publish-ack">
+                            <input type="checkbox" wire:model.live="complianceDeclaration">
+                            <span aria-hidden="true"></span>
+                            <p>I confirm these policies comply with local regulations and will be applied to all
+                                bookings.</p>
+                        </label>
+
+                        <button type="button" class="service-policies-save service-policies-save--publish"
+                            @click="saveSection('saveComplianceDeclaration')" wire:loading.attr="disabled"
+                            wire:target="saveComplianceDeclaration">
+                            <span wire:loading.remove wire:target="saveComplianceDeclaration">Save &amp; Publish</span>
+                            <span class="service-policies-saving" wire:loading.flex
+                                wire:target="saveComplianceDeclaration">
+                                <span class="service-policies-spinner" aria-hidden="true"></span>
+                                Saving
+                            </span>
+                        </button>
+                    </div>
+                </div>
             </div>
             <div x-show="!isEditing('compliance')">
                 <span>FursGo Compliance Declaration</span>
@@ -1098,46 +1496,35 @@ new class extends Component {
         </div>
     </section>
 
-    <section class="service-policies-block">
-        <div class="service-policies-section-title service-policies-section-title--compact">
+    <section class="service-policies-block service-policies-timeline-section" x-data="{ timelineOpen: true }">
+        <button type="button"
+            class="service-policies-section-title service-policies-section-title--compact service-policies-timeline-title"
+            @click="timelineOpen = !timelineOpen" :aria-expanded="timelineOpen.toString()"
+            aria-controls="service-policies-compliance-timeline">
             <h3>Compliance Timeline</h3>
-            <div class="service-policies-title-actions">
-                <button type="button" class="service-policies-save" x-cloak x-show="editingSection === 'timeline'"
-                    @click="saveSection('saveComplianceTimeline')" wire:loading.attr="disabled"
-                    wire:target="saveComplianceTimeline">
-                    <span wire:loading.remove wire:target="saveComplianceTimeline">Save Details</span>
-                    <span class="service-policies-saving" wire:loading.flex wire:target="saveComplianceTimeline">
-                        <span class="service-policies-spinner" aria-hidden="true"></span>
-                        Saving
-                    </span>
-                </button>
-                <button type="button" class="service-policies-edit" x-cloak x-show="editingSection !== 'timeline'"
-                    @click="editSection('timeline')">
-                    <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="15"
-                            viewBox="0 0 16 15" fill="none">
-                            <path
-                                d="M10.2059 2.37997L12.853 4.97712M8.44119 14.5H15.5M1.38236 11.0371L0.500011 14.5L4.02942 13.6343L14.2524 3.60409C14.5832 3.2794 14.769 2.83908 14.769 2.37997C14.769 1.92085 14.5832 1.48054 14.2524 1.15584L14.1006 1.00694C13.7697 0.682347 13.3209 0.5 12.853 0.5C12.385 0.5 11.9362 0.682347 11.6053 1.00694L1.38236 11.0371Z"
-                                stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg></span> Edit details
-                </button>
-            </div>
-        </div>
-        <div class="service-policies-card service-policies-timeline" :class="{ 'service-policies-card--editing': isEditing('timeline') }">
-            <label class="service-policies-textarea" x-cloak x-show="isEditing('timeline')">
-                <span>Verify Dates</span>
-                <textarea rows="5" wire:model.defer="complianceVerifyDatesText"></textarea>
-            </label>
-            <div x-show="!isEditing('timeline')">
-                @forelse ($verifyDates as $date)
-                    <p><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24"
-                                height="24" viewBox="0 0 24 24" fill="none">
-                                <path
-                                    d="M12 0C5.4 0 0 5.4 0 12C0 18.6 5.4 24 12 24C18.6 24 24 18.6 24 12C24 5.4 18.6 0 12 0ZM9.6 18L3.6 12L5.292 10.308L9.6 14.604L18.708 5.496L20.4 7.2L9.6 18Z"
-                                    fill="#C9DDA0" />
-                            </svg></span>{{ $date }} - Business verified</p>
-                @empty
-                    <p>No data found</p>
-                @endforelse
+            <span class="service-policies-timeline-toggle" :class="{ 'is-collapsed': !timelineOpen }">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8"
+                    fill="none" aria-hidden="true">
+                    <path d="M13.8737 7.24316L7.13022 0.499723L0.499976 7.12996" stroke="#3B3731"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </span>
+        </button>
+        <div id="service-policies-compliance-timeline" class="service-policies-timeline-collapse"
+            :class="{ 'is-open': timelineOpen }">
+            <div class="service-policies-timeline-collapse__inner">
+                <div class="service-policies-card service-policies-timeline">
+                    @forelse ($verifyDates as $date)
+                        <p><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                    height="24" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M12 0C5.4 0 0 5.4 0 12C0 18.6 5.4 24 12 24C18.6 24 24 18.6 24 12C24 5.4 18.6 0 12 0ZM9.6 18L3.6 12L5.292 10.308L9.6 14.604L18.708 5.496L20.4 7.2L9.6 18Z"
+                                        fill="#C9DDA0" />
+                                </svg></span>{{ $date }} - Business verified</p>
+                    @empty
+                        <p>No data found</p>
+                    @endforelse
+                </div>
             </div>
         </div>
     </section>
@@ -1157,7 +1544,7 @@ new class extends Component {
             gap: 1rem;
             margin-bottom: 1.5rem;
             border-bottom: 1px solid #D4D4D4;
-            padding-bottom: 1.5rem;
+            padding-bottom: 1rem;
         }
 
         .service-policies-heading h2 {
@@ -1435,6 +1822,152 @@ new class extends Component {
             margin-top: 0.15rem;
         }
 
+        .service-policies-limitations-editor {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, 0.6fr);
+            column-gap: 4.5rem;
+            row-gap: 1.35rem;
+            align-items: start;
+        }
+
+        .service-policies-limitations-presets>span,
+        .service-policies-limitations-custom>span {
+            display: block;
+            margin-bottom: 1rem;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .service-policies-limitation-option {
+            display: flex;
+            align-items: center;
+            gap: 1.05rem;
+            width: fit-content;
+            margin-bottom: 1.05rem;
+            cursor: pointer;
+        }
+
+        .service-policies-limitation-option input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .service-policies-limitation-option>span {
+            width: 17px;
+            height: 17px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 17px;
+            margin: 0;
+            border: 1px solid #FFC56D;
+            border-radius: 50%;
+            background: #FFFFFF;
+            box-sizing: border-box;
+        }
+
+        .service-policies-limitation-option input:checked+span::after {
+            content: '';
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            background: #FFD485;
+        }
+
+        .service-policies-limitation-option p {
+            margin: 0;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .service-policies-limitations-add {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .service-policies-limitations-add input {
+            width: min(100%, 290px);
+            height: 43px;
+            border: 1px solid #E0E0E0;
+            border-radius: 10px;
+            background: #FFFFFF;
+            padding: 0 1rem;
+            box-sizing: border-box;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+            outline: none;
+        }
+
+        .service-policies-limitations-add input::placeholder {
+            color: #9D9B98;
+        }
+
+        .service-policies-limitations-add button {
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 42px;
+            border: 0;
+            border-radius: 50%;
+            background: #FFC56D;
+            box-shadow: 0 6px 14px rgba(59, 55, 49, 0.16);
+            cursor: pointer;
+        }
+
+        .service-policies-limitations-custom-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.8rem;
+        }
+
+        .service-policies-limitations-custom-list button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            border: 1px solid #E8E8E8;
+            border-radius: 999px;
+            background: #FAFAFA;
+            padding: 0.35rem 0.65rem;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .service-policies-limitations-custom-list strong {
+            color: #9D9B98;
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 1;
+        }
+
+        .service-policies-limitations-editor>small {
+            grid-column: 1 / -1;
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
         .service-policies-edit-grid label,
         .service-policies-textarea {
             display: flex;
@@ -1620,20 +2153,23 @@ new class extends Component {
             font-size: 16px;
             font-style: normal;
             font-weight: 400;
-            line-height: 1.35;
+            line-height: normal;
         }
 
         .service-policies-late-editor {
             display: flex;
             flex-direction: column;
-            gap: 2rem;
+            gap: 2.5rem;
             max-width: 920px;
         }
 
         .service-policies-fee-group>span em {
             color: #9D9B98;
+            font-family: Lato;
+            font-size: 16px;
             font-style: normal;
-            font-weight: 400;
+            font-weight: 600;
+            line-height: normal;
         }
 
         .service-policies-fee-row {
@@ -1656,6 +2192,11 @@ new class extends Component {
             border-radius: 999px;
             background: #DCEABF;
             cursor: pointer;
+            transition: background-color 160ms ease;
+        }
+
+        .service-policies-switch-check:has(input:not(:checked)) {
+            background: #E2E2E2;
         }
 
         .service-policies-switch-check input {
@@ -1677,7 +2218,11 @@ new class extends Component {
             margin-left: 25px;
             border-radius: 50%;
             background: #FFFFFF;
-            transition: margin 160ms ease;
+            transition: margin 160ms ease, background-color 160ms ease;
+        }
+
+        .service-policies-switch-check:has(input:not(:checked)) span {
+            background: #F7F7F7;
         }
 
         .service-policies-switch-check span svg {
@@ -1765,19 +2310,47 @@ new class extends Component {
             position: relative;
             display: inline-flex;
             align-items: center;
-            width: 88px;
-            height: 54px;
-            border: 1px solid #D8D8D8;
+            width: 95px;
+            height: 48px;
+            border: 1px solid #D4D4D4;
             border-radius: 12px;
             background: #FFFFFF;
             box-sizing: border-box;
             padding: 0 2rem 0 0.65rem;
         }
 
+        .service-policies-percent-input--shake {
+            animation: service-policies-input-shake 360ms ease-in-out;
+        }
+
+        @keyframes service-policies-input-shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20% {
+                transform: translateX(-4px);
+            }
+
+            40% {
+                transform: translateX(4px);
+            }
+
+            60% {
+                transform: translateX(-3px);
+            }
+
+            80% {
+                transform: translateX(3px);
+            }
+        }
+
         .service-policies-percent-input input {
             width: 2ch;
-            min-width: 1ch;
-            max-width: 3ch;
+            min-width: 1.35ch;
+            max-width: 4ch;
             height: 100%;
             border: 0;
             background: transparent;
@@ -1880,14 +2453,14 @@ new class extends Component {
         }
 
         .service-policies-money-input {
-            width: 82px;
+            width: 96px;
             padding: 0 2rem 0 0.85rem;
         }
 
         .service-policies-minutes-input {
-            width: 102px;
+            width: 116px;
             padding: 0 2rem 0 0.85rem;
-            gap: 0.25rem;
+            gap: 0;
         }
 
         .service-policies-number-input>span:not(.service-policies-stepper) {
@@ -1898,9 +2471,9 @@ new class extends Component {
         }
 
         .service-policies-number-input input {
-            width: 2ch;
-            min-width: 1ch;
-            max-width: 3ch;
+            width: 4ch;
+            min-width: 4ch;
+            max-width: 4ch;
             height: 100%;
             border: 0;
             background: transparent;
@@ -1909,6 +2482,12 @@ new class extends Component {
             padding: 0;
             outline: none;
             box-sizing: border-box;
+        }
+
+        .service-policies-minutes-input input {
+            width: 2ch;
+            min-width: 1.35ch;
+            max-width: 4ch;
         }
 
         .service-policies-number-input input::-webkit-outer-spin-button,
@@ -1924,11 +2503,16 @@ new class extends Component {
 
         .service-policies-number-input:has(input:disabled) {
             cursor: not-allowed;
-            opacity: 0.65;
+            border-color: #E2E2E2;
+            background: #F5F5F5;
+            color: #9D9B98;
+            opacity: 1;
         }
 
         .service-policies-number-input:has(input:disabled) input,
+        .service-policies-number-input:has(input:disabled)>span:not(.service-policies-stepper),
         .service-policies-number-input:has(input:disabled) .service-policies-stepper button {
+            color: #9D9B98;
             cursor: not-allowed;
         }
 
@@ -1961,6 +2545,22 @@ new class extends Component {
             padding-right: 1.35rem;
         }
 
+        .service-policies-refund-card.service-policies-card--editing {
+            border: 0;
+        }
+
+        .service-policies-animal-welfare-card.service-policies-card--editing {
+            border: 0;
+            background: transparent;
+            padding: 1.2rem 0;
+        }
+
+        .service-policies-compliance-card.service-policies-card--editing {
+            border: 0;
+            background: transparent;
+            padding: 1.2rem 0;
+        }
+
         .service-policies-refund-editor {
             display: flex;
             flex-direction: column;
@@ -1974,24 +2574,54 @@ new class extends Component {
         }
 
         .service-policies-refund-document {
-            width: min(100%, 600px);
+            width: min(100%, 640px);
             max-height: 380px;
-            overflow-y: auto;
+            overflow-y: scroll;
             border: 1px solid #E2E2E2;
-            border-radius: 8px;
+            border-radius: 10px;
             background: #FAFAFA;
-            padding: 3rem 2.9rem;
+            padding: 3rem 2.2rem;
             box-sizing: border-box;
             color: #3B3731;
+            scrollbar-color: #E3E3E3 transparent;
+            scrollbar-width: thin;
+        }
+
+        .service-policies-refund-document::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .service-policies-refund-document::-webkit-scrollbar-button {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+
+        .service-policies-refund-document::-webkit-scrollbar-button:single-button,
+        .service-policies-refund-document::-webkit-scrollbar-button:decrement,
+        .service-policies-refund-document::-webkit-scrollbar-button:increment {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+
+        .service-policies-refund-document::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .service-policies-refund-document::-webkit-scrollbar-thumb {
+            min-height: 79.959px;
+            border-radius: 96px;
+            background: #E3E3E3;
         }
 
         .service-policies-refund-document h4 {
             margin: 0 0 2.2rem;
             color: #3B3731;
-            font-family: Georgia, 'Times New Roman', serif;
+            font-family: "Playfair Display";
             font-size: 24px;
             font-style: normal;
-            font-weight: 700;
+            font-weight: 600;
             line-height: normal;
         }
 
@@ -2001,7 +2631,7 @@ new class extends Component {
             border-bottom: 1px solid #D9D9D9;
             color: #3B3731;
             font-family: Lato;
-            font-size: 18px;
+            font-size: 20px;
             font-style: normal;
             font-weight: 600;
             line-height: normal;
@@ -2021,8 +2651,18 @@ new class extends Component {
             margin-bottom: 0;
         }
 
+        .service-policies-animal-welfare-document {
+            width: min(100%, 624px);
+            max-height: 445px;
+        }
+
+        .service-policies-compliance-document {
+            width: min(100%, 624px);
+            max-height: 408px;
+        }
+
         .service-policies-refund-ack {
-            width: min(100%, 530px);
+            width: min(100%, 600px);
             display: grid;
             grid-template-columns: 22px 1fr;
             gap: 1.1rem;
@@ -2067,14 +2707,14 @@ new class extends Component {
             margin: 0;
             color: #3B3731;
             font-family: Lato;
-            font-size: 16px;
+            font-size: 18px;
             font-style: normal;
             font-weight: 400;
             line-height: 1.35;
         }
 
         .service-policies-refund-note {
-            width: min(100%, 580px);
+            width: min(100%, 640px);
             margin: -0.65rem 0 0 !important;
             color: #9D9B98 !important;
             font-family: Lato;
@@ -2105,17 +2745,20 @@ new class extends Component {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 999px;
+            border-radius: 96px;
             font-family: Lato;
             font-size: 14px;
             font-style: normal;
             font-weight: 400;
             line-height: normal;
+            box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.10);
+
             cursor: pointer;
         }
 
         .service-policies-refund-download {
-            min-width: 240px;
+            width: 281px;
+            height: 48px;
             gap: 1.25rem;
             border: 1px solid #9D9B98;
             background: #FFFFFF;
@@ -2123,16 +2766,18 @@ new class extends Component {
         }
 
         .service-policies-refund-decline {
-            min-width: 82px;
+            width: 94px;
+            height: 48px;
             border: 1px solid #9D9B98;
-            background: #FFFFFF;
+            background: transparent;
             color: #3B3731;
         }
 
         .service-policies-refund-agree {
-            min-width: 142px;
+            width: 167px;
+            height: 48px;
             border: 0;
-            background: #FFC978;
+            background: #FFC97A;
             color: #FFFFFF;
         }
 
@@ -2140,6 +2785,44 @@ new class extends Component {
         .service-policies-refund-agree:disabled {
             cursor: wait;
             opacity: 0.75;
+        }
+
+        .service-policies-compliance-publish {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            margin-top: 3.25rem;
+        }
+
+        .service-policies-compliance-publish-ack {
+            width: auto;
+            flex: 1 1 auto;
+            align-items: center;
+        }
+
+        .service-policies-compliance-publish-ack p {
+            font-weight: 600 !important;
+        }
+
+        .service-policies-save--publish {
+            position: static;
+            inset: auto;
+            width: 160px;
+            height: 42px;
+            flex: 0 0 140px;
+            margin-left: auto;
+        }
+
+        .service-policies-save--publish>span {
+            color: #FFF;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
         }
 
         .service-policies-download {
@@ -2198,6 +2881,60 @@ new class extends Component {
             padding: 0;
         }
 
+        .service-policies-timeline-section .service-policies-section-title {
+            width: 100%;
+            border-bottom: 1px solid #D4D4D4;
+            background: transparent;
+            padding-bottom: 1.5rem;
+            border-top: 0;
+            border-right: 0;
+            border-left: 0;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .service-policies-timeline-section .service-policies-section-title h3 {
+            width: auto;
+            flex: 1 1 auto;
+            padding-bottom: 0;
+            border-bottom: 0;
+        }
+
+        .service-policies-timeline-toggle {
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            padding: 0;
+            flex: 0 0 32px;
+        }
+
+        .service-policies-timeline-toggle svg {
+            transition: transform 220ms ease;
+        }
+
+        .service-policies-timeline-toggle.is-collapsed svg {
+            transform: rotate(180deg);
+        }
+
+        .service-policies-timeline-collapse {
+            display: grid;
+            grid-template-rows: 0fr;
+            opacity: 0;
+            transition: grid-template-rows 240ms ease, opacity 180ms ease;
+        }
+
+        .service-policies-timeline-collapse.is-open {
+            grid-template-rows: 1fr;
+            opacity: 1;
+        }
+
+        .service-policies-timeline-collapse__inner {
+            overflow: hidden;
+        }
+
         .service-policies-timeline p {
             display: flex;
             align-items: center;
@@ -2232,6 +2969,11 @@ new class extends Component {
             .service-policies-edit-grid--three,
             .service-policies-edit-grid--four {
                 grid-template-columns: 1fr;
+            }
+
+            .service-policies-limitations-editor {
+                grid-template-columns: 1fr;
+                column-gap: 0;
             }
         }
 
@@ -2274,6 +3016,14 @@ new class extends Component {
                 padding: 2rem 1.5rem;
             }
 
+            .service-policies-limitations-add {
+                align-items: flex-start;
+            }
+
+            .service-policies-limitations-add input {
+                width: 100%;
+            }
+
             .service-policies-refund-actions,
             .service-policies-refund-actions>div {
                 align-items: stretch;
@@ -2281,10 +3031,18 @@ new class extends Component {
                 width: 100%;
             }
 
+            .service-policies-compliance-publish {
+                align-items: stretch;
+                flex-direction: column;
+                margin-top: 1.5rem;
+            }
+
             .service-policies-refund-download,
             .service-policies-refund-decline,
-            .service-policies-refund-agree {
+            .service-policies-refund-agree,
+            .service-policies-save--publish {
                 width: 100%;
+                flex-basis: auto;
             }
         }
     </style>
