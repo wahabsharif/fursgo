@@ -726,8 +726,7 @@
                                     <div class="profile-menu">
                                         <a href="{{ route('business-hub') }}"
                                             class="profile-item d-flex align-items-center gap-40"
-                                            :class="{ 'profile-item--active': @js($isBusinessHubRoute) &&
-                                                    activeSection === 'business-hub' }"
+                                            :class="{ 'profile-item--active': @js($isBusinessHubRoute) }"
                                             @click="activeSection = 'business-hub'" wire:navigate>
                                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
                                                 viewBox="0 0 22 22" fill="none">
