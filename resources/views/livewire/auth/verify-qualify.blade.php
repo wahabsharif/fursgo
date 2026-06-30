@@ -11,7 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 
-new #[Layout('layouts.dashboard')] class extends Component {
+new #[Layout('layouts.business-hub')] class extends Component {
     use WithFileUploads;
 
     // Form display control
@@ -2151,7 +2151,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
     public function goToDashboard(): void
     {
-        $this->redirect(route('dashboard', absolute: false), navigate: true);
+        $this->redirect(route('business-hub', absolute: false), navigate: true);
     }
 
     /** @return array<string, string> slug => label */

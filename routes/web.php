@@ -4,8 +4,8 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BookingInvoicePdfController;
 use App\Http\Controllers\PetDetailController;
 use App\Models\GroomerSpacerProfile;
+use App\Support\BusinessHubNav;
 use App\Support\BusinessPageShell;
-use App\Support\DashboardNav;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -74,7 +74,7 @@ Route::redirect('/business/business-homepage-groomer-space-owner', '/business-ho
 Route::get('/support-and-assistance/help-and-support', function () {
     BusinessPageShell::applyFromRequest();
 
-    $component = BusinessPageShell::resolveComponent('help.support-dashboard', 'help.support');
+    $component = BusinessPageShell::resolveComponent('help.support-business-hub', 'help.support');
 
     return app(LivewireManager::class)->new($component)->__invoke();
 })->name('help-and-support');
@@ -83,7 +83,7 @@ Route::get('/support-and-assistance/help-and-support', function () {
 Route::get('/business-homepage-groomer-space-owner', function () {
     BusinessPageShell::applyFromRequest();
 
-    $component = BusinessPageShell::resolveComponent('business.homepage-dashboard', 'business.homepage');
+    $component = BusinessPageShell::resolveComponent('business.homepage-business-hub', 'business.homepage');
 
     return app(LivewireManager::class)->new($component)->__invoke();
 })->name('business-homepage-groomer-space-owner');
@@ -121,24 +121,24 @@ Volt::route('/groomer-unavailability/location-unavailability', 'groomer.unavaila
 // ===============================================================
 // Authenticated Routes
 // ===============================================================
-Volt::route('dashboard', 'dashboard')
-    ->middleware(['auth:groomer_spacer', 'verified', 'business.shell.dashboard'])
-    ->name('dashboard');
+Volt::route('business-hub', 'business-hub')
+    ->middleware(['auth:groomer_spacer', 'verified', 'business.shell.business-hub'])
+    ->name('business-hub');
 
-Route::post('dashboard/nav', function (Request $request) {
-    DashboardNav::persist(DashboardNav::mergeFromRequest($request));
+Route::post('business-hub/nav', function (Request $request) {
+    BusinessHubNav::persist(BusinessHubNav::mergeFromRequest($request));
 
     return response()->noContent();
-})->middleware(['auth:groomer_spacer'])->name('dashboard.nav');
+})->middleware(['auth:groomer_spacer'])->name('business-hub.nav');
 
-Route::get('dashboard/bookings/{booking}/invoice.pdf', BookingInvoicePdfController::class)
+Route::get('business-hub/bookings/{booking}/invoice.pdf', BookingInvoicePdfController::class)
     ->middleware(['auth:groomer_spacer', 'verified'])
-    ->name('dashboard.bookings.invoice-pdf');
+    ->name('business-hub.bookings.invoice-pdf');
 
 /** Same invoice as HTML for DevTools (local env only). */
-Route::get('dashboard/bookings/{booking}/invoice.html', [BookingInvoicePdfController::class, 'previewHtml'])
+Route::get('business-hub/bookings/{booking}/invoice.html', [BookingInvoicePdfController::class, 'previewHtml'])
     ->middleware(['auth:groomer_spacer', 'verified'])
-    ->name('dashboard.bookings.invoice-html');
+    ->name('business-hub.bookings.invoice-html');
 
 Route::middleware(['auth:web,groomer_spacer'])->group(function () {
     Route::redirect('settings', 'settings/profile');

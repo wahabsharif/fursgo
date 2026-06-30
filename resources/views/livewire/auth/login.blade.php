@@ -73,7 +73,7 @@ new #[Layout('layouts.app')] class extends Component {
             RateLimiter::clear($this->throttleKey());
             request()->session()->regenerate();
 
-            $default = route('dashboard');
+            $default = route('business-hub');
             $target = session()->pull('url.intended', $default);
             $this->redirect(is_string($target) && $target !== '' ? $target : $default, navigate: true);
 
@@ -94,7 +94,7 @@ new #[Layout('layouts.app')] class extends Component {
 
             $default = route('pet-owner-profile');
             $target = session()->pull('url.intended', $default);
-            if ($target === route('dashboard')) {
+            if ($target === route('business-hub')) {
                 $target = $default;
             }
             $this->redirect(is_string($target) && $target !== '' ? $target : $default, navigate: true);

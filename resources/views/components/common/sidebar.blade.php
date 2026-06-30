@@ -1,10 +1,10 @@
 @props(['variant' => null])
 
 @php
-    use App\Support\DashboardNav;
+    use App\Support\BusinessHubNav;
     use Illuminate\Support\Facades\Cache;
 
-    $dashboardNav = DashboardNav::fromSession();
+    $dashboardNav = BusinessHubNav::fromSession();
     $dashboardActiveSection = $dashboardNav['active_section'];
 
     $activeBgColor = '#FFC97A';
@@ -93,7 +93,7 @@
         <ul class="nav-list">
             <!-- Business Hub -->
             <li class="nav-item">
-                <a href="{{ route('dashboard') }}"
+                <a href="{{ route('business-hub') }}"
                     @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'business-hub'; bookingsOpen = false; availabilityOpen = false"
                     :class="{ 'active': activeSection === 'business-hub' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"

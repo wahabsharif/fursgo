@@ -1,5 +1,5 @@
 @section('styles')
-    @include('partials.dashboard.business-homepage-styles')
+    @include('partials.business-hub.business-homepage-styles')
 @endsection
 
-@include('partials.dashboard.business-homepage-content')
+@include('partials.business-hub.business-homepage-content')

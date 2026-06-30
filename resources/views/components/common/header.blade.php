@@ -23,7 +23,7 @@
     ]);
     $isBusinessSiteRoute = $isBusinessLandingRoute || $isBusinessHomepageRoute || $isBusinessAuthRoute;
     $isForGroomersHostsActive = $isBusinessHomepageRoute || $isBusinessLandingRoute;
-    $dashboardLogoHref = $isVerifyQualifyRoute ? route('verify-qualify') : route('dashboard');
+    $dashboardLogoHref = $isVerifyQualifyRoute ? route('verify-qualify') : route('business-hub');
 
     if (!$isGroomerSpacerSession && auth()->check()) {
         $authUser = auth()->user();
@@ -130,12 +130,12 @@
                         </div>
                         <div>
                             @if ($variant === 'dashboard')
-                                <a href="{{ route('business-homepage-groomer-space-owner', ['shell' => 'dashboard']) }}"
+                                <a href="{{ route('business-homepage-groomer-space-owner', ['shell' => 'business-hub']) }}"
                                     wire:navigate
                                     class="{{ $dashboardNavView === 'for-groomers-hosts' ? 'active' : '' }}">For
                                     Groomers &
                                     Hosts</a>
-                                <a href="{{ route('help-and-support', ['shell' => 'dashboard']) }}" wire:navigate
+                                <a href="{{ route('help-and-support', ['shell' => 'business-hub']) }}" wire:navigate
                                     class="{{ $dashboardNavView === 'help-centre' ? 'active' : '' }}">Help Centre</a>
                             @elseif ($isBusinessSiteRoute && !$isBusinessHomepageRoute)
                                 <a href="{{ route('business-homepage-groomer-space-owner') }}"
@@ -701,7 +701,8 @@
                                             stroke-linejoin="round" />
                                     </svg>
                                 </a>
-                                <div class="user-profile-options" style="display: none;">
+                                <div class="user-profile-options"
+                                    style="--profile-menu-hover-bg: {{ $headerUserType === 'space' ? '#FFA899' : '#FFC97A' }};">
                                     @if ($isHeaderAuthenticated)
                                         <div class="user-profile-image d-flex align-items-center gap-20">
                                             <img src="{{ auth()->check() && auth()->user()->profile_image ? asset('storage/' . auth()->user()->profile_image) : $headerProfileImage }}"
@@ -1389,6 +1390,34 @@
 @endif
 <script>
     function initHeaderDropdowns() {
+        function closeDropdown(dropdown) {
+            if (dropdown.classList.contains('user-profile-options')) {
+                dropdown.classList.remove('is-open');
+
+                return;
+            }
+
+            dropdown.style.display = 'none';
+        }
+
+        function openDropdown(dropdown) {
+            if (dropdown.classList.contains('user-profile-options')) {
+                dropdown.classList.add('is-open');
+
+                return;
+            }
+
+            dropdown.style.display = 'block';
+        }
+
+        function isDropdownOpen(dropdown) {
+            if (dropdown.classList.contains('user-profile-options')) {
+                return dropdown.classList.contains('is-open');
+            }
+
+            return window.getComputedStyle(dropdown).display !== 'none';
+        }
+
         function toggleDropdown(dropdownClass) {
             const dropdown = document.querySelector(dropdownClass);
             if (!dropdown) {
@@ -1396,15 +1425,15 @@
             }
 
             // Check visibility BEFORE closing others
-            const isVisible = window.getComputedStyle(dropdown).display !== 'none';
+            const isVisible = isDropdownOpen(dropdown);
 
             // Close all dropdowns first
             document.querySelectorAll('.header-notifications, .messages-notifications, .user-profile-options')
-                .forEach(el => el.style.display = 'none');
+                .forEach(closeDropdown);
 
             // Toggle current - only open if it was previously closed
             if (!isVisible) {
-                dropdown.style.display = 'block';
+                openDropdown(dropdown);
             }
         }
 
@@ -1452,7 +1481,15 @@
 
         if (!isButton && !isInsideDropdown) {
             document.querySelectorAll('.header-notifications, .messages-notifications, .user-profile-options')
-                .forEach(el => el.style.display = 'none');
+                .forEach(el => {
+                    if (el.classList.contains('user-profile-options')) {
+                        el.classList.remove('is-open');
+
+                        return;
+                    }
+
+                    el.style.display = 'none';
+                });
         }
     });
 
@@ -1460,7 +1497,15 @@
     document.addEventListener('keydown', (e) => {
         if (e.key === "Escape") {
             document.querySelectorAll('.header-notifications, .messages-notifications, .user-profile-options')
-                .forEach(el => el.style.display = 'none');
+                .forEach(el => {
+                    if (el.classList.contains('user-profile-options')) {
+                        el.classList.remove('is-open');
+
+                        return;
+                    }
+
+                    el.style.display = 'none';
+                });
         }
     });
 

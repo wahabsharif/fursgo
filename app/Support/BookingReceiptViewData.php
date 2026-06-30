@@ -108,7 +108,7 @@ class BookingReceiptViewData
 
         return [
             'booking_id' => (int) $booking->id,
-            'invoice_url' => route('dashboard.bookings.invoice-pdf', $booking),
+            'invoice_url' => route('business-hub.bookings.invoice-pdf', $booking),
             'is_space_user' => $isSpaceUser,
             'booking_id_label' => 'FG-' . str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT),
             'date_label' => optional($booking->date)->format('d/m/Y') ?? 'N/A',

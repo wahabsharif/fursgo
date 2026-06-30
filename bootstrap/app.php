@@ -15,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth.groomer_spacer' => \App\Http\Middleware\EnsureGroomerSpacerAuthenticated::class,
             'business.shell.web' => \App\Http\Middleware\SetBusinessPageWebShell::class,
-            'business.shell.dashboard' => \App\Http\Middleware\SetBusinessPageDashboardShell::class,
+            'business.shell.business-hub' => \App\Http\Middleware\SetBusinessPageBusinessHubShell::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
