@@ -13,6 +13,7 @@
     $isHeaderAuthenticated = $isGroomerSpacerSession || auth()->check();
     $isBusinessLandingRoute = request()->routeIs('business-landing-page');
     $isBusinessHomepageRoute = request()->routeIs('business-homepage-groomer-space-owner');
+    $isBusinessHubRoute = request()->routeIs('business-hub');
     $isHelpCentreRoute = request()->routeIs('help-and-support');
     $isVerifyQualifyRoute = request()->routeIs('verify-qualify', 'verify-qualify.*');
     $isBusinessAuthRoute = request()->routeIs([
@@ -723,9 +724,11 @@
                                         </div>
                                     @endif
                                     <div class="profile-menu">
-                                        <a href="#" class="profile-item d-flex align-items-center gap-40"
-                                            :class="{ 'profile-item--active': activeSection === 'business-hub' }"
-                                            @click.prevent="activeSection = 'business-hub'" wire:navigate>
+                                        <a href="{{ route('business-hub') }}"
+                                            class="profile-item d-flex align-items-center gap-40"
+                                            :class="{ 'profile-item--active': @js($isBusinessHubRoute) &&
+                                                    activeSection === 'business-hub' }"
+                                            @click="activeSection = 'business-hub'" wire:navigate>
                                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
                                                 viewBox="0 0 22 22" fill="none">
                                                 <path
