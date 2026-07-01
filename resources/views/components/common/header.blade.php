@@ -133,15 +133,14 @@
                             @if ($variant === 'dashboard')
                                 <a href="{{ route('business-homepage-groomer-space-owner', ['shell' => 'business-hub']) }}"
                                     wire:navigate
-                                    class="{{ $dashboardNavView === 'for-groomers-hosts' ? 'active' : '' }}">For
-                                    Groomers &
-                                    Hosts</a>
+                                    class="{{ $dashboardNavView === 'for-groomers-hosts' ? 'active' : '' }}">FursGo
+                                    Business</a>
                                 <a href="{{ route('help-and-support', ['shell' => 'business-hub']) }}" wire:navigate
                                     class="{{ $dashboardNavView === 'help-centre' ? 'active' : '' }}">Help Centre</a>
                             @elseif ($isBusinessSiteRoute && !$isBusinessHomepageRoute)
                                 <a href="{{ route('business-homepage-groomer-space-owner') }}"
-                                    class="{{ $isForGroomersHostsActive ? 'active' : '' }}" wire:navigate>For Groomers &
-                                    Hosts</a>
+                                    class="{{ $isForGroomersHostsActive ? 'active' : '' }}" wire:navigate>FursGo
+                                    Business</a>
                                 <a href="{{ route('help-and-support') }}"
                                     class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
                             @else
@@ -150,8 +149,8 @@
                                         wire:navigate>Our Mission</a>
                                 @endif
                                 <a href="{{ route('business-homepage-groomer-space-owner') }}"
-                                    class="{{ $isBusinessHomepageRoute ? 'active' : '' }}" wire:navigate>For Groomers &
-                                    Hosts</a>
+                                    class="{{ $isBusinessHomepageRoute ? 'active' : '' }}" wire:navigate>FursGo
+                                    Business</a>
                                 <a href="{{ route('help-and-support') }}"
                                     class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
                             @endif
@@ -1366,16 +1365,16 @@
                     <div class="menu-items">
                         @if ($isBusinessSiteRoute && !$isBusinessHomepageRoute)
                             <a href="{{ route('business-homepage-groomer-space-owner') }}"
-                                class="{{ $isForGroomersHostsActive ? 'active' : '' }}" wire:navigate>For Groomers &
-                                Hosts</a>
+                                class="{{ $isForGroomersHostsActive ? 'active' : '' }}" wire:navigate>FursGo
+                                Business</a>
                             <a href="{{ route('help-and-support') }}"
                                 class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
                         @else
                             <a href="#" class="{{ $isBusinessLandingRoute ? 'active' : '' }}" wire:navigate>Our
                                 Mission</a>
                             <a href="{{ route('business-homepage-groomer-space-owner') }}"
-                                class="{{ $isBusinessHomepageRoute ? 'active' : '' }}" wire:navigate>For Groomers &
-                                Hosts</a>
+                                class="{{ $isBusinessHomepageRoute ? 'active' : '' }}" wire:navigate>FursGo
+                                Business</a>
                             <a href="{{ route('help-and-support') }}"
                                 class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
                         @endif
