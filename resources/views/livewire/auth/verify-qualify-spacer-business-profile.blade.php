@@ -1,7 +1,7 @@
-<div class="business-basics-wrap" wire:key="verify-qualify-spacer-business-profile">
+<div class="business-basics-wrap" wire:key="verify-qualify-spacer-business-profile" x-data="spacerBusinessProfile(@js($this->spacerBusinessProfileClientState()))">
     <h1 class="business-basics-title">About Your Business</h1>
 
-    <form wire:submit="submitSpacerBusinessProfile" class="business-basics-form">
+    <form @submit.prevent="submitForm()" class="business-basics-form">
         {{-- Bio --}}
         <div class="basics-card">
             <div class="basics-field">
@@ -26,13 +26,11 @@
             </div>
             <div class="spacer-services-list-body">
                 @foreach ($this->spacerServicesPricingRowLabels() as $slug => $rowLabel)
-                    <label
-                        class="spacer-service-row {{ !empty($spacer_services_pricing[$slug]['selected']) ? 'spacer-service-row--selected' : '' }}">
-                        <input type="checkbox" wire:model.live="spacer_services_pricing.{{ $slug }}.selected"
-                            class="spacer-select-input">
+                    <label x-data="{ selected: @entangle('spacer_services_pricing.' . $slug . '.selected').live }" :class="{ 'spacer-service-row--selected': selected }"
+                        class="spacer-service-row">
+                        <input type="checkbox" x-model="selected" class="spacer-select-input">
                         <div class="spacer-service-row-inner">
-                            <div
-                                class="spacer-select-row {{ !empty($spacer_services_pricing[$slug]['selected']) ? 'is-selected' : '' }}">
+                            <div class="spacer-select-row" :class="{ 'is-selected': selected }">
                                 <span class="spacer-select-dot" aria-hidden="true"></span>
                                 <span class="spacer-service-label spacer-service-label--with-icon">
                                     <span class="spacer-service-label__icon" aria-hidden="true">
@@ -134,74 +132,76 @@
                     </div>
                 </div>
                 <div class="addon-picker-input-wrap">
-                    <input type="text" class="form-input" placeholder="Early Hours Access"
-                        wire:model.live="spacer_addon_input">
+                    <input type="text" class="form-input" placeholder="Early Hours Access" x-model="addonInput"
+                        @keydown.enter.stop.prevent="addCustomAddon()">
                     <button type="button" class="addon-picker-plus" aria-label="Add add-on"
-                        wire:click="addSpacerCustomAddonRow">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"
-                            fill="none">
-                            <g filter="url(#spacer_plus)">
-                                <rect x="8" y="3" width="48" height="48" rx="24" fill="#FFC97A" />
-                            </g>
-                            <path d="M32 19V27.495M32 27.495V35.99M32 27.495H40.495M32 27.495H23.505" stroke="white"
-                                stroke-width="2" stroke-linecap="round" />
-                            <defs>
-                                <filter id="spacer_plus" x="0" y="0" width="64" height="64"
-                                    filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                                    <feFlood flood-opacity="0" result="BackgroundImageFix" />
-                                    <feColorMatrix in="SourceAlpha" type="matrix"
-                                        values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
-                                    <feOffset dy="5" />
-                                    <feGaussianBlur stdDeviation="4" />
-                                    <feComposite in2="hardAlpha" operator="out" />
-                                    <feColorMatrix type="matrix"
-                                        values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0" />
-                                    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow" />
-                                    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow"
-                                        result="shape" />
-                                </filter>
-                            </defs>
-                        </svg>
+                        :disabled="addonAddPending" @click="addCustomAddon()">
+                        <span class="addon-picker-plus-icon" x-show="!addonAddPending" x-cloak>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"
+                                viewBox="0 0 64 64" fill="none">
+                                <g filter="url(#spacer_plus)">
+                                    <rect x="8" y="3" width="48" height="48" rx="24" fill="#FFC97A" />
+                                </g>
+                                <path d="M32 19V27.495M32 27.495V35.99M32 27.495H40.495M32 27.495H23.505"
+                                    stroke="white" stroke-width="2" stroke-linecap="round" />
+                                <defs>
+                                    <filter id="spacer_plus" x="0" y="0" width="64" height="64"
+                                        filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                        <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                                        <feColorMatrix in="SourceAlpha" type="matrix"
+                                            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+                                        <feOffset dy="5" />
+                                        <feGaussianBlur stdDeviation="4" />
+                                        <feComposite in2="hardAlpha" operator="out" />
+                                        <feColorMatrix type="matrix"
+                                            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0" />
+                                        <feBlend mode="normal" in2="BackgroundImageFix"
+                                            result="effect1_dropShadow" />
+                                        <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow"
+                                            result="shape" />
+                                    </filter>
+                                </defs>
+                            </svg>
+                        </span>
+                        <span class="addon-picker-plus-spinner" x-show="addonAddPending" x-cloak aria-hidden="true">
+                            <span class="groomer-plus-spinner"></span>
+                        </span>
                     </button>
                 </div>
-                @foreach ($spacer_addon_custom_rows as $idx => $row)
-                    <div class="spacer-addon-custom-row" wire:key="spacer-addon-custom-{{ $idx }}">
-                        <label class="spacer-select-row sm {{ !empty($row['selected']) ? 'is-selected' : '' }}">
-                            <input type="checkbox" class="spacer-select-input"
-                                wire:model.live="spacer_addon_custom_rows.{{ $idx }}.selected">
+                <template x-for="(row, index) in customAddonRows" :key="'spacer-addon-custom-' + index">
+                    <div class="spacer-addon-custom-row">
+                        <label class="spacer-select-row sm" :class="{ 'is-selected': row.selected }">
+                            <input type="checkbox" class="spacer-select-input" x-model="row.selected">
                             <span class="spacer-select-dot" aria-hidden="true"></span>
-                            <span class="spacer-service-label">{{ $row['name'] }}</span>
+                            <span class="spacer-service-label" x-text="row.name"></span>
                         </label>
                         <div class="service-price-control">
                             <span class="service-price-currency">£</span>
                             <input type="number" class="service-price-input" min="0" step="1"
-                                wire:model.live="spacer_addon_custom_rows.{{ $idx }}.price">
+                                x-model="row.price">
                             <div class="service-price-steppers">
                                 <button type="button" class="service-stepper-btn" aria-label="Increase price"
-                                    onclick="const i=this.closest('.service-price-control').querySelector('.service-price-input'); i.stepUp(); i.dispatchEvent(new Event('input',{bubbles:true}));"><svg
-                                        xmlns="http://www.w3.org/2000/svg" width="11" height="6"
-                                        viewBox="0 0 11 6" fill="none">
+                                    @click="stepAddonPrice(index, 1)"><svg xmlns="http://www.w3.org/2000/svg"
+                                        width="11" height="6" viewBox="0 0 11 6" fill="none">
                                         <path d="M10.374 5.47852L5.3952 0.499696L0.499963 5.39494" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg></button>
                                 <button type="button" class="service-stepper-btn" aria-label="Decrease price"
-                                    onclick="const i=this.closest('.service-price-control').querySelector('.service-price-input'); i.stepDown(); i.dispatchEvent(new Event('input',{bubbles:true}));"><svg
-                                        xmlns="http://www.w3.org/2000/svg" width="11" height="6"
-                                        viewBox="0 0 11 6" fill="none">
+                                    @click="stepAddonPrice(index, -1)"><svg xmlns="http://www.w3.org/2000/svg"
+                                        width="11" height="6" viewBox="0 0 11 6" fill="none">
                                         <path d="M10.374 0.5L5.3952 5.47882L0.499963 0.583578" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg></button>
                             </div>
                         </div>
                     </div>
-                @endforeach
+                </template>
                 <p class="addon-picker-label">Or choose from FursGo add-ons:</p>
                 @foreach ($this->spacerFursgoAddonCatalog() as $slug => $addonLabel)
                     <div class="spacer-addon-fursgo-row" wire:key="spacer-fursgo-{{ $slug }}">
-                        <label
-                            class="spacer-select-row sm {{ !empty($spacer_addons_service[$slug]['selected']) ? 'is-selected' : '' }}">
-                            <input type="checkbox" class="spacer-select-input"
-                                wire:model.live="spacer_addons_service.{{ $slug }}.selected">
+                        <label x-data="{ selected: @entangle('spacer_addons_service.' . $slug . '.selected').live }" class="spacer-select-row sm"
+                            :class="{ 'is-selected': selected }">
+                            <input type="checkbox" class="spacer-select-input" x-model="selected">
                             <span class="spacer-select-dot" aria-hidden="true"></span>
                             <span class="spacer-service-label">{{ $addonLabel }}</span>
                         </label>
@@ -241,9 +241,9 @@
             </div>
             <div class="groomer-pill-group spacer-suitable-grid">
                 @foreach ($this->spacerSuitableForCatalog() as $option)
-                    <label
-                        class="groomer-pill-option groomer-pill-suitable {{ in_array($option, $spacer_suitable_for, true) ? 'is-active' : '' }}">
-                        <input type="checkbox" wire:model.live="spacer_suitable_for" value="{{ $option }}">
+                    <label class="groomer-pill-option groomer-pill-suitable"
+                        :class="{ 'is-active': suitableFor.includes(@js($option)) }">
+                        <input type="checkbox" x-model="suitableFor" value="{{ $option }}">
                         <span class="groomer-pill-suitable__tick" aria-hidden="true">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="10"
                                 viewBox="0 0 14 10" fill="none">
@@ -268,37 +268,41 @@
                     </div>
                 </div>
                 <div class="addon-picker-input-wrap">
-                    <input type="text" class="form-input" placeholder="No Food or Drink"
-                        wire:model.live="spacer_rule_input">
-                    <button type="button" class="addon-picker-plus" aria-label="Add rule"
-                        wire:click="addSpacerRuleCustom">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"
-                            fill="none">
-                            <g>
-                                <rect x="8" y="3" width="48" height="48" rx="24" fill="#FFC97A" />
-                            </g>
-                            <path d="M32 19V27.495M32 27.495V35.99M32 27.495H40.495M32 27.495H23.505" stroke="white"
-                                stroke-width="2" stroke-linecap="round" />
-                        </svg>
+                    <input type="text" class="form-input" placeholder="No Food or Drink" x-model="ruleInput"
+                        @keydown.enter.stop.prevent="addCustomRule()">
+                    <button type="button" class="addon-picker-plus" aria-label="Add rule" :disabled="ruleAddPending"
+                        @click="addCustomRule()">
+                        <span class="addon-picker-plus-icon" x-show="!ruleAddPending" x-cloak>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"
+                                viewBox="0 0 64 64" fill="none">
+                                <g>
+                                    <rect x="8" y="3" width="48" height="48" rx="24" fill="#FFC97A" />
+                                </g>
+                                <path d="M32 19V27.495M32 27.495V35.99M32 27.495H40.495M32 27.495H23.505"
+                                    stroke="white" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                        </span>
+                        <span class="addon-picker-plus-spinner" x-show="ruleAddPending" x-cloak aria-hidden="true">
+                            <span class="groomer-plus-spinner"></span>
+                        </span>
                     </button>
                 </div>
-                @if (count($spacer_rules_custom) > 0)
-                    <ul class="spacer-custom-chips">
-                        @foreach ($spacer_rules_custom as $r)
-                            <li class="spacer-custom-chip">
-                                <span class="spacer-custom-chip__marker" aria-hidden="true"></span>
-                                <span>{{ $r }}</span>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
+                <template x-if="rulesCustom.length > 0">
+                    <div class="addon-checkbox-list spacer-custom-checkbox-list">
+                        <template x-for="(rule, index) in rulesCustom" :key="'spacer-rule-custom-' + index">
+                            <label class="addon-checkbox-item" :class="{ 'is-selected': rule.selected }">
+                                <input type="checkbox" x-model="rule.selected">
+                                <span x-text="rule.text"></span>
+                            </label>
+                        </template>
+                    </div>
+                </template>
                 <p class="addon-picker-label">Or choose from FursGo rules &amp; restrictions:</p>
                 <div class="addon-checkbox-list">
                     @foreach ($this->spacerRulesPresetCatalog() as $ruleLabel)
-                        <label
-                            class="addon-checkbox-item {{ in_array($ruleLabel, $spacer_rules_preset_selected, true) ? 'is-selected' : '' }}">
-                            <input type="checkbox" wire:model.live="spacer_rules_preset_selected"
-                                value="{{ $ruleLabel }}">
+                        <label class="addon-checkbox-item"
+                            :class="{ 'is-selected': selectedRules.includes(@js($ruleLabel)) }">
+                            <input type="checkbox" x-model="selectedRules" value="{{ $ruleLabel }}">
                             <span>{{ $ruleLabel }}</span>
                         </label>
                     @endforeach
@@ -309,39 +313,45 @@
         {{-- Amenities --}}
         <div class="basics-card addon-picker-card" style="margin-top: 1.5rem;">
             <div class="basics-field">
-                <label class="form-label">Custom amenity</label>
+                <label class="form-label">Amenities Included</label>
+                <span>Select what your space provides</span>
                 <div class="addon-picker-input-wrap">
                     <input type="text" class="form-input" placeholder="Premium shampoos provided"
-                        wire:model.live="spacer_amenity_input">
+                        x-model="amenityInput" @keydown.enter.stop.prevent="addCustomAmenity()">
                     <button type="button" class="addon-picker-plus" aria-label="Add amenity"
-                        wire:click="addSpacerAmenityCustom">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"
-                            fill="none">
-                            <g>
-                                <rect x="8" y="3" width="48" height="48" rx="24" fill="#FFC97A" />
-                            </g>
-                            <path d="M32 19V27.495M32 27.495V35.99M32 27.495H40.495M32 27.495H23.505" stroke="white"
-                                stroke-width="2" stroke-linecap="round" />
-                        </svg>
+                        :disabled="amenityAddPending" @click="addCustomAmenity()">
+                        <span class="addon-picker-plus-icon" x-show="!amenityAddPending" x-cloak>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"
+                                viewBox="0 0 64 64" fill="none">
+                                <g>
+                                    <rect x="8" y="3" width="48" height="48" rx="24" fill="#FFC97A" />
+                                </g>
+                                <path d="M32 19V27.495M32 27.495V35.99M32 27.495H40.495M32 27.495H23.505"
+                                    stroke="white" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                        </span>
+                        <span class="addon-picker-plus-spinner" x-show="amenityAddPending" x-cloak
+                            aria-hidden="true">
+                            <span class="groomer-plus-spinner"></span>
+                        </span>
                     </button>
                 </div>
-                @if (count($spacer_amenities_custom) > 0)
-                    <ul class="spacer-custom-chips">
-                        @foreach ($spacer_amenities_custom as $a)
-                            <li class="spacer-custom-chip">
-                                <span class="spacer-custom-chip__marker" aria-hidden="true"></span>
-                                <span>{{ $a }}</span>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
+                <template x-if="amenitiesCustom.length > 0">
+                    <div class="addon-checkbox-list spacer-custom-checkbox-list">
+                        <template x-for="(amenity, index) in amenitiesCustom" :key="'spacer-amenity-custom-' + index">
+                            <label class="addon-checkbox-item" :class="{ 'is-selected': amenity.selected }">
+                                <input type="checkbox" x-model="amenity.selected">
+                                <span x-text="amenity.text"></span>
+                            </label>
+                        </template>
+                    </div>
+                </template>
                 <p class="addon-picker-label">Or choose from FursGo amenities:</p>
                 <div class="addon-checkbox-list">
                     @foreach ($this->spacerAmenitiesPresetCatalog() as $amLabel)
-                        <label
-                            class="addon-checkbox-item {{ in_array($amLabel, $spacer_amenities_preset_selected, true) ? 'is-selected' : '' }}">
-                            <input type="checkbox" wire:model.live="spacer_amenities_preset_selected"
-                                value="{{ $amLabel }}">
+                        <label class="addon-checkbox-item"
+                            :class="{ 'is-selected': selectedAmenities.includes(@js($amLabel)) }">
+                            <input type="checkbox" x-model="selectedAmenities" value="{{ $amLabel }}">
                             <span>{{ $amLabel }}</span>
                         </label>
                     @endforeach
@@ -350,16 +360,13 @@
         </div>
 
         <div class="form-buttons basics-actions">
-            <button type="button" class="back-btn" wire:click="goBack">
-                <span>Back</span>
-            </button>
-            <button type="submit"
-                class="submit-btn {{ $this->isSpacerBusinessProfileContinueEnabled() ? 'btn-active' : 'btn-disabled' }}"
-                wire:loading.attr="disabled" wire:target="submitSpacerBusinessProfile"
-                @if (!$this->isSpacerBusinessProfileContinueEnabled()) disabled @endif>
-                <span wire:loading.remove wire:target="submitSpacerBusinessProfile">Continue</span>
-                <span wire:loading wire:target="submitSpacerBusinessProfile">Saving…</span>
-            </button>
+            <x-common.button type="button" label="Back" width="105px" bg-color="#FFFFFF" text-color="#9D9B98"
+                border="1px solid rgba(59, 55, 49, 0.10)" :shadow="false" wire:click="goBack" />
+            <x-common.button type="submit" label="Continue" width="105px"
+                bg-color="{{ $this->isSpacerBusinessProfileContinueEnabled() ? '#FFC97A' : '#e5e7eb' }}"
+                text-color="{{ $this->isSpacerBusinessProfileContinueEnabled() ? '#FFFFFF' : '#9ca3af' }}"
+                loading-target="submitSpacerBusinessProfile"
+                x-bind:disabled="!@js($this->isSpacerBusinessProfileContinueEnabled()) || submitting" />
         </div>
     </form>
 </div>
@@ -606,48 +613,45 @@
         transition: none;
     }
 
-    .spacer-custom-chips {
-        list-style: none;
-        margin: 0.5rem 0 0 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
+    .spacer-custom-checkbox-list {
+        margin-top: 0.5rem;
     }
 
-    .spacer-custom-chip {
+    .addon-picker-plus-spinner {
+        border-radius: 50%;
+    }
+
+    .groomer-plus-spinner {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: #FFC97A;
+        box-shadow: 0 5px 8px rgba(0, 0, 0, 0.1);
         display: inline-flex;
         align-items: center;
-        gap: 0.8rem;
-        margin: 0;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 18px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-    .spacer-custom-chip__marker {
-        flex-shrink: 0;
-        width: 1rem;
-        height: 1rem;
-        border-radius: 999px;
-        border: 1px solid #F6C676;
-        background: #FFF;
+        justify-content: center;
         position: relative;
     }
 
-    .spacer-custom-chip__marker::after {
+    .groomer-plus-spinner::after {
         content: "";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 16px;
-        height: 16px;
-        border-radius: 999px;
-        transform: translate(-50%, -50%);
-        background: #F6C676;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.45);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: groomer-plus-spin 0.8s linear infinite;
+    }
+
+    .addon-picker-plus-icon[x-cloak],
+    .addon-picker-plus-spinner[x-cloak] {
+        display: none !important;
+    }
+
+    @keyframes groomer-plus-spin {
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     .services-card>.services-header {

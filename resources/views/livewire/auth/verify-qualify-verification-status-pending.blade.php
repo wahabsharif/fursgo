@@ -31,13 +31,9 @@
             information.</span>
     </div>
     <div class="verification-approved-actions form-buttons">
-        <button type="button" class="back-btn" wire:click="goBack">
-            <span>Back</span>
-        </button>
-        <button type="button" class="submit-btn btn-active verification-pending-cta" wire:click="reviewSubmission"
-            wire:loading.attr="disabled" wire:target="reviewSubmission">
-            <span wire:loading.remove wire:target="reviewSubmission">Review Submission</span>
-            <span wire:loading wire:target="reviewSubmission" class="btn-spinner" aria-hidden="true"></span>
-        </button>
+        <x-common.button type="button" label="Back" width="105px" bg-color="#FFFFFF" text-color="#9D9B98"
+            border="1px solid rgba(59, 55, 49, 0.10)" :shadow="false" wire:click="goBack" />
+        <x-common.button label="Review Submission" width="auto" bg-color="#FFC97A" wire:click="reviewSubmission"
+            box-shadow="0 4px 14px rgba(59, 55, 49, 0.14)" style="min-width: 220px; padding: 0 1.75rem;" />
     </div>
 </div>

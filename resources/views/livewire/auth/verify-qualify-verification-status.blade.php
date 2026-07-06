@@ -33,10 +33,7 @@
         <span class="verification-approved-copy-muted">You can now set up payouts and access all provider features!</p>
     </div>
     <div class="verification-approved-actions" style="justify-content: center;">
-        <button type="button" class="submit-btn btn-active verification-approved-cta"
-            wire:click="continueToBuildProfile" wire:loading.attr="disabled" wire:target="continueToBuildProfile">
-            <span wire:loading.remove wire:target="continueToBuildProfile">Build Your Profile</span>
-            <span wire:loading wire:target="continueToBuildProfile" class="btn-spinner" aria-hidden="true"></span>
-        </button>
+        <x-common.button label="Build Your Profile" width="auto" wire:click="continueToBuildProfile"
+            box-shadow="0 4px 14px rgba(59, 55, 49, 0.14)" style="min-width: 200px; padding: 0 1.75rem;" />
     </div>
 </div>

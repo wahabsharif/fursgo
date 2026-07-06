@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -48,13 +49,25 @@ new #[Layout('layouts.business-hub')] class extends Component {
 
     public $business_avatar_upload = null;
 
-    /** Stored public-disk paths (max 3). */
+    private bool $mergingBusinessOwnerIdUpload = false;
+    private bool $mergingBusinessGalleryPending = false;
+
+    private bool $mergingGovernmentIdUpload = false;
+
+    private bool $mergingInsuranceCertificateUpload = false;
+
+    /** @var array<string, list<UploadedFile|TemporaryUploadedFile>> */
+    private array $pendingDocUploadSnapshots = [];
+
+    /** Stored public-disk paths. */
     public array $business_gallery_paths = [];
 
-    /** New gallery files before submit (max 3 total with paths). */
+    /** New gallery files before submit. */
     public array $business_gallery_pending = [];
 
     public $business_gallery_pick = null;
+
+    private const GALLERY_MIN_VISIBLE_SLOTS = 3;
 
     /** Step 2A — Groomer business profile. */
     public string $groomer_experience = '';
@@ -62,29 +75,26 @@ new #[Layout('layouts.business-hub')] class extends Component {
     public array $groomer_pet_specialties = [];
     public string $groomer_specialty_other = '';
     public array $groomer_pet_sizes = [];
+    public string $groomer_service_input = '';
+    public array $groomer_custom_services = [];
+    public array $groomer_selected_services = [];
     public string $groomer_addon_input = '';
     public array $groomer_custom_addons = [];
     public array $groomer_selected_addons = [];
 
     /**
-     * Fixed grooming service rows (matches verify-qualify-groomer-business-profile UI). Stored in groomer_business_profile.services.
+     * Service rows keyed by slug. Stored in groomer_business_profile.services.
      *
-     * @var array<string, array{price: string, description?: string}>
+     * @var array<string, array{name: string, price: string, description: string}>
      */
-    public array $groomer_services_pricing = [
-        'full_groom' => ['price' => '', 'description' => ''],
-        'face_trim' => ['price' => ''],
-    ];
+    public array $groomer_services_pricing = [];
 
     /**
-     * Sample add-on price rows in the pricing table. Stored in groomer_business_profile.addon_pricing.
+     * Add-on rows keyed by slug. Stored in groomer_business_profile.addon_pricing.
      *
-     * @var array<string, array{price: string, description?: string}>
+     * @var array<string, array{name: string, price: string, description: string}>
      */
-    public array $groomer_addon_pricing = [
-        'flea_tick' => ['price' => '', 'description' => ''],
-        'fast_dry' => ['price' => ''],
-    ];
+    public array $groomer_addon_pricing = [];
 
     /** Step 2B — Spacer business profile (stored in spacer_business_profile JSON). */
     public string $spacer_bio = '';
@@ -137,9 +147,27 @@ new #[Layout('layouts.business-hub')] class extends Component {
     public array $insurance_certificate_paths = [];
     /** New file picks only — bound to the insurance file input. */
     public $insurance_certificate_upload = [];
+    /** Saved business-owner ID paths from DB (registered business). */
+    public array $business_owner_id_paths = [];
+    /** New business-owner ID file picks only — bound to the file input. */
     public $business_owner_id_images = [];
 
+    /** Saved government ID paths from DB (freelance). */
+    public array $government_id_paths = [];
+    /** New government ID file picks only — bound to the file input. */
+    public $government_id = [];
+
+    /** Original upload filenames keyed by storage path (registered business ID). */
+    public array $business_owner_id_file_names = [];
+
+    /** Original upload filenames keyed by storage path (freelance government ID). */
+    public array $government_id_file_names = [];
+
+    /** Original upload filenames keyed by storage path (insurance). */
+    public array $insurance_certificate_file_names = [];
+
     // Third form: Payout details
+    public string $bank = '';
     public string $account_holder_name = '';
     public string $account_number = '';
     public string $sort_code = '';
@@ -162,6 +190,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
     public function mount(): void
     {
         $this->loadExistingData();
+        $this->scrollVerifyQualifyStepToTop();
     }
 
     /**
@@ -174,12 +203,16 @@ new #[Layout('layouts.business-hub')] class extends Component {
             return;
         }
 
-        if (in_array($propertyName, ['full_name', 'business_email', 'business_name', 'business_registration_number', 'business_phone', 'freelance_service_home_address_line1', 'freelance_service_home_address_line2', 'business_owner_id_images', 'insurance_certificate_upload', 'id_documents', 'account_holder_name', 'account_number', 'sort_code', 'iban', 'business_display_name', 'business_tagline', 'business_bio', 'groomer_experience', 'groomer_specialties', 'groomer_pet_specialties', 'groomer_specialty_other', 'groomer_pet_sizes', 'groomer_addon_input', 'groomer_custom_addons', 'groomer_selected_addons', 'groomer_services_pricing', 'groomer_addon_pricing'])) {
+        if (in_array($propertyName, ['fursgo_usage', 'account_type', 'location_types', 'full_name', 'business_email', 'business_name', 'business_registration_number', 'business_phone', 'freelance_service_home_address_line1', 'freelance_service_home_address_line2', 'business_owner_id_paths', 'business_owner_id_images', 'business_owner_id_file_names', 'government_id_paths', 'government_id', 'government_id_file_names', 'insurance_certificate_upload', 'insurance_certificate_paths', 'insurance_certificate_file_names', 'id_documents', 'account_holder_name', 'account_number', 'sort_code', 'iban', 'business_display_name', 'business_tagline', 'business_bio', 'groomer_experience', 'groomer_specialties', 'groomer_pet_specialties', 'groomer_specialty_other', 'groomer_pet_sizes', 'groomer_service_input', 'groomer_custom_services', 'groomer_selected_services', 'groomer_addon_input', 'groomer_custom_addons', 'groomer_selected_addons', 'groomer_services_pricing', 'groomer_addon_pricing'])) {
             // Don't reset file arrays when other properties change
             return;
         }
 
         if (in_array($propertyName, ['business_avatar_upload', 'business_gallery_pick', 'business_gallery_pending'], true)) {
+            return;
+        }
+
+        if (in_array($propertyName, ['legal_terms_accepted', 'legal_privacy_accepted', 'legal_agreements_expanded'], true)) {
             return;
         }
 
@@ -190,44 +223,18 @@ new #[Layout('layouts.business-hub')] class extends Component {
     public function updatedFursgoUsage($value): void
     {
         $this->fursgo_usage = $this->normalizeFursgoUsage((string) $value);
-        if (!$this->shouldUseDevDbPreview()) {
-            $this->validateOnly('fursgo_usage', [
-                'fursgo_usage' => ['required', 'string', 'in:groomer,space'],
-            ]);
-        }
-
-        $this->persistRealtimeVerificationTypeSelections();
-        $this->syncVerificationTypeSelectionsFromDb();
-        $this->syncRealtimeVerificationComponentVisibility();
     }
 
     public function updatedAccountType($value): void
     {
         $this->account_type = (string) $value;
-        if (!$this->shouldUseDevDbPreview()) {
-            $this->validateOnly('account_type', [
-                'account_type' => ['required', 'string', 'in:registered_business,freelance'],
-            ]);
-        }
-
-        $this->persistRealtimeVerificationTypeSelections();
-        $this->syncVerificationTypeSelectionsFromDb();
-        $this->syncRealtimeVerificationComponentVisibility();
     }
 
     public function updatedLocationTypes($value): void
     {
-        if (!$this->shouldUseDevDbPreview()) {
-            $this->validateOnly('location_types', [
-                'location_types' => ['required', 'array', 'min:1'],
-            ]);
-            $this->validateOnly('location_types.*', [
-                'location_types.*' => ['string', 'in:space_visits,commercial_salon,home_studio,house_visit,mobile_van'],
-            ]);
+        if (!is_array($this->location_types)) {
+            $this->location_types = [];
         }
-
-        $this->persistRealtimeVerificationTypeSelections();
-        $this->syncRealtimeVerificationComponentVisibility();
     }
 
     private function shouldBypassDevValidation(?\Illuminate\Contracts\Auth\Authenticatable $user = null): bool
@@ -401,21 +408,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
             return $sessionStep;
         }
 
-        $usage = $this->normalizeFursgoUsage((string) ($user->user_type ?? ''));
-        $accountType = (string) ($user->account_type ?? '');
-        $hasUsage = in_array($usage, ['groomer', 'space'], true);
-        $hasAccount = in_array($accountType, ['registered_business', 'freelance'], true);
-        $locations = $user->select_location_type ?? [];
-        $hasLocations = is_array($locations) && count($locations) > 0;
-
-        if ($hasUsage && $hasAccount && $hasLocations) {
-            return $this->personalInfoSubstepForAccountType($accountType);
-        }
-
-        if ($hasUsage && $hasAccount) {
-            return 'account_payouts';
-        }
-
+        // Fresh visit: always begin at Background Checks (do not skip ahead from saved DB fields).
         return 'background_checks';
     }
 
@@ -427,12 +420,9 @@ new #[Layout('layouts.business-hub')] class extends Component {
         }
 
         if ($this->isFreelanceAccount($user)) {
-            $details = $user->freelance_details ?? [];
+            $details = $this->decodeProfileJson($user->freelance_details ?? null);
         } else {
-            $details = $user->business_details ?? [];
-        }
-        if (!is_array($details)) {
-            $details = is_string($details) ? (json_decode($details, true) ?: []) : [];
+            $details = $this->decodeProfileJson($user->business_details ?? null);
         }
 
         $status = strtolower(trim((string) ($details['verification_status'] ?? '')));
@@ -549,6 +539,12 @@ new #[Layout('layouts.business-hub')] class extends Component {
 
         session(['verification_current_step' => $step]);
         session()->save();
+        $this->scrollVerifyQualifyStepToTop();
+    }
+
+    private function scrollVerifyQualifyStepToTop(): void
+    {
+        $this->js('window.__vqRequestStepScrollToTop?.()');
     }
 
     /**
@@ -625,18 +621,9 @@ new #[Layout('layouts.business-hub')] class extends Component {
     {
         $user = Auth::guard('groomer_spacer')->user();
         if (!$user instanceof GroomerSpacerProfile) {
+            $this->applyVerifyQualifySubstep('background_checks');
+
             return;
-        }
-
-        $this->showVerificationStatus = false;
-        $this->showBusinessBasicsForm = false;
-
-        // Resolve visible step using DB first, then fallback to session.
-        // This keeps UI in sync when user_type/account_type are edited directly in DB and page reloads.
-        $currentStep = $this->resolveVerificationCurrentStepFromDb($user, session('verification_current_step'));
-        if ($currentStep !== '' && $currentStep !== (string) session('verification_current_step', '')) {
-            session(['verification_current_step' => $currentStep]);
-            session()->save();
         }
 
         // Load existing verification data (normalize so "Space", "spacer", etc. match wizard branches)
@@ -644,89 +631,455 @@ new #[Layout('layouts.business-hub')] class extends Component {
         $this->account_type = $user->account_type ?? '';
         $this->location_types = $user->select_location_type ?? [];
 
-        $this->hydratePersonalInfoFieldsFromDb($user);
+        $this->restoreVerificationViewState($user);
+    }
 
-        // Which wizard screen to show — Figma order: 2.3 → 2.4 → 2.5/2.6 → 2.7 → build profile → 2.12.
+    /**
+     * Restore wizard screen from session (and DB fallbacks) after a full page reload.
+     */
+    private function restoreVerificationViewState(GroomerSpacerProfile $user): void
+    {
         $this->verification_review_mode = (bool) session('verification_review_mode', false);
-        $hasBuildProfileSession = (bool) session('verification_build_profile_step', false);
-        $allowBuildProfileResume = $hasBuildProfileSession || ($this->shouldUseDevDbPreview($user) && $user->hasCompletedVerifyQualifyPersonalStep());
 
-        if ($hasBuildProfileSession) {
-            $bpSub = (string) session('verification_build_profile_substep', 'business_basics');
-            if ($bpSub === 'complete') {
-                session()->forget(['verification_build_profile_step', 'verification_build_profile_substep']);
-                session()->save();
-                $hasBuildProfileSession = false;
+        if ((bool) session('verification_build_profile_step', false)) {
+            $validBuildSubsteps = ['business_basics', 'groomer_profile', 'spacer_profile', 'legal_policy', 'start_grooming'];
+            $sessionSub = (string) session('verification_build_profile_substep', '');
+
+            if (in_array($sessionSub, $validBuildSubsteps, true)) {
+                $substep = $this->coerceBuildProfileSubstepToUserType($user, $sessionSub);
+            } else {
+                $substep = $this->inferVerificationBuildProfileSubstep($user);
             }
+
+            if ($substep === 'start_grooming' && !$user->legal_policy_agreements && !$this->shouldUseDevDbPreview($user)) {
+                $substep = 'legal_policy';
+            }
+
+            session(['verification_build_profile_step' => true]);
+            $this->setBuildProfileSubstep($substep);
+            $this->applyBuildProfileSubstepUi($user, $substep);
+
+            return;
         }
 
-        if ($hasBuildProfileSession && $allowBuildProfileResume) {
-            $buildProfileSubstep = $this->shouldUseDevDbPreview($user) ? (string) session('verification_build_profile_substep', 'business_basics') : $this->inferVerificationBuildProfileSubstep($user);
-            session([
-                'verification_build_profile_step' => true,
-                'verification_build_profile_substep' => $buildProfileSubstep,
-            ]);
-            session()->save();
-            $buildProfileSubstep = $this->coerceBuildProfileSubstepToUserType($user, $buildProfileSubstep);
-            if ($buildProfileSubstep !== (string) session('verification_build_profile_substep', '')) {
-                session(['verification_build_profile_substep' => $buildProfileSubstep]);
-                session()->save();
-            }
-            $this->applyBuildProfileSubstepUi($user, $buildProfileSubstep);
-        } elseif ($currentStep === 'verification_notices') {
-            $this->applyVerifyQualifySubstep('verification_notices');
-        } elseif ($this->shouldUseDevDbPreview($user) && in_array($currentStep, ['registered_business', 'freelance_groomer', 'account_payouts'], true)) {
-            $this->applyVerifyQualifySubstep($currentStep);
-        } else {
-            $this->applyVerifyQualifySubstep($currentStep !== '' ? $currentStep : 'background_checks');
-        }
+        $sessionStep = session('verification_current_step');
+        $sessionStep = is_string($sessionStep) && $sessionStep !== '' ? $sessionStep : null;
+        $step = $this->resolveVerificationCurrentStepFromDb($user, $sessionStep);
+        $this->applyVerifyQualifySubstep($step);
 
-        // Never show the wrong build-profile partial if session substep was stale vs user_type
-        $usage = $this->normalizeFursgoUsage($user->user_type ?? '');
-        $bb = $user->business_basics ?? [];
-        if (!is_array($bb)) {
-            $bb = is_string($bb) ? (json_decode($bb, true) ?: []) : [];
-        }
-        $hasDisplayName = trim((string) ($bb['display_name'] ?? '')) !== '';
-        if ($usage === 'space' && $this->showGroomerBusinessProfileForm) {
-            $this->showGroomerBusinessProfileForm = false;
-            if ($hasDisplayName && !$this->showBusinessBasicsForm) {
-                $this->showSpacerBusinessProfileForm = true;
-            }
-        } elseif ($usage === 'groomer' && $this->showSpacerBusinessProfileForm) {
-            $this->showSpacerBusinessProfileForm = false;
-            if ($hasDisplayName && !$this->showBusinessBasicsForm) {
-                $this->showGroomerBusinessProfileForm = true;
-            }
+        if ($this->verification_review_mode && in_array($step, ['registered_business', 'freelance_groomer'], true)) {
+            $this->highlightPersonalStepValidationErrors($user);
         }
     }
 
     /**
-     * Load personal-info form fields from the JSON column that matches DB account_type.
+     * Decode a profile JSON column to an array.
+     */
+    private function decodeProfileJson(mixed $value): array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (!is_string($value) || trim($value) === '') {
+            return [];
+        }
+
+        $decoded = json_decode($value, true);
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $value
+     * @return array<string, string>
+     */
+    private function fileNamesMapFromJson(?array $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $map = [];
+        foreach ($value as $path => $name) {
+            if (!is_string($path) || $path === '' || !is_string($name) || trim($name) === '') {
+                continue;
+            }
+            $map[$path] = trim($name);
+        }
+
+        return $map;
+    }
+
+    private function normalizeStoragePathForLookup(string $path): string
+    {
+        return ltrim(str_replace('\\', '/', trim($path)), '/');
+    }
+
+    private function storagePathMatches(string $left, string $right): bool
+    {
+        return $this->normalizeStoragePathForLookup($left) === $this->normalizeStoragePathForLookup($right);
+    }
+
+    /**
+     * @param  list<string>  $paths
+     */
+    private function pathExistsInStoredList(string $path, array $paths): bool
+    {
+        foreach ($paths as $stored) {
+            if (is_string($stored) && $this->storagePathMatches($path, $stored)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  list<string>  $paths
+     * @return list<string>
+     */
+    private function removeStoredPathFromList(array $paths, string $path): array
+    {
+        return array_values(array_filter($paths, fn($stored) => !is_string($stored) || !$this->storagePathMatches($path, $stored)));
+    }
+
+    /**
+     * @param  array<string, string>  $fileNames
+     * @return array<string, string>
+     */
+    private function removeFileNameForStoredPath(array $fileNames, string $path): array
+    {
+        $filtered = [];
+        foreach ($fileNames as $storedPath => $name) {
+            if ($this->storagePathMatches((string) $storedPath, $path)) {
+                continue;
+            }
+            $filtered[$storedPath] = $name;
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * @param  list<string>  $paths
+     */
+    private function resolveStoredPublicDiskPath(string $path, array $paths): string
+    {
+        foreach ($paths as $stored) {
+            if (is_string($stored) && $this->storagePathMatches($path, $stored)) {
+                return $stored;
+            }
+        }
+
+        return $path;
+    }
+
+    private function pendingUploadMatchesRemoval(UploadedFile|TemporaryUploadedFile $item, string $filename, int $size): bool
+    {
+        if (trim($item->getClientOriginalName()) !== $filename) {
+            return false;
+        }
+
+        if ($size > 0 && (int) $item->getSize() !== $size) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param  list<string>  $paths
+     * @return list<string>
+     */
+    private function uniqueStoredPaths(array $paths): array
+    {
+        $out = [];
+        $seen = [];
+        foreach ($paths as $path) {
+            if (!is_string($path) || $path === '') {
+                continue;
+            }
+            $key = $this->normalizeStoragePathForLookup($path);
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $out[] = $path;
+        }
+
+        return array_values($out);
+    }
+
+    /**
+     * Keep one stored path per original display filename (latest path wins).
+     *
+     * @param  list<string>  $paths
+     * @param  array<string, string>  $fileNames
+     * @return list<string>
+     */
+    private function uniquePathsByOriginalName(array $paths, array $fileNames): array
+    {
+        $paths = $this->uniqueStoredPaths($paths);
+        $out = [];
+        $seenNames = [];
+
+        foreach (array_reverse($paths) as $path) {
+            if (!is_string($path) || $path === '') {
+                continue;
+            }
+
+            $displayName = strtolower(trim($this->displayFileNameForPath($path, $fileNames)));
+            if ($displayName !== '') {
+                if (isset($seenNames[$displayName])) {
+                    continue;
+                }
+                $seenNames[$displayName] = true;
+            }
+
+            array_unshift($out, $path);
+        }
+
+        return array_values($out);
+    }
+
+    private function uploadFingerprint(UploadedFile|TemporaryUploadedFile $file): string
+    {
+        return strtolower(trim($file->getClientOriginalName())) . '|' . $file->getSize();
+    }
+
+    private function originalNameAlreadyStored(string $originalName, array $fileNames): bool
+    {
+        $needle = strtolower(trim($originalName));
+        if ($needle === '') {
+            return false;
+        }
+
+        foreach ($fileNames as $name) {
+            if (strtolower(trim((string) $name)) === $needle) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  list<string>  $paths
+     * @param  array<string, string>  $fileNames
+     * @return array{paths: list<string>, fileNames: array<string, string>, storedPath: ?string}
+     */
+    private function storeDocUploadIfNew(array $paths, array $fileNames, UploadedFile|TemporaryUploadedFile $file, string $storageKey): array
+    {
+        $originalName = trim($file->getClientOriginalName());
+        if ($this->originalNameAlreadyStored($originalName, $fileNames)) {
+            return [
+                'paths' => $paths,
+                'fileNames' => $fileNames,
+                'storedPath' => null,
+            ];
+        }
+
+        $dir = $this->storageDirectoryForUpload($file, $storageKey);
+        $path = $file->store($dir, 'public');
+        $paths[] = $path;
+        if ($originalName !== '') {
+            $fileNames[$path] = $originalName;
+        }
+
+        return [
+            'paths' => $paths,
+            'fileNames' => $fileNames,
+            'storedPath' => $path,
+        ];
+    }
+
+    /**
+     * @return list<UploadedFile|TemporaryUploadedFile>
+     */
+    private function pendingInsuranceCertificateUploads(): array
+    {
+        $items = is_array($this->insurance_certificate_upload ?? null) ? $this->insurance_certificate_upload : [];
+
+        return array_values(array_filter($items, fn($item) => $item instanceof UploadedFile || $item instanceof TemporaryUploadedFile));
+    }
+
+    /**
+     * @param  list<UploadedFile|TemporaryUploadedFile>  $uploads
+     * @return list<UploadedFile|TemporaryUploadedFile>
+     */
+    private function uniquePendingUploads(array $uploads): array
+    {
+        $out = [];
+        $seen = [];
+
+        foreach ($uploads as $file) {
+            $key = $this->uploadFingerprint($file);
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $out[] = $file;
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  list<UploadedFile|TemporaryUploadedFile>  $uploads
+     * @param  array<string, string>  $storedFileNames
+     * @return list<UploadedFile|TemporaryUploadedFile>
+     */
+    private function filterPendingUploadsNotStored(array $uploads, array $storedFileNames): array
+    {
+        return array_values(
+            array_filter($uploads, function ($file) use ($storedFileNames) {
+                if (!($file instanceof UploadedFile || $file instanceof TemporaryUploadedFile)) {
+                    return false;
+                }
+
+                return !$this->originalNameAlreadyStored((string) $file->getClientOriginalName(), $storedFileNames);
+            }),
+        );
+    }
+
+    /**
+     * @param  list<UploadedFile|TemporaryUploadedFile>  $prev
+     * @param  array<string, string>  $storedFileNames
+     * @return list<UploadedFile|TemporaryUploadedFile>
+     */
+    private function reconcilePendingDocUploads(array $prev, mixed $incoming, array $storedFileNames): array
+    {
+        $byFingerprint = [];
+
+        foreach ($prev as $file) {
+            if ($file instanceof UploadedFile || $file instanceof TemporaryUploadedFile) {
+                $byFingerprint[$this->uploadFingerprint($file)] = $file;
+            }
+        }
+
+        $incomingList = is_array($incoming) ? $incoming : ($incoming instanceof UploadedFile || $incoming instanceof TemporaryUploadedFile ? [$incoming] : []);
+
+        foreach ($incomingList as $file) {
+            if ($file instanceof UploadedFile || $file instanceof TemporaryUploadedFile) {
+                $byFingerprint[$this->uploadFingerprint($file)] = $file;
+            }
+        }
+
+        return $this->filterPendingUploadsNotStored(array_values($byFingerprint), $storedFileNames);
+    }
+
+    /**
+     * @param  array<string, string>  $fileNames
+     */
+    private function displayFileNameForPath(string $path, array $fileNames): string
+    {
+        $direct = trim((string) ($fileNames[$path] ?? ''));
+        if ($direct !== '') {
+            return $direct;
+        }
+
+        $normalized = $this->normalizeStoragePathForLookup($path);
+        foreach ($fileNames as $storedPath => $name) {
+            if ($this->normalizeStoragePathForLookup((string) $storedPath) === $normalized) {
+                $match = trim((string) $name);
+
+                return $match !== '' ? $match : '';
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * @param  array<string, string>  $fileNames
+     * @return array{path: string, url: string, name?: string}
+     */
+    private function savedDocUploadEntry(string $path, string $routeName, array $fileNames = []): array
+    {
+        $entry = [
+            'path' => $path,
+            'url' => route($routeName, ['t' => Crypt::encryptString($path)]),
+        ];
+
+        $displayName = $this->displayFileNameForPath($path, $fileNames);
+        if ($displayName !== '') {
+            $entry['name'] = $displayName;
+        }
+
+        return $entry;
+    }
+
+    /**
+     * @param  list<string>  $paths
+     * @param  array<string, string>  $fileNames
+     * @return list<array{path: string, url: string, name?: string}>
+     */
+    private function savedDocUploadEntriesForPaths(array $paths, array $fileNames, string $routeName): array
+    {
+        $entries = [];
+        $seen = [];
+        foreach ($paths as $path) {
+            if (!is_string($path) || $path === '') {
+                continue;
+            }
+            $key = $this->normalizeStoragePathForLookup($path);
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $entries[] = $this->savedDocUploadEntry($path, $routeName, $fileNames);
+        }
+
+        return $entries;
+    }
+
+    /**
+     * @param  array<string, string>  $fileNames
+     * @param  list<string>  $paths
+     * @return array<string, string>
+     */
+    private function intersectFileNamesWithPaths(array $fileNames, array $paths): array
+    {
+        if ($fileNames === [] || $paths === []) {
+            return [];
+        }
+
+        $allowed = [];
+        foreach ($paths as $path) {
+            if (!is_string($path) || $path === '') {
+                continue;
+            }
+            $allowed[$this->normalizeStoragePathForLookup($path)] = true;
+        }
+
+        $filtered = [];
+        foreach ($fileNames as $storedPath => $name) {
+            if (!is_string($storedPath) || $storedPath === '' || !is_string($name) || trim($name) === '') {
+                continue;
+            }
+            if (isset($allowed[$this->normalizeStoragePathForLookup($storedPath)])) {
+                $filtered[$storedPath] = trim($name);
+            }
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * Load personal-info form fields from the JSON column that matches account_type.
      */
     private function hydratePersonalInfoFieldsFromDb(GroomerSpacerProfile $user): void
     {
         $this->full_name = $user->full_name ?? '';
         $this->information_accuracy_confirmed = (bool) ($user->information_accuracy_confirmed ?? false);
 
-        $businessDetails = $user->business_details ?? [];
-        if (!is_array($businessDetails)) {
-            $businessDetails = is_string($businessDetails) ? (json_decode($businessDetails, true) ?: []) : [];
-        }
-        $freelanceDetails = $user->freelance_details ?? [];
-        if (!is_array($freelanceDetails)) {
-            $freelanceDetails = is_string($freelanceDetails) ? (json_decode($freelanceDetails, true) ?: []) : [];
-        }
-        $payoutDetails = $user->payout_details ?? [];
-        if (!is_array($payoutDetails)) {
-            $payoutDetails = is_string($payoutDetails) ? (json_decode($payoutDetails, true) ?: []) : [];
-        }
-        $insuranceDetails = $user->insurance_details ?? [];
-        if (!is_array($insuranceDetails)) {
-            $insuranceDetails = is_string($insuranceDetails) ? (json_decode($insuranceDetails, true) ?: []) : [];
-        }
+        $businessDetails = $this->decodeProfileJson($user->business_details ?? null);
+        $freelanceDetails = $this->decodeProfileJson($user->freelance_details ?? null);
+        $payoutDetails = $this->decodeProfileJson($user->payout_details ?? null);
+        $insuranceDetails = $this->decodeProfileJson($user->insurance_details ?? null);
 
-        if (($user->account_type ?? '') === 'freelance') {
+        if ($this->isFreelanceAccount($user)) {
             $this->freelance_service_home_address_line1 = trim((string) ($freelanceDetails['service_home_address_line1'] ?? ''));
             $this->freelance_service_home_address_line2 = trim((string) ($freelanceDetails['service_home_address_line2'] ?? ''));
             if ($this->freelance_service_home_address_line1 === '' && $this->freelance_service_home_address_line2 === '') {
@@ -738,33 +1091,45 @@ new #[Layout('layouts.business-hub')] class extends Component {
             $this->business_email = trim((string) ($freelanceDetails['contact_email'] ?? ''));
             $this->business_name = '';
             $this->business_registration_number = '';
-            $this->business_phone = $freelanceDetails['contact_phone'] ?? '';
-            $this->business_owner_id_images = is_array($freelanceDetails['id_verification_images'] ?? null) ? $freelanceDetails['id_verification_images'] : [];
+            $this->business_phone = (string) ($freelanceDetails['contact_phone'] ?? '');
+            $this->government_id_paths = GroomerSpacerProfile::governmentIdPathsFromFreelanceDetails($freelanceDetails);
+            $this->government_id = [];
+            $this->government_id_file_names = $this->intersectFileNamesWithPaths($this->fileNamesMapFromJson(is_array($freelanceDetails['government_id_file_names'] ?? null) ? $freelanceDetails['government_id_file_names'] : []), $this->government_id_paths);
+            $this->government_id_paths = $this->uniquePathsByOriginalName($this->government_id_paths, $this->government_id_file_names);
+            $this->business_owner_id_paths = [];
+            $this->business_owner_id_images = [];
+            $this->business_owner_id_file_names = [];
         } else {
             $this->freelance_service_home_address_line1 = '';
             $this->freelance_service_home_address_line2 = '';
+            $this->government_id_paths = [];
+            $this->government_id = [];
+            $this->government_id_file_names = [];
             $this->business_email = trim((string) ($businessDetails['business_email'] ?? ''));
-            $this->business_name = $businessDetails['business_name'] ?? '';
-            $this->business_registration_number = $businessDetails['business_registration_number'] ?? '';
-            $this->business_phone = $businessDetails['business_phone'] ?? '';
-            $this->business_owner_id_images = is_array($businessDetails['business_owner_id_images'] ?? null) ? $businessDetails['business_owner_id_images'] : [];
+            $this->business_name = (string) ($businessDetails['business_name'] ?? '');
+            $this->business_registration_number = (string) ($businessDetails['business_registration_number'] ?? '');
+            $this->business_phone = (string) ($businessDetails['business_phone'] ?? '');
+            $this->business_owner_id_paths = $this->uniqueStoredPaths(GroomerSpacerProfile::businessOwnerIdPathsFromBusinessDetails($businessDetails));
+            if ($this->business_owner_id_paths === []) {
+                $legacyIdPaths = is_array($user->id_document_paths ?? null) ? $user->id_document_paths : [];
+                $this->business_owner_id_paths = $this->uniqueStoredPaths(array_values(array_filter($legacyIdPaths, fn($path) => is_string($path) && $path !== '')));
+            }
+            $this->business_owner_id_images = [];
+            $this->business_owner_id_file_names = $this->intersectFileNamesWithPaths($this->fileNamesMapFromJson(is_array($businessDetails['business_owner_id_file_names'] ?? null) ? $businessDetails['business_owner_id_file_names'] : []), $this->business_owner_id_paths);
+            $this->business_owner_id_paths = $this->uniquePathsByOriginalName($this->business_owner_id_paths, $this->business_owner_id_file_names);
         }
 
-        $this->account_holder_name = $payoutDetails['account_holder_name'] ?? '';
-        $this->account_number = $payoutDetails['account_number'] ?? '';
-        $this->sort_code = $payoutDetails['sort_code'] ?? '';
-        $this->iban = $payoutDetails['iban'] ?? '';
+        $this->bank = (string) ($payoutDetails['bank'] ?? '');
+        $this->account_holder_name = (string) ($payoutDetails['account_holder_name'] ?? '');
+        $this->account_number = (string) ($payoutDetails['account_number'] ?? '');
+        $this->sort_code = (string) ($payoutDetails['sort_code'] ?? '');
+        $this->iban = (string) ($payoutDetails['iban'] ?? '');
 
-        $idPaths = $user->id_document_paths ?? null;
-        if (is_array($idPaths)) {
-            $this->id_documents = $idPaths;
-        } elseif (is_string($idPaths) && $idPaths !== '') {
-            $this->id_documents = json_decode($idPaths, true) ?: [];
-        } else {
-            $this->id_documents = [];
-        }
+        $this->id_documents = [];
         $rawInsPaths = $insuranceDetails['insurance_certificate_paths'] ?? [];
-        $this->insurance_certificate_paths = is_array($rawInsPaths) ? array_values(array_filter($rawInsPaths, fn($p) => is_string($p) && $p !== '')) : [];
+        $this->insurance_certificate_paths = is_array($rawInsPaths) ? $this->uniqueStoredPaths(array_filter($rawInsPaths, fn($p) => is_string($p) && $p !== '')) : [];
+        $this->insurance_certificate_file_names = $this->intersectFileNamesWithPaths($this->fileNamesMapFromJson(is_array($insuranceDetails['insurance_certificate_file_names'] ?? null) ? $insuranceDetails['insurance_certificate_file_names'] : []), $this->insurance_certificate_paths);
+        $this->insurance_certificate_paths = $this->uniquePathsByOriginalName($this->insurance_certificate_paths, $this->insurance_certificate_file_names);
         $this->insurance_certificate_upload = [];
     }
 
@@ -777,27 +1142,142 @@ new #[Layout('layouts.business-hub')] class extends Component {
     }
 
     /**
+     * @return list<string>
+     */
+    private function storedBusinessOwnerIdPathsForDisplay(): array
+    {
+        return array_values(array_filter(is_array($this->business_owner_id_paths) ? $this->business_owner_id_paths : [], fn($path) => is_string($path) && $path !== ''));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function storedGovernmentIdPathsForDisplay(): array
+    {
+        return array_values(array_filter(is_array($this->government_id_paths) ? $this->government_id_paths : [], fn($path) => is_string($path) && $path !== ''));
+    }
+
+    /**
+     * @return list<\Illuminate\Http\UploadedFile|Livewire\Features\SupportFileUploads\TemporaryUploadedFile>
+     */
+    private function pendingBusinessOwnerIdUploads(): array
+    {
+        return array_values(array_filter(is_array($this->business_owner_id_images) ? $this->business_owner_id_images : [], fn($item) => $item instanceof UploadedFile || $item instanceof TemporaryUploadedFile));
+    }
+
+    /**
+     * @return list<\Illuminate\Http\UploadedFile|Livewire\Features\SupportFileUploads\TemporaryUploadedFile>
+     */
+    private function pendingGovernmentIdUploads(): array
+    {
+        return array_values(array_filter(is_array($this->government_id) ? $this->government_id : [], fn($item) => $item instanceof UploadedFile || $item instanceof TemporaryUploadedFile));
+    }
+
+    /**
+     * @return list<UploadedFile|TemporaryUploadedFile>
+     */
+    private function pendingUploadItemsFromProperty(string $property): array
+    {
+        $items = $this->{$property} ?? [];
+        if (!is_array($items)) {
+            $items = $items instanceof UploadedFile || $items instanceof TemporaryUploadedFile ? [$items] : [];
+        }
+
+        return array_values(array_filter($items, fn($item) => $item instanceof UploadedFile || $item instanceof TemporaryUploadedFile));
+    }
+
+    private function snapshotPendingDocUploadProperty(string $property): void
+    {
+        $this->pendingDocUploadSnapshots[$property] = $this->pendingUploadItemsFromProperty($property);
+    }
+
+    /**
+     * @return list<UploadedFile|TemporaryUploadedFile>
+     */
+    private function consumePendingDocUploadSnapshot(string $property): array
+    {
+        $prev = $this->pendingDocUploadSnapshots[$property] ?? [];
+        unset($this->pendingDocUploadSnapshots[$property]);
+
+        return is_array($prev) ? $prev : [];
+    }
+
+    public function updatingBusinessOwnerIdImages($value): void
+    {
+        if (!$this->mergingBusinessOwnerIdUpload) {
+            $this->snapshotPendingDocUploadProperty('business_owner_id_images');
+        }
+    }
+
+    /**
      * Handle business owner ID images uploads — keep existing stored paths when new files are picked.
      */
     public function updatedBusinessOwnerIdImages($value): void
     {
-        $prev = $this->business_owner_id_images ?? [];
-        $keptPaths = [];
-        foreach (is_array($prev) ? $prev : [] as $item) {
-            if (is_string($item) && $item !== '') {
-                $keptPaths[] = $item;
-            }
+        if ($this->mergingBusinessOwnerIdUpload) {
+            return;
         }
-        $incoming = is_array($value) ? $value : ($value ? [$value] : []);
-        $combined = $keptPaths;
-        foreach ($incoming as $item) {
-            if ($item instanceof TemporaryUploadedFile || $item instanceof UploadedFile) {
-                $combined[] = $item;
-            } elseif (is_string($item) && $item !== '' && !in_array($item, $combined, true)) {
-                $combined[] = $item;
-            }
+
+        $this->mergingBusinessOwnerIdUpload = true;
+
+        try {
+            $prev = $this->consumePendingDocUploadSnapshot('business_owner_id_images');
+            $this->business_owner_id_images = $this->reconcilePendingDocUploads($prev, $value, $this->business_owner_id_file_names);
+        } finally {
+            $this->mergingBusinessOwnerIdUpload = false;
         }
-        $this->business_owner_id_images = array_values($combined);
+    }
+
+    public function updatingGovernmentId($value): void
+    {
+        if (!$this->mergingGovernmentIdUpload) {
+            $this->snapshotPendingDocUploadProperty('government_id');
+        }
+    }
+
+    /**
+     * Handle freelance government ID uploads — keep existing stored paths when new files are picked.
+     */
+    public function updatedGovernmentId($value): void
+    {
+        if ($this->mergingGovernmentIdUpload) {
+            return;
+        }
+
+        $this->mergingGovernmentIdUpload = true;
+
+        try {
+            $prev = $this->consumePendingDocUploadSnapshot('government_id');
+            $this->government_id = $this->reconcilePendingDocUploads($prev, $value, $this->government_id_file_names);
+        } finally {
+            $this->mergingGovernmentIdUpload = false;
+        }
+    }
+
+    public function updatingInsuranceCertificateUpload($value): void
+    {
+        if (!$this->mergingInsuranceCertificateUpload) {
+            $this->snapshotPendingDocUploadProperty('insurance_certificate_upload');
+        }
+    }
+
+    /**
+     * Handle insurance certificate uploads — keep existing stored paths and prior temp uploads.
+     */
+    public function updatedInsuranceCertificateUpload($value): void
+    {
+        if ($this->mergingInsuranceCertificateUpload) {
+            return;
+        }
+
+        $this->mergingInsuranceCertificateUpload = true;
+
+        try {
+            $prev = $this->consumePendingDocUploadSnapshot('insurance_certificate_upload');
+            $this->insurance_certificate_upload = $this->reconcilePendingDocUploads($prev, $value, $this->insurance_certificate_file_names);
+        } finally {
+            $this->mergingInsuranceCertificateUpload = false;
+        }
     }
 
     /**
@@ -816,40 +1296,6 @@ new #[Layout('layouts.business-hub')] class extends Component {
 
         $isFreelance = ($user->account_type ?? '') === 'freelance';
 
-        if ($isFreelance) {
-            $freelanceDetails = $user->freelance_details ?? [];
-            if (!is_array($freelanceDetails)) {
-                $freelanceDetails = is_string($freelanceDetails) ? (json_decode($freelanceDetails, true) ?: []) : [];
-            }
-            $images = $freelanceDetails['id_verification_images'] ?? [];
-            if (!is_array($images) || !in_array($path, $images, true)) {
-                return;
-            }
-            $freelanceDetails['id_verification_images'] = array_values(array_filter($images, fn($p) => $p !== $path));
-        } else {
-            $businessDetails = $user->business_details ?? [];
-            if (!is_array($businessDetails)) {
-                $businessDetails = is_string($businessDetails) ? (json_decode($businessDetails, true) ?: []) : [];
-            }
-
-            $images = $businessDetails['business_owner_id_images'] ?? [];
-            if (!is_array($images) || !in_array($path, $images, true)) {
-                return;
-            }
-
-            $businessDetails['business_owner_id_images'] = array_values(array_filter($images, fn($p) => $p !== $path));
-        }
-
-        $this->business_owner_id_images = array_values(
-            array_filter($this->business_owner_id_images ?? [], function ($item) use ($path) {
-                if ($item instanceof TemporaryUploadedFile || $item instanceof UploadedFile) {
-                    return true;
-                }
-
-                return !(is_string($item) && $item === $path);
-            }),
-        );
-
         $idPaths = [];
         $rawId = $user->id_document_paths ?? null;
         if (is_array($rawId)) {
@@ -857,9 +1303,82 @@ new #[Layout('layouts.business-hub')] class extends Component {
         } elseif (is_string($rawId) && $rawId !== '') {
             $idPaths = json_decode($rawId, true) ?: [];
         }
-        $idPaths = array_values(array_filter($idPaths, fn($p) => is_string($p) && $p !== $path));
+        $pathInIdDocuments = $this->pathExistsInStoredList($path, $idPaths);
 
-        $this->id_documents = array_values(array_filter($this->id_documents ?? [], fn($item) => !is_string($item) || $item !== $path));
+        if ($isFreelance) {
+            $freelanceDetails = $user->freelance_details ?? [];
+            if (!is_array($freelanceDetails)) {
+                $freelanceDetails = is_string($freelanceDetails) ? (json_decode($freelanceDetails, true) ?: []) : [];
+            }
+            $images = GroomerSpacerProfile::governmentIdPathsFromFreelanceDetails($freelanceDetails);
+            $pathInFreelance = $this->pathExistsInStoredList($path, $images);
+            if (!$pathInFreelance && !$pathInIdDocuments) {
+                return;
+            }
+            if ($pathInFreelance) {
+                $freelanceDetails['government_id'] = $this->removeStoredPathFromList($images, $path);
+                unset($freelanceDetails['id_verification_images']);
+                $fileNames = $this->fileNamesMapFromJson(is_array($freelanceDetails['government_id_file_names'] ?? null) ? $freelanceDetails['government_id_file_names'] : []);
+                $freelanceDetails['government_id_file_names'] = $this->intersectFileNamesWithPaths($this->removeFileNameForStoredPath($fileNames, $path), $freelanceDetails['government_id']);
+            }
+        } else {
+            $businessDetails = $user->business_details ?? [];
+            if (!is_array($businessDetails)) {
+                $businessDetails = is_string($businessDetails) ? (json_decode($businessDetails, true) ?: []) : [];
+            }
+
+            $images = $businessDetails['business_owner_id_images'] ?? [];
+            if (!is_array($images)) {
+                $images = [];
+            }
+            $pathInBusiness = $this->pathExistsInStoredList($path, $images);
+            if (!$pathInBusiness && !$pathInIdDocuments) {
+                return;
+            }
+            if ($pathInBusiness) {
+                $businessDetails['business_owner_id_images'] = $this->removeStoredPathFromList($images, $path);
+                $fileNames = $this->fileNamesMapFromJson(is_array($businessDetails['business_owner_id_file_names'] ?? null) ? $businessDetails['business_owner_id_file_names'] : []);
+                $businessDetails['business_owner_id_file_names'] = $this->intersectFileNamesWithPaths($this->removeFileNameForStoredPath($fileNames, $path), $businessDetails['business_owner_id_images']);
+            }
+        }
+
+        $diskCandidates = $idPaths;
+        if (isset($images) && is_array($images)) {
+            $diskCandidates = array_merge($diskCandidates, $images);
+        }
+        $diskCandidates = array_merge($diskCandidates, is_array($this->business_owner_id_paths ?? null) ? $this->business_owner_id_paths : [], is_array($this->government_id_paths ?? null) ? $this->government_id_paths : []);
+        $diskPath = $this->resolveStoredPublicDiskPath($path, $diskCandidates);
+
+        $this->business_owner_id_paths = $this->removeStoredPathFromList($this->business_owner_id_paths ?? [], $path);
+
+        $this->government_id_paths = $this->removeStoredPathFromList($this->government_id_paths ?? [], $path);
+
+        $this->business_owner_id_file_names = $this->intersectFileNamesWithPaths($this->removeFileNameForStoredPath($this->business_owner_id_file_names, $path), $this->business_owner_id_paths);
+        $this->government_id_file_names = $this->intersectFileNamesWithPaths($this->removeFileNameForStoredPath($this->government_id_file_names, $path), $this->government_id_paths);
+
+        $this->business_owner_id_images = array_values(
+            array_filter($this->business_owner_id_images ?? [], function ($item) use ($path) {
+                if ($item instanceof TemporaryUploadedFile || $item instanceof UploadedFile) {
+                    return true;
+                }
+
+                return !(is_string($item) && $this->storagePathMatches($item, $path));
+            }),
+        );
+
+        $this->government_id = array_values(
+            array_filter($this->government_id ?? [], function ($item) use ($path) {
+                if ($item instanceof TemporaryUploadedFile || $item instanceof UploadedFile) {
+                    return true;
+                }
+
+                return !(is_string($item) && $this->storagePathMatches($item, $path));
+            }),
+        );
+
+        $idPaths = $this->removeStoredPathFromList($idPaths, $path);
+
+        $this->id_documents = array_values(array_filter($this->id_documents ?? [], fn($item) => !(is_string($item) && $this->storagePathMatches($item, $path))));
 
         $payload = [];
         if ($isFreelance) {
@@ -873,8 +1392,8 @@ new #[Layout('layouts.business-hub')] class extends Component {
 
         $user->update($payload);
 
-        if (Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
+        if (Storage::disk('public')->exists($diskPath)) {
+            Storage::disk('public')->delete($diskPath);
         }
     }
 
@@ -898,18 +1417,32 @@ new #[Layout('layouts.business-hub')] class extends Component {
         }
 
         $paths = $insuranceDetails['insurance_certificate_paths'] ?? [];
-        if (!is_array($paths) || !in_array($path, $paths, true)) {
+        if (!is_array($paths) || !$this->pathExistsInStoredList($path, $paths)) {
             return;
         }
 
-        $insuranceDetails['insurance_certificate_paths'] = array_values(array_filter($paths, fn($p) => $p !== $path));
+        $diskPath = $this->resolveStoredPublicDiskPath($path, $paths);
 
-        $this->insurance_certificate_paths = array_values(array_filter($this->insurance_certificate_paths ?? [], fn($p) => $p !== $path));
+        $insuranceDetails['insurance_certificate_paths'] = $this->removeStoredPathFromList($paths, $path);
+        $fileNames = $this->fileNamesMapFromJson(is_array($insuranceDetails['insurance_certificate_file_names'] ?? null) ? $insuranceDetails['insurance_certificate_file_names'] : []);
+        $insuranceDetails['insurance_certificate_file_names'] = $this->intersectFileNamesWithPaths($this->removeFileNameForStoredPath($fileNames, $path), $insuranceDetails['insurance_certificate_paths']);
+
+        $this->insurance_certificate_paths = $this->removeStoredPathFromList($this->insurance_certificate_paths ?? [], $path);
+        $this->insurance_certificate_file_names = $this->intersectFileNamesWithPaths($this->removeFileNameForStoredPath($this->insurance_certificate_file_names, $path), $this->insurance_certificate_paths);
+        $this->insurance_certificate_upload = array_values(
+            array_filter($this->insurance_certificate_upload ?? [], function ($item) use ($path) {
+                if ($item instanceof TemporaryUploadedFile || $item instanceof UploadedFile) {
+                    return true;
+                }
+
+                return !(is_string($item) && $this->storagePathMatches($item, $path));
+            }),
+        );
 
         $user->update(['insurance_details' => $insuranceDetails]);
 
-        if (Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
+        if (Storage::disk('public')->exists($diskPath)) {
+            Storage::disk('public')->delete($diskPath);
         }
     }
 
@@ -1150,8 +1683,11 @@ new #[Layout('layouts.business-hub')] class extends Component {
         }
 
         if (!$this->isPersonalInfoFormValid()) {
-            if (count($this->business_owner_id_images ?? []) === 0 && count($this->id_documents ?? []) === 0) {
-                $this->addError('business_owner_id_images', 'Please upload at least one ID document.');
+            $idUploads = $this->isFreelanceAccount($user) ? $this->storedGovernmentIdPathsForDisplay() : $this->storedBusinessOwnerIdPathsForDisplay();
+            $pendingUploads = $this->isFreelanceAccount($user) ? $this->pendingGovernmentIdUploads() : $this->pendingBusinessOwnerIdUploads();
+            if (count($idUploads) === 0 && count($pendingUploads) === 0) {
+                $errorKey = $this->isFreelanceAccount($user) ? 'government_id' : 'business_owner_id_images';
+                $this->addError($errorKey, 'Please upload at least one ID document.');
             }
         }
     }
@@ -1186,7 +1722,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
      *
      * @param  bool  $hydrateBasicsFields  When false, skips heavy JSON hydration (faster step switches to Legal / success).
      */
-    private function enterBusinessBasicsStep(GroomerSpacerProfile $user, bool $refreshFromDb, bool $hydrateBasicsFields = true): void
+    private function enterBusinessBasicsStep(GroomerSpacerProfile $user, bool $refreshFromDb, bool $hydrateBasicsFields = true, bool $scrollToTop = true): void
     {
         $this->showBusinessBasicsForm = true;
         $this->showVerificationStatus = false;
@@ -1200,12 +1736,16 @@ new #[Layout('layouts.business-hub')] class extends Component {
         $this->showStartEarningComplete = false;
         $this->legal_agreements_expanded = false;
 
-        if ($refreshFromDb) {
+        if ($refreshFromDb || $hydrateBasicsFields) {
             $user->refresh();
         }
 
         if ($hydrateBasicsFields) {
             $this->hydrateBusinessBasicsFields($user);
+        }
+
+        if ($scrollToTop) {
+            $this->scrollVerifyQualifyStepToTop();
         }
     }
 
@@ -1228,30 +1768,11 @@ new #[Layout('layouts.business-hub')] class extends Component {
         $this->business_tagline = trim((string) ($bb['tagline'] ?? ''));
         $this->business_bio = trim((string) ($bb['bio'] ?? ''));
         $this->business_avatar_path = $this->normalizeStoredPublicPath((string) ($bb['profile_photo_path'] ?? ''));
-
-        $paths = $bb['gallery_paths'] ?? [];
-        if (is_string($paths) && $paths !== '') {
-            $paths = json_decode($paths, true) ?: [];
-        }
-        $this->business_gallery_paths = [];
-        if (is_array($paths)) {
-            foreach ($paths as $p) {
-                if (!is_string($p) || $p === '') {
-                    continue;
-                }
-                $n = $this->normalizeStoredPublicPath($p);
-                if ($n !== '') {
-                    $this->business_gallery_paths[] = $n;
-                }
-                if (count($this->business_gallery_paths) >= 3) {
-                    break;
-                }
-            }
-        }
+        $this->business_gallery_paths = $this->galleryPathsFromBusinessBasics($bb);
 
         $this->business_avatar_upload = null;
-        $this->business_gallery_pending = [];
         $this->business_gallery_pick = null;
+        $this->business_gallery_pending = [];
 
         $groomerProfile = $user->groomer_business_profile ?? [];
         if (!is_array($groomerProfile)) {
@@ -1284,6 +1805,17 @@ new #[Layout('layouts.business-hub')] class extends Component {
             $selectedAddons = [];
         }
         $this->groomer_selected_addons = array_values(array_filter($selectedAddons, fn($v) => is_string($v) && trim($v) !== ''));
+        $customServices = $groomerProfile['custom_services'] ?? [];
+        if (!is_array($customServices)) {
+            $customServices = [];
+        }
+        $this->groomer_custom_services = array_values(array_filter($customServices, fn($v) => is_string($v) && trim($v) !== ''));
+        $selectedServices = $groomerProfile['selected_services'] ?? [];
+        if (!is_array($selectedServices)) {
+            $selectedServices = [];
+        }
+        $this->groomer_selected_services = array_values(array_filter($selectedServices, fn($v) => is_string($v) && trim($v) !== ''));
+        $this->groomer_service_input = '';
         $this->groomer_addon_input = '';
 
         $this->hydrateGroomerServiceAndAddonPricing($groomerProfile);
@@ -1292,51 +1824,375 @@ new #[Layout('layouts.business-hub')] class extends Component {
     }
 
     /**
-     * Load groomer_services_pricing / groomer_addon_pricing from saved JSON (fixed keys for the template rows).
+     * @param  array<string, mixed>  $bb
+     * @return list<string>
+     */
+    private function galleryPathsFromBusinessBasics(array $bb): array
+    {
+        $paths = $bb['gallery_paths'] ?? [];
+        if (is_string($paths) && $paths !== '') {
+            $paths = json_decode($paths, true) ?: [];
+        }
+
+        $out = [];
+        if (!is_array($paths)) {
+            return $out;
+        }
+
+        foreach ($paths as $p) {
+            if (!is_string($p) || $p === '') {
+                continue;
+            }
+            $n = $this->normalizeStoredPublicPath($p);
+            if ($n !== '') {
+                $out[] = $n;
+            }
+            if (count($out) >= 100) {
+                break;
+            }
+        }
+
+        return $out;
+    }
+
+    public function initVerifyQualifyDocUploads(): void
+    {
+        $this->js(
+            <<<'JS'
+                if (window.VqDocUpload) {
+                    if (typeof window.VqDocUpload.init === 'function') window.VqDocUpload.init();
+                    if (typeof window.VqDocUpload.afterMorph === 'function') window.VqDocUpload.afterMorph();
+                }
+            JS
+            ,
+        );
+    }
+
+    /** @deprecated Use initVerifyQualifyDocUploads() */
+    public function initBusinessBasicsDocUploads(): void
+    {
+        $this->initVerifyQualifyDocUploads();
+    }
+
+    private function syncBusinessBasicsMediaFromDb(): void
+    {
+        $user = Auth::guard('groomer_spacer')->user();
+        if (!$user instanceof GroomerSpacerProfile) {
+            return;
+        }
+
+        $user->refresh();
+        $bb = $user->business_basics ?? [];
+        if (!is_array($bb)) {
+            $bb = is_string($bb) ? (json_decode($bb, true) ?: []) : [];
+        }
+
+        $this->business_avatar_path = $this->normalizeStoredPublicPath((string) ($bb['profile_photo_path'] ?? ''));
+        $this->business_gallery_paths = $this->galleryPathsFromBusinessBasics($bb);
+    }
+
+    /**
+     * @return list<UploadedFile|TemporaryUploadedFile>
+     */
+    private function pendingBusinessGalleryUploads(): array
+    {
+        return array_values(array_filter(is_array($this->business_gallery_pending) ? $this->business_gallery_pending : [], fn($item) => $item instanceof UploadedFile || $item instanceof TemporaryUploadedFile));
+    }
+
+    public function galleryVisibleSlotCount(): int
+    {
+        $used = count($this->business_gallery_paths) + count($this->pendingBusinessGalleryUploads());
+
+        return max(self::GALLERY_MIN_VISIBLE_SLOTS, $used + 1);
+    }
+
+    /**
+     * Load groomer_services_pricing / groomer_addon_pricing from saved JSON.
      */
     private function hydrateGroomerServiceAndAddonPricing(array $groomerProfile): void
     {
-        $defServices = [
-            'full_groom' => ['price' => '', 'description' => ''],
-            'face_trim' => ['price' => ''],
-        ];
         $svc = $groomerProfile['services'] ?? [];
         if (!is_array($svc)) {
             $svc = [];
         }
-        $outS = [];
-        foreach ($defServices as $k => $shape) {
-            $row = isset($svc[$k]) && is_array($svc[$k]) ? $svc[$k] : [];
-            $merged = $shape;
-            foreach (array_keys($shape) as $f) {
-                if (array_key_exists($f, $row) && (is_string($row[$f]) || is_numeric($row[$f]))) {
-                    $merged[$f] = trim((string) $row[$f]);
+
+        if ($this->groomer_selected_services === []) {
+            $legacyServiceMap = [
+                'full_groom' => 'Full Groom (bath, dry, haircut)',
+                'face_trim' => 'Face Trim Only',
+            ];
+            foreach ($legacyServiceMap as $key => $label) {
+                if (array_key_exists($key, $svc)) {
+                    $this->groomer_selected_services[] = $label;
                 }
             }
-            $outS[$k] = $merged;
+            foreach ($svc as $key => $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                $name = trim((string) ($row['name'] ?? ''));
+                if ($name === '' && isset($legacyServiceMap[$key])) {
+                    $name = $legacyServiceMap[$key];
+                }
+                if ($name !== '' && !in_array($name, $this->groomer_selected_services, true)) {
+                    $this->groomer_selected_services[] = $name;
+                }
+            }
         }
-        $this->groomer_services_pricing = $outS;
 
-        $defAddons = [
-            'flea_tick' => ['price' => '', 'description' => ''],
-            'fast_dry' => ['price' => ''],
-        ];
         $addon = $groomerProfile['addon_pricing'] ?? [];
         if (!is_array($addon)) {
             $addon = [];
         }
-        $outA = [];
-        foreach ($defAddons as $k => $shape) {
-            $row = isset($addon[$k]) && is_array($addon[$k]) ? $addon[$k] : [];
-            $merged = $shape;
-            foreach (array_keys($shape) as $f) {
-                if (array_key_exists($f, $row) && (is_string($row[$f]) || is_numeric($row[$f]))) {
-                    $merged[$f] = trim((string) $row[$f]);
+
+        if ($this->groomer_selected_addons === []) {
+            $legacyAddonMap = [
+                'flea_tick' => 'Flea & Tick Treatment',
+                'fast_dry' => 'Fast-Dry Service (express grooming)',
+            ];
+            foreach ($legacyAddonMap as $key => $label) {
+                if (array_key_exists($key, $addon)) {
+                    $this->groomer_selected_addons[] = $label;
                 }
             }
-            $outA[$k] = $merged;
         }
-        $this->groomer_addon_pricing = $outA;
+
+        $this->groomer_selected_addons = $this->normalizeGroomerSelectedAddons($this->groomer_selected_addons, $addon);
+
+        if ($this->groomer_selected_addons === []) {
+            $legacyAddonMap = [
+                'flea_tick' => 'Flea & Tick Treatment',
+                'fast_dry' => 'Fast-Dry Service (express grooming)',
+            ];
+            foreach ($legacyAddonMap as $key => $label) {
+                if (array_key_exists($key, $addon)) {
+                    $this->groomer_selected_addons[] = $label;
+                }
+            }
+        }
+
+        $this->syncGroomerServicesPricing($svc);
+        $this->syncGroomerAddonPricing($addon);
+    }
+
+    /**
+     * @param  array<int, string>  $selected
+     * @param  array<string, array<string, mixed>>  $addonPricing
+     * @return array<int, string>
+     */
+    private function normalizeGroomerSelectedAddons(array $selected, array $addonPricing = []): array
+    {
+        $legacyKeyToLabel = [
+            'flea_tick' => 'Flea & Tick Treatment',
+            'fast_dry' => 'Fast-Dry Service (express grooming)',
+        ];
+
+        $normalized = [];
+        foreach ($selected as $value) {
+            if (!is_string($value) || trim($value) === '') {
+                continue;
+            }
+            $value = trim($value);
+
+            if (in_array($value, $this->groomerAddonCatalog(), true)) {
+                $normalized[] = $value;
+
+                continue;
+            }
+
+            if (in_array($value, $this->groomer_custom_addons, true)) {
+                $normalized[] = $value;
+
+                continue;
+            }
+
+            if (isset($legacyKeyToLabel[$value])) {
+                $normalized[] = $legacyKeyToLabel[$value];
+
+                continue;
+            }
+
+            if (isset($addonPricing[$value]) && is_array($addonPricing[$value])) {
+                $name = trim((string) ($addonPricing[$value]['name'] ?? ''));
+                if ($name !== '') {
+                    $normalized[] = $name;
+
+                    continue;
+                }
+            }
+
+            $resolved = null;
+            foreach ($this->groomerAddonCatalog() as $label) {
+                if ($this->groomerAddonKey($label) === $value) {
+                    $resolved = $label;
+                    break;
+                }
+            }
+            if ($resolved === null) {
+                foreach ($this->groomer_custom_addons as $label) {
+                    if ($this->groomerAddonKey($label) === $value) {
+                        $resolved = $label;
+                        break;
+                    }
+                }
+            }
+            if ($resolved !== null) {
+                $normalized[] = $resolved;
+
+                continue;
+            }
+
+            if (!preg_match('/^[a-z0-9_]+$/', $value)) {
+                $normalized[] = $value;
+            }
+        }
+
+        return array_values(array_unique($normalized));
+    }
+
+    public function groomerServiceCatalog(): array
+    {
+        return ['Full Groom (bath, dry, haircut)', 'Face Trim Only', 'Nail Trim', 'Ear Cleaning', 'Tail Trim Only', 'Bath & Brush', 'Luxury Spa'];
+    }
+
+    public function groomerAddonCatalog(): array
+    {
+        return ['Flea & Tick Treatment', 'Hypoallergenic Shampoo Upgrade', 'Tear-Stain Treatment', 'Coat Shine Spray', 'Nail Grinding', 'Coat Colour Enhancing Shampoo', 'Fast-Dry Service (express grooming)', 'Breath Freshner Gel', 'Deep Conditioning Mask', 'Shed-Control Shampoo', 'Deodorising Treatment', 'Anti-Itch Treatment', 'Soft-Claws / Nail Caps Application', 'Premium Fragrance Upgrade', 'Paw Fur Shaping'];
+    }
+
+    public function groomerServiceDefaultDescription(string $name): string
+    {
+        return match ($name) {
+            'Face Trim Only' => 'Targeted trimming of facial hair to maintain cleanliness, comfort, and visibility without a full groom.',
+            default => '',
+        };
+    }
+
+    public function groomerServiceKeyFor(string $name): string
+    {
+        return $this->groomerServiceKey($name);
+    }
+
+    public function groomerAddonKeyFor(string $name): string
+    {
+        return $this->groomerAddonKey($name);
+    }
+
+    private function groomerServiceKey(string $name): string
+    {
+        $legacy = [
+            'Full Groom (bath, dry, haircut)' => 'full_groom',
+            'Face Trim Only' => 'face_trim',
+            'Nail Trim' => 'nail_trim',
+            'Ear Cleaning' => 'ear_cleaning',
+            'Tail Trim Only' => 'tail_trim_only',
+            'Bath & Brush' => 'bath_brush',
+            'Luxury Spa' => 'luxury_spa',
+        ];
+
+        if (isset($legacy[$name])) {
+            return $legacy[$name];
+        }
+
+        $base = Str::slug($name, '_');
+
+        return $base !== '' ? $base : 'service_' . substr(md5($name), 0, 8);
+    }
+
+    private function groomerAddonKey(string $name): string
+    {
+        $legacy = [
+            'Flea & Tick Treatment' => 'flea_tick',
+            'Fast-Dry Service (express grooming)' => 'fast_dry',
+        ];
+
+        if (isset($legacy[$name])) {
+            return $legacy[$name];
+        }
+
+        $base = Str::slug($name, '_');
+
+        return $base !== '' ? $base : 'addon_' . substr(md5($name), 0, 8);
+    }
+
+    public function updatedGroomerSelectedServices(): void
+    {
+        $this->syncGroomerServicesPricing();
+    }
+
+    public function updatedGroomerSelectedAddons(): void
+    {
+        $this->syncGroomerAddonPricing();
+    }
+
+    private function syncGroomerServicesPricing(?array $loaded = null): void
+    {
+        $loaded = $loaded ?? $this->groomer_services_pricing;
+        $next = [];
+        foreach ($this->groomer_selected_services as $name) {
+            if (!is_string($name) || trim($name) === '') {
+                continue;
+            }
+            $name = trim($name);
+            $key = $this->groomerServiceKey($name);
+            $row = isset($loaded[$key]) && is_array($loaded[$key]) ? $loaded[$key] : [];
+            $existing = $this->groomer_services_pricing[$key] ?? [];
+            $next[$key] = [
+                'name' => $name,
+                'price' => trim((string) ($existing['price'] ?? ($row['price'] ?? ''))),
+                'description' => trim((string) ($existing['description'] ?? ($row['description'] ?? ''))),
+            ];
+        }
+        $this->groomer_services_pricing = $next;
+    }
+
+    private function syncGroomerAddonPricing(?array $loaded = null): void
+    {
+        $loaded = $loaded ?? $this->groomer_addon_pricing;
+        $next = [];
+        foreach ($this->groomer_selected_addons as $name) {
+            if (!is_string($name) || trim($name) === '') {
+                continue;
+            }
+            $name = trim($name);
+            $key = $this->groomerAddonKey($name);
+            $row = isset($loaded[$key]) && is_array($loaded[$key]) ? $loaded[$key] : [];
+            $existing = $this->groomer_addon_pricing[$key] ?? [];
+            $next[$key] = [
+                'name' => $name,
+                'price' => trim((string) ($existing['price'] ?? ($row['price'] ?? ''))),
+                'description' => trim((string) ($existing['description'] ?? ($row['description'] ?? ''))),
+            ];
+        }
+        $this->groomer_addon_pricing = $next;
+    }
+
+    public function addGroomerCustomService(): void
+    {
+        $name = trim($this->groomer_service_input);
+        if ($name === '') {
+            return;
+        }
+
+        if (in_array($name, $this->groomerServiceCatalog(), true)) {
+            if (!in_array($name, $this->groomer_selected_services, true)) {
+                $this->groomer_selected_services[] = $name;
+            }
+            $this->groomer_service_input = '';
+            $this->syncGroomerServicesPricing();
+
+            return;
+        }
+
+        if (!in_array($name, $this->groomer_custom_services, true)) {
+            $this->groomer_custom_services[] = $name;
+        }
+        if (!in_array($name, $this->groomer_selected_services, true)) {
+            $this->groomer_selected_services[] = $name;
+        }
+
+        $this->groomer_service_input = '';
+        $this->syncGroomerServicesPricing();
     }
 
     private function mergeSpacerProfileKeyedRows(array $defaults, array $loaded): array
@@ -1437,7 +2293,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
                 if (in_array($r, $this->spacerRulesPresetCatalog(), true)) {
                     $this->spacer_rules_preset_selected[] = $r;
                 } else {
-                    $this->spacer_rules_custom[] = $r;
+                    $this->spacer_rules_custom[] = ['text' => $r, 'selected' => true];
                 }
             }
         } else {
@@ -1447,7 +2303,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
             }
             $rc = $data['rules_custom'] ?? [];
             if (is_array($rc)) {
-                $this->spacer_rules_custom = array_values(array_filter($rc, fn($v) => is_string($v) && trim($v) !== ''));
+                $this->spacer_rules_custom = $this->normalizeSpacerCustomEntries($rc);
             }
         }
         $this->spacer_rules_preset_selected = array_values(array_unique($this->spacer_rules_preset_selected));
@@ -1463,7 +2319,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
                 if (in_array($a, $this->spacerAmenitiesPresetCatalog(), true)) {
                     $this->spacer_amenities_preset_selected[] = $a;
                 } else {
-                    $this->spacer_amenities_custom[] = $a;
+                    $this->spacer_amenities_custom[] = ['text' => $a, 'selected' => true];
                 }
             }
         } else {
@@ -1473,7 +2329,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
             }
             $ac = $data['amenities_custom'] ?? [];
             if (is_array($ac)) {
-                $this->spacer_amenities_custom = array_values(array_filter($ac, fn($v) => is_string($v) && trim($v) !== ''));
+                $this->spacer_amenities_custom = $this->normalizeSpacerCustomEntries($ac);
             }
         }
         $this->spacer_amenities_preset_selected = array_values(array_unique($this->spacer_amenities_preset_selected));
@@ -1483,29 +2339,50 @@ new #[Layout('layouts.business-hub')] class extends Component {
         $this->spacer_amenity_input = '';
     }
 
+    public function updatingBusinessGalleryPending($value): void
+    {
+        if (!$this->mergingBusinessGalleryPending) {
+            $this->snapshotPendingDocUploadProperty('business_gallery_pending');
+        }
+    }
+
+    public function updatedBusinessGalleryPending($value): void
+    {
+        if ($this->mergingBusinessGalleryPending) {
+            return;
+        }
+
+        $this->mergingBusinessGalleryPending = true;
+
+        try {
+            $prev = $this->consumePendingDocUploadSnapshot('business_gallery_pending');
+            $this->business_gallery_pending = $this->reconcilePendingDocUploads($prev, $value, []);
+        } finally {
+            $this->mergingBusinessGalleryPending = false;
+        }
+    }
+
     public function updatedBusinessGalleryPick($value): void
     {
         if (!$value instanceof TemporaryUploadedFile) {
-            $this->business_gallery_pick = null;
-
             return;
         }
 
         $this->resetValidation('business_gallery_pick');
 
         $this->validate([
-            'business_gallery_pick' => ['file'],
+            'business_gallery_pick' => ['file', 'mimes:jpg,jpeg,png,gif,webp', 'max:51200'],
         ]);
 
         $room = 3 - count($this->business_gallery_paths) - count($this->business_gallery_pending);
         if ($room > 0) {
-            $this->business_gallery_pending[] = $value;
+            $this->business_gallery_pending = [...$this->business_gallery_pending, $value];
         }
 
         $this->business_gallery_pick = null;
     }
 
-    public function removeBusinessAvatar(): void
+    public function removeBusinessAvatar(bool $includeStored = true): void
     {
         if ($this->business_avatar_upload instanceof TemporaryUploadedFile) {
             $this->business_avatar_upload = null;
@@ -1516,6 +2393,10 @@ new #[Layout('layouts.business-hub')] class extends Component {
         if ($this->business_avatar_upload !== null && $this->business_avatar_upload !== '') {
             $this->business_avatar_upload = null;
 
+            return;
+        }
+
+        if (!$includeStored) {
             return;
         }
 
@@ -1535,6 +2416,41 @@ new #[Layout('layouts.business-hub')] class extends Component {
             unset($bb['profile_photo_path']);
             $user->update(['business_basics' => $bb]);
         }
+    }
+
+    /**
+     * Remove a not-yet-submitted temporary upload from a doc-upload wire model.
+     */
+    public function removePendingDocUpload(string $property, string $filename, int $size = 0): void
+    {
+        $allowed = ['business_owner_id_images', 'government_id', 'insurance_certificate_upload', 'business_gallery_pending'];
+        if (!in_array($property, $allowed, true)) {
+            return;
+        }
+
+        unset($this->pendingDocUploadSnapshots[$property]);
+
+        $items = $this->{$property} ?? [];
+        if (!is_array($items)) {
+            $items = $items instanceof TemporaryUploadedFile ? [$items] : [];
+        }
+
+        $remaining = [];
+        foreach ($items as $item) {
+            if ($item instanceof TemporaryUploadedFile || $item instanceof UploadedFile) {
+                if ($this->pendingUploadMatchesRemoval($item, $filename, $size)) {
+                    if ($item instanceof TemporaryUploadedFile) {
+                        $item->delete();
+                    }
+
+                    continue;
+                }
+            }
+
+            $remaining[] = $item;
+        }
+
+        $this->{$property} = array_values($remaining);
     }
 
     public function removeBusinessGalleryPath(int $index): void
@@ -1562,6 +2478,25 @@ new #[Layout('layouts.business-hub')] class extends Component {
         }
     }
 
+    public function removeBusinessGalleryStoredFile(string $path): void
+    {
+        if ($path === '' || str_contains($path, '..')) {
+            return;
+        }
+
+        $needle = $this->normalizeStoragePathForLookup($path);
+        foreach ($this->business_gallery_paths as $index => $stored) {
+            if (!is_string($stored) || $stored === '') {
+                continue;
+            }
+            if ($this->normalizeStoragePathForLookup($stored) === $needle) {
+                $this->removeBusinessGalleryPath((int) $index);
+
+                return;
+            }
+        }
+    }
+
     public function removeBusinessGalleryPending(int $index): void
     {
         if (!isset($this->business_gallery_pending[$index])) {
@@ -1569,6 +2504,9 @@ new #[Layout('layouts.business-hub')] class extends Component {
         }
 
         $file = $this->business_gallery_pending[$index];
+        if ($file instanceof TemporaryUploadedFile) {
+            $file->delete();
+        }
         unset($this->business_gallery_pending[$index]);
         $this->business_gallery_pending = array_values($this->business_gallery_pending);
     }
@@ -1667,6 +2605,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
         session(['verification_build_profile_step' => true]);
         $this->setBuildProfileSubstep('start_grooming');
         session()->save();
+        $this->scrollVerifyQualifyStepToTop();
     }
 
     public function currentSidebarStep(): int
@@ -2060,7 +2999,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
     {
         $buildProfileSubstep = $this->coerceBuildProfileSubstepToUserType($user, $buildProfileSubstep);
         $hydrateBasics = !in_array($buildProfileSubstep, ['legal_policy', 'start_grooming'], true);
-        $this->enterBusinessBasicsStep($user, false, $hydrateBasics);
+        $this->enterBusinessBasicsStep($user, false, $hydrateBasics, false);
         if ($buildProfileSubstep === 'groomer_profile') {
             $this->showBusinessBasicsForm = false;
             $this->showGroomerBusinessProfileForm = true;
@@ -2096,6 +3035,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
             $this->showLegalPolicyForm = false;
             $this->showStartEarningComplete = false;
         }
+        $this->scrollVerifyQualifyStepToTop();
     }
 
     private function applySidebarStepOneForGroomerSpaceUser(GroomerSpacerProfile $user): void
@@ -2213,8 +3153,8 @@ new #[Layout('layouts.business-hub')] class extends Component {
         if ($t === '') {
             return;
         }
-        if (!in_array($t, $this->spacer_rules_custom, true)) {
-            $this->spacer_rules_custom[] = $t;
+        if (!in_array($t, array_column($this->spacer_rules_custom, 'text'), true)) {
+            $this->spacer_rules_custom[] = ['text' => $t, 'selected' => true];
         }
         $this->spacer_rule_input = '';
     }
@@ -2225,8 +3165,8 @@ new #[Layout('layouts.business-hub')] class extends Component {
         if ($t === '') {
             return;
         }
-        if (!in_array($t, $this->spacer_amenities_custom, true)) {
-            $this->spacer_amenities_custom[] = $t;
+        if (!in_array($t, array_column($this->spacer_amenities_custom, 'text'), true)) {
+            $this->spacer_amenities_custom[] = ['text' => $t, 'selected' => true];
         }
         $this->spacer_amenity_input = '';
     }
@@ -2243,6 +3183,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
                 $this->groomer_selected_addons[] = $name;
             }
             $this->groomer_addon_input = '';
+            $this->syncGroomerAddonPricing();
 
             return;
         }
@@ -2255,11 +3196,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
         }
 
         $this->groomer_addon_input = '';
-    }
-
-    private function groomerAddonCatalog(): array
-    {
-        return ['Flea & Tick Treatment', 'Hypoallergenic Shampoo Upgrade', 'Tear-Stain Treatment', 'Coat Shine Spray', 'Nail Grinding', 'Coat Colour Enhancing Shampoo', 'Fast-Dry Service (express grooming)', 'Breath Freshner Gel', 'Deep Conditioning Mask', 'Shed-Control Shampoo', 'Deodorising Treatment', 'Anti-Itch Treatment', 'Soft-Claws / Nail Caps Application', 'Premium Fragrance Upgrade', 'Paw Fur Shaping'];
+        $this->syncGroomerAddonPricing();
     }
 
     private function setBuildProfileSubstep(string $substep): void
@@ -2281,17 +3218,15 @@ new #[Layout('layouts.business-hub')] class extends Component {
                 'business_display_name' => ['required', 'string', 'max:255'],
                 'business_tagline' => ['nullable', 'string', 'max:500'],
                 'business_bio' => ['nullable', 'string', 'max:5000'],
-                'business_avatar_upload' => ['nullable', 'file'],
+                'business_avatar_upload' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:51200'],
             ]);
         }
 
         if (!$isDevPreview) {
-            foreach ($this->business_gallery_pending as $i => $file) {
-                if ($file instanceof TemporaryUploadedFile) {
-                    $this->validate([
-                        "business_gallery_pending.$i" => ['file'],
-                    ]);
-                }
+            foreach ($this->pendingBusinessGalleryUploads() as $i => $file) {
+                $this->validate([
+                    "business_gallery_pending.$i" => ['file', 'mimes:jpg,jpeg,png,gif,webp', 'max:51200'],
+                ]);
             }
         }
 
@@ -2305,16 +3240,12 @@ new #[Layout('layouts.business-hub')] class extends Component {
         }
 
         $gallery = $this->business_gallery_paths;
-        foreach ($this->business_gallery_pending as $file) {
-            if (count($gallery) >= 3) {
-                break;
-            }
+        foreach ($this->pendingBusinessGalleryUploads() as $file) {
             if ($file instanceof TemporaryUploadedFile) {
                 $dir = $this->storageDirectoryForUpload($file, 'groomer_spacer_profile_gallery');
                 $gallery[] = $file->store($dir, 'public');
             }
         }
-        $gallery = array_slice($gallery, 0, 3);
 
         $existing = $user->business_basics ?? [];
         if (!is_array($existing)) {
@@ -2357,13 +3288,196 @@ new #[Layout('layouts.business-hub')] class extends Component {
             $this->setBuildProfileSubstep('business_basics');
             $this->js('alert(' . json_encode('Please select how you use FursGo (groomer or space).') . ')');
         }
+
+        $this->scrollVerifyQualifyStepToTop();
     }
 
-    public function submitGroomerBusinessProfile(): void
+    public function spacerBusinessProfileClientState(): array
+    {
+        return [
+            'suitableFor' => $this->spacer_suitable_for,
+            'selectedRules' => $this->spacer_rules_preset_selected,
+            'selectedAmenities' => $this->spacer_amenities_preset_selected,
+            'customAddonRows' => $this->spacer_addon_custom_rows,
+            'rulesCustom' => $this->spacer_rules_custom,
+            'amenitiesCustom' => $this->spacer_amenities_custom,
+        ];
+    }
+
+    /**
+     * @param  array<int, mixed>  $items
+     * @return list<array{text: string, selected: bool}>
+     */
+    private function normalizeSpacerCustomEntries(array $items): array
+    {
+        $normalized = [];
+        $seen = [];
+
+        foreach ($items as $item) {
+            $text = '';
+            $selected = true;
+
+            if (is_string($item)) {
+                $text = trim($item);
+            } elseif (is_array($item)) {
+                $text = trim((string) ($item['text'] ?? ''));
+                $selected = !empty($item['selected']);
+            }
+
+            if ($text === '' || isset($seen[$text])) {
+                continue;
+            }
+
+            $seen[$text] = true;
+            $normalized[] = ['text' => $text, 'selected' => $selected];
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * @param  array<int, mixed>  $entries
+     * @return list<string>
+     */
+    private function selectedSpacerCustomEntryTexts(array $entries): array
+    {
+        $texts = [];
+
+        foreach ($entries as $entry) {
+            if (is_string($entry)) {
+                $text = trim($entry);
+                if ($text !== '') {
+                    $texts[] = $text;
+                }
+
+                continue;
+            }
+
+            if (!is_array($entry) || empty($entry['selected'])) {
+                continue;
+            }
+
+            $text = trim((string) ($entry['text'] ?? ''));
+            if ($text !== '') {
+                $texts[] = $text;
+            }
+        }
+
+        return array_values(array_unique($texts));
+    }
+
+    /**
+     * @param  array<string, mixed>  $form
+     */
+    private function assignSpacerBusinessProfileFromClient(array $form): void
+    {
+        $suitableFor = $form['suitableFor'] ?? [];
+        $this->spacer_suitable_for = is_array($suitableFor) ? array_values(array_filter($suitableFor, fn($v) => is_string($v) && trim($v) !== '')) : [];
+
+        $selectedRules = $form['selectedRules'] ?? [];
+        $this->spacer_rules_preset_selected = is_array($selectedRules) ? array_values(array_filter($selectedRules, fn($v) => is_string($v) && trim($v) !== '')) : [];
+
+        $selectedAmenities = $form['selectedAmenities'] ?? [];
+        $this->spacer_amenities_preset_selected = is_array($selectedAmenities) ? array_values(array_filter($selectedAmenities, fn($v) => is_string($v) && trim($v) !== '')) : [];
+
+        $customAddonRows = $form['customAddonRows'] ?? [];
+        $normalizedRows = [];
+        if (is_array($customAddonRows)) {
+            foreach ($customAddonRows as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                $name = trim((string) ($row['name'] ?? ''));
+                if ($name === '') {
+                    continue;
+                }
+                $price = $row['price'] ?? '';
+                $normalizedRows[] = [
+                    'name' => $name,
+                    'selected' => !empty($row['selected']),
+                    'price' => is_scalar($price) ? trim((string) $price) : '',
+                ];
+            }
+        }
+        $this->spacer_addon_custom_rows = $normalizedRows;
+
+        $rulesCustom = $form['rulesCustom'] ?? [];
+        $this->spacer_rules_custom = is_array($rulesCustom) ? $this->normalizeSpacerCustomEntries($rulesCustom) : [];
+
+        $amenitiesCustom = $form['amenitiesCustom'] ?? [];
+        $this->spacer_amenities_custom = is_array($amenitiesCustom) ? $this->normalizeSpacerCustomEntries($amenitiesCustom) : [];
+
+        $this->spacer_addon_input = '';
+        $this->spacer_rule_input = '';
+        $this->spacer_amenity_input = '';
+    }
+
+    public function groomerBusinessProfileClientState(): array
+    {
+        $defaultDescriptions = [];
+        foreach ($this->groomerServiceCatalog() as $serviceName) {
+            $desc = $this->groomerServiceDefaultDescription($serviceName);
+            if ($desc !== '') {
+                $defaultDescriptions[$serviceName] = $desc;
+            }
+        }
+
+        return [
+            'experience' => $this->groomer_experience,
+            'petSpecialties' => $this->groomer_pet_specialties,
+            'specialtyOther' => $this->groomer_specialty_other,
+            'petSizes' => $this->groomer_pet_sizes,
+            'customServices' => $this->groomer_custom_services,
+            'selectedServices' => $this->groomer_selected_services,
+            'servicesPricing' => $this->groomer_services_pricing,
+            'customAddons' => $this->groomer_custom_addons,
+            'selectedAddons' => $this->groomer_selected_addons,
+            'addonPricing' => $this->groomer_addon_pricing,
+            'serviceCatalog' => $this->groomerServiceCatalog(),
+            'addonCatalog' => $this->groomerAddonCatalog(),
+            'serviceDefaultDescriptions' => $defaultDescriptions,
+            'devPreview' => $this->shouldUseDevDbPreview(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $form
+     */
+    private function assignGroomerBusinessProfileFromClient(array $form): void
+    {
+        $this->groomer_experience = trim((string) ($form['experience'] ?? ''));
+        $petSpecialties = $form['petSpecialties'] ?? [];
+        $this->groomer_pet_specialties = is_array($petSpecialties) ? array_values(array_filter($petSpecialties, fn($v) => in_array($v, ['dog', 'cat', 'other'], true))) : [];
+        $this->groomer_specialty_other = trim((string) ($form['specialtyOther'] ?? ''));
+        $petSizes = $form['petSizes'] ?? [];
+        $this->groomer_pet_sizes = is_array($petSizes) ? array_values(array_filter($petSizes, fn($v) => in_array($v, ['small', 'medium', 'large'], true))) : [];
+        $customServices = $form['customServices'] ?? [];
+        $this->groomer_custom_services = is_array($customServices) ? array_values(array_filter($customServices, fn($v) => is_string($v) && trim($v) !== '')) : [];
+        $selectedServices = $form['selectedServices'] ?? [];
+        $this->groomer_selected_services = is_array($selectedServices) ? array_values(array_filter($selectedServices, fn($v) => is_string($v) && trim($v) !== '')) : [];
+        $customAddons = $form['customAddons'] ?? [];
+        $this->groomer_custom_addons = is_array($customAddons) ? array_values(array_filter($customAddons, fn($v) => is_string($v) && trim($v) !== '')) : [];
+        $selectedAddons = $form['selectedAddons'] ?? [];
+        $this->groomer_selected_addons = is_array($selectedAddons) ? array_values(array_filter($selectedAddons, fn($v) => is_string($v) && trim($v) !== '')) : [];
+        $servicesPricing = $form['servicesPricing'] ?? [];
+        $this->groomer_services_pricing = is_array($servicesPricing) ? $servicesPricing : [];
+        $addonPricing = $form['addonPricing'] ?? [];
+        $this->groomer_addon_pricing = is_array($addonPricing) ? $addonPricing : [];
+        $this->groomer_selected_addons = $this->normalizeGroomerSelectedAddons($this->groomer_selected_addons, $this->groomer_addon_pricing);
+        $this->syncGroomerAddonPricing();
+        $this->groomer_service_input = '';
+        $this->groomer_addon_input = '';
+    }
+
+    public function submitGroomerBusinessProfile(array $form = []): void
     {
         $user = Auth::guard('groomer_spacer')->user();
         if (!$user) {
             return;
+        }
+
+        if ($form !== []) {
+            $this->assignGroomerBusinessProfileFromClient($form);
         }
 
         $isDevPreview = $this->shouldUseDevDbPreview($user);
@@ -2379,6 +3493,10 @@ new #[Layout('layouts.business-hub')] class extends Component {
                 'groomer_custom_addons.*' => ['string', 'max:255'],
                 'groomer_selected_addons' => ['nullable', 'array'],
                 'groomer_selected_addons.*' => ['string', 'max:255'],
+                'groomer_custom_services' => ['nullable', 'array'],
+                'groomer_custom_services.*' => ['string', 'max:255'],
+                'groomer_selected_services' => ['nullable', 'array'],
+                'groomer_selected_services.*' => ['string', 'max:255'],
             ]);
         }
 
@@ -2410,6 +3528,8 @@ new #[Layout('layouts.business-hub')] class extends Component {
                 'pet_sizes' => array_values($this->groomer_pet_sizes),
                 'custom_addons' => array_values($this->groomer_custom_addons),
                 'selected_addons' => array_values($this->groomer_selected_addons),
+                'custom_services' => array_values($this->groomer_custom_services),
+                'selected_services' => array_values($this->groomer_selected_services),
                 'services' => $this->groomer_services_pricing,
                 'addon_pricing' => $this->groomer_addon_pricing,
             ],
@@ -2417,13 +3537,18 @@ new #[Layout('layouts.business-hub')] class extends Component {
         $this->showGroomerBusinessProfileForm = false;
         $this->showLegalPolicyForm = true;
         $this->setBuildProfileSubstep('legal_policy');
+        $this->scrollVerifyQualifyStepToTop();
     }
 
-    public function submitSpacerBusinessProfile(): void
+    public function submitSpacerBusinessProfile(array $form = []): void
     {
         $user = Auth::guard('groomer_spacer')->user();
         if (!$user instanceof GroomerSpacerProfile) {
             return;
+        }
+
+        if ($form !== []) {
+            $this->assignSpacerBusinessProfileFromClient($form);
         }
 
         $isDevPreview = $this->shouldUseDevDbPreview($user);
@@ -2435,9 +3560,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
                 'spacer_suitable_for' => ['nullable', 'array'],
                 'spacer_suitable_for.*' => ['string', 'max:255'],
                 'spacer_rules_custom' => ['nullable', 'array'],
-                'spacer_rules_custom.*' => ['string', 'max:500'],
                 'spacer_amenities_custom' => ['nullable', 'array'],
-                'spacer_amenities_custom.*' => ['string', 'max:500'],
             ]);
         }
 
@@ -2454,8 +3577,8 @@ new #[Layout('layouts.business-hub')] class extends Component {
             return;
         }
 
-        $rulesMerged = array_values(array_unique(array_merge($this->spacer_rules_preset_selected, $this->spacer_rules_custom)));
-        $amenitiesMerged = array_values(array_unique(array_merge($this->spacer_amenities_preset_selected, $this->spacer_amenities_custom)));
+        $rulesMerged = array_values(array_unique(array_merge($this->spacer_rules_preset_selected, $this->selectedSpacerCustomEntryTexts($this->spacer_rules_custom))));
+        $amenitiesMerged = array_values(array_unique(array_merge($this->spacer_amenities_preset_selected, $this->selectedSpacerCustomEntryTexts($this->spacer_amenities_custom))));
 
         $payload = [
             'bio' => trim($this->spacer_bio),
@@ -2484,6 +3607,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
         $this->showStartEarningComplete = false;
         $this->showLegalPolicyForm = true;
         $this->setBuildProfileSubstep('legal_policy');
+        $this->scrollVerifyQualifyStepToTop();
     }
 
     /**
@@ -2595,7 +3719,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
                 'freelance_service_home_address_line1' => ['nullable', 'string', 'max:500'],
                 'freelance_service_home_address_line2' => ['nullable', 'string', 'max:500'],
                 'business_phone' => ['required', 'string', 'max:20'],
-                'business_owner_id_images' => ['nullable', 'array'],
+                'government_id' => ['nullable', 'array'],
                 'id_documents' => ['nullable', 'array'],
                 'insurance_certificate_upload' => ['nullable', 'array'],
                 'account_holder_name' => ['required', 'string', 'max:255'],
@@ -2604,10 +3728,9 @@ new #[Layout('layouts.business-hub')] class extends Component {
                 'iban' => ['required', 'string', 'max:50'],
                 'information_accuracy_confirmed' => ['accepted'],
             ]);
-            $hasBo = is_array($this->business_owner_id_images) && count($this->business_owner_id_images) > 0;
-            $hasId = is_array($this->id_documents) && count($this->id_documents) > 0;
-            if (!$hasBo && !$hasId) {
-                $this->addError('business_owner_id_images', 'Please upload at least one valid ID document.');
+            $hasGovernmentId = count($this->storedGovernmentIdPathsForDisplay()) > 0 || count($this->pendingGovernmentIdUploads()) > 0;
+            if (!$hasGovernmentId) {
+                $this->addError('government_id', 'Please upload at least one valid government ID document.');
 
                 return;
             }
@@ -2618,7 +3741,8 @@ new #[Layout('layouts.business-hub')] class extends Component {
                 'business_name' => ['required', 'string', 'max:255'],
                 'business_registration_number' => ['required', 'string', 'max:255'],
                 'business_phone' => ['required', 'string', 'max:20'],
-                'business_owner_id_images' => ['required', 'array', 'min:1'],
+                'business_owner_id_images' => ['nullable', 'array'],
+                'business_owner_id_paths' => ['nullable', 'array'],
                 'id_documents' => ['nullable', 'array'],
                 'insurance_certificate_upload' => ['nullable', 'array'],
                 'account_holder_name' => ['required', 'string', 'max:255'],
@@ -2627,17 +3751,27 @@ new #[Layout('layouts.business-hub')] class extends Component {
                 'iban' => ['required', 'string', 'max:50'],
                 'information_accuracy_confirmed' => ['accepted'],
             ]);
+            $hasBusinessOwnerId = count($this->storedBusinessOwnerIdPathsForDisplay()) > 0 || count($this->pendingBusinessOwnerIdUploads()) > 0;
+            if (!$hasBusinessOwnerId) {
+                $this->addError('business_owner_id_images', 'Please upload at least one valid ID document.');
+
+                return;
+            }
         }
 
-        foreach ($this->business_owner_id_images ?? [] as $index => $image) {
+        $idUploadProperty = $isFreelance ? 'government_id' : 'business_owner_id_images';
+        $idUploadLabel = $isFreelance ? 'government ID' : 'business owner ID';
+        $pendingUploads = $isFreelance ? $this->pendingGovernmentIdUploads() : $this->pendingBusinessOwnerIdUploads();
+
+        foreach ($pendingUploads as $index => $image) {
             if ($image instanceof UploadedFile) {
                 if (!$isDevBypass) {
                     $this->validate([
-                        "business_owner_id_images.$index" => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+                        "{$idUploadProperty}.{$index}" => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:51200'],
                     ]);
                 }
             } elseif (!is_string($image) || trim($image) === '') {
-                $this->addError('business_owner_id_images', 'Each business owner ID entry must be a valid file or saved path.');
+                $this->addError($idUploadProperty, "Each {$idUploadLabel} entry must be a valid file or saved path.");
                 return;
             }
         }
@@ -2671,6 +3805,8 @@ new #[Layout('layouts.business-hub')] class extends Component {
                         "insurance_certificate_upload.$index" => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:51200'],
                     ]);
                 }
+            } elseif (is_string($certificate) && $certificate !== '') {
+                continue;
             } else {
                 $this->addError('insurance_certificate_upload', 'Invalid insurance certificate upload.');
 
@@ -2682,42 +3818,54 @@ new #[Layout('layouts.business-hub')] class extends Component {
             // ID proof uploads (same files as business owner ID; id_document_paths mirrors for legacy column)
             $documentPaths = [];
 
-            // Insurance: keep existing stored paths + persist new uploads from insurance_certificate_upload only
-            $insuranceCertificatePaths = array_values(array_filter($this->insurance_certificate_paths ?? [], fn($p) => is_string($p) && $p !== ''));
-            foreach ($insuranceUploadFiles as $certificate) {
-                if ($certificate instanceof UploadedFile || $certificate instanceof TemporaryUploadedFile) {
-                    $dir = $this->storageDirectoryForUpload($certificate, 'insurance_certificates');
-                    $insuranceCertificatePaths[] = $certificate->store($dir, 'public');
-                }
+            $existingInsurance = $this->decodeProfileJson($user->insurance_details ?? null);
+
+            // Insurance: keep stored paths and persist only new pending uploads.
+            $insuranceCertificatePaths = $this->uniquePathsByOriginalName($this->insurance_certificate_paths, $this->insurance_certificate_file_names);
+            $insuranceFileNames = $this->intersectFileNamesWithPaths($this->insurance_certificate_file_names, $insuranceCertificatePaths);
+
+            foreach ($this->uniquePendingUploads($this->filterPendingUploadsNotStored($this->pendingInsuranceCertificateUploads(), $insuranceFileNames)) as $certificate) {
+                $stored = $this->storeDocUploadIfNew($insuranceCertificatePaths, $insuranceFileNames, $certificate, 'insurance_certificates');
+                $insuranceCertificatePaths = $stored['paths'];
+                $insuranceFileNames = $stored['fileNames'];
             }
 
-            // Store the business owner ID images if uploaded
-            $businessOwnerIdImagePaths = [];
-            if ($this->business_owner_id_images && is_array($this->business_owner_id_images)) {
-                foreach ($this->business_owner_id_images as $image) {
-                    if ($image instanceof \Illuminate\Http\UploadedFile) {
-                        $dir = $this->storageDirectoryForUpload($image, 'business_owner_id_images');
-                        $path = $image->store($dir, 'public');
-                        $businessOwnerIdImagePaths[] = $path;
-                        $documentPaths[] = $path;
-                    } elseif (is_string($image)) {
-                        $businessOwnerIdImagePaths[] = $image;
-                        $documentPaths[] = $image;
+            $insuranceCertificatePaths = $this->uniquePathsByOriginalName($insuranceCertificatePaths, $insuranceFileNames);
+            $insuranceFileNames = $this->intersectFileNamesWithPaths($insuranceFileNames, $insuranceCertificatePaths);
+
+            // Store government ID / business owner ID images if uploaded
+            $governmentIdPaths = $isFreelance ? $this->uniquePathsByOriginalName($this->storedGovernmentIdPathsForDisplay(), $this->government_id_file_names) : [];
+            $businessOwnerIdImagePaths = $isFreelance ? [] : $this->uniquePathsByOriginalName($this->storedBusinessOwnerIdPathsForDisplay(), $this->business_owner_id_file_names);
+            $governmentIdFileNames = $isFreelance ? $this->intersectFileNamesWithPaths($this->government_id_file_names, $governmentIdPaths) : [];
+            $businessOwnerIdFileNames = $isFreelance ? [] : $this->intersectFileNamesWithPaths($this->business_owner_id_file_names, $businessOwnerIdImagePaths);
+            $pendingIdUploads = $this->uniquePendingUploads($this->filterPendingUploadsNotStored($isFreelance ? $this->pendingGovernmentIdUploads() : $this->pendingBusinessOwnerIdUploads(), $isFreelance ? $governmentIdFileNames : $businessOwnerIdFileNames));
+            $documentPaths = [];
+
+            if ($isFreelance) {
+                foreach ($pendingIdUploads as $image) {
+                    $stored = $this->storeDocUploadIfNew($governmentIdPaths, $governmentIdFileNames, $image, 'government_id');
+                    $governmentIdPaths = $stored['paths'];
+                    $governmentIdFileNames = $stored['fileNames'];
+                    if ($stored['storedPath'] !== null) {
+                        $documentPaths[] = $stored['storedPath'];
+                    }
+                }
+            } else {
+                foreach ($pendingIdUploads as $image) {
+                    $stored = $this->storeDocUploadIfNew($businessOwnerIdImagePaths, $businessOwnerIdFileNames, $image, 'business_owner_id_images');
+                    $businessOwnerIdImagePaths = $stored['paths'];
+                    $businessOwnerIdFileNames = $stored['fileNames'];
+                    if ($stored['storedPath'] !== null) {
+                        $documentPaths[] = $stored['storedPath'];
                     }
                 }
             }
 
-            if ($this->id_documents && is_array($this->id_documents)) {
-                foreach ($this->id_documents as $document) {
-                    if ($document instanceof \Illuminate\Http\UploadedFile) {
-                        $dir = $this->storageDirectoryForUpload($document, 'id_documents');
-                        $path = $document->store($dir, 'public');
-                        $documentPaths[] = $path;
-                    } elseif (is_string($document)) {
-                        $documentPaths[] = $document;
-                    }
-                }
-            }
+            $governmentIdPaths = $this->uniquePathsByOriginalName($governmentIdPaths, $governmentIdFileNames);
+            $businessOwnerIdImagePaths = $this->uniquePathsByOriginalName($businessOwnerIdImagePaths, $businessOwnerIdFileNames);
+            $governmentIdFileNames = $this->intersectFileNamesWithPaths($governmentIdFileNames, $governmentIdPaths);
+            $businessOwnerIdFileNames = $this->intersectFileNamesWithPaths($businessOwnerIdFileNames, $businessOwnerIdImagePaths);
+            $documentPaths = $isFreelance ? $governmentIdPaths : $businessOwnerIdImagePaths;
 
             $table = $user->getTable();
             $existingPayoutDetails = $user->payout_details ?? [];
@@ -2725,6 +3873,12 @@ new #[Layout('layouts.business-hub')] class extends Component {
                 $existingPayoutDetails = is_string($existingPayoutDetails) ? (json_decode($existingPayoutDetails, true) ?: []) : [];
             }
             $payoutFrequency = $existingPayoutDetails['payout_frequency'] ?? 'Weekly';
+            $payoutBank = trim($this->bank) !== '' ? $this->bank : (string) ($existingPayoutDetails['bank'] ?? '');
+
+            $insuranceDetailsPayload = array_merge($existingInsurance, [
+                'insurance_certificate_paths' => $insuranceCertificatePaths,
+                'insurance_certificate_file_names' => $insuranceFileNames,
+            ]);
 
             if ($isFreelance) {
                 $existingFreelance = $user->freelance_details ?? [];
@@ -2737,13 +3891,14 @@ new #[Layout('layouts.business-hub')] class extends Component {
                     'service_home_address_line2' => trim((string) ($this->freelance_service_home_address_line2 ?? '')),
                     'contact_email' => trim((string) $this->business_email),
                     'contact_phone' => trim((string) $this->business_phone),
-                    'id_verification_images' => $businessOwnerIdImagePaths,
+                    'government_id' => $governmentIdPaths,
+                    'government_id_file_names' => $governmentIdFileNames,
                     'information_accuracy_confirmed_at' => now()->toIso8601String(),
                     'last_submitted_at' => now()->toIso8601String(),
                 ];
 
                 $mergedFreelance = array_merge($existingFreelance, $freelanceDetailsPayload);
-                foreach (['trading_name', 'personal_info_completed', 'personal_info_completed_at'] as $legacyKey) {
+                foreach (['trading_name', 'personal_info_completed', 'personal_info_completed_at', 'id_verification_images'] as $legacyKey) {
                     unset($mergedFreelance[$legacyKey]);
                 }
 
@@ -2751,16 +3906,14 @@ new #[Layout('layouts.business-hub')] class extends Component {
                     'full_name' => $this->full_name,
                     'freelance_details' => $mergedFreelance,
                     'payout_details' => [
-                        'bank' => $this->bank,
+                        'bank' => $payoutBank,
                         'account_holder_name' => $this->account_holder_name,
                         'account_number' => $this->account_number,
                         'sort_code' => $this->sort_code,
                         'iban' => $this->iban,
                         'payout_frequency' => $payoutFrequency,
                     ],
-                    'insurance_details' => [
-                        'insurance_certificate_paths' => $insuranceCertificatePaths,
-                    ],
+                    'insurance_details' => $insuranceDetailsPayload,
                 ];
             } else {
                 $existingBusiness = $user->business_details ?? [];
@@ -2774,22 +3927,21 @@ new #[Layout('layouts.business-hub')] class extends Component {
                     'business_phone' => $this->business_phone,
                     'business_email' => $this->business_email,
                     'business_owner_id_images' => $businessOwnerIdImagePaths,
+                    'business_owner_id_file_names' => $businessOwnerIdFileNames,
                 ];
 
                 $payload = [
                     'full_name' => $this->full_name,
                     'business_details' => array_merge($existingBusiness, $businessDetailsPayload),
                     'payout_details' => [
-                        'bank' => $this->bank,
+                        'bank' => $payoutBank,
                         'account_holder_name' => $this->account_holder_name,
                         'account_number' => $this->account_number,
                         'sort_code' => $this->sort_code,
                         'iban' => $this->iban,
                         'payout_frequency' => $payoutFrequency,
                     ],
-                    'insurance_details' => [
-                        'insurance_certificate_paths' => $insuranceCertificatePaths,
-                    ],
+                    'insurance_details' => $insuranceDetailsPayload,
                 ];
             }
 
@@ -2801,7 +3953,14 @@ new #[Layout('layouts.business-hub')] class extends Component {
             $user->update($payload);
 
             $this->insurance_certificate_paths = $insuranceCertificatePaths;
+            $this->insurance_certificate_file_names = $insuranceFileNames;
             $this->insurance_certificate_upload = [];
+            $this->business_owner_id_paths = $businessOwnerIdImagePaths;
+            $this->business_owner_id_file_names = $businessOwnerIdFileNames;
+            $this->business_owner_id_images = [];
+            $this->government_id_paths = $governmentIdPaths;
+            $this->government_id_file_names = $governmentIdFileNames;
+            $this->government_id = [];
 
             $status = $this->isPersonalInfoFormValid() ? 'approved' : 'pending';
             $this->persistVerificationStatus($user, $status);
@@ -2829,9 +3988,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
             return true;
         }
 
-        $bo = is_array($this->business_owner_id_images) ? $this->business_owner_id_images : [];
-        $idDocs = is_array($this->id_documents) ? $this->id_documents : [];
-        $hasIdProof = count($bo) > 0 || count($idDocs) > 0;
+        $hasIdProof = $this->isFreelanceAccount() ? count($this->storedGovernmentIdPathsForDisplay()) > 0 || count($this->pendingGovernmentIdUploads()) > 0 : count($this->storedBusinessOwnerIdPathsForDisplay()) > 0 || count($this->pendingBusinessOwnerIdUploads()) > 0;
         $emailOk = (bool) filter_var($this->business_email, FILTER_VALIDATE_EMAIL);
 
         if ($this->isFreelanceAccount()) {
@@ -2846,9 +4003,9 @@ new #[Layout('layouts.business-hub')] class extends Component {
      */
     public function getSubmitButtonDebug(): array
     {
-        $bo = is_array($this->business_owner_id_images) ? $this->business_owner_id_images : [];
-        $idDocs = is_array($this->id_documents) ? $this->id_documents : [];
-        $hasIdProof = count($bo) > 0 || count($idDocs) > 0;
+        $boPaths = $this->storedBusinessOwnerIdPathsForDisplay();
+        $govPaths = $this->storedGovernmentIdPathsForDisplay();
+        $hasIdProof = $this->isFreelanceAccount() ? count($govPaths) > 0 || count($this->pendingGovernmentIdUploads()) > 0 : count($boPaths) > 0 || count($this->pendingBusinessOwnerIdUploads()) > 0;
 
         return [
             'step' => [
@@ -2884,8 +4041,11 @@ new #[Layout('layouts.business-hub')] class extends Component {
                 'sort_code' => $this->sort_code !== '',
                 'iban' => $this->iban !== '',
                 'email_format_ok' => (bool) filter_var($this->business_email, FILTER_VALIDATE_EMAIL),
-                'business_owner_id_images_count' => count($bo),
-                'id_documents_count' => count($idDocs),
+                'business_owner_id_paths_count' => count($boPaths),
+                'government_id_paths_count' => count($govPaths),
+                'business_owner_id_images_count' => count($this->pendingBusinessOwnerIdUploads()),
+                'government_id_count' => count($this->pendingGovernmentIdUploads()),
+                'id_documents_count' => 0,
                 'has_id_proof' => $hasIdProof,
                 'information_accuracy_confirmed' => $this->information_accuracy_confirmed,
                 'submit_would_enable' => $this->isPersonalInfoFormValid(),
@@ -2935,58 +4095,71 @@ new #[Layout('layouts.business-hub')] class extends Component {
 };
 ?>
 
+@pushOnce('styles')
+    <link rel="stylesheet" href="{{ asset('css/vq-doc-upload.css') }}">
+@endPushOnce
+
+@pushOnce('script')
+    <script src="{{ asset('js/vq-doc-upload.js') }}"></script>
+    <script src="{{ asset('js/vq-groomer-business-profile.js') }}"></script>
+    <script src="{{ asset('js/vq-spacer-business-profile.js') }}"></script>
+@endPushOnce
+
 <section class="container verify-qualify-page mt-5 mb-5">
-    <div class="verification-wrapper" wire:loading.class="verification-wrapper--navigating"
-        wire:target="goToSidebarStep,goToVerifyQualifySubstep,goToBuildProfileSubstep,submitBusinessBasics,submit,submitPersonalInfo">
+    <div class="verification-wrapper{{ $showVerificationCard || $showVerificationStatus || $showStartEarningComplete ? ' verification-wrapper--no-sidebar' : '' }}"
+        wire:loading.class="verification-wrapper--navigating"
+        wire:target="goToSidebarStep,goToVerifyQualifySubstep,goToBuildProfileSubstep,goBack,submitBusinessBasics,submit,submitPersonalInfo,submitGroomerBusinessProfile,submitSpacerBusinessProfile,submitLegalPolicy">
         <div class="verification-step-loading-bar" wire:loading
-            wire:target="goToSidebarStep,goToVerifyQualifySubstep,goToBuildProfileSubstep,submitBusinessBasics,submit,submitPersonalInfo"
+            wire:target="goToSidebarStep,goToVerifyQualifySubstep,goToBuildProfileSubstep,goBack,submitBusinessBasics,submit,submitPersonalInfo,submitGroomerBusinessProfile,submitSpacerBusinessProfile,submitLegalPolicy"
             aria-hidden="true">
             <span class="verification-step-loading-bar__sweep"></span>
         </div>
         <!-- Floating Sidebar (step tracker) -->
-        <div class="floating-sidebar">
-            <div class="sidebar-header">
-                <h1>{{ $this->activeSidebarStepLabel() }}</h1>
+        @unless ($showVerificationCard || $showVerificationStatus || $showStartEarningComplete)
+            <div class="floating-sidebar">
+                <div class="sidebar-header">
+                    <h1>{{ $this->activeSidebarStepLabel() }}</h1>
+                </div>
+                <div class="steps-list" role="list">
+                    <div @if ($this->sidebarStepIsAvailable(1)) wire:click="goToSidebarStep(1)" role="button"
+                        tabindex="0" @else aria-disabled="true" tabindex="-1" @endif
+                        class="step-item {{ $this->currentSidebarStep() === 1 ? 'active' : '' }} {{ $this->sidebarStepIsAvailable(1) ? 'step-item--clickable' : 'step-item--disabled' }}">
+                        <div class="step-content">
+                            <div class="step-title"><span>1.</span>
+                                <p>Verify & Qualify</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div @if ($this->sidebarStepIsAvailable(2)) wire:click="goToSidebarStep(2)" role="button"
+                        tabindex="0" @else aria-disabled="true" tabindex="-1" @endif
+                        class="step-item {{ $this->currentSidebarStep() === 2 ? 'active' : '' }} {{ $this->sidebarStepIsAvailable(2) ? 'step-item--clickable' : 'step-item--disabled' }}">
+                        <div class="step-content">
+                            <div class="step-title"><span>2.</span>
+                                <p>Build Your Profile</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div @if ($this->sidebarStepIsAvailable(3)) wire:click="goToSidebarStep(3)" role="button"
+                        tabindex="0" @else aria-disabled="true" tabindex="-1" @endif
+                        class="step-item {{ $this->currentSidebarStep() === 3 ? 'active' : '' }} {{ $this->sidebarStepIsAvailable(3) ? 'step-item--clickable' : 'step-item--disabled' }}">
+                        <div class="step-content">
+                            <div class="step-title"><span>3.</span>
+                                <p>Legal & Policy Agreement</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div @if ($this->sidebarStepIsAvailable(4)) wire:click="goToSidebarStep(4)" role="button"
+                        tabindex="0" @else aria-disabled="true" tabindex="-1" @endif
+                        class="step-item {{ $this->currentSidebarStep() === 4 ? 'active' : '' }} {{ $this->sidebarStepIsAvailable(4) ? 'step-item--clickable' : 'step-item--disabled' }}">
+                        <div class="step-content">
+                            <div class="step-title"><span>4.</span>
+                                <p>Start Grooming & Earning!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="steps-list" role="list">
-                <div @if ($this->sidebarStepIsAvailable(1)) wire:click="goToSidebarStep(1)" role="button"
-                        tabindex="0" @else aria-disabled="true" tabindex="-1" @endif
-                    class="step-item {{ $this->currentSidebarStep() === 1 ? 'active' : '' }} {{ $this->sidebarStepIsAvailable(1) ? 'step-item--clickable' : 'step-item--disabled' }}">
-                    <div class="step-content">
-                        <div class="step-title"><span>1.</span>
-                            <p>Verify & Qualify</p>
-                        </div>
-                    </div>
-                </div>
-                <div @if ($this->sidebarStepIsAvailable(2)) wire:click="goToSidebarStep(2)" role="button"
-                        tabindex="0" @else aria-disabled="true" tabindex="-1" @endif
-                    class="step-item {{ $this->currentSidebarStep() === 2 ? 'active' : '' }} {{ $this->sidebarStepIsAvailable(2) ? 'step-item--clickable' : 'step-item--disabled' }}">
-                    <div class="step-content">
-                        <div class="step-title"><span>2.</span>
-                            <p>Build Your Profile</p>
-                        </div>
-                    </div>
-                </div>
-                <div @if ($this->sidebarStepIsAvailable(3)) wire:click="goToSidebarStep(3)" role="button"
-                        tabindex="0" @else aria-disabled="true" tabindex="-1" @endif
-                    class="step-item {{ $this->currentSidebarStep() === 3 ? 'active' : '' }} {{ $this->sidebarStepIsAvailable(3) ? 'step-item--clickable' : 'step-item--disabled' }}">
-                    <div class="step-content">
-                        <div class="step-title"><span>3.</span>
-                            <p>Legal & Policy Agreement</p>
-                        </div>
-                    </div>
-                </div>
-                <div @if ($this->sidebarStepIsAvailable(4)) wire:click="goToSidebarStep(4)" role="button"
-                        tabindex="0" @else aria-disabled="true" tabindex="-1" @endif
-                    class="step-item {{ $this->currentSidebarStep() === 4 ? 'active' : '' }} {{ $this->sidebarStepIsAvailable(4) ? 'step-item--clickable' : 'step-item--disabled' }}">
-                    <div class="step-content">
-                        <div class="step-title"><span>4.</span>
-                            <p>Start Grooming & Earning!</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        @endunless
 
         <!-- Main Content -->
         <div class="main-content">
@@ -2999,7 +4172,8 @@ new #[Layout('layouts.business-hub')] class extends Component {
             @elseif ($showStartEarningComplete)
                 @include('livewire.auth.verify-qualify-start-grooming-complete')
             @elseif ($showBusinessBasicsForm)
-                <div class="business-basics-wrap" wire:key="verify-qualify-business-basics">
+                <div class="business-basics-wrap" wire:key="verify-qualify-business-basics"
+                    wire:init="initVerifyQualifyDocUploads">
                     <h1 class="business-basics-title">Business Basics</h1>
 
                     <form wire:submit="submitBusinessBasics" class="business-basics-form">
@@ -3046,123 +4220,35 @@ new #[Layout('layouts.business-hub')] class extends Component {
                                 <h2 class="basics-card-heading">Profile Photo</h2>
                                 <p class="basics-section-muted">Upload your profile photo or logo.</p>
                             </div>
-                            <div class="profile-photo-upload-tracker" wire:key="profile-avatar-widget">
-                                <div class="profile-photo-drop">
-                                    <div class="profile-photo-placeholder-static" aria-hidden="true">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="85" height="85"
-                                            viewBox="0 0 85 85" fill="none">
-                                            <circle cx="42.5" cy="42.5" r="42" fill="#E3E3E3"
-                                                stroke="#F6F6F6" />
-                                            <path
-                                                d="M16.4332 75.7445C18.0849 43.507 66.8864 43.507 68.5381 75.7446C68.5381 75.7446 59.0091 84.8113 42.5757 84.8113C26.1424 84.8113 16.4332 75.7445 16.4332 75.7445Z"
-                                                fill="white" />
-                                            <path
-                                                d="M55.519 33.4267C55.519 36.8815 54.1466 40.1948 51.7037 42.6377C49.2608 45.0806 45.9475 46.453 42.4928 46.453C39.038 46.453 35.7247 45.0806 33.2818 42.6377C30.839 40.1948 29.4666 36.8815 29.4666 33.4267C29.4666 29.9719 30.839 26.6586 33.2818 24.2157C35.7247 21.7728 39.038 20.4004 42.4928 20.4004C45.9475 20.4004 49.2608 21.7728 51.7037 24.2157C54.1466 26.6586 55.519 29.9719 55.519 33.4267Z"
-                                                fill="white" />
-                                            <path
-                                                d="M73.9928 20.1803C68.9347 20.1803 64.8201 16.0657 64.8201 11.0076C64.8201 5.94955 68.9347 1.83496 73.9928 1.83496C79.0509 1.83496 83.1655 5.94955 83.1655 11.0076C83.1655 16.0657 79.0509 20.1803 73.9928 20.1803Z"
-                                                fill="#9D9B98" />
-                                            <path
-                                                d="M73.993 15.5936C73.6261 15.5936 73.3378 15.3053 73.3378 14.9384V7.07609C73.3378 6.70918 73.6261 6.4209 73.993 6.4209C74.3599 6.4209 74.6481 6.70918 74.6481 7.07609V14.9384C74.6481 15.3053 74.3599 15.5936 73.993 15.5936Z"
-                                                fill="white" />
-                                            <path
-                                                d="M77.924 11.6619H70.0617C69.6948 11.6619 69.4066 11.3737 69.4066 11.0068C69.4066 10.6398 69.6948 10.3516 70.0617 10.3516H77.924C78.2909 10.3516 78.5792 10.6398 78.5792 11.0068C78.5792 11.3737 78.2909 11.6619 77.924 11.6619Z"
-                                                fill="white" />
-                                        </svg>
-                                    </div>
-                                    <div class="profile-photo-copy">
-                                        <p class="profile-photo-label">Upload Image</p>
-                                        <label class="profile-photo-btn">
-                                            <input type="file" wire:model="business_avatar_upload"
-                                                class="hidden-input">
-                                            <span class="profile-photo-btn-inner">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                                                    viewBox="0 0 14 14" fill="none">
-                                                    <path
-                                                        d="M7 10.3163C6.72386 10.3163 6.5 10.0924 6.5 9.81626V1.66626L4.52903 3.63722C4.33115 3.8351 4.00998 3.83398 3.81349 3.63471C3.61896 3.43744 3.62005 3.12016 3.81593 2.92422L6.55492 0.184464C6.80072 -0.0614062 7.19931 -0.0614344 7.44514 0.184402L10.185 2.92425C10.3809 3.1202 10.3822 3.43753 10.1877 3.63499C9.99116 3.83461 9.66959 3.83585 9.47149 3.63775L7.5 1.66626V9.81626C7.5 10.0924 7.27614 10.3163 7 10.3163ZM1.616 13.7393C1.15533 13.7393 0.771 13.5853 0.463 13.2773C0.155 12.9693 0.000666667 12.5846 0 12.1233V10.2003C0 9.92412 0.223858 9.70026 0.5 9.70026C0.776142 9.70026 1 9.92412 1 10.2003V12.1233C1 12.2773 1.064 12.4186 1.192 12.5473C1.32 12.6759 1.461 12.7399 1.615 12.7393H12.385C12.5383 12.7393 12.6793 12.6753 12.808 12.5473C12.9367 12.4193 13.0007 12.2779 13 12.1233V10.2003C13 9.92412 13.2239 9.70026 13.5 9.70026C13.7761 9.70026 14 9.92412 14 10.2003V12.1233C14 12.5839 13.846 12.9683 13.538 13.2763C13.23 13.5843 12.8453 13.7386 12.384 13.7393H1.616Z"
-                                                        fill="white" />
-                                                </svg>
-                                                Upload Photo
-                                            </span>
-                                        </label>
-                                    </div>
-                                    @error('business_avatar_upload')
-                                        <span class="error-text">{{ $message }}</span>
-                                    @enderror
-                                </div>
-
-                                @if ($business_avatar_upload || $business_avatar_path !== '')
-                                    <div class="file-list profile-basics-avatar-attachments">
-                                        @if ($business_avatar_upload)
-                                            <div class="file-item-1" wire:key="profile-avatar-temp">
-                                                <div class="file-info">
-                                                    <img src="{{ $business_avatar_upload->temporaryUrl() }}"
-                                                        class="file-thumbnail" alt="">
-                                                    <div class="file-details">
-                                                        <div class="file-name">
-                                                            {{ $business_avatar_upload->getClientOriginalName() }}
-                                                        </div>
-                                                        <div class="file-progress-text" style="color:#10b981">
-                                                            {{ $this->formatBytesForDisplay((int) $business_avatar_upload->getSize()) }}
-                                                            • Uploaded
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <button type="button" class="file-remove"
-                                                    wire:click="removeBusinessAvatar" title="Remove"
-                                                    aria-label="Remove">
-                                                    <svg width="16" height="16" viewBox="0 0 16 16"
-                                                        fill="none">
-                                                        <path d="M12 4L4 12M4 4L12 12" stroke="currentColor"
-                                                            stroke-width="1.5" stroke-linecap="round" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        @elseif ($business_avatar_path !== '')
-                                            <div class="file-item file-item--saved" wire:key="profile-avatar-saved">
-                                                <div class="file-info">
-                                                    <img class="file-thumbnail"
-                                                        src="{{ $this->publicDiskUrl($business_avatar_path) }}"
-                                                        alt="" loading="lazy">
-                                                    <div class="file-details">
-                                                        <div class="file-name">{{ basename($business_avatar_path) }}
-                                                        </div>
-                                                        <div class="file-progress-text" style="color:#10b981">Saved
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <button type="button" class="file-remove"
-                                                    wire:click="removeBusinessAvatar" wire:loading.attr="disabled"
-                                                    wire:target="removeBusinessAvatar" title="Remove"
-                                                    aria-label="Remove">
-                                                    <svg width="16" height="16" viewBox="0 0 16 16"
-                                                        fill="none">
-                                                        <path d="M12 4L4 12M4 4L12 12" stroke="currentColor"
-                                                            stroke-width="1.5" stroke-linecap="round" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        @endif
-                                    </div>
-                                @endif
-
-                                <div class="profile-avatar-upload-progress" hidden>
-                                    <div class="profile-avatar-upload-progress-inner">
-                                        <div class="profile-avatar-upload-progress-thumb-wrap" aria-hidden="true">
-                                            <img class="profile-avatar-upload-progress-thumb" src=""
-                                                alt="">
-                                        </div>
-                                        <div class="profile-avatar-upload-progress-text">
-                                            <span class="profile-avatar-upload-progress-name"></span>
-                                            <span class="profile-avatar-upload-progress-status"></span>
-                                        </div>
-                                        <button type="button" class="profile-avatar-upload-progress-cancel"
-                                            wire:click="$cancelUpload('business_avatar_upload')"
-                                            wire:loading.attr="disabled" wire:target="business_avatar_upload"
-                                            title="Cancel upload" aria-label="Cancel upload">×</button>
-                                    </div>
-                                </div>
-                            </div>
+                            @php
+                                $__avatarSavedFileEntries =
+                                    ($business_avatar_path ?? '') !== ''
+                                        ? [
+                                            $this->savedDocUploadEntry(
+                                                (string) $business_avatar_path,
+                                                'groomer-spacer.business-basics-file',
+                                            ),
+                                        ]
+                                        : [];
+                                $__avatarSavedKey = md5(implode("\0", array_column($__avatarSavedFileEntries, 'path')));
+                            @endphp
+                            <input type="hidden" id="profile-photo-saved-urls-json"
+                                value="{{ htmlspecialchars(json_encode($__avatarSavedFileEntries), ENT_QUOTES, 'UTF-8') }}"
+                                wire:key="profile-photo-saved-urls-json-{{ $__avatarSavedKey }}">
+                            <script>
+                                window.__avatarSavedFileEntries = @json($__avatarSavedFileEntries);
+                            </script>
+                            <x-common.doc-upload upload-id="profile-photo" wire-model="business_avatar_upload"
+                                :multiple="false" accept=".jpg,.jpeg,.png,.gif,.webp"
+                                hint="JPEG, PNG, GIF, and WebP formats, up to 50 MB." header-label="Upload Image"
+                                browse-label="Browse File" empty-title="Choose an image or drag & drop it here."
+                                :saved-entries="$__avatarSavedFileEntries" :saved-entries-key="$__avatarSavedKey" saved-json-id="profile-photo-saved-urls-json"
+                                saved-window-key="__avatarSavedFileEntries"
+                                remove-stored-fn="removeBusinessAvatarStoredFile"
+                                pending-clear-call="removeBusinessAvatar" />
+                            @error('business_avatar_upload')
+                                <span class="error-text">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="basics-card">
@@ -3179,16 +4265,20 @@ new #[Layout('layouts.business-hub')] class extends Component {
                                     foreach ($business_gallery_pending as $i => $f) {
                                         $gallery_items[] = ['kind' => 'pending', 'idx' => $i, 'file' => $f];
                                     }
-                                    $gallery_items = array_slice($gallery_items, 0, 3);
                                     $gallery_used = count($gallery_items);
-                                    $gallery_room = max(
-                                        0,
-                                        3 - count($business_gallery_paths) - count($business_gallery_pending),
+                                    $gallery_total_slots = $this->galleryVisibleSlotCount();
+                                    $gallery_slots_key = md5(
+                                        implode("\0", $business_gallery_paths) .
+                                            '|' .
+                                            count($business_gallery_pending) .
+                                            '|' .
+                                            $gallery_total_slots,
                                     );
                                 @endphp
-                                @foreach (range(0, 2) as $slot)
+                                @foreach (range(0, $gallery_total_slots - 1) as $slot)
                                     @php $item = $gallery_items[$slot] ?? null; @endphp
-                                    <div class="gallery-slot">
+                                    <div class="gallery-slot"
+                                        wire:key="gallery-slot-{{ $slot }}-{{ $gallery_slots_key }}">
                                         @if ($item && $item['kind'] === 'path')
                                             <img class="gallery-slot-img"
                                                 src="{{ $this->publicDiskUrl($item['path']) }}" alt="">
@@ -3204,75 +4294,38 @@ new #[Layout('layouts.business-hub')] class extends Component {
                                             <button type="button" class="gallery-slot-remove"
                                                 wire:click="removeBusinessGalleryPending({{ (int) $item['idx'] }})"
                                                 aria-label="Remove photo">&times;</button>
+                                        @elseif ($slot === $gallery_used)
+                                            <label class="gallery-slot-empty">
+                                                <input type="file" id="business-gallery-pick-input"
+                                                    class="hidden-input" accept=".jpg,.jpeg,.png,.gif,.webp" multiple>
+                                                @include('livewire.auth.partials.verify-qualify-gallery-paw')
+                                            </label>
                                         @else
-                                            @if ($slot === $gallery_used && $gallery_room > 0)
-                                                <label class="gallery-slot-empty">
-                                                    <input type="file" wire:model="business_gallery_pick"
-                                                        class="hidden-input">
-                                                    <span class="gallery-paw" aria-hidden="true">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="160"
-                                                            height="158" viewBox="0 0 160 158" fill="none">
-                                                            <rect width="159.422" height="157.441" rx="10"
-                                                                fill="white" />
-                                                            <path fill-rule="evenodd" clip-rule="evenodd"
-                                                                d="M69.9503 40.5986C67.9196 40.5986 66.328 41.8179 65.3434 43.2803C64.3466 44.7548 63.7969 46.6789 63.7969 48.7002C63.7969 50.7216 64.3466 52.6457 65.3434 54.1202C66.328 55.5785 67.9196 56.8018 69.9503 56.8018C71.9809 56.8018 73.5725 55.5825 74.5571 54.1202C75.5539 52.6457 76.1036 50.7216 76.1036 48.7002C76.1036 46.6789 75.5539 44.7548 74.5571 43.2803C73.5725 41.822 71.9809 40.5986 69.9503 40.5986ZM90.4615 40.5986C88.4309 40.5986 86.8392 41.8179 85.8546 43.2803C84.8578 44.7548 84.3081 46.6789 84.3081 48.7002C84.3081 50.7216 84.8578 52.6457 85.8546 54.1202C86.8392 55.5785 88.4309 56.8018 90.4615 56.8018C92.4921 56.8018 94.0837 55.5825 95.0683 54.1202C96.0651 52.6457 96.6148 50.7216 96.6148 48.7002C96.6148 46.6789 96.0651 44.7548 95.0683 43.2803C94.0837 41.822 92.4921 40.5986 90.4615 40.5986ZM57.6435 58.8272C55.6129 58.8272 54.0213 60.0465 53.0367 61.5089C52.0399 62.9834 51.4902 64.9075 51.4902 66.9288C51.4902 68.9502 52.0399 70.8743 53.0367 72.3488C54.0213 73.8071 55.6129 75.0305 57.6435 75.0305C59.6741 75.0305 61.2658 73.8112 62.2504 72.3488C63.2472 70.8743 63.7969 68.9502 63.7969 66.9288C63.7969 64.9075 63.2472 62.9834 62.2504 61.5089C61.2658 60.0506 59.6741 58.8272 57.6435 58.8272ZM80.2059 58.8272C75.2832 58.8272 71.6363 61.436 69.3062 64.6726C67.0048 67.8605 65.848 71.8182 65.848 75.0305C65.848 78.7734 68.1248 81.3781 70.9184 82.9376C73.6669 84.4769 77.1128 85.1575 80.2059 85.1575C83.299 85.1575 86.7448 84.481 89.4933 82.9376C92.2829 81.374 94.5637 78.7734 94.5637 75.0305C94.5637 71.8182 93.4069 67.8605 91.1055 64.6726C88.7795 61.4319 85.1327 58.8272 80.2059 58.8272ZM102.768 58.8272C100.738 58.8272 99.1459 60.0465 98.1614 61.5089C97.1645 62.9834 96.6148 64.9075 96.6148 66.9288C96.6148 68.9502 97.1645 70.8743 98.1614 72.3488C99.1459 73.8071 100.738 75.0305 102.768 75.0305C104.799 75.0305 106.39 73.8112 107.375 72.3488C108.372 70.8743 108.922 68.9502 108.922 66.9288C108.922 64.9075 108.372 62.9834 107.375 61.5089C106.39 60.0506 104.799 58.8272 102.768 58.8272Z"
-                                                                fill="#E5E5E5" />
-                                                            <path
-                                                                d="M80.1727 134.566C75.1146 134.566 71 130.451 71 125.393C71 120.335 75.1146 116.221 80.1727 116.221C85.2307 116.221 89.3453 120.335 89.3453 125.393C89.3453 130.451 85.2307 134.566 80.1727 134.566Z"
-                                                                fill="#9D9B98" />
-                                                            <path
-                                                                d="M80.1728 129.981C79.8059 129.981 79.5176 129.693 79.5176 129.326V121.464C79.5176 121.097 79.8059 120.809 80.1728 120.809C80.5397 120.809 80.828 121.097 80.828 121.464V129.326C80.828 129.693 80.5397 129.981 80.1728 129.981Z"
-                                                                fill="white" />
-                                                            <path
-                                                                d="M84.1039 126.049H76.2416C75.8747 126.049 75.5864 125.76 75.5864 125.393C75.5864 125.027 75.8747 124.738 76.2416 124.738H84.1039C84.4708 124.738 84.7591 125.027 84.7591 125.393C84.7591 125.76 84.4708 126.049 84.1039 126.049Z"
-                                                                fill="white" />
-                                                        </svg>
-                                                    </span>
-                                                </label>
-                                            @else
-                                                <div class="gallery-slot-empty gallery-slot-placeholder"
-                                                    aria-hidden="true">
-                                                    <span class="gallery-paw">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="160"
-                                                            height="158" viewBox="0 0 160 158" fill="none">
-                                                            <rect width="159.422" height="157.441" rx="10"
-                                                                fill="white" />
-                                                            <path fill-rule="evenodd" clip-rule="evenodd"
-                                                                d="M69.9503 40.5986C67.9196 40.5986 66.328 41.8179 65.3434 43.2803C64.3466 44.7548 63.7969 46.6789 63.7969 48.7002C63.7969 50.7216 64.3466 52.6457 65.3434 54.1202C66.328 55.5785 67.9196 56.8018 69.9503 56.8018C71.9809 56.8018 73.5725 55.5825 74.5571 54.1202C75.5539 52.6457 76.1036 50.7216 76.1036 48.7002C76.1036 46.6789 75.5539 44.7548 74.5571 43.2803C73.5725 41.822 71.9809 40.5986 69.9503 40.5986ZM90.4615 40.5986C88.4309 40.5986 86.8392 41.8179 85.8546 43.2803C84.8578 44.7548 84.3081 46.6789 84.3081 48.7002C84.3081 50.7216 84.8578 52.6457 85.8546 54.1202C86.8392 55.5785 88.4309 56.8018 90.4615 56.8018C92.4921 56.8018 94.0837 55.5825 95.0683 54.1202C96.0651 52.6457 96.6148 50.7216 96.6148 48.7002C96.6148 46.6789 96.0651 44.7548 95.0683 43.2803C94.0837 41.822 92.4921 40.5986 90.4615 40.5986ZM57.6435 58.8272C55.6129 58.8272 54.0213 60.0465 53.0367 61.5089C52.0399 62.9834 51.4902 64.9075 51.4902 66.9288C51.4902 68.9502 52.0399 70.8743 53.0367 72.3488C54.0213 73.8071 55.6129 75.0305 57.6435 75.0305C59.6741 75.0305 61.2658 73.8112 62.2504 72.3488C63.2472 70.8743 63.7969 68.9502 63.7969 66.9288C63.7969 64.9075 63.2472 62.9834 62.2504 61.5089C61.2658 60.0506 59.6741 58.8272 57.6435 58.8272ZM80.2059 58.8272C75.2832 58.8272 71.6363 61.436 69.3062 64.6726C67.0048 67.8605 65.848 71.8182 65.848 75.0305C65.848 78.7734 68.1248 81.3781 70.9184 82.9376C73.6669 84.4769 77.1128 85.1575 80.2059 85.1575C83.299 85.1575 86.7448 84.481 89.4933 82.9376C92.2829 81.374 94.5637 78.7734 94.5637 75.0305C94.5637 71.8182 93.4069 67.8605 91.1055 64.6726C88.7795 61.4319 85.1327 58.8272 80.2059 58.8272ZM102.768 58.8272C100.738 58.8272 99.1459 60.0465 98.1614 61.5089C97.1645 62.9834 96.6148 64.9075 96.6148 66.9288C96.6148 68.9502 97.1645 70.8743 98.1614 72.3488C99.1459 73.8071 100.738 75.0305 102.768 75.0305C104.799 75.0305 106.39 73.8112 107.375 72.3488C108.372 70.8743 108.922 68.9502 108.922 66.9288C108.922 64.9075 108.372 62.9834 107.375 61.5089C106.39 60.0506 104.799 58.8272 102.768 58.8272Z"
-                                                                fill="#E5E5E5" />
-                                                            <path
-                                                                d="M80.1727 134.566C75.1146 134.566 71 130.451 71 125.393C71 120.335 75.1146 116.221 80.1727 116.221C85.2307 116.221 89.3453 120.335 89.3453 125.393C89.3453 130.451 85.2307 134.566 80.1727 134.566Z"
-                                                                fill="#9D9B98" />
-                                                            <path
-                                                                d="M80.1728 129.981C79.8059 129.981 79.5176 129.693 79.5176 129.326V121.464C79.5176 121.097 79.8059 120.809 80.1728 120.809C80.5397 120.809 80.828 121.097 80.828 121.464V129.326C80.828 129.693 80.5397 129.981 80.1728 129.981Z"
-                                                                fill="white" />
-                                                            <path
-                                                                d="M84.1039 126.049H76.2416C75.8747 126.049 75.5864 125.76 75.5864 125.393C75.5864 125.027 75.8747 124.738 76.2416 124.738H84.1039C84.4708 124.738 84.7591 125.027 84.7591 125.393C84.7591 125.76 84.4708 126.049 84.1039 126.049Z"
-                                                                fill="white" />
-                                                        </svg>
-                                                    </span>
-                                                </div>
-                                            @endif
+                                            <div class="gallery-slot-empty gallery-slot-placeholder"
+                                                aria-hidden="true">
+                                                @include('livewire.auth.partials.verify-qualify-gallery-paw')
+                                            </div>
                                         @endif
                                     </div>
                                 @endforeach
                             </div>
-                            @error('business_gallery_pick')
+                            @error('business_gallery_pending')
                                 <span class="error-text">{{ $message }}</span>
                             @enderror
+                            @if ($errors->has('business_gallery_pending.*'))
+                                <span class="error-text">{{ $errors->first('business_gallery_pending.*') }}</span>
+                            @endif
                         </div>
 
                         <div class="form-buttons basics-actions">
-                            <button type="button" class="back-btn" wire:click="goBack">
-                                <span>Back</span>
-                            </button>
-                            <button type="submit"
-                                class="submit-btn {{ $this->isBusinessBasicsContinueEnabled() ? 'btn-active' : 'btn-disabled' }}"
-                                wire:loading.attr="disabled" wire:target="submitBusinessBasics"
-                                @if (!$this->isBusinessBasicsContinueEnabled()) disabled @endif>
-                                <span wire:loading.remove wire:target="submitBusinessBasics">Continue</span>
-                                <span wire:loading wire:target="submitBusinessBasics">Saving…</span>
-                            </button>
+                            <x-common.button type="button" label="Back" width="105px" bg-color="#FFFFFF"
+                                text-color="#9D9B98" border="1px solid rgba(59, 55, 49, 0.10)" :shadow="false"
+                                wire:click="goBack" />
+                            <x-common.button type="submit" label="Continue" width="105px"
+                                bg-color="{{ $this->isBusinessBasicsContinueEnabled() ? '#FFC97A' : '#e5e7eb' }}"
+                                text-color="{{ $this->isBusinessBasicsContinueEnabled() ? '#FFFFFF' : '#9ca3af' }}"
+                                loading-target="submitBusinessBasics,business_avatar_upload,business_gallery_pending"
+                                :disabled="!$this->isBusinessBasicsContinueEnabled()" />
                         </div>
                     </form>
                 </div>
@@ -3360,10 +4413,9 @@ new #[Layout('layouts.business-hub')] class extends Component {
 
                     </div>
 
-                    <div class="submit-section">
-                        <button type="button" class="submit-btn" wire:click="verifyBusiness">
-                            Verify Business
-                        </button>
+                    <div class="verification-card-actions">
+                        <x-common.button label="Verify Business" wire:click="verifyBusiness"
+                            loading-target="verifyBusiness" />
                     </div>
                 </div>
             @elseif ($showAccountPayoutsForm)
@@ -3372,7 +4424,35 @@ new #[Layout('layouts.business-hub')] class extends Component {
                         <h2>Verify Your Account for Payouts</h2>
                     </div>
 
-                    <form wire:submit="submit" class="verification-form">
+                    <form wire:submit="submit" class="verification-form" x-data="{
+                        fursgoUsage: @js($fursgo_usage),
+                        accountType: @js($account_type),
+                        locationTypes: @js($location_types),
+                        devPreview: @js($this->shouldUseDevDbPreview()),
+                        get canContinue() {
+                            if (this.devPreview) {
+                                return true;
+                            }
+                    
+                            return Boolean(this.fursgoUsage) &&
+                                Boolean(this.accountType) &&
+                                this.locationTypes.length > 0;
+                        },
+                        isLocationChecked(value) {
+                            return this.locationTypes.includes(value);
+                        },
+                        toggleLocation(value, checked) {
+                            if (checked) {
+                                if (!this.locationTypes.includes(value)) {
+                                    this.locationTypes.push(value);
+                                }
+                    
+                                return;
+                            }
+                    
+                            this.locationTypes = this.locationTypes.filter((item) => item !== value);
+                        },
+                    }">
                         <div>
                             <div class="form-section">
                                 <div class="section-title">
@@ -3380,32 +4460,28 @@ new #[Layout('layouts.business-hub')] class extends Component {
                                     <p>This helps us set up the right tools and dashboard for your business.</p>
                                 </div>
                                 <div class="radio-group">
-                                    <div class="radio-item {{ $fursgo_usage == 'groomer' ? 'checked' : '' }}">
-                                        <input type="radio" wire:model.live="fursgo_usage" value="groomer"
-                                            id="groomer" name="fursgo_usage">
-                                        <label for="groomer" class="radio-label">
-                                            <div class="radio-content">
-                                                <p class="radio-title">Pet Groomer</p>
-                                                <p class="radio-description">I provide grooming services for pets and
-                                                    accept
-                                                    bookings from pet owners.</p>
-                                            </div>
-                                            <span class="radio-custom"></span>
-                                        </label>
-                                    </div>
-                                    <div class="radio-item {{ $fursgo_usage == 'space' ? 'checked' : '' }}">
-                                        <input type="radio" wire:model.live="fursgo_usage" value="space"
-                                            id="space" name="fursgo_usage">
-                                        <label for="space" class="radio-label">
-                                            <div class="radio-content">
-                                                <p class="radio-title">Space Host</p>
-                                                <p class="radio-description">I rent out a grooming space for
-                                                    professional
-                                                    groomers to use.</p>
-                                            </div>
-                                            <span class="radio-custom"></span>
-                                        </label>
-                                    </div>
+                                    <label class="radio-item" :class="{ 'checked': fursgoUsage === 'groomer' }">
+                                        <input type="radio" wire:model="fursgo_usage" value="groomer"
+                                            id="groomer" name="fursgo_usage" @change="fursgoUsage = 'groomer'">
+                                        <div class="radio-content">
+                                            <p class="radio-title">Pet Groomer</p>
+                                            <p class="radio-description">I provide grooming services for pets and
+                                                accept
+                                                bookings from pet owners.</p>
+                                        </div>
+                                        <span class="radio-custom"></span>
+                                    </label>
+                                    <label class="radio-item" :class="{ 'checked': fursgoUsage === 'space' }">
+                                        <input type="radio" wire:model="fursgo_usage" value="space"
+                                            id="space" name="fursgo_usage" @change="fursgoUsage = 'space'">
+                                        <div class="radio-content">
+                                            <p class="radio-title">Space Host</p>
+                                            <p class="radio-description">I rent out a grooming space for
+                                                professional
+                                                groomers to use.</p>
+                                        </div>
+                                        <span class="radio-custom"></span>
+                                    </label>
                                 </div>
                                 @error('fursgo_usage')
                                     <span class="error-text">{{ $message }}</span>
@@ -3416,29 +4492,26 @@ new #[Layout('layouts.business-hub')] class extends Component {
                             <div class="form-section">
                                 <h3 class="section-title">Select Account Type</h3>
                                 <div class="radio-group">
-                                    <div
-                                        class="radio-item {{ $account_type == 'registered_business' ? 'checked' : '' }}">
-                                        <input type="radio" wire:model.live="account_type"
-                                            value="registered_business" id="registered_business" name="account_type">
-                                        <label for="registered_business" class="radio-label">
-                                            <div class="radio-content">
-                                                <p class="radio-title">Registered Business</p>
-                                                <p class="radio-description">I operate as a registered business.</p>
-                                            </div>
-                                            <span class="radio-custom"></span>
-                                        </label>
-                                    </div>
-                                    <div class="radio-item {{ $account_type == 'freelance' ? 'checked' : '' }}">
-                                        <input type="radio" wire:model.live="account_type" value="freelance"
-                                            id="freelance" name="account_type">
-                                        <label for="freelance" class="radio-label">
-                                            <div class="radio-content">
-                                                <p class="radio-title">Freelance</p>
-                                                <p class="radio-description">I operate independently.</p>
-                                            </div>
-                                            <span class="radio-custom"></span>
-                                        </label>
-                                    </div>
+                                    <label class="radio-item"
+                                        :class="{ 'checked': accountType === 'registered_business' }">
+                                        <input type="radio" wire:model="account_type" value="registered_business"
+                                            id="registered_business" name="account_type"
+                                            @change="accountType = 'registered_business'">
+                                        <div class="radio-content">
+                                            <p class="radio-title">Registered Business</p>
+                                            <p class="radio-description">I operate as a registered business.</p>
+                                        </div>
+                                        <span class="radio-custom"></span>
+                                    </label>
+                                    <label class="radio-item" :class="{ 'checked': accountType === 'freelance' }">
+                                        <input type="radio" wire:model="account_type" value="freelance"
+                                            id="freelance" name="account_type" @change="accountType = 'freelance'">
+                                        <div class="radio-content">
+                                            <p class="radio-title">Freelance</p>
+                                            <p class="radio-description">I operate independently.</p>
+                                        </div>
+                                        <span class="radio-custom"></span>
+                                    </label>
                                 </div>
                                 @error('account_type')
                                     <span class="error-text">{{ $message }}</span>
@@ -3449,61 +4522,56 @@ new #[Layout('layouts.business-hub')] class extends Component {
                             <div class="form-section">
                                 <h3 class="section-title">Select location type</h3>
                                 <div class="checkbox-group">
-                                    <div
-                                        class="checkbox-item {{ in_array('space_visits', $location_types) ? 'checked' : '' }}">
-                                        <input type="checkbox" wire:model.live="location_types" value="space_visits"
-                                            id="space_visits" name="location_types">
-                                        <label for="space_visits" class="checkbox-label">
-                                            <div class="checkbox-content">
-                                                <p class="checkbox-title">Space Visits</p>
-                                            </div>
-                                            <span class="checkbox-custom"></span>
-                                        </label>
-                                    </div>
-                                    <div
-                                        class="checkbox-item {{ in_array('commercial_salon', $location_types) ? 'checked' : '' }}">
-                                        <input type="checkbox" wire:model.live="location_types"
-                                            value="commercial_salon" id="commercial_salon" name="location_types">
-                                        <label for="commercial_salon" class="checkbox-label">
-                                            <div class="checkbox-content">
-                                                <p class="checkbox-title">Commercial Salon</p>
-                                            </div>
-                                            <span class="checkbox-custom"></span>
-                                        </label>
-                                    </div>
-                                    <div
-                                        class="checkbox-item {{ in_array('home_studio', $location_types) ? 'checked' : '' }}">
-                                        <input type="checkbox" wire:model.live="location_types" value="home_studio"
-                                            id="home_studio" name="location_types">
-                                        <label for="home_studio" class="checkbox-label">
-                                            <div class="checkbox-content">
-                                                <p class="checkbox-title">Home Studio</p>
-                                            </div>
-                                            <span class="checkbox-custom"></span>
-                                        </label>
-                                    </div>
-                                    <div
-                                        class="checkbox-item {{ in_array('house_visit', $location_types) ? 'checked' : '' }}">
-                                        <input type="checkbox" wire:model.live="location_types" value="house_visit"
-                                            id="house_visit" name="location_types">
-                                        <label for="house_visit" class="checkbox-label">
-                                            <div class="checkbox-content">
-                                                <p class="checkbox-title">House visit</p>
-                                            </div>
-                                            <span class="checkbox-custom"></span>
-                                        </label>
-                                    </div>
-                                    <div
-                                        class="checkbox-item {{ in_array('mobile_van', $location_types) ? 'checked' : '' }}">
-                                        <input type="checkbox" wire:model.live="location_types" value="mobile_van"
-                                            id="mobile_van" name="location_types">
-                                        <label for="mobile_van" class="checkbox-label">
-                                            <div class="checkbox-content">
-                                                <p class="checkbox-title">Mobile Van</p>
-                                            </div>
-                                            <span class="checkbox-custom"></span>
-                                        </label>
-                                    </div>
+                                    <label class="checkbox-item"
+                                        :class="{ 'checked': isLocationChecked('space_visits') }">
+                                        <input type="checkbox" wire:model="location_types" value="space_visits"
+                                            id="space_visits" name="location_types"
+                                            @change="toggleLocation('space_visits', $event.target.checked)">
+                                        <div class="checkbox-content">
+                                            <p class="checkbox-title">Space Visits</p>
+                                        </div>
+                                        <span class="checkbox-custom"></span>
+                                    </label>
+                                    <label class="checkbox-item"
+                                        :class="{ 'checked': isLocationChecked('commercial_salon') }">
+                                        <input type="checkbox" wire:model="location_types" value="commercial_salon"
+                                            id="commercial_salon" name="location_types"
+                                            @change="toggleLocation('commercial_salon', $event.target.checked)">
+                                        <div class="checkbox-content">
+                                            <p class="checkbox-title">Commercial Salon</p>
+                                        </div>
+                                        <span class="checkbox-custom"></span>
+                                    </label>
+                                    <label class="checkbox-item"
+                                        :class="{ 'checked': isLocationChecked('home_studio') }">
+                                        <input type="checkbox" wire:model="location_types" value="home_studio"
+                                            id="home_studio" name="location_types"
+                                            @change="toggleLocation('home_studio', $event.target.checked)">
+                                        <div class="checkbox-content">
+                                            <p class="checkbox-title">Home Studio</p>
+                                        </div>
+                                        <span class="checkbox-custom"></span>
+                                    </label>
+                                    <label class="checkbox-item"
+                                        :class="{ 'checked': isLocationChecked('house_visit') }">
+                                        <input type="checkbox" wire:model="location_types" value="house_visit"
+                                            id="house_visit" name="location_types"
+                                            @change="toggleLocation('house_visit', $event.target.checked)">
+                                        <div class="checkbox-content">
+                                            <p class="checkbox-title">House visit</p>
+                                        </div>
+                                        <span class="checkbox-custom"></span>
+                                    </label>
+                                    <label class="checkbox-item"
+                                        :class="{ 'checked': isLocationChecked('mobile_van') }">
+                                        <input type="checkbox" wire:model="location_types" value="mobile_van"
+                                            id="mobile_van" name="location_types"
+                                            @change="toggleLocation('mobile_van', $event.target.checked)">
+                                        <div class="checkbox-content">
+                                            <p class="checkbox-title">Mobile Van</p>
+                                        </div>
+                                        <span class="checkbox-custom"></span>
+                                    </label>
                                 </div>
                                 @error('location_types')
                                     <span class="error-text">{{ $message }}</span>
@@ -3512,17 +4580,16 @@ new #[Layout('layouts.business-hub')] class extends Component {
                         </div>
 
                         <div class="form-buttons verification-form-actions">
-                            <button type="button" class="back-btn" wire:click="goBack">
-                                <span>Back</span>
-                            </button>
-                            <button type="submit"
-                                class="submit-btn {{ $this->isFormValid() ? 'btn-active' : 'btn-disabled' }}"
-                                wire:loading.attr="disabled" wire:target="submit"
-                                @if ($this->isFormValid()) @else disabled @endif>
-                                <span wire:loading.remove wire:target="submit">Continue</span>
-                                <span wire:loading wire:target="submit" class="btn-spinner"
-                                    aria-hidden="true"></span>
-                            </button>
+                            <x-common.button type="button" label="Back" width="105px" bg-color="#FFFFFF"
+                                text-color="#9D9B98" border="1px solid rgba(59, 55, 49, 0.10)" :shadow="false"
+                                wire:click="goBack" />
+                            <x-common.button type="submit" label="Continue" width="105px" loading-target="submit"
+                                x-bind:disabled="!canContinue" x-bind:class="{ 'common-btn--disabled': !canContinue }"
+                                x-bind:style="{
+                                    backgroundColor: canContinue ? '#FFC97A' : '#e5e7eb',
+                                    color: canContinue ? '#FFFFFF' : '#9ca3af',
+                                    boxShadow: canContinue ? '0 5px 8px 0 rgba(0, 0, 0, 0.10)' : 'none',
+                                }" />
                         </div>
                     </form>
                 </div>
@@ -3538,7 +4605,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
                         </div>
                     @endif
 
-                    <form wire:submit="submitPersonalInfo" novalidate>
+                    <form wire:submit="submitPersonalInfo" novalidate wire:init="initVerifyQualifyDocUploads">
                         <div class="form-grid">
                             <!-- Full Name -->
                             <div class="form-group full-width">
@@ -3633,94 +4700,36 @@ new #[Layout('layouts.business-hub')] class extends Component {
                                 </div>
                                 <div>
                                     <label class="form-label">Business Owner ID</label>
-                                    <p>Please upload a clear photo or scan of a valid government-issued ID (e.g.
-                                        passport or
-                                        driving licence) and a recent UK utility bill, bank statement, or official
-                                        letter
-                                        showing your current address. Both documents must be in English and dated within
-                                        the
-                                        last 3 months.</p>
+                                    <p class="business-owner-id-help">Please upload a clear photo or scan of a valid
+                                        government-issued ID (e.g. passport or driving licence) and a recent UK utility
+                                        bill, bank statement, or official letter showing your current address. Both
+                                        documents must be in English and dated within the last 3 months.</p>
 
                                     @php
-                                        $__boSavedFileEntries = [];
-                                        foreach ($business_owner_id_images ?? [] as $__p) {
-                                            if (is_string($__p) && $__p !== '') {
-                                                $__boSavedFileEntries[] = [
-                                                    'path' => $__p,
-                                                    'url' => route('groomer-spacer.business-owner-id-file', [
-                                                        't' => \Illuminate\Support\Facades\Crypt::encryptString($__p),
-                                                    ]),
-                                                ];
-                                            }
-                                        }
+                                        $__boSavedFileEntries = $this->savedDocUploadEntriesForPaths(
+                                            is_array($business_owner_id_paths ?? null) ? $business_owner_id_paths : [],
+                                            is_array($business_owner_id_file_names ?? null)
+                                                ? $business_owner_id_file_names
+                                                : [],
+                                            'groomer-spacer.business-owner-id-file',
+                                        );
+                                        $__boSavedKey = md5(implode("\0", array_column($__boSavedFileEntries, 'path')));
                                     @endphp
-                                    <input type="hidden" id="business-owner-saved-urls-json"
+                                    <input type="hidden" id="business-owner-saved-urls-json-registered"
                                         value="{{ htmlspecialchars(json_encode($__boSavedFileEntries), ENT_QUOTES, 'UTF-8') }}"
-                                        wire:key="business-owner-saved-urls-json">
+                                        wire:key="business-owner-saved-urls-json-registered">
                                     <script>
-                                        window.__boSavedFileEntries = @json($__boSavedFileEntries);
+                                        window.__boSavedFileEntriesRegistered = @json($__boSavedFileEntries);
                                     </script>
 
-                                    <!-- Custom File Upload Interface: wire:ignore entire widget so Livewire morphs do not reset Attach/Upload tab state (was causing flicker on every wire:model.live keystroke). Hidden saved-url inputs stay above this block. -->
-                                    <div class="custom-file-upload" wire:ignore>
-                                        <!-- Tabs -->
-                                        <div class="upload-tabs">
-                                            <div>
-                                                <button type="button" class="tab-btn active" data-tab="attach"><svg
-                                                        xmlns="http://www.w3.org/2000/svg" width="11"
-                                                        height="12" viewBox="0 0 11 12" fill="none">
-                                                        <path
-                                                            d="M10.5 6.04469L6.17551 10.5107C5.54818 11.1481 4.70239 11.5037 3.82235 11.5C2.94232 11.4963 2.09936 11.1336 1.47707 10.4909C0.854792 9.8483 0.503611 8.97775 0.500028 8.06891C0.496444 7.16008 0.840748 6.2866 1.45794 5.63874L5.78243 1.17272C5.98895 0.95944 6.23412 0.790259 6.50395 0.674834C6.77378 0.559409 7.06298 0.5 7.35504 0.5C7.64711 0.5 7.93631 0.559409 8.20614 0.674834C8.47597 0.790259 8.72114 0.95944 8.92766 1.17272C9.13418 1.386 9.298 1.63919 9.40977 1.91785C9.52153 2.19652 9.57906 2.49518 9.57906 2.7968C9.57906 3.09842 9.52153 3.39709 9.40977 3.67575C9.298 3.95441 9.13418 4.20761 8.92766 4.42089L4.60317 8.88691C4.3946 9.10231 4.1117 9.22333 3.81673 9.22333C3.52175 9.22333 3.23886 9.10231 3.03028 8.88691C2.8217 8.6715 2.70452 8.37935 2.70452 8.07472C2.70452 7.77009 2.8217 7.47794 3.03028 7.26254L6.96168 3.20304"
-                                                            stroke="#3B3731" stroke-linecap="round" />
-                                                    </svg>Attach</button>
-                                                <button type="button" class="tab-btn" data-tab="upload"><svg
-                                                        xmlns="http://www.w3.org/2000/svg" width="12"
-                                                        height="12" viewBox="0 0 12 12" fill="none">
-                                                        <path
-                                                            d="M10.2778 0.5H1.72222C1.04721 0.5 0.5 1.04721 0.5 1.72222V10.2778C0.5 10.9528 1.04721 11.5 1.72222 11.5H10.2778C10.9528 11.5 11.5 10.9528 11.5 10.2778V1.72222C11.5 1.04721 10.9528 0.5 10.2778 0.5Z"
-                                                            stroke="#3B3731" stroke-linecap="round"
-                                                            stroke-linejoin="round" />
-                                                        <path
-                                                            d="M4.16662 5.38878C4.84163 5.38878 5.38884 4.84157 5.38884 4.16656C5.38884 3.49154 4.84163 2.94434 4.16662 2.94434C3.4916 2.94434 2.9444 3.49154 2.9444 4.16656C2.9444 4.84157 3.4916 5.38878 4.16662 5.38878Z"
-                                                            stroke="#3B3731" stroke-linecap="round"
-                                                            stroke-linejoin="round" />
-                                                        <path
-                                                            d="M11.5001 7.83358L9.61421 5.94769C9.38501 5.71856 9.07419 5.58984 8.7501 5.58984C8.42601 5.58984 8.11519 5.71856 7.88599 5.94769L2.33344 11.5002"
-                                                            stroke="#3B3731" stroke-linecap="round"
-                                                            stroke-linejoin="round" />
-                                                    </svg>Upload</button>
-
-                                            </div>
-                                        </div>
-
-                                        <!-- Tab Content -->
-                                        <div class="tab-content">
-                                            <!-- Attach Tab -->
-                                            <div class="tab-pane active" id="attach-tab">
-                                                <div class="file-list" id="business-owner-id-file-list" wire:ignore>
-                                                    <!-- Files will be dynamically added here -->
-                                                </div>
-                                                <p class="file-list-empty-msg" data-role="file-list-empty">No file
-                                                    attached.
-                                                </p>
-                                            </div>
-
-                                            <!-- Upload Tab -->
-                                            <div class="tab-pane" id="upload-tab">
-                                                <div class="upload-area" id="business-owner-id-upload-area">
-                                                    <div>
-                                                        <p>Choose a file or drag & drop it here.</p>
-                                                    </div>
-                                                    <div class="upload-icon">
-                                                        Browse File
-                                                    </div>
-                                                    <input type="file" wire:model="business_owner_id_images"
-                                                        id="business-owner-id-file-input" class="hidden-input"
-                                                        accept=".pdf,.jpg,.jpeg,.png" multiple>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <!-- Business Owner ID upload -->
+                                    <x-common.doc-upload upload-id="business-owner-id"
+                                        wire-model="business_owner_id_images" :saved-entries="$__boSavedFileEntries" :saved-entries-key="$__boSavedKey"
+                                        saved-json-id="business-owner-saved-urls-json-registered"
+                                        saved-window-key="__boSavedFileEntriesRegistered"
+                                        remove-stored-fn="removeBusinessOwnerStoredFile"
+                                        empty-title="Choose files or drag & drop them here."
+                                        browse-label="Browse Files" />
                                 </div>
                             </div>
 
@@ -3799,17 +4808,18 @@ new #[Layout('layouts.business-hub')] class extends Component {
                                 <div>
                                     <label class="form-label">Insurance Certificate <span>(Optional)</span></label>
                                     @php
-                                        $__insSavedFileEntries = [];
-                                        foreach ($insurance_certificate_paths ?? [] as $__p) {
-                                            if (is_string($__p) && $__p !== '') {
-                                                $__insSavedFileEntries[] = [
-                                                    'path' => $__p,
-                                                    'url' => route('groomer-spacer.insurance-certificate-file', [
-                                                        't' => \Illuminate\Support\Facades\Crypt::encryptString($__p),
-                                                    ]),
-                                                ];
-                                            }
-                                        }
+                                        $__insSavedFileEntries = $this->savedDocUploadEntriesForPaths(
+                                            is_array($insurance_certificate_paths ?? null)
+                                                ? $insurance_certificate_paths
+                                                : [],
+                                            is_array($insurance_certificate_file_names ?? null)
+                                                ? $insurance_certificate_file_names
+                                                : [],
+                                            'groomer-spacer.insurance-certificate-file',
+                                        );
+                                        $__insSavedKey = md5(
+                                            implode("\0", array_column($__insSavedFileEntries, 'path')),
+                                        );
                                     @endphp
                                     <input type="hidden" id="insurance-saved-urls-json"
                                         value="{{ htmlspecialchars(json_encode($__insSavedFileEntries), ENT_QUOTES, 'UTF-8') }}"
@@ -3817,69 +4827,14 @@ new #[Layout('layouts.business-hub')] class extends Component {
                                     <script>
                                         window.__insSavedFileEntries = @json($__insSavedFileEntries);
                                     </script>
-                                    <!-- Custom File Upload Interface (wire:ignore — same tab-flicker fix as Business Owner ID) -->
-                                    <div class="custom-file-upload" wire:ignore>
-                                        <!-- Tabs -->
-                                        <div class="upload-tabs">
-                                            <div>
-                                                <button type="button" class="tab-btn"
-                                                    data-tab="insurance-attach"><svg
-                                                        xmlns="http://www.w3.org/2000/svg" width="11"
-                                                        height="12" viewBox="0 0 11 12" fill="none">
-                                                        <path
-                                                            d="M10.5 6.04469L6.17551 10.5107C5.54818 11.1481 4.70239 11.5037 3.82235 11.5C2.94232 11.4963 2.09936 11.1336 1.47707 10.4909C0.854792 9.8483 0.503611 8.97775 0.500028 8.06891C0.496444 7.16008 0.840748 6.2866 1.45794 5.63874L5.78243 1.17272C5.98895 0.95944 6.23412 0.790259 6.50395 0.674834C6.77378 0.559409 7.06298 0.5 7.35504 0.5C7.64711 0.5 7.93631 0.559409 8.20614 0.674834C8.47597 0.790259 8.72114 0.95944 8.92766 1.17272C9.13418 1.386 9.298 1.63919 9.40977 1.91785C9.52153 2.19652 9.57906 2.49518 9.57906 2.7968C9.57906 3.09842 9.52153 3.39709 9.40977 3.67575C9.298 3.95441 9.13418 4.20761 8.92766 4.42089L4.60317 8.88691C4.3946 9.10231 4.1117 9.22333 3.81673 9.22333C3.52175 9.22333 3.23886 9.10231 3.03028 8.88691C2.8217 8.6715 2.70452 8.37935 2.70452 8.07472C2.70452 7.77009 2.8217 7.47794 3.03028 7.26254L6.96168 3.20304"
-                                                            stroke="#3B3731" stroke-linecap="round" />
-                                                    </svg>Attach</button>
-                                                <button type="button" class="tab-btn active"
-                                                    data-tab="insurance-upload"><svg
-                                                        xmlns="http://www.w3.org/2000/svg" width="12"
-                                                        height="12" viewBox="0 0 12 12" fill="none">
-                                                        <path
-                                                            d="M10.2778 0.5H1.72222C1.04721 0.5 0.5 1.04721 0.5 1.72222V10.2778C0.5 10.9528 1.04721 11.5 1.72222 11.5H10.2778C10.9528 11.5 11.5 10.9528 11.5 10.2778V1.72222C11.5 1.04721 10.9528 0.5 10.2778 0.5Z"
-                                                            stroke="#3B3731" stroke-linecap="round"
-                                                            stroke-linejoin="round" />
-                                                        <path
-                                                            d="M4.16662 5.38878C4.84163 5.38878 5.38884 4.84157 5.38884 4.16656C5.38884 3.49154 4.84163 2.94434 4.16662 2.94434C3.4916 2.94434 2.9444 3.49154 2.9444 4.16656C2.9444 4.84157 3.4916 5.38878 4.16662 5.38878Z"
-                                                            stroke="#3B3731" stroke-linecap="round"
-                                                            stroke-linejoin="round" />
-                                                        <path
-                                                            d="M11.5001 7.83358L9.61421 5.94769C9.38501 5.71856 9.07419 5.58984 8.7501 5.58984C8.42601 5.58984 8.11519 5.71856 7.88599 5.94769L2.33344 11.5002"
-                                                            stroke="#3B3731" stroke-linecap="round"
-                                                            stroke-linejoin="round" />
-                                                    </svg>Upload</button>
-
-                                            </div>
-                                        </div>
-
-                                        <!-- Tab Content -->
-                                        <div class="tab-content">
-                                            <!-- Attach Tab -->
-                                            <div class="tab-pane" id="insurance-attach-tab">
-                                                <div class="file-list" id="insurance-file-list" wire:ignore>
-                                                    <!-- Files will be dynamically added here -->
-                                                </div>
-                                                <p class="file-list-empty-msg" data-role="file-list-empty">No file
-                                                    attached.
-                                                </p>
-                                            </div>
-
-                                            <!-- Upload Tab -->
-                                            <div class="tab-pane active" id="insurance-upload-tab">
-                                                <div class="upload-area" id="insurance-upload-area">
-                                                    <div>
-                                                        <p>Choose a file or drag & drop it here.</p>
-                                                        <span>JPEG, PNG, and PDF formats, up to 50 MB.</span>
-                                                    </div>
-                                                    <div class="upload-icon">
-                                                        Browse File
-                                                    </div>
-                                                    <input type="file" wire:model="insurance_certificate_upload"
-                                                        id="insurance-file-input" class="hidden-input"
-                                                        accept=".pdf,.jpg,.jpeg,.png" multiple>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <!-- Insurance certificate upload -->
+                                    <x-common.doc-upload upload-id="insurance"
+                                        wire-model="insurance_certificate_upload" :saved-entries="$__insSavedFileEntries" :saved-entries-key="$__insSavedKey"
+                                        saved-json-id="insurance-saved-urls-json"
+                                        saved-window-key="__insSavedFileEntries"
+                                        remove-stored-fn="removeInsuranceStoredFile"
+                                        empty-title="Choose files or drag & drop them here."
+                                        browse-label="Browse Files" />
                                     @error('insurance_certificate_upload')
                                         <span class="error-text">{{ $message }}</span>
                                     @enderror
@@ -3896,16 +4851,14 @@ new #[Layout('layouts.business-hub')] class extends Component {
 
                         <!-- Buttons -->
                         <div class="form-buttons">
-                            <button type="button" class="back-btn" wire:click="goBack">
-                                <span>Back</span>
-                            </button>
-                            <button type="submit"
-                                class="submit-btn {{ $this->isPersonalInfoFormValid() ? 'btn-active' : 'btn-disabled' }}"
-                                wire:loading.attr="disabled" wire:target="submitPersonalInfo">
-                                <span wire:loading.remove wire:target="submitPersonalInfo">Submit</span>
-                                <span wire:loading wire:target="submitPersonalInfo" class="btn-spinner"
-                                    aria-hidden="true"></span>
-                            </button>
+                            <x-common.button type="button" label="Back" width="105px" bg-color="#FFFFFF"
+                                text-color="#9D9B98" border="1px solid rgba(59, 55, 49, 0.10)" :shadow="false"
+                                wire:click="goBack" />
+                            <x-common.button type="submit" label="Submit" width="105px"
+                                bg-color="{{ $this->isPersonalInfoFormValid() ? '#FFC97A' : '#e5e7eb' }}"
+                                text-color="{{ $this->isPersonalInfoFormValid() ? '#FFFFFF' : '#9ca3af' }}"
+                                loading-target="submitPersonalInfo,business_owner_id_images,insurance_certificate_upload"
+                                :disabled="!$this->isPersonalInfoFormValid()" />
                         </div>
                     </form>
                 </div>
@@ -3920,6 +4873,78 @@ new #[Layout('layouts.business-hub')] class extends Component {
 @script
     <script>
         (function() {
+            function easeInOutCubic(t) {
+                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            }
+
+            function revealMainContent() {
+                const main = document.querySelector(
+                    ".verification-wrapper .main-content",
+                );
+                if (!main) {
+                    return;
+                }
+                main.classList.remove("vq-step-enter");
+                void main.offsetWidth;
+                main.classList.add("vq-step-enter");
+                main.addEventListener(
+                    "animationend",
+                    () => main.classList.remove("vq-step-enter"), {
+                        once: true
+                    },
+                );
+            }
+
+            if (!window.__vqScrollStepToTop) {
+                window.__vqScrollStepToTop = function __vqScrollStepToTop() {
+                    const reduceMotion = window.matchMedia(
+                        "(prefers-reduced-motion: reduce)",
+                    ).matches;
+                    const root =
+                        document.scrollingElement || document.documentElement;
+                    const startTop = root.scrollTop || window.scrollY || 0;
+                    const targetTop = 0;
+                    const distance = targetTop - startTop;
+
+                    const snapToTop = () => {
+                        window.scrollTo({
+                            top: 0,
+                            left: 0,
+                            behavior: "auto",
+                        });
+                        root.scrollTop = 0;
+                        document.body.scrollTop = 0;
+                        revealMainContent();
+                    };
+
+                    if (reduceMotion || Math.abs(distance) < 6) {
+                        snapToTop();
+                        return;
+                    }
+
+                    const duration = Math.min(
+                        780,
+                        Math.max(420, Math.abs(distance) * 0.5),
+                    );
+                    const startTime = performance.now();
+
+                    const tick = (now) => {
+                        const progress = Math.min((now - startTime) / duration, 1);
+                        const nextTop =
+                            startTop + distance * easeInOutCubic(progress);
+                        window.scrollTo(0, nextTop);
+                        root.scrollTop = nextTop;
+                        if (progress < 1) {
+                            requestAnimationFrame(tick);
+                        } else {
+                            snapToTop();
+                        }
+                    };
+
+                    requestAnimationFrame(() => requestAnimationFrame(tick));
+                };
+            }
+
             if (window.__verifyQualifyDebugInstalled) {
                 return;
             }
@@ -4074,14 +5099,54 @@ new #[Layout('layouts.business-hub')] class extends Component {
         position: relative;
     }
 
+    .verification-wrapper--no-sidebar {
+        gap: 0;
+    }
+
+    .verification-wrapper--no-sidebar .main-content {
+        width: 100%;
+    }
+
+    .verification-wrapper .main-content {
+        will-change: transform, opacity;
+    }
+
+    @keyframes vq-step-content-enter {
+        from {
+            opacity: 0;
+            transform: translateY(14px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .verification-wrapper .main-content.vq-step-enter {
+        animation: vq-step-content-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
     .verification-wrapper--navigating {
         cursor: wait;
     }
 
     .verification-wrapper--navigating .main-content {
-        opacity: 0.58;
-        transition: opacity 0.12s ease;
+        opacity: 0.45;
+        transform: translateY(6px);
+        transition: opacity 0.22s ease, transform 0.22s ease;
         pointer-events: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .verification-wrapper .main-content.vq-step-enter {
+            animation: none;
+        }
+
+        .verification-wrapper--navigating .main-content {
+            transform: none;
+            transition: opacity 0.12s ease;
+        }
     }
 
     .verification-wrapper--navigating .floating-sidebar {
@@ -4137,8 +5202,9 @@ new #[Layout('layouts.business-hub')] class extends Component {
     .floating-sidebar {
         max-width: 18rem;
         position: sticky;
-        top: 2rem;
+        top: calc(var(--dashboard-sticky-header-offset, 9.5rem) + 0.75rem);
         height: fit-content;
+        align-self: flex-start;
     }
 
     .sidebar-header h1 {
@@ -4367,13 +5433,6 @@ new #[Layout('layouts.business-hub')] class extends Component {
         line-height: normal;
     }
 
-    .verification-pending-cta {
-        width: auto;
-        min-width: 220px;
-        padding: 0 1.75rem;
-        box-shadow: 0 4px 14px rgba(59, 55, 49, 0.14);
-    }
-
     .verification-review-banner {
         margin: 0 0 1.25rem;
         padding: 0.875rem 1rem;
@@ -4386,60 +5445,10 @@ new #[Layout('layouts.business-hub')] class extends Component {
         line-height: 1.45;
     }
 
-    .verification-approved-cta {
-        width: auto;
-        min-width: 200px;
-        padding: 0 1.75rem;
-        box-shadow: 0 4px 14px rgba(59, 55, 49, 0.14);
-        background: #FFC97A;
-    }
-
-    .submit-section {
+    .verification-card-actions {
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 179px;
-        height: 48px;
-        border-radius: 96px;
-        background: #FFC97A;
-        cursor: pointer;
-    }
-
-    .verification-form .submit-section {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        width: 100%;
-        height: 48px;
-        background: transparent;
-        cursor: pointer;
-    }
-
-    .submit-btn {
-        border: none;
-        color: #FFF;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        background: #FFC97A !important;
-        cursor: pointer;
-        width: 179px;
-        height: 48px;
-        border-radius: 96px;
-    }
-
-    .submit-btn>span {
-        color: #FFF;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        background: transparent !important;
     }
 
     .verification-form {
@@ -4544,7 +5553,6 @@ new #[Layout('layouts.business-hub')] class extends Component {
     .form-input:focus {
         outline: none;
         border-color: var(--active-bg);
-        box-shadow: 0 0 0 4px rgba(255, 201, 122, 0.1);
         transform: translateY(-1px);
     }
 
@@ -4644,35 +5652,6 @@ new #[Layout('layouts.business-hub')] class extends Component {
         text-decoration: underline;
     }
 
-    .btn-active {
-        width: 105px;
-        height: 48px;
-        border-radius: 96px;
-        background: #C9DDA0;
-        box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.10);
-        color: #FFF;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .btn-disabled {
-        background: #e5e7eb !important;
-        color: #9ca3af;
-        cursor: not-allowed;
-        width: 105px;
-        height: 48px;
-        border-radius: 96px;
-    }
-
-    .btn-disabled:hover {
-        transform: none;
-        box-shadow: none;
-    }
-
     .form-section {
         margin-bottom: 2rem;
     }
@@ -4721,7 +5700,14 @@ new #[Layout('layouts.business-hub')] class extends Component {
         border: 2px solid #e5e7eb;
         cursor: pointer;
         width: 50%;
+        justify-content: space-between;
+        margin: 0;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
     }
+
 
     .radio-item:hover {
         background: #FFF4E4;
@@ -4729,23 +5715,11 @@ new #[Layout('layouts.business-hub')] class extends Component {
 
     .radio-item.checked {
         background: #FFF4E4;
-        border: none;
+        border-color: transparent;
     }
 
     .radio-item input[type="radio"] {
         display: none;
-    }
-
-    .radio-label {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        cursor: pointer;
-        font-weight: 500;
-        color: #374151;
-        margin: 0;
-        flex: 1;
-        justify-content: space-between;
     }
 
     .radio-content {
@@ -4793,12 +5767,12 @@ new #[Layout('layouts.business-hub')] class extends Component {
         opacity: 0;
     }
 
-    .radio-item input[type="radio"]:checked+.radio-label .radio-custom {
+    .radio-item input[type="radio"]:checked~.radio-custom {
         border-radius: 10px;
         background: #FFF4E4;
     }
 
-    .radio-item input[type="radio"]:checked+.radio-label .radio-custom::after,
+    .radio-item input[type="radio"]:checked~.radio-custom::after,
     .radio-item.checked .radio-custom::after {
         opacity: 1;
     }
@@ -4818,34 +5792,21 @@ new #[Layout('layouts.business-hub')] class extends Component {
         border: 2px solid #e5e7eb;
         cursor: pointer;
         width: fit-content;
-        /* ← was causing the issue */
+        justify-content: space-between;
+        margin: 0;
     }
 
     .checkbox-item:hover {
         background: transparent;
     }
 
-    .checkbox-item.checked,
-    .checkbox-item input[type="checkbox"]:checked+.checkbox-label {
+    .checkbox-item.checked {
         background: #FFF4E4;
-        border: none;
+        border-color: transparent;
     }
 
     .checkbox-item input[type="checkbox"] {
         display: none;
-    }
-
-    .checkbox-label {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        cursor: pointer;
-        font-weight: 500;
-        color: #374151;
-        margin: 0;
-        flex: 1;
-        justify-content: space-between;
-        background: transparent !important;
     }
 
     .checkbox-content {
@@ -4885,12 +5846,12 @@ new #[Layout('layouts.business-hub')] class extends Component {
         opacity: 0;
     }
 
-    .checkbox-item input[type="checkbox"]:checked+.checkbox-label .checkbox-custom {
+    .checkbox-item input[type="checkbox"]:checked~.checkbox-custom {
         border-radius: 10px;
         background: #FFF4E4;
     }
 
-    .checkbox-item input[type="checkbox"]:checked+.checkbox-label .checkbox-custom::after,
+    .checkbox-item input[type="checkbox"]:checked~.checkbox-custom::after,
     .checkbox-item.checked .checkbox-custom::after {
         opacity: 1;
     }
@@ -4966,97 +5927,13 @@ new #[Layout('layouts.business-hub')] class extends Component {
         margin-top: 2rem;
     }
 
-    .back-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 105px;
-        height: 48px;
-        border-radius: 96px;
-        border: 1px solid rgba(59, 55, 49, 0.10);
-        background: #FFF;
-        color: #9D9B98;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        cursor: pointer;
-    }
-
-    /* Custom File Upload Styles */
-    .custom-file-upload {
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        overflow: hidden;
-        margin-top: 1rem;
-    }
-
-    .upload-tabs {
-        border-bottom: 1px solid #e5e7eb;
-        background: #f9fafb;
-    }
-
-    .upload-tabs>div {
-        display: flex;
-        width: 50%;
-    }
-
-    .tab-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        flex: 1;
-        padding: 12px 16px;
-        border: none;
+    .business-owner-id-help {
+        margin: 0 0 1rem;
         color: #3B3731;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        background: transparent;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border-bottom: 2px solid transparent;
-    }
-
-    .tab-btn:hover {
-        color: #3b3731;
-        background: #f3f4f6;
-    }
-
-    .tab-btn.active {
-        color: #3b3731;
-        background: white;
-        border-bottom-color: #3b3731;
-    }
-
-    .tab-content {
-        position: relative;
-    }
-
-    .tab-pane {
-        display: none;
-        background: white;
-    }
-
-    .tab-pane>p {
-        text-align: center;
-        color: #9D9B98;
-        font-family: Lato;
+        font-family: Lato, sans-serif;
         font-size: 16px;
-        font-style: normal;
         font-weight: 400;
-        line-height: normal;
-        margin-bottom: 1rem;
-        background: #FBFBFB;
-    }
-
-    .tab-pane.active {
-        display: block;
+        line-height: 1.45;
     }
 
     .file-list {
@@ -5165,81 +6042,6 @@ new #[Layout('layouts.business-hub')] class extends Component {
     .file-remove:hover {
         background: #f3f4f6;
         color: #374151;
-    }
-
-    .upload-area {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        gap: 10px;
-        border-radius: 6px;
-        padding: 32px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        position: relative;
-    }
-
-    .upload-area>div>p {
-        color: #3B3731;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-    .upload-area>div>span {
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-
-    .upload-area.dragover {
-        border-color: #ff6b35;
-        background: #fff4e4;
-    }
-
-    .upload-icon {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 96px;
-        border: 1px solid #D8D8D8;
-        box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.10);
-        width: 113px;
-        height: 36px;
-        color: #3B3731;
-        text-align: center;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .upload-area p {
-        margin: 0;
-        font-family: Lato;
-        font-size: 14px;
-        color: #6b7280;
-    }
-
-    .browse-link {
-        color: #ff6b35;
-        text-decoration: underline;
-        cursor: pointer;
-        font-weight: 500;
-    }
-
-    .browse-link:hover {
-        color: #e55a2b;
     }
 
     .hidden-input {
@@ -5405,6 +6207,22 @@ new #[Layout('layouts.business-hub')] class extends Component {
         gap: 0.7rem;
     }
 
+    .groomer-pill-group--sizes {
+        flex-wrap: nowrap;
+        gap: 0.5rem;
+    }
+
+    .groomer-pill-option.groomer-pill-size {
+        min-height: 42px;
+        padding: 0.35rem 0.75rem;
+        font-size: 14px;
+    }
+
+    .groomer-pill-option.groomer-pill-size>span {
+        font-size: 14px;
+        gap: 6px;
+    }
+
     .groomer-pill-option {
         display: inline-flex;
         align-items: center;
@@ -5422,7 +6240,7 @@ new #[Layout('layouts.business-hub')] class extends Component {
         font-style: normal;
         font-weight: 600;
         line-height: normal;
-        min-height: 58px;
+        min-height: 48px;
         padding: 0.5rem 1.65rem;
         cursor: pointer;
         user-select: none;
@@ -5474,15 +6292,15 @@ new #[Layout('layouts.business-hub')] class extends Component {
     .groomer-pill-option.groomer-pill-size.is-active span::before {
         content: "";
         display: inline-block;
-        width: 14px;
-        height: 10px;
+        width: 12px;
+        height: 8px;
         background-color: #FDFCF8;
         -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='10' viewBox='0 0 14 10' fill='none'%3E%3Cpath d='M13.6793 0.289386C13.5867 0.197689 13.4765 0.124907 13.3551 0.0752394C13.2337 0.0255714 13.1035 0 12.972 0C12.8405 0 12.7103 0.0255714 12.5889 0.0752394C12.4675 0.124907 12.3574 0.197689 12.2647 0.289386L4.84329 7.58766L1.72529 4.51573C1.62913 4.42451 1.51563 4.35279 1.39125 4.30465C1.26688 4.25652 1.13406 4.23291 1.0004 4.23518C0.86673 4.23745 0.734828 4.26555 0.612221 4.31789C0.489614 4.37022 0.378704 4.44576 0.285823 4.54019C0.192942 4.63462 0.119909 4.74609 0.0708932 4.86824C0.0218778 4.99039 -0.00216024 5.12082 0.000152332 5.25209C0.0024649 5.38336 0.0310826 5.5129 0.0843711 5.63331C0.13766 5.75372 0.214575 5.86265 0.310727 5.95386L4.13601 9.71062C4.22862 9.80231 4.3388 9.87509 4.46019 9.92476C4.58158 9.97443 4.71179 10 4.84329 10C4.9748 10 5.105 9.97443 5.22639 9.92476C5.34779 9.87509 5.45796 9.80231 5.55057 9.71062L13.6793 1.72752C13.7804 1.63591 13.8611 1.52472 13.9163 1.40096C13.9715 1.2772 14 1.14356 14 1.00845C14 0.873344 13.9715 0.7397 13.9163 0.615943C13.8611 0.492186 13.7804 0.380998 13.6793 0.289386Z' fill='black'/%3E%3C/svg%3E");
         mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='10' viewBox='0 0 14 10' fill='none'%3E%3Cpath d='M13.6793 0.289386C13.5867 0.197689 13.4765 0.124907 13.3551 0.0752394C13.2337 0.0255714 13.1035 0 12.972 0C12.8405 0 12.7103 0.0255714 12.5889 0.0752394C12.4675 0.124907 12.3574 0.197689 12.2647 0.289386L4.84329 7.58766L1.72529 4.51573C1.62913 4.42451 1.51563 4.35279 1.39125 4.30465C1.26688 4.25652 1.13406 4.23291 1.0004 4.23518C0.86673 4.23745 0.734828 4.26555 0.612221 4.31789C0.489614 4.37022 0.378704 4.44576 0.285823 4.54019C0.192942 4.63462 0.119909 4.74609 0.0708932 4.86824C0.0218778 4.99039 -0.00216024 5.12082 0.000152332 5.25209C0.0024649 5.38336 0.0310826 5.5129 0.0843711 5.63331C0.13766 5.75372 0.214575 5.86265 0.310727 5.95386L4.13601 9.71062C4.22862 9.80231 4.3388 9.87509 4.46019 9.92476C4.58158 9.97443 4.71179 10 4.84329 10C4.9748 10 5.105 9.97443 5.22639 9.92476C5.34779 9.87509 5.45796 9.80231 5.55057 9.71062L13.6793 1.72752C13.7804 1.63591 13.8611 1.52472 13.9163 1.40096C13.9715 1.2772 14 1.14356 14 1.00845C14 0.873344 13.9715 0.7397 13.9163 0.615943C13.8611 0.492186 13.7804 0.380998 13.6793 0.289386Z' fill='black'/%3E%3C/svg%3E");
         -webkit-mask-repeat: no-repeat;
         mask-repeat: no-repeat;
-        -webkit-mask-size: 14px 10px;
-        mask-size: 14px 10px;
+        -webkit-mask-size: 12px 8px;
+        mask-size: 12px 8px;
         -webkit-mask-position: center;
         mask-position: center;
     }
@@ -5501,146 +6319,6 @@ new #[Layout('layouts.business-hub')] class extends Component {
         mask-size: 14px 10px;
         -webkit-mask-position: center;
         mask-position: center;
-    }
-
-    .profile-photo-upload-tracker {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .profile-photo-drop {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        gap: 1.5rem;
-        padding: 1.25rem;
-        border: 1px solid #E2E2E2;
-        border-radius: 10px 10px 0 0;
-        background: #FFF;
-    }
-
-    .profile-photo-placeholder-static {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .profile-photo-copy {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .profile-photo-copy .profile-photo-label,
-    .profile-photo-label {
-        color: #3B3731;
-        text-align: center;
-        font-family: Lato, sans-serif;
-        font-size: 14px;
-        font-weight: 600;
-        line-height: normal;
-        margin: 0;
-    }
-
-    .profile-photo-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        margin-top: 0.75rem;
-        cursor: pointer;
-        width: 162px;
-        height: 48px;
-        border-radius: 96px;
-        background: #FFC97A;
-    }
-
-    .profile-photo-btn-inner {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        color: #FFF;
-        text-align: center;
-        font-family: Lato, sans-serif;
-        font-size: 16px;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .profile-basics-avatar-attachments {
-        margin-bottom: 0;
-    }
-
-    .profile-avatar-upload-progress {
-        border-radius: 0 0 10px 10px;
-        border: 1px solid #E2E2E2;
-        background: #F8F8F8;
-        padding: 0.85rem 1rem;
-    }
-
-    .profile-avatar-upload-progress-inner {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .profile-avatar-upload-progress-thumb-wrap {
-        width: 48px;
-        height: 48px;
-        border-radius: 8px;
-        overflow: hidden;
-        background: #f3f4f6;
-        flex-shrink: 0;
-        border: 1px solid #e8e8e8;
-    }
-
-    .profile-avatar-upload-progress-thumb {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-    }
-
-    .profile-avatar-upload-progress-text {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0.2rem;
-    }
-
-    .profile-avatar-upload-progress-name {
-        font-family: Lato, sans-serif;
-        font-size: 15px;
-        font-weight: 500;
-        color: #3B3731;
-        word-break: break-word;
-    }
-
-    .profile-avatar-upload-progress-status {
-        font-family: Lato, sans-serif;
-        font-size: 14px;
-        color: #9D9B98;
-    }
-
-    .profile-avatar-upload-progress-cancel {
-        border: none;
-        background: transparent;
-        color: #6b7280;
-        font-size: 1.35rem;
-        line-height: 1;
-        padding: 0.2rem 0.45rem;
-        cursor: pointer;
-        flex-shrink: 0;
-        border-radius: 6px;
-    }
-
-    .profile-avatar-upload-progress-cancel:hover {
-        color: #3B3731;
-        background: #f3f4f6;
     }
 
     .basics-upload-hint {
@@ -5666,12 +6344,24 @@ new #[Layout('layouts.business-hub')] class extends Component {
     }
 
     .gallery-slot-img {
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
+        z-index: 0;
+    }
+
+    .gallery-slot-preview {
+        z-index: 1;
+    }
+
+    .gallery-slot-img:not(.gallery-slot-preview) {
+        transition: opacity 0.2s ease;
     }
 
     .gallery-slot-remove {
+        z-index: 4;
         position: absolute;
         top: 6px;
         right: 6px;
@@ -5688,6 +6378,9 @@ new #[Layout('layouts.business-hub')] class extends Component {
 
     .gallery-slot-empty,
     .gallery-slot-placeholder {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
         border: none;
         border-radius: 10px;
         background: #FFF;
@@ -5702,11 +6395,97 @@ new #[Layout('layouts.business-hub')] class extends Component {
 
     .gallery-paw {
         opacity: 0.85;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
     }
 
+    .gallery-paw svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
 
-    .gallery-slot-empty {
+    .gallery-slot-placeholder {
+        cursor: default;
+        pointer-events: none;
+    }
+
+    .gallery-slot--uploading .gallery-slot-empty .gallery-paw {
+        opacity: 0;
+    }
+
+    .gallery-slot--uploading .gallery-slot-empty {
+        pointer-events: none;
+        background: transparent;
+    }
+
+    .gallery-slot--uploading .gallery-slot-preview {
+        opacity: 1;
+    }
+
+    .gallery-slot--batch-pending .gallery-slot-preview {
+        opacity: 1;
+    }
+
+    .gallery-upload-ring {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.35);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .gallery-upload-ring.gallery-upload-ring--visible {
+        opacity: 1;
+    }
+
+    .gallery-upload-ring[hidden] {
+        display: none !important;
+    }
+
+    .gallery-upload-ring__inner {
         position: relative;
+        width: 72px;
+        height: 72px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .gallery-upload-ring__svg {
+        width: 72px;
+        height: 72px;
+        display: block;
+    }
+
+    .gallery-upload-ring__bg {
+        stroke: #e8e8e8;
+    }
+
+    .gallery-upload-ring__progress {
+        stroke: #ffc97a;
+        stroke-linecap: round;
+    }
+
+    .gallery-upload-ring__label {
+        position: absolute;
+        font-family: Lato, sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1;
+        pointer-events: none;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
     }
 
     .basics-actions {
@@ -5716,1005 +6495,1083 @@ new #[Layout('layouts.business-hub')] class extends Component {
 </style>
 
 <script>
-    // ── Helpers ──────────────────────────────────────────────────────
-    window.uploadedFiles = [];
-    window.insuranceUploadedFiles = [];
-    window.businessOwnerIdUploadedFiles = [];
-    /** @type {File[]} Cumulative picks across multiple open-file dialogs */
-    window.businessOwnerIdRawFiles = window.businessOwnerIdRawFiles || [];
-    window.__boIdIgnoreNextChange = false;
-    /** Fingerprint added only when the fake progress bar finishes — morphs after that skip re-animating. */
-    window.__uploadSimCompletedFps = window.__uploadSimCompletedFps || new Set();
-    /** One active interval per file fingerprint so a quick morph can replace the row without leaving ghost timers. */
-    window.__uploadSimIntervalByFp = window.__uploadSimIntervalByFp || new Map();
-
-    /**
-     * Business Basics profile photo: Livewire upload progress row (thumbnail + KB + cancel).
-     * See https://livewire.laravel.com/docs/uploads#progress-indicators
-     */
-    (function bindProfileAvatarLwUploadUi() {
-        if (window.__verifyQualifyAvatarLwUiBound) {
+    (function registerVqStepScroll() {
+        if (window.__vqStepScrollRegistered) {
             return;
         }
-        window.__verifyQualifyAvatarLwUiBound = true;
+        window.__vqStepScrollRegistered = true;
 
-        var avatarThumbObjectUrl = null;
+        if ("scrollRestoration" in history) {
+            history.scrollRestoration = "manual";
+        }
 
-        function revokeAvatarThumb() {
-            if (avatarThumbObjectUrl) {
-                try {
-                    URL.revokeObjectURL(avatarThumbObjectUrl);
-                } catch (err) {
-                    /* ignore */
-                }
-                avatarThumbObjectUrl = null;
+        function easeInOutCubic(t) {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+
+        function revealMainContent() {
+            const main = document.querySelector(
+                ".verification-wrapper .main-content",
+            );
+            if (!main) {
+                return;
             }
+            main.classList.remove("vq-step-enter");
+            void main.offsetWidth;
+            main.classList.add("vq-step-enter");
+            main.addEventListener(
+                "animationend",
+                () => main.classList.remove("vq-step-enter"), {
+                    once: true
+                },
+            );
         }
 
-        function trackerFromEventTarget(t) {
-            return t && t.closest && t.closest('.profile-photo-upload-tracker');
-        }
+        window.__vqScrollStepToTop = function __vqScrollStepToTop() {
+            const reduceMotion = window.matchMedia(
+                "(prefers-reduced-motion: reduce)",
+            ).matches;
+            const root =
+                document.scrollingElement || document.documentElement;
+            const startTop = root.scrollTop || window.scrollY || 0;
+            const targetTop = 0;
+            const distance = targetTop - startTop;
 
-        function formatKb(bytes) {
-            var n = Number(bytes) || 0;
-            return Math.max(0, Math.round(n / 1024)) + ' KB';
-        }
-
-        function els(tracker) {
-            return {
-                row: tracker.querySelector('.profile-avatar-upload-progress'),
-                thumb: tracker.querySelector('.profile-avatar-upload-progress-thumb'),
-                nameEl: tracker.querySelector('.profile-avatar-upload-progress-name'),
-                statusEl: tracker.querySelector('.profile-avatar-upload-progress-status'),
+            const snapToTop = () => {
+                window.scrollTo({
+                    top: 0,
+                    left: 0,
+                    behavior: "auto"
+                });
+                root.scrollTop = 0;
+                document.body.scrollTop = 0;
+                revealMainContent();
             };
-        }
 
-        function hide(tracker) {
-            revokeAvatarThumb();
-            var o = els(tracker);
-            if (o.row) {
-                o.row.hidden = true;
-            }
-            if (o.thumb) {
-                o.thumb.removeAttribute('src');
-            }
-            if (o.nameEl) {
-                o.nameEl.textContent = '';
-            }
-            if (o.statusEl) {
-                o.statusEl.textContent = '';
-            }
-        }
-
-        document.addEventListener('livewire-upload-start', function(e) {
-            var tracker = trackerFromEventTarget(e.target);
-            if (!tracker) {
-                return;
-            }
-            var input = e.target;
-            if (!input || input.tagName !== 'INPUT' || input.type !== 'file') {
+            if (reduceMotion || Math.abs(distance) < 6) {
+                snapToTop();
                 return;
             }
 
-            var o = els(tracker);
-            revokeAvatarThumb();
-            var file = input.files && input.files[0];
-            if (file) {
-                if (o.nameEl) {
-                    o.nameEl.textContent = String(file.name || '').replace(/[<>]/g, '');
-                }
-                avatarThumbObjectUrl = URL.createObjectURL(file);
-                if (o.thumb) {
-                    o.thumb.src = avatarThumbObjectUrl;
-                }
-                if (o.statusEl) {
-                    o.statusEl.textContent = formatKb(0) + ' of ' + formatKb(file.size) + ' • Uploading...';
-                }
-            }
-            if (o.row) {
-                o.row.hidden = false;
-            }
-        });
+            const duration = Math.min(
+                780,
+                Math.max(420, Math.abs(distance) * 0.5),
+            );
+            const startTime = performance.now();
 
-        document.addEventListener('livewire-upload-progress', function(e) {
-            var tracker = trackerFromEventTarget(e.target);
-            if (!tracker) {
+            const tick = (now) => {
+                const progress = Math.min((now - startTime) / duration, 1);
+                const nextTop = startTop + distance * easeInOutCubic(progress);
+                window.scrollTo(0, nextTop);
+                root.scrollTop = nextTop;
+                if (progress < 1) {
+                    requestAnimationFrame(tick);
+                } else {
+                    snapToTop();
+                }
+            };
+
+            requestAnimationFrame(() => requestAnimationFrame(tick));
+        };
+
+        window.__vqRequestStepScrollToTop = function __vqRequestStepScrollToTop() {
+            window.__vqPendingStepScroll = true;
+            window.setTimeout(() => {
+                window.__vqFlushPendingStepScroll?.();
+            }, 300);
+        };
+
+        window.__vqFlushPendingStepScroll = function __vqFlushPendingStepScroll() {
+            if (!window.__vqPendingStepScroll) {
                 return;
             }
-            var input = e.target;
-            var file = input.files && input.files[0];
-            var o = els(tracker);
-            var p = (e.detail && typeof e.detail.progress === 'number') ? e.detail.progress : 0;
-            if (o.statusEl && file) {
-                var loaded = Math.round((file.size * p) / 100);
-                o.statusEl.textContent = formatKb(loaded) + ' of ' + formatKb(file.size) +
-                    ' • Uploading...';
-            }
-        });
+            window.__vqPendingStepScroll = false;
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    window.__vqScrollStepToTop?.();
+                });
+            });
+        };
 
-        function end(tracker) {
-            hide(tracker);
-        }
-
-        document.addEventListener('livewire-upload-finish', function(e) {
-            var t = trackerFromEventTarget(e.target);
-            if (t) {
-                end(t);
+        window.addEventListener("pageshow", (event) => {
+            if (!document.querySelector(".verify-qualify-page")) {
+                return;
             }
-        });
-        document.addEventListener('livewire-upload-cancel', function(e) {
-            var t = trackerFromEventTarget(e.target);
-            if (t) {
-                end(t);
-            }
-        });
-        document.addEventListener('livewire-upload-error', function(e) {
-            var t = trackerFromEventTarget(e.target);
-            if (t) {
-                end(t);
+            if (event.persisted) {
+                window.__vqRequestStepScrollToTop?.();
             }
         });
     })();
 
-    function businessOwnerFileFingerprint(file) {
-        return file.name + '\0' + file.size + '\0' + file.lastModified;
+    function vqResolveLivewireWire() {
+        if (!window.Livewire) {
+            return null;
+        }
+        const root = document.querySelector('[wire\\:id]');
+        if (!root) {
+            return null;
+        }
+        const wid = root.getAttribute('wire:id');
+        return wid ? Livewire.find(wid) : null;
     }
 
-    function mergeBusinessOwnerPicks(input, newlyPickedFiles) {
-        if (!window.businessOwnerIdRawFiles) {
-            window.businessOwnerIdRawFiles = [];
+    function vqCallLivewire(method, ...args) {
+        const wire = vqResolveLivewireWire();
+        if (!wire) {
+            return null;
         }
-        const seen = new Set(window.businessOwnerIdRawFiles.map(businessOwnerFileFingerprint));
-        newlyPickedFiles.forEach((f) => {
-            const fp = businessOwnerFileFingerprint(f);
-            if (!seen.has(fp)) {
-                seen.add(fp);
-                window.businessOwnerIdRawFiles.push(f);
-            }
-        });
-        const dt = new DataTransfer();
-        window.businessOwnerIdRawFiles.forEach((f) => dt.items.add(f));
-        window.__boIdIgnoreNextChange = true;
-        input.files = dt.files;
+        const callFn = wire.$call || wire.call;
+        if (typeof callFn !== 'function') {
+            return null;
+        }
+        return callFn.call(wire, method, ...args);
     }
 
-    function storagePathFromPublicUrl(url) {
-        try {
-            const u = new URL(url, window.location.origin);
-            const i = u.pathname.indexOf('/storage/');
-            if (i === -1) return '';
-            return decodeURIComponent(u.pathname.slice(i + '/storage/'.length));
-        } catch (e) {
-            return '';
+    function vqAfterDocUploadMorph() {
+        if (window.VqDocUpload && typeof window.VqDocUpload.afterMorph === 'function') {
+            window.VqDocUpload.afterMorph();
         }
-    }
-
-    function readSavedBusinessOwnerEntries() {
-        const hid = document.getElementById('business-owner-saved-urls-json');
-        let raw = [];
-        if (hid) {
-            try {
-                raw = JSON.parse(hid.value || '[]');
-            } catch (e) {
-                raw = [];
-            }
-        }
-        if (!Array.isArray(raw) || !raw.length) {
-            raw = Array.isArray(window.__boSavedFileEntries) ? window.__boSavedFileEntries : [];
-        }
-        if (!Array.isArray(raw)) return [];
-        return raw
-            .map((item) => {
-                if (typeof item === 'string') {
-                    const path = storagePathFromPublicUrl(item);
-                    return {
-                        path: path || '',
-                        url: item
-                    };
-                }
-                if (item && typeof item.url === 'string') {
-                    return {
-                        path: item.path || storagePathFromPublicUrl(item.url) || '',
-                        url: item.url,
-                    };
-                }
-                return null;
-            })
-            .filter(Boolean);
     }
 
     if (!window.removeBusinessOwnerStoredFile) {
         window.removeBusinessOwnerStoredFile = function(storagePath) {
-            if (!storagePath || !window.Livewire) return;
-            const root = document.querySelector('[wire\\:id]');
-            if (!root) return;
-            const wid = root.getAttribute('wire:id');
-            if (!wid) return;
-            const c = Livewire.find(wid);
-            if (c && typeof c.$call === 'function') {
-                c.$call('removeStoredBusinessOwnerImage', storagePath);
+            if (!storagePath) {
+                return Promise.reject(new Error("Missing storage path"));
             }
-        };
-    }
-
-    function appendSavedBusinessOwnerRows(listEl) {
-        if (!listEl) return;
-        const entries = readSavedBusinessOwnerEntries();
-        if (!entries.length) return;
-        entries.forEach((entry) => {
-            const url = entry.url;
-            const storagePath = entry.path;
-            // Signed URLs end with .../business-owner-id-file?t=... — no extension; use storage path for name/type
-            const seg =
-                (storagePath && storagePath.split('/').pop()) ||
-                (url.split('/').pop() || 'file').split('?')[0];
-            const name = decodeURIComponent(seg);
-            const div = document.createElement('div');
-            div.className = 'file-item file-item--saved';
-            const isImg = /\.(jpe?g|png|gif|webp|bmp|heic)$/i.test(name);
-            const isPdf = /\.pdf$/i.test(name) || getFileExtension(name) === 'PDF';
-            const thumb = isImg ?
-                `<img src="${url}" class="file-thumbnail" alt="" loading="lazy">` :
-                isPdf ?
-                `<div class="file-icon file-icon--pdf">${pdfIconSvgHtml()}</div>` :
-                `<div class="file-icon">${getFileExtension(name)}</div>`;
-            div.innerHTML = `
-            <div class="file-info">
-                ${thumb}
-                <div class="file-details">
-                    <div class="file-name"><a href="${url}" target="_blank" rel="noopener noreferrer">${name}</a></div>
-                    <div class="file-progress-text" style="color:#10b981">Saved</div>
-                </div>
-            </div>
-            ${storagePath
-                    ? `<button type="button" class="file-remove" title="Remove" aria-label="Remove">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-            </button>`
-                    : ''
-                }`;
-            const btn = div.querySelector('.file-remove');
-            if (btn && storagePath) {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    window.removeBusinessOwnerStoredFile(storagePath);
+            const result = vqCallLivewire('removeStoredBusinessOwnerImage', storagePath);
+            if (result && typeof result.then === 'function') {
+                return result.then(function() {
+                    vqAfterDocUploadMorph();
                 });
             }
-            listEl.appendChild(div);
-        });
-    }
-
-    function readSavedInsuranceEntries() {
-        const hid = document.getElementById('insurance-saved-urls-json');
-        let raw = [];
-        if (hid) {
-            try {
-                raw = JSON.parse(hid.value || '[]');
-            } catch (e) {
-                raw = [];
-            }
-        }
-        if (!Array.isArray(raw) || !raw.length) {
-            raw = Array.isArray(window.__insSavedFileEntries) ? window.__insSavedFileEntries : [];
-        }
-        if (!Array.isArray(raw)) {
-            return [];
-        }
-        return raw
-            .map((item) => {
-                if (typeof item === 'string') {
-                    const path = storagePathFromPublicUrl(item);
-                    return {
-                        path: path || '',
-                        url: item
-                    };
-                }
-                if (item && typeof item.url === 'string') {
-                    return {
-                        path: item.path || storagePathFromPublicUrl(item.url) || '',
-                        url: item.url,
-                    };
-                }
-                return null;
-            })
-            .filter(Boolean);
+            vqAfterDocUploadMorph();
+            return Promise.resolve();
+        };
     }
 
     if (!window.removeInsuranceStoredFile) {
         window.removeInsuranceStoredFile = function(storagePath) {
-            if (!storagePath || !window.Livewire) {
-                return;
+            if (!storagePath) {
+                return Promise.reject(new Error("Missing storage path"));
             }
-            const root = document.querySelector('[wire\\:id]');
-            if (!root) {
-                return;
+            const result = vqCallLivewire('removeStoredInsuranceCertificate', storagePath);
+            if (result && typeof result.then === 'function') {
+                return result.then(function() {
+                    vqAfterDocUploadMorph();
+                });
             }
-            const wid = root.getAttribute('wire:id');
-            if (!wid) {
-                return;
-            }
-            const c = Livewire.find(wid);
-            if (c && typeof c.$call === 'function') {
-                c.$call('removeStoredInsuranceCertificate', storagePath);
-            }
+            vqAfterDocUploadMorph();
+            return Promise.resolve();
         };
     }
 
-    function appendSavedInsuranceRows(listEl) {
-        if (!listEl) {
-            return;
-        }
-        const entries = readSavedInsuranceEntries();
-        if (!entries.length) {
-            return;
-        }
-        entries.forEach((entry) => {
-            const url = entry.url;
-            const storagePath = entry.path;
-            const seg =
-                (storagePath && storagePath.split('/').pop()) ||
-                (url.split('/').pop() || 'file').split('?')[0];
-            const name = decodeURIComponent(seg);
-            const div = document.createElement('div');
-            div.className = 'file-item file-item--saved';
-            const isImg = /\.(jpe?g|png|gif|webp|bmp|heic)$/i.test(name);
-            const isPdf = /\.pdf$/i.test(name) || getFileExtension(name) === 'PDF';
-            const thumb = isImg ?
-                `<img src="${url}" class="file-thumbnail" alt="" loading="lazy">` :
-                isPdf ?
-                `<div class="file-icon file-icon--pdf">${pdfIconSvgHtml()}</div>` :
-                `<div class="file-icon">${getFileExtension(name)}</div>`;
-            div.innerHTML = `
-            <div class="file-info">
-                ${thumb}
-                <div class="file-details">
-                    <div class="file-name"><a href="${url}" target="_blank" rel="noopener noreferrer">${name}</a></div>
-                    <div class="file-progress-text" style="color:#10b981">Saved</div>
-                </div>
-            </div>
-            ${storagePath
-                    ? `<button type="button" class="file-remove" title="Remove" aria-label="Remove">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-            </button>`
-                    : ''
-                }`;
-            const btn = div.querySelector('.file-remove');
-            if (btn && storagePath) {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    window.removeInsuranceStoredFile(storagePath);
+    if (!window.removeBusinessAvatarStoredFile) {
+        window.removeBusinessAvatarStoredFile = function() {
+            const result = vqCallLivewire('removeBusinessAvatar');
+            if (result && typeof result.then === 'function') {
+                return result.then(function() {
+                    vqAfterDocUploadMorph();
                 });
             }
-            listEl.appendChild(div);
-        });
+            vqAfterDocUploadMorph();
+            return Promise.resolve();
+        };
     }
 
-    function renderInsuranceAttachListIfNeeded() {
-        const listEl = document.getElementById('insurance-file-list');
-        if (!listEl) {
+    if (!window.removeBusinessGalleryStoredFile) {
+        window.removeBusinessGalleryStoredFile = function(storagePath) {
+            if (!storagePath) {
+                return Promise.reject(new Error("Missing storage path"));
+            }
+            const result = vqCallLivewire('removeBusinessGalleryStoredFile', storagePath);
+            if (result && typeof result.then === 'function') {
+                return result.then(function() {
+                    vqAfterDocUploadMorph();
+                });
+            }
+            vqAfterDocUploadMorph();
+            return Promise.resolve();
+        };
+    }
+
+    function syncDashboardStickyHeaderOffset() {
+        const header = document.querySelector('.dashboard-header');
+        if (!header) {
             return;
         }
-        const pending = window.insuranceUploadedFiles || [];
-        if (pending.length > 0) {
-            listEl.replaceChildren();
-            appendSavedInsuranceRows(listEl);
-            pending.forEach((item) => {
-                if (item && item.element) {
-                    listEl.appendChild(item.element);
+
+        const height = Math.ceil(header.getBoundingClientRect().height);
+        document.documentElement.style.setProperty(
+            '--dashboard-sticky-header-offset',
+            height + 'px',
+        );
+    }
+
+    function initVerificationPage() {
+        syncDashboardStickyHeaderOffset();
+        if (window.VqDocUpload && typeof window.VqDocUpload.init === 'function') {
+            window.VqDocUpload.init();
+        }
+        if (window.VqDocUpload && typeof window.VqDocUpload.afterMorph === 'function') {
+            window.VqDocUpload.afterMorph();
+        }
+        bindGalleryUploadProgress();
+
+        if (document.querySelector('.verify-qualify-page')) {
+            window.__vqPendingStepScroll = true;
+            window.__vqFlushPendingStepScroll?.();
+        }
+    }
+
+    function revokeGalleryPreviewUrl(preview) {
+        if (preview && preview.dataset.objectUrl) {
+            URL.revokeObjectURL(preview.dataset.objectUrl);
+            delete preview.dataset.objectUrl;
+        }
+    }
+
+    function bindGalleryUploadProgress() {
+        if (window.__vqGalleryUploadProgressBound) return;
+        window.__vqGalleryUploadProgressBound = true;
+
+        const GALLERY_INPUT_ID = 'business-gallery-pick-input';
+        const RING_RADIUS = 15.5;
+        const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+        function isGalleryInput(input) {
+            return input && input.id === GALLERY_INPUT_ID;
+        }
+
+        function getGallerySlot(input) {
+            return input ? input.closest('.gallery-slot') : null;
+        }
+
+        function revokeGalleryPreview(preview) {
+            revokeGalleryPreviewUrl(preview);
+        }
+
+        function markGallerySlotUploading(slot) {
+            if (!slot) return;
+            slot.classList.add('gallery-slot--uploading');
+            window.__vqGalleryActiveSlot = slot;
+        }
+
+        function galleryFileFingerprint(file) {
+            return [file.name, file.size, file.lastModified].join('::');
+        }
+
+        function getGallerySlotsContainer() {
+            return document.querySelector('.gallery-slots');
+        }
+
+        function getGallerySlotElements() {
+            const container = getGallerySlotsContainer();
+            return container ?
+                Array.from(container.querySelectorAll('.gallery-slot')) : [];
+        }
+
+        function getGalleryUploadSlotIndex(input) {
+            const slots = getGallerySlotElements();
+            const uploadSlot = getGallerySlot(input);
+            return uploadSlot ? slots.indexOf(uploadSlot) : -1;
+        }
+
+        function ensureGallerySlotAtIndex(index) {
+            const container = getGallerySlotsContainer();
+            if (!container) {
+                return null;
+            }
+
+            let slots = getGallerySlotElements();
+            while (slots.length <= index) {
+                const div = document.createElement('div');
+                div.className = 'gallery-slot gallery-slot--client';
+                div.setAttribute('data-vq-gallery-client-slot', '1');
+                container.appendChild(div);
+                slots = getGallerySlotElements();
+            }
+
+            return slots[index] || null;
+        }
+
+        function clearGallerySlotEmptyUi(slot) {
+            if (!slot) {
+                return;
+            }
+            const empty = slot.querySelector('.gallery-slot-empty');
+            if (empty) {
+                empty.style.display = 'none';
+            }
+        }
+
+        function getGalleryBatchSlotForFile(file) {
+            const batch = window.__vqGalleryBatch;
+            if (!batch || !file) {
+                return null;
+            }
+            if (!batch.fileSlots) {
+                batch.fileSlots = new Map();
+            }
+            const fp = galleryFileFingerprint(file);
+            if (batch.fileSlots.has(fp)) {
+                return batch.fileSlots.get(fp);
+            }
+            const idx = batch.files.findIndex(function(item) {
+                return galleryFileFingerprint(item) === fp;
+            });
+            if (idx < 0) {
+                return null;
+            }
+            const slot = ensureGallerySlotAtIndex(batch.startIndex + idx);
+            if (slot) {
+                batch.fileSlots.set(fp, slot);
+            }
+            return slot;
+        }
+
+        function resolveGalleryEventSlot(e) {
+            const file = e.target && e.target.files && e.target.files[0];
+            if (file) {
+                const slot = getGalleryBatchSlotForFile(file);
+                if (slot) {
+                    return slot;
+                }
+            }
+
+            const batch = window.__vqGalleryBatch;
+            if (batch && batch.files.length > 1) {
+                if (typeof batch.currentUploadIndex === 'number') {
+                    const current = batch.files[batch.currentUploadIndex];
+                    if (current) {
+                        return getGalleryBatchSlotForFile(current);
+                    }
+                }
+                return null;
+            }
+
+            return isGalleryInput(e.target) ? getGallerySlot(e.target) : null;
+        }
+
+        function isGalleryBatchUploadEvent(e) {
+            const batch = window.__vqGalleryBatch;
+            if (!batch || batch.files.length <= 1) {
+                return false;
+            }
+
+            const prop =
+                e.detail && (e.detail.property || e.detail.name) ?
+                e.detail.property || e.detail.name :
+                '';
+            if (prop && prop !== 'business_gallery_pending') {
+                return false;
+            }
+
+            const file = e.target && e.target.files && e.target.files[0];
+            if (!file) {
+                return true;
+            }
+
+            const fp = galleryFileFingerprint(file);
+            return batch.files.some(function(item) {
+                return galleryFileFingerprint(item) === fp;
+            });
+        }
+
+        function isActiveGalleryUploadEvent(e) {
+            if (isGalleryInput(e.target)) {
+                return true;
+            }
+            return isGalleryBatchUploadEvent(e);
+        }
+
+        function rememberGalleryBatchSlots(files, startIndex) {
+            const batch = window.__vqGalleryBatch;
+            if (!batch) {
+                return;
+            }
+            batch.fileSlots = new Map();
+            files.forEach(function(file, i) {
+                const slot = ensureGallerySlotAtIndex(startIndex + i);
+                if (slot) {
+                    batch.fileSlots.set(galleryFileFingerprint(file), slot);
                 }
             });
-            updateNoFileMessage(listEl);
-            return;
         }
-        const entries = readSavedInsuranceEntries();
-        if (!entries.length) {
-            return;
-        }
-        listEl.replaceChildren();
-        appendSavedInsuranceRows(listEl);
-        updateNoFileMessage(listEl);
-        showInsuranceAttachTab();
-    }
 
-    function renderBusinessOwnerAttachListIfNeeded() {
-        const listEl = document.getElementById('business-owner-id-file-list');
-        if (!listEl) return;
-        const raw = window.businessOwnerIdRawFiles || [];
-        if (raw.length > 0) {
-            rebuildBusinessOwnerIdListUI();
-            return;
-        }
-        const entries = readSavedBusinessOwnerEntries();
-        if (!entries.length) return;
-        listEl.replaceChildren();
-        appendSavedBusinessOwnerRows(listEl);
-        updateNoFileMessage(listEl);
-    }
+        function showGalleryFilePreviewInSlot(slot, file, options) {
+            if (!slot || !file || !String(file.type || '').startsWith('image/')) {
+                return;
+            }
 
-    function rebuildBusinessOwnerIdListUI() {
-        const listEl = document.getElementById('business-owner-id-file-list');
-        if (!listEl) return;
-        listEl.replaceChildren();
-        window.businessOwnerIdUploadedFiles = [];
-        appendSavedBusinessOwnerRows(listEl);
-        const raw = window.businessOwnerIdRawFiles || [];
-        raw.forEach((file) => {
-            const item = createFileItem(file, (removedId) => {
-                const removed = window.businessOwnerIdUploadedFiles.find((x) => x.id === removedId);
-                if (!removed || !removed.file) return;
-                clearUploadSimForFile(removed.file);
-                window.businessOwnerIdRawFiles = (window.businessOwnerIdRawFiles || []).filter(
-                    (f) => businessOwnerFileFingerprint(f) !== businessOwnerFileFingerprint(removed
-                        .file)
+            const withProgress = !!(options && options.withProgress);
+            const batchPending = !!(options && options.batchPending);
+
+            if (batchPending) {
+                slot.classList.add('gallery-slot--batch-pending');
+            }
+
+            markGallerySlotUploading(slot);
+            clearGallerySlotEmptyUi(slot);
+
+            let preview = slot.querySelector('img.gallery-slot-preview');
+            if (!preview) {
+                preview = document.createElement('img');
+                preview.className = 'gallery-slot-img gallery-slot-preview';
+                preview.alt = '';
+                slot.insertBefore(preview, slot.firstChild);
+            }
+
+            revokeGalleryPreview(preview);
+            const url = URL.createObjectURL(file);
+            preview.dataset.objectUrl = url;
+            preview.dataset.vqGalleryFileFp = galleryFileFingerprint(file);
+            preview.src = url;
+            slot.dataset.vqGalleryPreviewUrl = url;
+
+            if (withProgress) {
+                const ring = ensureGalleryUploadRing(slot);
+                if (ring) {
+                    startGalleryUploadProgress(ring);
+                }
+            }
+        }
+
+        function showAllGallerySlotPreviews(input, files, startIndex) {
+            rememberGalleryBatchSlots(files, startIndex);
+            const isBatch = files.length > 1;
+            files.forEach(function(file, i) {
+                const slot = ensureGallerySlotAtIndex(startIndex + i);
+                showGalleryFilePreviewInSlot(slot, file, {
+                    withProgress: true,
+                    batchPending: isBatch,
+                });
+            });
+        }
+
+        function uploadSingleGalleryFile(wire, file) {
+            const slot = getGalleryBatchSlotForFile(file);
+            if (slot) {
+                const ring = ensureGalleryUploadRing(slot);
+                if (ring) {
+                    startGalleryUploadProgress(ring);
+                }
+            }
+
+            const uploadFn = wire.$upload || wire.upload;
+            if (typeof uploadFn !== 'function') {
+                return;
+            }
+
+            const onFinish = function() {
+                if (slot) {
+                    const ring = slot.querySelector('.gallery-upload-ring');
+                    if (ring) {
+                        finishGalleryUploadProgress(ring);
+                    }
+                }
+            };
+            const onError = function() {
+                if (slot) {
+                    clearGallerySlotClientState(slot);
+                }
+            };
+            const onProgress = function(event) {
+                const percent =
+                    event && event.detail && event.detail.progress != null ?
+                    event.detail.progress :
+                    event && event.progress != null ?
+                    event.progress :
+                    null;
+                if (slot && percent != null) {
+                    const ring = slot.querySelector('.gallery-upload-ring');
+                    if (ring) {
+                        setGalleryUploadProgress(ring, percent);
+                    }
+                }
+            };
+
+            try {
+                uploadFn.call(
+                    wire,
+                    'business_gallery_pending',
+                    file,
+                    onFinish,
+                    onError,
+                    onProgress,
                 );
-                const input = document.getElementById('business-owner-id-file-input');
-                if (input) {
-                    const dt = new DataTransfer();
-                    (window.businessOwnerIdRawFiles || []).forEach((f) => dt.items.add(f));
-                    window.__boIdIgnoreNextChange = true;
-                    input.files = dt.files;
-                    input.dispatchEvent(new Event('input', {
-                        bubbles: true
-                    }));
-                }
-                rebuildBusinessOwnerIdListUI();
-            });
-            listEl.appendChild(item.element);
-            window.businessOwnerIdUploadedFiles.push(item);
-            simulateUpload(item);
-        });
-        updateNoFileMessage(listEl);
-    }
-
-    if (!window.__boOwnerUploadClickDelegated) {
-        window.__boOwnerUploadClickDelegated = true;
-        document.addEventListener(
-            'click',
-            function(e) {
-                const area = e.target.closest && e.target.closest('#business-owner-id-upload-area');
-                if (!area) return;
-                if (e.target.closest('#business-owner-id-file-input')) return;
-                e.preventDefault();
-                const inp = document.getElementById('business-owner-id-file-input');
-                if (!inp || window.__boIdFileDialogOpening) return;
-                window.__boIdFileDialogOpening = true;
-                inp.click();
-                setTimeout(function() {
-                    window.__boIdFileDialogOpening = false;
-                }, 500);
-            },
-            true
-        );
-    }
-
-    /** One delegated handler + debounce — avoids duplicate open when setupUploaders re-binds after Livewire morph */
-    if (!window.__insuranceUploadClickDelegated) {
-        window.__insuranceUploadClickDelegated = true;
-        document.addEventListener(
-            'click',
-            function(e) {
-                const area = e.target.closest && e.target.closest('#insurance-upload-area');
-                if (!area) return;
-                if (e.target.closest('#insurance-file-input')) return;
-                e.preventDefault();
-                const inp = document.getElementById('insurance-file-input');
-                if (!inp || window.__insIdFileDialogOpening) return;
-                window.__insIdFileDialogOpening = true;
-                inp.click();
-                setTimeout(function() {
-                    window.__insIdFileDialogOpening = false;
-                }, 500);
-            },
-            true
-        );
-    }
-
-    function formatFileSize(bytes) {
-        if (!bytes) return '0 Bytes';
-        const k = 1024,
-            sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    }
-
-    function getFileExtension(name) {
-        return name.split('.').pop().toUpperCase();
-    }
-
-    function pdfIconSvgHtml() {
-        return `<svg xmlns="http://www.w3.org/2000/svg" width="21" height="25" viewBox="0 0 21 25" fill="none" aria-hidden="true">
-  <path d="M5.04074 24.501H15.9593C17.1635 24.501 18.3185 24.0226 19.1701 23.1711C20.0216 22.3195 20.5 21.1646 20.5 19.9603V12.7859C20.5004 11.5818 20.0226 10.4268 19.1715 9.57499L11.4276 1.82979C11.0059 1.40815 10.5053 1.0737 9.95439 0.845536C9.40346 0.61737 8.81297 0.499957 8.21666 0.5H5.04074C3.83646 0.5 2.6815 0.978398 1.82995 1.82995C0.978398 2.6815 0.5 3.83646 0.5 5.04074V19.9603C0.5 21.1646 0.978398 22.3195 1.82995 23.1711C2.6815 24.0226 3.83646 24.501 5.04074 24.501Z" stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M10.0952 0.966797V8.30982C10.0952 8.99798 10.3686 9.65795 10.8552 10.1446C11.3418 10.6312 12.0018 10.9045 12.6899 10.9045H20.0355" stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M4.33759 18.3383V17.041M4.33759 17.041V14.4463H5.63494C5.97902 14.4463 6.30901 14.583 6.55231 14.8263C6.79561 15.0696 6.93229 15.3996 6.93229 15.7436C6.93229 16.0877 6.79561 16.4177 6.55231 16.661C6.30901 16.9043 5.97902 17.041 5.63494 17.041H4.33759ZM14.7164 18.3383V16.7167M14.7164 16.7167V14.4463H16.6624M14.7164 16.7167H16.6624M9.527 18.3383V14.4463H10.1757C10.6918 14.4463 11.1868 14.6513 11.5517 15.0163C11.9167 15.3812 12.1217 15.8762 12.1217 16.3923C12.1217 16.9084 11.9167 17.4034 11.5517 17.7684C11.1868 18.1333 10.6918 18.3383 10.1757 18.3383H9.527Z" stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
-    }
-
-    function getFileIcon(file) {
-        if (file.type.startsWith('image/'))
-            return `<img src="${URL.createObjectURL(file)}" class="file-thumbnail" alt="${file.name}">`;
-        if (file.type === 'application/pdf' || getFileExtension(file.name) === 'PDF')
-            return `<div class="file-icon file-icon--pdf">${pdfIconSvgHtml()}</div>`;
-        return `<div class="file-icon">${getFileExtension(file.name)}</div>`;
-    }
-
-    function clearUploadSimForFile(file) {
-        if (!file) return;
-        const fp = businessOwnerFileFingerprint(file);
-        const iv = window.__uploadSimIntervalByFp?.get(fp);
-        if (iv != null) {
-            clearInterval(iv);
-            window.__uploadSimIntervalByFp.delete(fp);
-        }
-        window.__uploadSimCompletedFps?.delete(fp);
-    }
-
-    function simulateUpload(fileItemData) {
-        const file = fileItemData.file;
-        if (!file) return;
-        const fp = businessOwnerFileFingerprint(file);
-        const total = file.size;
-        const progressText = fileItemData.element.querySelector('.file-progress-text');
-
-        if (window.__uploadSimCompletedFps.has(fp)) {
-            if (progressText) {
-                progressText.textContent = `${formatFileSize(total)} • Uploaded`;
-                progressText.style.color = '#10b981';
+            } catch (error) {
+                uploadFn.call(wire, 'business_gallery_pending', file);
             }
-            return;
         }
 
-        const prevIv = window.__uploadSimIntervalByFp.get(fp);
-        if (prevIv != null) {
-            clearInterval(prevIv);
+        function pushGalleryFilesToLivewire(files) {
+            const wire = vqResolveLivewireWire();
+            if (!wire || !files.length) {
+                return false;
+            }
+
+            rememberGalleryBatchSlots(
+                files,
+                window.__vqGalleryBatch ?
+                window.__vqGalleryBatch.startIndex :
+                0,
+            );
+
+            const uploadMultipleFn = wire.$uploadMultiple || wire.uploadMultiple;
+
+            if (files.length > 1 && typeof uploadMultipleFn === 'function') {
+                uploadMultipleFn.call(wire, 'business_gallery_pending', files);
+                return true;
+            }
+
+            files.forEach(function(file) {
+                uploadSingleGalleryFile(wire, file);
+            });
+
+            return true;
         }
 
-        let uploaded = 0;
-        const iv = setInterval(() => {
-            const pt = fileItemData.element.querySelector('.file-progress-text');
-            if (!pt || !pt.isConnected) {
-                clearInterval(iv);
-                window.__uploadSimIntervalByFp.delete(fp);
+        function countGalleryServerImages() {
+            return document.querySelectorAll(
+                '.gallery-slots .gallery-slot-img:not(.gallery-slot-preview)',
+            ).length;
+        }
+
+        function restoreGalleryBatchPreviewsAfterMorph() {
+            const batch = window.__vqGalleryBatch;
+            if (!batch || !batch.files || !batch.files.length) {
                 return;
             }
-            uploaded += Math.random() * total * 0.1;
-            if (uploaded >= total) {
-                clearInterval(iv);
-                window.__uploadSimIntervalByFp.delete(fp);
-                window.__uploadSimCompletedFps.add(fp);
-                pt.textContent = `${formatFileSize(total)} • Uploaded`;
-                pt.style.color = '#10b981';
-            } else {
-                pt.textContent = `${formatFileSize(uploaded)} of ${formatFileSize(total)} • Uploading...`;
+
+            const serverCount = countGalleryServerImages();
+            const targetCount = batch.startIndex + batch.files.length;
+            if (serverCount >= targetCount) {
+                finishGalleryBatchIfComplete();
+                return;
             }
-        }, 200);
-        window.__uploadSimIntervalByFp.set(fp, iv);
-    }
 
-    function createFileItem(file, onRemove) {
-        const id = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        const div = document.createElement('div');
-        div.className = 'file-item';
-        div.dataset.fileId = id;
-        div.innerHTML = `
-            <div class="file-info">
-                ${getFileIcon(file)}
-                <div class="file-details">
-                    <div class="file-name">${file.name}</div>
-                    <div class="file-progress-text">0 KB of ${formatFileSize(file.size)} • Uploading...</div>
-                </div>
-            </div>
-            <button class="file-remove" type="button">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-            </button>`;
-        div.querySelector('.file-remove').addEventListener('click', () => {
-            div.remove();
-            onRemove(id);
-        });
-        return {
-            element: div,
-            id,
-            file
-        };
-    }
-
-    function updateNoFileMessage(listEl) {
-        if (!listEl) return;
-        const pane = listEl.closest('.tab-pane');
-        if (!pane) return;
-        const msg = pane.querySelector('.file-list-empty-msg');
-        if (msg) msg.style.display = listEl.children.length === 0 ? 'block' : 'none';
-    }
-
-    /** Show Business Owner ID "Attach" tab so the file list (which lives there) is visible */
-    function showBusinessOwnerAttachTab() {
-        const wrap = document.getElementById('business-owner-id-file-input')?.closest('.custom-file-upload');
-        if (!wrap) return;
-        const attachBtn = wrap.querySelector('[data-tab="attach"]');
-        const uploadBtn = wrap.querySelector('[data-tab="upload"]');
-        if (attachBtn) attachBtn.classList.add('active');
-        if (uploadBtn) uploadBtn.classList.remove('active');
-        const attachPane = document.getElementById('attach-tab');
-        const uploadPane = document.getElementById('upload-tab');
-        if (attachPane) attachPane.classList.add('active');
-        if (uploadPane) uploadPane.classList.remove('active');
-    }
-
-    /** Insurance certificate list lives on Attach tab; show it after picking files on Upload tab */
-    function showInsuranceAttachTab() {
-        const wrap = document.getElementById('insurance-file-input')?.closest('.custom-file-upload');
-        if (!wrap) return;
-        const attachBtn = wrap.querySelector('[data-tab="insurance-attach"]');
-        const uploadBtn = wrap.querySelector('[data-tab="insurance-upload"]');
-        if (attachBtn) attachBtn.classList.add('active');
-        if (uploadBtn) uploadBtn.classList.remove('active');
-        const attachPane = document.getElementById('insurance-attach-tab');
-        const uploadPane = document.getElementById('insurance-upload-tab');
-        if (attachPane) attachPane.classList.add('active');
-        if (uploadPane) uploadPane.classList.remove('active');
-    }
-
-    // ── Restore file items after Livewire morphs the DOM ─────────────
-    function restoreFileItems() {
-        const fileList = document.getElementById('business-file-list');
-        const insFileList = document.getElementById('insurance-file-list');
-        const businessOwnerIdFileList = document.getElementById('business-owner-id-file-list');
-
-        if (fileList) {
-            if (fileList.children.length === 0 && window.uploadedFiles.length > 0) {
-                window.uploadedFiles.forEach(item => {
-                    if (item.element && !fileList.contains(item.element)) {
-                        fileList.appendChild(item.element);
-                    }
-                });
-                updateNoFileMessage(fileList);
+            const remainingStart = Math.max(batch.startIndex, serverCount);
+            const remaining = batch.files.slice(
+                Math.max(0, serverCount - batch.startIndex),
+            );
+            if (!remaining.length) {
+                return;
             }
-        }
 
-        if (insFileList) {
-            if (insFileList.children.length === 0 && window.insuranceUploadedFiles.length > 0) {
-                window.insuranceUploadedFiles.forEach(item => {
-                    if (item.element && !insFileList.contains(item.element)) {
-                        insFileList.appendChild(item.element);
-                    }
-                });
-                updateNoFileMessage(insFileList);
-            }
-        }
-
-        if (businessOwnerIdFileList && window.businessOwnerIdUploadedFiles.length > 0) {
-            if (businessOwnerIdFileList.children.length === 0) {
-                window.businessOwnerIdUploadedFiles.forEach(item => {
-                    if (item.element && !businessOwnerIdFileList.contains(item.element)) {
-                        businessOwnerIdFileList.appendChild(item.element);
-                    }
-                });
-            }
-            updateNoFileMessage(businessOwnerIdFileList);
-        }
-    }
-
-    // ── Tab switching — delegated once on document so it works for dynamically-injected steps ───
-    function setupTabs() {
-        if (window.__tabDelegationBound) return;
-        window.__tabDelegationBound = true;
-
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('[data-tab]');
-            if (!btn) return;
-
-            const target = btn.dataset.tab;
-            const wrap = btn.closest('.custom-file-upload');
-            if (!wrap) return;
-
-            e.preventDefault();
-
-            // Deactivate all sibling tab buttons in this upload widget
-            wrap.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            // Activate clicked button
-            btn.classList.add('active');
-
-            // Deactivate all panes in this widget, activate the target one
-            wrap.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-            const pane = wrap.querySelector('[id="' + target + '-tab"]');
-            if (pane) pane.classList.add('active');
-        });
-    }
-
-    // ── File upload — only bind once per input using a flag ───────────
-    function setupUploaders() {
-        // ── Business Owner ID ─────────────────────────────────────────
-        const fileInput = document.getElementById('file-input');
-        const uploadArea = document.getElementById('upload-area');
-        const fileList = document.getElementById('business-file-list');
-
-        if (fileInput && !fileInput.dataset.bound) {
-            fileInput.dataset.bound = '1';
-
-            fileInput.addEventListener('change', function() {
-                const listEl = document.getElementById('business-file-list') || fileList;
-                if (!listEl) return;
-                (window.uploadedFiles || []).forEach((u) => {
-                    if (u && u.file) clearUploadSimForFile(u.file);
-                });
-                listEl.replaceChildren();
-                window.uploadedFiles = [];
-
-                Array.from(this.files).forEach(file => {
-                    const item = createFileItem(file, removedId => {
-                        const removed = window.uploadedFiles.find((f) => f.id === removedId);
-                        if (removed && removed.file) {
-                            clearUploadSimForFile(removed.file);
-                        }
-                        window.uploadedFiles = window.uploadedFiles.filter(f => f.id !==
-                            removedId);
-                        updateNoFileMessage(listEl);
-                    });
-                    listEl.appendChild(item.element);
-                    window.uploadedFiles.push(item);
-                    simulateUpload(item);
-                });
-                updateNoFileMessage(listEl);
-            });
-        }
-
-        if (uploadArea && !uploadArea.dataset.bound) {
-            uploadArea.dataset.bound = '1';
-
-            // Use stopPropagation on the hidden input so click doesn't bubble back up
-            uploadArea.addEventListener('click', function(e) {
-                // If the click came FROM the hidden input itself, ignore it
-                if (e.target === fileInput || e.target === document.getElementById('file-input')) return;
-                document.getElementById('file-input').click();
-            });
-
-            uploadArea.addEventListener('dragover', e => {
-                e.preventDefault();
-                uploadArea.classList.add('dragover');
-            });
-            uploadArea.addEventListener('dragleave', e => {
-                e.preventDefault();
-                uploadArea.classList.remove('dragover');
-            });
-            uploadArea.addEventListener('drop', e => {
-                e.preventDefault();
-                uploadArea.classList.remove('dragover');
-                if (!fileInput || !fileList) return;
-                fileInput.files = e.dataTransfer.files;
-                fileInput.dispatchEvent(new Event('change', {
-                    bubbles: true
-                }));
-            });
-        }
-
-        // ── Insurance Certificate ─────────────────────────────────────
-        const insFileInput = document.getElementById('insurance-file-input');
-        const insUploadArea = document.getElementById('insurance-upload-area');
-        const insFileList = document.getElementById('insurance-file-list');
-
-        if (insFileInput && !insFileInput.dataset.bound) {
-            insFileInput.dataset.bound = '1';
-
-            insFileInput.addEventListener('change', function() {
-                const listEl = document.getElementById('insurance-file-list') || insFileList;
-                if (!listEl) return;
-                (window.insuranceUploadedFiles || []).forEach((u) => {
-                    if (u && u.file) clearUploadSimForFile(u.file);
-                });
-                listEl.replaceChildren();
-                window.insuranceUploadedFiles = [];
-                appendSavedInsuranceRows(listEl);
-
-                Array.from(this.files).forEach(file => {
-                    const item = createFileItem(file, removedId => {
-                        const removed = window.insuranceUploadedFiles.find((f) => f.id ===
-                            removedId);
-                        if (removed && removed.file) {
-                            clearUploadSimForFile(removed.file);
-                        }
-                        window.insuranceUploadedFiles = window.insuranceUploadedFiles.filter(
-                            f => f.id !== removedId);
-                        updateNoFileMessage(listEl);
-                    });
-                    listEl.appendChild(item.element);
-                    window.insuranceUploadedFiles.push(item);
-                    simulateUpload(item);
-                });
-                updateNoFileMessage(listEl);
-                this.dispatchEvent(new Event('input', {
-                    bubbles: true
-                }));
-                showInsuranceAttachTab();
-            });
-        }
-
-        if (insUploadArea && !insUploadArea.dataset.bound) {
-            insUploadArea.dataset.bound = '1';
-
-            insUploadArea.addEventListener('dragover', e => {
-                e.preventDefault();
-                insUploadArea.classList.add('dragover');
-            });
-            insUploadArea.addEventListener('dragleave', e => {
-                e.preventDefault();
-                insUploadArea.classList.remove('dragover');
-            });
-            insUploadArea.addEventListener('drop', e => {
-                e.preventDefault();
-                insUploadArea.classList.remove('dragover');
-                if (!insFileInput) return;
-                insFileInput.files = e.dataTransfer.files;
-                insFileInput.dispatchEvent(new Event('change', {
-                    bubbles: true
-                }));
-            });
-        }
-
-        // Business Owner ID Images
-        const businessOwnerIdFileInput = document.getElementById('business-owner-id-file-input');
-        const businessOwnerIdUploadArea = document.getElementById('business-owner-id-upload-area');
-        const businessOwnerIdFileList = document.getElementById('business-owner-id-file-list');
-
-        if (businessOwnerIdFileInput && !businessOwnerIdFileInput.dataset.bound) {
-            businessOwnerIdFileInput.dataset.bound = '1';
-
-            businessOwnerIdFileInput.addEventListener('change', function() {
-                if (window.__boIdIgnoreNextChange) {
-                    window.__boIdIgnoreNextChange = false;
+            remaining.forEach(function(file, i) {
+                const slot = ensureGallerySlotAtIndex(remainingStart + i);
+                if (!slot) {
                     return;
                 }
-                mergeBusinessOwnerPicks(this, Array.from(this.files));
-                rebuildBusinessOwnerIdListUI();
-                this.dispatchEvent(new Event('input', {
-                    bubbles: true
-                }));
-                showBusinessOwnerAttachTab();
+                const hasServer = slot.querySelector(
+                    '.gallery-slot-img:not(.gallery-slot-preview)',
+                );
+                if (hasServer) {
+                    return;
+                }
+                showGalleryFilePreviewInSlot(slot, file, {
+                    batchPending: true,
+                    withProgress: true,
+                });
             });
         }
 
-        if (businessOwnerIdUploadArea && !businessOwnerIdUploadArea.dataset.bound) {
-            businessOwnerIdUploadArea.dataset.bound = '1';
-
-            businessOwnerIdUploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                businessOwnerIdUploadArea.classList.add('dragover');
-            });
-            businessOwnerIdUploadArea.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                businessOwnerIdUploadArea.classList.remove('dragover');
-            });
-            businessOwnerIdUploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                businessOwnerIdUploadArea.classList.remove('dragover');
-                const inp = document.getElementById('business-owner-id-file-input');
-                if (!inp) return;
-                mergeBusinessOwnerPicks(inp, Array.from(e.dataTransfer.files));
-                rebuildBusinessOwnerIdListUI();
-                inp.dispatchEvent(new Event('input', {
-                    bubbles: true
-                }));
-                showBusinessOwnerAttachTab();
-            });
-        }
-
-    }
-
-    /** Stable fingerprint for hidden JSON so harmless re-renders (key order, whitespace) do not rebuild lists. */
-    function normalizeSavedUrlsFingerprint(jsonStr) {
-        if (jsonStr == null || jsonStr === '') {
-            return '';
-        }
-        try {
-            const a = JSON.parse(jsonStr);
-            if (!Array.isArray(a)) {
-                return jsonStr;
+        function finishGalleryBatchIfComplete() {
+            const batch = window.__vqGalleryBatch;
+            if (!batch) {
+                return;
             }
-            const parts = a
-                .map((item) => {
-                    if (typeof item === 'string') {
-                        return 's:' + item;
+
+            const serverCount = countGalleryServerImages();
+            const targetCount = batch.startIndex + batch.files.length;
+            if (serverCount < targetCount) {
+                return;
+            }
+
+            getGallerySlotElements().forEach(function(slot) {
+                if (slot.querySelector('.gallery-slot-img:not(.gallery-slot-preview)')) {
+                    clearGallerySlotClientState(slot);
+                }
+                slot.classList.remove('gallery-slot--batch-pending');
+            });
+
+            document
+                .querySelectorAll('.gallery-slot[data-vq-gallery-client-slot="1"]')
+                .forEach(function(slot) {
+                    if (!slot.querySelector('.gallery-slot-img:not(.gallery-slot-preview)')) {
+                        clearGallerySlotClientState(slot);
+                        slot.remove();
+                    } else {
+                        slot.removeAttribute('data-vq-gallery-client-slot');
+                        slot.classList.remove('gallery-slot--client');
                     }
-                    if (item && typeof item === 'object') {
-                        return 'o:' + (item.path || '') + '\t' + (item.url || '');
+                });
+
+            window.__vqGalleryBatch = null;
+            window.__vqGalleryActiveSlot = null;
+        }
+
+        function handleGalleryInputChange(input) {
+            const files = Array.from(input.files || []).filter(function(file) {
+                return String(file.type || '').startsWith('image/');
+            });
+            if (!files.length) {
+                return;
+            }
+
+            const startIndex = getGalleryUploadSlotIndex(input);
+            if (startIndex < 0) {
+                return;
+            }
+
+            window.__vqGalleryBatch = {
+                files: files,
+                startIndex: startIndex,
+                fileSlots: new Map(),
+                currentUploadIndex: 0,
+            };
+
+            showAllGallerySlotPreviews(input, files, startIndex);
+            pushGalleryFilesToLivewire(files);
+            input.value = '';
+        }
+
+        function showGallerySlotPreview(input, file) {
+            const slot = getGallerySlot(input);
+            showGalleryFilePreviewInSlot(slot, file, {
+                withProgress: true
+            });
+            window.__vqGalleryActiveSlot = slot;
+        }
+
+        function getGalleryProgressState(ring) {
+            if (!ring.__vqGalleryProgressState) {
+                ring.__vqGalleryProgressState = {
+                    uploading: false,
+                    display: 0,
+                    target: 0,
+                    raf: null,
+                    creepTimer: null,
+                };
+            }
+            return ring.__vqGalleryProgressState;
+        }
+
+        function cancelGalleryProgressAnimation(state) {
+            if (state.raf) {
+                cancelAnimationFrame(state.raf);
+                state.raf = null;
+            }
+        }
+
+        function clearGalleryProgressCreep(state) {
+            if (state.creepTimer) {
+                clearInterval(state.creepTimer);
+                state.creepTimer = null;
+            }
+        }
+
+        function paintGalleryProgress(ring, value) {
+            if (!ring) return;
+            const p = Math.max(0, Math.min(100, Math.round(value)));
+            const circle = ring.querySelector('.gallery-upload-ring__progress');
+            const label = ring.querySelector('.gallery-upload-ring__label');
+            if (circle) {
+                circle.style.strokeDasharray = String(CIRCUMFERENCE);
+                circle.style.strokeDashoffset = String(
+                    CIRCUMFERENCE * (1 - Math.max(p, 1) / 100),
+                );
+            }
+            if (label) {
+                label.textContent = p + '%';
+            }
+            ring.hidden = false;
+            ring.classList.add('gallery-upload-ring--visible');
+            const slot = ring.closest('.gallery-slot');
+            if (slot) {
+                slot.classList.add('gallery-slot--uploading');
+            }
+            const state = getGalleryProgressState(ring);
+            state.display = p;
+        }
+
+        function animateGalleryProgressTo(ring, nextTarget) {
+            if (!ring) return;
+            const state = getGalleryProgressState(ring);
+            const goal = Math.max(
+                state.display,
+                Math.min(100, Number(nextTarget) || 0),
+            );
+            state.target = Math.max(state.target, goal);
+
+            if (goal <= state.display + 0.4) {
+                paintGalleryProgress(ring, goal);
+                return;
+            }
+
+            cancelGalleryProgressAnimation(state);
+            const startValue = state.display;
+            const delta = goal - startValue;
+            const startedAt = performance.now();
+            const duration = Math.min(900, Math.max(300, delta * 16));
+            const easeInOut = function(t) {
+                return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+            };
+
+            const step = function(now) {
+                const elapsed = Math.min(1, (now - startedAt) / duration);
+                paintGalleryProgress(ring, startValue + delta * easeInOut(elapsed));
+                if (elapsed < 1) {
+                    state.raf = requestAnimationFrame(step);
+                } else {
+                    state.raf = null;
+                    state.display = goal;
+                }
+            };
+
+            state.raf = requestAnimationFrame(step);
+        }
+
+        function startGalleryUploadProgress(ring) {
+            if (!ring) return;
+            const state = getGalleryProgressState(ring);
+            if (state.uploading) return;
+
+            clearGalleryProgressCreep(state);
+            cancelGalleryProgressAnimation(state);
+            state.uploading = true;
+            state.display = 0;
+            state.target = 1;
+            paintGalleryProgress(ring, 1);
+
+            state.creepTimer = setInterval(function() {
+                if (!state.uploading) {
+                    clearGalleryProgressCreep(state);
+                    return;
+                }
+                const ceiling = 88;
+                if (state.display >= ceiling) return;
+                const bump = Math.max(1, Math.round((ceiling - state.display) * 0.12));
+                animateGalleryProgressTo(ring, Math.min(ceiling, state.display + bump));
+            }, 110);
+        }
+
+        function setGalleryUploadProgress(ring, percent) {
+            if (!ring) return;
+            const state = getGalleryProgressState(ring);
+            const next = Math.min(99, Math.max(1, Number(percent) || 0));
+            state.target = Math.max(state.target, next);
+            animateGalleryProgressTo(ring, next);
+        }
+
+        function finishGalleryUploadProgress(ring) {
+            if (!ring) return;
+            const state = getGalleryProgressState(ring);
+            clearGalleryProgressCreep(state);
+            cancelGalleryProgressAnimation(state);
+            state.uploading = false;
+            state.target = 100;
+            if (state.display >= 99) {
+                paintGalleryProgress(ring, 100);
+                return;
+            }
+            animateGalleryProgressTo(ring, 100);
+        }
+
+        function resetGalleryUploadProgress(ring) {
+            if (!ring) return;
+            const state = getGalleryProgressState(ring);
+            state.uploading = false;
+            clearGalleryProgressCreep(state);
+            cancelGalleryProgressAnimation(state);
+            state.display = 0;
+            state.target = 0;
+        }
+
+        function showProgressRing(ringEl, percent) {
+            animateGalleryProgressTo(ringEl, percent);
+            return Math.round(percent);
+        }
+
+        function setProgressRing(ringEl, percent) {
+            return showProgressRing(ringEl, percent);
+        }
+
+        function ensureGalleryUploadRing(slot) {
+            if (!slot) return null;
+            let ring = slot.querySelector('.gallery-upload-ring');
+            if (ring) return ring;
+            ring = document.createElement('div');
+            ring.className = 'gallery-upload-ring';
+            ring.hidden = true;
+            ring.innerHTML =
+                '<div class="gallery-upload-ring__inner">' +
+                '<svg class="gallery-upload-ring__svg" viewBox="0 0 36 36" aria-hidden="true">' +
+                '<circle class="gallery-upload-ring__bg" cx="18" cy="18" r="' + RING_RADIUS +
+                '" fill="none" stroke-width="3" />' +
+                '<circle class="gallery-upload-ring__progress" cx="18" cy="18" r="' + RING_RADIUS +
+                '" fill="none" stroke-width="3" transform="rotate(-90 18 18)" />' +
+                '</svg>' +
+                '<span class="gallery-upload-ring__label">0%</span>' +
+                '</div>';
+            slot.appendChild(ring);
+            return ring;
+        }
+
+        function resetGallerySlotUpload(input) {
+            const slot = getGallerySlot(input);
+            if (!slot) return;
+            const ring = slot.querySelector('.gallery-upload-ring');
+            if (ring) {
+                resetGalleryUploadProgress(ring);
+                ring.hidden = true;
+                ring.classList.remove('gallery-upload-ring--visible');
+            }
+            slot.classList.remove('gallery-slot--uploading');
+            const preview = slot.querySelector('.gallery-slot-preview');
+            if (preview) {
+                revokeGalleryPreview(preview);
+                preview.remove();
+            }
+            if (window.__vqGalleryActiveSlot === slot) {
+                window.__vqGalleryActiveSlot = null;
+            }
+        }
+
+        document.addEventListener('change', function(e) {
+            const input = e.target;
+            if (!isGalleryInput(input) || !input.files || !input.files.length) return;
+            handleGalleryInputChange(input);
+        });
+
+        document.addEventListener('livewire-upload-start', function(e) {
+            if (!isActiveGalleryUploadEvent(e)) return;
+            const slot = resolveGalleryEventSlot(e);
+            const ring = ensureGalleryUploadRing(slot);
+            if (ring) startGalleryUploadProgress(ring);
+            const file = e.target && e.target.files && e.target.files[0];
+            if (file) {
+                showGalleryFilePreviewInSlot(slot, file, {
+                    withProgress: true
+                });
+            }
+        });
+
+        document.addEventListener('livewire-upload-progress', function(e) {
+            if (!isActiveGalleryUploadEvent(e)) return;
+            const percent = e.detail && e.detail.progress != null ? e.detail.progress : 1;
+            const slot = resolveGalleryEventSlot(e);
+            if (slot) {
+                setGalleryUploadProgress(slot.querySelector('.gallery-upload-ring'), percent);
+            }
+        });
+
+        document.addEventListener('livewire-upload-finish', function(e) {
+            if (!isActiveGalleryUploadEvent(e)) return;
+            const slot = resolveGalleryEventSlot(e);
+            const ring = slot ? slot.querySelector('.gallery-upload-ring') : null;
+            if (ring) finishGalleryUploadProgress(ring);
+        });
+
+        document.addEventListener('livewire-upload-error', function(e) {
+            if (!isActiveGalleryUploadEvent(e)) return;
+            const slot = resolveGalleryEventSlot(e);
+            if (slot) {
+                clearGallerySlotClientState(slot);
+                return;
+            }
+            if (isGalleryInput(e.target)) {
+                resetGallerySlotUpload(e.target);
+            }
+        });
+
+        document.addEventListener('livewire-upload-cancel', function(e) {
+            if (!isActiveGalleryUploadEvent(e)) return;
+            const slot = resolveGalleryEventSlot(e);
+            if (slot) {
+                clearGallerySlotClientState(slot);
+                return;
+            }
+            if (isGalleryInput(e.target)) {
+                resetGallerySlotUpload(e.target);
+            }
+        });
+
+        function restoreGalleryPreviewIfNeeded(slot) {
+            if (!slot) return null;
+            const existing = slot.querySelector('.gallery-slot-preview');
+            if (existing) return existing;
+
+            const url = slot.dataset.vqGalleryPreviewUrl;
+            if (!url) return null;
+
+            const preview = document.createElement('img');
+            preview.className = 'gallery-slot-img gallery-slot-preview';
+            preview.alt = '';
+            preview.dataset.objectUrl = url;
+            preview.src = url;
+            slot.insertBefore(preview, slot.firstChild);
+            return preview;
+        }
+
+        function clearGallerySlotClientState(slot) {
+            if (!slot) return;
+            const preview = slot.querySelector('.gallery-slot-preview');
+            if (preview) {
+                revokeGalleryPreview(preview);
+                preview.remove();
+            }
+            delete slot.dataset.vqGalleryPreviewUrl;
+            const ring = slot.querySelector('.gallery-upload-ring');
+            if (ring) {
+                resetGalleryUploadProgress(ring);
+                ring.hidden = true;
+                ring.classList.remove('gallery-upload-ring--visible');
+            }
+            slot.classList.remove('gallery-slot--uploading');
+            slot.classList.remove('gallery-slot--batch-pending');
+            const empty = slot.querySelector('.gallery-slot-empty');
+            if (empty) {
+                empty.style.display = '';
+            }
+        }
+
+        function finalizeGallerySlotAfterMorph() {
+            restoreGalleryBatchPreviewsAfterMorph();
+            finishGalleryBatchIfComplete();
+
+            const slots = [];
+            if (window.__vqGalleryActiveSlot) {
+                slots.push(window.__vqGalleryActiveSlot);
+            }
+            document.querySelectorAll('.gallery-slot--uploading').forEach(function(slot) {
+                if (slots.indexOf(slot) === -1) slots.push(slot);
+            });
+
+            if (!slots.length) {
+                return;
+            }
+
+            slots.forEach(function(slot) {
+                const serverImg = slot.querySelector('.gallery-slot-img:not(.gallery-slot-preview)');
+
+                if (slot.classList.contains('gallery-slot--batch-pending')) {
+                    if (serverImg) {
+                        const ring = slot.querySelector('.gallery-upload-ring');
+                        if (ring) {
+                            finishGalleryUploadProgress(ring);
+                        }
+                        const revealServerImage = function() {
+                            serverImg.style.opacity = '1';
+                            requestAnimationFrame(function() {
+                                clearGallerySlotClientState(slot);
+                                slot.classList.remove('gallery-slot--batch-pending');
+                            });
+                        };
+                        const preview = slot.querySelector('.gallery-slot-preview');
+                        if (preview) {
+                            serverImg.style.opacity = '0';
+                        }
+                        if (serverImg.complete && serverImg.naturalWidth > 0) {
+                            revealServerImage();
+                        } else {
+                            serverImg.addEventListener('load', revealServerImage, {
+                                once: true,
+                            });
+                            serverImg.addEventListener('error', revealServerImage, {
+                                once: true,
+                            });
+                        }
                     }
-                    return '';
-                })
-                .filter(Boolean);
-            parts.sort();
-            return parts.join('\n');
-        } catch (e) {
-            return jsonStr;
+                    return;
+                }
+
+                const preview = restoreGalleryPreviewIfNeeded(slot);
+                const ring = ensureGalleryUploadRing(slot);
+
+                if (ring) {
+                    paintGalleryProgress(ring, 100);
+                }
+
+                if (!serverImg) {
+                    return;
+                }
+
+                const revealServerImage = function() {
+                    serverImg.style.opacity = '1';
+                    requestAnimationFrame(function() {
+                        clearGallerySlotClientState(slot);
+                        if (window.__vqGalleryActiveSlot === slot) {
+                            window.__vqGalleryActiveSlot = null;
+                        }
+                    });
+                };
+
+                if (preview) {
+                    serverImg.style.opacity = '0';
+                }
+
+                if (serverImg.complete && serverImg.naturalWidth > 0) {
+                    revealServerImage();
+                    return;
+                }
+
+                serverImg.addEventListener('load', revealServerImage, {
+                    once: true
+                });
+                serverImg.addEventListener('error', revealServerImage, {
+                    once: true
+                });
+            });
         }
+
+        function registerGalleryMorphCleanup() {
+            if (window.__vqGalleryMorphCleanupHooked) return;
+            window.__vqGalleryMorphCleanupHooked = true;
+            const register = function() {
+                Livewire.hook('commit', function(payload) {
+                    if (typeof payload.succeed !== 'function') return;
+                    payload.succeed(function() {
+                        finalizeGallerySlotAfterMorph();
+                    });
+                });
+            };
+            if (window.Livewire) {
+                register();
+            } else {
+                document.addEventListener('livewire:init', register, {
+                    once: true
+                });
+            }
+        }
+
+        registerGalleryMorphCleanup();
     }
 
-    function syncMorphSavedFingerprints() {
-        const boHid = document.getElementById('business-owner-saved-urls-json');
-        window.__vqLastBoSavedSnap = normalizeSavedUrlsFingerprint(boHid ? boHid.value : '');
-        const insHid = document.getElementById('insurance-saved-urls-json');
-        window.__vqLastInsSavedSnap = normalizeSavedUrlsFingerprint(insHid ? insHid.value : '');
-    }
+    bindGalleryUploadProgress();
 
-    /**
-     * After Livewire morph (e.g. wire:model.live): do not re-run full init — that re-bound uploaders and
-     * replaceChildren() on file lists on every keystroke and caused flicker. Only rebuild BO/insurance lists
-     * when the hidden saved-URL JSON actually changed (remove file, new session data, etc.).
-     */
-    function afterLivewireMorphLight() {
-        restoreFileItems();
-
-        const boHid = document.getElementById('business-owner-saved-urls-json');
-        const boFp = normalizeSavedUrlsFingerprint(boHid ? boHid.value : '');
-        if (boFp !== window.__vqLastBoSavedSnap) {
-            window.__vqLastBoSavedSnap = boFp;
-            renderBusinessOwnerAttachListIfNeeded();
-        } else {
-            const boList = document.getElementById('business-owner-id-file-list');
-            if (boList) updateNoFileMessage(boList);
-        }
-
-        const insHid = document.getElementById('insurance-saved-urls-json');
-        const insFp = normalizeSavedUrlsFingerprint(insHid ? insHid.value : '');
-        if (insFp !== window.__vqLastInsSavedSnap) {
-            window.__vqLastInsSavedSnap = insFp;
-            renderInsuranceAttachListIfNeeded();
-        } else {
-            const insList = document.getElementById('insurance-file-list');
-            if (insList) updateNoFileMessage(insList);
-        }
-    }
-
-    // ── Boot ──────────────────────────────────────────────────────────
-    function initVerificationPage() {
-        setupTabs();
-        setupUploaders();
-        restoreFileItems();
-        renderInsuranceAttachListIfNeeded();
-        renderBusinessOwnerAttachListIfNeeded();
-        syncMorphSavedFingerprints();
+    if (!window.__vqDashboardHeaderOffsetBound) {
+        window.__vqDashboardHeaderOffsetBound = true;
+        window.addEventListener('resize', syncDashboardStickyHeaderOffset);
     }
 
     document.addEventListener('DOMContentLoaded', initVerificationPage);
     document.addEventListener('livewire:navigated', initVerificationPage);
-
-    let __vqMorphLightTimer = null;
-    document.addEventListener('livewire:init', function() {
-        Livewire.hook('morph.updated', function() {
-            clearTimeout(__vqMorphLightTimer);
-            __vqMorphLightTimer = setTimeout(function() {
-                afterLivewireMorphLight();
-            }, 100);
-        });
-    });
-
-
-    // Global drag prevention (do not cancel drops on our upload zones — those handlers set input.files)
-    function __vqIsFileUploadZoneTarget(el) {
-        if (!el || !el.closest) {
-            return false;
+    document.addEventListener('livewire:init', () => {
+        if (window.Livewire) {
+            Livewire.hook('commit', ({
+                succeed
+            }) => {
+                if (typeof succeed === 'function') {
+                    succeed(() => {
+                        if (window.VqDocUpload && typeof window.VqDocUpload.afterMorph ===
+                            'function') {
+                            window.VqDocUpload.afterMorph();
+                        }
+                        window.__vqFlushPendingStepScroll?.();
+                    });
+                }
+            });
         }
-        return Boolean(
-            el.closest('.upload-area') ||
-            el.closest('#insurance-upload-area') ||
-            el.closest('#business-owner-id-upload-area') ||
-            el.closest('#upload-area')
-        );
-    }
-    document.addEventListener('dragover', function(e) {
-        if (__vqIsFileUploadZoneTarget(e.target)) {
-            return;
-        }
-        e.preventDefault();
-    });
-    document.addEventListener('drop', function(e) {
-        if (__vqIsFileUploadZoneTarget(e.target)) {
-            return;
-        }
-        e.preventDefault();
     });
 </script>

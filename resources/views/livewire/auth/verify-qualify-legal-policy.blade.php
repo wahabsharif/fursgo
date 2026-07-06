@@ -1,6 +1,12 @@
 <div class="legal-policy-wrap" wire:key="verify-qualify-legal-policy">
     <h1 class="business-basics-title">Legal &amp; Policy Agreements</h1>
-    <form wire:submit="submitLegalPolicy">
+    @php
+        $legalPolicyDevPreview = $this->shouldUseDevDbPreview();
+    @endphp
+    <form wire:submit="submitLegalPolicy" x-data="{
+        accepted: @entangle('legal_terms_accepted').defer,
+        devPreview: @js($legalPolicyDevPreview),
+    }">
         <div
             class="legal-agreements-content-card {{ $legal_agreements_expanded ? 'legal-agreements-content-card--expanded' : '' }}">
             <div class="legal-agreements-container {{ $legal_agreements_expanded ? 'is-expanded' : '' }}"
@@ -13,8 +19,8 @@
         </div>
 
         <div class="legal-policy-checkbox-list">
-            <label class="legal-policy-checkbox-item {{ $legal_terms_accepted ? 'is-selected' : '' }}">
-                <input type="checkbox" wire:model.live="legal_terms_accepted">
+            <label class="legal-policy-checkbox-item" :class="{ 'is-selected': accepted }">
+                <input type="checkbox" x-model="accepted">
                 <span class="legal-policy-checkbox-box" aria-hidden="true"></span>
                 <span class="legal-policy-checkbox-label">I confirm I have read and agree to all FursGo policies
                     listed above.</span>
@@ -42,12 +48,13 @@
                     wire:click="goBackFromBuildProfile">
                     Decline
                 </button>
-                <button type="submit" style="width: 167px;background: #C9DDA0 !important;"
-                    class="submit-btn legal-policy-submit {{ $this->isLegalPolicyContinueEnabled() ? 'btn-active' : 'btn-disabled' }}"
-                    wire:loading.attr="disabled" wire:target="submitLegalPolicy"
-                    @if (!$this->isLegalPolicyContinueEnabled()) disabled @endif>
-                    <span wire:loading.remove wire:target="submitLegalPolicy">Agree & Continue</span>
-                    <span wire:loading wire:target="submitLegalPolicy">Saving…</span>
+                <button type="submit" class="legal-policy-btn legal-policy-btn--continue"
+                    x-bind:class="(devPreview || accepted) ? 'legal-policy-btn--continue-active' : 'legal-policy-btn--continue-muted'"
+                    x-bind:disabled="!devPreview && !accepted" wire:loading.attr="disabled"
+                    wire:target="submitLegalPolicy">
+                    <span wire:loading.remove wire:target="submitLegalPolicy">Agree &amp; Continue</span>
+                    <span class="legal-policy-btn__spinner" wire:loading wire:target="submitLegalPolicy"
+                        aria-hidden="true"></span>
                 </button>
             </div>
         </div>
@@ -209,6 +216,8 @@
         font-size: 16px;
         font-weight: 400;
         line-height: 1.45;
+        user-select: none;
+        -webkit-user-select: none;
     }
 
     .legal-policy-checkbox-item input[type="checkbox"] {
@@ -238,6 +247,22 @@
 
 
 
+    .legal-policy-checkbox-item input:checked+.legal-policy-checkbox-box {
+        border-color: #FFD88C;
+    }
+
+    .legal-policy-checkbox-item input:checked+.legal-policy-checkbox-box::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 15px;
+        height: 15px;
+        border-radius: 999px;
+        transform: translate(-50%, -50%);
+        background: #FFD88C;
+    }
+
     .legal-policy-checkbox-item.is-selected .legal-policy-checkbox-box {
         border-color: #FFD88C;
     }
@@ -261,6 +286,8 @@
         font-style: normal;
         font-weight: 400;
         line-height: normal;
+        user-select: none;
+        -webkit-user-select: none;
     }
 
     .legal-policy-checkbox-item:not(.is-selected) .legal-policy-checkbox-label {
@@ -343,6 +370,49 @@
     .legal-policy-btn--outline:hover {
         border-color: #9ca3af;
         color: #3B3731;
+    }
+
+    .legal-policy-btn--continue {
+        width: 170px;
+        font-weight: 600;
+        box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.10);
+        transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .legal-policy-btn--continue-active {
+        background: #FFC97A;
+        color: #FFFFFF;
+        border: none;
+    }
+
+    .legal-policy-btn--continue-active:hover:not(:disabled) {
+        opacity: 0.92;
+    }
+
+    .legal-policy-btn--continue-muted,
+    .legal-policy-btn--continue:disabled {
+        background: #e5e7eb;
+        color: #9ca3af;
+        border: none;
+        box-shadow: none;
+        cursor: not-allowed;
+    }
+
+    .legal-policy-btn__spinner {
+        width: 18px;
+        height: 18px;
+        display: inline-block;
+        border: 2px solid rgba(255, 255, 255, 0.45);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: legal-policy-btn-spin 0.8s linear infinite;
+        vertical-align: middle;
+    }
+
+    @keyframes legal-policy-btn-spin {
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     .legal-policy-checkbox-label a {
