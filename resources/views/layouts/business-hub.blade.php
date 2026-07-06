@@ -138,6 +138,10 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
         }
 
         /* Verify & Qualify: content width matches header (Bootstrap .container only) */
+        .dashboard-shell--verify-qualify {
+            --dashboard-sticky-header-offset: 9.5rem;
+        }
+
         .dashboard-shell--verify-qualify .dashboard-info-main {
             max-width: 100%;
             width: 100%;

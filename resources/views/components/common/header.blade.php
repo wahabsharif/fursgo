@@ -881,8 +881,11 @@
 
         <style>
             .dashboard-header {
-                position: relative;
+                position: sticky;
+                top: 0;
+                z-index: 1020;
                 width: 100%;
+                background: #fff;
             }
 
             .dashboard-header .dashboard-header-container {
@@ -998,7 +1001,7 @@
 
             /* Verify & Qualify: no header curve; align nav width with .verification-wrapper (.container) */
             .dashboard-header.dashboard-header--verify-qualify {
-                background: transparent;
+                background: #fff;
             }
 
             .dashboard-header.dashboard-header--verify-qualify>.dashboard-header-container>.dashboard-navbar {
