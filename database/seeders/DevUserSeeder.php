@@ -27,7 +27,6 @@ class DevUserSeeder extends Seeder
         );
 
         $devEmail = 'dev@dev.com';
-        $idProofPath = 'dev-seed/id-documents/owner-id-sample.jpg';
 
         GroomerSpacerProfile::updateOrCreate(
             ['email' => $devEmail],
@@ -38,13 +37,13 @@ class DevUserSeeder extends Seeder
                 'user_type' => 'groomer',
                 'account_type' => 'registered_business',
                 'select_location_type' => ['home_studio', 'house_visit', 'mobile_van'],
-                'id_document_paths' => [$idProofPath],
+                'id_document_paths' => [],
                 'business_details' => [
                     'business_name' => 'Dev Grooming Ltd',
                     'business_registration_number' => '12345678',
                     'business_phone' => '+441632960000',
                     'business_email' => $devEmail,
-                    'business_owner_id_images' => [$idProofPath],
+                    'business_owner_id_images' => [],
                 ],
                 'payout_details' => [
                     'bank' => 'Barclays',
@@ -55,7 +54,7 @@ class DevUserSeeder extends Seeder
                     'payout_frequency' => 'Weekly',
                 ],
                 'insurance_details' => [
-                    'insurance_certificate_paths' => ['dev-seed/insurance/certificate-sample.pdf'],
+                    'insurance_certificate_paths' => [],
                     'insurance_certificate_expiry_date' => '2026-01-12',
                 ],
                 'freelance_details' => null,
@@ -63,11 +62,8 @@ class DevUserSeeder extends Seeder
                     'display_name' => 'Dev Grooming',
                     'tagline' => 'Calm, kind grooms for every coat.',
                     'bio' => 'Development seed profile with representative business basics data.',
-                    'profile_photo_path' => 'images/groomer-profile.png',
-                    'gallery_paths' => [
-                        'dev-seed/gallery/sample-1.jpg',
-                        'dev-seed/gallery/sample-2.jpg',
-                    ],
+                    'profile_photo_path' => '',
+                    'gallery_paths' => [],
                 ],
                 'groomer_business_profile' => [
                     'experience' => '6+ years breed-specific trims and hand-stripping.',
@@ -75,15 +71,25 @@ class DevUserSeeder extends Seeder
                     'pet_specialties' => ['dog', 'cat'],
                     'specialty_other' => '',
                     'pet_sizes' => ['small', 'medium', 'large'],
-                    'custom_addons' => ['Teeth brushing'],
-                    'selected_addons' => ['nail_clipping', 'ear_cleaning'],
+                    'custom_addons' => [],
+                    'selected_addons' => [
+                        'Anti-Itch Treatment',
+                        'Fast-Dry Service (express grooming)',
+                    ],
                     'services' => [
                         'full_groom' => ['price' => '45', 'description' => 'Bath, dry, clip, nails'],
                         'face_trim' => ['price' => '20'],
                     ],
                     'addon_pricing' => [
-                        'flea_tick' => ['price' => '12', 'description' => 'Flea & tick shampoo'],
-                        'fast_dry' => ['price' => '8'],
+                        'anti_itch_treatment' => [
+                            'name' => 'Anti-Itch Treatment',
+                            'price' => '10',
+                            'description' => 'Soothing anti-itch wash',
+                        ],
+                        'fast_dry' => [
+                            'name' => 'Fast-Dry Service (express grooming)',
+                            'price' => '8',
+                        ],
                     ],
                 ],
                 'spacer_business_profile' => null,
