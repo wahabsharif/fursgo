@@ -361,7 +361,7 @@ new #[Layout('layouts.app')] class extends Component {
         }
 
         .social-btn:focus-visible {
-            outline: 2px solid #d7a659;
+            outline: 2px solid #FFC97A;
             outline-offset: 2px;
         }
 
