@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GroomerSpacerProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -50,8 +51,13 @@ class GroomerSpacerPrivateFileController extends Controller
             $allowed = [];
         }
 
-        $fromFreelance = $freelanceDetails['id_verification_images'] ?? [];
-        if (is_array($fromFreelance) && $fromFreelance !== []) {
+        $fromBusiness = GroomerSpacerProfile::businessOwnerIdPathsFromBusinessDetails($businessDetails);
+        if ($fromBusiness !== []) {
+            $allowed = array_merge($allowed, $fromBusiness);
+        }
+
+        $fromFreelance = GroomerSpacerProfile::governmentIdPathsFromFreelanceDetails($freelanceDetails);
+        if ($fromFreelance !== []) {
             $allowed = array_merge($allowed, $fromFreelance);
         }
 

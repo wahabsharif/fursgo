@@ -80,9 +80,9 @@ class GroomerSpacerProfile extends Authenticatable
             if (trim((string) ($fd['contact_phone'] ?? '')) === '') {
                 return false;
             }
-            $ids = $fd['id_verification_images'] ?? [];
+            $ids = self::governmentIdPathsFromFreelanceDetails($fd);
 
-            return is_array($ids) && count($ids) > 0;
+            return count($ids) > 0;
         }
 
         if (($this->account_type ?? '') !== 'registered_business') {
@@ -98,9 +98,49 @@ class GroomerSpacerProfile extends Authenticatable
                 return false;
             }
         }
-        $bo = $bd['business_owner_id_images'] ?? [];
 
-        return is_array($bo) && count($bo) > 0;
+        return count(self::businessOwnerIdPathsFromBusinessDetails($bd)) > 0;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $businessDetails
+     * @return list<string>
+     */
+    public static function businessOwnerIdPathsFromBusinessDetails(?array $businessDetails): array
+    {
+        if (!is_array($businessDetails)) {
+            return [];
+        }
+
+        $paths = $businessDetails['business_owner_id_images'] ?? null;
+        if (!is_array($paths)) {
+            return [];
+        }
+
+        return array_values(array_filter($paths, fn ($path) => is_string($path) && $path !== ''));
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $freelanceDetails
+     * @return list<string>
+     */
+    public static function governmentIdPathsFromFreelanceDetails(?array $freelanceDetails): array
+    {
+        if (!is_array($freelanceDetails)) {
+            return [];
+        }
+
+        $paths = $freelanceDetails['government_id'] ?? null;
+        if (is_array($paths) && $paths !== []) {
+            return array_values(array_filter($paths, fn($path) => is_string($path) && $path !== ''));
+        }
+
+        $legacy = $freelanceDetails['id_verification_images'] ?? null;
+        if (!is_array($legacy)) {
+            return [];
+        }
+
+        return array_values(array_filter($legacy, fn($path) => is_string($path) && $path !== ''));
     }
 
     /**
