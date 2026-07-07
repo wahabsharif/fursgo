@@ -54,13 +54,13 @@
     }
 
     .availability-calendar-title {
+        width: min(100%, 300px);
         min-width: 280px;
         display: grid;
-        grid-template-columns: 26px minmax(0, max-content) 26px;
+        grid-template-columns: 26px minmax(0, 1fr) 26px;
         align-items: center;
         justify-content: center;
-        column-gap: 8px;
-        flex: 1;
+        column-gap: 12px;
     }
 
     .availability-calendar-title button {
@@ -77,6 +77,14 @@
         cursor: pointer;
     }
 
+    .availability-calendar-title button:first-of-type {
+        justify-self: start;
+    }
+
+    .availability-calendar-title button:last-of-type {
+        justify-self: end;
+    }
+
     .availability-calendar-title h3 {
         margin: 0;
         color: #4c473f;
@@ -85,6 +93,8 @@
         font-weight: 500;
         text-align: center;
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .availability-weekdays,
