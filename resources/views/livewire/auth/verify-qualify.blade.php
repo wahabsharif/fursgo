@@ -5205,6 +5205,8 @@ new #[Layout('layouts.business-hub')] class extends Component {
         top: calc(var(--dashboard-sticky-header-offset, 9.5rem) + 0.75rem);
         height: fit-content;
         align-self: flex-start;
+        z-index: 1010;
+        background: #fff;
     }
 
     .sidebar-header h1 {
@@ -5794,6 +5796,8 @@ new #[Layout('layouts.business-hub')] class extends Component {
         width: fit-content;
         justify-content: space-between;
         margin: 0;
+        user-select: none;
+        -webkit-user-select: none;
     }
 
     .checkbox-item:hover {
@@ -6696,19 +6700,50 @@ new #[Layout('layouts.business-hub')] class extends Component {
 
     function syncDashboardStickyHeaderOffset() {
         const header = document.querySelector('.dashboard-header');
-        if (!header) {
+        const root =
+            document.querySelector('.dashboard-shell--verify-qualify') ||
+            document.body;
+        if (!header || !root) {
             return;
         }
 
         const height = Math.ceil(header.getBoundingClientRect().height);
-        document.documentElement.style.setProperty(
+        const effectiveHeight = Math.max(height, 120);
+
+        root.style.setProperty(
             '--dashboard-sticky-header-offset',
-            height + 'px',
+            effectiveHeight + 'px',
         );
     }
 
+    function scheduleDashboardStickyHeaderOffsetSync() {
+        window.requestAnimationFrame(() => {
+            syncDashboardStickyHeaderOffset();
+        });
+    }
+
+    function bindDashboardStickyHeaderOffsetSync() {
+        if (window.__vqDashboardHeaderOffsetBound) {
+            scheduleDashboardStickyHeaderOffsetSync();
+            return;
+        }
+
+        window.__vqDashboardHeaderOffsetBound = true;
+        window.addEventListener('resize', scheduleDashboardStickyHeaderOffsetSync);
+        window.addEventListener('load', scheduleDashboardStickyHeaderOffsetSync);
+
+        const header = document.querySelector('.dashboard-header');
+        if (header && typeof ResizeObserver !== 'undefined') {
+            const observer = new ResizeObserver(
+                scheduleDashboardStickyHeaderOffsetSync,
+            );
+            observer.observe(header);
+        }
+    }
+
     function initVerificationPage() {
-        syncDashboardStickyHeaderOffset();
+        bindDashboardStickyHeaderOffsetSync();
+        scheduleDashboardStickyHeaderOffsetSync();
         if (window.VqDocUpload && typeof window.VqDocUpload.init === 'function') {
             window.VqDocUpload.init();
         }
@@ -7550,20 +7585,17 @@ new #[Layout('layouts.business-hub')] class extends Component {
 
     bindGalleryUploadProgress();
 
-    if (!window.__vqDashboardHeaderOffsetBound) {
-        window.__vqDashboardHeaderOffsetBound = true;
-        window.addEventListener('resize', syncDashboardStickyHeaderOffset);
-    }
-
     document.addEventListener('DOMContentLoaded', initVerificationPage);
     document.addEventListener('livewire:navigated', initVerificationPage);
     document.addEventListener('livewire:init', () => {
+        bindDashboardStickyHeaderOffsetSync();
         if (window.Livewire) {
             Livewire.hook('commit', ({
                 succeed
             }) => {
                 if (typeof succeed === 'function') {
                     succeed(() => {
+                        scheduleDashboardStickyHeaderOffsetSync();
                         if (window.VqDocUpload && typeof window.VqDocUpload.afterMorph ===
                             'function') {
                             window.VqDocUpload.afterMorph();

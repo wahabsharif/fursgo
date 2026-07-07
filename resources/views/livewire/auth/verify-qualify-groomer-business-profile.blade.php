@@ -712,6 +712,8 @@
         font-weight: 400;
         line-height: normal;
         cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
     }
 
     .addon-checkbox-item input[type="checkbox"] {
