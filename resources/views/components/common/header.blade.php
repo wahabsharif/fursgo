@@ -77,7 +77,8 @@
 
 @if ($variant === 'dashboard')
     {{-- Dashboard Header --}}
-    <header class="dashboard-header{{ $isVerifyQualifyRoute ? ' dashboard-header--verify-qualify' : '' }}">
+    <header
+        class="dashboard-header{{ $isVerifyQualifyRoute ? ' dashboard-header--verify-qualify' : '' }}{{ $isBusinessHubRoute ? ' dashboard-header--business-hub' : '' }}">
         @unless ($isVerifyQualifyRoute)
             {{-- Full-viewport curve (sibling to max-width content wrapper) --}}
             <div class="curve-shape-container" aria-hidden="true">
@@ -886,6 +887,16 @@
                 z-index: 1020;
                 width: 100%;
                 background: #fff;
+            }
+
+            .dashboard-header.dashboard-header--business-hub {
+                position: static;
+            }
+
+            @media (max-width: 1200px) {
+                .dashboard-header.dashboard-header--business-hub {
+                    position: static;
+                }
             }
 
             .dashboard-header .dashboard-header-container {
