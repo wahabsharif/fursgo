@@ -410,6 +410,7 @@ new class extends Component {
         $activeColor = auth()->check() && auth()->user()->user_type === 'space' ? '#FFA899' : '#FFC97A';
         $lightColor = auth()->check() && auth()->user()->user_type === 'space' ? '#FFE8E4' : '#FFF8EB';
         $chartColor = auth()->check() && auth()->user()->user_type === 'space' ? '#FFA899' : '#FFC97A';
+        $bookingItemHoverBg = auth()->check() && auth()->user()->user_type === 'space' ? '#FFF7F5' : '#FFFBF4';
     @endphp
 
     <div class="business-hub-step-loading-bar" wire:loading
@@ -422,6 +423,7 @@ new class extends Component {
             --business-hub-active: {{ $activeColor }};
             --business-hub-light: {{ $lightColor }};
             --business-hub-chart: {{ $chartColor }};
+            --booking-item-hover-bg: {{ $bookingItemHoverBg }};
             --weekly-revenue-axis: #D9D5CF;
         }
 
@@ -429,7 +431,7 @@ new class extends Component {
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
-            padding: 1rem 0;
+            padding: 1rem 0.5rem;
             flex: 1 1 0;
             min-height: 0;
             width: 100%;
@@ -526,7 +528,7 @@ new class extends Component {
             display: flex;
             flex: 0 1 auto;
             width: 100%;
-            gap: 4rem;
+            gap: 2rem;
             align-items: stretch;
             min-height: 0;
         }
@@ -562,14 +564,16 @@ new class extends Component {
             width: 20%;
         }
 
-        /* Booking Items — tinted panel only on first row */
+        /* Booking Items */
         .booking-item {
             padding: 15px;
+            border-radius: 10px;
+            transition: background 0.2s ease;
+            cursor: pointer;
         }
 
-        .booking-item.booking-item--odd {
-            background: color-mix(in srgb, var(--business-hub-active) 10%, white);
-            border-radius: 10px;
+        .booking-item:hover {
+            background: var(--booking-item-hover-bg);
         }
 
         .booking-header {
@@ -1086,7 +1090,7 @@ new class extends Component {
             margin-top: 1rem;
             display: grid;
             grid-template-columns: 2fr 1fr;
-            gap: 2.5rem;
+            gap: 1.5rem;
         }
 
         .upcoming-bookings {
@@ -1413,7 +1417,7 @@ new class extends Component {
             </div>
             <div class="card-content">
                 @foreach (collect($this->todaysBookings)->take(2) as $booking)
-                    <div class="booking-item {{ $loop->odd ? 'booking-item--odd' : '' }}">
+                    <div class="booking-item">
                         <div class="booking-header">
                             <div class="pet-avatar-stack">
                                 @foreach (!empty($booking['pet_images']) ? $booking['pet_images'] : [$booking['pet_image']] as $petImage)
@@ -1998,7 +2002,7 @@ new class extends Component {
                         <div class="card-modal-body">
                             @if ($activeModal === 'todays')
                                 @foreach ($this->todaysBookings as $booking)
-                                    <div class="booking-item {{ $loop->odd ? 'booking-item--odd' : '' }}">
+                                    <div class="booking-item">
                                         <div class="booking-header">
                                             <div class="pet-avatar-stack">
                                                 @foreach (!empty($booking['pet_images']) ? $booking['pet_images'] : [$booking['pet_image']] as $petImage)
