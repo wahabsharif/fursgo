@@ -59,7 +59,7 @@ new class extends Component {
         $query->orderByDesc('created_at')->orderByDesc(self::BOOKING_ID_COLUMN);
     }
 
-    public function refreshBookingsAndCounts(bool $force = false): void
+    public function refreshBookingsAndCounts(bool $force = false, bool $refreshCounts = true): void
     {
         // Avoid heavy polling refresh while a modal is open, so calendar
         // interactions (day/time/month selection) stay responsive.
@@ -69,15 +69,17 @@ new class extends Component {
 
         $profileId = Auth::id();
 
-        $counts = Booking::query()
-            ->where(self::SPACER_ID_COLUMN, $profileId)
-            ->selectRaw(self::BOOKING_STATUS_COLUMN . ', COUNT(*) as total')
-            ->groupBy(self::BOOKING_STATUS_COLUMN)
-            ->pluck('total', self::BOOKING_STATUS_COLUMN);
+        if ($refreshCounts) {
+            $counts = Booking::query()
+                ->where(self::SPACER_ID_COLUMN, $profileId)
+                ->selectRaw(self::BOOKING_STATUS_COLUMN . ', COUNT(*) as total')
+                ->groupBy(self::BOOKING_STATUS_COLUMN)
+                ->pluck('total', self::BOOKING_STATUS_COLUMN);
 
-        $this->statusCounts = collect(['pending', 'confirmed', 'completed', 'cancelled'])
-            ->mapWithKeys(fn($status) => [$status => (int) ($counts[$status] ?? 0)])
-            ->all();
+            $this->statusCounts = collect(['pending', 'confirmed', 'completed', 'cancelled'])
+                ->mapWithKeys(fn($status) => [$status => (int) ($counts[$status] ?? 0)])
+                ->all();
+        }
 
         $bookingsQuery = Booking::with(['petOwner:id,name', 'pets:id,name,pet_type,breed'])->where(self::SPACER_ID_COLUMN, $profileId);
 
@@ -91,10 +93,12 @@ new class extends Component {
 
         $this->bookings = $bookingsQuery->limit($this->visibleRows)->get();
 
-        Cache::forget("dashboard_sidebar_booking_counts_{$profileId}");
+        if ($refreshCounts) {
+            Cache::forget("dashboard_sidebar_booking_counts_{$profileId}");
 
-        // Keep sidebar status counters in sync without a full page refresh.
-        $this->dispatch('booking-counts-updated', counts: $this->statusCounts);
+            // Keep sidebar status counters in sync without a full page refresh.
+            $this->dispatch('booking-counts-updated', counts: $this->statusCounts);
+        }
     }
 
     public function mount(): void
@@ -121,9 +125,14 @@ new class extends Component {
             return;
         }
 
+        if ($this->activeStatus === $status && $this->visibleRows === 10) {
+            $this->dispatch('bookings-tabs-loading-end');
+            return;
+        }
+
         $this->activeStatus = $status;
         $this->visibleRows = 10;
-        $this->refreshBookingsAndCounts(force: true);
+        $this->refreshBookingsAndCounts(force: true, refreshCounts: false);
         $this->dispatch('booking-status-changed', status: $status === 'all' ? '' : $status);
         $this->dispatch('bookings-tabs-loading-end');
     }
@@ -137,11 +146,21 @@ new class extends Component {
     #[On('booking-filter-reset')]
     public function onBookingFilterReset(): void
     {
+        if ($this->activeStatus === 'all' && $this->visibleRows === 10) {
+            $this->dispatch('bookings-tabs-loading-end');
+            return;
+        }
+
         $this->activeStatus = 'all';
         $this->visibleRows = 10;
-        $this->refreshBookingsAndCounts(force: true);
+        $this->refreshBookingsAndCounts(force: true, refreshCounts: false);
         $this->dispatch('booking-status-changed', status: '');
         $this->dispatch('bookings-tabs-loading-end');
+    }
+
+    public function refreshBookingsForPoll(): void
+    {
+        $this->refreshBookingsAndCounts(refreshCounts: false);
     }
 
     public function acceptBooking(int $bookingId): void
@@ -355,19 +374,19 @@ new class extends Component {
 
         $this->pendingSort = $sort;
         $this->visibleRows = 10;
-        $this->refreshBookingsAndCounts();
+        $this->refreshBookingsAndCounts(refreshCounts: false);
         $this->dispatch('bookings-tabs-loading-end');
     }
 
     public function loadMoreBookings(): void
     {
         $this->visibleRows += 10;
-        $this->refreshBookingsAndCounts();
+        $this->refreshBookingsAndCounts(refreshCounts: false);
         $this->dispatch('bookings-tabs-loading-end');
     }
 }; ?>
 
-<section class="bookings-board" wire:poll.visible.30s="refreshBookingsAndCounts">
+<section class="bookings-board" wire:poll.visible.60s="refreshBookingsForPoll">
     <div class="bookings-board-header">
         <div class="booking-list-header">
             <div class="booking-pill-row">
@@ -380,9 +399,6 @@ new class extends Component {
                         ['status' => 'cancelled', 'label' => 'Cancelled Bookings', 'class' => 'cancelled'],
                     ];
                     $allBookingsCount = array_sum($statusCounts);
-                    usort($bookingPills, function ($a, $b) use ($activeStatus) {
-                        return ($b['status'] === $activeStatus) <=> ($a['status'] === $activeStatus);
-                    });
                 @endphp
                 @foreach ($bookingPills as $pill)
                     <button type="button" wire:click="setActiveStatus('{{ $pill['status'] }}')"
