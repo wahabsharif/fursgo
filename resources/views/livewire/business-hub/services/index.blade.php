@@ -157,7 +157,9 @@ new class extends Component {
     @if ($showServiceArea)
         <template x-if="activeServiceMenu === 'service-area'">
             <div>
-                <div x-show="!showAddServiceArea" x-cloak x-init="window.dispatchEvent(new CustomEvent('service-area-map-refresh'))">
+                <div x-show="!showAddServiceArea" x-cloak x-init="const refreshServiceAreaMap = () => window.dispatchEvent(new CustomEvent('service-area-map-refresh'));
+                refreshServiceAreaMap();
+                $watch('showAddServiceArea', (value) => { if (!value) refreshServiceAreaMap(); })">
                     <livewire:business-hub.services.service-area-list />
                 </div>
 

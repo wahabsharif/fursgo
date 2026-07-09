@@ -14,6 +14,7 @@
         x-on:nav-list-loading-end.window="navLoading = false; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; }"
         x-on:client-profile-visible.window="clientProfileOpen = !!$event.detail?.visible"
         x-on:service-form-opened.window="serviceFormOpen = true"
+        x-on:service-form-cancel.window="serviceFormOpen = false"
         x-on:service-form-closed.window="serviceFormOpen = false"
         x-on:services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'"
         x-on:earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'">

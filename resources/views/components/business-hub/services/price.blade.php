@@ -171,15 +171,7 @@
                                     x-transition:leave-end="service-price-value-leave-end">—</span>
                             </div>
                         @else
-                            <div class="service-price-by-size-value">
-                                <span x-show="!isSizeSelected('large')" x-cloak class="service-duration-none"
-                                    x-transition:enter="service-price-value-enter"
-                                    x-transition:enter-start="service-price-value-enter-start"
-                                    x-transition:enter-end="service-price-value-enter-end"
-                                    x-transition:leave="service-price-value-leave"
-                                    x-transition:leave-start="service-price-value-leave-start"
-                                    x-transition:leave-end="service-price-value-leave-end">—</span>
-                            </div>
+                            <span class="service-duration-none">—</span>
                         @endif
                     </div>
                 </div>
