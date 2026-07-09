@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\GroomerSpacerProfile;
 use App\Models\ServiceArea;
 use Livewire\Volt\Component;
 
@@ -23,18 +22,17 @@ new class extends Component {
             'longitude' => ['required', 'numeric', 'between:-180,180'],
         ]);
 
-        $email = (string) data_get(auth()->user(), 'email', '');
-        $profile = GroomerSpacerProfile::where('email', $email)->first();
+        $profileId = auth()->id();
 
-        if (!$profile) {
+        if (!$profileId) {
             $this->addError('name', 'Groomer profile not found for current user.');
             return;
         }
 
-        $existingCount = ServiceArea::query()->where('groomer_spacer_id', $profile->id)->count();
+        $existingCount = ServiceArea::query()->where('groomer_spacer_id', $profileId)->count();
 
         $serviceArea = ServiceArea::create([
-            'groomer_spacer_id' => $profile->id,
+            'groomer_spacer_id' => $profileId,
             'name' => $this->name,
             'radius' => $this->radius,
             'latitude' => $this->latitude,
@@ -44,7 +42,6 @@ new class extends Component {
         ]);
 
         $this->dispatch('service-area-created', itemId: $serviceArea->id);
-        $this->dispatch('service-form-cancel');
         $this->reset(['name', 'address']);
         $this->radius = 1;
         $this->latitude = 51.5074;
@@ -53,8 +50,7 @@ new class extends Component {
 }; ?>
 
 <section class="service-area-form-panel" aria-label="Add service area form" x-data="serviceAreaFormMap(@entangle('latitude').live, @entangle('longitude').live, @entangle('radius').live, @entangle('address').live)">
-    <form class="service-area-form" wire:submit.prevent="save"
-        x-on:submit="window.dispatchEvent(new CustomEvent('nav-list-loading-start'))">
+    <form class="service-area-form" wire:submit.prevent="save">
         <div class="service-area-form-layout">
             <div class="service-area-form-fields">
                 <label class="service-field">

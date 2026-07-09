@@ -14,11 +14,32 @@
     basePrice: $wire.entangle('basePrice').live,
     overtimeCharge: $wire.entangle('overtimeCharge').live,
     showAdvancedPrice: @js(!$showAdvanced),
-    @if ($showBySize) priceSmall: $wire.entangle('priceSmall').live,
+    @if ($showBySize) selectedSizes: $wire.entangle('selectedSizes').live,
+            priceSmall: $wire.entangle('priceSmall').live,
             priceMedium: $wire.entangle('priceMedium').live,
             @if ($largeMode === 'editable')
                 priceLarge: $wire.entangle('priceLarge').live,
                 priceLargeDirty: false, @endif
+    @endif
+    @if ($showBySize) isSizeSelected(size) {
+            return this.selectedSizes.includes(size);
+        },
+        @if ($largeMode === 'editable')
+        init() {
+            const syncLargePrice = (sizes) => {
+                if (sizes.includes('large')) {
+                    if (this.priceLarge === null) {
+                        this.priceLarge = this.basePrice;
+                        this.priceLargeDirty = false;
+                    }
+                } else {
+                    this.priceLarge = null;
+                    this.priceLargeDirty = false;
+                }
+            };
+            syncLargePrice(this.selectedSizes);
+            this.$watch('selectedSizes', syncLargePrice);
+        }, @endif
     @endif
 }" {{ $attributes }}>
     <h4>{{ $title }}</h4>
@@ -31,8 +52,8 @@
 
         @if ($showAdvanced)
             <div class="service-price-advanced-wrap">
-                <button type="button" class="service-price-advanced-btn"
-                    @click="showAdvancedPrice = !showAdvancedPrice" :aria-expanded="showAdvancedPrice.toString()">
+                <button type="button" class="service-price-advanced-btn" @click="showAdvancedPrice = !showAdvancedPrice"
+                    :aria-expanded="showAdvancedPrice.toString()">
                     <span x-text="showAdvancedPrice ? '−' : '+'"></span>
                     <span>Advanced Price Settings</span>
                 </button>
@@ -45,8 +66,7 @@
             <div class="service-price-layout-reveal" x-cloak x-show="showAdvancedPrice"
                 x-transition:enter="service-price-layout-enter"
                 x-transition:enter-start="service-price-layout-enter-start"
-                x-transition:enter-end="service-price-layout-enter-end"
-                x-transition:leave="service-price-layout-leave"
+                x-transition:enter-end="service-price-layout-enter-end" x-transition:leave="service-price-layout-leave"
                 x-transition:leave-start="service-price-layout-leave-start"
                 x-transition:leave-end="service-price-layout-leave-end">
         @endif
@@ -59,51 +79,107 @@
                 <div class="service-price-by-size-card">
                     <div class="service-price-by-size-row">
                         <p>Small 0-7 kg</p>
-                        <x-business-hub.services.price-number-input model="priceSmall" width="85px"
-                            increase-label="Increase small pet price" decrease-label="Decrease small pet price" />
+                        <div class="service-price-by-size-value">
+                            <div x-show="isSizeSelected('small')" x-cloak x-transition:enter="service-price-value-enter"
+                                x-transition:enter-start="service-price-value-enter-start"
+                                x-transition:enter-end="service-price-value-enter-end"
+                                x-transition:leave="service-price-value-leave"
+                                x-transition:leave-start="service-price-value-leave-start"
+                                x-transition:leave-end="service-price-value-leave-end">
+                                <x-business-hub.services.price-number-input model="priceSmall" width="85px"
+                                    increase-label="Increase small pet price"
+                                    decrease-label="Decrease small pet price" />
+                            </div>
+                            <span x-show="!isSizeSelected('small')" x-cloak class="service-duration-none"
+                                x-transition:enter="service-price-value-enter"
+                                x-transition:enter-start="service-price-value-enter-start"
+                                x-transition:enter-end="service-price-value-enter-end"
+                                x-transition:leave="service-price-value-leave"
+                                x-transition:leave-start="service-price-value-leave-start"
+                                x-transition:leave-end="service-price-value-leave-end">—</span>
+                        </div>
                     </div>
                     <div class="service-price-by-size-row">
                         <p>Medium 8-18 kg</p>
-                        <x-business-hub.services.price-number-input model="priceMedium" width="85px"
-                            increase-label="Increase medium pet price" decrease-label="Decrease medium pet price" />
+                        <div class="service-price-by-size-value">
+                            <div x-show="isSizeSelected('medium')" x-cloak
+                                x-transition:enter="service-price-value-enter"
+                                x-transition:enter-start="service-price-value-enter-start"
+                                x-transition:enter-end="service-price-value-enter-end"
+                                x-transition:leave="service-price-value-leave"
+                                x-transition:leave-start="service-price-value-leave-start"
+                                x-transition:leave-end="service-price-value-leave-end">
+                                <x-business-hub.services.price-number-input model="priceMedium" width="85px"
+                                    increase-label="Increase medium pet price"
+                                    decrease-label="Decrease medium pet price" />
+                            </div>
+                            <span x-show="!isSizeSelected('medium')" x-cloak class="service-duration-none"
+                                x-transition:enter="service-price-value-enter"
+                                x-transition:enter-start="service-price-value-enter-start"
+                                x-transition:enter-end="service-price-value-enter-end"
+                                x-transition:leave="service-price-value-leave"
+                                x-transition:leave-start="service-price-value-leave-start"
+                                x-transition:leave-end="service-price-value-leave-end">—</span>
+                        </div>
                     </div>
                     <div class="service-price-by-size-row">
                         <p>Large 19+ kg</p>
                         @if ($largeMode === 'editable')
-                            <span x-show="priceLarge === null"
-                                class="service-duration-none service-price-large-placeholder" role="button"
-                                tabindex="0"
-                                @click="priceLargeDirty = false; priceLarge = basePrice; $nextTick(() => $refs.priceLargeInput?.focus())"
-                                @keydown.enter.prevent="priceLargeDirty = false; priceLarge = basePrice; $nextTick(() => $refs.priceLargeInput?.focus())">—</span>
-                            <div x-show="priceLarge !== null" x-cloak
-                                class="service-number-input-wrap service-number-input-wrap-currency"
-                                style="width: 85px;"
-                                @click.outside="if (!priceLargeDirty) { priceLarge = null; priceLargeDirty = false; }">
-                                <input type="number" min="0" step="0.01" x-ref="priceLargeInput"
-                                    x-model.number="priceLarge" style="width: 100%;" @input="priceLargeDirty = true" />
-                                <div class="service-number-input-controls">
-                                    <button type="button" class="service-number-step-btn"
-                                        aria-label="Increase large pet price"
-                                        @click="priceLargeDirty = true; $event.currentTarget.closest('.service-number-input-wrap').querySelector('input').stepUp(); $event.currentTarget.closest('.service-number-input-wrap').querySelector('input').dispatchEvent(new Event('input', { bubbles: true }))">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
-                                            viewBox="0 0 11 6" fill="none" aria-hidden="true">
-                                            <path d="M10.3741 5.47876L5.39527 0.499941L0.500024 5.39518"
-                                                stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" class="service-number-step-btn"
-                                        aria-label="Decrease large pet price"
-                                        @click="priceLargeDirty = true; $event.currentTarget.closest('.service-number-input-wrap').querySelector('input').stepDown(); $event.currentTarget.closest('.service-number-input-wrap').querySelector('input').dispatchEvent(new Event('input', { bubbles: true }))">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
-                                            viewBox="0 0 11 6" fill="none" aria-hidden="true">
-                                            <path d="M10.3741 0.5L5.39527 5.47882L0.500024 0.583578" stroke="#3B3731"
-                                                stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </button>
+                            <div class="service-price-by-size-value">
+                                <div x-show="isSizeSelected('large')" x-cloak
+                                    x-transition:enter="service-price-value-enter"
+                                    x-transition:enter-start="service-price-value-enter-start"
+                                    x-transition:enter-end="service-price-value-enter-end"
+                                    x-transition:leave="service-price-value-leave"
+                                    x-transition:leave-start="service-price-value-leave-start"
+                                    x-transition:leave-end="service-price-value-leave-end">
+                                    <div class="service-number-input-wrap service-number-input-wrap-currency"
+                                        style="width: 85px;">
+                                        <input type="number" min="0" step="0.01" x-ref="priceLargeInput"
+                                            x-model.number="priceLarge" style="width: 100%;"
+                                            @input="priceLargeDirty = true" />
+                                        <div class="service-number-input-controls">
+                                            <button type="button" class="service-number-step-btn"
+                                                aria-label="Increase large pet price"
+                                                @click="priceLargeDirty = true; $event.currentTarget.closest('.service-number-input-wrap').querySelector('input').stepUp(); $event.currentTarget.closest('.service-number-input-wrap').querySelector('input').dispatchEvent(new Event('input', { bubbles: true }))">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
+                                                    viewBox="0 0 11 6" fill="none" aria-hidden="true">
+                                                    <path d="M10.3741 5.47876L5.39527 0.499941L0.500024 5.39518"
+                                                        stroke="#3B3731" stroke-linecap="round"
+                                                        stroke-linejoin="round" />
+                                                </svg>
+                                            </button>
+                                            <button type="button" class="service-number-step-btn"
+                                                aria-label="Decrease large pet price"
+                                                @click="priceLargeDirty = true; $event.currentTarget.closest('.service-number-input-wrap').querySelector('input').stepDown(); $event.currentTarget.closest('.service-number-input-wrap').querySelector('input').dispatchEvent(new Event('input', { bubbles: true }))">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
+                                                    viewBox="0 0 11 6" fill="none" aria-hidden="true">
+                                                    <path d="M10.3741 0.5L5.39527 5.47882L0.500024 0.583578"
+                                                        stroke="#3B3731" stroke-linecap="round"
+                                                        stroke-linejoin="round" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
+                                <span x-show="!isSizeSelected('large')" x-cloak class="service-duration-none"
+                                    x-transition:enter="service-price-value-enter"
+                                    x-transition:enter-start="service-price-value-enter-start"
+                                    x-transition:enter-end="service-price-value-enter-end"
+                                    x-transition:leave="service-price-value-leave"
+                                    x-transition:leave-start="service-price-value-leave-start"
+                                    x-transition:leave-end="service-price-value-leave-end">—</span>
                             </div>
                         @else
-                            <span class="service-duration-none">—</span>
+                            <div class="service-price-by-size-value">
+                                <span x-show="!isSizeSelected('large')" x-cloak class="service-duration-none"
+                                    x-transition:enter="service-price-value-enter"
+                                    x-transition:enter-start="service-price-value-enter-start"
+                                    x-transition:enter-end="service-price-value-enter-end"
+                                    x-transition:leave="service-price-value-leave"
+                                    x-transition:leave-start="service-price-value-leave-start"
+                                    x-transition:leave-end="service-price-value-leave-end">—</span>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -112,22 +188,20 @@
             <x-business-hub.services.price-overtime :muted-label="$mutedOvertimeLabel" :options="$overtimeOptions" />
         </div>
         @if ($showAdvanced)
-            </div>
-        @endif
-    @else
-        @if ($showAdvanced)
-            <div class="service-overtime-reveal" x-cloak x-show="showAdvancedPrice"
-                x-transition:enter="service-overtime-enter"
-                x-transition:enter-start="service-overtime-enter-start"
-                x-transition:enter-end="service-overtime-enter-end" x-transition:leave="service-overtime-leave"
-                x-transition:leave-start="service-overtime-leave-start"
-                x-transition:leave-end="service-overtime-leave-end">
-                <x-business-hub.services.price-overtime :muted-label="$mutedOvertimeLabel" :options="$overtimeOptions" />
-            </div>
-        @else
-            <x-business-hub.services.price-overtime :muted-label="$mutedOvertimeLabel" :options="$overtimeOptions" />
-        @endif
-    @endif
+</div>
+@endif
+@else
+@if ($showAdvanced)
+    <div class="service-overtime-reveal" x-cloak x-show="showAdvancedPrice"
+        x-transition:enter="service-overtime-enter" x-transition:enter-start="service-overtime-enter-start"
+        x-transition:enter-end="service-overtime-enter-end" x-transition:leave="service-overtime-leave"
+        x-transition:leave-start="service-overtime-leave-start" x-transition:leave-end="service-overtime-leave-end">
+        <x-business-hub.services.price-overtime :muted-label="$mutedOvertimeLabel" :options="$overtimeOptions" />
+    </div>
+@else
+    <x-business-hub.services.price-overtime :muted-label="$mutedOvertimeLabel" :options="$overtimeOptions" />
+@endif
+@endif
 </div>
 
 @once
@@ -326,6 +400,55 @@
             grid-template-columns: 1fr 190px;
             align-items: center;
             gap: 0.8rem;
+        }
+
+        .service-price-fieldset .service-price-by-size-value {
+            position: relative;
+            width: 85px;
+            height: 48px;
+            justify-self: end;
+        }
+
+        .service-price-fieldset .service-price-by-size-value>div,
+        .service-price-fieldset .service-price-by-size-value>.service-duration-none {
+            position: absolute;
+            inset: 0;
+        }
+
+        .service-price-fieldset .service-price-value-enter {
+            transition: opacity 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .service-price-fieldset .service-price-value-enter-start {
+            opacity: 0;
+            transform: translateY(6px) scale(0.97);
+        }
+
+        .service-price-fieldset .service-price-value-enter-end {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .service-price-fieldset .service-price-value-leave {
+            transition: opacity 180ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .service-price-fieldset .service-price-value-leave-start {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .service-price-fieldset .service-price-value-leave-end {
+            opacity: 0;
+            transform: translateY(-4px) scale(0.97);
+        }
+
+        .service-price-fieldset .service-price-by-size-value .service-duration-none {
+            width: 85px;
+            align-items: center;
+            padding-left: 1.25rem;
         }
 
         .service-price-fieldset .service-price-by-size-row p {

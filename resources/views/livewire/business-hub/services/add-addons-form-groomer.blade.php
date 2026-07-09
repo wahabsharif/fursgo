@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\GroomerSpacerProfile;
 use App\Models\AddOn;
 use Livewire\Volt\Component;
 
@@ -17,10 +16,11 @@ new class extends Component {
     public string $bufferTime = '15 min';
     public string $durationSmall = '15 min';
     public string $durationMedium = '30 min';
-    public string $durationLarge = '';
+    public string $durationLarge = '45 min';
     public float $basePrice = 35;
     public float $priceSmall = 35;
     public float $priceMedium = 45;
+    public ?float $priceLarge = null;
     public float $overtimeCharge = 10;
     public string $overtimePer = '15 min';
 
@@ -34,6 +34,30 @@ new class extends Component {
         return isset($matches[0]) ? (int) $matches[0] : '';
     }
 
+    private function hasSize(string $size): bool
+    {
+        return in_array($size, $this->selectedSizes, true);
+    }
+
+    private function durationForSize(string $size, string $duration): int|string
+    {
+        return $this->hasSize($size) ? $this->parseMinutes($duration) : '';
+    }
+
+    private function priceForSize(string $size, float $price): float|string
+    {
+        return $this->hasSize($size) ? (float) $price : '';
+    }
+
+    private function priceForLarge(): float|string
+    {
+        if (!$this->hasSize('large') || $this->priceLarge === null) {
+            return '';
+        }
+
+        return (float) $this->priceLarge;
+    }
+
     public function save(): void
     {
         $this->validate([
@@ -41,16 +65,15 @@ new class extends Component {
             'description' => ['nullable', 'string'],
         ]);
 
-        $email = (string) data_get(auth()->user(), 'email', '');
-        $profile = GroomerSpacerProfile::where('email', $email)->first();
+        $profileId = auth()->id();
 
-        if (!$profile) {
+        if (!$profileId) {
             $this->addError('addOnsName', 'Groomer/Spacer profile not found for current user.');
             return;
         }
 
         $addOn = AddOn::create([
-            'groomer_spacer_id' => $profile->id,
+            'groomer_spacer_id' => $profileId,
             'add_ons_name' => $this->addOnsName,
             'description' => $this->description !== '' ? $this->description : '',
             'pet_compatibility' => [
@@ -62,18 +85,18 @@ new class extends Component {
                 'base_duration' => $this->parseMinutes($this->baseDuration),
                 'buffer_time' => $this->parseMinutes($this->bufferTime),
                 'duration_by_size' => [
-                    'small' => $this->parseMinutes($this->durationSmall),
-                    'medium' => $this->parseMinutes($this->durationMedium),
-                    'large' => $this->parseMinutes($this->durationLarge !== '' ? $this->durationLarge : $this->baseDuration),
+                    'small' => $this->durationForSize('small', $this->durationSmall),
+                    'medium' => $this->durationForSize('medium', $this->durationMedium),
+                    'large' => $this->durationForSize('large', $this->durationLarge),
                 ],
             ],
             'pricing' => [
                 'base_price' => (float) $this->basePrice,
                 'overtime_charge' => ['price' => (float) $this->overtimeCharge, 'per' => $this->overtimePer],
                 'pricing_by_size' => [
-                    'small' => (float) $this->priceSmall,
-                    'medium' => (float) $this->priceMedium,
-                    'large' => (float) $this->basePrice,
+                    'small' => $this->priceForSize('small', $this->priceSmall),
+                    'medium' => $this->priceForSize('medium', $this->priceMedium),
+                    'large' => $this->priceForLarge(),
                 ],
             ],
             'add_ons_compatibility' => $this->addOnsCompatibility,
@@ -81,14 +104,12 @@ new class extends Component {
         ]);
 
         $this->dispatch('add-on-created', itemId: $addOn->id);
-        $this->dispatch('service-form-cancel');
         $this->reset(['addOnsName', 'description', 'otherPets', 'otherPetInput']);
     }
 }; ?>
 
 <section class="service-form-wrapper" aria-label="Add service form" x-data="{ addOnsCompatibility: $wire.entangle('addOnsCompatibility').live, visibilityControls: $wire.entangle('visibilityControls').live }">
-    <form class="service-form" wire:submit.prevent="save"
-        x-on:submit="window.dispatchEvent(new CustomEvent('nav-list-loading-start'))">
+    <form class="service-form" wire:submit.prevent="save">
         <div class="service-form-grid">
             <label class="service-field" style="width: 400px;">
                 <span>Add-ons Name</span>
@@ -106,7 +127,7 @@ new class extends Component {
 
         <x-business-hub.services.duration show-by-size show-advanced large-mode="dropdown" />
 
-        <x-business-hub.services.price show-by-size show-advanced large-mode="placeholder" />
+        <x-business-hub.services.price show-by-size show-advanced large-mode="editable" />
 
         <div class="service-fieldset">
             <h4>Visibility Controls</h4>

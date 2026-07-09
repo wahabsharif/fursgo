@@ -17,7 +17,8 @@
     baseDuration: @entangle('baseDuration').live,
     bufferTime: @entangle('bufferTime').live,
     showAdvancedDuration: @js(!$showAdvanced),
-    @if ($showBySize) durationSmall: @entangle('durationSmall').live,
+    @if ($showBySize) selectedSizes: @entangle('selectedSizes').live,
+            durationSmall: @entangle('durationSmall').live,
             durationMedium: @entangle('durationMedium').live,
             @if ($largeMode === 'dropdown')
                 durationLarge: @entangle('durationLarge').live, @endif
@@ -32,6 +33,29 @@
     isDurationEmpty(value) {
         return value === null || value === '';
     },
+    @if ($showBySize) isSizeSelected(size) {
+            return this.selectedSizes.includes(size);
+        },
+        @if ($largeMode === 'dropdown')
+        init() {
+            const syncDurationBySize = (sizes) => {
+                if (sizes.includes('large') && this.isDurationEmpty(this.durationLarge)) {
+                    this.durationLarge = @js($largeDurationOptions[0]);
+                }
+                if (!sizes.includes('small')) {
+                    this.openDurationSmall = false;
+                }
+                if (!sizes.includes('medium')) {
+                    this.openDurationMedium = false;
+                }
+                if (!sizes.includes('large')) {
+                    this.openDurationLarge = false;
+                }
+            };
+            syncDurationBySize(this.selectedSizes);
+            this.$watch('selectedSizes', syncDurationBySize);
+        }, @endif
+    @endif
 }" {{ $attributes }}>
     <h4>{{ $title }}</h4>
     <div class="service-form-grid">
@@ -77,21 +101,70 @@
             <div class="service-duration-by-size-card">
                 <div class="service-duration-by-size-row">
                     <p>Small 0-7 kg</p>
-                    <x-business-hub.services.duration-select model="durationSmall" open-key="openDurationSmall"
-                        :options="$smallDurationOptions" :by-size="true" />
+                    <div class="service-duration-by-size-value">
+                        <div x-show="isSizeSelected('small')" x-cloak x-transition:enter="service-duration-value-enter"
+                            x-transition:enter-start="service-duration-value-enter-start"
+                            x-transition:enter-end="service-duration-value-enter-end"
+                            x-transition:leave="service-duration-value-leave"
+                            x-transition:leave-start="service-duration-value-leave-start"
+                            x-transition:leave-end="service-duration-value-leave-end">
+                            <x-business-hub.services.duration-select model="durationSmall" open-key="openDurationSmall"
+                                :options="$smallDurationOptions" :by-size="true" />
+                        </div>
+                        <span x-show="!isSizeSelected('small')" x-cloak class="service-duration-none"
+                            x-transition:enter="service-duration-value-enter"
+                            x-transition:enter-start="service-duration-value-enter-start"
+                            x-transition:enter-end="service-duration-value-enter-end"
+                            x-transition:leave="service-duration-value-leave"
+                            x-transition:leave-start="service-duration-value-leave-start"
+                            x-transition:leave-end="service-duration-value-leave-end">—</span>
+                    </div>
                 </div>
 
                 <div class="service-duration-by-size-row">
                     <p>Medium 8-18 kg</p>
-                    <x-business-hub.services.duration-select model="durationMedium" open-key="openDurationMedium"
-                        :options="$mediumDurationOptions" :by-size="true" />
+                    <div class="service-duration-by-size-value">
+                        <div x-show="isSizeSelected('medium')" x-cloak x-transition:enter="service-duration-value-enter"
+                            x-transition:enter-start="service-duration-value-enter-start"
+                            x-transition:enter-end="service-duration-value-enter-end"
+                            x-transition:leave="service-duration-value-leave"
+                            x-transition:leave-start="service-duration-value-leave-start"
+                            x-transition:leave-end="service-duration-value-leave-end">
+                            <x-business-hub.services.duration-select model="durationMedium"
+                                open-key="openDurationMedium" :options="$mediumDurationOptions" :by-size="true" />
+                        </div>
+                        <span x-show="!isSizeSelected('medium')" x-cloak class="service-duration-none"
+                            x-transition:enter="service-duration-value-enter"
+                            x-transition:enter-start="service-duration-value-enter-start"
+                            x-transition:enter-end="service-duration-value-enter-end"
+                            x-transition:leave="service-duration-value-leave"
+                            x-transition:leave-start="service-duration-value-leave-start"
+                            x-transition:leave-end="service-duration-value-leave-end">—</span>
+                    </div>
                 </div>
 
                 <div class="service-duration-by-size-row">
                     <p>Large 19+ kg</p>
                     @if ($largeMode === 'dropdown')
-                        <x-business-hub.services.duration-select model="durationLarge" open-key="openDurationLarge"
-                            :options="$largeDurationOptions" :by-size="true" :allow-empty="true" />
+                        <div class="service-duration-by-size-value">
+                            <div x-show="isSizeSelected('large')" x-cloak
+                                x-transition:enter="service-duration-value-enter"
+                                x-transition:enter-start="service-duration-value-enter-start"
+                                x-transition:enter-end="service-duration-value-enter-end"
+                                x-transition:leave="service-duration-value-leave"
+                                x-transition:leave-start="service-duration-value-leave-start"
+                                x-transition:leave-end="service-duration-value-leave-end">
+                                <x-business-hub.services.duration-select model="durationLarge"
+                                    open-key="openDurationLarge" :options="$largeDurationOptions" :by-size="true" />
+                            </div>
+                            <span x-show="!isSizeSelected('large')" x-cloak class="service-duration-none"
+                                x-transition:enter="service-duration-value-enter"
+                                x-transition:enter-start="service-duration-value-enter-start"
+                                x-transition:enter-end="service-duration-value-enter-end"
+                                x-transition:leave="service-duration-value-leave"
+                                x-transition:leave-start="service-duration-value-leave-start"
+                                x-transition:leave-end="service-duration-value-leave-end">—</span>
+                        </div>
                     @else
                         <span class="service-duration-none">—</span>
                     @endif
@@ -99,9 +172,9 @@
             </div>
         </div>
         @if ($showAdvanced)
-            </div>
-        @endif
-    @endif
+</div>
+@endif
+@endif
 </div>
 
 @once
@@ -290,6 +363,49 @@
             justify-content: space-between;
             align-items: center;
             gap: 1rem;
+        }
+
+        .service-duration-fieldset .service-duration-by-size-value {
+            position: relative;
+            width: 165px;
+            height: 48px;
+            flex-shrink: 0;
+        }
+
+        .service-duration-fieldset .service-duration-by-size-value>div,
+        .service-duration-fieldset .service-duration-by-size-value>.service-duration-none {
+            position: absolute;
+            inset: 0;
+        }
+
+        .service-duration-fieldset .service-duration-value-enter {
+            transition: opacity 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .service-duration-fieldset .service-duration-value-enter-start {
+            opacity: 0;
+            transform: translateY(6px) scale(0.97);
+        }
+
+        .service-duration-fieldset .service-duration-value-enter-end {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .service-duration-fieldset .service-duration-value-leave {
+            transition: opacity 180ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .service-duration-fieldset .service-duration-value-leave-start {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .service-duration-fieldset .service-duration-value-leave-end {
+            opacity: 0;
+            transform: translateY(-4px) scale(0.97);
         }
 
         .service-duration-fieldset .service-duration-by-size-row p {

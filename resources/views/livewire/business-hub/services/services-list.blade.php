@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\GroomerSpacerProfile;
 use App\Models\Service;
 use Livewire\Attributes\On;
 use Livewire\Volt\Component;
@@ -10,28 +9,33 @@ new class extends Component {
 
     public ?int $highlightItemId = null;
 
+    private function profileId(): ?int
+    {
+        $id = auth()->id();
+
+        return $id ? (int) $id : null;
+    }
+
     public function getServicesProperty()
     {
-        $email = (string) data_get(auth()->user(), 'email', '');
-        $profile = GroomerSpacerProfile::where('email', $email)->first();
+        $profileId = $this->profileId();
 
-        if (!$profile) {
+        if (!$profileId) {
             return collect();
         }
 
-        return Service::query()->where('groomer_spacer_id', $profile->id)->latest()->limit($this->perPage)->get();
+        return Service::query()->where('groomer_spacer_id', $profileId)->latest()->limit($this->perPage)->get();
     }
 
     public function getTotalServicesProperty(): int
     {
-        $email = (string) data_get(auth()->user(), 'email', '');
-        $profile = GroomerSpacerProfile::where('email', $email)->first();
+        $profileId = $this->profileId();
 
-        if (!$profile) {
+        if (!$profileId) {
             return 0;
         }
 
-        return (int) Service::query()->where('groomer_spacer_id', $profile->id)->count();
+        return (int) Service::query()->where('groomer_spacer_id', $profileId)->count();
     }
 
     public function getCanLoadMoreProperty(): bool

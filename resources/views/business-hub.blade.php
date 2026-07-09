@@ -14,7 +14,7 @@
         x-on:nav-list-loading-end.window="navLoading = false; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; }"
         x-on:client-profile-visible.window="clientProfileOpen = !!$event.detail?.visible"
         x-on:service-form-opened.window="serviceFormOpen = true"
-        x-on:service-form-cancel.window="serviceFormOpen = false"
+        x-on:service-form-closed.window="serviceFormOpen = false"
         x-on:services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'"
         x-on:earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'">
         <template x-if="activeSection === 'bookings'">
@@ -93,7 +93,7 @@
         <template x-if="activeSection === 'services'">
             <div class="active-section-header active-section-header-services">
                 <button type="button" class="service-list-header-btn" x-cloak x-show="serviceFormOpen"
-                    @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); window.dispatchEvent(new CustomEvent('service-form-cancel'))">
+                    @click="window.dispatchEvent(new CustomEvent('service-form-cancel'))">
                     <svg xmlns="http://www.w3.org/2000/svg" width="17" height="11" viewBox="0 0 17 11"
                         fill="none">
                         <path

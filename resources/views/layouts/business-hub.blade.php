@@ -35,6 +35,25 @@
     @yield('styles')
     @stack('styles')
 
+    @if ($isDashboardHub)
+        <script>
+            (function() {
+                if ('scrollRestoration' in history) {
+                    history.scrollRestoration = 'manual';
+                }
+
+                window.__scrollBusinessHubToTop = function() {
+                    const root = document.scrollingElement || document.documentElement;
+                    root.scrollTop = 0;
+                    document.body.scrollTop = 0;
+                    window.scrollTo(0, 0);
+                };
+
+                window.__scrollBusinessHubToTop();
+            })();
+        </script>
+    @endif
+
 </head>
 
 <body class="dashboard-shell dashboard-shell--{{ $dashboardNavView }}" x-data="{
@@ -44,6 +63,8 @@
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const behavior = smooth && !reduceMotion ? 'smooth' : 'auto';
         if (smooth && root.scrollTop < 40) return;
+        root.scrollTop = 0;
+        document.body.scrollTop = 0;
         window.scrollTo({ top: 0, left: 0, behavior });
     },
     persistBusinessHubNav(detail = {}) {
@@ -72,10 +93,13 @@
             keepalive: true,
         }).catch(() => {});
     },
-}" x-init="$watch('activeSection', (section) => {
+}" x-init="scrollDashboardToTop(false);
+$watch('activeSection', (section) => {
     scrollDashboardToTop(true);
     persistBusinessHubNav({ section });
 });
+window.addEventListener('pageshow', () => scrollDashboardToTop(false));
+window.addEventListener('load', () => scrollDashboardToTop(false));
 window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNav(event.detail ?? {}));">
 
     <x-common.header variant="dashboard" :dashboard-nav-view="$dashboardNavView" />
@@ -173,9 +197,7 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
         window.__dashboardNavCsrf = @json(csrf_token());
 
         document.addEventListener('DOMContentLoaded', () => {
-            window.scrollTo(0, 0);
-            document.documentElement.scrollTop = 0;
-            document.body.scrollTop = 0;
+            window.__scrollBusinessHubToTop?.();
 
             const panel = document.querySelector('.dashboard-info-panel--for-groomers');
             if (panel) {
@@ -186,6 +208,12 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
             if (helpPanel) {
                 helpPanel.dispatchEvent(new CustomEvent('help-centre-mounted'));
             }
+        });
+
+        document.addEventListener('livewire:initialized', () => {
+            requestAnimationFrame(() => {
+                window.__scrollBusinessHubToTop?.();
+            });
         });
 
         document.addEventListener('livewire:navigated', () => {
@@ -208,14 +236,6 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
                 left: 0,
                 behavior: reduceMotion ? 'auto' : 'smooth',
             });
-        });
-
-        window.addEventListener('pageshow', (event) => {
-            if (event.persisted) {
-                window.scrollTo(0, 0);
-                document.documentElement.scrollTop = 0;
-                document.body.scrollTop = 0;
-            }
         });
     </script>
 

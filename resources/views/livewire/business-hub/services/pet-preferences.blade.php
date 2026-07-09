@@ -99,12 +99,25 @@ new class extends Component {
         $this->editTypes = false;
     }
 
+    public function cancelTypePreferences(): void
+    {
+        $this->loadPreference();
+        $this->otherPetInput = '';
+        $this->editTypes = false;
+    }
+
     public function saveSizePreferences(): void
     {
         $this->upsertPreference([
             'pet_sizes' => array_values($this->petSizes),
         ]);
 
+        $this->editSizes = false;
+    }
+
+    public function cancelSizePreferences(): void
+    {
+        $this->loadPreference();
         $this->editSizes = false;
     }
 
@@ -148,6 +161,8 @@ new class extends Component {
             otherInput: @entangle('otherPetInput').live,
             otherList: [],
             removingKeys: [],
+            originalPetTypes: [],
+            originalOtherPetsText: '',
             toggleType(type) {
                 if (!this.editTypes) return;
                 if (this.petTypes.includes(type)) {
@@ -157,11 +172,24 @@ new class extends Component {
                 }
             },
             openTypesEdit() {
+                this.originalPetTypes = [...this.petTypes];
+                this.originalOtherPetsText = this.otherPetsText;
                 this.otherList = this.otherPetsText
                     .split(',')
                     .map((item) => item.trim())
                     .filter(Boolean);
                 this.editTypes = true;
+            },
+            cancelTypesEdit() {
+                this.petTypes = [...this.originalPetTypes];
+                this.otherPetsText = this.originalOtherPetsText;
+                this.otherInput = '';
+                this.otherList = this.otherPetsText
+                    .split(',')
+                    .map((item) => item.trim())
+                    .filter(Boolean);
+                this.removingKeys = [];
+                this.editTypes = false;
             },
             addByEnter() {
                 const candidate = this.otherInput.trim();
@@ -183,7 +211,8 @@ new class extends Component {
                     this.removingKeys = this.removingKeys.filter((key) => key !== removeKey);
                 }, 190);
             },
-        }" :class="{ 'is-editing': editTypes }">
+        }" :class="{ 'is-editing': editTypes }"
+            @keydown.escape.window="if (editTypes) { cancelTypesEdit() }">
             <div class="pet-preferences-card-head">
                 <h4>Pet Types Accepted</h4>
                 <button type="button" class="pet-pref-edit-btn" x-show="!editTypes"
@@ -314,6 +343,15 @@ new class extends Component {
             x-data="{
                 editSizes: @entangle('editSizes').live,
                 petSizes: @entangle('petSizes').live,
+                originalPetSizes: [],
+                openSizesEdit() {
+                    this.originalPetSizes = [...this.petSizes];
+                    this.editSizes = true;
+                },
+                cancelSizesEdit() {
+                    this.petSizes = [...this.originalPetSizes];
+                    this.editSizes = false;
+                },
                 toggleSize(size) {
                     if (!this.editSizes) return;
                     if (this.petSizes.includes(size)) {
@@ -322,14 +360,15 @@ new class extends Component {
                         this.petSizes.push(size);
                     }
                 },
-            }" :class="{ 'is-editing': editSizes }">
+            }" :class="{ 'is-editing': editSizes }"
+            @keydown.escape.window="if (editSizes) { cancelSizesEdit() }">
             <div class="pet-preferences-card-head">
                 <h4>Pet Size Accepted</h4>
                 <button type="button" class="pet-pref-edit-btn" x-show="!editSizes"
                     x-transition:enter="pet-pref-fade-enter" x-transition:enter-start="pet-pref-fade-enter-start"
                     x-transition:enter-end="pet-pref-fade-enter-end" x-transition:leave="pet-pref-fade-leave"
                     x-transition:leave-start="pet-pref-fade-leave-start"
-                    x-transition:leave-end="pet-pref-fade-leave-end" @click="editSizes = true"
+                    x-transition:leave-end="pet-pref-fade-leave-end" @click="openSizesEdit()"
                     aria-label="Edit pet sizes">
                     <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16"
                         fill="none">

@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\GroomerSpacerProfile;
 use App\Models\Service;
 use Livewire\Volt\Component;
 
@@ -36,16 +35,15 @@ new class extends Component {
             'description' => ['nullable', 'string'],
         ]);
 
-        $email = (string) data_get(auth()->user(), 'email', '');
-        $profile = GroomerSpacerProfile::where('email', $email)->first();
+        $profileId = auth()->id();
 
-        if (!$profile) {
+        if (!$profileId) {
             $this->addError('serviceName', 'Groomer/Spacer profile not found for current user.');
             return;
         }
 
         $service = Service::create([
-            'groomer_spacer_id' => $profile->id,
+            'groomer_spacer_id' => $profileId,
             'service_name' => $this->serviceName,
             'description' => $this->description !== '' ? $this->description : '',
             'pet_compatibility' => [
@@ -76,14 +74,12 @@ new class extends Component {
         ]);
 
         $this->dispatch('service-created', itemId: $service->id);
-        $this->dispatch('service-form-cancel');
         $this->reset();
     }
 }; ?>
 
 <section class="service-form-wrapper" aria-label="Add service form" x-data="{ addOnsCompatibility: $wire.entangle('addOnsCompatibility').live, visibilityControls: $wire.entangle('visibilityControls').live }">
-    <form class="service-form" wire:submit.prevent="save"
-        x-on:submit="window.dispatchEvent(new CustomEvent('nav-list-loading-start'))">
+    <form class="service-form" wire:submit.prevent="save">
         <div class="service-form-grid">
             <label class="service-field" style="width: 400px;">
                 <span>Service Name</span>

@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\GroomerSpacerProfile;
 use App\Models\AddOn;
 use Livewire\Volt\Component;
 
@@ -33,16 +32,15 @@ new class extends Component {
             'description' => ['nullable', 'string'],
         ]);
 
-        $email = (string) data_get(auth()->user(), 'email', '');
-        $profile = GroomerSpacerProfile::where('email', $email)->first();
+        $profileId = auth()->id();
 
-        if (!$profile) {
+        if (!$profileId) {
             $this->addError('addOnsName', 'Groomer/Spacer profile not found for current user.');
             return;
         }
 
         $addOn = AddOn::create([
-            'groomer_spacer_id' => $profile->id,
+            'groomer_spacer_id' => $profileId,
             'add_ons_name' => $this->addOnsName,
             'description' => $this->description !== '' ? $this->description : '',
             'pet_compatibility' => [
@@ -65,14 +63,12 @@ new class extends Component {
         ]);
 
         $this->dispatch('add-on-created', itemId: $addOn->id);
-        $this->dispatch('service-form-cancel');
         $this->reset(['addOnsName', 'description', 'otherPets', 'otherPetInput']);
     }
 }; ?>
 
 <section class="service-form-wrapper" aria-label="Add service form" x-data="{ visibilityControls: $wire.entangle('visibilityControls').live }">
-    <form class="service-form" wire:submit.prevent="save"
-        x-on:submit="window.dispatchEvent(new CustomEvent('nav-list-loading-start'))">
+    <form class="service-form" wire:submit.prevent="save">
         <div class="service-form-grid">
             <label class="service-field" style="width: 400px;">
                 <span>Add-on Name</span>

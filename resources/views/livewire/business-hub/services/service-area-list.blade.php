@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\GroomerSpacerProfile;
 use App\Models\ServiceArea;
 use Livewire\Attributes\On;
 use Livewire\Volt\Component;
@@ -12,10 +11,9 @@ new class extends Component {
 
     private function getProfileId(): ?int
     {
-        $email = (string) data_get(auth()->user(), 'email', '');
-        $profile = GroomerSpacerProfile::where('email', $email)->first();
+        $id = auth()->id();
 
-        return $profile?->id;
+        return $id ? (int) $id : null;
     }
 
     public function getServiceAreasProperty(): array
