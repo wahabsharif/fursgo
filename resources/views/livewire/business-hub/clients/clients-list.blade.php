@@ -20,6 +20,24 @@ new class extends Component {
 
     public ?int $completedBookingId = null;
 
+    public ?int $declineBookingId = null;
+
+    public $rescheduleCalendarBookings;
+
+    public ?int $rescheduleBookingId = null;
+
+    public ?string $rescheduleCalendarMonth = null;
+
+    public ?string $rescheduleSelectedDate = null;
+
+    public ?string $rescheduleSelectedTime = null;
+
+    public int $rescheduleDurationMinutes = 60;
+
+    private array $reschedulableStatuses = ['pending', 'confirmed'];
+
+    private array $declinableStatuses = ['pending', 'confirmed'];
+
     private const PET_LIST_COLUMNS = ['id', 'user_id', 'name', 'pet_type', 'breed', 'sex', 'birthday', 'weight', 'notes', 'photo'];
 
     public ?int $selectedClientId = null;
@@ -96,6 +114,16 @@ new class extends Component {
     private function spacerId(): int
     {
         return (int) (auth('groomer_spacer')->id() ?? 0);
+    }
+
+    private function scopedClientBookingQuery(int $bookingId)
+    {
+        return Booking::query()->where('goormer_spacer_id', $this->spacerId())->where('pet_owner_id', $this->selectedClientId)->whereKey($bookingId);
+    }
+
+    private function refreshAfterBookingChange(): void
+    {
+        unset($this->allClientRows, $this->profileBookings, $this->profileSummary, $this->profileMeta, $this->profileTabCounts, $this->profileTabBookings, $this->profileVisibleTabBookings, $this->profileCanLoadMore);
     }
 
     private function clientInitialsFromName(?string $name): string
@@ -337,6 +365,8 @@ new class extends Component {
         $this->profilePetSort = 'name_asc';
         $this->profilePerPage = 6;
         $this->completedBookingId = null;
+        $this->closeRescheduleModal();
+        $this->closeDeclineModal();
         $this->profileIsBlocked = ($this->profileClient?->user_status ?? 'active') === 'blocked';
         $this->resetReviewReplyDraft();
     }
@@ -346,6 +376,8 @@ new class extends Component {
         $this->selectedClientId = null;
         $this->selectedPetId = null;
         $this->completedBookingId = null;
+        $this->closeRescheduleModal();
+        $this->closeDeclineModal();
         $this->resetReviewReplyDraft();
     }
 
@@ -425,6 +457,8 @@ new class extends Component {
         ]);
 
         $this->resetReviewReplyDraft();
+
+        unset($this->profileReviews, $this->profileTabReviews, $this->profileVisibleTabReviews, $this->profileSummary, $this->profileMeta, $this->profileTabCounts);
     }
 
     public function openCompletedBookingModal(int $bookingId): void
@@ -445,6 +479,163 @@ new class extends Component {
     public function closeCompletedBookingModal(): void
     {
         $this->completedBookingId = null;
+    }
+
+    public function cancelBooking(int $bookingId): void
+    {
+        if (!$this->selectedClientId) {
+            return;
+        }
+
+        $booking = $this->scopedClientBookingQuery($bookingId)->first();
+
+        if (!$booking || !in_array($booking->booking_status, $this->declinableStatuses, true)) {
+            return;
+        }
+
+        $booking->update(['booking_status' => 'cancelled']);
+        $this->refreshAfterBookingChange();
+    }
+
+    public function openDeclineModal(int $bookingId): void
+    {
+        if (!$this->selectedClientId) {
+            return;
+        }
+
+        $booking = $this->scopedClientBookingQuery($bookingId)->whereIn('booking_status', $this->declinableStatuses)->first();
+
+        if (!$booking || !$booking->date || $booking->date->lt(today())) {
+            return;
+        }
+
+        $this->declineBookingId = $bookingId;
+        $this->dispatch('decline-modal-opened');
+    }
+
+    public function closeDeclineModal(): void
+    {
+        $this->declineBookingId = null;
+        $this->dispatch('decline-modal-closed');
+    }
+
+    public function confirmDeclineBooking(): void
+    {
+        if ($this->declineBookingId === null) {
+            return;
+        }
+
+        $this->cancelBooking($this->declineBookingId);
+        $this->declineBookingId = null;
+        $this->dispatch('decline-modal-closed');
+    }
+
+    public function openRescheduleModal(int $bookingId): void
+    {
+        if (!$this->selectedClientId) {
+            return;
+        }
+
+        $booking = $this->scopedClientBookingQuery($bookingId)->whereIn('booking_status', $this->reschedulableStatuses)->first();
+
+        if (!$booking || !$booking->date || $booking->date->lt(today())) {
+            return;
+        }
+
+        $this->rescheduleBookingId = $bookingId;
+        $currentDate = date('Y-m-d', strtotime((string) $booking->date));
+        $this->rescheduleSelectedDate = $currentDate;
+        $this->rescheduleCalendarMonth = date('Y-m-01', strtotime($currentDate));
+        $this->rescheduleDurationMinutes = 60;
+        $this->rescheduleSelectedTime = null;
+        $this->rescheduleCalendarBookings = Booking::query()
+            ->where('goormer_spacer_id', $this->spacerId())
+            ->where('booking_status', '!=', 'cancelled')
+            ->select(['id', 'date', 'booking_status'])
+            ->get();
+
+        $timeRaw = trim((string) $booking->time);
+        if (preg_match('/(\d{1,2}:\d{2})/', $timeRaw, $mStart)) {
+            $this->rescheduleSelectedTime = date('h:i A', strtotime($mStart[1]));
+        }
+
+        if (str_contains($timeRaw, '-')) {
+            $parts = preg_split('/\s*-\s*/', $timeRaw, 2);
+            $start = $parts[0] ?? '';
+            $end = $parts[1] ?? '';
+            preg_match('/(\d{1,2}:\d{2})/', $start, $mStart);
+            preg_match('/(\d{1,2}:\d{2})/', $end, $mEnd);
+            if (!empty($mStart[1]) && !empty($mEnd[1])) {
+                try {
+                    $startTs = strtotime($mStart[1]);
+                    $endTs = strtotime($mEnd[1]);
+                    if ($endTs < $startTs) {
+                        $endTs = strtotime('+1 day', $endTs);
+                    }
+                    $this->rescheduleDurationMinutes = (int) max(1, ($endTs - $startTs) / 60);
+                } catch (\Throwable $e) {
+                    $this->rescheduleDurationMinutes = 60;
+                }
+            }
+        }
+
+        $this->dispatch('reschedule-modal-opened');
+    }
+
+    public function closeRescheduleModal(): void
+    {
+        $this->rescheduleBookingId = null;
+        $this->rescheduleCalendarMonth = null;
+        $this->rescheduleSelectedDate = null;
+        $this->rescheduleSelectedTime = null;
+        $this->rescheduleDurationMinutes = 60;
+        $this->rescheduleCalendarBookings = collect();
+        $this->dispatch('reschedule-modal-closed');
+    }
+
+    public function confirmRescheduleBooking(): void
+    {
+        if (!$this->rescheduleBookingId || !$this->rescheduleSelectedDate || !$this->rescheduleSelectedTime || !$this->selectedClientId) {
+            return;
+        }
+
+        $booking = $this->scopedClientBookingQuery($this->rescheduleBookingId)->whereIn('booking_status', $this->reschedulableStatuses)->first();
+
+        if (!$booking) {
+            $this->closeRescheduleModal();
+
+            return;
+        }
+
+        $start = DateTime::createFromFormat('h:i A', $this->rescheduleSelectedTime);
+        if (!$start) {
+            return;
+        }
+
+        $duration = max(1, $this->rescheduleDurationMinutes);
+        $end = (clone $start)->modify('+' . $duration . ' minutes');
+        $timeRange = $start->format('H:i') . ' - ' . $end->format('H:i');
+
+        $booking->update([
+            'date' => $this->rescheduleSelectedDate,
+            'time' => $timeRange,
+        ]);
+
+        $this->refreshAfterBookingChange();
+        $this->closeRescheduleModal();
+    }
+
+    public function confirmRescheduleBookingFromClient(?string $selectedDate, ?string $selectedTime): void
+    {
+        if (is_string($selectedDate) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $selectedDate)) {
+            $this->rescheduleSelectedDate = $selectedDate;
+        }
+
+        if (is_string($selectedTime) && preg_match('/^\d{2}:\d{2}\s(?:AM|PM)$/', $selectedTime)) {
+            $this->rescheduleSelectedTime = $selectedTime;
+        }
+
+        $this->confirmRescheduleBooking();
     }
 
     public function viewPetDetails(int $petId): void
@@ -490,6 +681,189 @@ new class extends Component {
             ]);
         }
 
+        unset($this->selectedPet, $this->selectedPetMedication);
+    }
+
+    public function addGroomerNote(?string $title, string $note): void
+    {
+        if (!$this->selectedPetId || !$this->selectedClientId) {
+            return;
+        }
+
+        $noteText = trim($note);
+
+        if ($noteText === '') {
+            return;
+        }
+
+        $pet = PetDetail::query()->where('user_id', $this->selectedClientId)->find($this->selectedPetId);
+
+        if (!$pet) {
+            return;
+        }
+
+        $entry = [
+            'date' => now()->toDateString(),
+            'title' => trim((string) $title),
+            'note' => $noteText,
+        ];
+
+        $medication = $pet->medicationDetail;
+
+        if ($medication) {
+            $notes = $medication->groomer_notes ?? [];
+            array_unshift($notes, $entry);
+            $medication->update(['groomer_notes' => array_values($notes)]);
+        } else {
+            PetMedicationDetail::create([
+                'pet_detail_id' => $pet->id,
+                'pet_owner_id' => $this->selectedClientId,
+                'groomer_notes' => [$entry],
+            ]);
+        }
+
+        unset($this->selectedPet, $this->selectedPetMedication);
+    }
+
+    public function addOwnerNote(?string $title, string $note): void
+    {
+        if (!$this->selectedPetId || !$this->selectedClientId) {
+            return;
+        }
+
+        $noteText = trim($note);
+
+        if ($noteText === '') {
+            return;
+        }
+
+        $pet = PetDetail::query()->where('user_id', $this->selectedClientId)->find($this->selectedPetId);
+
+        if (!$pet) {
+            return;
+        }
+
+        $entry = [
+            'date' => now()->toDateString(),
+            'title' => trim((string) $title),
+            'note' => $noteText,
+        ];
+
+        $medication = $pet->medicationDetail;
+
+        if ($medication) {
+            $notes = $medication->owner_notes ?? [];
+            array_unshift($notes, $entry);
+            $medication->update(['owner_notes' => array_values($notes)]);
+        } else {
+            PetMedicationDetail::create([
+                'pet_detail_id' => $pet->id,
+                'pet_owner_id' => $this->selectedClientId,
+                'owner_notes' => [$entry],
+            ]);
+        }
+
+        unset($this->selectedPet, $this->selectedPetMedication);
+    }
+
+    public function updateGroomerNote(int $index, ?string $title, string $note): void
+    {
+        $this->mutatePetNotes('groomer_notes', function (array $notes) use ($index, $title, $note): ?array {
+            if (!isset($notes[$index])) {
+                return null;
+            }
+
+            $noteText = trim($note);
+            if ($noteText === '') {
+                return null;
+            }
+
+            $notes[$index] = [
+                'date' => $notes[$index]['date'] ?? now()->toDateString(),
+                'title' => trim((string) $title),
+                'note' => $noteText,
+            ];
+
+            return array_values($notes);
+        });
+    }
+
+    public function deleteGroomerNote(int $index): void
+    {
+        $this->mutatePetNotes('groomer_notes', function (array $notes) use ($index): ?array {
+            if (!isset($notes[$index])) {
+                return null;
+            }
+
+            unset($notes[$index]);
+
+            return array_values($notes);
+        });
+    }
+
+    public function updateOwnerNote(int $index, ?string $title, string $note): void
+    {
+        $this->mutatePetNotes('owner_notes', function (array $notes) use ($index, $title, $note): ?array {
+            if (!isset($notes[$index])) {
+                return null;
+            }
+
+            $noteText = trim($note);
+            if ($noteText === '') {
+                return null;
+            }
+
+            $notes[$index] = [
+                'date' => $notes[$index]['date'] ?? now()->toDateString(),
+                'title' => trim((string) $title),
+                'note' => $noteText,
+            ];
+
+            return array_values($notes);
+        });
+    }
+
+    public function deleteOwnerNote(int $index): void
+    {
+        $this->mutatePetNotes('owner_notes', function (array $notes) use ($index): ?array {
+            if (!isset($notes[$index])) {
+                return null;
+            }
+
+            unset($notes[$index]);
+
+            return array_values($notes);
+        });
+    }
+
+    /**
+     * @param  callable(array<int, array<string, mixed>>): (?array<int, array<string, mixed>>)  $mutator
+     */
+    private function mutatePetNotes(string $field, callable $mutator): void
+    {
+        if (!$this->selectedPetId || !$this->selectedClientId) {
+            return;
+        }
+
+        if (!in_array($field, ['groomer_notes', 'owner_notes'], true)) {
+            return;
+        }
+
+        $pet = PetDetail::query()->where('user_id', $this->selectedClientId)->find($this->selectedPetId);
+
+        if (!$pet?->medicationDetail) {
+            return;
+        }
+
+        $medication = $pet->medicationDetail;
+        $notes = $medication->{$field} ?? [];
+        $updated = $mutator(is_array($notes) ? $notes : []);
+
+        if ($updated === null) {
+            return;
+        }
+
+        $medication->update([$field => $updated]);
         unset($this->selectedPet, $this->selectedPetMedication);
     }
 
@@ -701,7 +1075,9 @@ new class extends Component {
         return Review::query()
             ->where('pet_owner_id', $this->selectedClientId)
             ->whereHas('booking', fn($query) => $query->where('goormer_spacer_id', $this->spacerId()))
-            ->with(['booking:' . implode(',', self::BOOKING_LIST_COLUMNS)])
+            ->with([
+                'booking' => fn($query) => $query->select(['id', 'date', 'rating', 'amount', 'time', 'service', 'booking_status']),
+            ])
             ->get();
     }
 
@@ -791,6 +1167,36 @@ new class extends Component {
         return $this->profileBookings->firstWhere('id', $this->completedBookingId);
     }
 
+    #[Computed]
+    public function profileRescheduleBooking(): ?Booking
+    {
+        if (!$this->rescheduleBookingId || !$this->selectedClientId) {
+            return null;
+        }
+
+        return Booking::query()
+            ->with(['petOwner:id,name', 'pets:' . implode(',', self::PET_LIST_COLUMNS)])
+            ->where('goormer_spacer_id', $this->spacerId())
+            ->where('pet_owner_id', $this->selectedClientId)
+            ->whereKey($this->rescheduleBookingId)
+            ->first();
+    }
+
+    #[Computed]
+    public function profileDeclineBooking(): ?Booking
+    {
+        if (!$this->declineBookingId || !$this->selectedClientId) {
+            return null;
+        }
+
+        return Booking::query()
+            ->with(['petOwner:id,name', 'pets:' . implode(',', self::PET_LIST_COLUMNS)])
+            ->where('goormer_spacer_id', $this->spacerId())
+            ->where('pet_owner_id', $this->selectedClientId)
+            ->whereKey($this->declineBookingId)
+            ->first();
+    }
+
     public function formatProfileLocationLabel(?string $visitType): string
     {
         $label = str_replace('_', ' ', strtolower((string) $visitType));
@@ -877,7 +1283,7 @@ new class extends Component {
 @php
     $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
     $profileWireTargets =
-        'viewProfile, closeProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, closePetDetails, openCompletedBookingModal, closeCompletedBookingModal, toggleReviewReply, closeReviewReply, submitReviewReply';
+        'viewProfile, closeProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, closePetDetails, openCompletedBookingModal, closeCompletedBookingModal, openRescheduleModal, closeRescheduleModal, confirmRescheduleBookingFromClient, openDeclineModal, closeDeclineModal, confirmDeclineBooking, updateGroomerGuidanceNotes, addGroomerNote, addOwnerNote, updateGroomerNote, deleteGroomerNote, updateOwnerNote, deleteOwnerNote, toggleReviewReply, closeReviewReply, submitReviewReply';
 @endphp
 
 <div class="clients-section" x-data="{
@@ -1105,7 +1511,146 @@ new class extends Component {
     </section>
 
     <x-business-hub.common.completed-booking-modal :booking="$this->profileCompletedBooking" />
+    <x-business-hub.common.decline-modal :decline-booking="$this->profileDeclineBooking" />
+    <x-business-hub.common.reschedule-modal :reschedule-booking="$this->profileRescheduleBooking" :bookings="$rescheduleCalendarBookings ?? collect()" :reschedule-selected-date="$rescheduleSelectedDate" :reschedule-selected-time="$rescheduleSelectedTime"
+        :reschedule-calendar-month="$rescheduleCalendarMonth" :reschedule-duration-minutes="$rescheduleDurationMinutes" />
 </div>
+
+<script>
+    if (!window.reschedulePicker) {
+        window.reschedulePicker = function(config) {
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+
+            const parseYmd = (ymd) => {
+                const [y, m, d] = (ymd || '').split('-').map(Number);
+                if (!y || !m || !d) return null;
+                return {
+                    y,
+                    m,
+                    d
+                };
+            };
+
+            return {
+                selectedDate: config.initialDate,
+                selectedTime: config.initialTime,
+                monthDate: config.initialMonth,
+                bookedDaysByMonth: config.bookedDaysByMonth || {},
+                get monthKey() {
+                    return this.monthDate.slice(0, 7);
+                },
+                get monthMeta() {
+                    const [y, m] = this.monthKey.split('-').map(Number);
+                    return {
+                        y,
+                        m
+                    };
+                },
+                get monthTitle() {
+                    const {
+                        y,
+                        m
+                    } = this.monthMeta;
+                    return `${monthNames[m - 1]} ${y}`;
+                },
+                get daysInMonth() {
+                    const {
+                        y,
+                        m
+                    } = this.monthMeta;
+                    return new Date(y, m, 0).getDate();
+                },
+                get prefixBlank() {
+                    const {
+                        y,
+                        m
+                    } = this.monthMeta;
+                    const mondayFirst = (new Date(y, m - 1, 1).getDay() + 6) % 7;
+                    return Array.from({
+                        length: mondayFirst
+                    }, (_, i) => i);
+                },
+                get selectedDay() {
+                    const parsed = parseYmd(this.selectedDate);
+                    if (!parsed) return 0;
+                    const {
+                        y,
+                        m
+                    } = this.monthMeta;
+                    return parsed.y === y && parsed.m === m ? parsed.d : 0;
+                },
+                get selectedDateLabel() {
+                    const parsed = parseYmd(this.selectedDate);
+                    if (!parsed) return 'N/A';
+                    return `${String(parsed.d).padStart(2, '0')}/${String(parsed.m).padStart(2, '0')}/${parsed.y}`;
+                },
+                get selectedTimeLabel() {
+                    return this.selectedTime || 'N/A';
+                },
+                prevMonth() {
+                    const {
+                        y,
+                        m
+                    } = this.monthMeta;
+                    const d = new Date(y, m - 2, 1);
+                    this.monthDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+                },
+                nextMonth() {
+                    const {
+                        y,
+                        m
+                    } = this.monthMeta;
+                    const d = new Date(y, m, 1);
+                    this.monthDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+                },
+                selectDay(day) {
+                    const {
+                        y,
+                        m
+                    } = this.monthMeta;
+                    this.selectedDate = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                },
+                selectTime(slot) {
+                    this.selectedTime = slot;
+                },
+                isBooked(day) {
+                    return (this.bookedDaysByMonth[this.monthKey] || []).includes(day);
+                }
+            };
+        };
+    }
+
+    if (!window.__declineModalScrollLockBound) {
+        window.__declineModalScrollLockBound = true;
+
+        window.addEventListener('decline-modal-opened', () => {
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+        });
+
+        window.addEventListener('decline-modal-closed', () => {
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+        });
+    }
+
+    if (!window.__rescheduleModalScrollLockBound) {
+        window.__rescheduleModalScrollLockBound = true;
+
+        window.addEventListener('reschedule-modal-opened', () => {
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+        });
+
+        window.addEventListener('reschedule-modal-closed', () => {
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+        });
+    }
+</script>
 
 <style>
     [x-cloak] {

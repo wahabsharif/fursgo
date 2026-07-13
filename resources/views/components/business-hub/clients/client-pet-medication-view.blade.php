@@ -60,6 +60,13 @@
     $photoGallery = $medication?->photo_gallery ?? [];
     $groomerNotes = $medication?->groomer_notes ?? [];
     $ownerNotes = $medication?->owner_notes ?? [];
+
+    $authProfile = auth('groomer_spacer')->user();
+    $defaultNoteTitle = trim(
+        (string) ($authProfile?->business_details['business_name'] ?? null ?:
+        $authProfile?->business_basics['display_name'] ?? null ?:
+        $authProfile?->full_name ?? ''),
+    );
 @endphp
 
 <section class="client-pet-medication-view" aria-label="Pet medication details">
@@ -507,14 +514,68 @@
                     x-transition:leave="client-pet-medication-tab-pane-leave"
                     x-transition:leave-start="client-pet-medication-tab-pane-leave-start"
                     x-transition:leave-end="client-pet-medication-tab-pane-leave-end">
-                    <div class="client-pet-medication-info-section">
-                        <h4 class="client-pet-medication-info-title">Groomer Notes</h4>
+                    <div class="client-pet-medication-info-section client-pet-medication-groomer-notes-section"
+                        wire:key="groomer-notes-{{ $pet->id }}-{{ count($groomerNotes) }}"
+                        x-data="{
+                            adding: false,
+                            title: @js($defaultNoteTitle),
+                            note: '',
+                            startAdd() {
+                                this.title = @js($defaultNoteTitle);
+                                this.note = '';
+                                this.adding = true;
+                                this.$nextTick(() => this.$refs.noteField?.focus());
+                            },
+                            cancelAdd() {
+                                this.adding = false;
+                                this.title = @js($defaultNoteTitle);
+                                this.note = '';
+                            },
+                            saveAdd() {
+                                const body = (this.note || '').trim();
+                                if (!body) {
+                                    this.$refs.noteField?.focus();
+                                    return;
+                                }
+                                $wire.addGroomerNote(this.title, body).then(() => {
+                                    this.cancelAdd();
+                                });
+                            },
+                        }">
+                        <div class="client-pet-medication-notes-header" :class="{ 'is-adding': adding }">
+                            <div class="client-pet-medication-notes-title-wrap">
+                                <h4 class="client-pet-medication-info-title">Groomer Notes</h4>
+                            </div>
+                            <button type="button" class="client-pet-medication-add-note-btn" x-show="!adding"
+                                x-cloak @click="startAdd()">
+                                + Add Note
+                            </button>
+                        </div>
+
+                        <div class="client-pet-medication-add-note-form" x-show="adding" x-cloak>
+                            <input type="text" class="client-pet-medication-add-note-title" x-model="title"
+                                placeholder="Note title (optional)" maxlength="120" />
+                            <textarea class="client-pet-medication-guidance-textarea" x-ref="noteField" x-model="note" rows="4"
+                                placeholder="Write your note…"></textarea>
+                            <div class="client-pet-medication-guidance-edit-actions">
+                                <button type="button" class="client-pet-medication-guidance-save-btn"
+                                    @click="saveAdd()" wire:loading.attr="disabled" wire:target="addGroomerNote">
+                                    <span wire:loading.remove wire:target="addGroomerNote">Save note</span>
+                                    <span wire:loading wire:target="addGroomerNote">Saving…</span>
+                                </button>
+                                <button type="button" class="client-pet-medication-guidance-cancel-btn"
+                                    @click="cancelAdd()" wire:loading.attr="disabled"
+                                    wire:target="addGroomerNote">Cancel</button>
+                            </div>
+                        </div>
+
                         @if (!empty($groomerNotes))
                             <div class="client-pet-medication-notes-list">
-                                @foreach ($groomerNotes as $note)
+                                @foreach ($groomerNotes as $noteIndex => $note)
                                     @php
                                         $noteDate = PetMedicationDetail::formatVaccinationDate($note['date'] ?? null);
                                         $noteTitle = trim((string) ($note['title'] ?? ''));
+                                        $noteBody = trim((string) ($note['note'] ?? ''));
                                         $noteHeading =
                                             $noteDate !== '—' && $noteTitle !== ''
                                                 ? $noteDate . ' – ' . $noteTitle
@@ -522,60 +583,306 @@
                                                     ? $noteDate
                                                     : $noteTitle);
                                     @endphp
-                                    <article class="client-pet-medication-note-card">
-                                        <div class="client-pet-medication-note-card__header">
-                                            @if ($noteHeading !== '')
-                                                <p class="client-pet-medication-note-card__heading">
-                                                    {{ $noteHeading }}
+                                    <article class="client-pet-medication-note-card"
+                                        wire:key="groomer-note-card-{{ $pet->id }}-{{ $noteIndex }}"
+                                        x-data="{
+                                            menuId: @js('groomer-' . $pet->id . '-' . $noteIndex),
+                                            openMenu: false,
+                                            editing: false,
+                                            draftTitle: @js($noteTitle),
+                                            draftNote: @js($noteBody),
+                                            toggleMenu() {
+                                                if (!this.openMenu) {
+                                                    window.dispatchEvent(new CustomEvent('pet-note-menu-opened', {
+                                                        detail: { id: this.menuId },
+                                                    }));
+                                                }
+                                                this.openMenu = !this.openMenu;
+                                            },
+                                            startEdit() {
+                                                this.openMenu = false;
+                                                this.draftTitle = @js($noteTitle);
+                                                this.draftNote = @js($noteBody);
+                                                this.editing = true;
+                                                this.$nextTick(() => this.$refs.editNoteField?.focus());
+                                            },
+                                            cancelEdit() {
+                                                this.editing = false;
+                                                this.draftTitle = @js($noteTitle);
+                                                this.draftNote = @js($noteBody);
+                                            },
+                                            saveEdit() {
+                                                const body = (this.draftNote || '').trim();
+                                                if (!body) {
+                                                    this.$refs.editNoteField?.focus();
+                                                    return;
+                                                }
+                                                $wire.updateGroomerNote({{ $noteIndex }}, this.draftTitle, body).then(() => {
+                                                    this.editing = false;
+                                                });
+                                            },
+                                            deleteNote() {
+                                                this.openMenu = false;
+                                                $wire.deleteGroomerNote({{ $noteIndex }});
+                                            },
+                                        }"
+                                        @pet-note-menu-opened.window="if (($event.detail?.id ?? null) !== menuId) { openMenu = false }"
+                                        @keydown.escape.window="openMenu = false" @click.outside="openMenu = false">
+                                        <div x-show="!editing">
+                                            <div class="client-pet-medication-note-card__header">
+                                                @if ($noteHeading !== '')
+                                                    <p class="client-pet-medication-note-card__heading">
+                                                        {{ $noteHeading }}
+                                                    </p>
+                                                @else
+                                                    <p class="client-pet-medication-note-card__heading">Note</p>
+                                                @endif
+                                                <div class="client-pet-medication-note-card__menu-wrap">
+                                                    <button type="button"
+                                                        class="client-pet-medication-note-card__menu"
+                                                        aria-label="Note options" @click.stop="toggleMenu()"
+                                                        :aria-expanded="openMenu.toString()">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="25"
+                                                            height="5" viewBox="0 0 25 5" fill="none"
+                                                            aria-hidden="true">
+                                                            <circle cx="2.5" cy="2.5" r="2.5"
+                                                                fill="#3B3731" />
+                                                            <circle cx="12.5" cy="2.5" r="2.5"
+                                                                fill="#3B3731" />
+                                                            <circle cx="22.5" cy="2.5" r="2.5"
+                                                                fill="#3B3731" />
+                                                        </svg>
+                                                    </button>
+                                                    <div class="client-pet-medication-note-card__dropdown" x-cloak
+                                                        x-show="openMenu" x-transition.opacity.duration.120ms
+                                                        @click.stop>
+                                                        <button type="button"
+                                                            class="client-pet-medication-note-card__dropdown-item"
+                                                            @click="startEdit()">Edit</button>
+                                                        <button type="button"
+                                                            class="client-pet-medication-note-card__dropdown-item is-danger"
+                                                            @click="deleteNote()" wire:loading.attr="disabled"
+                                                            wire:target="deleteGroomerNote">Delete</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @if ($noteBody !== '')
+                                                <p class="client-pet-medication-note-card__body">{{ $noteBody }}
                                                 </p>
                                             @endif
-                                            <button type="button" class="client-pet-medication-note-card__menu"
-                                                aria-label="Note options">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="4"
-                                                    viewBox="0 0 18 4" fill="none" aria-hidden="true">
-                                                    <circle cx="2" cy="2" r="1.5"
-                                                        fill="currentColor" />
-                                                    <circle cx="9" cy="2" r="1.5"
-                                                        fill="currentColor" />
-                                                    <circle cx="16" cy="2" r="1.5"
-                                                        fill="currentColor" />
-                                                </svg>
-                                            </button>
                                         </div>
-                                        @if (!empty($note['note']))
-                                            <p class="client-pet-medication-note-card__body">{{ $note['note'] }}</p>
-                                        @endif
+
+                                        <div class="client-pet-medication-add-note-form" x-show="editing" x-cloak>
+                                            <input type="text" class="client-pet-medication-add-note-title"
+                                                x-model="draftTitle" placeholder="Note title (optional)"
+                                                maxlength="120" />
+                                            <textarea class="client-pet-medication-guidance-textarea" x-ref="editNoteField" x-model="draftNote" rows="4"
+                                                placeholder="Write your note…"></textarea>
+                                            <div class="client-pet-medication-guidance-edit-actions">
+                                                <button type="button" class="client-pet-medication-guidance-save-btn"
+                                                    @click="saveEdit()" wire:loading.attr="disabled"
+                                                    wire:target="updateGroomerNote">
+                                                    <span wire:loading.remove
+                                                        wire:target="updateGroomerNote">Save</span>
+                                                    <span wire:loading wire:target="updateGroomerNote">Saving…</span>
+                                                </button>
+                                                <button type="button"
+                                                    class="client-pet-medication-guidance-cancel-btn"
+                                                    @click="cancelEdit()" wire:loading.attr="disabled"
+                                                    wire:target="updateGroomerNote">Cancel</button>
+                                            </div>
+                                        </div>
                                     </article>
                                 @endforeach
                             </div>
                         @else
-                            <div>
+                            <div x-show="!adding">
                                 <p class="client-pet-medication-empty">No groomer notes yet.</p>
                             </div>
                         @endif
                     </div>
 
-                    <div class="client-pet-medication-info-section">
-                        <h4 class="client-pet-medication-info-title">Owner Notes</h4>
+                    <div class="client-pet-medication-info-section client-pet-medication-owner-notes-section"
+                        wire:key="owner-notes-{{ $pet->id }}-{{ count($ownerNotes) }}" x-data="{
+                            adding: false,
+                            title: '',
+                            note: '',
+                            startAdd() {
+                                this.title = '';
+                                this.note = '';
+                                this.adding = true;
+                                this.$nextTick(() => this.$refs.ownerNoteField?.focus());
+                            },
+                            cancelAdd() {
+                                this.adding = false;
+                                this.title = '';
+                                this.note = '';
+                            },
+                            saveAdd() {
+                                const body = (this.note || '').trim();
+                                if (!body) {
+                                    this.$refs.ownerNoteField?.focus();
+                                    return;
+                                }
+                                $wire.addOwnerNote(this.title, body).then(() => {
+                                    this.cancelAdd();
+                                });
+                            },
+                        }">
+                        <div class="client-pet-medication-notes-header" :class="{ 'is-adding': adding }">
+                            <div class="client-pet-medication-notes-title-wrap">
+                                <h4 class="client-pet-medication-info-title">Owner Notes</h4>
+                            </div>
+                            <button type="button" class="client-pet-medication-add-note-btn" x-show="!adding"
+                                x-cloak @click="startAdd()">
+                                + Add Note
+                            </button>
+                        </div>
+
+                        <div class="client-pet-medication-add-note-form" x-show="adding" x-cloak>
+                            <input type="text" class="client-pet-medication-add-note-title" x-model="title"
+                                placeholder="Note title (optional)" maxlength="120" />
+                            <textarea class="client-pet-medication-guidance-textarea" x-ref="ownerNoteField" x-model="note" rows="4"
+                                placeholder="Write your note…"></textarea>
+                            <div class="client-pet-medication-guidance-edit-actions">
+                                <button type="button" class="client-pet-medication-guidance-save-btn"
+                                    @click="saveAdd()" wire:loading.attr="disabled" wire:target="addOwnerNote">
+                                    <span wire:loading.remove wire:target="addOwnerNote">Save note</span>
+                                    <span wire:loading wire:target="addOwnerNote">Saving…</span>
+                                </button>
+                                <button type="button" class="client-pet-medication-guidance-cancel-btn"
+                                    @click="cancelAdd()" wire:loading.attr="disabled"
+                                    wire:target="addOwnerNote">Cancel</button>
+                            </div>
+                        </div>
+
                         @if (!empty($ownerNotes))
                             <div class="client-pet-medication-notes-list">
-                                @foreach ($ownerNotes as $note)
+                                @foreach ($ownerNotes as $noteIndex => $note)
                                     @php
                                         $noteDate = PetMedicationDetail::formatVaccinationDate($note['date'] ?? null);
+                                        $noteTitle = trim((string) ($note['title'] ?? ''));
+                                        $noteBody = trim((string) ($note['note'] ?? ''));
+                                        $noteHeading =
+                                            $noteDate !== '—' && $noteTitle !== ''
+                                                ? $noteDate . ' – ' . $noteTitle
+                                                : ($noteDate !== '—'
+                                                    ? $noteDate
+                                                    : $noteTitle);
                                     @endphp
-                                    <article class="client-pet-medication-note-card">
-                                        @if ($noteDate !== '—')
-                                            <p class="client-pet-medication-note-card__heading">{{ $noteDate }}
-                                            </p>
-                                        @endif
-                                        @if (!empty($note['note']))
-                                            <p class="client-pet-medication-note-card__body">{{ $note['note'] }}</p>
-                                        @endif
+                                    <article class="client-pet-medication-note-card"
+                                        wire:key="owner-note-card-{{ $pet->id }}-{{ $noteIndex }}"
+                                        x-data="{
+                                            menuId: @js('owner-' . $pet->id . '-' . $noteIndex),
+                                            openMenu: false,
+                                            editing: false,
+                                            draftTitle: @js($noteTitle),
+                                            draftNote: @js($noteBody),
+                                            toggleMenu() {
+                                                if (!this.openMenu) {
+                                                    window.dispatchEvent(new CustomEvent('pet-note-menu-opened', {
+                                                        detail: { id: this.menuId },
+                                                    }));
+                                                }
+                                                this.openMenu = !this.openMenu;
+                                            },
+                                            startEdit() {
+                                                this.openMenu = false;
+                                                this.draftTitle = @js($noteTitle);
+                                                this.draftNote = @js($noteBody);
+                                                this.editing = true;
+                                                this.$nextTick(() => this.$refs.editOwnerNoteField?.focus());
+                                            },
+                                            cancelEdit() {
+                                                this.editing = false;
+                                                this.draftTitle = @js($noteTitle);
+                                                this.draftNote = @js($noteBody);
+                                            },
+                                            saveEdit() {
+                                                const body = (this.draftNote || '').trim();
+                                                if (!body) {
+                                                    this.$refs.editOwnerNoteField?.focus();
+                                                    return;
+                                                }
+                                                $wire.updateOwnerNote({{ $noteIndex }}, this.draftTitle, body).then(() => {
+                                                    this.editing = false;
+                                                });
+                                            },
+                                            deleteNote() {
+                                                this.openMenu = false;
+                                                $wire.deleteOwnerNote({{ $noteIndex }});
+                                            },
+                                        }"
+                                        @pet-note-menu-opened.window="if (($event.detail?.id ?? null) !== menuId) { openMenu = false }"
+                                        @keydown.escape.window="openMenu = false" @click.outside="openMenu = false">
+                                        <div x-show="!editing">
+                                            <div class="client-pet-medication-note-card__header">
+                                                @if ($noteHeading !== '')
+                                                    <p class="client-pet-medication-note-card__heading">
+                                                        {{ $noteHeading }}
+                                                    </p>
+                                                @else
+                                                    <p class="client-pet-medication-note-card__heading">Note</p>
+                                                @endif
+                                                <div class="client-pet-medication-note-card__menu-wrap">
+                                                    <button type="button"
+                                                        class="client-pet-medication-note-card__menu"
+                                                        aria-label="Note options" @click.stop="toggleMenu()"
+                                                        :aria-expanded="openMenu.toString()">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="25"
+                                                            height="5" viewBox="0 0 25 5" fill="none"
+                                                            aria-hidden="true">
+                                                            <circle cx="2.5" cy="2.5" r="2.5"
+                                                                fill="#3B3731" />
+                                                            <circle cx="12.5" cy="2.5" r="2.5"
+                                                                fill="#3B3731" />
+                                                            <circle cx="22.5" cy="2.5" r="2.5"
+                                                                fill="#3B3731" />
+                                                        </svg>
+                                                    </button>
+                                                    <div class="client-pet-medication-note-card__dropdown" x-cloak
+                                                        x-show="openMenu" x-transition.opacity.duration.120ms
+                                                        @click.stop>
+                                                        <button type="button"
+                                                            class="client-pet-medication-note-card__dropdown-item"
+                                                            @click="startEdit()">Edit</button>
+                                                        <button type="button"
+                                                            class="client-pet-medication-note-card__dropdown-item is-danger"
+                                                            @click="deleteNote()" wire:loading.attr="disabled"
+                                                            wire:target="deleteOwnerNote">Delete</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @if ($noteBody !== '')
+                                                <p class="client-pet-medication-note-card__body">{{ $noteBody }}
+                                                </p>
+                                            @endif
+                                        </div>
+
+                                        <div class="client-pet-medication-add-note-form" x-show="editing" x-cloak>
+                                            <input type="text" class="client-pet-medication-add-note-title"
+                                                x-model="draftTitle" placeholder="Note title (optional)"
+                                                maxlength="120" />
+                                            <textarea class="client-pet-medication-guidance-textarea" x-ref="editOwnerNoteField" x-model="draftNote"
+                                                rows="4" placeholder="Write your note…"></textarea>
+                                            <div class="client-pet-medication-guidance-edit-actions">
+                                                <button type="button" class="client-pet-medication-guidance-save-btn"
+                                                    @click="saveEdit()" wire:loading.attr="disabled"
+                                                    wire:target="updateOwnerNote">
+                                                    <span wire:loading.remove wire:target="updateOwnerNote">Save</span>
+                                                    <span wire:loading wire:target="updateOwnerNote">Saving…</span>
+                                                </button>
+                                                <button type="button"
+                                                    class="client-pet-medication-guidance-cancel-btn"
+                                                    @click="cancelEdit()" wire:loading.attr="disabled"
+                                                    wire:target="updateOwnerNote">Cancel</button>
+                                            </div>
+                                        </div>
                                     </article>
                                 @endforeach
                             </div>
                         @else
-                            <div>
+                            <div x-show="!adding">
                                 <p class="client-pet-medication-empty">No owner notes yet.</p>
                             </div>
                         @endif
@@ -883,6 +1190,90 @@
             border-bottom: 1px solid #D4D4D4;
         }
 
+        .client-pet-medication-groomer-notes-section>.client-pet-medication-notes-header,
+        .client-pet-medication-owner-notes-section>.client-pet-medication-notes-header {
+            margin: 0;
+        }
+
+        .client-pet-medication-groomer-notes-section>.client-pet-medication-add-note-form,
+        .client-pet-medication-groomer-notes-section>.client-pet-medication-notes-list,
+        .client-pet-medication-owner-notes-section>.client-pet-medication-add-note-form,
+        .client-pet-medication-owner-notes-section>.client-pet-medication-notes-list {
+            margin: 1.5rem 0 3rem;
+        }
+
+        .client-pet-medication-groomer-notes-section>div:not(.client-pet-medication-notes-header):not(.client-pet-medication-add-note-form):not(.client-pet-medication-notes-list),
+        .client-pet-medication-owner-notes-section>div:not(.client-pet-medication-notes-header):not(.client-pet-medication-add-note-form):not(.client-pet-medication-notes-list) {
+            margin: 1.5rem 0 3rem;
+        }
+
+        .client-pet-medication-notes-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #D4D4D4;
+            margin: 0;
+        }
+
+        .client-pet-medication-notes-header.is-adding {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .client-pet-medication-notes-title-wrap {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .client-pet-medication-notes-title-wrap .client-pet-medication-info-title {
+            margin: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .client-pet-medication-add-note-btn {
+            flex-shrink: 0;
+            border: 0;
+            background: transparent;
+            color: #3B3731;
+            font-family: Lato, sans-serif;
+            font-size: 18px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .client-pet-medication-add-note-btn:hover {
+            opacity: 0.75;
+        }
+
+        .client-pet-medication-add-note-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .client-pet-medication-add-note-title {
+            width: 100%;
+            height: 42px;
+            padding: 0 1rem;
+            border: 1px solid #D4D4D4;
+            border-radius: 8px;
+            background: #FFF;
+            color: #3B3731;
+            font-family: Lato, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            outline: none;
+        }
+
+        .client-pet-medication-add-note-title:focus {
+            border-color: #FFC97A;
+        }
+
         .client-pet-medication-info-card {
             gap: 1rem;
             display: flex;
@@ -1105,6 +1496,7 @@
             border-radius: 5px;
             background: #FAFAFA;
             padding: 1rem 1.25rem;
+            position: relative;
         }
 
         .client-pet-medication-note-card__header {
@@ -1115,23 +1507,20 @@
             margin-bottom: 0.65rem;
         }
 
-        .client-pet-medication-note-card__header:only-child,
         .client-pet-medication-note-card__header:last-child {
             margin-bottom: 0;
         }
 
         .client-pet-medication-note-card__heading {
-            margin: 0 0 0.65rem;
+            margin: 0;
             color: #3B3731;
             font-family: Lato, sans-serif;
             font-size: 16px;
             font-style: normal;
             font-weight: 700;
             line-height: normal;
-        }
-
-        .client-pet-medication-note-card__header .client-pet-medication-note-card__heading {
-            margin-bottom: 0;
+            min-width: 0;
+            flex: 1;
         }
 
         .client-pet-medication-note-card__body {
@@ -1144,17 +1533,60 @@
             line-height: normal;
         }
 
-        .client-pet-medication-note-card__menu {
+        .client-pet-medication-note-card__menu-wrap {
+            position: relative;
             flex-shrink: 0;
+        }
+
+        .client-pet-medication-note-card__menu {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 0;
+            padding: 0.15rem;
             margin: 0;
             border: none;
             background: transparent;
             cursor: pointer;
             color: #3B3731;
+        }
+
+        .client-pet-medication-note-card__dropdown {
+            position: absolute;
+            top: calc(100% + 0.35rem);
+            right: 0;
+            min-width: 120px;
+            background: #FFF;
+            border: 1px solid #D9D9D9;
+            border-radius: 8px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            z-index: 20;
+        }
+
+        .client-pet-medication-note-card__dropdown-item {
+            width: 100%;
+            border: 0;
+            border-bottom: 1px solid #E8E8E8;
+            background: transparent;
+            padding: 0.65rem 0.85rem;
+            text-align: left;
+            color: #3B3731;
+            font-family: Lato, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .client-pet-medication-note-card__dropdown-item:last-child {
+            border-bottom: 0;
+        }
+
+        .client-pet-medication-note-card__dropdown-item:hover {
+            background: #F5F5F5;
+        }
+
+        .client-pet-medication-note-card__dropdown-item.is-danger {
+            color: #FF6E6E;
         }
 
         .client-pet-medication-gallery {

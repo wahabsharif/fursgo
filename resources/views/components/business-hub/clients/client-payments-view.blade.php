@@ -43,8 +43,8 @@
                     <th class="client-payments-view-col">
                         <span class="client-payments-view-col-inner">View Booking</span>
                     </th>
-                    <th class="client-payments-receipt-col">
-                        <span class="client-payments-view-col-inner">Receipt</span>
+                    <th class="client-payments-invoice-col">
+                        <span class="client-payments-view-col-inner">Invoice</span>
                     </th>
                     <th class="client-payments-more-col"></th>
                 </tr>
@@ -104,13 +104,13 @@
                                 @endif
                             </div>
                         </td>
-                        <td class="client-payments-receipt-col">
+                        <td class="client-payments-invoice-col">
                             <div class="client-payments-view-col-inner">
                                 @if ($booking)
                                     <button type="button" class="client-payments-icon-btn"
                                         data-invoice-url="{{ route('business-hub.bookings.invoice-pdf', $booking) }}"
                                         onclick="window.downloadBookingInvoicePdf(this.dataset.invoiceUrl)"
-                                        aria-label="Download receipt">
+                                        aria-label="Download invoice">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
                                             viewBox="0 0 16 19" fill="none">
                                             <path
@@ -300,7 +300,7 @@
         padding: 1.1rem 0.35rem;
     }
 
-    .client-payments-receipt-col {
+    .client-payments-invoice-col {
         vertical-align: middle;
         width: 8rem;
         text-align: center;

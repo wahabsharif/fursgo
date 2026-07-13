@@ -153,7 +153,7 @@
                     </div>
                 </div>
 
-                <div class="completed-booking-modal-section">
+                <div class="completed-booking-modal-section completed-booking-modal-extras">
                     <p class="completed-booking-modal-section-title">Extras &amp; Add-ons</p>
                     @if ($completedExtraAddOns->isNotEmpty())
                         @foreach ($completedExtraAddOns as $addon)
@@ -163,7 +163,7 @@
                             </div>
                         @endforeach
                     @else
-                        <div class="completed-booking-modal-line">
+                        <div class="completed-booking-modal-line completed-booking-addon-line">
                             <p class="completed-booking-modal-line-sub">No add-ons recorded</p>
                             <span>£{{ number_format($completedExtrasAmount, 2) }}</span>
                         </div>
@@ -400,6 +400,15 @@
             font-style: normal;
             font-weight: 400;
             line-height: 20px;
+        }
+
+        .completed-booking-modal-extras .completed-booking-modal-line-sub {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 18px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 23px;
         }
 
         .completed-booking-modal-card.is-space-user .completed-booking-modal-line-sub {

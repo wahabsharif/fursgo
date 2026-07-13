@@ -1,7 +1,7 @@
 @php
     $profileWireTargets =
         $profileWireTargets ??
-        'viewProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, updateGroomerGuidanceNotes, openCompletedBookingModal, closeCompletedBookingModal, toggleReviewReply, closeReviewReply, submitReviewReply';
+        'viewProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, updateGroomerGuidanceNotes, addGroomerNote, addOwnerNote, updateGroomerNote, deleteGroomerNote, updateOwnerNote, deleteOwnerNote, openCompletedBookingModal, closeCompletedBookingModal, openRescheduleModal, closeRescheduleModal, confirmRescheduleBookingFromClient, openDeclineModal, closeDeclineModal, confirmDeclineBooking, toggleReviewReply, closeReviewReply, submitReviewReply';
 @endphp
 
 @if ($selectedPetId && $this->selectedPet)
@@ -507,6 +507,7 @@
                                                 </svg>
                                             </button>
                                             <button type="button" class="client-profile-action-btn is-reschedule"
+                                                wire:click="openRescheduleModal({{ $booking->id }})"
                                                 aria-label="Reschedule">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
                                                     viewBox="0 0 36 36" fill="none">
@@ -526,6 +527,7 @@
                                                 </svg>
                                             </button>
                                             <button type="button" class="client-profile-action-btn is-cancel"
+                                                wire:click="openDeclineModal({{ $booking->id }})"
                                                 aria-label="Cancel">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
                                                     viewBox="0 0 36 36" fill="none">
@@ -535,7 +537,6 @@
                                                         stroke-width="1.5" stroke-linecap="round" />
                                                 </svg>
                                             </button>
-                                            <x-business-hub.common.more-action-btn :row-id="$booking->id" />
                                         </div>
                                     </td>
                                 </tr>
