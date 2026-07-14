@@ -14,6 +14,7 @@
     $isBusinessLandingRoute = request()->routeIs('business-landing-page');
     $isBusinessHomepageRoute = request()->routeIs('business-homepage-groomer-space-owner');
     $isBusinessHubRoute = request()->routeIs('business-hub');
+    $isMarketingHubRoute = request()->routeIs('marketing-hub', 'marketing-hub.*');
     $isHelpCentreRoute = request()->routeIs('help-and-support');
     $isVerifyQualifyRoute = request()->routeIs('verify-qualify', 'verify-qualify.*');
     $isBusinessAuthRoute = request()->routeIs([
@@ -24,7 +25,11 @@
     ]);
     $isBusinessSiteRoute = $isBusinessLandingRoute || $isBusinessHomepageRoute || $isBusinessAuthRoute;
     $isForGroomersHostsActive = $isBusinessHomepageRoute || $isBusinessLandingRoute;
-    $dashboardLogoHref = $isVerifyQualifyRoute ? route('verify-qualify') : route('business-hub');
+    $dashboardLogoHref = $isVerifyQualifyRoute
+        ? route('verify-qualify')
+        : ($isMarketingHubRoute
+            ? route('marketing-hub')
+            : route('business-hub'));
 
     if (!$isGroomerSpacerSession && auth()->check()) {
         $authUser = auth()->user();
@@ -78,7 +83,7 @@
 @if ($variant === 'dashboard')
     {{-- Dashboard Header --}}
     <header
-        class="dashboard-header{{ $isVerifyQualifyRoute ? ' dashboard-header--verify-qualify' : '' }}{{ $isBusinessHubRoute ? ' dashboard-header--business-hub' : '' }}">
+        class="dashboard-header{{ $isVerifyQualifyRoute ? ' dashboard-header--verify-qualify' : '' }}{{ $isBusinessHubRoute ? ' dashboard-header--business-hub' : '' }}{{ $isMarketingHubRoute ? ' dashboard-header--marketing-hub' : '' }}">
         @unless ($isVerifyQualifyRoute)
             {{-- Full-viewport curve (sibling to max-width content wrapper) --}}
             <div class="curve-shape-container" aria-hidden="true">
@@ -95,7 +100,8 @@
                 <div class="dashboard-header-inner">
                     <div class="align-items-center dash-menu-items">
                         <div class="logo-toggle-button d-flex justify-content-between">
-                            <a href="{{ $dashboardLogoHref }}" wire:navigate @click="activeSection = 'business-hub'"
+                            <a href="{{ $dashboardLogoHref }}" wire:navigate
+                                @click="activeSection = @js($isMarketingHubRoute ? 'marketing-hub' : 'business-hub')"
                                 class="d-inline-flex align-items-end gap-10" aria-label="FursGo Business dashboard">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40"
                                     viewBox="0 0 145 40" fill="none">
@@ -732,21 +738,23 @@
                                                 viewBox="0 0 22 22" fill="none">
                                                 <path
                                                     d="M1.19434 15.083H8.36133C8.60382 15.0831 8.80542 15.2849 8.80566 15.5273V20.3057C8.8056 20.5483 8.60393 20.7499 8.36133 20.75H1.19434C0.95169 20.7499 0.75006 20.5483 0.75 20.3057V15.5273C0.75024 15.2848 0.951798 15.0831 1.19434 15.083ZM13.1387 10.3057H20.3057C20.5483 10.3057 20.75 10.5073 20.75 10.75V20.3057C20.7499 20.5483 20.5483 20.7499 20.3057 20.75H13.1387C12.8961 20.7499 12.6944 20.5483 12.6943 20.3057V10.75C12.6943 10.5073 12.896 10.3058 13.1387 10.3057ZM1.19434 0.75H8.36133C8.60393 0.75012 8.8056 0.951726 8.80566 1.19434V10.75C8.80566 10.9927 8.60396 11.1942 8.36133 11.1943H1.19434C0.951654 11.1943 0.75 10.9927 0.75 10.75V1.19434C0.75006 0.95169 0.95169 0.75006 1.19434 0.75ZM13.1387 0.75H20.3057C20.5483 0.75006 20.7499 0.95169 20.75 1.19434V5.97266C20.7498 6.21516 20.5482 6.41693 20.3057 6.41699H13.1387C12.8962 6.41687 12.6946 6.21512 12.6943 5.97266V1.19434C12.6944 0.951725 12.8961 0.75012 13.1387 0.75Z"
-                                                    stroke="white" stroke-width="1.5" />
+                                                    stroke="#3B3731" stroke-width="1.5" />
                                             </svg>
                                             <p class="medium-light-font">Business Hub</p>
                                         </a>
-                                        <a href="#" class="profile-item d-flex align-items-center gap-40"
-                                            wire:navigate>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23"
-                                                viewBox="0 0 23 23" fill="none">
+                                        <a href="{{ route('marketing-hub') }}"
+                                            class="profile-item d-flex align-items-center gap-40"
+                                            :class="{ 'profile-item--active': @js($isMarketingHubRoute) }"
+                                            @click="activeSection = 'marketing-hub'" wire:navigate>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+                                                viewBox="0 0 13 13" fill="none">
                                                 <path
-                                                    d="M1.57692 11.4985C1.57692 11.4985 0.75 11.1884 0.75 9.84464C0.75 8.5009 1.57692 8.1908 1.57692 8.1908M21.423 10.9817C21.423 10.9817 22.2499 10.7579 22.2499 9.84464C22.2499 8.93141 21.423 8.70763 21.423 8.70763M11.5 6.53696V13.1523M4.05768 6.53696V13.1523M19.3526 0.966623C19.3526 0.966623 14.8748 6.53696 10.673 6.53696H2.40384C2.18453 6.53696 1.9742 6.62409 1.81912 6.77916C1.66404 6.93424 1.57692 7.14457 1.57692 7.36388V12.3254C1.57692 12.5447 1.66404 12.755 1.81912 12.9101C1.9742 13.0652 2.18453 13.1523 2.40384 13.1523H10.673C14.8748 13.1523 19.3526 18.7459 19.3526 18.7459C19.6658 19.1594 20.5961 18.8762 20.5961 18.2379V1.47208C20.5961 0.835866 19.7175 0.499413 19.3526 0.966623Z"
-                                                    stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
+                                                    d="M0.961537 6.49898C0.961537 6.49898 0.5 6.32591 0.5 5.57591C0.5 4.82591 0.961537 4.65284 0.961537 4.65284M12.0384 6.21052C12.0384 6.21052 12.5 6.08562 12.5 5.57591C12.5 5.0662 12.0384 4.9413 12.0384 4.9413M6.49998 3.72976V7.42206M2.34615 3.72976V7.42206M10.8828 0.620733C10.8828 0.620733 8.38363 3.72976 6.03844 3.72976H1.42307C1.30067 3.72976 1.18327 3.77839 1.09672 3.86494C1.01016 3.9515 0.961537 4.06889 0.961537 4.1913V6.96052C0.961537 7.08293 1.01016 7.20032 1.09672 7.28688C1.18327 7.37343 1.30067 7.42206 1.42307 7.42206H6.03844C8.38363 7.42206 10.8828 10.5441 10.8828 10.5441C11.0577 10.7748 11.5769 10.6168 11.5769 10.2605V0.902847C11.5769 0.547752 11.0865 0.359964 10.8828 0.620733Z"
+                                                    stroke="#3B3731" stroke-linecap="round"
                                                     stroke-linejoin="round" />
                                                 <path
-                                                    d="M5.71143 13.1523V21.835C5.71143 21.9446 5.75499 22.0498 5.83253 22.1274C5.91006 22.2049 6.01523 22.2485 6.12489 22.2485H8.86406C8.9936 22.2485 9.12133 22.2181 9.23697 22.1597C9.35261 22.1013 9.45292 22.0166 9.52981 21.9124C9.6067 21.8081 9.65802 21.6873 9.67964 21.5596C9.70127 21.4318 9.69258 21.3008 9.65428 21.1771C9.22118 19.7878 8.19219 18.2213 8.19219 15.6331H9.01911C9.23842 15.6331 9.44875 15.546 9.60383 15.3909C9.7589 15.2358 9.84603 15.0255 9.84603 14.8062V13.9792C9.84603 13.7599 9.7589 13.5496 9.60383 13.3945C9.44875 13.2394 9.23842 13.1523 9.01911 13.1523H8.19219"
-                                                    stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
+                                                    d="M3.26922 7.42206V12.2682C3.26922 12.3294 3.29353 12.3881 3.33681 12.4314C3.38009 12.4747 3.43878 12.499 3.49999 12.499H5.02883C5.10113 12.499 5.17242 12.482 5.23696 12.4494C5.30151 12.4169 5.35749 12.3696 5.40041 12.3114C5.44332 12.2532 5.47197 12.1857 5.48404 12.1145C5.49611 12.0432 5.49126 11.9701 5.46988 11.901C5.22815 11.1256 4.65383 10.2513 4.65383 8.80667H5.11537C5.23777 8.80667 5.35517 8.75804 5.44172 8.67149C5.52828 8.58493 5.5769 8.46754 5.5769 8.34513V7.8836C5.5769 7.76119 5.52828 7.64379 5.44172 7.55724C5.35517 7.47068 5.23777 7.42206 5.11537 7.42206H4.65383"
+                                                    stroke="#3B3731" stroke-linecap="round"
                                                     stroke-linejoin="round" />
                                             </svg>
                                             <p class="medium-light-font">Marketing Hub</p>
@@ -809,8 +817,8 @@
                 </div>
             </nav>
 
-            {{-- Welcome Section (Business Hub only) --}}
-            @if ($dashboardNavView === 'hub')
+            {{-- Welcome Section (Business Hub / Marketing Hub) --}}
+            @if ($dashboardNavView === 'hub' || $dashboardNavView === 'marketing-hub')
                 <div class="welcome-section">
                     <div class="welcome-hub-content">
                         <div class="dashboard-header-inner">
@@ -859,9 +867,17 @@
                                             @endif
                                         </div>
                                     </div>
-                                    <h1 class="welcome-text">Welcome back,
-                                        <span>{{ $welcomeBusinessName ?? ($displayName ?? (auth()->user()->name ?? '')) }}</span>
-                                    </h1>
+                                    @if ($dashboardNavView === 'marketing-hub')
+                                        <h1 class="welcome-text">
+                                            <span
+                                                style="font-weight: 600;">{{ $welcomeBusinessName ?? ($displayName ?? (auth()->user()->name ?? '')) }}</span>
+                                            - Marketing Hub
+                                        </h1>
+                                    @else
+                                        <h1 class="welcome-text">Welcome back,
+                                            <span>{{ $welcomeBusinessName ?? ($displayName ?? (auth()->user()->name ?? '')) }}</span>
+                                        </h1>
+                                    @endif
                                 </div>
                                 <div class="welcome-right d-flex align-items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
@@ -889,12 +905,15 @@
                 background: #fff;
             }
 
-            .dashboard-header.dashboard-header--business-hub {
+            .dashboard-header.dashboard-header--business-hub,
+            .dashboard-header.dashboard-header--marketing-hub {
                 position: static;
             }
 
             @media (max-width: 1200px) {
-                .dashboard-header.dashboard-header--business-hub {
+
+                .dashboard-header.dashboard-header--business-hub,
+                .dashboard-header.dashboard-header--marketing-hub {
                     position: static;
                 }
             }
@@ -1172,12 +1191,22 @@
                 font-family: "Playfair Display";
                 font-size: 36px;
                 font-style: normal;
-                font-weight: 700;
+                font-weight: 600;
                 line-height: normal;
             }
 
             .welcome-text>span {
                 font-weight: 600;
+            }
+
+            .dashboard-header--marketing-hub .welcome-text,
+            .dashboard-header--marketing-hub .welcome-text>span {
+                color: #3B3731;
+                font-family: "Playfair Display";
+                font-size: 36px;
+                font-style: normal;
+                font-weight: 700;
+                line-height: normal;
             }
 
             .welcome-right {

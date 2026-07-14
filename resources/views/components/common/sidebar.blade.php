@@ -637,6 +637,8 @@
         .nav-link.active {
             background: var(--sidebar-active-bg);
             color: #FFF;
+            border: none;
+            outline: none;
         }
 
         .nav-link.active svg path,

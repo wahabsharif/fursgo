@@ -6,6 +6,7 @@ use App\Http\Controllers\PetDetailController;
 use App\Models\GroomerSpacerProfile;
 use App\Support\BusinessHubNav;
 use App\Support\BusinessPageShell;
+use App\Support\MarketingHubNav;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -64,7 +65,7 @@ Route::get('/seed', function () {
 Route::middleware('business.shell.web')->group(function () {
     Volt::route('/', 'home')->name('home');
     Route::view('/business-landing-page', 'business-landing-page')->name('business-landing-page');
-    Volt::route('/support-and-assistance/search', 'help.search')->name('search');
+    Route::livewire('/support-and-assistance/search', 'help.search')->name('search');
     Volt::route('/search-results', 'search.results')->name('search-results');
 });
 Route::redirect('/business/support-and-assistance/help-and-support', '/support-and-assistance/help-and-support');
@@ -130,6 +131,16 @@ Route::post('business-hub/nav', function (Request $request) {
 
     return response()->noContent();
 })->middleware(['auth:groomer_spacer'])->name('business-hub.nav');
+
+Volt::route('marketing-hub', 'marketing-hub')
+    ->middleware(['auth:groomer_spacer', 'verified', 'business.shell.business-hub'])
+    ->name('marketing-hub');
+
+Route::post('marketing-hub/nav', function (Request $request) {
+    MarketingHubNav::persist(MarketingHubNav::mergeFromRequest($request));
+
+    return response()->noContent();
+})->middleware(['auth:groomer_spacer'])->name('marketing-hub.nav');
 
 Route::get('business-hub/bookings/{booking}/invoice.pdf', BookingInvoicePdfController::class)
     ->middleware(['auth:groomer_spacer', 'verified'])
