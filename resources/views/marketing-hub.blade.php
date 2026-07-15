@@ -3,6 +3,7 @@
 
     $dashboardNav = MarketingHubNav::fromSession();
     $mh = $mh ?? \App\Support\MarketingHubStats::empty();
+    $mhPromos = $mhPromos ?? \App\Support\MarketingHubPromos::empty();
     $isSpaceUser = strtolower((string) (auth('groomer_spacer')->user()?->user_type ?? '')) === 'space';
     $serviceColors = ['#FBAC83', '#FDD0B3', '#FFF4E4'];
     $petColors = ['#D8E8B7', 'rgba(216, 232, 183, 0.60)', 'rgba(216, 232, 183, 0.20)'];
@@ -15,7 +16,9 @@
 @endphp
 
 <section class="dashboard-content-wrapper marketing-hub-content">
-    <div class="active-section-header" x-cloak>
+    <div class="active-section-header" x-cloak x-data="{ navLoading: false, navLoadingTimeout: null }"
+        x-on:nav-list-loading-start.window="navLoading = true; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; } if (!$event.detail?.persistent) { navLoadingTimeout = setTimeout(() => { navLoading = false; navLoadingTimeout = null; }, 350); }"
+        x-on:nav-list-loading-end.window="navLoading = false; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; }">
         <template x-if="activeSection === 'marketing-hub'">
             <div>
                 <h2>Marketing Hub</h2>
@@ -28,25 +31,38 @@
             </div>
         </template>
 
-        <template x-if="activeSection === 'settings'">
-            <div>
-                <h2>Settings</h2>
-            </div>
-        </template>
+        <div class="active-section-loading-bar" x-cloak x-show="navLoading" aria-hidden="true">
+            <span class="active-section-loading-bar__sweep"></span>
+        </div>
     </div>
 
     <div class="marketing-hub-panels">
-        <div x-show="activeSection === 'marketing-hub'" x-cloak
-            x-effect="if (activeSection === 'marketing-hub') { $nextTick(() => window.__initMarketingHubCharts?.()) }">
+        <div x-show="activeSection === 'marketing-hub'" x-cloak x-transition:enter="mh-panel-enter"
+            x-transition:enter-start="mh-panel-enter-start" x-transition:enter-end="mh-panel-enter-end"
+            x-transition:leave="mh-panel-leave" x-transition:leave-start="mh-panel-leave-start"
+            x-transition:leave-end="mh-panel-leave-end" x-data="{ ready: false }"
+            x-effect="
+                if (activeSection === 'marketing-hub') {
+                    ready = false;
+                    $nextTick(() => {
+                        requestAnimationFrame(() => {
+                            ready = true;
+                            window.__initMarketingHubCharts?.();
+                        });
+                    });
+                } else {
+                    ready = false;
+                }
+            ">
             <script>
                 window.__mhChartData = @json($mhChartData);
             </script>
-            <div class="mh-dashboard">
+            <div class="mh-dashboard" :class="{ 'is-ready': ready }">
                 {{-- Performance Snapshot --}}
                 <div class="mh-section">
-                    <h3 class="mh-section-title">Performance Snapshot</h3>
+                    <h3 class="mh-section-title mh-anim-item" style="--i: 0">Performance Snapshot</h3>
                     <div class="mh-kpi-row">
-                        <article class="mh-kpi-card">
+                        <article class="mh-kpi-card mh-anim-item" style="--i: 0">
                             <p class="mh-kpi-label">Profile Views</p>
                             <p class="mh-kpi-value">{{ $mh['kpis']['profile_views']['value'] }}</p>
                             <span class="mh-kpi-pill mh-kpi-pill--yellow">
@@ -59,19 +75,19 @@
                                 {{ $mh['kpis']['profile_views']['sublabel'] }}
                             </span>
                         </article>
-                        <article class="mh-kpi-card">
+                        <article class="mh-kpi-card mh-anim-item" style="--i: 1">
                             <p class="mh-kpi-label">New Clients</p>
                             <p class="mh-kpi-value">{{ $mh['kpis']['new_clients']['value'] }}</p>
                             <span
                                 class="mh-kpi-pill mh-kpi-pill--peach">{{ $mh['kpis']['new_clients']['sublabel'] }}</span>
                         </article>
-                        <article class="mh-kpi-card">
+                        <article class="mh-kpi-card mh-anim-item" style="--i: 2">
                             <p class="mh-kpi-label">Booking Conversion</p>
                             <p class="mh-kpi-value">{{ $mh['kpis']['booking_conversion']['value'] }}</p>
                             <span
                                 class="mh-kpi-pill mh-kpi-pill--pink">{{ $mh['kpis']['booking_conversion']['sublabel'] }}</span>
                         </article>
-                        <article class="mh-kpi-card">
+                        <article class="mh-kpi-card mh-anim-item" style="--i: 3">
                             <p class="mh-kpi-label">Repeat Clients</p>
                             <p class="mh-kpi-value">{{ $mh['kpis']['repeat_clients']['value'] }}</p>
                             <span class="mh-kpi-pill mh-kpi-pill--blue">
@@ -84,7 +100,7 @@
                                 {{ $mh['kpis']['repeat_clients']['sublabel'] }}
                             </span>
                         </article>
-                        <article class="mh-kpi-card">
+                        <article class="mh-kpi-card mh-anim-item" style="--i: 4">
                             <p class="mh-kpi-label">Average Rating</p>
                             <p class="mh-kpi-value mh-kpi-value--rating">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
@@ -100,7 +116,7 @@
                         </article>
                     </div>
 
-                    <div class="mh-tips-banner" role="note">
+                    <div class="mh-tips-banner mh-anim-item" style="--i: 5" role="note">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="20" viewBox="0 0 14 20"
                             fill="none">
                             <path
@@ -115,7 +131,7 @@
                 </div>
 
                 <div class="mh-grid mh-grid--mid">
-                    <article class="mh-card mh-card--chart">
+                    <article class="mh-card mh-card--chart mh-anim-item" style="--i: 6">
                         <div class="mh-card-header">
                             <h3 class="mh-card-title">Peak Bookings Times per Day</h3>
                             <div class="mh-day-switcher" aria-label="Select day">
@@ -187,7 +203,7 @@
                         </div>
                     </article>
 
-                    <article class="mh-card">
+                    <article class="mh-card mh-anim-item" style="--i: 7">
                         <div class="mh-card-header">
                             <h3 class="mh-card-title">Services</h3>
                         </div>
@@ -233,7 +249,7 @@
 
                 <div class="mh-grid mh-grid--bottom {{ $isSpaceUser ? 'mh-grid--bottom-space' : '' }}">
                     @unless ($isSpaceUser)
-                        <article class="mh-card">
+                        <article class="mh-card mh-anim-item" style="--i: 8">
                             <div class="mh-donut-block">
                                 <div>
                                     <h3 class="mh-card-title">Most Popular Pets</h3>
@@ -263,7 +279,7 @@
                         </article>
                     @endunless
 
-                    <article class="mh-card">
+                    <article class="mh-card mh-anim-item" style="--i: {{ $isSpaceUser ? 8 : 9 }}">
                         <div class="mh-card-header mh-card-header--divider">
                             <h3 class="mh-card-title">Bookings From</h3>
                         </div>
@@ -283,12 +299,173 @@
             </div>
         </div>
 
-        <div x-show="activeSection === 'promo-creation'" x-cloak>
-            <p class="marketing-hub-placeholder">Promo Creation tools coming soon.</p>
-        </div>
+        <div x-show="activeSection === 'promo-creation'" x-cloak x-transition:enter="mh-panel-enter"
+            x-transition:enter-start="mh-panel-enter-start" x-transition:enter-end="mh-panel-enter-end"
+            x-transition:leave="mh-panel-leave" x-transition:leave-start="mh-panel-leave-start"
+            x-transition:leave-end="mh-panel-leave-end">
+            <div class="mh-promo">
+                <div class="mh-promo-section">
+                    <div class="mh-promo-header">
+                        <div>
+                            <h3 class="mh-promo-title">Promotions</h3>
+                            <p class="mh-promo-subtitle">Create and manage offers to attract more bookings.</p>
+                        </div>
+                        <button type="button" class="mh-promo-create-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                <path d="M7 1V13M1 7H13" stroke="currentColor" stroke-width="1.5"
+                                    stroke-linecap="round" />
+                            </svg>
+                            Create Promotion
+                        </button>
+                    </div>
 
-        <div x-show="activeSection === 'settings'" x-cloak>
-            <p class="marketing-hub-placeholder">Marketing settings coming soon.</p>
+                    <div class="mh-tips-banner mh-tips-banner--promo" role="note">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16"
+                            fill="none">
+                            <path
+                                d="M5.79447 12.1458V8.43996M4.73565 8.30654C5.08155 8.39548 5.43732 8.44031 5.79447 8.43996C6.15162 8.44031 6.50739 8.39548 6.85329 8.30654M7.3827 13.5851C6.3332 13.7837 5.25574 13.7837 4.20624 13.5851M6.85329 15.2672C6.14934 15.341 5.4396 15.341 4.73565 15.2672M7.3827 12.1458V12.0103C7.3827 11.3164 7.84718 10.7235 8.44718 10.3755C9.45518 9.79175 10.2425 8.89188 10.6872 7.81528C11.1319 6.73869 11.2092 5.54549 10.9069 4.42055C10.6047 3.29562 9.93994 2.30175 9.0156 1.59296C8.09125 0.88416 6.95894 0.5 5.79412 0.5C4.62929 0.5 3.49699 0.88416 2.57264 1.59296C1.64829 2.30175 0.983507 3.29562 0.681292 4.42055C0.379078 5.54549 0.456304 6.73869 0.901005 7.81528C1.34571 8.89188 2.13306 9.79175 3.14106 10.3755C3.74106 10.7235 4.20624 11.3164 4.20624 12.0103V12.1458"
+                                stroke="#B5D475" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <p>Limited-time offers convert 22% better than ongoing discounts.</p>
+                    </div>
+
+                    <div class="mh-promo-table-wrap" x-data="{ ready: false }"
+                        x-effect="
+                            if (activeSection === 'promo-creation') {
+                                ready = false;
+                                $nextTick(() => requestAnimationFrame(() => ready = true));
+                            } else {
+                                ready = false;
+                            }
+                        ">
+                        <table class="mh-promo-table" :class="{ 'is-ready': ready }">
+                            <thead>
+                                <tr>
+                                    <th>Discount Type</th>
+                                    <th>Discount Amount</th>
+                                    <th>Code</th>
+                                    <th>Valid Dates</th>
+                                    <th>Status</th>
+                                    <th class="mh-promo-th-edit">Edit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($mhPromos['promos'] as $promo)
+                                    <tr wire:key="promo-row-{{ $promo['id'] }}" @class(['mh-promo-row--off' => !$promo['visibility']])
+                                        style="--i: {{ $loop->index }}" x-data="{ on: {{ $promo['visibility'] ? 'true' : 'false' }} }"
+                                        :class="{ 'mh-promo-row--off': !on }">
+                                        <td>{{ $promo['discount_type_label'] }}</td>
+                                        <td>{{ $promo['discount_amount_label'] }}</td>
+                                        <td class="mh-promo-code">{{ $promo['code'] }}</td>
+                                        <td>{{ $promo['valid_dates_label'] }}</td>
+                                        <td>
+                                            <label class="ma-switch" style="height: 24px;">
+                                                <input type="checkbox" :checked="on"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="togglePromoVisibility({{ $promo['id'] }})"
+                                                    @change="
+                                                        on = $event.target.checked;
+                                                        window.dispatchEvent(new CustomEvent('nav-list-loading-start', { detail: { persistent: true } }));
+                                                        $wire.togglePromoVisibility({{ $promo['id'] }})
+                                                            .then(() => {
+                                                                window.dispatchEvent(new CustomEvent('nav-list-loading-end'));
+                                                            })
+                                                            .catch(() => {
+                                                                on = !on;
+                                                                $event.target.checked = on;
+                                                                window.dispatchEvent(new CustomEvent('nav-list-loading-end'));
+                                                            });
+                                                    "
+                                                    aria-label="Toggle promo visibility">
+                                                <span class="ma-switch-slider"></span>
+                                                <span class="ma-switch-check-icon" aria-hidden="true">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20"
+                                                        height="20" viewBox="0 0 20 20" fill="none">
+                                                        <path
+                                                            d="M9.99391 0C4.49726 0 0 4.49726 0 9.99391C0 15.4906 4.49726 19.9878 9.99391 19.9878C15.4906 19.9878 19.9878 15.4906 19.9878 9.99391C19.9878 4.49726 15.4906 0 9.99391 0ZM8.41154 14.5744C8.18156 14.8044 7.80869 14.8044 7.57871 14.5744L3.70323 10.699C3.31384 10.3096 3.31384 9.67824 3.70323 9.28885C4.09225 8.89984 4.72282 8.8994 5.11237 9.28786L7.99513 12.1626L14.8709 5.28678C15.2624 4.8953 15.8975 4.89642 16.2876 5.28928C16.6757 5.68019 16.6746 6.31139 16.2851 6.70092L8.41154 14.5744Z"
+                                                            fill="white" />
+                                                    </svg>
+                                                </span>
+                                            </label>
+                                        </td>
+                                        <td class="mh-promo-td-edit">
+                                            <div class="mh-promo-actions">
+                                                <button type="button" class="mh-promo-action-btn "
+                                                    aria-label="Edit promotion">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="17"
+                                                        height="16" viewBox="0 0 17 16" fill="none">
+                                                        <path
+                                                            d="M10.8529 2.51425L13.6765 5.29691M8.97059 15.5H16.5M1.44118 11.7898L0.5 15.5L4.26471 14.5724L15.1692 3.82581C15.5221 3.47793 15.7203 3.00616 15.7203 2.51425C15.7203 2.02234 15.5221 1.55057 15.1692 1.20269L15.0073 1.04315C14.6543 0.695371 14.1756 0.5 13.6765 0.5C13.1773 0.5 12.6986 0.695371 12.3456 1.04315L1.44118 11.7898Z"
+                                                            stroke="#3B3731" stroke-linecap="round"
+                                                            stroke-linejoin="round" />
+                                                    </svg>
+                                                </button>
+                                                <button type="button"
+                                                    class="mh-promo-action-btn mh-promo-action-btn--more"
+                                                    aria-label="More options">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="5"
+                                                        height="5" viewBox="0 0 5 5" fill="none">
+                                                        <circle cx="2.5" cy="2.5" r="2.5"
+                                                            fill="#3B3731" />
+                                                    </svg>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="5"
+                                                        height="5" viewBox="0 0 5 5" fill="none">
+                                                        <circle cx="2.5" cy="2.5" r="2.5"
+                                                            fill="#3B3731" />
+                                                    </svg>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="5"
+                                                        height="5" viewBox="0 0 5 5" fill="none">
+                                                        <circle cx="2.5" cy="2.5" r="2.5"
+                                                            fill="#3B3731" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr style="--i: 0">
+                                        <td colspan="6" class="mh-promo-empty">No promotions yet. Create your first
+                                            offer to get started.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mh-promo-section">
+                    <h3 class="mh-section-title" style="border-bottom: none;padding-bottom: 0;">Campaign Performance
+                        (This Week)</h3>
+                    <div class="mh-kpi-row mh-kpi-row--promo">
+                        <article class="mh-kpi-card mh-kpi-card--promo-views">
+                            <p class="mh-kpi-label">Promotion Views</p>
+                            <p class="mh-kpi-value">{{ $mhPromos['performance']['views']['value'] }}</p>
+                            <span class="mh-kpi-pill mh-kpi-pill--promo-views">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="6" height="9"
+                                    viewBox="0 0 6 9" fill="none" aria-hidden="true">
+                                    <path
+                                        d="M2.91 0L5.8 2.895L5.415 3.265C5.33833 3.34167 5.26167 3.37333 5.185 3.36C5.105 3.34333 5.02833 3.3 4.955 3.23L3.74 2.005C3.65333 1.91833 3.575 1.835 3.505 1.755C3.43167 1.675 3.36667 1.59833 3.31 1.525C3.33333 1.72167 3.35333 1.92833 3.37 2.145C3.38333 2.35833 3.39 2.575 3.39 2.795L3.39 8.93H2.415L2.415 2.795C2.415 2.575 2.42333 2.35667 2.44 2.14C2.45333 1.92333 2.47333 1.71667 2.5 1.52C2.44333 1.59667 2.38 1.675 2.31 1.755C2.23667 1.835 2.15667 1.91833 2.07 2.005L0.845 3.24C0.775 3.31 0.7 3.35333 0.62 3.37C0.54 3.38333 0.461667 3.35167 0.385 3.275L0 2.905L2.91 0Z"
+                                        fill="currentColor" />
+                                </svg>
+                                {{ $mhPromos['performance']['views']['sublabel'] }}
+                            </span>
+                        </article>
+                        <article class="mh-kpi-card mh-kpi-card--promo-bookings">
+                            <p class="mh-kpi-label">Bookings</p>
+                            <p class="mh-kpi-value">{{ $mhPromos['performance']['bookings']['value'] }}</p>
+                            <span
+                                class="mh-kpi-pill mh-kpi-pill--promo-bookings">{{ $mhPromos['performance']['bookings']['sublabel'] }}</span>
+                        </article>
+                        <article class="mh-kpi-card mh-kpi-card--promo-revenue">
+                            <p class="mh-kpi-label">Revenue</p>
+                            <p class="mh-kpi-value">{{ $mhPromos['performance']['revenue']['value'] }}</p>
+                            <span
+                                class="mh-kpi-pill mh-kpi-pill--promo-revenue">{{ $mhPromos['performance']['revenue']['sublabel'] }}</span>
+                        </article>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -308,6 +485,50 @@
         font-weight: 600;
         line-height: normal;
         position: relative;
+    }
+
+    .active-section-loading-bar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -6px;
+        height: 4px;
+        overflow: hidden;
+        z-index: 10;
+        pointer-events: none;
+        background: rgba(232, 228, 222, 0.85);
+        border-radius: 2px;
+    }
+
+    .active-section-loading-bar__sweep {
+        position: absolute;
+        top: 0;
+        left: -42%;
+        height: 100%;
+        width: 42%;
+        border-radius: 2px;
+        background: linear-gradient(90deg, #FFC97A 0%, #f6a623 45%, #FFC97A 100%);
+        box-shadow: 0 0 12px rgba(246, 166, 35, 0.45);
+        will-change: left;
+        animation: active-section-load-sweep 1.1s linear infinite;
+    }
+
+    @keyframes active-section-load-sweep {
+        0% {
+            left: -42%;
+        }
+
+        100% {
+            left: 100%;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .active-section-loading-bar__sweep {
+            animation: none;
+            left: 0;
+            width: 100%;
+        }
     }
 
     .active-section-header h2,
@@ -790,6 +1011,400 @@
         .mh-services-divider {
             width: 100%;
             height: 1px;
+        }
+    }
+
+    /* Promo Creation */
+    .mh-promo {
+        display: flex;
+        flex-direction: column;
+        gap: 2.5rem;
+    }
+
+    .mh-promo-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .mh-promo-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #D4D4D4;
+        margin-bottom: 1.25rem;
+    }
+
+    .mh-promo-title {
+        margin: 0 0 0.35rem;
+        color: #3B3731;
+        font-family: "Playfair Display";
+        font-size: 28px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .mh-promo-subtitle {
+        margin: 0;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 20px;
+    }
+
+    .mh-promo-create-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0.15rem;
+        padding: 0;
+        border: none;
+        background: transparent;
+        color: #3B3731;
+        text-align: right;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .mh-promo-create-btn:hover {
+        color: #6B6760;
+    }
+
+    .mh-tips-banner--promo {
+        border-radius: 10px;
+        background: rgba(201, 221, 160, 0.20);
+        margin: 0 auto 1.5rem;
+    }
+
+    .mh-tips-banner--promo p {
+        color: #B5D475;
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .mh-panel-enter {
+        transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .mh-panel-enter-start {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    .mh-panel-enter-end {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .mh-panel-leave {
+        transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .mh-panel-leave-start {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .mh-panel-leave-end {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    .mh-dashboard .mh-anim-item {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    .mh-dashboard.is-ready .mh-anim-item {
+        animation: mh-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        animation-delay: calc(var(--i, 0) * 55ms + 40ms);
+    }
+
+    @keyframes mh-fade-up {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .mh-promo-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .mh-promo-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    .mh-promo-table thead tr {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    .mh-promo-table.is-ready thead tr {
+        animation: mh-fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        animation-delay: 40ms;
+    }
+
+    .mh-promo-table tbody tr {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    .mh-promo-table.is-ready tbody tr {
+        animation: mh-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        animation-delay: calc(var(--i, 0) * 55ms + 100ms);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .mh-panel-enter,
+        .mh-panel-leave,
+        .mh-dashboard .mh-anim-item,
+        .mh-dashboard.is-ready .mh-anim-item,
+        .mh-promo-table thead tr,
+        .mh-promo-table tbody tr,
+        .mh-promo-table.is-ready thead tr,
+        .mh-promo-table.is-ready tbody tr {
+            transition: none !important;
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+        }
+    }
+
+    .mh-promo-table th {
+        padding: 0.75rem 0.5rem 0.9rem;
+        color: #000;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        text-align: left;
+        border-bottom: 1px solid #ECECEC;
+        white-space: nowrap;
+    }
+
+    .mh-promo-th-edit,
+    .mh-promo-td-edit {
+        border-left: 1px solid #ECECEC;
+        padding-left: 5rem !important;
+    }
+
+    .mh-promo-th-edit {
+        text-align: left !important;
+        padding-right: 0.25rem !important;
+    }
+
+    .mh-promo-table td {
+        padding: 1.05rem 0.5rem;
+        color: #3B3731;
+        font-family: Lato, sans-serif;
+        font-size: 15px;
+        font-weight: 500;
+        line-height: normal;
+        border-bottom: 1px solid #F0F0F0;
+        vertical-align: middle;
+        transition: color 0.15s ease;
+    }
+
+    .mh-promo-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .mh-promo-code {
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+
+    .mh-promo-row--off td {
+        color: #B0AEAB;
+    }
+
+    .mh-promo-empty {
+        color: #9D9B98 !important;
+        font-weight: 400 !important;
+        text-align: center;
+        padding: 2rem 0.5rem !important;
+    }
+
+    .ma-switch {
+        position: relative;
+        display: inline-block;
+        width: 42px;
+    }
+
+    .ma-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .ma-switch-slider {
+        width: 44px;
+        height: 24px;
+        aspect-ratio: 11/6;
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        border-radius: 999px;
+        background: #D4D4D4;
+        transition: background 0.2s ease;
+    }
+
+    .ma-switch-slider::before {
+        content: "";
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        background: #fff;
+        top: 2px;
+        left: 3px;
+        transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+
+    .ma-switch input:checked+.ma-switch-slider {
+        background: #d4e5ad;
+    }
+
+    .ma-switch input:checked+.ma-switch-slider::before {
+        transform: translateX(20px);
+        background: transparent;
+    }
+
+    .ma-switch-check-icon {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 20px;
+        height: 20px;
+        line-height: 0;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .ma-switch input:checked~.ma-switch-check-icon {
+        opacity: 1;
+        transform: translateX(20px);
+    }
+
+    .mh-promo-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 3.5rem;
+    }
+
+    .mh-promo-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    .mh-promo-action-btn--more {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+    }
+
+
+    .mh-kpi-row--promo {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        max-width: 100%;
+    }
+
+    .mh-kpi-row--promo .mh-kpi-card {
+        border: none;
+        border-radius: 10px;
+    }
+
+    .mh-kpi-card--promo-views {
+        background: rgba(255, 235, 206, 0.20);
+    }
+
+    .mh-kpi-card--promo-bookings {
+        background: rgba(253, 224, 210, 0.20);
+    }
+
+    .mh-kpi-card--promo-revenue {
+        background: rgba(255, 224, 219, 0.20);
+    }
+
+    .mh-kpi-row--promo .mh-kpi-pill {
+        border-radius: 74px;
+        font-family: Lato;
+        font-size: 10px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        letter-spacing: 0.1px;
+    }
+
+    .mh-kpi-pill--promo-views {
+        background: rgba(255, 201, 122, 0.2);
+        color: #FFC97A;
+    }
+
+    .mh-kpi-pill--promo-bookings {
+        background: rgba(251, 172, 131, 0.2);
+        color: #FBAC83;
+    }
+
+    .mh-kpi-pill--promo-revenue {
+        background: rgba(255, 168, 153, 0.2);
+        color: #FFA899;
+    }
+
+    @media (max-width: 900px) {
+        .mh-promo-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .mh-promo-create-btn {
+            align-self: flex-start;
+        }
+
+        .mh-kpi-row--promo {
+            max-width: none;
+        }
+    }
+
+    @media (max-width: 720px) {
+        .mh-promo-table {
+            table-layout: auto;
+            min-width: 640px;
         }
     }
 </style>
