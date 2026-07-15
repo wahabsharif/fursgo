@@ -23,6 +23,7 @@ class Booking extends Model
         'staff',
         'rating',
         'visit_type',
+        'acquisition_source',
         'booking_status',
         'cancelled_by',
         'refund_status',
@@ -55,6 +56,11 @@ class Booking extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function promoCodeUsage(): HasOne
+    {
+        return $this->hasOne(PromoCodeUsage::class);
     }
 
     public function scopeToday($query)
