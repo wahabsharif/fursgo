@@ -14,7 +14,6 @@ class MarketingHubNav
     public const SECTIONS = [
         'marketing-hub',
         'promo-creation',
-        'settings',
     ];
 
     /**
