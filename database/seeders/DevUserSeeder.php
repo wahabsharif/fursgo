@@ -93,7 +93,74 @@ class DevUserSeeder extends Seeder
                     ],
                 ],
                 'spacer_business_profile' => null,
-                'profile_visit' => 125,
+                'profile_visit' => 1240,
+                'legal_policy_agreements' => true,
+                'auto_accept_booking' => true,
+            ]
+        );
+
+        GroomerSpacerProfile::updateOrCreate(
+            ['email' => 'space@dev.com'],
+            [
+                'full_name' => 'Dev Space',
+                'information_accuracy_confirmed' => true,
+                'password' => Hash::make($plainPassword),
+                'user_type' => 'space',
+                'account_type' => 'registered_business',
+                'select_location_type' => ['garden_shed', 'garage'],
+                'id_document_paths' => [],
+                'business_details' => [
+                    'business_name' => 'Dev Space Hire Ltd',
+                    'business_registration_number' => '87654321',
+                    'business_phone' => '+441632960001',
+                    'business_email' => 'space@dev.com',
+                    'business_owner_id_images' => [],
+                ],
+                'payout_details' => [
+                    'bank' => 'Barclays',
+                    'account_holder_name' => 'Dev Space',
+                    'account_number' => '87654321',
+                    'sort_code' => '65-43-21',
+                    'iban' => 'GB82WEST12345698765433',
+                    'payout_frequency' => 'Weekly',
+                ],
+                'insurance_details' => [
+                    'insurance_certificate_paths' => [],
+                    'insurance_certificate_expiry_date' => '2026-01-12',
+                ],
+                'freelance_details' => null,
+                'business_basics' => [
+                    'display_name' => 'Dev Space Studio',
+                    'tagline' => 'Flexible spaces for calm, professional pet care.',
+                    'bio' => 'Development seed space profile with representative rental options.',
+                    'profile_photo_path' => '',
+                    'gallery_paths' => [],
+                ],
+                'groomer_business_profile' => null,
+                'spacer_business_profile' => [
+                    'experience' => 'Purpose-built hire spaces for groomers and pet pros.',
+                    'space_types' => ['Garden / Shed', 'Garage'],
+                    'services' => [
+                        'hourly' => ['name' => 'Hourly', 'price' => '25', 'description' => '1 hour access'],
+                        'half_day' => ['name' => 'Half-Day', 'price' => '80', 'meta' => '(4 hours)'],
+                        'full_day' => ['name' => 'Full-Day', 'price' => '120', 'meta' => '(8 hours)'],
+                    ],
+                    'addon_pricing' => [
+                        'storage_locker' => [
+                            'name' => 'Storage Locker',
+                            'price' => '8',
+                        ],
+                        'deep_clean' => [
+                            'name' => 'Deep Clean',
+                            'price' => '20',
+                        ],
+                        'after_hours' => [
+                            'name' => 'After-Hours Access',
+                            'price' => '10',
+                        ],
+                    ],
+                ],
+                'profile_visit' => 980,
                 'legal_policy_agreements' => true,
                 'auto_accept_booking' => true,
             ]
