@@ -112,6 +112,9 @@ window.addEventListener('dashboard-nav-changed', (event) => persistMarketingHubN
     <script src="{{ asset('js/custom-dropdown.js') }}" defer></script>
     <script src="{{ asset('js/custom.js') }}" defer></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+    <script src="{{ asset('js/marketing-hub-charts.js') }}"></script>
+
     @fluxScripts
 
     @stack('styles')
