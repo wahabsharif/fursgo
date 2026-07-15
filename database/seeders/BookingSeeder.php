@@ -221,6 +221,54 @@ class BookingSeeder extends Seeder
     }
 
     /**
+     * Demo promo codes for the Promo Creation table.
+     *
+     * @param  list<array{code: string, type: string, amount: float|int, visibility: bool}>  $catalog
+     */
+    private function seedPromoCatalog(int $spacerId, array $catalog = []): void
+    {
+        if ($catalog === []) {
+            $catalog = [
+                ['code' => 'NY367', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 20, 'visibility' => true],
+                ['code' => 'NEW10', 'type' => PromoCode::DISCOUNT_TYPE_POUND, 'amount' => 20, 'visibility' => true],
+                ['code' => 'PETS19', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 20, 'visibility' => true],
+                ['code' => 'PAWS20', 'type' => PromoCode::DISCOUNT_TYPE_POUND, 'amount' => 20, 'visibility' => false],
+                ['code' => 'NAILS10', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 20, 'visibility' => true],
+                ['code' => 'BATH10', 'type' => PromoCode::DISCOUNT_TYPE_POUND, 'amount' => 5, 'visibility' => false],
+                ['code' => 'FUR298', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 20, 'visibility' => true],
+                ['code' => 'FIRST50', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 20, 'visibility' => true],
+                ['code' => 'NWYEAR26', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 15, 'visibility' => true],
+                ['code' => 'SPRING15', 'type' => PromoCode::DISCOUNT_TYPE_POUND, 'amount' => 15, 'visibility' => true],
+                ['code' => 'WELCOME10', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 10, 'visibility' => true],
+            ];
+        }
+
+        $start = now()->month(11)->day(12)->startOfDay();
+        $end = now()->month(11)->day(25)->endOfDay();
+
+        foreach ($catalog as $row) {
+            PromoCode::updateOrCreate(
+                [
+                    'goormer_spacer_id' => $spacerId,
+                    'discount_code' => $row['code'],
+                ],
+                [
+                    'description' => '',
+                    'start_date' => $start->toDateString(),
+                    'end_date' => $end->toDateString(),
+                    'no_end_date' => false,
+                    'discount_type' => $row['type'],
+                    'discount_amount' => $row['amount'],
+                    'services' => ['allow_all' => true, 'selected' => []],
+                    'pet_types' => ['allow_all' => true, 'selected' => []],
+                    'pet_sizes' => ['allow_all' => true, 'selected' => []],
+                    'visibility' => $row['visibility'],
+                ]
+            );
+        }
+    }
+
+    /**
      * Extra historical bookings so Marketing Hub charts/KPIs have enough coverage.
      *
      * @param  array<string, array<int, array<string, mixed>>>  $serviceAddOns
@@ -237,6 +285,7 @@ class BookingSeeder extends Seeder
         array $refundStatuses,
         array $discountSamples,
     ): void {
+        $this->seedPromoCatalog($spacerId);
         $services = array_keys($serviceAddOns);
         $sources = ['direct_profile', 'direct_profile', 'direct_profile', 'platform_search', 'platform_search', 'promotion_link'];
         $promos = ['NWYEAR26', 'SPRING15', 'WELCOME10', null, null];
@@ -359,6 +408,8 @@ class BookingSeeder extends Seeder
 
             return;
         }
+
+        $this->seedPromoCatalog($spaceSpacer->id);
 
         $serviceAddOns = [
             'Hourly' => [
