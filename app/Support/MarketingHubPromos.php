@@ -20,8 +20,8 @@ class MarketingHubPromos
 
         $promos = PromoCode::query()
             ->where('goormer_spacer_id', $spacerId)
-            ->orderByDesc('visibility')
-            ->orderBy('discount_code')
+            ->orderByDesc('updated_at')
+            ->orderByDesc('created_at')
             ->get()
             ->map(fn(PromoCode $promo) => self::presentPromo($promo))
             ->values()
@@ -81,11 +81,21 @@ class MarketingHubPromos
 
         $endDate = $end instanceof Carbon ? $end : Carbon::parse($end);
 
+        // Same month + year: 12-25 Nov
         if ($startDate->isSameMonth($endDate) && $startDate->isSameYear($endDate)) {
+            if ($startDate->isSameDay($endDate)) {
+                return $startDate->format('j M');
+            }
+
             return $startDate->format('j') . '-' . $endDate->format('j M');
         }
 
-        return $startDate->format('j M') . ' – ' . $endDate->format('j M');
+        // Different months: 15 Jun – 15 Jul
+        if ($startDate->isSameYear($endDate)) {
+            return $startDate->format('j M') . ' – ' . $endDate->format('j M');
+        }
+
+        return $startDate->format('j M Y') . ' – ' . $endDate->format('j M Y');
     }
 
     /**

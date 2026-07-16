@@ -223,30 +223,62 @@ class BookingSeeder extends Seeder
     /**
      * Demo promo codes for the Promo Creation table.
      *
-     * @param  list<array{code: string, type: string, amount: float|int, visibility: bool}>  $catalog
+     * Date ranges intentionally cover all Valid Dates formats:
+     * - Same month: 12-25 Nov
+     * - Different months: 15 Jun – 15 Jul
+     * - Ongoing: 12 Nov – Ongoing
+     *
+     * @param  list<array{
+     *     code: string,
+     *     type: string,
+     *     amount: float|int,
+     *     visibility: bool,
+     *     dates?: 'same_month'|'cross_month'|'ongoing'
+     * }>  $catalog
      */
     private function seedPromoCatalog(int $spacerId, array $catalog = []): void
     {
         if ($catalog === []) {
             $catalog = [
-                ['code' => 'NY367', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 20, 'visibility' => true],
-                ['code' => 'NEW10', 'type' => PromoCode::DISCOUNT_TYPE_POUND, 'amount' => 20, 'visibility' => true],
-                ['code' => 'PETS19', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 20, 'visibility' => true],
-                ['code' => 'PAWS20', 'type' => PromoCode::DISCOUNT_TYPE_POUND, 'amount' => 20, 'visibility' => false],
-                ['code' => 'NAILS10', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 20, 'visibility' => true],
-                ['code' => 'BATH10', 'type' => PromoCode::DISCOUNT_TYPE_POUND, 'amount' => 5, 'visibility' => false],
-                ['code' => 'FUR298', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 20, 'visibility' => true],
-                ['code' => 'FIRST50', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 20, 'visibility' => true],
-                ['code' => 'NWYEAR26', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 15, 'visibility' => true],
-                ['code' => 'SPRING15', 'type' => PromoCode::DISCOUNT_TYPE_POUND, 'amount' => 15, 'visibility' => true],
-                ['code' => 'WELCOME10', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 10, 'visibility' => true],
+                ['code' => 'NY367', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 20, 'visibility' => true, 'dates' => 'same_month'],
+                ['code' => 'NEW10', 'type' => PromoCode::DISCOUNT_TYPE_POUND, 'amount' => 20, 'visibility' => true, 'dates' => 'cross_month'],
+                ['code' => 'PETS19', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 20, 'visibility' => true, 'dates' => 'ongoing'],
+                ['code' => 'PAWS20', 'type' => PromoCode::DISCOUNT_TYPE_POUND, 'amount' => 20, 'visibility' => false, 'dates' => 'same_month'],
+                ['code' => 'NAILS10', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 20, 'visibility' => true, 'dates' => 'cross_month'],
+                ['code' => 'BATH10', 'type' => PromoCode::DISCOUNT_TYPE_POUND, 'amount' => 5, 'visibility' => false, 'dates' => 'ongoing'],
+                ['code' => 'FUR298', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 20, 'visibility' => true, 'dates' => 'same_month'],
+                ['code' => 'FIRST50', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 20, 'visibility' => true, 'dates' => 'cross_month'],
+                ['code' => 'NWYEAR26', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 15, 'visibility' => true, 'dates' => 'ongoing'],
+                ['code' => 'SPRING15', 'type' => PromoCode::DISCOUNT_TYPE_POUND, 'amount' => 15, 'visibility' => true, 'dates' => 'same_month'],
+                ['code' => 'WELCOME10', 'type' => PromoCode::DISCOUNT_TYPE_PERCENT, 'amount' => 10, 'visibility' => true, 'dates' => 'cross_month'],
             ];
         }
 
-        $start = now()->month(11)->day(12)->startOfDay();
-        $end = now()->month(11)->day(25)->endOfDay();
+        $year = (int) now()->year;
+        $datePresets = [
+            // 12-25 Nov
+            'same_month' => [
+                'start_date' => "{$year}-11-12",
+                'end_date' => "{$year}-11-25",
+                'no_end_date' => false,
+            ],
+            // 15 Jun – 15 Jul
+            'cross_month' => [
+                'start_date' => "{$year}-06-15",
+                'end_date' => "{$year}-07-15",
+                'no_end_date' => false,
+            ],
+            // 12 Nov – Ongoing
+            'ongoing' => [
+                'start_date' => "{$year}-11-12",
+                'end_date' => null,
+                'no_end_date' => true,
+            ],
+        ];
 
         foreach ($catalog as $row) {
+            $dates = $datePresets[$row['dates'] ?? 'same_month'] ?? $datePresets['same_month'];
+
             PromoCode::updateOrCreate(
                 [
                     'goormer_spacer_id' => $spacerId,
@@ -254,9 +286,9 @@ class BookingSeeder extends Seeder
                 ],
                 [
                     'description' => '',
-                    'start_date' => $start->toDateString(),
-                    'end_date' => $end->toDateString(),
-                    'no_end_date' => false,
+                    'start_date' => $dates['start_date'],
+                    'end_date' => $dates['end_date'],
+                    'no_end_date' => $dates['no_end_date'],
                     'discount_type' => $row['type'],
                     'discount_amount' => $row['amount'],
                     'services' => ['allow_all' => true, 'selected' => []],
