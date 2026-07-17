@@ -8,20 +8,23 @@
     'startValue' => null,
     'endValue' => null,
     'calendarWidth' => '100%',
+    'single' => false,
 ])
 
 @php
     $componentId = preg_replace('/[^A-Za-z0-9_-]/', '-', (string) $id);
+    $isSingle = filter_var($single, FILTER_VALIDATE_BOOLEAN);
 @endphp
 
-<div class="rdc" id="{{ $componentId }}" style="--rdc-width: {{ $calendarWidth }};" x-data="rangeDateCalendar({
-    start: @js($startValue),
-    end: @js($endValue),
-    startName: @js($startName),
-    endName: @js($endName),
-    componentId: @js($componentId),
-})"
-    x-init="init()">
+<div class="rdc{{ $isSingle ? ' rdc--single' : '' }}" id="{{ $componentId }}" style="--rdc-width: {{ $calendarWidth }};"
+    x-data="rangeDateCalendar({
+        start: @js($startValue),
+        end: @js($endValue),
+        startName: @js($startName),
+        endName: @js($endName),
+        componentId: @js($componentId),
+        single: @js($isSingle),
+    })" x-init="init()">
     <input type="hidden" :name="startName" :value="startDate">
     <input type="hidden" :name="endName" :value="endDate">
 
@@ -61,9 +64,9 @@
                 x-transition:leave="transition ease-in duration-140"
                 x-transition:leave-start="opacity-100 translate-y-0 scale-y-100"
                 x-transition:leave-end="opacity-0 -translate-y-2 scale-y-95">
-                <div class="rdc-month-range-grid">
+                <div class="rdc-month-range-grid" :class="{ 'rdc-month-range-grid--single': single }">
                     <div class="rdc-month-range-block">
-                        <label class="rdc-month-range-label">From</label>
+                        <label class="rdc-month-range-label" x-text="single ? 'Month' : 'From'"></label>
                         <div class="rdc-month-range-controls">
                             <div class="rdc-custom-select-wrap" @click.outside="closeFromMonthSelect()">
                                 <button type="button" class="rdc-custom-select" @click="toggleFromMonthSelect()"
@@ -105,7 +108,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="rdc-month-range-block">
+                    <div class="rdc-month-range-block" x-show="!single">
                         <label class="rdc-month-range-label">To</label>
                         <div class="rdc-month-range-controls">
                             <div class="rdc-custom-select-wrap" @click.outside="closeToMonthSelect()">
@@ -215,7 +218,35 @@
                     </svg>
                 </button>
                 <strong x-text="monthLabel(leftDate)"></strong>
-                <div></div>
+                <button type="button" class="rdc-nav-inline" x-show="single" @click="nextMonth()"
+                    aria-label="Next month">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34"
+                        fill="none">
+                        <g filter="url(#filter0_d_3_1955s)">
+                            <circle cx="13" cy="13" r="13" transform="matrix(-1 0 0 1 30 0)"
+                                fill="white" />
+                        </g>
+                        <path d="M15.375 17.0625L19.4653 12.9722L15.4437 8.9505" stroke="#3B3731"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                        <defs>
+                            <filter id="filter0_d_3_1955s" x="0" y="0" width="34" height="34"
+                                filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                                <feColorMatrix in="SourceAlpha" type="matrix"
+                                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+                                <feOffset dy="4" />
+                                <feGaussianBlur stdDeviation="2" />
+                                <feComposite in2="hardAlpha" operator="out" />
+                                <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.03 0" />
+                                <feBlend mode="normal" in2="BackgroundImageFix"
+                                    result="effect1_dropShadow_3_1955s" />
+                                <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_3_1955s"
+                                    result="shape" />
+                            </filter>
+                        </defs>
+                    </svg>
+                </button>
+                <div x-show="!single"></div>
             </div>
             <div class="rdc-weekdays">
                 <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
@@ -231,7 +262,7 @@
             </div>
         </div>
 
-        <div class="rdc-month">
+        <div class="rdc-month" x-show="!single">
             <div class="rdc-month-header">
                 <div></div>
                 <strong x-text="monthLabel(rightDate)"></strong>
@@ -333,6 +364,10 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
         margin-bottom: 10px;
+    }
+
+    .rdc-month-range-grid--single {
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .rdc-month-range-block {
@@ -545,6 +580,14 @@
         gap: 20px;
     }
 
+    .rdc--single .rdc-panel {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rdc--single .rdc-top .rdc-nav-circle {
+        display: none;
+    }
+
     .rdc-month-header {
         display: flex;
         align-items: center;
@@ -670,6 +713,8 @@
                 startName: config.startName || 'start_date',
                 endName: config.endName || 'end_date',
                 componentId: config.componentId || null,
+                single: !!config.single,
+                pickMode: 'range',
                 startDate: config.start || null,
                 endDate: config.end || null,
                 hoverDate: null,
@@ -701,11 +746,17 @@
                             this.startDate = detail.start || '';
                         }
                         if (Object.prototype.hasOwnProperty.call(detail, 'end')) {
-                            this.endDate = detail.end || '';
+                            this.endDate = this.single ? '' : (detail.end || '');
                         }
-                        const anchor = this.startDate ?
-                            this.isoToDate(this.startDate) :
-                            (this.endDate ? this.isoToDate(this.endDate) : new Date());
+                        if (Object.prototype.hasOwnProperty.call(detail, 'pickMode')) {
+                            this.pickMode = detail.pickMode || 'range';
+                        }
+                        const anchorIso = (this.pickMode === 'end' && this.endDate) ?
+                            this.endDate :
+                            (this.startDate || this.endDate || null);
+                        const anchor = anchorIso ?
+                            this.isoToDate(anchorIso) :
+                            new Date();
                         if (anchor) {
                             this.leftDate = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
                             this.rightDate = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1);
@@ -715,6 +766,9 @@
                     });
                 },
                 get rangeTitle() {
+                    if (this.single) {
+                        return `${MONTHS[this.leftDate.getMonth()]} ${this.leftDate.getFullYear()}`;
+                    }
                     return `${MONTHS[this.leftDate.getMonth()]} ${this.leftDate.getFullYear()} - ${MONTHS[this.rightDate.getMonth()]} ${this.rightDate.getFullYear()}`;
                 },
                 monthLabel(baseDate) {
@@ -816,6 +870,12 @@
                 },
                 applyFromToMonths() {
                     const fromDate = new Date(this.draftFromYear, this.draftFromMonth, 1);
+                    if (this.single) {
+                        this.leftDate = fromDate;
+                        this.rightDate = new Date(this.draftFromYear, this.draftFromMonth + 1, 1);
+                        this.closeMonthDropdown();
+                        return;
+                    }
                     const toDate = new Date(this.draftToYear, this.draftToMonth, 1);
                     if (toDate < fromDate) {
                         this.rightDate = new Date(this.draftFromYear, this.draftFromMonth + 1, 1);
@@ -857,6 +917,36 @@
                     return cells;
                 },
                 pickDate(dateIso) {
+                    if (this.single) {
+                        this.startDate = dateIso;
+                        this.endDate = null;
+                        this.hoverDate = null;
+                        this.emitRangeChanged();
+                        return;
+                    }
+
+                    if (this.pickMode === 'end' && this.startDate) {
+                        if (dateIso < this.startDate) {
+                            this.endDate = this.startDate;
+                            this.startDate = dateIso;
+                        } else {
+                            this.endDate = dateIso;
+                        }
+                        this.hoverDate = null;
+                        this.emitRangeChanged();
+                        return;
+                    }
+
+                    if (this.pickMode === 'start') {
+                        this.startDate = dateIso;
+                        if (this.endDate && dateIso > this.endDate) {
+                            this.endDate = null;
+                        }
+                        this.hoverDate = null;
+                        this.emitRangeChanged();
+                        return;
+                    }
+
                     if (!this.startDate || (this.startDate && this.endDate)) {
                         this.startDate = dateIso;
                         this.endDate = null;
@@ -885,23 +975,37 @@
                     }));
                 },
                 setHoverDate(dateIso) {
-                    if (!this.startDate || this.endDate || !dateIso) return;
-                    this.hoverDate = dateIso;
+                    if (this.single || !this.startDate || !dateIso) return;
+                    if (this.pickMode === 'end' || !this.endDate) {
+                        this.hoverDate = dateIso;
+                    }
                 },
                 clearHoverDate() {
-                    if (this.endDate) return;
+                    if (this.pickMode !== 'end' && this.endDate) return;
                     this.hoverDate = null;
                 },
                 dayClasses(day) {
                     if (!day.date) return '';
-                    const previewEnd = this.endDate ?? this.hoverDate;
+                    if (this.single) {
+                        return {
+                            'is-selected': this.startDate === day.date,
+                            'is-in-range': false,
+                            'is-range-start': false,
+                            'is-range-end': false,
+                        };
+                    }
+                    const previewEnd = (this.pickMode === 'end' || !this.endDate) ?
+                        (this.hoverDate ?? this.endDate) :
+                        this.endDate;
                     const rangeStart = this.startDate && previewEnd && previewEnd < this.startDate ?
                         previewEnd : this.startDate;
                     const rangeEnd = this.startDate && previewEnd && previewEnd < this.startDate ? this
                         .startDate : previewEnd;
                     const inRange = rangeStart && rangeEnd && day.date > rangeStart && day.date < rangeEnd;
                     const isStart = this.startDate === day.date;
-                    const isEnd = this.endDate ? this.endDate === day.date : this.hoverDate === day.date;
+                    const isEnd = (this.pickMode === 'end' && this.hoverDate) ?
+                        this.hoverDate === day.date :
+                        (this.endDate ? this.endDate === day.date : this.hoverDate === day.date);
                     const hasRange = !!rangeStart && !!rangeEnd && rangeStart !== rangeEnd;
                     return {
                         'is-selected': isStart || isEnd,
