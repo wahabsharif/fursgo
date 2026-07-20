@@ -58,7 +58,7 @@ class User extends Authenticatable  // implements MustVerifyEmail
     {
         return Str::of($this->name)
             ->explode(' ')
-            ->map(fn(string $name) => Str::of($name)->substr(0, 1))
+            ->map(fn (string $name) => Str::of($name)->substr(0, 1))
             ->implode('');
     }
 
@@ -84,5 +84,13 @@ class User extends Authenticatable  // implements MustVerifyEmail
     public function groomerSpacerProfile()
     {
         return $this->hasOne(GroomerSpacerProfile::class);
+    }
+
+    /**
+     * Get the account settings for the user
+     */
+    public function accountSetting()
+    {
+        return $this->morphOne(AccountSetting::class, 'owner');
     }
 }
