@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountDataExportController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BookingInvoicePdfController;
 use App\Http\Controllers\PetDetailController;
@@ -13,9 +14,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\LivewireManager;
 use Livewire\Volt\Volt;
+use Throwable;
 
 Route::get('/clear', function () {
     Artisan::call('optimize:clear');
+
     return 'All caches cleared!';
 });
 
@@ -53,7 +56,7 @@ Route::get('/seed', function () {
                 . e($output) . '</pre>',
             200
         )->header('Content-Type', 'text/html');
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         return response(
             "<pre>Seeding failed:\n\n" . e($e->getMessage()) . '</pre>',
             500
@@ -66,7 +69,7 @@ Route::middleware('business.shell.web')->group(function () {
     Volt::route('/', 'home')->name('home');
     Route::view('/business-landing-page', 'business-landing-page')->name('business-landing-page');
     Route::livewire('/support-and-assistance/search', 'help.search')->name('search');
-    Volt::route('/search-results', 'search.results')->name('search-results');
+    Volt::route('/search-results', 'search/results')->name('search-results');
 });
 Route::redirect('/business/support-and-assistance/help-and-support', '/support-and-assistance/help-and-support');
 Route::redirect('/business/support-and-assistance/search', '/support-and-assistance/search');
@@ -90,17 +93,24 @@ Route::get('/business-homepage-groomer-space-owner', function () {
 })->name('business-homepage-groomer-space-owner');
 
 // Authenticated pages (web + groomer/spacer guard)
-Volt::route('/booking-groomer', 'booking.groomer')
+Volt::route('/booking-groomer', 'booking/groomer')
     ->middleware(['auth:web,groomer_spacer'])
     ->name('booking-groomer');
 
-Volt::route('/my-account/pet-owner-profile', 'account.profile')
+Volt::route('/my-account/pet-owner-profile', 'account/profile')
     ->middleware(['auth:web,groomer_spacer'])
     ->name('pet-owner-profile');
 
-Volt::route('/account-and-setting/settings', 'account.settings')
-    ->middleware(['auth:web,groomer_spacer'])
-    ->name('account-and-setting');
+Volt::route('/account-settings', 'account/settings')
+    ->middleware(['auth:web,groomer_spacer', 'business.shell.business-hub'])
+    ->name('account-settings');
+
+Route::get('/account-settings/download-data', AccountDataExportController::class)
+    ->middleware(['auth:web,groomer_spacer', 'business.shell.business-hub'])
+    ->name('account-settings.download-data');
+
+Route::redirect('/account-and-setting/settings', '/account-settings')
+    ->middleware(['auth:web,groomer_spacer']);
 
 // Cookie and overlay components
 Route::get('/cookies-overlay-card', function () {
@@ -116,7 +126,7 @@ Route::get('/rating-overlay-card', function () {
 })->name('rating-overlay-card');
 
 // Groomer unavailability
-Volt::route('/groomer-unavailability/location-unavailability', 'groomer.unavailability')
+Volt::route('/groomer-unavailability/location-unavailability', 'groomer/unavailability')
     ->name('groomer-unavailability.location-unavailability');
 
 // ===============================================================
@@ -154,12 +164,12 @@ Route::get('business-hub/bookings/{booking}/invoice.html', [BookingInvoicePdfCon
 Route::middleware(['auth:web,groomer_spacer'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
-    Volt::route('settings/profile', 'account.profile')->name('settings.profile');
-    Volt::route('settings/password', 'account.settings')->name('settings.password');
-    Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
+    Volt::route('settings/profile', 'account/profile')->name('settings.profile');
+    Route::redirect('settings/password', '/account-settings?tab=login_and_security');
+    Volt::route('settings/appearance', 'settings/appearance')->name('settings.appearance');
 
     // Pet Details - handled by LiveWire Volt component
-    Volt::route('/pet-details', 'pet-details.manager')->name('pet-details.show');
+    Volt::route('/pet-details', 'pet-details/manager')->name('pet-details.show');
 
     // Pet Details form submission (traditional POST for booking-groomer page)
     Route::post('/pet-details', [PetDetailController::class, 'store'])->name('pet-details.store');
