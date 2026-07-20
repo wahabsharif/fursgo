@@ -12,7 +12,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 
-new #[Layout('layouts.business-hub')] class extends Component {
+new #[Layout('layouts.dashboard')] class extends Component {
     use WithFileUploads;
 
     // Form display control

@@ -3,7 +3,7 @@
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.business-hub')] class extends Component {
+new #[Layout('layouts.dashboard')] class extends Component {
     // Business Hub - can add Livewire functionality later
 }; ?>
 

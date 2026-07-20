@@ -1,4 +1,4 @@
-<!-- app.blade.php -->
+{{-- Shared dashboard shell for Business Hub, Account Settings, Help Centre, Verify & Qualify, etc. --}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
@@ -19,6 +19,7 @@
         $dashboardNavView = match (true) {
             request()->routeIs('business-homepage-groomer-space-owner') => 'for-groomers-hosts',
             request()->routeIs('help-and-support') => 'help-centre',
+            request()->routeIs('account-settings') => 'account-settings',
             request()->routeIs('verify-qualify', 'verify-qualify.*') => 'verify-qualify',
             default => 'hub',
         };
@@ -31,6 +32,9 @@
     <title>@yield('title', $pageTitle)</title>
 
     @include('partials.head')
+    @if (request()->routeIs('account-settings'))
+        <link rel="stylesheet" href="{{ asset('css/account-settings.css') }}">
+    @endif
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     @yield('styles')
     @stack('styles')
@@ -42,14 +46,14 @@
                     history.scrollRestoration = 'manual';
                 }
 
-                window.__scrollBusinessHubToTop = function() {
+                window.__scrollDashboardToTop = function() {
                     const root = document.scrollingElement || document.documentElement;
                     root.scrollTop = 0;
                     document.body.scrollTop = 0;
                     window.scrollTo(0, 0);
                 };
 
-                window.__scrollBusinessHubToTop();
+                window.__scrollDashboardToTop();
             })();
         </script>
     @endif
@@ -197,7 +201,7 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
         window.__dashboardNavCsrf = @json(csrf_token());
 
         document.addEventListener('DOMContentLoaded', () => {
-            window.__scrollBusinessHubToTop?.();
+            window.__scrollDashboardToTop?.();
 
             const panel = document.querySelector('.dashboard-info-panel--for-groomers');
             if (panel) {
@@ -212,7 +216,7 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
 
         document.addEventListener('livewire:initialized', () => {
             requestAnimationFrame(() => {
-                window.__scrollBusinessHubToTop?.();
+                window.__scrollDashboardToTop?.();
             });
         });
 
