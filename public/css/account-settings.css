@@ -1,0 +1,491 @@
+.account-settings-page {
+    position: relative;
+    width: 100%;
+    max-width: min(100%, max(110rem, 92vw), 2450px);
+    margin: 0 auto;
+    padding: 0 clamp(0.75rem, 4vw, 2rem) 3rem;
+    box-sizing: border-box;
+}
+
+.account-settings-loading-bar {
+    position: absolute;
+    top: 0;
+    left: clamp(0.75rem, 4vw, 2rem);
+    right: clamp(0.75rem, 4vw, 2rem);
+    z-index: 30;
+    height: 4px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: rgba(232, 228, 222, 0.85);
+    pointer-events: none;
+}
+
+.account-settings-loading-bar__sweep {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 42%;
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #ffc97a 0%, #f6a623 45%, #ffc97a 100%);
+    box-shadow: 0 0 12px rgba(246, 166, 35, 0.45);
+    transform: translate3d(-100%, 0, 0);
+    will-change: transform;
+    animation: account-settings-loading-sweep 0.9s linear infinite;
+}
+
+@keyframes account-settings-loading-sweep {
+    to {
+        transform: translate3d(340%, 0, 0);
+    }
+}
+
+.account-settings-panel {
+    contain: layout style;
+}
+
+.account-settings-panel-enter {
+    transition: opacity 0.18s ease-out;
+}
+
+.account-settings-panel-enter-start,
+.account-settings-panel-leave-end {
+    opacity: 0;
+}
+
+.account-settings-panel-enter-end,
+.account-settings-panel-leave-start {
+    opacity: 1;
+}
+
+.account-settings-panel-leave {
+    transition: none;
+}
+
+.account-settings-layout {
+    display: grid;
+    grid-template-columns: minmax(220px, 295px) minmax(0, 1fr);
+    gap: clamp(1.5rem, 3vw, 3.75rem);
+    align-items: start;
+}
+
+.account-settings-sidebar {
+    position: sticky;
+    top: 7.5rem;
+}
+
+.account-settings-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.account-settings-nav__item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: #3b3731;
+    font-family: Lato;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: normal;
+    white-space: nowrap;
+    text-align: left;
+    padding: 0.75rem 1.25rem 0.75rem 2rem;
+    border-radius: 96px;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.account-settings-nav__item:hover,
+.account-settings-nav__item.is-active {
+    background: #f8f8f8;
+}
+
+.account-settings-nav__item.is-active {
+    border: none;
+    outline: none;
+    box-shadow: none;
+    font-weight: 700;
+}
+
+.account-settings-nav__item.is-active:focus,
+.account-settings-nav__item.is-active:active {
+    border: none;
+    outline: none;
+    box-shadow: none;
+}
+
+.account-settings-nav__icon {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    object-fit: contain;
+}
+
+.account-settings-main {
+    min-width: 0;
+}
+
+.account-settings-page-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+    margin-bottom: 2.5rem;
+}
+
+.account-settings-page-title {
+    margin: 0;
+    color: #3b3731;
+    font-family: "Playfair Display";
+    font-size: 28px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.account-settings-page-subtitle {
+    margin: 0.35rem 0 0;
+    color: #9d9b98;
+    font-family: Lato;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+}
+
+.account-settings-section-title {
+    margin: 0 0 1.5rem;
+    color: #3b3731;
+    font-family: "Playfair Display";
+    font-size: 28px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.account-settings-divider {
+    border: 0;
+    border-top: 1px solid #d4d4d4;
+    margin: 0 0 2rem;
+}
+
+.account-settings-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    max-width: 610px;
+}
+
+.account-settings-field label {
+    display: block;
+    margin-bottom: 0.55rem;
+    color: #3b3731;
+    font-family: Lato;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.account-settings-select {
+    position: relative;
+}
+
+.account-settings-select__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 48px;
+    padding: 0.65rem 1.25rem;
+    border: 1px solid #d4d4d4;
+    border-radius: 10px;
+    background: #fff;
+    color: #d4d4d4;
+    font-family: Lato;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: normal;
+    cursor: pointer;
+}
+
+.account-settings-select__trigger.has-value {
+    color: #3b3731;
+}
+
+.account-settings-select__chevron {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 13px;
+    object-fit: contain;
+    transform: rotate(135deg);
+}
+
+.account-settings-select__options {
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    max-height: 280px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0.35rem 0;
+    list-style: none;
+    border: 1px solid #d4d4d4;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 10px 20px 2px rgba(0, 0, 0, 0.05);
+}
+
+.account-settings-select__option {
+    padding: 0.65rem 1.25rem;
+    color: #3b3731;
+    font-family: Lato;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.account-settings-select__option:hover,
+.account-settings-select__option.is-selected {
+    background: #f8f8f8;
+}
+
+.account-settings-legacy-panel {
+    max-width: 925px;
+}
+
+.account-settings-legacy-panel .large-font {
+    color: #3b3731;
+    font-family: "Playfair Display";
+    font-size: 28px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.account-settings-legacy-panel .bold-font {
+    color: #3b3731;
+    font-family: Lato;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.account-settings-legacy-panel .form-field label {
+    display: block;
+    margin-bottom: 0.55rem;
+    color: #3b3731;
+    font-family: Lato;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.account-settings-legacy-panel .select-trigger.full-width {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 48px;
+    padding: 0.65rem 1.25rem;
+    border: 1px solid #d4d4d4;
+    border-radius: 10px;
+    background: #fff;
+}
+
+@media (max-width: 991px) {
+    .account-settings-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .account-settings-sidebar {
+        position: static;
+    }
+
+    .account-settings-page-header {
+        align-items: flex-start;
+        text-align: left;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .account-settings-loading-bar__sweep {
+        transform: none;
+        width: 100%;
+        animation: none;
+        opacity: 0.85;
+    }
+
+    .account-settings-panel-enter,
+    .account-settings-panel-leave {
+        transition: none;
+    }
+}
+
+.account-settings-legacy-panel p {
+    color: #3b3731;
+    font-family: Lato;
+    font-size: 18px;
+    font-weight: 400;
+}
+
+.account-settings-legacy-panel .link-tag {
+    color: #3b3731;
+    font-family: Lato;
+    font-size: 18px;
+    font-weight: 400;
+    text-decoration-line: underline;
+    text-underline-offset: 4px;
+}
+
+.account-settings-legacy-panel .small-link-tag {
+    color: #3b3731;
+    font-family: Lato;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration-line: underline;
+    text-underline-offset: 4px;
+}
+
+.account-settings-legacy-panel .toggle-button-content .bold-font,
+.account-settings-legacy-panel .settings-section-content .bold-font,
+.account-settings-legacy-panel .active-sessions .bold-font {
+    color: #3b3731;
+    font-family: Lato;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.account-settings-legacy-panel .toggle-switch {
+    position: relative;
+    width: 58px;
+    height: 33px;
+    padding: 0;
+    border: 0;
+    background: rgba(255, 201, 122, 0.5);
+    border-radius: 24px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.account-settings-legacy-panel .toggle-circle {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 27px;
+    height: 27px;
+    background-color: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+.account-settings-legacy-panel .toggle-switch.on {
+    background-color: #ffc97a;
+}
+
+.account-settings-legacy-panel .toggle-switch.on .toggle-circle {
+    transform: translateX(26px);
+    background-color: transparent;
+}
+
+.account-settings-legacy-panel .rounded-circle {
+    border-radius: 50px;
+    width: 56px;
+    height: 56px;
+}
+
+.account-settings-legacy-panel img.social-icons {
+    height: 25px;
+    width: 25px;
+}
+
+.account-settings-legacy-panel .border-and-bg {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #d4d4d4;
+}
+
+.account-settings-legacy-panel .toggle-dark-light {
+    position: relative;
+    width: 58px;
+    height: 33px;
+    cursor: pointer;
+}
+
+.account-settings-legacy-panel .toggle-dark-light input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.account-settings-legacy-panel .track {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: #ffc97a;
+    transition: background 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.account-settings-legacy-panel .toggle-dark-light input:checked ~ .track {
+    background: #3b3731;
+}
+
+.account-settings-legacy-panel .thumb {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.account-settings-legacy-panel
+    .toggle-dark-light
+    input:checked
+    ~ .track
+    .thumb {
+    transform: translateX(26px);
+}
+
+.account-settings-legacy-panel .icon-dark-light {
+    position: absolute;
+    transition:
+        opacity 0.3s,
+        transform 0.4s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.account-settings-legacy-panel .icon-sun {
+    opacity: 1;
+}
+
+.account-settings-legacy-panel .icon-moon {
+    opacity: 0;
+}
+
+.account-settings-legacy-panel
+    .toggle-dark-light
+    input:checked
+    ~ .track
+    .thumb
+    .icon-sun {
+    opacity: 0;
+}
+
+.account-settings-legacy-panel
+    .toggle-dark-light
+    input:checked
+    ~ .track
+    .thumb
+    .icon-moon {
+    opacity: 1;
+}
