@@ -6,8 +6,10 @@ use App\Models\Payment;
 use App\Models\Review;
 use App\Models\PetMedicationDetail;
 use App\Models\User;
+use App\Support\AccountBlocks;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -367,7 +369,7 @@ new class extends Component {
         $this->completedBookingId = null;
         $this->closeRescheduleModal();
         $this->closeDeclineModal();
-        $this->profileIsBlocked = ($this->profileClient?->user_status ?? 'active') === 'blocked';
+        $this->profileIsBlocked = $this->isClientBlockedByCurrentAccount($this->profileClient);
         $this->resetReviewReplyDraft();
     }
 
@@ -975,17 +977,31 @@ new class extends Component {
             return;
         }
 
-        $hasBookings = Booking::query()->where('goormer_spacer_id', $this->spacerId())->where('pet_owner_id', $this->selectedClientId)->exists();
+        $owner = Auth::guard('groomer_spacer')->user();
+        $client = User::query()->whereKey($this->selectedClientId)->first();
 
-        if (!$hasBookings) {
+        if (!$owner || !$client) {
             $this->profileIsBlocked = !$this->profileIsBlocked;
 
             return;
         }
 
-        User::query()
-            ->whereKey($this->selectedClientId)
-            ->update(['user_status' => $this->profileIsBlocked ? 'blocked' : 'active']);
+        if ($this->profileIsBlocked) {
+            AccountBlocks::block($owner, $client);
+        } else {
+            AccountBlocks::unblockBlocked($owner, $client);
+        }
+    }
+
+    private function isClientBlockedByCurrentAccount(?User $client): bool
+    {
+        if (!$client) {
+            return false;
+        }
+
+        $owner = Auth::guard('groomer_spacer')->user();
+
+        return $owner ? AccountBlocks::isBlocked($owner, $client) : false;
     }
 
     #[Computed]
