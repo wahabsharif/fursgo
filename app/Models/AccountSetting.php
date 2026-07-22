@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Model;
 
 class AccountSetting extends Model
 {
@@ -16,6 +16,7 @@ class AccountSetting extends Model
         'theme',
         'push_notifications',
         'two_factor_enabled',
+        'password_updated_at',
         'notify_booking_updates',
         'notify_groomer_messages',
         'notify_space_owner_messages',
@@ -34,6 +35,7 @@ class AccountSetting extends Model
         return [
             'push_notifications' => 'boolean',
             'two_factor_enabled' => 'boolean',
+            'password_updated_at' => 'datetime',
             'notify_booking_updates' => 'boolean',
             'notify_groomer_messages' => 'boolean',
             'notify_space_owner_messages' => 'boolean',
