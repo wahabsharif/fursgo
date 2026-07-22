@@ -15,6 +15,7 @@
     $isBusinessHomepageRoute = request()->routeIs('business-homepage-groomer-space-owner');
     $isBusinessHubRoute = request()->routeIs('business-hub');
     $isMarketingHubRoute = request()->routeIs('marketing-hub', 'marketing-hub.*');
+    $isAccountSettingsRoute = request()->routeIs('account-settings');
     $isHelpCentreRoute = request()->routeIs('help-and-support');
     $isVerifyQualifyRoute = request()->routeIs('verify-qualify', 'verify-qualify.*');
     $isBusinessAuthRoute = request()->routeIs([
@@ -83,7 +84,7 @@
 @if ($variant === 'dashboard')
     {{-- Dashboard Header --}}
     <header
-        class="dashboard-header{{ $isVerifyQualifyRoute ? ' dashboard-header--verify-qualify' : '' }}{{ $isBusinessHubRoute ? ' dashboard-header--business-hub' : '' }}{{ $isMarketingHubRoute ? ' dashboard-header--marketing-hub' : '' }}">
+        class="dashboard-header{{ $isVerifyQualifyRoute ? ' dashboard-header--verify-qualify' : '' }}{{ $isBusinessHubRoute ? ' dashboard-header--business-hub' : '' }}{{ $isMarketingHubRoute ? ' dashboard-header--marketing-hub' : '' }}{{ $isAccountSettingsRoute ? ' dashboard-header--account-settings' : '' }}">
         @unless ($isVerifyQualifyRoute)
             {{-- Full-viewport curve (sibling to max-width content wrapper) --}}
             <div class="curve-shape-container" aria-hidden="true">
@@ -140,8 +141,9 @@
                             @if ($variant === 'dashboard')
                                 <a href="{{ route('business-homepage-groomer-space-owner', ['shell' => 'business-hub']) }}"
                                     wire:navigate
-                                    class="{{ $dashboardNavView === 'for-groomers-hosts' ? 'active' : '' }}">FursGo
-                                    Business</a>
+                                    class="{{ in_array($dashboardNavView, ['for-groomers-hosts', 'account-settings'], true) ? 'active' : '' }}">
+                                    {{ $dashboardNavView === 'account-settings' ? 'For Groomers & Hosts' : 'FursGo Business' }}
+                                </a>
                                 <a href="{{ route('help-and-support', ['shell' => 'business-hub']) }}" wire:navigate
                                     class="{{ $dashboardNavView === 'help-centre' ? 'active' : '' }}">Help Centre</a>
                             @elseif ($isBusinessSiteRoute && !$isBusinessHomepageRoute)
@@ -759,8 +761,10 @@
                                             </svg>
                                             <p class="medium-light-font">Marketing Hub</p>
                                         </a>
-                                        <a href="#" class="profile-item d-flex align-items-center gap-40"
-                                            wire:navigate>
+                                        <a href="{{ route('account-settings') }}"
+                                            class="profile-item d-flex align-items-center gap-40"
+                                            :class="{ 'profile-item--active': @js($isAccountSettingsRoute) }"
+                                            @click="activeSection = 'account-settings'" wire:navigate>
                                             <svg xmlns="http://www.w3.org/2000/svg" width="21" height="22"
                                                 viewBox="0 0 21 22" fill="none">
                                                 <path
@@ -818,7 +822,7 @@
             </nav>
 
             {{-- Welcome Section (Business Hub / Marketing Hub) --}}
-            @if ($dashboardNavView === 'hub' || $dashboardNavView === 'marketing-hub')
+            @if (in_array($dashboardNavView, ['hub', 'marketing-hub', 'account-settings'], true))
                 <div class="welcome-section">
                     <div class="welcome-hub-content">
                         <div class="dashboard-header-inner">

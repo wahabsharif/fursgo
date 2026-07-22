@@ -18,6 +18,12 @@
     border-radius: 2px;
     background: rgba(232, 228, 222, 0.85);
     pointer-events: none;
+    display: none;
+}
+
+.account-settings-loading-bar.is-tab-loading,
+.account-settings-loading-bar.is-modal-loading {
+    display: block;
 }
 
 .account-settings-loading-bar__sweep {
@@ -159,12 +165,17 @@
 }
 
 .account-settings-section-title {
-    margin: 0 0 1.5rem;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 0 2rem;
+    padding-bottom: 1.5rem;
     color: #3b3731;
     font-family: "Playfair Display";
     font-size: 28px;
     font-weight: 600;
     line-height: normal;
+    border-bottom: 1px solid #d4d4d4;
 }
 
 .account-settings-divider {
@@ -255,15 +266,27 @@
 }
 
 .account-settings-legacy-panel {
-    max-width: 925px;
+    max-width: none;
+    width: 100%;
 }
 
 .account-settings-legacy-panel .large-font {
+    display: block;
+    width: 100%;
+    align-self: stretch;
+    box-sizing: border-box;
+    margin: 0 0 2rem;
+    padding-bottom: 1.5rem;
     color: #3b3731;
     font-family: "Playfair Display";
     font-size: 28px;
     font-weight: 600;
     line-height: normal;
+    border-bottom: 1px solid #d4d4d4;
+}
+
+.account-settings-legacy-panel > :not(.large-font) {
+    max-width: 800px;
 }
 
 .account-settings-legacy-panel .bold-font {
@@ -488,4 +511,325 @@
     .thumb
     .icon-moon {
     opacity: 1;
+}
+
+.account-settings-legacy-panel .theme-toggle {
+    position: relative;
+    width: 58.667px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 24px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.25s ease;
+}
+
+.account-settings-legacy-panel .theme-toggle--light {
+    background: #ffc97a;
+}
+
+.account-settings-legacy-panel .theme-toggle--dark {
+    background: #3b3731;
+}
+
+.account-settings-legacy-panel .theme-toggle__thumb {
+    position: absolute;
+    top: 2.5px;
+    left: 3px;
+    width: 27px;
+    height: 27px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.25s ease;
+    pointer-events: none;
+}
+
+.account-settings-legacy-panel .theme-toggle.is-dark .theme-toggle__thumb {
+    transform: translateX(26px);
+}
+
+.account-settings-legacy-panel .theme-toggle__icon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+        opacity 0.2s ease,
+        transform 0.25s ease;
+}
+
+.account-settings-legacy-panel .theme-toggle__icon--sun {
+    opacity: 1;
+}
+
+.account-settings-legacy-panel .theme-toggle__icon--moon {
+    opacity: 0;
+}
+
+.account-settings-legacy-panel .theme-toggle.is-dark .theme-toggle__icon--sun {
+    opacity: 0;
+}
+
+.account-settings-legacy-panel .theme-toggle.is-dark .theme-toggle__icon--moon {
+    opacity: 1;
+}
+
+.account-settings-link-btn {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+}
+
+.account-settings-modal-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    min-height: 100dvh;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(59, 55, 49, 0.45);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity 180ms ease,
+        visibility 0s linear 180ms;
+}
+
+.account-settings-modal-overlay.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+        opacity 180ms ease,
+        visibility 0s linear 0s;
+}
+
+.account-settings-modal-card {
+    width: 100%;
+    max-width: 480px;
+    padding: 1.75rem 1.75rem 1.5rem;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    transform: translateY(10px) scale(0.97);
+    transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.account-settings-modal-overlay.is-open .account-settings-modal-card {
+    transform: translateY(0) scale(1);
+}
+
+.account-settings-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+
+.account-settings-modal-header h3 {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.account-settings-modal-close {
+    border: 0;
+    background: transparent;
+    padding: 0.25rem;
+    line-height: 0;
+    cursor: pointer;
+}
+
+.account-settings-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.account-settings-modal-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.account-settings-modal-field > span:first-child {
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.account-settings-modal-field input {
+    width: 100%;
+    border: 1px solid #d8d1c7;
+    border-radius: 10px;
+    background: #fff;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    padding: 0.85rem 1rem;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.account-settings-modal-field input::placeholder {
+    color: #b7b3ac;
+}
+
+.account-settings-modal-field input:focus {
+    border-color: #bacf8e;
+}
+
+.account-settings-modal-field input.is-invalid {
+    border-color: #ff6e6e;
+}
+
+.account-settings-password-meter {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.55rem;
+}
+
+.account-settings-password-meter__bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.account-settings-password-meter__label {
+    flex: 0 0 auto;
+    min-width: 7.5rem;
+    color: #ffc97a;
+    font-family: Lato, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.account-settings-password-meter__bar-row.is-fair
+    .account-settings-password-meter__label {
+    color: #f6a623;
+}
+
+.account-settings-password-meter__bar-row.is-strong
+    .account-settings-password-meter__label {
+    color: #c9dda0;
+}
+
+.account-settings-password-meter__track {
+    flex: 1 1 auto;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #eceae6;
+}
+
+.account-settings-password-meter__fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #ffc97a;
+    transition:
+        width 0.2s ease,
+        background-color 0.2s ease;
+}
+
+.account-settings-password-meter__bar-row.is-fair
+    .account-settings-password-meter__fill {
+    background: #f6a623;
+}
+
+.account-settings-password-meter__bar-row.is-strong
+    .account-settings-password-meter__fill {
+    background: #c9dda0;
+}
+
+.account-settings-password-meter__rules {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.account-settings-password-meter__rules p {
+    margin: 0 0 0.15rem;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.account-settings-password-meter__rules span {
+    color: #9d9b98;
+    font-family: Lato, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    transition: color 0.2s ease;
+}
+
+.account-settings-password-meter__rules span.is-met {
+    color: #c9dda0;
+}
+
+.account-settings-modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.account-settings-modal-btn {
+    min-width: 120px;
+    min-height: 44px;
+    padding: 0.65rem 1.25rem;
+    cursor: pointer;
+}
+
+.account-settings-modal-btn--light {
+    border-radius: 75px;
+    border: 1px solid #3b3731;
+    background: transparent;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.account-settings-modal-btn--primary {
+    border: none;
+    border-radius: 96px;
+    background: #bacf8e;
+    box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.1);
+    color: #fff;
+    font-family: Lato, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.account-settings-modal-btn--primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .account-settings-modal-overlay,
+    .account-settings-modal-card {
+        transition: none;
+    }
 }
