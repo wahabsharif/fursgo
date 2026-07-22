@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\LivewireManager;
 use Livewire\Volt\Volt;
-use Throwable;
 
 Route::get('/clear', function () {
     Artisan::call('optimize:clear');
@@ -56,7 +55,7 @@ Route::get('/seed', function () {
                 . e($output) . '</pre>',
             200
         )->header('Content-Type', 'text/html');
-    } catch (Throwable $e) {
+    } catch (\Throwable $e) {
         return response(
             "<pre>Seeding failed:\n\n" . e($e->getMessage()) . '</pre>',
             500
