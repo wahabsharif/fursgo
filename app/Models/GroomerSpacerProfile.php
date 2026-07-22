@@ -60,7 +60,7 @@ class GroomerSpacerProfile extends Authenticatable
         }
 
         $payout = $this->payout_details ?? [];
-        if (!is_array($payout)) {
+        if (! is_array($payout)) {
             $payout = is_string($payout) ? (json_decode($payout, true) ?: []) : [];
         }
         foreach (['bank', 'account_holder_name', 'account_number', 'sort_code', 'iban'] as $key) {
@@ -71,7 +71,7 @@ class GroomerSpacerProfile extends Authenticatable
 
         if (($this->account_type ?? '') === 'freelance') {
             $fd = $this->freelance_details ?? [];
-            if (!is_array($fd)) {
+            if (! is_array($fd)) {
                 $fd = is_string($fd) ? (json_decode($fd, true) ?: []) : [];
             }
             if (trim((string) ($fd['contact_email'] ?? '')) === '') {
@@ -90,7 +90,7 @@ class GroomerSpacerProfile extends Authenticatable
         }
 
         $bd = $this->business_details ?? [];
-        if (!is_array($bd)) {
+        if (! is_array($bd)) {
             $bd = is_string($bd) ? (json_decode($bd, true) ?: []) : [];
         }
         foreach (['business_email', 'business_name', 'business_registration_number', 'business_phone'] as $key) {
@@ -108,12 +108,12 @@ class GroomerSpacerProfile extends Authenticatable
      */
     public static function businessOwnerIdPathsFromBusinessDetails(?array $businessDetails): array
     {
-        if (!is_array($businessDetails)) {
+        if (! is_array($businessDetails)) {
             return [];
         }
 
         $paths = $businessDetails['business_owner_id_images'] ?? null;
-        if (!is_array($paths)) {
+        if (! is_array($paths)) {
             return [];
         }
 
@@ -126,21 +126,21 @@ class GroomerSpacerProfile extends Authenticatable
      */
     public static function governmentIdPathsFromFreelanceDetails(?array $freelanceDetails): array
     {
-        if (!is_array($freelanceDetails)) {
+        if (! is_array($freelanceDetails)) {
             return [];
         }
 
         $paths = $freelanceDetails['government_id'] ?? null;
         if (is_array($paths) && $paths !== []) {
-            return array_values(array_filter($paths, fn($path) => is_string($path) && $path !== ''));
+            return array_values(array_filter($paths, fn ($path) => is_string($path) && $path !== ''));
         }
 
         $legacy = $freelanceDetails['id_verification_images'] ?? null;
-        if (!is_array($legacy)) {
+        if (! is_array($legacy)) {
             return [];
         }
 
-        return array_values(array_filter($legacy, fn($path) => is_string($path) && $path !== ''));
+        return array_values(array_filter($legacy, fn ($path) => is_string($path) && $path !== ''));
     }
 
     /**
@@ -149,5 +149,13 @@ class GroomerSpacerProfile extends Authenticatable
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the account settings for the profile.
+     */
+    public function accountSetting()
+    {
+        return $this->morphOne(AccountSetting::class, 'owner');
     }
 }
