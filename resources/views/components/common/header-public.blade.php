@@ -1,4 +1,4 @@
-<header>
+﻿<header>
     <nav class="navbar">
         <div class="container">
             <div class="row align-items-center">
@@ -42,7 +42,7 @@
                 <div class="col-lg-7">
                     <ul class="menu-items">
                         <li>
-                            <a href="{{ route('home') }}#how_it_works" wire:navigate>How it works</a>
+                            <a href="{{ url('/') }}#how_it_works">How it works</a>
                         </li>
                         <li>
                             <a href="{{ route('business-homepage-groomer-space-owner') }}"
@@ -82,7 +82,26 @@
                 header.classList.remove('scrolled');
             }
         }
+
+        function scrollToHashTarget() {
+            const id = window.location.hash.replace('#', '');
+            if (!id) return;
+
+            const target = document.getElementById(id);
+            if (!target) return;
+
+            const header = document.querySelector('header');
+            const headerHeight = header ? header.offsetHeight : 0;
+            const top = target.getBoundingClientRect().top + window.scrollY - headerHeight - 12;
+
+            window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        }
+
         window.addEventListener('scroll', onScroll, { passive: true });
         document.addEventListener('livewire:navigated', onScroll);
+        document.addEventListener('livewire:navigated', scrollToHashTarget);
+        window.addEventListener('hashchange', scrollToHashTarget);
+        window.addEventListener('load', scrollToHashTarget);
+        document.addEventListener('DOMContentLoaded', scrollToHashTarget);
     })();
 </script>
