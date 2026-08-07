@@ -111,6 +111,9 @@ Route::get('/account-settings/download-data', AccountDataExportController::class
 Route::redirect('/account-and-setting/settings', '/account-settings')
     ->middleware(['auth:web,groomer_spacer']);
 
+Volt::route('/account_and_setting/settings.php', 'account_and_setting/settings')
+    ->name('account_and_setting.settings');
+
 // Cookie and overlay components
 Route::get('/cookies-overlay-card', function () {
     return view('components.ui.cookies-overlay-card');

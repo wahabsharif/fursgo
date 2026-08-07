@@ -307,7 +307,12 @@ toggleActive(".find-space-content", ".weight-option", "active");
 // custom select dropdown js
 
 document.querySelectorAll(".custom-select").forEach((select) => {
+  if (select.dataset.dropdownBound === "1") return;
+  select.dataset.dropdownBound = "1";
+
   const trigger = select.querySelector(".select-trigger");
+  if (!trigger) return;
+
   const options = select.querySelectorAll(".select-options li");
   const datePopovers = document.querySelectorAll(".popover");
   const text = select.querySelector(".selected-text");
@@ -324,6 +329,7 @@ document.querySelectorAll(".custom-select").forEach((select) => {
       if (s !== select) {
         s.classList.remove("open");
         const t = s.querySelector(".select-trigger");
+        if (!t) return;
         t.style.cssText = `
                     border-bottom-left-radius: 12px;
                     border-bottom-right-radius: 12px;
@@ -340,8 +346,8 @@ document.querySelectorAll(".custom-select").forEach((select) => {
 
   options.forEach((option) => {
     option.addEventListener("click", () => {
-      text.textContent = option.textContent;
-      hiddenInput.value = option.dataset.value;
+      if (text) text.textContent = option.textContent;
+      if (hiddenInput) hiddenInput.value = option.dataset.value;
 
       select.classList.remove("open");
       select.classList.add("has-value"); // add class to highlight border
@@ -357,10 +363,8 @@ document.querySelectorAll(".custom-select").forEach((select) => {
 // Remove 'has-value' if clicked outside and no value
 document.addEventListener("click", (e) => {
   document.querySelectorAll(".custom-select").forEach((select) => {
-    if (
-      !select.contains(e.target) &&
-      !select.querySelector('input[type="hidden"]').value
-    ) {
+    const hidden = select.querySelector('input[type="hidden"]');
+    if (!select.contains(e.target) && hidden && !hidden.value) {
       select.classList.remove("has-value");
     }
   });
@@ -371,6 +375,7 @@ document.addEventListener("click", () => {
   document.querySelectorAll(".custom-select").forEach((select) => {
     select.classList.remove("open");
     const trigger = select.querySelector(".select-trigger");
+    if (!trigger) return;
     trigger.style.cssText = `
             border-bottom-left-radius: 12px;
             border-bottom-right-radius: 12px;

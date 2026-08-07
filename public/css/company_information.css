@@ -1,13 +1,13 @@
 .top-head.d-flex.align-items-center.justify-content-center {
     padding: 25px 50px;
     border-radius: 10px;
-    background: #f8f8f8;
+    background: #F8F8F8;
 }
 
 .common-topics p.bg {
     border-radius: 100px;
     background: rgba(255, 201, 122, 0.13);
-    color: #ffc97a;
+    color: #FFC97A;
     text-align: center;
     font-family: Lato;
     font-size: 14px;
@@ -25,8 +25,8 @@ body {
     position: relative;
     margin: 40px auto;
     border-radius: 100px;
-    border: 1px solid #ffc97a;
-    background: #fff;
+    border: 1px solid #FFC97A;
+    background: #FFF;
     box-shadow: 0 10px 20px 2px rgba(0, 0, 0, 0.05);
 }
 
@@ -36,6 +36,7 @@ body {
     border-radius: 30px;
     outline: none;
     font-size: 14px;
+    border: none;
 }
 
 .search-wrapper input::placeholder {
@@ -56,8 +57,9 @@ body {
     font-size: 16px;
 }
 
+
 .large-font {
-    color: #3b3731;
+    color: #3B3731;
     font-family: "Playfair Display";
     font-size: 28px;
     font-weight: 600;
@@ -80,49 +82,49 @@ body {
 }
 
 .medium-font {
-    color: #3b3731;
+    color: #3B3731;
     font-family: Lato;
     font-size: 20px;
     font-weight: 600;
 }
 
 .normal-font-weight {
-    color: #3b3731;
+    color: #3B3731;
     font-family: Lato;
     font-size: 16px;
     font-weight: 400;
 }
 
 .normal-font-weight.active {
-    color: #3b3731;
+    color: #3B3731;
     font-family: Lato;
     font-size: 16px;
     font-weight: 600;
 }
 
 .normal-font-bold {
-    color: #3b3731;
+    color: #3B3731;
     font-family: Lato;
     font-size: 16px !important;
     font-weight: 600 !important;
 }
 
 .medium-font-bold {
-    color: #3b3731;
+    color: #3B3731;
     font-family: Lato;
     font-size: 18px !important;
     font-weight: 600 !important;
 }
 
 .medium-light-font {
-    color: #3b3731;
+    color: #3B3731;
     font-family: Lato;
     font-size: 18px !important;
     font-weight: 400 !important;
 }
 
 .light-color-font {
-    color: #9d9b98;
+    color: #9D9B98;
     font-family: Lato;
     font-size: 14px;
     font-weight: 600;
@@ -136,7 +138,7 @@ body {
 }
 
 .simple-light-font {
-    color: #9d9b98;
+    color: #9D9B98;
     font-family: Lato;
     font-size: 14px;
     font-style: normal;
@@ -165,7 +167,7 @@ body {
     width: 33%;
     position: -webkit-sticky;
     position: sticky;
-    top: 24px;
+    top: var(--nav-height);
     align-self: flex-start;
     height: fit-content;
     z-index: 5;
@@ -182,20 +184,21 @@ body {
     padding: 20px 30px;
 }
 
+
 .tab-btn.active {
     border-radius: 96px;
-    background: #f8f8f8;
+    background: #F8F8F8;
 }
 
 .help-tabs.active {
     border-radius: 10px;
-    border: 1px solid #ffc97a;
-    background: #fff;
+    border: 1px solid #FFC97A;
+    background: #FFF;
     box-shadow: 0 10px 20px 2px rgba(0, 0, 0, 0.05);
 }
 
 .help-tabs.active p {
-    color: #ffc97a !important;
+    color: #FFC97A !important;
 }
 
 /* Tab content */
@@ -219,15 +222,16 @@ body {
     display: none;
 }
 
-.tab-panel p {
-    color: #3b3731;
+/* Scoped so settings.php (and similar) can use their own font classes */
+.company-info-content .tab-panel p {
+    color: #3B3731;
     font-family: Lato;
     font-size: 18px;
     font-weight: 400;
 }
 
 .tab-panel .link-tag {
-    color: #3b3731;
+    color: #3B3731;
     font-family: Lato;
     font-size: 18px;
     font-weight: 400;
@@ -237,7 +241,7 @@ body {
 }
 
 .tab-panel .small-link-tag {
-    color: #3b3731;
+    color: #3B3731;
     font-family: Lato;
     font-size: 16px;
     font-weight: 600;
@@ -272,6 +276,7 @@ body {
     }
 }
 
+
 /* contact us css */
 .contact-left-section.mt-5 {
     height: 427px;
@@ -280,13 +285,13 @@ body {
 .contact-right-section.mt-5 {
     padding: 10px 30px;
     border-radius: 10px;
-    background: rgba(255, 201, 122, 0.2);
+    background: rgba(255, 201, 122, 0.20);
     height: auto;
 }
 
 .fursgo-app-container {
     border-radius: 10px;
-    background: #f2f6f9;
+    background: #F2F6F9;
     padding: 40px;
 }
 
@@ -303,7 +308,7 @@ body {
 
 .explore-app-container {
     border-radius: 10px;
-    background: #f5f9ed;
+    background: #F5F9ED;
     padding: 40px 255px;
 }
 
@@ -319,6 +324,7 @@ body {
     }
 }
 
+
 .groomer-container {
     width: 330px;
     height: 160px;
@@ -330,42 +336,44 @@ body {
     width: 330px;
     height: 160px;
     border-radius: 10px;
-    background: #fff4f2;
+    background: #FFF4F2;
 }
+
 
 /* help and support css */
 /* default: show inactive icon */
 /* Default (inactive) */
 .tab-icon .bg {
-    fill: #efefef;
+    fill: #EFEFEF;
     fill-opacity: 0.125;
 }
 
 .tab-icon .check {
-    fill: #efefef;
+    fill: #EFEFEF;
 }
 
 .tab-icon .stroke {
-    stroke: #3b3731;
+    stroke: #3B3731;
 }
 
 /* Active state */
 .tab-btn.active .tab-icon .bg {
-    fill: #ffc97a;
+    fill: #FFC97A;
 }
 
+
 .tab-btn.active .tab-icon .check {
-    fill: #ffc97a;
+    fill: #FFC97A;
 }
 
 /* default (inactive) */
 .tab-icon .accent {
-    fill: #d4d4d4;
+    fill: #D4D4D4;
 }
 
 /* active tab */
 .tab-btn.active .tab-icon .accent {
-    fill: #ffc97a;
+    fill: #FFC97A;
 }
 
 /* Default (inactive) */
@@ -375,17 +383,17 @@ body {
 }
 
 .tab-btn .bottom {
-    fill: #efefef;
+    fill: #EFEFEF;
 }
 
 /* Active tab */
 .tab-btn.active .circle {
-    fill: #fff8ee;
+    fill: #FFF8EE;
     /* your desired upper circle color */
 }
 
 .tab-btn.active .bottom {
-    fill: #fff8ee;
+    fill: #FFF8EE;
     /* example, change bottom color when active if needed */
 }
 
@@ -397,18 +405,19 @@ body {
 
 /* Default inactive colors */
 .tab-btn .check {
-    fill: #d4d4d4;
+    fill: #D4D4D4;
     transition: fill 0.3s ease;
 }
 
+
 /* Active tab colors */
 .tab-btn.active .check {
-    fill: #ffc97a;
+    fill: #FFC97A;
     /* active color */
 }
 
 .accordion {
-    background-color: #fff;
+    background-color: #FFF;
     cursor: pointer;
     padding: 30px 0;
     width: 100%;
@@ -418,12 +427,15 @@ body {
     transition: 0.4s;
 }
 
+
+
 .accordion:after {
     color: #777;
     font-weight: bold;
     float: right;
     margin-left: 5px;
     content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" fill="none"><path d="M0.5 0.75656L7.24344 7.5L13.8737 0.75656" stroke="%233B3731" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+
 }
 
 .acc-active:after {
@@ -433,10 +445,9 @@ body {
 .panel {
     /* padding: 50px 0; */
     background-color: white;
-    display: none;
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.35s ease;
+    transition: max-height 0.2s ease-out;
 }
 
 .panel p {
@@ -447,14 +458,14 @@ body {
     width: 450px;
     min-height: 320px;
     border-radius: 10px;
-    border: 1px solid #d4d4d4;
-    background: #fff;
+    border: 1px solid #D4D4D4;
+    background: #FFF;
     padding: 30px 36px;
 }
 
 .bg-div {
     border-radius: 10px;
-    background: rgba(255, 216, 140, 0.2);
+    background: rgba(255, 216, 140, 0.20);
     padding: 30px;
 }
 
@@ -473,10 +484,10 @@ a.underline {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(59, 55, 49, 0.1);
+    background: rgba(59, 55, 49, 0.10);
     justify-content: center;
     align-items: center;
-    z-index: 999;
+    z-index: 1000;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(2px);
     overflow-y: auto;
@@ -485,7 +496,7 @@ a.underline {
 #request_modal .modal-content {
     padding: 20px;
     border-radius: 10px;
-    background: #fdfcf8;
+    background: #FDFCF8;
     width: 820px;
     height: auto;
 }
@@ -508,6 +519,7 @@ a.underline {
     width: 820px;
     height: auto;
     padding: 40px 0px;
+    margin-bottom: 5rem;
 }
 
 #request_modal .modal-cross {
@@ -525,7 +537,7 @@ a.underline {
 
 .custom-select.open .select-trigger,
 .custom-select.has-value .select-trigger {
-    border-color: var(--border);
+    border-color: var(--border)
 }
 
 /* upload box css */
@@ -573,7 +585,7 @@ a.underline {
 }
 
 .file-size {
-    color: #9d9b98;
+    color: #9D9B98;
     font-family: Lato;
     font-size: 10px;
     font-style: normal;
@@ -596,11 +608,12 @@ a.underline {
 .toggle-button-content .bold-font,
 .settings-section-content .bold-font,
 .active-sessions .bold-font {
-    color: #3b3731;
+    color: #3B3731;
     font-family: Lato;
     font-size: 18px;
     font-weight: 600;
 }
+
 
 /* toggle button */
 /* Container for the toggle */
@@ -608,7 +621,7 @@ a.underline {
     position: relative;
     width: 58px;
     height: 33px;
-    background: rgba(255, 201, 122, 0.5);
+    background: rgba(255, 201, 122, 0.50);
     /* off color */
     border-radius: 24px;
     cursor: pointer;
@@ -650,7 +663,7 @@ a.underline {
 
 /* ON state styles */
 .toggle-switch.on {
-    background-color: #ffc97a;
+    background-color: #FFC97A;
 }
 
 .toggle-switch.on .toggle-circle {
@@ -661,12 +674,13 @@ a.underline {
     display: block;
 }
 
+
 .user-sessions {
     width: 100%;
 }
 
 .logged-devices {
-    padding: 0 0px 20px 20px;
+    padding: 0 0px 20px 20px
 }
 
 .rounded-circle {
@@ -683,8 +697,9 @@ img.social-icons {
 .border-and-bg {
     padding: 10px;
     border-radius: 5px;
-    border: 1px solid #d4d4d4;
+    border: 1px solid #D4D4D4;
 }
+
 
 /* light and dark mode css */
 .toggle-wrap {
@@ -726,12 +741,12 @@ body.dark .label {
     position: absolute;
     inset: 0;
     border-radius: 999px;
-    background: #ffc97a;
-    transition: background 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #FFC97A;
+    transition: background 0.45s cubic-bezier(.4, 0, .2, 1);
 }
 
-.toggle-dark-light input:checked ~ .track {
-    background: #3b3731;
+.toggle-dark-light input:checked~.track {
+    background: #3B3731;
 }
 
 .thumb {
@@ -748,15 +763,13 @@ body.dark .label {
     overflow: hidden;
 }
 
-.toggle-dark-light input:checked ~ .track .thumb {
+.toggle-dark-light input:checked~.track .thumb {
     transform: translateX(26px);
 }
 
 .icon-dark-light {
     position: absolute;
-    transition:
-        opacity 0.3s,
-        transform 0.4s;
+    transition: opacity 0.3s, transform 0.4s;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -772,29 +785,30 @@ body.dark .label {
     transform: scale(0.5) rotate(-30deg);
 }
 
-.toggle-dark-light input:checked ~ .track .thumb .icon-sun {
+.toggle-dark-light input:checked~.track .thumb .icon-sun {
     opacity: 0;
     transform: scale(0.5) rotate(30deg);
 }
 
-.toggle-dark-light input:checked ~ .track .thumb .icon-moon {
+.toggle-dark-light input:checked~.track .thumb .icon-moon {
     opacity: 1;
     transform: scale(1) rotate(0deg);
 }
+
 
 /* payments tab css */
 
 .card-details {
     border-radius: 10px;
-    border: 1px solid #eee;
-    background: #fff;
+    border: 1px solid #EEE;
+    background: #FFF;
     min-width: 550px;
     padding: 20px 30px;
 }
 
 .card-details.active {
     border-radius: 10px;
-    background: #fff;
+    background: #FFF;
     box-shadow: 0 4px 20px 5px rgba(0, 0, 0, 0.05);
     padding: 20px 30px;
 }
@@ -809,8 +823,8 @@ body.dark .label {
 /* custom table */
 table.custom-table {
     border-radius: 10px;
-    border: 1px solid #e2e2e2;
-    background: #fff;
+    border: 1px solid #E2E2E2;
+    background: #FFF;
     width: 100%;
 }
 
@@ -819,7 +833,7 @@ table.custom-table td,
 table.custom-table th,
 table.custom-table thead {
     padding: 12px;
-    border-bottom: 1px solid #e2e2e2;
+    border-bottom: 1px solid #E2E2E2;
 }
 
 /* Remove border from last row */
@@ -827,13 +841,14 @@ table.custom-table tr:last-child td {
     border-bottom: none !important;
 }
 
+
 /* invoice modal css */
 #invoice_modal {
     backdrop-filter: blur(2px);
 }
 
 #invoice_modal .invoice-font {
-    color: #3b3731;
+    color: #3B3731;
     font-family: Lato;
     font-size: 20px;
     font-style: normal;
@@ -843,16 +858,16 @@ table.custom-table tr:last-child td {
 
 #invoice_modal .modal-content {
     border-radius: 10px;
-    border: 1px solid #d4d4d4;
-    background: #fff;
+    border: 1px solid #D4D4D4;
+    background: #FFF;
     width: 670px;
     padding: 0;
 }
 
 #invoice_modal .modal-head {
     border-radius: 10px 10px 0 0;
-    border: 1px solid #d4d4d4;
-    background: #f8f8f8;
+    border: 1px solid #D4D4D4;
+    background: #F8F8F8;
     padding: 15px;
 }
 
