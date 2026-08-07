@@ -1,10 +1,9 @@
 <?php
 
+use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new class extends Component {
-    // Home page - static content wrapper
-    // Can be enhanced with dynamic LiveWire features later
+new #[Layout('layouts.app')] class extends Component {
 }; ?>
 
 <div>

@@ -36,7 +36,6 @@
         @endif
     </main>
 
-    <x-common.chat-btn />
     <x-common.footer />
 
     <!-- <script src="{{ asset('js/common.js') }}" defer></script> -->

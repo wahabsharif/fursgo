@@ -564,8 +564,6 @@
   /* ─── Auto-init ──────────────────────────────────────────────────── */
   function autoInit() {
     document.querySelectorAll("select[data-furs-dropdown]").forEach((sel) => {
-      // Skip already initialized dropdowns
-      if (sel._fursDD) return;
       const searchable = sel.hasAttribute("data-furs-searchable");
       new FursDropdown(sel, { searchable });
     });
@@ -576,13 +574,6 @@
   } else {
     autoInit();
   }
-
-  // Re-initialize after navigation (back-forward cache restore)
-  window.addEventListener("pageshow", (event) => {
-    if (event.persisted) {
-      autoInit();
-    }
-  });
 
   /* ─── Export ─────────────────────────────────────────────────────── */
   window.FursDropdown = FursDropdown;
