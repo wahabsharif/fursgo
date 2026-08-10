@@ -5340,7 +5340,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
         background: #FFF4E4;
         border: 1px solid #FFC97A;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 15px;
         line-height: 1.45;
     }
@@ -5834,7 +5834,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
     .business-owner-id-help {
         margin: 0 0 1rem;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 400;
         line-height: 1.45;
@@ -6078,7 +6078,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
     .business-basics-form .basics-field>.form-label {
         display: block;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-style: normal;
         font-weight: 600;
@@ -6099,7 +6099,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
     .groomer-focus-heading {
         margin: 0;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 22px;
         font-weight: 500;
         line-height: 1.2;
@@ -6383,7 +6383,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
     .gallery-upload-ring__label {
         position: absolute;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         font-weight: 700;
         color: #fff;

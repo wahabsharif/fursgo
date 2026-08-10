@@ -172,7 +172,7 @@
 
     .legal-agreements-body {
         color: #4b5563;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 0.875rem;
         line-height: 1.65;
     }
@@ -207,7 +207,7 @@
         margin: 0;
         cursor: pointer;
         color: #9d9b98;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 400;
         line-height: 1.45;
@@ -276,7 +276,7 @@
 
     .legal-policy-checkbox-label {
         color: #3b3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 18px;
         font-style: normal;
         font-weight: 400;
@@ -336,7 +336,7 @@
         min-height: 48px;
         padding: 0 1.25rem;
         border-radius: 96px;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 600;
         line-height: normal;

@@ -5,7 +5,7 @@
     <style>
         .earnings-invoices {
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             margin-top: 3rem;
             position: relative;
         }
@@ -182,7 +182,7 @@
             background: #FFF;
             box-shadow: 0 16px 34px rgba(0, 0, 0, 0.12);
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             padding: 1rem;
         }
 
@@ -203,7 +203,7 @@
             background: #FFF;
             color: #3B3731;
             cursor: pointer;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 14px;
             font-weight: 700;
             padding: 0.55rem 1.1rem;
@@ -416,8 +416,7 @@
             <div class="earnings-invoices-field">
                 <label for="earnings-invoices-date">Date</label>
                 <div class="earnings-invoices-input-wrap">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="14" viewBox="0 0 15 14"
-                        fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="14" viewBox="0 0 15 14" fill="none">
                         <path
                             d="M0.5 6.83375C0.5 4.31955 0.5 3.06212 1.31621 2.28139C2.13243 1.50067 3.4452 1.5 6.07143 1.5H8.85714C11.4834 1.5 12.7968 1.5 13.6124 2.28139C14.4279 3.06279 14.4286 4.31955 14.4286 6.83375V8.16718C14.4286 10.6814 14.4286 11.9388 13.6124 12.7195C12.7961 13.5003 11.4834 13.5009 8.85714 13.5009H6.07143C3.4452 13.5009 2.13173 13.5009 1.31621 12.7195C0.500696 11.9381 0.5 10.6814 0.5 8.16718V6.83375Z"
                             stroke="#3B3731" />
@@ -509,11 +508,10 @@
                                 x-text="invoice.status_label"></span>
                         </td>
                         <td class="earnings-invoices-download-cell">
-                            <button type="button" class="earnings-invoices-icon-btn"
-                                :disabled="!invoice.invoice_url" @click="download(invoice.invoice_url)"
-                                aria-label="Download invoice">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
-                                    viewBox="0 0 16 19" fill="none">
+                            <button type="button" class="earnings-invoices-icon-btn" :disabled="!invoice.invoice_url"
+                                @click="download(invoice.invoice_url)" aria-label="Download invoice">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19"
+                                    fill="none">
                                     <path
                                         d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
                                         stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
@@ -539,7 +537,7 @@
 @once
     @push('script')
         <script>
-            window.earningsInvoices = function(invoices) {
+            window.earningsInvoices = function (invoices) {
                 return {
                     invoices,
                     filters: {
@@ -754,7 +752,7 @@
             };
 
             if (!window.downloadBookingInvoicePdf) {
-                window.downloadBookingInvoicePdf = async function(invoiceUrl) {
+                window.downloadBookingInvoicePdf = async function (invoiceUrl) {
                     if (!invoiceUrl) {
                         return;
                     }
@@ -770,7 +768,7 @@
                         });
                         const contentType = (res.headers.get('Content-Type') || '').toLowerCase();
                         if (!res.ok || (!contentType.includes('application/pdf') && !contentType.includes(
-                                'octet-stream'))) {
+                            'octet-stream'))) {
                             throw new Error('Invoice download failed');
                         }
 

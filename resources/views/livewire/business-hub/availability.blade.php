@@ -79,124 +79,121 @@
         return $s;
     };
 
-    $availabilitySpaceDurationLine = static function ($booking) use (
-        $availabilitySpaceDurationKind,
-        $availabilityNormalizedBookingTime,
-    ): string {
+    $availabilitySpaceDurationLine = static function ($booking) use ($availabilitySpaceDurationKind, $availabilityNormalizedBookingTime, ): string {
         $kind = $availabilitySpaceDurationKind($booking->service ?? null);
         $timeRaw = $availabilityNormalizedBookingTime($booking);
 
         // Derive kind from the time range duration when service doesn't explicitly say so.
-    if (
-        $kind === '' &&
-        $timeRaw !== '' &&
-        preg_match('/^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$/', $timeRaw, $r)
-    ) {
-        $startMinutes = ((int) $r[1]) * 60 + (int) $r[2];
-        $endMinutes = ((int) $r[3]) * 60 + (int) $r[4];
-        $diff = $endMinutes - $startMinutes;
-        if ($diff < 0) {
-            $diff += 24 * 60; // wraps past midnight
-        }
-        if ($diff >= 7 * 60) {
-            $kind = 'Full day';
-        } elseif ($diff >= 3 * 60) {
-            $kind = 'Half-Day';
-        } else {
+        if (
+            $kind === '' &&
+            $timeRaw !== '' &&
+            preg_match('/^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$/', $timeRaw, $r)
+        ) {
+            $startMinutes = ((int) $r[1]) * 60 + (int) $r[2];
+            $endMinutes = ((int) $r[3]) * 60 + (int) $r[4];
+            $diff = $endMinutes - $startMinutes;
+            if ($diff < 0) {
+                $diff += 24 * 60; // wraps past midnight
+            }
+            if ($diff >= 7 * 60) {
+                $kind = 'Full day';
+            } elseif ($diff >= 3 * 60) {
+                $kind = 'Half-Day';
+            } else {
+                $kind = 'Hourly';
+            }
+        } elseif ($kind === '' && $timeRaw !== '') {
             $kind = 'Hourly';
         }
-    } elseif ($kind === '' && $timeRaw !== '') {
-        $kind = 'Hourly';
-    }
 
-    if ($kind !== '' && $timeRaw !== '') {
-        return $kind . ' (' . $timeRaw . ')';
-    }
+        if ($kind !== '' && $timeRaw !== '') {
+            return $kind . ' (' . $timeRaw . ')';
+        }
 
-    if ($kind !== '') {
-        return $kind;
-    }
+        if ($kind !== '') {
+            return $kind;
+        }
 
-    return $timeRaw !== '' ? $timeRaw : 'Time not set';
-};
-
-$previewPet = $userBookings->first()?->pets?->first();
-$previewPetSizeLabel = null;
-if ($isSpaceAccount) {
-    $previewPetWeight = (float) ($previewPet?->weight ?? 0);
-    if ($previewPetWeight > 0) {
-        $previewPetSizeLabel = $previewPetWeight <= 7 ? 'Small' : ($previewPetWeight <= 18 ? 'Medium' : 'Large');
-    }
-}
-
-$calendarBookingsByDate = [];
-$calendarBookingsById = [];
-foreach ($userBookings as $booking) {
-    if (!$booking->date) {
-        continue;
-    }
-    $dateKey = $booking->date->format('Y-m-d');
-    $bookingStatus = strtolower((string) ($booking->booking_status ?? ''));
-    $statusBadgeClass = match ($bookingStatus) {
-        'confirmed' => 'is-confirmed',
-        'pending' => 'is-pending',
-        'cancelled' => 'is-cancelled',
-        default => 'is-default',
+        return $timeRaw !== '' ? $timeRaw : 'Time not set';
     };
-    $slotType = match ($bookingStatus) {
-        'confirmed' => 'green',
-        'pending' => 'orange',
-        'cancelled' => 'red',
-        default => 'blue',
-    };
-    $normalizedTime = $availabilityNormalizedBookingTime($booking);
-    $pillTime = $normalizedTime;
-    if ($pillTime !== '' && str_contains($pillTime, ' - ')) {
-        $pillTime = trim(explode(' - ', $pillTime, 2)[0]);
-    }
-    $timeLabel = $pillTime !== '' ? $pillTime : '—';
-    $firstPet = $booking->pets->first();
-    $petPhoto = trim((string) ($firstPet?->photo ?? ''));
-    $petPhotoUrl = $petPhoto !== '' ? $petPhoto : asset('images/ellipse-65.svg');
-    $petSizeLabel = null;
+
+    $previewPet = $userBookings->first()?->pets?->first();
+    $previewPetSizeLabel = null;
     if ($isSpaceAccount) {
-        $w = (float) ($firstPet?->weight ?? 0);
-        if ($w > 0) {
-            $petSizeLabel = $w <= 7 ? 'Small' : ($w <= 18 ? 'Medium' : 'Large');
+        $previewPetWeight = (float) ($previewPet?->weight ?? 0);
+        if ($previewPetWeight > 0) {
+            $previewPetSizeLabel = $previewPetWeight <= 7 ? 'Small' : ($previewPetWeight <= 18 ? 'Medium' : 'Large');
         }
     }
-    $clientSinceDate = $booking->petOwner?->created_at ?? $booking->created_at;
-    $calendarBookingsByDate[$dateKey][] = [
-        'bookingId' => $booking->id,
-        'label' => $timeLabel,
-        'type' => $slotType,
-    ];
-    $calendarBookingsById[(string) $booking->id] = [
-        'id' => $booking->id,
-        'statusBadgeClass' => $statusBadgeClass,
-        'client' => $booking->petOwner?->name ?? (auth()->user()?->name ?? 'Client'),
-        'clientSince' => $clientSinceDate ? $clientSinceDate->format('M d, Y') : 'N/A',
-        'status' => ucfirst((string) ($booking->booking_status ?: 'unknown')),
-        'date' => $booking->date->format('l, jS F d/m/Y'),
-        'time' => $normalizedTime !== '' ? $normalizedTime : 'Time not set',
-        'service' => (string) ($booking->service ?? ''),
-        'petName' => $firstPet?->name ?? 'Pet',
-        'petType' => $firstPet?->pet_type ?? 'Pet type',
-        'petBreed' => (string) ($firstPet?->breed ?? ''),
-        'petSizeLabel' => $petSizeLabel,
-        'petPhoto' => $petPhotoUrl,
-        'petSex' => $firstPet?->sex ? ucfirst($firstPet->sex) : 'Not provided',
-        'petWeight' => $firstPet?->weight ?: 'Not provided',
-        'petNotes' => $firstPet?->notes ?: 'No notes',
-        'spacePetTitle' => $firstPet?->name ?? 'Pet',
-        'spaceDurationLine' => $availabilitySpaceDurationLine($booking),
-        'spaceServiceLabel' => trim((string) ($booking->service ?? '')) ?: '—',
-        'spacePetType' => $firstPet?->pet_type ?? 'Pet type',
-        'spaceAddOns' => $availabilitySpaceAddOnLabels($booking),
-    ];
-}
-foreach ($calendarBookingsByDate as $dk => $rows) {
-    usort($calendarBookingsByDate[$dk], fn($a, $b) => strcmp((string) $a['label'], (string) $b['label']));
+
+    $calendarBookingsByDate = [];
+    $calendarBookingsById = [];
+    foreach ($userBookings as $booking) {
+        if (!$booking->date) {
+            continue;
+        }
+        $dateKey = $booking->date->format('Y-m-d');
+        $bookingStatus = strtolower((string) ($booking->booking_status ?? ''));
+        $statusBadgeClass = match ($bookingStatus) {
+            'confirmed' => 'is-confirmed',
+            'pending' => 'is-pending',
+            'cancelled' => 'is-cancelled',
+            default => 'is-default',
+        };
+        $slotType = match ($bookingStatus) {
+            'confirmed' => 'green',
+            'pending' => 'orange',
+            'cancelled' => 'red',
+            default => 'blue',
+        };
+        $normalizedTime = $availabilityNormalizedBookingTime($booking);
+        $pillTime = $normalizedTime;
+        if ($pillTime !== '' && str_contains($pillTime, ' - ')) {
+            $pillTime = trim(explode(' - ', $pillTime, 2)[0]);
+        }
+        $timeLabel = $pillTime !== '' ? $pillTime : '—';
+        $firstPet = $booking->pets->first();
+        $petPhoto = trim((string) ($firstPet?->photo ?? ''));
+        $petPhotoUrl = $petPhoto !== '' ? $petPhoto : asset('images/ellipse-65.svg');
+        $petSizeLabel = null;
+        if ($isSpaceAccount) {
+            $w = (float) ($firstPet?->weight ?? 0);
+            if ($w > 0) {
+                $petSizeLabel = $w <= 7 ? 'Small' : ($w <= 18 ? 'Medium' : 'Large');
+            }
+        }
+        $clientSinceDate = $booking->petOwner?->created_at ?? $booking->created_at;
+        $calendarBookingsByDate[$dateKey][] = [
+            'bookingId' => $booking->id,
+            'label' => $timeLabel,
+            'type' => $slotType,
+        ];
+        $calendarBookingsById[(string) $booking->id] = [
+            'id' => $booking->id,
+            'statusBadgeClass' => $statusBadgeClass,
+            'client' => $booking->petOwner?->name ?? (auth()->user()?->name ?? 'Client'),
+            'clientSince' => $clientSinceDate ? $clientSinceDate->format('M d, Y') : 'N/A',
+            'status' => ucfirst((string) ($booking->booking_status ?: 'unknown')),
+            'date' => $booking->date->format('l, jS F d/m/Y'),
+            'time' => $normalizedTime !== '' ? $normalizedTime : 'Time not set',
+            'service' => (string) ($booking->service ?? ''),
+            'petName' => $firstPet?->name ?? 'Pet',
+            'petType' => $firstPet?->pet_type ?? 'Pet type',
+            'petBreed' => (string) ($firstPet?->breed ?? ''),
+            'petSizeLabel' => $petSizeLabel,
+            'petPhoto' => $petPhotoUrl,
+            'petSex' => $firstPet?->sex ? ucfirst($firstPet->sex) : 'Not provided',
+            'petWeight' => $firstPet?->weight ?: 'Not provided',
+            'petNotes' => $firstPet?->notes ?: 'No notes',
+            'spacePetTitle' => $firstPet?->name ?? 'Pet',
+            'spaceDurationLine' => $availabilitySpaceDurationLine($booking),
+            'spaceServiceLabel' => trim((string) ($booking->service ?? '')) ?: '—',
+            'spacePetType' => $firstPet?->pet_type ?? 'Pet type',
+            'spaceAddOns' => $availabilitySpaceAddOnLabels($booking),
+        ];
+    }
+    foreach ($calendarBookingsByDate as $dk => $rows) {
+        usort($calendarBookingsByDate[$dk], fn($a, $b) => strcmp((string) $a['label'], (string) $b['label']));
     }
 @endphp
 
@@ -224,16 +221,14 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
 
             <div class="availability-calendar-title">
                 <button type="button" aria-label="Previous period" @click="prevPeriod()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="6" height="10" viewBox="0 0 6 10"
-                        fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="6" height="10" viewBox="0 0 6 10" fill="none">
                         <path d="M4.59033 8.612L0.499999 4.52167L4.52167 0.499997" stroke="#3B3731"
                             stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
                 </button>
                 <h3 x-text="periodLabel"></h3>
                 <button type="button" aria-label="Next period" @click="nextPeriod()"><svg
-                        xmlns="http://www.w3.org/2000/svg" width="6" height="10" viewBox="0 0 6 10"
-                        fill="none">
+                        xmlns="http://www.w3.org/2000/svg" width="6" height="10" viewBox="0 0 6 10" fill="none">
                         <path d="M0.5 8.612L4.59033 4.52167L0.568664 0.499997" stroke="#3B3731" stroke-linecap="round"
                             stroke-linejoin="round" />
                     </svg></button>
@@ -242,8 +237,7 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
             <label class="availability-search">
                 <input type="search" placeholder="Type to search ..." />
                 <span class="availability-search-icon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
-                        fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path
                             d="M5.73535 0.5C8.6267 0.500031 10.9707 2.844 10.9707 5.73535C10.9707 7.22006 10.3528 8.55933 9.35938 9.5127C8.41826 10.4158 7.14221 10.9707 5.73535 10.9707C2.844 10.9707 0.500031 8.6267 0.5 5.73535C0.5 2.84398 2.84398 0.5 5.73535 0.5Z"
                             stroke="#9D9B98" />
@@ -289,14 +283,12 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                     <h4 x-text="miniMonthYearLabel"></h4>
                     <div>
                         <button type="button" aria-label="Previous month" @click="prevMiniMonth()"><svg
-                                xmlns="http://www.w3.org/2000/svg" width="6" height="10" viewBox="0 0 6 10"
-                                fill="none">
+                                xmlns="http://www.w3.org/2000/svg" width="6" height="10" viewBox="0 0 6 10" fill="none">
                                 <path d="M4.59033 8.612L0.499999 4.52167L4.52167 0.499997" stroke="#3B3731"
                                     stroke-linecap="round" stroke-linejoin="round" />
                             </svg></button>
                         <button type="button" aria-label="Next month" @click="nextMiniMonth()"><svg
-                                xmlns="http://www.w3.org/2000/svg" width="6" height="10" viewBox="0 0 6 10"
-                                fill="none">
+                                xmlns="http://www.w3.org/2000/svg" width="6" height="10" viewBox="0 0 6 10" fill="none">
                                 <path d="M0.5 8.612L4.59033 4.52167L0.568664 0.499997" stroke="#3B3731"
                                     stroke-linecap="round" stroke-linejoin="round" />
                             </svg></button>
@@ -326,8 +318,8 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                     <div>
                         <div class="booking-chip {{ $isSpaceAccount ? 'is-space' : '' }}">Home Visits</div>
                         <ul>
-                            <li><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13"
-                                    viewBox="0 0 13 13" fill="none">
+                            <li><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 13 13"
+                                    fill="none">
                                     <path
                                         d="M0.5 5.95717C0.5 3.79127 0.5 2.70803 1.2032 2.03545C1.9064 1.36288 3.0374 1.3623 5.3 1.3623H7.7C9.9626 1.3623 11.0942 1.3623 11.7968 2.03545C12.4994 2.7086 12.5 3.79127 12.5 5.95717V7.10589C12.5 9.27179 12.5 10.355 11.7968 11.0276C11.0936 11.7002 9.9626 11.7008 7.7 11.7008H5.3C3.0374 11.7008 1.9058 11.7008 1.2032 11.0276C0.5006 10.3545 0.5 9.27179 0.5 7.10589V5.95717Z"
                                         stroke="#3B3731" />
@@ -340,8 +332,8 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                                 18/12/2025</li>
                             <li>
                                 @if ($isSpaceAccount)
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="13"
-                                        viewBox="0 0 15 13" fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="13" viewBox="0 0 15 13"
+                                        fill="none">
                                         <path
                                             d="M5.5438 12.2186C2.69175 11.808 0.5 9.35597 0.5 6.39044C0.5 3.13724 3.13744 0.5 6.39088 0.5C9.08249 0.5 11.3519 2.30515 12.0556 4.77069"
                                             stroke="#3B3731" stroke-linecap="round" />
@@ -357,8 +349,7 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                                     </svg>
                                 @else
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                        <circle cx="8" cy="8" r="6" stroke="#3B3731"
-                                            stroke-width="1" />
+                                        <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1" />
                                         <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1"
                                             stroke-linecap="round" />
                                     </svg>
@@ -367,8 +358,8 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                             </li>
                             @unless ($isSpaceAccount)
                                 <li>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14"
-                                        viewBox="0 0 13 14" fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14"
+                                        fill="none">
                                         <path
                                             d="M4.09452 9.45989C5.13622 10.5016 7.66978 9.6573 9.75319 7.57355C11.8369 5.49013 12.6812 2.95655 11.6395 1.91484M7.1596 1.20725L7.6311 1.67909M5.50935 2.85785L5.98085 3.32935M4.09418 4.7442L4.56568 5.2157M3.62268 7.10204L4.09418 7.57355M9.75319 0.5L10.2247 0.971503M9.28169 3.32969L10.2247 4.27269M7.63144 4.98028L8.57444 5.92329M5.7451 6.39479L6.6881 7.3378"
                                             stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
@@ -378,8 +369,8 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                                     </svg>Full Groom
                                 </li>
                             @endunless
-                            <li><svg xmlns="http://www.w3.org/2000/svg" width="13" height="12"
-                                    viewBox="0 0 13 12" fill="none">
+                            <li><svg xmlns="http://www.w3.org/2000/svg" width="13" height="12" viewBox="0 0 13 12"
+                                    fill="none">
                                     <path
                                         d="M6.5 4.84211C4.69029 4.84211 3.16114 6.44318 2.66743 8.4996C2.45029 9.40392 2.77771 10.3638 3.58143 10.8148C4.21857 11.1723 5.16629 11.5 6.5 11.5C7.83371 11.5 8.78171 11.1723 9.41886 10.8148C10.2226 10.3638 10.5497 9.40392 10.3326 8.4996C9.83886 6.44289 8.30971 4.84211 6.5 4.84211ZM0.5 4.39168C0.5 5.19121 1.01143 6 1.64286 6C2.27429 6 2.78571 5.19121 2.78571 4.39168C2.78571 3.59216 2.27429 3.10526 1.64286 3.10526C1.01143 3.10526 0.5 3.59245 0.5 4.39168ZM12.5 4.39168C12.5 5.19121 11.9886 6 11.3571 6C10.7257 6 10.2143 5.19121 10.2143 4.39168C10.2143 3.59216 10.7257 3.10526 11.3571 3.10526C11.9886 3.10526 12.5 3.59245 12.5 4.39168ZM3.5 1.78642C3.5 2.58595 4.01143 3.39474 4.64286 3.39474C5.27429 3.39474 5.78571 2.58595 5.78571 1.78642C5.78571 0.986895 5.27429 0.5 4.64286 0.5C4.01143 0.5 3.5 0.987184 3.5 1.78642ZM9.5 1.78642C9.5 2.58595 8.98857 3.39474 8.35714 3.39474C7.72571 3.39474 7.21429 2.58595 7.21429 1.78642C7.21429 0.986895 7.72571 0.5 8.35714 0.5C8.98857 0.5 9.5 0.987184 9.5 1.78642Z"
                                         stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
@@ -409,8 +400,8 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                 <button type="button" class="availability-bookings-drawer-backdrop" @click="closeBookingsDrawer()"
                     x-show="isBookingsDrawerOpen" x-transition.opacity aria-label="Close bookings drawer"></button>
 
-                <aside class="availability-bookings-drawer" role="dialog" aria-modal="true"
-                    aria-label="All bookings" x-show="isBookingsDrawerOpen" x-transition:enter="drawer-enter"
+                <aside class="availability-bookings-drawer" role="dialog" aria-modal="true" aria-label="All bookings"
+                    x-show="isBookingsDrawerOpen" x-transition:enter="drawer-enter"
                     x-transition:enter-start="drawer-enter-start" x-transition:enter-end="drawer-enter-end"
                     x-transition:leave="drawer-leave" x-transition:leave-start="drawer-leave-start"
                     x-transition:leave-end="drawer-leave-end">
@@ -418,10 +409,10 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                         <h3 x-text="drawerHeadline">Bookings</h3>
                         <button type="button" class="availability-drawer-close" @click="closeBookingsDrawer()"
                             aria-label="Close">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17"
-                                viewBox="0 0 17 17" fill="none">
-                                <path d="M0.75 15.75L15.75 0.75M0.75 0.75L15.75 15.75" stroke="#3B3731"
-                                    stroke-width="1" stroke-linecap="round" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 17 17"
+                                fill="none">
+                                <path d="M0.75 15.75L15.75 0.75M0.75 0.75L15.75 15.75" stroke="#3B3731" stroke-width="1"
+                                    stroke-linecap="round" />
                             </svg>
                         </button>
                     </header>
@@ -475,8 +466,8 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                                             <div class="availability-drawer-client-name-row">
                                                 <strong>{{ $booking->petOwner?->name ?? (auth()->user()?->name ?? 'Client') }}</strong>
                                                 <span class="availability-drawer-space-badge" aria-hidden="true">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="15"
-                                                        height="15" viewBox="0 0 15 15" fill="none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15"
+                                                        viewBox="0 0 15 15" fill="none">
                                                         <path fill-rule="evenodd" clip-rule="evenodd"
                                                             d="M11.191 0.633868C11.042 0.395853 10.8226 0.210202 10.5632 0.102758C10.3038 -0.00468587 10.0173 -0.0285778 9.7437 0.0344091L7.8018 0.480493C7.60279 0.526236 7.39599 0.526236 7.19698 0.480493L5.25508 0.0344091C4.98147 -0.0285778 4.69503 -0.00468587 4.43563 0.102758C4.17623 0.210202 3.95678 0.395853 3.80783 0.633868L2.7494 2.32315C2.64139 2.49597 2.49559 2.64178 2.32278 2.75087L0.63361 3.80938C0.396021 3.9582 0.210655 4.17731 0.103241 4.43628C-0.0041733 4.69525 -0.0283068 4.98124 0.0341899 5.25456L0.480244 7.19874C0.52582 7.39742 0.52582 7.60384 0.480244 7.80252L0.0341899 9.74563C-0.0285497 10.0191 -0.00453765 10.3053 0.102888 10.5645C0.210314 10.8237 0.395816 11.043 0.63361 11.1919L2.32278 12.2504C2.49559 12.3584 2.64139 12.5042 2.75048 12.677L3.80891 14.3663C4.11348 14.8534 4.69454 15.0943 5.25508 14.9658L7.19698 14.5197C7.39599 14.474 7.60279 14.474 7.8018 14.5197L9.74479 14.9658C10.0182 15.0285 10.3044 15.0045 10.5636 14.8971C10.8228 14.7896 11.0421 14.6041 11.191 14.3663L12.2494 12.677C12.3574 12.5042 12.5032 12.3584 12.676 12.2504L14.3663 11.1919C14.6041 11.0428 14.7895 10.8233 14.8967 10.5639C15.004 10.3044 15.0277 10.0181 14.9646 9.74455L14.5196 7.80252C14.4739 7.6035 14.4739 7.39669 14.5196 7.19766L14.9657 5.25456C15.0285 4.9812 15.0047 4.69505 14.8974 4.43587C14.7902 4.17669 14.6049 3.95734 14.3673 3.8083L12.6771 2.74979C12.5045 2.64158 12.3587 2.49573 12.2505 2.32315L11.191 0.633868ZM10.6477 5.09146C10.7145 4.96862 10.731 4.82465 10.6939 4.68985C10.6567 4.55505 10.5687 4.43992 10.4483 4.3687C10.328 4.29748 10.1847 4.27571 10.0487 4.30797C9.91264 4.34023 9.79441 4.42401 9.71886 4.54169L6.89457 9.32223L5.1892 7.68911C5.1386 7.63716 5.07807 7.59593 5.0112 7.56788C4.94433 7.53984 4.87249 7.52554 4.79998 7.52586C4.72747 7.52618 4.65576 7.54109 4.58914 7.56972C4.52251 7.59835 4.46234 7.64011 4.4122 7.6925C4.36206 7.74489 4.32299 7.80684 4.29731 7.87466C4.27163 7.94248 4.25987 8.01478 4.26274 8.08724C4.2656 8.1597 4.28303 8.23084 4.31398 8.29642C4.34493 8.362 4.38878 8.42068 4.44289 8.46895L6.63968 10.5741C6.69848 10.6303 6.76922 10.6725 6.84661 10.6976C6.92401 10.7226 7.00606 10.7298 7.08665 10.7187C7.16724 10.7076 7.24427 10.6784 7.312 10.6334C7.37973 10.5883 7.4364 10.5285 7.47779 10.4585L10.6477 5.09146Z"
                                                             fill="#CBDCE8" />
@@ -497,14 +488,12 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
 
                                 <div class="availability-drawer-meta {{ $isSpaceAccount ? 'is-space' : '' }}">
                                     <div class="availability-drawer-meta-row">
-                                        <span class="availability-drawer-meta-item"><svg
-                                                xmlns="http://www.w3.org/2000/svg" width="17" height="16"
-                                                viewBox="0 0 17 16" fill="none">
+                                        <span class="availability-drawer-meta-item"><svg xmlns="http://www.w3.org/2000/svg"
+                                                width="17" height="16" viewBox="0 0 17 16" fill="none">
                                                 <path
                                                     d="M0.5 7.77557C0.5 4.88782 0.5 3.44357 1.4376 2.54684C2.3752 1.65012 3.8832 1.64935 6.9 1.64935H10.1C13.1168 1.64935 14.6256 1.64935 15.5624 2.54684C16.4992 3.44433 16.5 4.88782 16.5 7.77557V9.30712C16.5 12.1949 16.5 13.6391 15.5624 14.5358C14.6248 15.4326 13.1168 15.4333 10.1 15.4333H6.9C3.8832 15.4333 2.3744 15.4333 1.4376 14.5358C0.5008 13.6384 0.5 12.1949 0.5 9.30712V7.77557Z"
                                                     stroke="#3B3731" />
-                                                <path
-                                                    d="M4.50039 1.64867V0.5M12.5004 1.64867V0.5M0.900391 5.47755H16.1004"
+                                                <path d="M4.50039 1.64867V0.5M12.5004 1.64867V0.5M0.900391 5.47755H16.1004"
                                                     stroke="#3B3731" stroke-linecap="round" />
                                                 <path
                                                     d="M13.3004 11.6038C13.3004 11.8069 13.2162 12.0017 13.0661 12.1453C12.9161 12.2889 12.7126 12.3696 12.5004 12.3696C12.2883 12.3696 12.0848 12.2889 11.9348 12.1453C11.7847 12.0017 11.7004 11.8069 11.7004 11.6038C11.7004 11.4008 11.7847 11.206 11.9348 11.0624C12.0848 10.9188 12.2883 10.8381 12.5004 10.8381C12.7126 10.8381 12.9161 10.9188 13.0661 11.0624C13.2162 11.206 13.3004 11.4008 13.3004 11.6038ZM13.3004 8.54074C13.3004 8.74384 13.2162 8.93862 13.0661 9.08223C12.9161 9.22584 12.7126 9.30652 12.5004 9.30652C12.2883 9.30652 12.0848 9.22584 11.9348 9.08223C11.7847 8.93862 11.7004 8.74384 11.7004 8.54074C11.7004 8.33764 11.7847 8.14287 11.9348 7.99925C12.0848 7.85564 12.2883 7.77496 12.5004 7.77496C12.7126 7.77496 12.9161 7.85564 13.0661 7.99925C13.2162 8.14287 13.3004 8.33764 13.3004 8.54074ZM9.30044 11.6038C9.30044 11.8069 9.21615 12.0017 9.06612 12.1453C8.9161 12.2889 8.71261 12.3696 8.50044 12.3696C8.28827 12.3696 8.08478 12.2889 7.93475 12.1453C7.78472 12.0017 7.70044 11.8069 7.70044 11.6038C7.70044 11.4008 7.78472 11.206 7.93475 11.0624C8.08478 10.9188 8.28827 10.8381 8.50044 10.8381C8.71261 10.8381 8.9161 10.9188 9.06612 11.0624C9.21615 11.206 9.30044 11.4008 9.30044 11.6038ZM9.30044 8.54074C9.30044 8.74384 9.21615 8.93862 9.06612 9.08223C8.9161 9.22584 8.71261 9.30652 8.50044 9.30652C8.28827 9.30652 8.08478 9.22584 7.93475 9.08223C7.78472 8.93862 7.70044 8.74384 7.70044 8.54074C7.70044 8.33764 7.78472 8.14287 7.93475 7.99925C8.08478 7.85564 8.28827 7.77496 8.50044 7.77496C8.71261 7.77496 8.9161 7.85564 9.06612 7.99925C9.21615 8.14287 9.30044 8.33764 9.30044 8.54074ZM5.30044 11.6038C5.30044 11.8069 5.21615 12.0017 5.06612 12.1453C4.9161 12.2889 4.71261 12.3696 4.50044 12.3696C4.28827 12.3696 4.08478 12.2889 3.93475 12.1453C3.78473 12.0017 3.70044 11.8069 3.70044 11.6038C3.70044 11.4008 3.78473 11.206 3.93475 11.0624C4.08478 10.9188 4.28827 10.8381 4.50044 10.8381C4.71261 10.8381 4.9161 10.9188 5.06612 11.0624C5.21615 11.206 5.30044 11.4008 5.30044 11.6038ZM5.30044 8.54074C5.30044 8.74384 5.21615 8.93862 5.06612 9.08223C4.9161 9.22584 4.71261 9.30652 4.50044 9.30652C4.28827 9.30652 4.08478 9.22584 3.93475 9.08223C3.78473 8.93862 3.70044 8.74384 3.70044 8.54074C3.70044 8.33764 3.78473 8.14287 3.93475 7.99925C4.08478 7.85564 4.28827 7.77496 4.50044 7.77496C4.71261 7.77496 4.9161 7.85564 5.06612 7.99925C5.21615 8.14287 5.30044 8.33764 5.30044 8.54074Z"
@@ -515,24 +504,20 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                                         <div class="availability-drawer-meta-row">
                                             <span class="availability-drawer-meta-item">
                                                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                                    <circle cx="8" cy="8" r="6" stroke="#3B3731"
-                                                        stroke-width="1" />
+                                                    <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1" />
                                                     <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1"
                                                         stroke-linecap="round" />
                                                 </svg>
                                                 {{ $bookingTime !== '' ? $bookingTime : 'Time not set' }}
                                             </span>
-                                            <span class="availability-drawer-meta-item"><svg
-                                                    xmlns="http://www.w3.org/2000/svg" width="16" height="17"
-                                                    viewBox="0 0 16 17" fill="none">
+                                            <span class="availability-drawer-meta-item"><svg xmlns="http://www.w3.org/2000/svg"
+                                                    width="16" height="17" viewBox="0 0 16 17" fill="none">
                                                     <path
                                                         d="M4.9464 11.5546C6.23165 12.8398 9.35755 11.7981 11.928 9.22725C14.499 6.65675 15.5407 3.53086 14.2554 2.24561M8.72809 1.3726L9.30983 1.95475M6.69202 3.40908L7.27376 3.99082M4.94599 5.73643L5.52773 6.31816M4.36426 8.64551L4.94599 9.22725M11.928 0.5L12.5098 1.08173M11.3463 3.99123L12.5098 5.1547M9.31024 6.02771L10.4737 7.19118M6.98289 7.77291L8.14636 8.93638"
-                                                        stroke="#3B3731" stroke-linecap="round"
-                                                        stroke-linejoin="round" />
+                                                        stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                                     <path
                                                         d="M4.94549 13.3C5.42749 12.818 5.42749 12.0365 4.94549 11.5545C4.46349 11.0725 3.68202 11.0725 3.20002 11.5545L0.872726 13.8818C0.390728 14.3638 0.390728 15.1453 0.872726 15.6273C1.35472 16.1092 2.1362 16.1092 2.6182 15.6273L4.94549 13.3Z"
-                                                        stroke="#3B3731" stroke-linecap="round"
-                                                        stroke-linejoin="round" />
+                                                        stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                                 </svg>{{ $booking->service ?: 'Service not set' }}</span>
                                         </div>
                                     @endunless
@@ -542,11 +527,9 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                                     <div class="availability-drawer-space" style="margin-top: 0;">
                                         <div class="availability-drawer-space-main">
                                             <div class="availability-drawer-space-duration">
-                                                <svg class="availability-drawer-space-duration-icon" width="16"
-                                                    height="16" viewBox="0 0 16 16" fill="none"
-                                                    aria-hidden="true">
-                                                    <circle cx="8" cy="8" r="6" stroke="#3B3731"
-                                                        stroke-width="1" />
+                                                <svg class="availability-drawer-space-duration-icon" width="16" height="16"
+                                                    viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                                    <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1" />
                                                     <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1"
                                                         stroke-linecap="round" />
                                                 </svg>
@@ -554,8 +537,8 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                                             </div>
                                             <div class="availability-drawer-space-visit">
                                                 <span class="availability-drawer-space-visit-icon" aria-hidden="true">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20"
-                                                        height="16" viewBox="0 0 20 16" fill="none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="16"
+                                                        viewBox="0 0 20 16" fill="none">
                                                         <path
                                                             d="M16.7801 15.5092V4.90774C16.7801 4.8823 16.7822 4.85737 16.7861 4.83297L13.9198 2.38869C13.3102 1.86965 12.8891 1.51192 12.5318 1.2787C12.1869 1.05357 11.955 0.981548 11.7333 0.981548C11.5117 0.981548 11.2813 1.05383 10.9367 1.2787C10.5794 1.51195 10.1571 1.86936 9.54677 2.38869L6.67838 4.83297C6.68232 4.85747 6.68642 4.8822 6.68642 4.90774V15.5092C6.68599 15.7799 6.45561 16 6.17148 16C5.88754 15.9998 5.65697 15.7798 5.65654 15.5092V5.70333L5.1255 6.15768C4.91349 6.33835 4.5869 6.31948 4.39734 6.11742C4.20853 5.91549 4.2262 5.60589 4.43757 5.42535L8.85884 1.65828H8.86085C9.45081 1.15631 9.92858 0.747109 10.3534 0.469686C10.791 0.184003 11.2255 2.87993e-07 11.7333 0C12.241 0 12.6754 0.183991 13.1132 0.469686C13.5382 0.747176 14.018 1.15613 14.6077 1.65828L19.029 5.42535C19.2403 5.60589 19.258 5.91549 19.0692 6.11742C18.8796 6.31948 18.553 6.33835 18.341 6.15768L17.81 5.70333V15.5092C17.8096 15.7798 17.579 15.9998 17.2951 16C17.0109 16 16.7805 15.7799 16.7801 15.5092Z"
                                                             fill="#3B3731" />
@@ -572,18 +555,17 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                                                 </span>
                                                 <div class="availability-drawer-space-visit-copy">
                                                     <p class="availability-drawer-space-service-line">
-                                                        {{ $spaceServiceLabel }}</p>
+                                                        {{ $spaceServiceLabel }}
+                                                    </p>
                                                 </div>
                                             </div>
                                             <div class="availability-drawer-space-pet-type-row">
-                                                <span class="availability-drawer-space-pet-type-icon"
-                                                    aria-hidden="true">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16"
-                                                        height="15" viewBox="0 0 16 15" fill="none">
+                                                <span class="availability-drawer-space-pet-type-icon" aria-hidden="true">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15"
+                                                        viewBox="0 0 16 15" fill="none">
                                                         <path fill="none"
                                                             d="M8 6.02632C5.73786 6.02632 3.82643 8.06405 3.20929 10.6813C2.93786 11.8323 3.34714 13.0539 4.35179 13.6279C5.14821 14.0829 6.33286 14.5 8 14.5C9.66714 14.5 10.8521 14.0829 11.6486 13.6279C12.6532 13.0539 13.0621 11.8323 12.7907 10.6813C12.1736 8.06368 10.2621 6.02632 8 6.02632ZM0.5 5.45305C0.5 6.47063 1.13929 7.5 1.92857 7.5C2.71786 7.5 3.35714 6.47063 3.35714 5.45305C3.35714 4.43547 2.71786 3.81579 1.92857 3.81579C1.13929 3.81579 0.5 4.43584 0.5 5.45305ZM15.5 5.45305C15.5 6.47063 14.8607 7.5 14.0714 7.5C13.2821 7.5 12.6429 6.47063 12.6429 5.45305C12.6429 4.43547 13.2821 3.81579 14.0714 3.81579C14.8607 3.81579 15.5 4.43584 15.5 5.45305ZM4.25 2.13726C4.25 3.15484 4.88929 4.18421 5.67857 4.18421C6.46786 4.18421 7.10714 3.15484 7.10714 2.13726C7.10714 1.11968 6.46786 0.5 5.67857 0.5C4.88929 0.5 4.25 1.12005 4.25 2.13726ZM11.75 2.13726C11.75 3.15484 11.1107 4.18421 10.3214 4.18421C9.53214 4.18421 8.89286 3.15484 8.89286 2.13726C8.89286 1.11968 9.53214 0.5 10.3214 0.5C11.1107 0.5 11.75 1.12005 11.75 2.13726Z"
-                                                            stroke="#3B3731" stroke-linecap="round"
-                                                            stroke-linejoin="round" />
+                                                            stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                                     </svg>
                                                 </span>
                                                 <span
@@ -609,18 +591,16 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                                         <div class="availability-drawer-pet-left">
                                             <img src="{{ $petPhotoUrl }}" alt="Pet image" />
                                             <div class="availability-drawer-pet-copy">
-                                                <strong><svg xmlns="http://www.w3.org/2000/svg" width="16"
-                                                        height="15" viewBox="0 0 16 15" fill="none">
+                                                <strong><svg xmlns="http://www.w3.org/2000/svg" width="16" height="15"
+                                                        viewBox="0 0 16 15" fill="none">
                                                         <path
                                                             d="M8 6.02632C5.73786 6.02632 3.82643 8.06405 3.20929 10.6813C2.93786 11.8323 3.34714 13.0539 4.35179 13.6279C5.14821 14.0829 6.33286 14.5 8 14.5C9.66714 14.5 10.8521 14.0829 11.6486 13.6279C12.6532 13.0539 13.0621 11.8323 12.7907 10.6813C12.1736 8.06368 10.2621 6.02632 8 6.02632ZM0.5 5.45305C0.5 6.47063 1.13929 7.5 1.92857 7.5C2.71786 7.5 3.35714 6.47063 3.35714 5.45305C3.35714 4.43547 2.71786 3.81579 1.92857 3.81579C1.13929 3.81579 0.5 4.43584 0.5 5.45305ZM15.5 5.45305C15.5 6.47063 14.8607 7.5 14.0714 7.5C13.2821 7.5 12.6429 6.47063 12.6429 5.45305C12.6429 4.43547 13.2821 3.81579 14.0714 3.81579C14.8607 3.81579 15.5 4.43584 15.5 5.45305ZM4.25 2.13726C4.25 3.15484 4.88929 4.18421 5.67857 4.18421C6.46786 4.18421 7.10714 3.15484 7.10714 2.13726C7.10714 1.11968 6.46786 0.5 5.67857 0.5C4.88929 0.5 4.25 1.12005 4.25 2.13726ZM11.75 2.13726C11.75 3.15484 11.1107 4.18421 10.3214 4.18421C9.53214 4.18421 8.89286 3.15484 8.89286 2.13726C8.89286 1.11968 9.53214 0.5 10.3214 0.5C11.1107 0.5 11.75 1.12005 11.75 2.13726Z"
-                                                            stroke="#3B3731" stroke-linecap="round"
-                                                            stroke-linejoin="round" />
+                                                            stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                                     </svg>{{ $firstPet?->name ?: 'Pet' }}</strong>
                                                 <small>
                                                     {{ $firstPet?->pet_type ?: 'Pet type' }}
                                                     @if ($firstPet?->breed)
-                                                        <span class="black-dot"
-                                                            style="margin: 0 5px;background:#9D9B98;"></span>
+                                                        <span class="black-dot" style="margin: 0 5px;background:#9D9B98;"></span>
                                                         {{ $firstPet->breed }}
                                                     @endif
                                                 </small>
@@ -628,26 +608,25 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                                         </div>
                                         <div class="availability-drawer-pet-right">
                                             <p><span>
-                                                    <svg fill="#9D9B98" width="15" height="15"
-                                                        viewBox="0 0 61.13 61.13" xmlns="http://www.w3.org/2000/svg">
+                                                    <svg fill="#9D9B98" width="15" height="15" viewBox="0 0 61.13 61.13"
+                                                        xmlns="http://www.w3.org/2000/svg">
                                                         <path
                                                             d="M27.482,34.031v12.317h-6.92c-1.703,0-3.084,1.381-3.084,3.084s1.381,3.084,3.084,3.084h6.92v5.531c0,1.703,1.381,3.084,3.084,3.084s3.084-1.381,3.084-3.084v-5.531h6.92c1.703,0,3.084-1.381,3.084-3.084s-1.381-3.084-3.084-3.084h-6.92V34.031c7.993-1.458,14.072-8.467,14.072-16.874C47.723,7.697,40.026,0,30.566,0c-9.46,0-17.157,7.697-17.157,17.157C13.409,25.564,19.489,32.573,27.482,34.031z M30.566,6.169c6.059,0,10.988,4.929,10.988,10.988s-4.929,10.988-10.988,10.988s-10.988-4.929-10.988-10.988S24.507,6.169,30.566,6.169z" />
                                                     </svg>
                                                 </span>
-                                                {{ $firstPet?->sex ? ucfirst($firstPet->sex) : 'Not provided' }}</p>
-                                            <p><span><svg xmlns="http://www.w3.org/2000/svg" width="15"
-                                                        height="16" viewBox="0 0 15 16" fill="none">
+                                                {{ $firstPet?->sex ? ucfirst($firstPet->sex) : 'Not provided' }}
+                                            </p>
+                                            <p><span><svg xmlns="http://www.w3.org/2000/svg" width="15" height="16"
+                                                        viewBox="0 0 15 16" fill="none">
                                                         <path
                                                             d="M4.7373 3.14703C4.7373 3.84907 5.01619 4.52235 5.51261 5.01876C6.00903 5.51518 6.68232 5.79406 7.38436 5.79406C8.08641 5.79406 8.7597 5.51518 9.25612 5.01876C9.75254 4.52235 10.0314 3.84907 10.0314 3.14703C10.0314 2.44499 9.75254 1.77171 9.25612 1.2753C8.7597 0.778883 8.08641 0.5 7.38436 0.5C6.68232 0.5 6.00903 0.778883 5.51261 1.2753C5.01619 1.77171 4.7373 2.44499 4.7373 3.14703Z"
-                                                            stroke="#9D9B98" stroke-linecap="round"
-                                                            stroke-linejoin="round" />
+                                                            stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
                                                         <path
                                                             d="M2.8269 5.79492H11.9416C12.1482 5.79489 12.3483 5.86739 12.507 5.99977C12.6657 6.13215 12.7728 6.31602 12.8098 6.51933L14.2542 14.4604C14.2774 14.5876 14.2723 14.7183 14.2394 14.8433C14.2064 14.9683 14.1464 15.0845 14.0636 15.1837C13.9807 15.283 13.8771 15.3628 13.76 15.4176C13.643 15.4723 13.5153 15.5007 13.386 15.5007H1.38249C1.25323 15.5007 1.12554 15.4723 1.00846 15.4176C0.891377 15.3628 0.78776 15.283 0.704935 15.1837C0.62211 15.0845 0.5621 14.9683 0.52915 14.8433C0.496199 14.7183 0.491113 14.5876 0.514251 14.4604L1.95866 6.51933C1.99565 6.31602 2.10282 6.13215 2.26149 5.99977C2.42016 5.86739 2.62026 5.79489 2.8269 5.79492Z"
-                                                            stroke="#9D9B98" stroke-linecap="round"
-                                                            stroke-linejoin="round" />
+                                                            stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
                                                     </svg></span> {{ $firstPet?->weight ?: 'Not provided' }}</p>
-                                            <p><span><svg xmlns="http://www.w3.org/2000/svg" width="15"
-                                                        height="16" viewBox="0 0 15 16" fill="none">
+                                            <p><span><svg xmlns="http://www.w3.org/2000/svg" width="15" height="16"
+                                                        viewBox="0 0 15 16" fill="none">
                                                         <path
                                                             d="M13.5905 8.11123L13.9601 6.73016C14.3918 5.1182 14.6084 4.31257 14.4462 3.61489C14.3176 3.0641 14.0285 2.56382 13.6155 2.17734C13.093 1.68768 12.2866 1.4718 10.6747 1.04003C9.0627 0.607553 8.25636 0.391671 7.55939 0.55394C7.0086 0.682549 6.50833 0.971618 6.12185 1.38458C5.70224 1.83207 5.4835 2.48758 5.15824 3.67851L4.98382 4.32544L4.61425 5.70651C4.18177 7.31847 3.96589 8.1241 4.12816 8.82178C4.25677 9.37257 4.54584 9.87285 4.9588 10.2593C5.48135 10.749 6.28769 10.9649 7.89966 11.3974C9.35221 11.7862 10.1507 12 10.8048 11.9192C10.8763 11.9101 10.9463 11.8977 11.0149 11.882C11.5655 11.7538 12.0658 11.4652 12.4525 11.0528C12.9421 10.5295 13.158 9.7232 13.5905 8.11123Z"
                                                             stroke="#9D9B98" />
@@ -676,8 +655,8 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                 <button type="button" class="availability-bookings-drawer-backdrop" @click="closeBookingDetail()"
                     x-show="isBookingDetailOpen" x-transition.opacity aria-label="Close booking details"></button>
 
-                <aside class="availability-bookings-drawer" role="dialog" aria-modal="true"
-                    aria-label="Booking details" x-show="isBookingDetailOpen" x-transition:enter="drawer-enter"
+                <aside class="availability-bookings-drawer" role="dialog" aria-modal="true" aria-label="Booking details"
+                    x-show="isBookingDetailOpen" x-transition:enter="drawer-enter"
                     x-transition:enter-start="drawer-enter-start" x-transition:enter-end="drawer-enter-end"
                     x-transition:leave="drawer-leave" x-transition:leave-start="drawer-leave-start"
                     x-transition:leave-end="drawer-leave-end">
@@ -685,10 +664,10 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                         <h3>Booking</h3>
                         <button type="button" class="availability-drawer-close" @click="closeBookingDetail()"
                             aria-label="Close">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17"
-                                viewBox="0 0 17 17" fill="none">
-                                <path d="M0.75 15.75L15.75 0.75M0.75 0.75L15.75 15.75" stroke="#3B3731"
-                                    stroke-width="1" stroke-linecap="round" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 17 17"
+                                fill="none">
+                                <path d="M0.75 15.75L15.75 0.75M0.75 0.75L15.75 15.75" stroke="#3B3731" stroke-width="1"
+                                    stroke-linecap="round" />
                             </svg>
                         </button>
                     </header>
@@ -725,9 +704,8 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
 
                             <div class="availability-drawer-meta" :class="{ 'is-space': isSpaceAccount }">
                                 <div class="availability-drawer-meta-row">
-                                    <span class="availability-drawer-meta-item"><svg
-                                            xmlns="http://www.w3.org/2000/svg" width="17" height="16"
-                                            viewBox="0 0 17 16" fill="none">
+                                    <span class="availability-drawer-meta-item"><svg xmlns="http://www.w3.org/2000/svg"
+                                            width="17" height="16" viewBox="0 0 17 16" fill="none">
                                             <path
                                                 d="M0.5 7.77557C0.5 4.88782 0.5 3.44357 1.4376 2.54684C2.3752 1.65012 3.8832 1.64935 6.9 1.64935H10.1C13.1168 1.64935 14.6256 1.64935 15.5624 2.54684C16.4992 3.44433 16.5 4.88782 16.5 7.77557V9.30712C16.5 12.1949 16.5 13.6391 15.5624 14.5358C14.6248 15.4326 13.1168 15.4333 10.1 15.4333H6.9C3.8832 15.4333 2.3744 15.4333 1.4376 14.5358C0.5008 13.6384 0.5 12.1949 0.5 9.30712V7.77557Z"
                                                 stroke="#3B3731" />
@@ -741,16 +719,14 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                                 <div class="availability-drawer-meta-row" x-show="!isSpaceAccount">
                                     <span class="availability-drawer-meta-item">
                                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                            <circle cx="8" cy="8" r="6" stroke="#3B3731"
-                                                stroke-width="1" />
+                                            <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1" />
                                             <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1"
                                                 stroke-linecap="round" />
                                         </svg>
                                         <span x-text="selectedBooking?.time"></span>
                                     </span>
-                                    <span class="availability-drawer-meta-item"><svg
-                                            xmlns="http://www.w3.org/2000/svg" width="16" height="17"
-                                            viewBox="0 0 16 17" fill="none">
+                                    <span class="availability-drawer-meta-item"><svg xmlns="http://www.w3.org/2000/svg"
+                                            width="16" height="17" viewBox="0 0 16 17" fill="none">
                                             <path
                                                 d="M4.9464 11.5546C6.23165 12.8398 9.35755 11.7981 11.928 9.22725C14.499 6.65675 15.5407 3.53086 14.2554 2.24561M8.72809 1.3726L9.30983 1.95475M6.69202 3.40908L7.27376 3.99082M4.94599 5.73643L5.52773 6.31816M4.36426 8.64551L4.94599 9.22725M11.928 0.5L12.5098 1.08173M11.3463 3.99123L12.5098 5.1547M9.31024 6.02771L10.4737 7.19118M6.98289 7.77291L8.14636 8.93638"
                                                 stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
@@ -765,10 +741,9 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                             <div class="availability-drawer-space" x-show="isSpaceAccount" x-cloak>
                                 <div class="availability-drawer-space-main">
                                     <div class="availability-drawer-space-duration">
-                                        <svg class="availability-drawer-space-duration-icon" width="16"
-                                            height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                                            <circle cx="8" cy="8" r="6" stroke="#3B3731"
-                                                stroke-width="1" />
+                                        <svg class="availability-drawer-space-duration-icon" width="16" height="16"
+                                            viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                            <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1" />
                                             <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1"
                                                 stroke-linecap="round" />
                                         </svg>
@@ -805,8 +780,7 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                                                 viewBox="0 0 16 15" fill="none">
                                                 <path fill="none"
                                                     d="M8 6.02632C5.73786 6.02632 3.82643 8.06405 3.20929 10.6813C2.93786 11.8323 3.34714 13.0539 4.35179 13.6279C5.14821 14.0829 6.33286 14.5 8 14.5C9.66714 14.5 10.8521 14.0829 11.6486 13.6279C12.6532 13.0539 13.0621 11.8323 12.7907 10.6813C12.1736 8.06368 10.2621 6.02632 8 6.02632ZM0.5 5.45305C0.5 6.47063 1.13929 7.5 1.92857 7.5C2.71786 7.5 3.35714 6.47063 3.35714 5.45305C3.35714 4.43547 2.71786 3.81579 1.92857 3.81579C1.13929 3.81579 0.5 4.43584 0.5 5.45305ZM15.5 5.45305C15.5 6.47063 14.8607 7.5 14.0714 7.5C13.2821 7.5 12.6429 6.47063 12.6429 5.45305C12.6429 4.43547 13.2821 3.81579 14.0714 3.81579C14.8607 3.81579 15.5 4.43584 15.5 5.45305ZM4.25 2.13726C4.25 3.15484 4.88929 4.18421 5.67857 4.18421C6.46786 4.18421 7.10714 3.15484 7.10714 2.13726C7.10714 1.11968 6.46786 0.5 5.67857 0.5C4.88929 0.5 4.25 1.12005 4.25 2.13726ZM11.75 2.13726C11.75 3.15484 11.1107 4.18421 10.3214 4.18421C9.53214 4.18421 8.89286 3.15484 8.89286 2.13726C8.89286 1.11968 9.53214 0.5 10.3214 0.5C11.1107 0.5 11.75 1.12005 11.75 2.13726Z"
-                                                    stroke="#3B3731" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
+                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
                                         </span>
                                         <span class="availability-drawer-space-pet-type-value"
@@ -841,8 +815,8 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                                 </div>
                                 <div class="availability-drawer-pet-right">
                                     <p><span>
-                                            <svg fill="#9D9B98" width="15" height="15"
-                                                viewBox="0 0 61.13 61.13" xmlns="http://www.w3.org/2000/svg">
+                                            <svg fill="#9D9B98" width="15" height="15" viewBox="0 0 61.13 61.13"
+                                                xmlns="http://www.w3.org/2000/svg">
                                                 <path
                                                     d="M27.482,34.031v12.317h-6.92c-1.703,0-3.084,1.381-3.084,3.084s1.381,3.084,3.084,3.084h6.92v5.531c0,1.703,1.381,3.084,3.084,3.084s3.084-1.381,3.084-3.084v-5.531h6.92c1.703,0,3.084-1.381,3.084-3.084s-1.381-3.084-3.084-3.084h-6.92V34.031c7.993-1.458,14.072-8.467,14.072-16.874C47.723,7.697,40.026,0,30.566,0c-9.46,0-17.157,7.697-17.157,17.157C13.409,25.564,19.489,32.573,27.482,34.031z M30.566,6.169c6.059,0,10.988,4.929,10.988,10.988s-4.929,10.988-10.988,10.988s-10.988-4.929-10.988-10.988S24.507,6.169,30.566,6.169z" />
                                             </svg>
@@ -853,12 +827,10 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
                                                 viewBox="0 0 15 16" fill="none">
                                                 <path
                                                     d="M4.7373 3.14703C4.7373 3.84907 5.01619 4.52235 5.51261 5.01876C6.00903 5.51518 6.68232 5.79406 7.38436 5.79406C8.08641 5.79406 8.7597 5.51518 9.25612 5.01876C9.75254 4.52235 10.0314 3.84907 10.0314 3.14703C10.0314 2.44499 9.75254 1.77171 9.25612 1.2753C8.7597 0.778883 8.08641 0.5 7.38436 0.5C6.68232 0.5 6.00903 0.778883 5.51261 1.2753C5.01619 1.77171 4.7373 2.44499 4.7373 3.14703Z"
-                                                    stroke="#9D9B98" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
+                                                    stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
                                                 <path
                                                     d="M2.8269 5.79492H11.9416C12.1482 5.79489 12.3483 5.86739 12.507 5.99977C12.6657 6.13215 12.7728 6.31602 12.8098 6.51933L14.2542 14.4604C14.2774 14.5876 14.2723 14.7183 14.2394 14.8433C14.2064 14.9683 14.1464 15.0845 14.0636 15.1837C13.9807 15.283 13.8771 15.3628 13.76 15.4176C13.643 15.4723 13.5153 15.5007 13.386 15.5007H1.38249C1.25323 15.5007 1.12554 15.4723 1.00846 15.4176C0.891377 15.3628 0.78776 15.283 0.704935 15.1837C0.62211 15.0845 0.5621 14.9683 0.52915 14.8433C0.496199 14.7183 0.491113 14.5876 0.514251 14.4604L1.95866 6.51933C1.99565 6.31602 2.10282 6.13215 2.26149 5.99977C2.42016 5.86739 2.62026 5.79489 2.8269 5.79492Z"
-                                                    stroke="#9D9B98" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
+                                                    stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg></span> <span x-text="selectedBooking?.petWeight"></span></p>
                                     <p><span><svg xmlns="http://www.w3.org/2000/svg" width="15" height="16"
                                                 viewBox="0 0 15 16" fill="none">
@@ -967,7 +939,7 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
         padding: 0 35px 0 15px;
         color: #8b8781;
         font-size: 12px;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         outline: none;
     }
 
@@ -1261,7 +1233,7 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
         background: transparent;
         color: #4e4942;
         text-decoration: underline;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
@@ -1501,7 +1473,7 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
 
     .availability-drawer-space-addons-heading {
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         font-style: normal;
         font-weight: 600;
@@ -1528,7 +1500,7 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
 
     .availability-drawer-space-title strong {
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 18px;
         font-weight: 600;
         line-height: 1.2;
@@ -1541,7 +1513,7 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
         align-items: center;
         gap: 10px;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 15px;
         font-weight: 500;
         line-height: 1.35;
@@ -1573,7 +1545,7 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
     .availability-drawer-space-service-line {
         margin: 0;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 15px;
         font-weight: 500;
         line-height: 1.35;
@@ -1589,7 +1561,7 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
 
     .availability-drawer-space-pet-type-value {
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 15px;
         font-weight: 500;
         line-height: 1.35;
@@ -1608,7 +1580,7 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
 
     .availability-drawer-space-addon {
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         font-style: normal;
         font-weight: 400;
@@ -1737,7 +1709,7 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
 </style>
 
 <script>
-    (function() {
+    (function () {
         if (window.availabilityMiniCalendar) return;
 
         const MONTHS = [
@@ -1755,7 +1727,7 @@ foreach ($calendarBookingsByDate as $dk => $rows) {
             'December',
         ];
 
-        window.availabilityMiniCalendar = function() {
+        window.availabilityMiniCalendar = function () {
             return {
                 today: null,
                 selectedDate: null,

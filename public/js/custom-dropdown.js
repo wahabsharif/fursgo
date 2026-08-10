@@ -7,19 +7,19 @@
  */
 
 (function () {
-  "use strict";
+    "use strict";
 
-  /* ─── Inject shared styles once ─────────────────────────────────── */
-  if (!document.getElementById("furs-dropdown-styles")) {
-    const style = document.createElement("style");
-    style.id = "furs-dropdown-styles";
-    style.textContent = `
+    /* ─── Inject shared styles once ─────────────────────────────────── */
+    if (!document.getElementById("furs-dropdown-styles")) {
+        const style = document.createElement("style");
+        style.id = "furs-dropdown-styles";
+        style.textContent = `
       /* ── Wrapper ── */
       .furs-dd {
         width: 100%;
         position: relative;
         display: block;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         user-select: none;
       }
 
@@ -171,7 +171,7 @@
       .furs-dd__text {
         flex: 1;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 15px;
         font-weight: 400;
         line-height: 1.4;
@@ -207,7 +207,7 @@
         padding: 0 12px;
         border-radius: 8px;
         border: 1px solid #D4D4D4;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         color: #3B3731;
         outline: none;
@@ -222,7 +222,7 @@
         text-align: center;
         color: #9D9B98;
         font-size: 14px;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
       }
 
       /* ── Hidden native select (accessibility) ── */
@@ -235,355 +235,377 @@
         overflow: hidden !important;
       }
     `;
-    document.head.appendChild(style);
-  }
+        document.head.appendChild(style);
+    }
 
-  /* ─── Helper ─────────────────────────────────────────────────────── */
-  const SVG_ARROW = `<svg class="furs-dd__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 8" fill="none">
+    /* ─── Helper ─────────────────────────────────────────────────────── */
+    const SVG_ARROW = `<svg class="furs-dd__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 8" fill="none">
     <path d="M13.5105 0.5L6.95017 7.06033L0.499971 0.610127" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>`;
 
-  /* ─── Class ──────────────────────────────────────────────────────── */
-  class FursDropdown {
-    /**
-     * @param {HTMLSelectElement} selectEl  - The original <select> to replace.
-     * @param {object} [opts]
-     * @param {boolean} [opts.searchable=false]  - Show a search/filter input.
-     * @param {string}  [opts.placeholder]       - Overrides the first disabled option text.
-     * @param {boolean} [opts.showDot=true]      - Show the radio dot indicator.
-     */
-    constructor(selectEl, opts = {}) {
-      if (!(selectEl instanceof HTMLSelectElement))
-        throw new TypeError("FursDropdown: first arg must be a <select>");
-      if (selectEl._fursDD) return; // already initialized
+    /* ─── Class ──────────────────────────────────────────────────────── */
+    class FursDropdown {
+        /**
+         * @param {HTMLSelectElement} selectEl  - The original <select> to replace.
+         * @param {object} [opts]
+         * @param {boolean} [opts.searchable=false]  - Show a search/filter input.
+         * @param {string}  [opts.placeholder]       - Overrides the first disabled option text.
+         * @param {boolean} [opts.showDot=true]      - Show the radio dot indicator.
+         */
+        constructor(selectEl, opts = {}) {
+            if (!(selectEl instanceof HTMLSelectElement))
+                throw new TypeError(
+                    "FursDropdown: first arg must be a <select>",
+                );
+            if (selectEl._fursDD) return; // already initialized
 
-      this.select = selectEl;
-      this.opts = Object.assign({ searchable: false, showDot: true }, opts);
-      // boolean state renamed to avoid shadowing method names
-      this._isOpen = false;
-      this._filter = "";
+            this.select = selectEl;
+            this.opts = Object.assign(
+                { searchable: false, showDot: true },
+                opts,
+            );
+            // boolean state renamed to avoid shadowing method names
+            this._isOpen = false;
+            this._filter = "";
 
-      selectEl._fursDD = this;
-      this._build();
-      // if build failed (no parent node etc.) stop
-      if (!this.wrap) return;
-      this._syncFromNative();
-      this._attachEvents();
-    }
+            selectEl._fursDD = this;
+            this._build();
+            // if build failed (no parent node etc.) stop
+            if (!this.wrap) return;
+            this._syncFromNative();
+            this._attachEvents();
+        }
 
-    /* ── DOM construction ─────────────────────────────────────────── */
-    _build() {
-      const sel = this.select;
+        /* ── DOM construction ─────────────────────────────────────────── */
+        _build() {
+            const sel = this.select;
 
-      // wrapper
-      const wrap = document.createElement("div");
-      wrap.className = "furs-dd";
-      // inherit any extra classes from a parent .input-wrap if needed
-      this.wrap = wrap;
+            // wrapper
+            const wrap = document.createElement("div");
+            wrap.className = "furs-dd";
+            // inherit any extra classes from a parent .input-wrap if needed
+            this.wrap = wrap;
 
-      // trigger
-      const trigger = document.createElement("button");
-      trigger.type = "button";
-      trigger.className = "furs-dd__trigger";
-      trigger.setAttribute("aria-haspopup", "listbox");
-      trigger.setAttribute("aria-expanded", "false");
-      trigger.innerHTML = `<span class="furs-dd__label is-placeholder"></span>${SVG_ARROW}`;
-      this.trigger = trigger;
-      this.label = trigger.querySelector(".furs-dd__label");
+            // trigger
+            const trigger = document.createElement("button");
+            trigger.type = "button";
+            trigger.className = "furs-dd__trigger";
+            trigger.setAttribute("aria-haspopup", "listbox");
+            trigger.setAttribute("aria-expanded", "false");
+            trigger.innerHTML = `<span class="furs-dd__label is-placeholder"></span>${SVG_ARROW}`;
+            this.trigger = trigger;
+            this.label = trigger.querySelector(".furs-dd__label");
 
-      // panel
-      const panel = document.createElement("div");
-      panel.className = "furs-dd__panel";
-      panel.setAttribute("role", "listbox");
-      this.panel = panel;
+            // panel
+            const panel = document.createElement("div");
+            panel.className = "furs-dd__panel";
+            panel.setAttribute("role", "listbox");
+            this.panel = panel;
 
-      // optional search
-      if (this.opts.searchable) {
-        const sw = document.createElement("div");
-        sw.className = "furs-dd__search-wrap";
-        const si = document.createElement("input");
-        si.type = "text";
-        si.className = "furs-dd__search";
-        si.placeholder = "Search…";
-        si.setAttribute("autocomplete", "off");
-        si.addEventListener("input", () => {
-          this._filter = si.value.toLowerCase();
-          this._renderList();
-        });
-        sw.appendChild(si);
-        panel.appendChild(sw);
-        this.searchInput = si;
-      }
-
-      // list container
-      const list = document.createElement("div");
-      list.className = "furs-dd__list";
-      panel.appendChild(list);
-      this.list = list;
-
-      // assemble
-      wrap.appendChild(trigger);
-      wrap.appendChild(panel);
-
-      // hide native select, insert wrapper
-      // guard: ensure select has a parentNode
-      if (!sel.parentNode) {
-        console.warn(
-          "FursDropdown: cannot initialize - select has no parentNode",
-          sel,
-        );
-        this.wrap = null;
-        return;
-      }
-      sel.classList.add("furs-dd__native");
-      sel.parentNode.insertBefore(wrap, sel);
-      wrap.appendChild(sel); // keep select inside wrapper for layout
-
-      this._renderList();
-    }
-
-    _renderList() {
-      const list = this.list;
-      const sel = this.select;
-      const query = this._filter;
-
-      list.innerHTML = "";
-
-      // collect all <option> and <optgroup> children
-      let hasVisible = false;
-      const children = Array.from(sel.children);
-
-      children.forEach((child) => {
-        if (child.tagName === "OPTGROUP") {
-          const groupOpts = Array.from(child.querySelectorAll("option")).filter(
-            (o) => !query || o.textContent.toLowerCase().includes(query),
-          );
-          if (!groupOpts.length) return;
-
-          const div = document.createElement("div");
-          div.className = "furs-dd__divider";
-          list.appendChild(div);
-
-          groupOpts.forEach((o) => {
-            const node = this._makeOption(o);
-            if (node) {
-              list.appendChild(node);
-              hasVisible = true;
+            // optional search
+            if (this.opts.searchable) {
+                const sw = document.createElement("div");
+                sw.className = "furs-dd__search-wrap";
+                const si = document.createElement("input");
+                si.type = "text";
+                si.className = "furs-dd__search";
+                si.placeholder = "Search…";
+                si.setAttribute("autocomplete", "off");
+                si.addEventListener("input", () => {
+                    this._filter = si.value.toLowerCase();
+                    this._renderList();
+                });
+                sw.appendChild(si);
+                panel.appendChild(sw);
+                this.searchInput = si;
             }
-          });
-        } else if (child.tagName === "OPTION") {
-          if (query && !child.textContent.toLowerCase().includes(query)) return;
-          const node = this._makeOption(child);
-          if (node) {
-            list.appendChild(node);
-            hasVisible = true;
-          }
+
+            // list container
+            const list = document.createElement("div");
+            list.className = "furs-dd__list";
+            panel.appendChild(list);
+            this.list = list;
+
+            // assemble
+            wrap.appendChild(trigger);
+            wrap.appendChild(panel);
+
+            // hide native select, insert wrapper
+            // guard: ensure select has a parentNode
+            if (!sel.parentNode) {
+                console.warn(
+                    "FursDropdown: cannot initialize - select has no parentNode",
+                    sel,
+                );
+                this.wrap = null;
+                return;
+            }
+            sel.classList.add("furs-dd__native");
+            sel.parentNode.insertBefore(wrap, sel);
+            wrap.appendChild(sel); // keep select inside wrapper for layout
+
+            this._renderList();
         }
-      });
 
-      if (!hasVisible) {
-        const empty = document.createElement("div");
-        empty.className = "furs-dd__empty";
-        empty.textContent = "No options found";
-        list.appendChild(empty);
-      }
-    }
+        _renderList() {
+            const list = this.list;
+            const sel = this.select;
+            const query = this._filter;
 
-    _makeOption(optEl) {
-      if (!optEl) return null;
-      const isPlaceholder = optEl.disabled && optEl.index === 0;
-      const item = document.createElement("div");
-      item.className =
-        "furs-dd__option" +
-        (optEl.selected ? " is-selected" : "") +
-        (optEl.disabled ? " is-disabled" : "") +
-        (isPlaceholder ? " is-placeholder-option" : "");
-      item.setAttribute("role", "option");
-      item.setAttribute("aria-selected", optEl.selected ? "true" : "false");
-      item.dataset.value = optEl.value;
+            list.innerHTML = "";
 
-      // make option focusable for keyboard focus()
-      item.tabIndex = -1;
+            // collect all <option> and <optgroup> children
+            let hasVisible = false;
+            const children = Array.from(sel.children);
 
-      // dot
-      if (this.opts.showDot) {
-        const dot = document.createElement("span");
-        dot.className = "furs-dd__dot";
-        item.appendChild(dot);
-      }
+            children.forEach((child) => {
+                if (child.tagName === "OPTGROUP") {
+                    const groupOpts = Array.from(
+                        child.querySelectorAll("option"),
+                    ).filter(
+                        (o) =>
+                            !query ||
+                            o.textContent.toLowerCase().includes(query),
+                    );
+                    if (!groupOpts.length) return;
 
-      // text
-      const text = document.createElement("span");
-      text.className = "furs-dd__text";
-      text.textContent = optEl.textContent.trim();
-      item.appendChild(text);
+                    const div = document.createElement("div");
+                    div.className = "furs-dd__divider";
+                    list.appendChild(div);
 
-      // badge (data-badge attr on option)
-      if (optEl.dataset && optEl.dataset.badge) {
-        const badge = document.createElement("span");
-        badge.className = "furs-dd__badge";
-        badge.textContent = optEl.dataset.badge;
-        item.appendChild(badge);
-      }
+                    groupOpts.forEach((o) => {
+                        const node = this._makeOption(o);
+                        if (node) {
+                            list.appendChild(node);
+                            hasVisible = true;
+                        }
+                    });
+                } else if (child.tagName === "OPTION") {
+                    if (
+                        query &&
+                        !child.textContent.toLowerCase().includes(query)
+                    )
+                        return;
+                    const node = this._makeOption(child);
+                    if (node) {
+                        list.appendChild(node);
+                        hasVisible = true;
+                    }
+                }
+            });
 
-      item.addEventListener("click", () => {
-        if (optEl.disabled) return;
-        this._selectValue(optEl.value);
-        this._close();
-      });
-
-      return item;
-    }
-
-    /* ── State sync ───────────────────────────────────────────────── */
-    _syncFromNative() {
-      const sel = this.select;
-      const chosen = sel.options[sel.selectedIndex];
-      const isPlaceholder =
-        chosen && chosen.disabled && sel.selectedIndex === 0;
-      const ph =
-        this.opts.placeholder ||
-        (sel.options[0] && sel.options[0].disabled
-          ? sel.options[0].textContent.trim()
-          : "Select…");
-
-      if (!chosen || isPlaceholder) {
-        if (this.label) {
-          this.label.textContent = ph;
-          this.label.classList.add("is-placeholder");
+            if (!hasVisible) {
+                const empty = document.createElement("div");
+                empty.className = "furs-dd__empty";
+                empty.textContent = "No options found";
+                list.appendChild(empty);
+            }
         }
-      } else {
-        if (this.label) {
-          this.label.textContent = chosen.textContent.trim();
-          this.label.classList.remove("is-placeholder");
+
+        _makeOption(optEl) {
+            if (!optEl) return null;
+            const isPlaceholder = optEl.disabled && optEl.index === 0;
+            const item = document.createElement("div");
+            item.className =
+                "furs-dd__option" +
+                (optEl.selected ? " is-selected" : "") +
+                (optEl.disabled ? " is-disabled" : "") +
+                (isPlaceholder ? " is-placeholder-option" : "");
+            item.setAttribute("role", "option");
+            item.setAttribute(
+                "aria-selected",
+                optEl.selected ? "true" : "false",
+            );
+            item.dataset.value = optEl.value;
+
+            // make option focusable for keyboard focus()
+            item.tabIndex = -1;
+
+            // dot
+            if (this.opts.showDot) {
+                const dot = document.createElement("span");
+                dot.className = "furs-dd__dot";
+                item.appendChild(dot);
+            }
+
+            // text
+            const text = document.createElement("span");
+            text.className = "furs-dd__text";
+            text.textContent = optEl.textContent.trim();
+            item.appendChild(text);
+
+            // badge (data-badge attr on option)
+            if (optEl.dataset && optEl.dataset.badge) {
+                const badge = document.createElement("span");
+                badge.className = "furs-dd__badge";
+                badge.textContent = optEl.dataset.badge;
+                item.appendChild(badge);
+            }
+
+            item.addEventListener("click", () => {
+                if (optEl.disabled) return;
+                this._selectValue(optEl.value);
+                this._close();
+            });
+
+            return item;
         }
-      }
-    }
 
-    _selectValue(val) {
-      this.select.value = val;
-      this._syncFromNative();
-      this._renderList(); // refresh dot states
-      // fire native change event so existing code continues working
-      this.select.dispatchEvent(new Event("change", { bubbles: true }));
-    }
+        /* ── State sync ───────────────────────────────────────────────── */
+        _syncFromNative() {
+            const sel = this.select;
+            const chosen = sel.options[sel.selectedIndex];
+            const isPlaceholder =
+                chosen && chosen.disabled && sel.selectedIndex === 0;
+            const ph =
+                this.opts.placeholder ||
+                (sel.options[0] && sel.options[0].disabled
+                    ? sel.options[0].textContent.trim()
+                    : "Select…");
 
-    /* ── Open / Close ─────────────────────────────────────────────── */
-    _open() {
-      this._isOpen = true;
-      if (this.wrap) this.wrap.classList.add("is-open");
-      if (this.trigger) this.trigger.setAttribute("aria-expanded", "true");
-      if (this.searchInput) {
-        this.searchInput.value = "";
-        this._filter = "";
-        this._renderList();
-        this.searchInput.focus();
-      }
-    }
-
-    _close() {
-      this._isOpen = false;
-      if (this.wrap) this.wrap.classList.remove("is-open");
-      if (this.trigger) this.trigger.setAttribute("aria-expanded", "false");
-    }
-
-    _toggle() {
-      this._isOpen ? this._close() : this._open();
-    }
-
-    /* ── Events ───────────────────────────────────────────────────── */
-    _attachEvents() {
-      if (!this.trigger) return;
-
-      this.trigger.addEventListener("click", (e) => {
-        e.stopPropagation();
-        this._toggle();
-      });
-
-      // close on outside click
-      document.addEventListener("click", (e) => {
-        if (!this.wrap) return;
-        if (!this.wrap.contains(e.target)) this._close();
-      });
-
-      // keyboard
-      this.trigger.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          this._toggle();
+            if (!chosen || isPlaceholder) {
+                if (this.label) {
+                    this.label.textContent = ph;
+                    this.label.classList.add("is-placeholder");
+                }
+            } else {
+                if (this.label) {
+                    this.label.textContent = chosen.textContent.trim();
+                    this.label.classList.remove("is-placeholder");
+                }
+            }
         }
-        if (e.key === "Escape") this._close();
-        if (e.key === "ArrowDown") {
-          e.preventDefault();
-          this._open();
-          this._focusFirst();
+
+        _selectValue(val) {
+            this.select.value = val;
+            this._syncFromNative();
+            this._renderList(); // refresh dot states
+            // fire native change event so existing code continues working
+            this.select.dispatchEvent(new Event("change", { bubbles: true }));
         }
-      });
 
-      this.list.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-          this._close();
-          this.trigger.focus();
+        /* ── Open / Close ─────────────────────────────────────────────── */
+        _open() {
+            this._isOpen = true;
+            if (this.wrap) this.wrap.classList.add("is-open");
+            if (this.trigger)
+                this.trigger.setAttribute("aria-expanded", "true");
+            if (this.searchInput) {
+                this.searchInput.value = "";
+                this._filter = "";
+                this._renderList();
+                this.searchInput.focus();
+            }
         }
-      });
 
-      // if native select changes externally, sync
-      this.select.addEventListener("change", () => this._syncFromNative());
+        _close() {
+            this._isOpen = false;
+            if (this.wrap) this.wrap.classList.remove("is-open");
+            if (this.trigger)
+                this.trigger.setAttribute("aria-expanded", "false");
+        }
+
+        _toggle() {
+            this._isOpen ? this._close() : this._open();
+        }
+
+        /* ── Events ───────────────────────────────────────────────────── */
+        _attachEvents() {
+            if (!this.trigger) return;
+
+            this.trigger.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this._toggle();
+            });
+
+            // close on outside click
+            document.addEventListener("click", (e) => {
+                if (!this.wrap) return;
+                if (!this.wrap.contains(e.target)) this._close();
+            });
+
+            // keyboard
+            this.trigger.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    this._toggle();
+                }
+                if (e.key === "Escape") this._close();
+                if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    this._open();
+                    this._focusFirst();
+                }
+            });
+
+            this.list.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") {
+                    this._close();
+                    this.trigger.focus();
+                }
+            });
+
+            // if native select changes externally, sync
+            this.select.addEventListener("change", () =>
+                this._syncFromNative(),
+            );
+        }
+
+        _focusFirst() {
+            const first = this.list.querySelector(
+                ".furs-dd__option:not(.is-disabled)",
+            );
+            if (first) first.focus();
+        }
+
+        /* ── Public API ───────────────────────────────────────────────── */
+        /** Programmatically set the value */
+        setValue(val) {
+            this._selectValue(val);
+        }
+
+        /** Refresh options from the native select (call after adding <option> elements) */
+        refresh() {
+            this._renderList();
+            this._syncFromNative();
+        }
+
+        /** Destroy: restore native select */
+        destroy() {
+            this.select.classList.remove("furs-dd__native");
+            if (this.wrap && this.wrap.parentNode) {
+                this.wrap.parentNode.insertBefore(this.select, this.wrap);
+                this.wrap.remove();
+            }
+            delete this.select._fursDD;
+        }
     }
 
-    _focusFirst() {
-      const first = this.list.querySelector(
-        ".furs-dd__option:not(.is-disabled)",
-      );
-      if (first) first.focus();
+    /* ─── Auto-init ──────────────────────────────────────────────────── */
+    function autoInit() {
+        document
+            .querySelectorAll("select[data-furs-dropdown]")
+            .forEach((sel) => {
+                // Skip already initialized dropdowns
+                if (sel._fursDD) return;
+                const searchable = sel.hasAttribute("data-furs-searchable");
+                new FursDropdown(sel, { searchable });
+            });
     }
 
-    /* ── Public API ───────────────────────────────────────────────── */
-    /** Programmatically set the value */
-    setValue(val) {
-      this._selectValue(val);
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", autoInit);
+    } else {
+        autoInit();
     }
 
-    /** Refresh options from the native select (call after adding <option> elements) */
-    refresh() {
-      this._renderList();
-      this._syncFromNative();
-    }
-
-    /** Destroy: restore native select */
-    destroy() {
-      this.select.classList.remove("furs-dd__native");
-      if (this.wrap && this.wrap.parentNode) {
-        this.wrap.parentNode.insertBefore(this.select, this.wrap);
-        this.wrap.remove();
-      }
-      delete this.select._fursDD;
-    }
-  }
-
-  /* ─── Auto-init ──────────────────────────────────────────────────── */
-  function autoInit() {
-    document.querySelectorAll("select[data-furs-dropdown]").forEach((sel) => {
-      // Skip already initialized dropdowns
-      if (sel._fursDD) return;
-      const searchable = sel.hasAttribute("data-furs-searchable");
-      new FursDropdown(sel, { searchable });
+    // Re-initialize after navigation (back-forward cache restore)
+    window.addEventListener("pageshow", (event) => {
+        if (event.persisted) {
+            autoInit();
+        }
     });
-  }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", autoInit);
-  } else {
-    autoInit();
-  }
-
-  // Re-initialize after navigation (back-forward cache restore)
-  window.addEventListener("pageshow", (event) => {
-    if (event.persisted) {
-      autoInit();
-    }
-  });
-
-  /* ─── Export ─────────────────────────────────────────────────────── */
-  window.FursDropdown = FursDropdown;
+    /* ─── Export ─────────────────────────────────────────────────────── */
+    window.FursDropdown = FursDropdown;
 })();

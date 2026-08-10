@@ -526,7 +526,7 @@
 
     .active-section-header {
         color: #3B3731;
-        text-align: right;
+        text-align: left;
         font-family: "Playfair Display";
         font-size: 28px;
         font-weight: 600;
@@ -1925,7 +1925,7 @@
         background: #AFCD6F;
         color: #FFF;
         cursor: pointer;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         font-weight: 700;
         padding: 0.55rem 1.2rem;

@@ -194,7 +194,7 @@
         border-radius: 10px;
         background: #fff;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 400;
         line-height: normal;
@@ -228,7 +228,7 @@
         padding: 0.65rem 0.9rem;
         text-align: left;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         cursor: pointer;
     }
@@ -310,7 +310,7 @@
     .service-other-pets-head>span {
         padding: 0.75rem 1.25rem;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 600;
         line-height: normal;

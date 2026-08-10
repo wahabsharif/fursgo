@@ -721,10 +721,13 @@ new class extends Component {
 @endphp
 
 <div class="earnings-overview" x-data="{ activeEarningsMenu: @js($dashboardEarningsMenu) }"
-    x-on:earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'" x-init="$nextTick(() => window.mountEarningsCharts?.($el))">
+    x-on:earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'"
+    x-init="$nextTick(() => window.mountEarningsCharts?.($el))">
     <style>
         .earnings-overview {
-            --earnings-primary: {{ $primaryColor }};
+            --earnings-primary:
+                {{ $primaryColor }}
+            ;
             --earnings-light: rgba(255, 216, 140, 0.20);
             ;
             --earnings-text: #333333;
@@ -1387,7 +1390,7 @@ new class extends Component {
 
         .earnings-empty {
             color: #9D9B98;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 14px;
             text-align: center;
             padding: 1.5rem 1rem;
@@ -1417,7 +1420,7 @@ new class extends Component {
             text-align: left;
             border-bottom: 1px solid #E3E3E3;
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 16px;
             font-weight: 400;
             vertical-align: middle;
@@ -1598,7 +1601,7 @@ new class extends Component {
             align-items: center;
             gap: 0.75rem;
             color: #9D9B98;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 18px;
             font-weight: 400;
             line-height: normal;
@@ -1752,7 +1755,7 @@ new class extends Component {
             justify-content: space-between;
             gap: 1rem;
             color: #9D9B98;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 18px;
             font-weight: 400;
             line-height: 23px;
@@ -1762,7 +1765,7 @@ new class extends Component {
         .completed-booking-modal-total-row>span:last-child {
             color: #3B3731;
             text-align: right;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 18px;
             font-weight: 400;
             line-height: 23px;
@@ -1848,13 +1851,13 @@ new class extends Component {
             </div>
 
             <div class="earnings-chart-card" wire:ignore x-data="earningsChartPanel(@js([
-    'bookings' => $chartBookings,
-    'month' => (int) $now->month,
-    'year' => (int) $now->year,
-    'period' => 'month',
-    'primary' => $primaryColor,
-    'light' => $lightColor,
-]))">
+                'bookings' => $chartBookings,
+                'month' => (int) $now->month,
+                'year' => (int) $now->year,
+                'period' => 'month',
+                'primary' => $primaryColor,
+                'light' => $lightColor,
+            ]))">
                 <div class="earnings-chart-toolbar">
                     <div class="earnings-period-nav">
                         <button type="button" @click="previousPeriod()" aria-label="Previous month"><svg
@@ -1889,8 +1892,7 @@ new class extends Component {
                                 xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34"
                                 fill="none">
                                 <g filter="url(#filter0_d_48_567)">
-                                    <circle cx="13" cy="13" r="13" transform="matrix(-1 0 0 1 30 0)"
-                                        fill="white" />
+                                    <circle cx="13" cy="13" r="13" transform="matrix(-1 0 0 1 30 0)" fill="white" />
                                     <circle cx="13" cy="13" r="12.5" transform="matrix(-1 0 0 1 30 0)"
                                         stroke="#F5F5F5" />
                                 </g>
@@ -1954,13 +1956,11 @@ new class extends Component {
                                         @keydown.space.prevent="selectBar(index)"
                                         :aria-label="'View earnings for ' + bar.label">
                                         <div class="earnings-bar-chart__bar-track">
-                                            <div class="earnings-bar-chart__bar"
-                                                :style="{
+                                            <div class="earnings-bar-chart__bar" :style="{
                                                     height: barHeight(bar.value) + '%',
                                                     backgroundColor: barColor(index),
                                                     animationDelay: barStaggerDelay(index),
-                                                }"
-                                                :title="formatPound(bar.value)"></div>
+                                                }" :title="formatPound(bar.value)"></div>
                                         </div>
                                         <span class="earnings-bar-chart__label"
                                             :class="{ 'is-active': isActive(index) }" x-text="bar.label"></span>
@@ -1978,7 +1978,8 @@ new class extends Component {
                 <div class="earnings-breakdown-body">
                     <div class="earnings-donut-wrap earnings-chart-wrap" wire:ignore>
                         <canvas id="earningsDonutChart" role="img" aria-label="Revenue breakdown chart"
-                            data-labels='@json(array_column($breakdown['segments'], 'label'))' data-values='@json(array_column($breakdown['segments'], 'amount'))'
+                            data-labels='@json(array_column($breakdown['segments'], 'label'))'
+                            data-values='@json(array_column($breakdown['segments'], 'amount'))'
                             data-colors='@json($donutColors)'></canvas>
                     </div>
 
@@ -2025,14 +2026,13 @@ new class extends Component {
                                         <span
                                             class="earnings-recent-avatar-initials is-hidden">{{ $booking['client_initials'] }}</span>
                                     @else
-                                        <span
-                                            class="earnings-recent-avatar-initials">{{ $booking['client_initials'] }}</span>
+                                        <span class="earnings-recent-avatar-initials">{{ $booking['client_initials'] }}</span>
                                     @endif
                                 </div>
                                 <div class="earnings-recent-meta">
                                     <p class="earnings-recent-name is-space">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="13"
-                                            viewBox="0 0 15 13" fill="none" aria-hidden="true">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="13" viewBox="0 0 15 13"
+                                            fill="none" aria-hidden="true">
                                             <path
                                                 d="M13.1094 12.1166V3.83417C13.1094 3.81429 13.1111 3.79482 13.1141 3.77576L10.8748 1.86616C10.3986 1.46067 10.0696 1.18119 9.79046 0.998982C9.52095 0.823101 9.33983 0.766834 9.16658 0.766834C8.99347 0.766835 8.81349 0.823306 8.54428 0.998982C8.26512 1.18121 7.93524 1.46044 7.45838 1.86616L5.21745 3.77576C5.22054 3.7949 5.22374 3.81422 5.22374 3.83417V12.1166C5.2234 12.3281 5.04341 12.5 4.82144 12.5C4.59961 12.4998 4.41948 12.328 4.41914 12.1166V4.45573L4.00427 4.81069C3.83864 4.95183 3.58349 4.93709 3.43539 4.77924C3.28788 4.62148 3.30169 4.3796 3.46682 4.23856L6.92094 1.29553H6.92251C7.38342 0.90337 7.75667 0.583679 8.08855 0.366942C8.43046 0.143752 8.76989 2.24995e-07 9.16658 0C9.56323 0 9.9026 0.143743 10.2446 0.366942C10.5767 0.583731 10.9515 0.903225 11.4122 1.29553L14.8663 4.23856C15.0315 4.3796 15.0453 4.62148 14.8978 4.77924C14.7497 4.93709 14.4945 4.95183 14.3289 4.81069L13.914 4.45573V12.1166C13.9137 12.328 13.7336 12.4998 13.5117 12.5C13.2898 12.5 13.1098 12.3281 13.1094 12.1166Z"
                                                 fill="#3B3731" />
@@ -2057,8 +2057,8 @@ new class extends Component {
                                 </div>
                                 <div class="earnings-recent-meta">
                                     <p class="earnings-recent-name">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15"
-                                            viewBox="0 0 16 15" fill="none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 16 15"
+                                            fill="none">
                                             <path
                                                 d="M8 6.02632C5.73786 6.02632 3.82643 8.06405 3.20929 10.6813C2.93786 11.8323 3.34714 13.0539 4.35179 13.6279C5.14821 14.0829 6.33286 14.5 8 14.5C9.66714 14.5 10.8521 14.0829 11.6486 13.6279C12.6532 13.0539 13.0621 11.8323 12.7907 10.6813C12.1736 8.06368 10.2621 6.02632 8 6.02632ZM0.5 5.45305C0.5 6.47063 1.13929 7.5 1.92857 7.5C2.71786 7.5 3.35714 6.47063 3.35714 5.45305C3.35714 4.43547 2.71786 3.81579 1.92857 3.81579C1.13929 3.81579 0.5 4.43584 0.5 5.45305ZM15.5 5.45305C15.5 6.47063 14.8607 7.5 14.0714 7.5C13.2821 7.5 12.6429 6.47063 12.6429 5.45305C12.6429 4.43547 13.2821 3.81579 14.0714 3.81579C14.8607 3.81579 15.5 4.43584 15.5 5.45305ZM4.25 2.13726C4.25 3.15484 4.88929 4.18421 5.67857 4.18421C6.46786 4.18421 7.10714 3.15484 7.10714 2.13726C7.10714 1.11968 6.46786 0.5 5.67857 0.5C4.88929 0.5 4.25 1.12005 4.25 2.13726ZM11.75 2.13726C11.75 3.15484 11.1107 4.18421 10.3214 4.18421C9.53214 4.18421 8.89286 3.15484 8.89286 2.13726C8.89286 1.11968 9.53214 0.5 10.3214 0.5C11.1107 0.5 11.75 1.12005 11.75 2.13726Z"
                                                 stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />

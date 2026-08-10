@@ -11,8 +11,8 @@
             str_starts_with($photoRaw, 'https://') ||
             str_starts_with($photoRaw, 'data:') ||
             str_starts_with($photoRaw, '/')
-                ? $photoRaw
-                : asset('storage/' . ltrim($photoRaw, '/'));
+            ? $photoRaw
+            : asset('storage/' . ltrim($photoRaw, '/'));
     }
 
     $petType = trim((string) ($pet->pet_type ?? ''));
@@ -26,8 +26,8 @@
     $weightValue = $pet->weight ?? null;
     $weightLabel =
         $weightValue !== null && $weightValue !== ''
-            ? rtrim(rtrim(number_format((float) $weightValue, 2, '.', ''), '0'), '.') . ' kg'
-            : '—';
+        ? rtrim(rtrim(number_format((float) $weightValue, 2, '.', ''), '0'), '.') . ' kg'
+        : '—';
 
     $handlingNote =
         trim((string) ($medication?->groomer_guidance_notes ?? '')) ?: trim((string) ($pet->notes ?? '')) ?: '—';
@@ -64,8 +64,8 @@
     $authProfile = auth('groomer_spacer')->user();
     $defaultNoteTitle = trim(
         (string) ($authProfile?->business_details['business_name'] ?? null ?:
-        $authProfile?->business_basics['display_name'] ?? null ?:
-        $authProfile?->full_name ?? ''),
+            $authProfile?->business_basics['display_name'] ?? null ?:
+            $authProfile?->full_name ?? ''),
     );
 @endphp
 
@@ -125,8 +125,8 @@
                     </div>
 
                     <div class="client-pet-medication-card__detail-row">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="17" viewBox="0 0 15 17"
-                            fill="none" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="17" viewBox="0 0 15 17" fill="none"
+                            aria-hidden="true">
                             <path
                                 d="M1.27778 11.7778V14.5C1.27778 14.9126 1.44167 15.3082 1.73339 15.5999C2.02511 15.8917 2.42077 16.0556 2.83333 16.0556H12.1667C12.5792 16.0556 12.9749 15.8917 13.2666 15.5999C13.5583 15.3082 13.7222 14.9126 13.7222 14.5V11.7778M0.5 9.83333V9.05556C0.5 8.643 0.663888 8.24734 0.955612 7.95561C1.24733 7.66389 1.643 7.5 2.05556 7.5H12.9444C13.357 7.5 13.7527 7.66389 14.0444 7.95561C14.3361 8.24734 14.5 8.643 14.5 9.05556V9.83333M7.5 5.16667V7.5M7.5 5.16667C8.48156 5.16667 9.05556 4.41378 9.05556 3.125C9.05556 1.83622 7.5 0.5 7.5 0.5C7.5 0.5 5.94444 1.83622 5.94444 3.125C5.94444 4.41378 6.51844 5.16667 7.5 5.16667Z"
                                 stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
@@ -138,8 +138,8 @@
                     </div>
 
                     <div class="client-pet-medication-card__detail-row">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="16" viewBox="0 0 15 16"
-                            fill="none" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="16" viewBox="0 0 15 16" fill="none"
+                            aria-hidden="true">
                             <path
                                 d="M4.7373 3.14703C4.7373 3.84907 5.01619 4.52235 5.51261 5.01876C6.00903 5.51518 6.68232 5.79406 7.38436 5.79406C8.08641 5.79406 8.7597 5.51518 9.25612 5.01876C9.75254 4.52235 10.0314 3.84907 10.0314 3.14703C10.0314 2.44499 9.75254 1.77171 9.25612 1.2753C8.7597 0.778883 8.08641 0.5 7.38436 0.5C6.68232 0.5 6.00903 0.778883 5.51261 1.2753C5.01619 1.77171 4.7373 2.44499 4.7373 3.14703Z"
                                 stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
@@ -151,8 +151,8 @@
                     </div>
 
                     <div class="client-pet-medication-card__detail-row">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="16" viewBox="0 0 15 16"
-                            fill="none" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="16" viewBox="0 0 15 16" fill="none"
+                            aria-hidden="true">
                             <path
                                 d="M13.5905 8.11123L13.9601 6.73016C14.3918 5.1182 14.6084 4.31257 14.4462 3.61489C14.3176 3.0641 14.0285 2.56382 13.6155 2.17734C13.093 1.68768 12.2866 1.4718 10.6747 1.04003C9.0627 0.607553 8.25636 0.391671 7.55939 0.55394C7.0086 0.682549 6.50833 0.971618 6.12185 1.38458C5.70224 1.83207 5.4835 2.48758 5.15824 3.67851L4.98382 4.32544L4.61425 5.70651C4.18177 7.31847 3.96589 8.1241 4.12816 8.82178C4.25677 9.37257 4.54584 9.87285 4.9588 10.2593C5.48135 10.749 6.28769 10.9649 7.89966 11.3974C9.35221 11.7862 10.1507 12 10.8048 11.9192C10.8763 11.9101 10.9463 11.8977 11.0149 11.882C11.5655 11.7538 12.0658 11.4652 12.4525 11.0528C12.9421 10.5295 13.158 9.7232 13.5905 8.11123Z"
                                 stroke="#9D9B98" />
@@ -176,8 +176,8 @@
                         {{ $tabLabel }}
                         @if ($tabKey === 'vaccinations' && $overdueVaccinationCount > 0)
                             <span class="client-pet-medication-tab__alert" aria-label="Overdue vaccinations">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                                    viewBox="0 0 25 25" fill="none" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 25 25" fill="none"
+                                    aria-hidden="true">
                                     <circle cx="12.5" cy="12.5" r="12.5" fill="#FFAE37" />
                                     <path
                                         d="M13.4905 17.6578C13.7562 17.3911 13.8891 17.0611 13.8891 16.6675C13.8891 16.274 13.7558 15.9444 13.4891 15.6786C13.2224 15.4129 12.8928 15.2796 12.5002 15.2787C12.1076 15.2777 11.778 15.4111 11.5113 15.6786C11.2447 15.9462 11.1113 16.2759 11.1113 16.6675C11.1113 17.0592 11.2447 17.3893 11.5113 17.6578C11.778 17.9263 12.1076 18.0592 12.5002 18.0564C12.8928 18.0537 13.2229 17.9217 13.4905 17.6578ZM13.4905 13.4898C13.7562 13.224 13.8891 12.8944 13.8891 12.5009V8.33421C13.8891 7.94069 13.7558 7.61106 13.4891 7.34532C13.2224 7.07958 12.8928 6.94624 12.5002 6.94532C12.1076 6.94439 11.778 7.07772 11.5113 7.34532C11.2447 7.61291 11.1113 7.94254 11.1113 8.33421V12.5009C11.1113 12.8944 11.2447 13.2245 11.5113 13.4912C11.778 13.7578 12.1076 13.8907 12.5002 13.8898C12.8928 13.8888 13.2229 13.7555 13.4905 13.4898Z"
@@ -203,8 +203,8 @@
                             <span
                                 class="client-pet-medication-summary__value {{ $isOverdueStatus ? 'is-warning' : 'is-success' }}">
                                 @if ($isOverdueStatus)
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                                        viewBox="0 0 25 25" fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 25 25"
+                                        fill="none" aria-hidden="true">
                                         <circle cx="12.5" cy="12.5" r="12.5" fill="#FFAE37" />
                                         <path
                                             d="M13.4905 17.6578C13.7562 17.3911 13.8891 17.0611 13.8891 16.6675C13.8891 16.274 13.7558 15.9444 13.4891 15.6786C13.2224 15.4129 12.8928 15.2796 12.5002 15.2787C12.1076 15.2777 11.778 15.4111 11.5113 15.6786C11.2447 15.9462 11.1113 16.2759 11.1113 16.6675C11.1113 17.0592 11.2447 17.3893 11.5113 17.6578C11.778 17.9263 12.1076 18.0592 12.5002 18.0564C12.8928 18.0537 13.2229 17.9217 13.4905 17.6578ZM13.4905 13.4898C13.7562 13.224 13.8891 12.8944 13.8891 12.5009V8.33421C13.8891 7.94069 13.7558 7.61106 13.4891 7.34532C13.2224 7.07958 12.8928 6.94624 12.5002 6.94532C12.1076 6.94439 11.778 7.07772 11.5113 7.34532C11.2447 7.61291 11.1113 7.94254 11.1113 8.33421V12.5009C11.1113 12.8944 11.2447 13.2245 11.5113 13.4912C11.778 13.7578 12.1076 13.8907 12.5002 13.8898C12.8928 13.8888 13.2229 13.7555 13.4905 13.4898Z"
@@ -286,7 +286,8 @@
                         <div>
                             @if (!empty($currentMedication))
                                 <p class="client-pet-medication-info-list">
-                                    {{ PetMedicationDetail::formatItemList($currentMedication) }}</p>
+                                    {{ PetMedicationDetail::formatItemList($currentMedication) }}
+                                </p>
                             @else
                                 <p class="client-pet-medication-empty">No current medication recorded.</p>
                             @endif
@@ -321,8 +322,7 @@
                     @endif
 
                     <div class="client-pet-medication-info-section client-pet-medication-guidance-section"
-                        wire:key="groomer-guidance-{{ $pet->id }}-{{ md5($groomerGuidanceNotes) }}"
-                        x-data="{
+                        wire:key="groomer-guidance-{{ $pet->id }}-{{ md5($groomerGuidanceNotes) }}" x-data="{
                             editing: false,
                             draft: @js($groomerGuidanceNotes),
                             startEdit() {
@@ -345,8 +345,8 @@
                             </div>
                             <button type="button" class="client-pet-medication-edit-btn" x-show="!editing" x-cloak
                                 @click="startEdit()">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15"
-                                    viewBox="0 0 16 15" fill="none" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 16 15"
+                                    fill="none" aria-hidden="true">
                                     <path
                                         d="M10.2059 2.37997L12.8529 4.97712M8.44118 14.5H15.5M1.38235 11.0371L0.5 14.5L4.02941 13.6343L14.2524 3.60409C14.5832 3.2794 14.769 2.83908 14.769 2.37997C14.769 1.92085 14.5832 1.48054 14.2524 1.15584L14.1006 1.00694C13.7697 0.682347 13.3209 0.5 12.8529 0.5C12.385 0.5 11.9362 0.682347 11.6053 1.00694L1.38235 11.0371Z"
                                         stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
@@ -426,23 +426,18 @@
                                 <ul class="client-pet-medication-tolerance-list">
                                     @foreach ($toleranceRows as $row)
                                         <li class="client-pet-medication-tolerance-item">
-                                            <span
-                                                class="client-pet-medication-tolerance-activity">{{ $row['activity'] }}</span>
-                                            <span class="client-pet-medication-tolerance-arrow"
-                                                aria-hidden="true">→</span>
+                                            <span class="client-pet-medication-tolerance-activity">{{ $row['activity'] }}</span>
+                                            <span class="client-pet-medication-tolerance-arrow" aria-hidden="true">→</span>
                                             <span class="client-pet-medication-tolerance-status">
                                                 @if ($row['tone'] === 'ok')
                                                     ✔
                                                 @else
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18"
-                                                        height="18" viewBox="0 0 24 24" fill="none"
-                                                        aria-hidden="true"
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                                        viewBox="0 0 24 24" fill="none" aria-hidden="true"
                                                         class="client-pet-medication-tolerance-icon client-pet-medication-tolerance-icon--caution">
                                                         <path d="M12 2.75L21.25 20.75H2.75L12 2.75Z" fill="#FFAE37" />
-                                                        <rect x="11" y="8.25" width="2" height="6.5"
-                                                            rx="1" fill="#000" />
-                                                        <circle cx="12" cy="17.25" r="1.15"
-                                                            fill="#000" />
+                                                        <rect x="11" y="8.25" width="2" height="6.5" rx="1" fill="#000" />
+                                                        <circle cx="12" cy="17.25" r="1.15" fill="#000" />
                                                     </svg>
                                                 @endif
                                                 <span>{{ $row['label'] }}</span>
@@ -495,8 +490,8 @@
                                         str_starts_with($image, 'http://') ||
                                         str_starts_with($image, 'https://') ||
                                         str_starts_with($image, '/')
-                                            ? $image
-                                            : asset('storage/' . ltrim($image, '/'));
+                                        ? $image
+                                        : asset('storage/' . ltrim($image, '/'));
                                 @endphp
                                 <div class="client-pet-medication-gallery__item">
                                     <img src="{{ $galleryUrl }}" alt="{{ $pet->name }} gallery photo" />
@@ -515,8 +510,7 @@
                     x-transition:leave-start="client-pet-medication-tab-pane-leave-start"
                     x-transition:leave-end="client-pet-medication-tab-pane-leave-end">
                     <div class="client-pet-medication-info-section client-pet-medication-groomer-notes-section"
-                        wire:key="groomer-notes-{{ $pet->id }}-{{ count($groomerNotes) }}"
-                        x-data="{
+                        wire:key="groomer-notes-{{ $pet->id }}-{{ count($groomerNotes) }}" x-data="{
                             adding: false,
                             title: @js($defaultNoteTitle),
                             note: '',
@@ -546,8 +540,8 @@
                             <div class="client-pet-medication-notes-title-wrap">
                                 <h4 class="client-pet-medication-info-title">Groomer Notes</h4>
                             </div>
-                            <button type="button" class="client-pet-medication-add-note-btn" x-show="!adding"
-                                x-cloak @click="startAdd()">
+                            <button type="button" class="client-pet-medication-add-note-btn" x-show="!adding" x-cloak
+                                @click="startAdd()">
                                 + Add Note
                             </button>
                         </div>
@@ -555,11 +549,11 @@
                         <div class="client-pet-medication-add-note-form" x-show="adding" x-cloak>
                             <input type="text" class="client-pet-medication-add-note-title" x-model="title"
                                 placeholder="Note title (optional)" maxlength="120" />
-                            <textarea class="client-pet-medication-guidance-textarea" x-ref="noteField" x-model="note" rows="4"
-                                placeholder="Write your note…"></textarea>
+                            <textarea class="client-pet-medication-guidance-textarea" x-ref="noteField" x-model="note"
+                                rows="4" placeholder="Write your note…"></textarea>
                             <div class="client-pet-medication-guidance-edit-actions">
-                                <button type="button" class="client-pet-medication-guidance-save-btn"
-                                    @click="saveAdd()" wire:loading.attr="disabled" wire:target="addGroomerNote">
+                                <button type="button" class="client-pet-medication-guidance-save-btn" @click="saveAdd()"
+                                    wire:loading.attr="disabled" wire:target="addGroomerNote">
                                     <span wire:loading.remove wire:target="addGroomerNote">Save note</span>
                                     <span wire:loading wire:target="addGroomerNote">Saving…</span>
                                 </button>
@@ -578,54 +572,53 @@
                                         $noteBody = trim((string) ($note['note'] ?? ''));
                                         $noteHeading =
                                             $noteDate !== '—' && $noteTitle !== ''
-                                                ? $noteDate . ' – ' . $noteTitle
-                                                : ($noteDate !== '—'
-                                                    ? $noteDate
-                                                    : $noteTitle);
+                                            ? $noteDate . ' – ' . $noteTitle
+                                            : ($noteDate !== '—'
+                                                ? $noteDate
+                                                : $noteTitle);
                                     @endphp
                                     <article class="client-pet-medication-note-card"
-                                        wire:key="groomer-note-card-{{ $pet->id }}-{{ $noteIndex }}"
-                                        x-data="{
-                                            menuId: @js('groomer-' . $pet->id . '-' . $noteIndex),
-                                            openMenu: false,
-                                            editing: false,
-                                            draftTitle: @js($noteTitle),
-                                            draftNote: @js($noteBody),
-                                            toggleMenu() {
-                                                if (!this.openMenu) {
-                                                    window.dispatchEvent(new CustomEvent('pet-note-menu-opened', {
-                                                        detail: { id: this.menuId },
-                                                    }));
-                                                }
-                                                this.openMenu = !this.openMenu;
-                                            },
-                                            startEdit() {
-                                                this.openMenu = false;
-                                                this.draftTitle = @js($noteTitle);
-                                                this.draftNote = @js($noteBody);
-                                                this.editing = true;
-                                                this.$nextTick(() => this.$refs.editNoteField?.focus());
-                                            },
-                                            cancelEdit() {
-                                                this.editing = false;
-                                                this.draftTitle = @js($noteTitle);
-                                                this.draftNote = @js($noteBody);
-                                            },
-                                            saveEdit() {
-                                                const body = (this.draftNote || '').trim();
-                                                if (!body) {
-                                                    this.$refs.editNoteField?.focus();
-                                                    return;
-                                                }
-                                                $wire.updateGroomerNote({{ $noteIndex }}, this.draftTitle, body).then(() => {
-                                                    this.editing = false;
-                                                });
-                                            },
-                                            deleteNote() {
-                                                this.openMenu = false;
-                                                $wire.deleteGroomerNote({{ $noteIndex }});
-                                            },
-                                        }"
+                                        wire:key="groomer-note-card-{{ $pet->id }}-{{ $noteIndex }}" x-data="{
+                                                    menuId: @js('groomer-' . $pet->id . '-' . $noteIndex),
+                                                    openMenu: false,
+                                                    editing: false,
+                                                    draftTitle: @js($noteTitle),
+                                                    draftNote: @js($noteBody),
+                                                    toggleMenu() {
+                                                        if (!this.openMenu) {
+                                                            window.dispatchEvent(new CustomEvent('pet-note-menu-opened', {
+                                                                detail: { id: this.menuId },
+                                                            }));
+                                                        }
+                                                        this.openMenu = !this.openMenu;
+                                                    },
+                                                    startEdit() {
+                                                        this.openMenu = false;
+                                                        this.draftTitle = @js($noteTitle);
+                                                        this.draftNote = @js($noteBody);
+                                                        this.editing = true;
+                                                        this.$nextTick(() => this.$refs.editNoteField?.focus());
+                                                    },
+                                                    cancelEdit() {
+                                                        this.editing = false;
+                                                        this.draftTitle = @js($noteTitle);
+                                                        this.draftNote = @js($noteBody);
+                                                    },
+                                                    saveEdit() {
+                                                        const body = (this.draftNote || '').trim();
+                                                        if (!body) {
+                                                            this.$refs.editNoteField?.focus();
+                                                            return;
+                                                        }
+                                                        $wire.updateGroomerNote({{ $noteIndex }}, this.draftTitle, body).then(() => {
+                                                            this.editing = false;
+                                                        });
+                                                    },
+                                                    deleteNote() {
+                                                        this.openMenu = false;
+                                                        $wire.deleteGroomerNote({{ $noteIndex }});
+                                                    },
+                                                }"
                                         @pet-note-menu-opened.window="if (($event.detail?.id ?? null) !== menuId) { openMenu = false }"
                                         @keydown.escape.window="openMenu = false" @click.outside="openMenu = false">
                                         <div x-show="!editing">
@@ -638,24 +631,18 @@
                                                     <p class="client-pet-medication-note-card__heading">Note</p>
                                                 @endif
                                                 <div class="client-pet-medication-note-card__menu-wrap">
-                                                    <button type="button"
-                                                        class="client-pet-medication-note-card__menu"
+                                                    <button type="button" class="client-pet-medication-note-card__menu"
                                                         aria-label="Note options" @click.stop="toggleMenu()"
                                                         :aria-expanded="openMenu.toString()">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="25"
-                                                            height="5" viewBox="0 0 25 5" fill="none"
-                                                            aria-hidden="true">
-                                                            <circle cx="2.5" cy="2.5" r="2.5"
-                                                                fill="#3B3731" />
-                                                            <circle cx="12.5" cy="2.5" r="2.5"
-                                                                fill="#3B3731" />
-                                                            <circle cx="22.5" cy="2.5" r="2.5"
-                                                                fill="#3B3731" />
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="5"
+                                                            viewBox="0 0 25 5" fill="none" aria-hidden="true">
+                                                            <circle cx="2.5" cy="2.5" r="2.5" fill="#3B3731" />
+                                                            <circle cx="12.5" cy="2.5" r="2.5" fill="#3B3731" />
+                                                            <circle cx="22.5" cy="2.5" r="2.5" fill="#3B3731" />
                                                         </svg>
                                                     </button>
                                                     <div class="client-pet-medication-note-card__dropdown" x-cloak
-                                                        x-show="openMenu" x-transition.opacity.duration.120ms
-                                                        @click.stop>
+                                                        x-show="openMenu" x-transition.opacity.duration.120ms @click.stop>
                                                         <button type="button"
                                                             class="client-pet-medication-note-card__dropdown-item"
                                                             @click="startEdit()">Edit</button>
@@ -673,21 +660,18 @@
                                         </div>
 
                                         <div class="client-pet-medication-add-note-form" x-show="editing" x-cloak>
-                                            <input type="text" class="client-pet-medication-add-note-title"
-                                                x-model="draftTitle" placeholder="Note title (optional)"
-                                                maxlength="120" />
-                                            <textarea class="client-pet-medication-guidance-textarea" x-ref="editNoteField" x-model="draftNote" rows="4"
-                                                placeholder="Write your note…"></textarea>
+                                            <input type="text" class="client-pet-medication-add-note-title" x-model="draftTitle"
+                                                placeholder="Note title (optional)" maxlength="120" />
+                                            <textarea class="client-pet-medication-guidance-textarea" x-ref="editNoteField"
+                                                x-model="draftNote" rows="4" placeholder="Write your note…"></textarea>
                                             <div class="client-pet-medication-guidance-edit-actions">
                                                 <button type="button" class="client-pet-medication-guidance-save-btn"
                                                     @click="saveEdit()" wire:loading.attr="disabled"
                                                     wire:target="updateGroomerNote">
-                                                    <span wire:loading.remove
-                                                        wire:target="updateGroomerNote">Save</span>
+                                                    <span wire:loading.remove wire:target="updateGroomerNote">Save</span>
                                                     <span wire:loading wire:target="updateGroomerNote">Saving…</span>
                                                 </button>
-                                                <button type="button"
-                                                    class="client-pet-medication-guidance-cancel-btn"
+                                                <button type="button" class="client-pet-medication-guidance-cancel-btn"
                                                     @click="cancelEdit()" wire:loading.attr="disabled"
                                                     wire:target="updateGroomerNote">Cancel</button>
                                             </div>
@@ -733,8 +717,8 @@
                             <div class="client-pet-medication-notes-title-wrap">
                                 <h4 class="client-pet-medication-info-title">Owner Notes</h4>
                             </div>
-                            <button type="button" class="client-pet-medication-add-note-btn" x-show="!adding"
-                                x-cloak @click="startAdd()">
+                            <button type="button" class="client-pet-medication-add-note-btn" x-show="!adding" x-cloak
+                                @click="startAdd()">
                                 + Add Note
                             </button>
                         </div>
@@ -742,11 +726,11 @@
                         <div class="client-pet-medication-add-note-form" x-show="adding" x-cloak>
                             <input type="text" class="client-pet-medication-add-note-title" x-model="title"
                                 placeholder="Note title (optional)" maxlength="120" />
-                            <textarea class="client-pet-medication-guidance-textarea" x-ref="ownerNoteField" x-model="note" rows="4"
-                                placeholder="Write your note…"></textarea>
+                            <textarea class="client-pet-medication-guidance-textarea" x-ref="ownerNoteField"
+                                x-model="note" rows="4" placeholder="Write your note…"></textarea>
                             <div class="client-pet-medication-guidance-edit-actions">
-                                <button type="button" class="client-pet-medication-guidance-save-btn"
-                                    @click="saveAdd()" wire:loading.attr="disabled" wire:target="addOwnerNote">
+                                <button type="button" class="client-pet-medication-guidance-save-btn" @click="saveAdd()"
+                                    wire:loading.attr="disabled" wire:target="addOwnerNote">
                                     <span wire:loading.remove wire:target="addOwnerNote">Save note</span>
                                     <span wire:loading wire:target="addOwnerNote">Saving…</span>
                                 </button>
@@ -765,54 +749,53 @@
                                         $noteBody = trim((string) ($note['note'] ?? ''));
                                         $noteHeading =
                                             $noteDate !== '—' && $noteTitle !== ''
-                                                ? $noteDate . ' – ' . $noteTitle
-                                                : ($noteDate !== '—'
-                                                    ? $noteDate
-                                                    : $noteTitle);
+                                            ? $noteDate . ' – ' . $noteTitle
+                                            : ($noteDate !== '—'
+                                                ? $noteDate
+                                                : $noteTitle);
                                     @endphp
                                     <article class="client-pet-medication-note-card"
-                                        wire:key="owner-note-card-{{ $pet->id }}-{{ $noteIndex }}"
-                                        x-data="{
-                                            menuId: @js('owner-' . $pet->id . '-' . $noteIndex),
-                                            openMenu: false,
-                                            editing: false,
-                                            draftTitle: @js($noteTitle),
-                                            draftNote: @js($noteBody),
-                                            toggleMenu() {
-                                                if (!this.openMenu) {
-                                                    window.dispatchEvent(new CustomEvent('pet-note-menu-opened', {
-                                                        detail: { id: this.menuId },
-                                                    }));
-                                                }
-                                                this.openMenu = !this.openMenu;
-                                            },
-                                            startEdit() {
-                                                this.openMenu = false;
-                                                this.draftTitle = @js($noteTitle);
-                                                this.draftNote = @js($noteBody);
-                                                this.editing = true;
-                                                this.$nextTick(() => this.$refs.editOwnerNoteField?.focus());
-                                            },
-                                            cancelEdit() {
-                                                this.editing = false;
-                                                this.draftTitle = @js($noteTitle);
-                                                this.draftNote = @js($noteBody);
-                                            },
-                                            saveEdit() {
-                                                const body = (this.draftNote || '').trim();
-                                                if (!body) {
-                                                    this.$refs.editOwnerNoteField?.focus();
-                                                    return;
-                                                }
-                                                $wire.updateOwnerNote({{ $noteIndex }}, this.draftTitle, body).then(() => {
-                                                    this.editing = false;
-                                                });
-                                            },
-                                            deleteNote() {
-                                                this.openMenu = false;
-                                                $wire.deleteOwnerNote({{ $noteIndex }});
-                                            },
-                                        }"
+                                        wire:key="owner-note-card-{{ $pet->id }}-{{ $noteIndex }}" x-data="{
+                                                    menuId: @js('owner-' . $pet->id . '-' . $noteIndex),
+                                                    openMenu: false,
+                                                    editing: false,
+                                                    draftTitle: @js($noteTitle),
+                                                    draftNote: @js($noteBody),
+                                                    toggleMenu() {
+                                                        if (!this.openMenu) {
+                                                            window.dispatchEvent(new CustomEvent('pet-note-menu-opened', {
+                                                                detail: { id: this.menuId },
+                                                            }));
+                                                        }
+                                                        this.openMenu = !this.openMenu;
+                                                    },
+                                                    startEdit() {
+                                                        this.openMenu = false;
+                                                        this.draftTitle = @js($noteTitle);
+                                                        this.draftNote = @js($noteBody);
+                                                        this.editing = true;
+                                                        this.$nextTick(() => this.$refs.editOwnerNoteField?.focus());
+                                                    },
+                                                    cancelEdit() {
+                                                        this.editing = false;
+                                                        this.draftTitle = @js($noteTitle);
+                                                        this.draftNote = @js($noteBody);
+                                                    },
+                                                    saveEdit() {
+                                                        const body = (this.draftNote || '').trim();
+                                                        if (!body) {
+                                                            this.$refs.editOwnerNoteField?.focus();
+                                                            return;
+                                                        }
+                                                        $wire.updateOwnerNote({{ $noteIndex }}, this.draftTitle, body).then(() => {
+                                                            this.editing = false;
+                                                        });
+                                                    },
+                                                    deleteNote() {
+                                                        this.openMenu = false;
+                                                        $wire.deleteOwnerNote({{ $noteIndex }});
+                                                    },
+                                                }"
                                         @pet-note-menu-opened.window="if (($event.detail?.id ?? null) !== menuId) { openMenu = false }"
                                         @keydown.escape.window="openMenu = false" @click.outside="openMenu = false">
                                         <div x-show="!editing">
@@ -825,24 +808,18 @@
                                                     <p class="client-pet-medication-note-card__heading">Note</p>
                                                 @endif
                                                 <div class="client-pet-medication-note-card__menu-wrap">
-                                                    <button type="button"
-                                                        class="client-pet-medication-note-card__menu"
+                                                    <button type="button" class="client-pet-medication-note-card__menu"
                                                         aria-label="Note options" @click.stop="toggleMenu()"
                                                         :aria-expanded="openMenu.toString()">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="25"
-                                                            height="5" viewBox="0 0 25 5" fill="none"
-                                                            aria-hidden="true">
-                                                            <circle cx="2.5" cy="2.5" r="2.5"
-                                                                fill="#3B3731" />
-                                                            <circle cx="12.5" cy="2.5" r="2.5"
-                                                                fill="#3B3731" />
-                                                            <circle cx="22.5" cy="2.5" r="2.5"
-                                                                fill="#3B3731" />
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="5"
+                                                            viewBox="0 0 25 5" fill="none" aria-hidden="true">
+                                                            <circle cx="2.5" cy="2.5" r="2.5" fill="#3B3731" />
+                                                            <circle cx="12.5" cy="2.5" r="2.5" fill="#3B3731" />
+                                                            <circle cx="22.5" cy="2.5" r="2.5" fill="#3B3731" />
                                                         </svg>
                                                     </button>
                                                     <div class="client-pet-medication-note-card__dropdown" x-cloak
-                                                        x-show="openMenu" x-transition.opacity.duration.120ms
-                                                        @click.stop>
+                                                        x-show="openMenu" x-transition.opacity.duration.120ms @click.stop>
                                                         <button type="button"
                                                             class="client-pet-medication-note-card__dropdown-item"
                                                             @click="startEdit()">Edit</button>
@@ -860,11 +837,10 @@
                                         </div>
 
                                         <div class="client-pet-medication-add-note-form" x-show="editing" x-cloak>
-                                            <input type="text" class="client-pet-medication-add-note-title"
-                                                x-model="draftTitle" placeholder="Note title (optional)"
-                                                maxlength="120" />
-                                            <textarea class="client-pet-medication-guidance-textarea" x-ref="editOwnerNoteField" x-model="draftNote"
-                                                rows="4" placeholder="Write your note…"></textarea>
+                                            <input type="text" class="client-pet-medication-add-note-title" x-model="draftTitle"
+                                                placeholder="Note title (optional)" maxlength="120" />
+                                            <textarea class="client-pet-medication-guidance-textarea" x-ref="editOwnerNoteField"
+                                                x-model="draftNote" rows="4" placeholder="Write your note…"></textarea>
                                             <div class="client-pet-medication-guidance-edit-actions">
                                                 <button type="button" class="client-pet-medication-guidance-save-btn"
                                                     @click="saveEdit()" wire:loading.attr="disabled"
@@ -872,8 +848,7 @@
                                                     <span wire:loading.remove wire:target="updateOwnerNote">Save</span>
                                                     <span wire:loading wire:target="updateOwnerNote">Saving…</span>
                                                 </button>
-                                                <button type="button"
-                                                    class="client-pet-medication-guidance-cancel-btn"
+                                                <button type="button" class="client-pet-medication-guidance-cancel-btn"
                                                     @click="cancelEdit()" wire:loading.attr="disabled"
                                                     wire:target="updateOwnerNote">Cancel</button>
                                             </div>
@@ -894,792 +869,792 @@
 </section>
 
 @assets
-    <style>
-        [x-cloak] {
-            display: none !important;
-        }
-
-        .client-pet-medication-view {
-            width: 100%;
-        }
-
-        .client-pet-medication-back-block {
-            margin-bottom: 2rem;
-        }
-
-        .client-pet-medication-back {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.65rem;
-            border: 0;
-            background: transparent;
-            color: #3B3731;
-            font-family: Lato, sans-serif;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            padding: 0;
-            margin-bottom: 0.75rem;
-        }
-
-        .client-pet-medication-back-loader {
-            display: none;
-            position: relative;
-            height: 4px;
-        }
-
-        .client-pet-medication-back-loader.is-visible {
-            display: block;
-        }
-
-        .client-pet-medication-back-loader .active-section-loading-bar {
-            position: relative;
-            left: 0;
-            right: 0;
-            bottom: auto;
-            height: 4px;
-        }
-
-        .client-pet-medication-layout {
-            display: grid;
-            grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
-            gap: 2rem;
-            align-items: start;
-        }
-
-        .client-pet-medication-card {
-            border: 2px solid #FFC97A;
-            border-radius: 10px;
-            background: rgba(255, 201, 122, 0.05);
-            padding: 1.25rem;
-        }
-
-        .client-pet-medication-card__header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 1.25rem;
-        }
-
-        .client-pet-medication-card__avatar {
-            width: 72px;
-            height: 72px;
-            border-radius: 999px;
-            border: 3px solid #FFC97A;
-            overflow: hidden;
-            background: #F0EBE4;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            color: #3B3731;
-            font-family: Lato, sans-serif;
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        .client-pet-medication-card__avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .client-pet-medication-card__name {
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #3B3731;
-            font-family: Lato, sans-serif;
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .client-pet-medication-card__breed {
-            margin: 0.2rem 0 0;
-            color: #9D9B98;
-            font-family: Lato, sans-serif;
-            font-size: 16px;
-            font-weight: 400;
-        }
-
-        .client-pet-medication-card__details {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .client-pet-medication-card__detail-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.65rem;
-            color: #3B3731;
-            font-family: Lato, sans-serif;
-            font-size: 16px;
-            font-weight: 400;
-            line-height: 1.4;
-        }
-
-        .client-pet-medication-card__detail-row svg {
-            flex-shrink: 0;
-            margin-top: 0.15rem;
-        }
-
-        .client-pet-medication-card__sex-icon {
-            width: 18px;
-            height: 18px;
-            color: #9D9B98;
-            flex-shrink: 0;
-        }
-
-        .client-pet-medication-tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2.5rem;
-            border-bottom: 1px solid #E0E0E0;
-            margin-bottom: 2.5rem;
-        }
-
-        .client-pet-medication-tab {
-            border: 0;
-            background: transparent;
-            padding: 0 0 1rem;
-            text-align: center;
-            color: #9D9B98;
-            font-family: Lato;
-            font-size: 16px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: normal;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            position: relative;
-            transition: color 0.28s ease, font-weight 0.28s ease;
-        }
-
-        .client-pet-medication-tab::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: -1px;
-            height: 2px;
-            background: #3B3731;
-            transform: scaleX(0);
-            transform-origin: center;
-            transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .client-pet-medication-tab.is-active {
-            color: #3B3731;
-            font-weight: 600;
-        }
-
-        .client-pet-medication-tab.is-active::after {
-            transform: scaleX(1);
-        }
-
-        .client-pet-medication-tab__alert {
-            display: inline-flex;
-            line-height: 0;
-        }
-
-        .client-pet-medication-summary {
-            margin-bottom: 1.5rem;
-        }
-
-        .client-pet-medication-summary__row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            padding: 0.9rem 0;
-            border-bottom: 1px solid #E8E8E8;
-        }
-
-        .client-pet-medication-summary__label {
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 20px;
-            font-style: normal;
-            font-weight: 600;
-            line-height: normal;
-        }
-
-        .client-pet-medication-summary__value {
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 16px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: normal;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.45rem;
-            text-align: right;
-        }
-
-        .client-pet-medication-summary__value.is-warning {
-            color: #FFAE37;
-        }
-
-        .client-pet-medication-summary__value.is-success {
-            color: #AFCD6F;
-        }
-
-        .client-pet-medication-table-shell {
-            overflow-x: auto;
-        }
-
-        .client-pet-medication-table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 520px;
-        }
-
-        .client-pet-medication-table th,
-        .client-pet-medication-table td {
-            border-bottom: 1px solid #E8E8E8;
-            text-align: left;
-            padding: 1rem 0;
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 16px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: normal;
-            vertical-align: middle;
-        }
-
-        .client-pet-medication-table th {
-            color: #3B3731;
-            font-weight: 600;
-        }
-
-        .client-pet-medication-status-pill {
-            font-weight: 600;
-        }
-
-        .client-pet-medication-status-pill.is-overdue {
-            color: #FFAE37;
-        }
-
-        .client-pet-medication-status-pill.is-current {
-            color: #AFCD6F;
-        }
-
-        .client-pet-medication-info-section {
-            margin-bottom: 1.5rem;
-        }
-
-        .client-pet-medication-info-section>div {
-            margin: 1.5rem 0 3rem 0;
-        }
-
-        .client-pet-medication-info-title {
-            margin: 0 0 0.75rem;
-            padding-bottom: 1.5rem;
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 16px;
-            font-style: normal;
-            font-weight: 600;
-            line-height: normal;
-            border-bottom: 1px solid #D4D4D4;
-        }
-
-        .client-pet-medication-groomer-notes-section>.client-pet-medication-notes-header,
-        .client-pet-medication-owner-notes-section>.client-pet-medication-notes-header {
-            margin: 0;
-        }
-
-        .client-pet-medication-groomer-notes-section>.client-pet-medication-add-note-form,
-        .client-pet-medication-groomer-notes-section>.client-pet-medication-notes-list,
-        .client-pet-medication-owner-notes-section>.client-pet-medication-add-note-form,
-        .client-pet-medication-owner-notes-section>.client-pet-medication-notes-list {
-            margin: 1.5rem 0 3rem;
-        }
-
-        .client-pet-medication-groomer-notes-section>div:not(.client-pet-medication-notes-header):not(.client-pet-medication-add-note-form):not(.client-pet-medication-notes-list),
-        .client-pet-medication-owner-notes-section>div:not(.client-pet-medication-notes-header):not(.client-pet-medication-add-note-form):not(.client-pet-medication-notes-list) {
-            margin: 1.5rem 0 3rem;
-        }
-
-        .client-pet-medication-notes-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid #D4D4D4;
-            margin: 0;
-        }
-
-        .client-pet-medication-notes-header.is-adding {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .client-pet-medication-notes-title-wrap {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .client-pet-medication-notes-title-wrap .client-pet-medication-info-title {
-            margin: 0;
-            padding-bottom: 0;
-            border-bottom: none;
-        }
-
-        .client-pet-medication-add-note-btn {
-            flex-shrink: 0;
-            border: 0;
-            background: transparent;
-            color: #3B3731;
-            font-family: Lato, sans-serif;
-            font-size: 18px;
-            font-style: normal;
-            font-weight: 600;
-            line-height: normal;
-            cursor: pointer;
-            padding: 0;
-        }
-
-        .client-pet-medication-add-note-btn:hover {
-            opacity: 0.75;
-        }
-
-        .client-pet-medication-add-note-form {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .client-pet-medication-add-note-title {
-            width: 100%;
-            height: 42px;
-            padding: 0 1rem;
-            border: 1px solid #D4D4D4;
-            border-radius: 8px;
-            background: #FFF;
-            color: #3B3731;
-            font-family: Lato, sans-serif;
-            font-size: 16px;
-            font-weight: 400;
-            outline: none;
-        }
-
-        .client-pet-medication-add-note-title:focus {
-            border-color: #FFC97A;
-        }
-
-        .client-pet-medication-info-card {
-            gap: 1rem;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .client-pet-medication-info-card p {
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 16px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: normal;
-        }
-
-        .client-pet-medication-info-card p>strong {
-            font-weight: 700;
-        }
-
-        .client-pet-medication-info-list {
-            margin: 0;
-            color: #3B3731;
-            font-family: Lato, sans-serif;
-            font-size: 16px;
-            font-weight: 400;
-            line-height: 1.5;
-        }
-
-        .client-pet-medication-info-bullets {
-            margin: 0;
-            padding-left: 1.25rem;
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 16px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: normal;
-            list-style-type: disc;
-        }
-
-        .client-pet-medication-info-bullets li+li {
-            margin-top: 0.35rem;
-        }
-
-        .client-pet-medication-tolerance-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 0.85rem;
-        }
-
-        .client-pet-medication-tolerance-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #3B3731;
-            font-family: Lato, sans-serif;
-            font-size: 16px;
-            font-weight: 400;
-            line-height: normal;
-        }
-
-        .client-pet-medication-tolerance-activity {
-            flex-shrink: 0;
-        }
-
-        .client-pet-medication-tolerance-arrow {
-            flex-shrink: 0;
-            color: #3B3731;
-        }
-
-        .client-pet-medication-tolerance-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            min-width: 0;
-        }
-
-        .client-pet-medication-tolerance-icon {
-            flex-shrink: 0;
-        }
-
-        .client-pet-medication-tolerance-icon--ok {
-            width: 14px;
-            height: 11px;
-        }
-
-        .client-pet-medication-tolerance-icon--caution {
-            width: 18px;
-            height: 18px;
-        }
-
-        .client-pet-medication-guidance-section>.client-pet-medication-guidance-header {
-            margin: 0;
-        }
-
-        .client-pet-medication-guidance-section>.client-pet-medication-guidance-body {
-            margin: 1.5rem 0 3rem;
-        }
-
-        .client-pet-medication-guidance-header {
-            display: flex;
-            align-items: flex-end;
-            gap: 1rem;
-        }
-
-        .client-pet-medication-guidance-title-wrap {
-            flex: 1;
-            min-width: 0;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid #D4D4D4;
-        }
-
-        .client-pet-medication-guidance-title-wrap.is-editing {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .client-pet-medication-guidance-title {
-            margin: 0;
-            color: #3B3731;
-            font-family: Lato, sans-serif;
-            font-size: 16px;
-            font-weight: 600;
-            line-height: normal;
-        }
-
-        .client-pet-medication-edit-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.45rem;
-            flex-shrink: 0;
-            height: 36px;
-            padding: 0 1rem;
-            border: 1px solid #D4D4D4;
-            border-radius: 100px;
-            background: #FFF;
-            color: #3B3731;
-            font-family: Lato, sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            line-height: normal;
-            cursor: pointer;
-            transition: border-color 0.2s ease, background-color 0.2s ease;
-        }
-
-        .client-pet-medication-edit-btn:hover {
-            border-color: #A8A8A8;
-            background: #FAFAFA;
-        }
-
-        .client-pet-medication-edit-btn svg {
-            flex-shrink: 0;
-        }
-
-        .client-pet-medication-guidance-textarea {
-            width: 100%;
-            min-height: 7rem;
-            padding: 0.85rem 1rem;
-            border: 1px solid #D4D4D4;
-            border-radius: 8px;
-            background: #FFF;
-            color: #3B3731;
-            font-family: Lato, sans-serif;
-            font-size: 16px;
-            font-weight: 400;
-            line-height: 1.5;
-            resize: vertical;
-            outline: none;
-        }
-
-        .client-pet-medication-guidance-textarea:focus {
-            border-color: #FFC97A;
-        }
-
-        .client-pet-medication-guidance-edit-actions {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-top: 0.85rem;
-        }
-
-        .client-pet-medication-guidance-save-btn,
-        .client-pet-medication-guidance-cancel-btn {
-            border: 0;
-            border-radius: 100px;
-            padding: 0.55rem 1.15rem;
-            font-family: Lato, sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            line-height: normal;
-            cursor: pointer;
-        }
-
-        .client-pet-medication-guidance-save-btn {
-            background: #FFC97A;
-            color: #fff;
-        }
-
-        .client-pet-medication-guidance-save-btn[disabled] {
-            opacity: 0.7;
-            cursor: wait;
-        }
-
-        .client-pet-medication-guidance-cancel-btn {
-            background: transparent;
-            color: #9D9B98;
-        }
-
-        .client-pet-medication-notes-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .client-pet-medication-note-card {
-            border-radius: 5px;
-            background: #FAFAFA;
-            padding: 1rem 1.25rem;
-            position: relative;
-        }
-
-        .client-pet-medication-note-card__header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 1rem;
-            margin-bottom: 0.65rem;
-        }
-
-        .client-pet-medication-note-card__header:last-child {
-            margin-bottom: 0;
-        }
-
-        .client-pet-medication-note-card__heading {
-            margin: 0;
-            color: #3B3731;
-            font-family: Lato, sans-serif;
-            font-size: 16px;
-            font-style: normal;
-            font-weight: 700;
-            line-height: normal;
-            min-width: 0;
-            flex: 1;
-        }
-
-        .client-pet-medication-note-card__body {
-            margin: 0;
-            color: #3B3731;
-            font-family: Lato, sans-serif;
-            font-size: 16px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: normal;
-        }
-
-        .client-pet-medication-note-card__menu-wrap {
-            position: relative;
-            flex-shrink: 0;
-        }
-
-        .client-pet-medication-note-card__menu {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.15rem;
-            margin: 0;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            color: #3B3731;
-        }
-
-        .client-pet-medication-note-card__dropdown {
-            position: absolute;
-            top: calc(100% + 0.35rem);
-            right: 0;
-            min-width: 120px;
-            background: #FFF;
-            border: 1px solid #D9D9D9;
-            border-radius: 8px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-            z-index: 20;
-        }
-
-        .client-pet-medication-note-card__dropdown-item {
-            width: 100%;
-            border: 0;
-            border-bottom: 1px solid #E8E8E8;
-            background: transparent;
-            padding: 0.65rem 0.85rem;
-            text-align: left;
-            color: #3B3731;
-            font-family: Lato, sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .client-pet-medication-note-card__dropdown-item:last-child {
-            border-bottom: 0;
-        }
-
-        .client-pet-medication-note-card__dropdown-item:hover {
-            background: #F5F5F5;
-        }
-
-        .client-pet-medication-note-card__dropdown-item.is-danger {
-            color: #FF6E6E;
-        }
-
-        .client-pet-medication-gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 1rem;
-        }
-
-        .client-pet-medication-gallery__item {
-            aspect-ratio: 1;
-            border-radius: 10px;
-            overflow: hidden;
-            background: #F0EBE4;
-        }
-
-        .client-pet-medication-gallery__item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .client-pet-medication-empty,
-        .client-pet-medication-empty-cell {
-            color: #9D9B98 !important;
-            text-align: center;
-            padding: 1.5rem 0;
-            font-family: Lato, sans-serif;
-            font-size: 16px;
-        }
-
-        .client-pet-medication-tab-panel {
-            display: grid;
-            grid-template-columns: 1fr;
-            min-height: 12rem;
-        }
-
-        .client-pet-medication-tab-panel>div {
-            grid-column: 1;
-            grid-row: 1;
-            width: 100%;
-            min-width: 0;
-        }
-
-        .client-pet-medication-tab-pane-enter {
-            transition: opacity 0.32s ease, transform 0.32s ease;
-        }
-
-        .client-pet-medication-tab-pane-enter-start {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        .client-pet-medication-tab-pane-enter-end {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
+<style>
+    [x-cloak] {
+        display: none !important;
+    }
+
+    .client-pet-medication-view {
+        width: 100%;
+    }
+
+    .client-pet-medication-back-block {
+        margin-bottom: 2rem;
+    }
+
+    .client-pet-medication-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        border: 0;
+        background: transparent;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0;
+        margin-bottom: 0.75rem;
+    }
+
+    .client-pet-medication-back-loader {
+        display: none;
+        position: relative;
+        height: 4px;
+    }
+
+    .client-pet-medication-back-loader.is-visible {
+        display: block;
+    }
+
+    .client-pet-medication-back-loader .active-section-loading-bar {
+        position: relative;
+        left: 0;
+        right: 0;
+        bottom: auto;
+        height: 4px;
+    }
+
+    .client-pet-medication-layout {
+        display: grid;
+        grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
+        gap: 2rem;
+        align-items: start;
+    }
+
+    .client-pet-medication-card {
+        border: 2px solid #FFC97A;
+        border-radius: 10px;
+        background: rgba(255, 201, 122, 0.05);
+        padding: 1.25rem;
+    }
+
+    .client-pet-medication-card__header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .client-pet-medication-card__avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 999px;
+        border: 3px solid #FFC97A;
+        overflow: hidden;
+        background: #F0EBE4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+    .client-pet-medication-card__avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .client-pet-medication-card__name {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .client-pet-medication-card__breed {
+        margin: 0.2rem 0 0;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+    }
+
+    .client-pet-medication-card__details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .client-pet-medication-card__detail-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.65rem;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.4;
+    }
+
+    .client-pet-medication-card__detail-row svg {
+        flex-shrink: 0;
+        margin-top: 0.15rem;
+    }
+
+    .client-pet-medication-card__sex-icon {
+        width: 18px;
+        height: 18px;
+        color: #9D9B98;
+        flex-shrink: 0;
+    }
+
+    .client-pet-medication-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2.5rem;
+        border-bottom: 1px solid #E0E0E0;
+        margin-bottom: 2.5rem;
+    }
+
+    .client-pet-medication-tab {
+        border: 0;
+        background: transparent;
+        padding: 0 0 1rem;
+        text-align: center;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        position: relative;
+        transition: color 0.28s ease, font-weight 0.28s ease;
+    }
+
+    .client-pet-medication-tab::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -1px;
+        height: 2px;
+        background: #3B3731;
+        transform: scaleX(0);
+        transform-origin: center;
+        transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .client-pet-medication-tab.is-active {
+        color: #3B3731;
+        font-weight: 600;
+    }
+
+    .client-pet-medication-tab.is-active::after {
+        transform: scaleX(1);
+    }
+
+    .client-pet-medication-tab__alert {
+        display: inline-flex;
+        line-height: 0;
+    }
+
+    .client-pet-medication-summary {
+        margin-bottom: 1.5rem;
+    }
+
+    .client-pet-medication-summary__row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.9rem 0;
+        border-bottom: 1px solid #E8E8E8;
+    }
+
+    .client-pet-medication-summary__label {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 20px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .client-pet-medication-summary__value {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        text-align: right;
+    }
+
+    .client-pet-medication-summary__value.is-warning {
+        color: #FFAE37;
+    }
+
+    .client-pet-medication-summary__value.is-success {
+        color: #AFCD6F;
+    }
+
+    .client-pet-medication-table-shell {
+        overflow-x: auto;
+    }
+
+    .client-pet-medication-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 520px;
+    }
+
+    .client-pet-medication-table th,
+    .client-pet-medication-table td {
+        border-bottom: 1px solid #E8E8E8;
+        text-align: left;
+        padding: 1rem 0;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        vertical-align: middle;
+    }
+
+    .client-pet-medication-table th {
+        color: #3B3731;
+        font-weight: 600;
+    }
+
+    .client-pet-medication-status-pill {
+        font-weight: 600;
+    }
+
+    .client-pet-medication-status-pill.is-overdue {
+        color: #FFAE37;
+    }
+
+    .client-pet-medication-status-pill.is-current {
+        color: #AFCD6F;
+    }
+
+    .client-pet-medication-info-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .client-pet-medication-info-section>div {
+        margin: 1.5rem 0 3rem 0;
+    }
+
+    .client-pet-medication-info-title {
+        margin: 0 0 0.75rem;
+        padding-bottom: 1.5rem;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        border-bottom: 1px solid #D4D4D4;
+    }
+
+    .client-pet-medication-groomer-notes-section>.client-pet-medication-notes-header,
+    .client-pet-medication-owner-notes-section>.client-pet-medication-notes-header {
+        margin: 0;
+    }
+
+    .client-pet-medication-groomer-notes-section>.client-pet-medication-add-note-form,
+    .client-pet-medication-groomer-notes-section>.client-pet-medication-notes-list,
+    .client-pet-medication-owner-notes-section>.client-pet-medication-add-note-form,
+    .client-pet-medication-owner-notes-section>.client-pet-medication-notes-list {
+        margin: 1.5rem 0 3rem;
+    }
+
+    .client-pet-medication-groomer-notes-section>div:not(.client-pet-medication-notes-header):not(.client-pet-medication-add-note-form):not(.client-pet-medication-notes-list),
+    .client-pet-medication-owner-notes-section>div:not(.client-pet-medication-notes-header):not(.client-pet-medication-add-note-form):not(.client-pet-medication-notes-list) {
+        margin: 1.5rem 0 3rem;
+    }
+
+    .client-pet-medication-notes-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #D4D4D4;
+        margin: 0;
+    }
+
+    .client-pet-medication-notes-header.is-adding {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .client-pet-medication-notes-title-wrap {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .client-pet-medication-notes-title-wrap .client-pet-medication-info-title {
+        margin: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+
+    .client-pet-medication-add-note-btn {
+        flex-shrink: 0;
+        border: 0;
+        background: transparent;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .client-pet-medication-add-note-btn:hover {
+        opacity: 0.75;
+    }
+
+    .client-pet-medication-add-note-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .client-pet-medication-add-note-title {
+        width: 100%;
+        height: 42px;
+        padding: 0 1rem;
+        border: 1px solid #D4D4D4;
+        border-radius: 8px;
+        background: #FFF;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+        outline: none;
+    }
+
+    .client-pet-medication-add-note-title:focus {
+        border-color: #FFC97A;
+    }
+
+    .client-pet-medication-info-card {
+        gap: 1rem;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .client-pet-medication-info-card p {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+    }
+
+    .client-pet-medication-info-card p>strong {
+        font-weight: 700;
+    }
+
+    .client-pet-medication-info-list {
+        margin: 0;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.5;
+    }
+
+    .client-pet-medication-info-bullets {
+        margin: 0;
+        padding-left: 1.25rem;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        list-style-type: disc;
+    }
+
+    .client-pet-medication-info-bullets li+li {
+        margin-top: 0.35rem;
+    }
+
+    .client-pet-medication-tolerance-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+
+    .client-pet-medication-tolerance-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: normal;
+    }
+
+    .client-pet-medication-tolerance-activity {
+        flex-shrink: 0;
+    }
+
+    .client-pet-medication-tolerance-arrow {
+        flex-shrink: 0;
+        color: #3B3731;
+    }
+
+    .client-pet-medication-tolerance-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-width: 0;
+    }
+
+    .client-pet-medication-tolerance-icon {
+        flex-shrink: 0;
+    }
+
+    .client-pet-medication-tolerance-icon--ok {
+        width: 14px;
+        height: 11px;
+    }
+
+    .client-pet-medication-tolerance-icon--caution {
+        width: 18px;
+        height: 18px;
+    }
+
+    .client-pet-medication-guidance-section>.client-pet-medication-guidance-header {
+        margin: 0;
+    }
+
+    .client-pet-medication-guidance-section>.client-pet-medication-guidance-body {
+        margin: 1.5rem 0 3rem;
+    }
+
+    .client-pet-medication-guidance-header {
+        display: flex;
+        align-items: flex-end;
+        gap: 1rem;
+    }
+
+    .client-pet-medication-guidance-title-wrap {
+        flex: 1;
+        min-width: 0;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #D4D4D4;
+    }
+
+    .client-pet-medication-guidance-title-wrap.is-editing {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .client-pet-medication-guidance-title {
+        margin: 0;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .client-pet-medication-edit-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        flex-shrink: 0;
+        height: 36px;
+        padding: 0 1rem;
+        border: 1px solid #D4D4D4;
+        border-radius: 100px;
+        background: #FFF;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: normal;
+        cursor: pointer;
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .client-pet-medication-edit-btn:hover {
+        border-color: #A8A8A8;
+        background: #FAFAFA;
+    }
+
+    .client-pet-medication-edit-btn svg {
+        flex-shrink: 0;
+    }
+
+    .client-pet-medication-guidance-textarea {
+        width: 100%;
+        min-height: 7rem;
+        padding: 0.85rem 1rem;
+        border: 1px solid #D4D4D4;
+        border-radius: 8px;
+        background: #FFF;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.5;
+        resize: vertical;
+        outline: none;
+    }
+
+    .client-pet-medication-guidance-textarea:focus {
+        border-color: #FFC97A;
+    }
+
+    .client-pet-medication-guidance-edit-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 0.85rem;
+    }
+
+    .client-pet-medication-guidance-save-btn,
+    .client-pet-medication-guidance-cancel-btn {
+        border: 0;
+        border-radius: 100px;
+        padding: 0.55rem 1.15rem;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: normal;
+        cursor: pointer;
+    }
+
+    .client-pet-medication-guidance-save-btn {
+        background: #FFC97A;
+        color: #fff;
+    }
+
+    .client-pet-medication-guidance-save-btn[disabled] {
+        opacity: 0.7;
+        cursor: wait;
+    }
+
+    .client-pet-medication-guidance-cancel-btn {
+        background: transparent;
+        color: #9D9B98;
+    }
+
+    .client-pet-medication-notes-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .client-pet-medication-note-card {
+        border-radius: 5px;
+        background: #FAFAFA;
+        padding: 1rem 1.25rem;
+        position: relative;
+    }
+
+    .client-pet-medication-note-card__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.65rem;
+    }
+
+    .client-pet-medication-note-card__header:last-child {
+        margin-bottom: 0;
+    }
+
+    .client-pet-medication-note-card__heading {
+        margin: 0;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: normal;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .client-pet-medication-note-card__body {
+        margin: 0;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+    }
+
+    .client-pet-medication-note-card__menu-wrap {
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .client-pet-medication-note-card__menu {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.15rem;
+        margin: 0;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        color: #3B3731;
+    }
+
+    .client-pet-medication-note-card__dropdown {
+        position: absolute;
+        top: calc(100% + 0.35rem);
+        right: 0;
+        min-width: 120px;
+        background: #FFF;
+        border: 1px solid #D9D9D9;
+        border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        z-index: 20;
+    }
+
+    .client-pet-medication-note-card__dropdown-item {
+        width: 100%;
+        border: 0;
+        border-bottom: 1px solid #E8E8E8;
+        background: transparent;
+        padding: 0.65rem 0.85rem;
+        text-align: left;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .client-pet-medication-note-card__dropdown-item:last-child {
+        border-bottom: 0;
+    }
+
+    .client-pet-medication-note-card__dropdown-item:hover {
+        background: #F5F5F5;
+    }
+
+    .client-pet-medication-note-card__dropdown-item.is-danger {
+        color: #FF6E6E;
+    }
+
+    .client-pet-medication-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 1rem;
+    }
+
+    .client-pet-medication-gallery__item {
+        aspect-ratio: 1;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #F0EBE4;
+    }
+
+    .client-pet-medication-gallery__item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .client-pet-medication-empty,
+    .client-pet-medication-empty-cell {
+        color: #9D9B98 !important;
+        text-align: center;
+        padding: 1.5rem 0;
+        font-family: Lato;
+        font-size: 16px;
+    }
+
+    .client-pet-medication-tab-panel {
+        display: grid;
+        grid-template-columns: 1fr;
+        min-height: 12rem;
+    }
+
+    .client-pet-medication-tab-panel>div {
+        grid-column: 1;
+        grid-row: 1;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .client-pet-medication-tab-pane-enter {
+        transition: opacity 0.32s ease, transform 0.32s ease;
+    }
+
+    .client-pet-medication-tab-pane-enter-start {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    .client-pet-medication-tab-pane-enter-end {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .client-pet-medication-tab-pane-leave {
+        transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+
+    .client-pet-medication-tab-pane-leave-start {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .client-pet-medication-tab-pane-leave-end {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .client-pet-medication-tab,
+        .client-pet-medication-tab::after,
+        .client-pet-medication-tab-pane-enter,
         .client-pet-medication-tab-pane-leave {
-            transition: opacity 0.22s ease, transform 0.22s ease;
+            transition: none;
         }
 
-        .client-pet-medication-tab-pane-leave-start {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
+        .client-pet-medication-tab-pane-enter-start,
+        .client-pet-medication-tab-pane-enter-end,
+        .client-pet-medication-tab-pane-leave-start,
         .client-pet-medication-tab-pane-leave-end {
-            opacity: 0;
-            transform: translateY(-6px);
+            opacity: 1;
+            transform: none;
         }
+    }
 
-        @media (prefers-reduced-motion: reduce) {
-
-            .client-pet-medication-tab,
-            .client-pet-medication-tab::after,
-            .client-pet-medication-tab-pane-enter,
-            .client-pet-medication-tab-pane-leave {
-                transition: none;
-            }
-
-            .client-pet-medication-tab-pane-enter-start,
-            .client-pet-medication-tab-pane-enter-end,
-            .client-pet-medication-tab-pane-leave-start,
-            .client-pet-medication-tab-pane-leave-end {
-                opacity: 1;
-                transform: none;
-            }
+    @media (max-width: 900px) {
+        .client-pet-medication-layout {
+            grid-template-columns: 1fr;
         }
-
-        @media (max-width: 900px) {
-            .client-pet-medication-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    }
+</style>
 @endassets

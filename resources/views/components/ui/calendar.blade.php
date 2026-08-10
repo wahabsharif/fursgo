@@ -164,7 +164,7 @@
         display: block;
         margin-bottom: 15px;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 600;
         line-height: normal;
@@ -182,7 +182,7 @@
         align-items: center;
         justify-content: space-between;
         cursor: pointer;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 400;
         color: #3B3731;
@@ -272,7 +272,7 @@
         border-radius: 5px;
         border: 1px solid #EAE8E5;
         background: transparent;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         font-weight: 600;
         color: #3B3731;
@@ -285,7 +285,7 @@
         border-radius: 5px;
         border: 1px solid #D4D4D4;
         background: transparent;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         font-weight: 700;
         cursor: pointer;
@@ -305,7 +305,7 @@
 
     .bc-dow span {
         text-align: center;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         font-weight: 600;
         color: #9D9B98;
@@ -332,7 +332,7 @@
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         font-weight: 600;
         color: #3B3731;
@@ -380,7 +380,7 @@
     }
 
     .bc-ptitle {
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         font-weight: 600;
         color: #3B3731;
@@ -453,7 +453,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 13px;
         font-weight: 400;
         color: #9D9B98;
@@ -479,7 +479,7 @@
         padding: 8px 3px;
         border-radius: 8px;
         text-align: center;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 13px;
         font-weight: 500;
         color: #3B3731;

@@ -69,7 +69,7 @@
             border: none;
             cursor: pointer;
             text-align: center;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 16px;
             font-style: normal;
             font-weight: 600;

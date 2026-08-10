@@ -1043,7 +1043,7 @@
         margin: 0;
         cursor: pointer;
         color: #9D9B98;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         font-style: normal;
         font-weight: 400;

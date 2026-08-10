@@ -7,18 +7,17 @@
     $bank = $payouts['bank'] ?? [];
 @endphp
 
-<div class="earnings-payouts" x-data="{ bankModalOpen: false, frequencyModalOpen: false, futurePayoutsModalOpen: false }"
-    x-effect="
+<div class="earnings-payouts"
+    x-data="{ bankModalOpen: false, frequencyModalOpen: false, futurePayoutsModalOpen: false }" x-effect="
         const modalOpen = bankModalOpen || frequencyModalOpen || futurePayoutsModalOpen;
         document.body.style.overflow = modalOpen ? 'hidden' : '';
         document.documentElement.style.overflow = modalOpen ? 'hidden' : '';
-    "
-    x-on:payout-bank-details-saved.window="bankModalOpen = false"
+    " x-on:payout-bank-details-saved.window="bankModalOpen = false"
     x-on:payout-frequency-saved.window="frequencyModalOpen = false">
     <style>
         .earnings-payouts {
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             margin-top: 3rem;
         }
 
@@ -355,7 +354,7 @@
             justify-content: center;
             padding: 1rem;
             background: rgba(0, 0, 0, 0.22);
-            font-family: Lato, sans-serif;
+            font-family: Lato;
         }
 
         .earnings-payouts-modal-overlay-enter,
@@ -606,8 +605,7 @@
                     :aria-expanded="helpOpen.toString()" aria-controls="earnings-payouts-help-copy" @mousedown.prevent
                     @click="helpOpen = !helpOpen">
                     <span>How do Payouts work?</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="9" viewBox="0 0 15 9"
-                        fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="9" viewBox="0 0 15 9" fill="none">
                         <path d="M1 8L7.5 1L14 8" stroke="#9D9B98" stroke-width="1.5" stroke-linecap="round"
                             stroke-linejoin="round" />
                     </svg>
@@ -662,8 +660,8 @@
                                             data-invoice-url="{{ $item['invoice_url'] }}"
                                             onclick="window.downloadBookingInvoicePdf?.(this.dataset.invoiceUrl)"
                                             aria-label="Download invoice">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
-                                                viewBox="0 0 16 19" fill="none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19"
+                                                fill="none">
                                                 <path
                                                     d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
                                                     stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
@@ -706,8 +704,8 @@
                             <span class="earnings-payouts-muted">No scheduled future payouts.</span>
                         @endforelse
                     </div>
-                    <a href="#" class="earnings-payouts-panel-link"
-                        @click.prevent="futurePayoutsModalOpen = true">View More</a>
+                    <a href="#" class="earnings-payouts-panel-link" @click.prevent="futurePayoutsModalOpen = true">View
+                        More</a>
                 </div>
             </div>
 
@@ -731,8 +729,7 @@
                 <div class="earnings-payouts-panel-head">
                     <h3 class="earnings-payouts-panel-title">Bank Account</h3>
                     <span class="earnings-payouts-verified">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
-                            fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
                             <circle cx="7" cy="7" r="6.5" fill="#AFCD6F" />
                             <path d="M4 7.15L6.1 9.2L10 4.8" stroke="white" stroke-width="1.4" stroke-linecap="round"
                                 stroke-linejoin="round" />
@@ -780,8 +777,7 @@
                     </h3>
                     <button type="button" class="earnings-payouts-modal-close" @click="bankModalOpen = false"
                         aria-label="Close bank details modal">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 36 36"
-                            fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 36 36" fill="none">
                             <circle cx="18" cy="18" r="17.5" stroke="#3B3731" />
                             <path d="M12.8 23.9998L24 12.7998M12.8 12.7998L24 23.9998" stroke="#3B3731"
                                 stroke-width="1.5" stroke-linecap="round" />
@@ -818,8 +814,7 @@
 
                     <div class="earnings-payouts-modal-field is-full">
                         <label for="payout-sort-code">Sort Code</label>
-                        <input id="payout-sort-code" type="text" wire:model="payoutSortCode"
-                            placeholder="12-34-56">
+                        <input id="payout-sort-code" type="text" wire:model="payoutSortCode" placeholder="12-34-56">
                         @error('payoutSortCode')
                             <span class="earnings-payouts-modal-error">{{ $message }}</span>
                         @enderror
@@ -872,8 +867,7 @@
                     </h3>
                     <button type="button" class="earnings-payouts-modal-close" @click="frequencyModalOpen = false"
                         aria-label="Close payout frequency modal">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 36 36"
-                            fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 36 36" fill="none">
                             <circle cx="18" cy="18" r="17.5" stroke="#3B3731" />
                             <path d="M12.8 23.9998L24 12.7998M12.8 12.7998L24 23.9998" stroke="#3B3731"
                                 stroke-width="1.5" stroke-linecap="round" />
@@ -894,8 +888,8 @@
                         <label for="payout-frequency">Payout Frequency</label>
                         <div class="furs-dd" :class="{ 'is-open': frequencyDropdownOpen }"
                             @click.outside="frequencyDropdownOpen = false">
-                            <button type="button" class="furs-dd__trigger" id="payout-frequency"
-                                aria-haspopup="listbox" :aria-expanded="frequencyDropdownOpen.toString()"
+                            <button type="button" class="furs-dd__trigger" id="payout-frequency" aria-haspopup="listbox"
+                                :aria-expanded="frequencyDropdownOpen.toString()"
                                 @click="frequencyDropdownOpen = !frequencyDropdownOpen"
                                 @keydown.escape.prevent="frequencyDropdownOpen = false">
                                 <span class="furs-dd__label" x-text="selectedFrequency"></span>
@@ -958,10 +952,9 @@
                 <div class="earnings-payouts-modal-head">
                     <h3 class="earnings-payouts-modal-title" id="earnings-payouts-future-modal-title">Future Payouts
                     </h3>
-                    <button type="button" class="earnings-payouts-modal-close"
-                        @click="futurePayoutsModalOpen = false" aria-label="Close future payouts modal">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 36 36"
-                            fill="none">
+                    <button type="button" class="earnings-payouts-modal-close" @click="futurePayoutsModalOpen = false"
+                        aria-label="Close future payouts modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 36 36" fill="none">
                             <circle cx="18" cy="18" r="17.5" stroke="#3B3731" />
                             <path d="M12.8 23.9998L24 12.7998M12.8 12.7998L24 23.9998" stroke="#3B3731"
                                 stroke-width="1.5" stroke-linecap="round" />

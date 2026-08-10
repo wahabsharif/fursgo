@@ -6,8 +6,8 @@
 
     $maAccentColor =
         strtolower((string) ($gsp?->user_type ?? (auth()->user()?->user_type ?? ''))) === 'space'
-            ? '#FFA899'
-            : '#FFC97A';
+        ? '#FFA899'
+        : '#FFC97A';
 
     $staffMembers = $gsp
         ? \App\Models\Staff::where('goormer_spacer_profile_id', $gsp->id)->orderBy('id')->get()
@@ -92,8 +92,7 @@
     ];
 @endphp
 
-<div {{ $attributes->merge(['class' => 'dashboard-section-host']) }} x-data="{ extraStaff: [] }"
-    @staff-added.window="(() => {
+<div {{ $attributes->merge(['class' => 'dashboard-section-host']) }} x-data="{ extraStaff: [] }" @staff-added.window="(() => {
         const payload = {
             id: $event.detail.id,
             name: $event.detail.name,
@@ -162,8 +161,7 @@
 
                 <button type="button" class="ma-staff-add" aria-label="Add staff"
                     @click="$dispatch('open-add-staff-modal')">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14"
-                        fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14" fill="none">
                         <path
                             d="M13 7.12813C13 7.68041 12.5523 8.12813 12 8.12813H7.66288V13C7.66288 13.5523 7.21516 14 6.66288 14H6.31024C5.75795 14 5.31024 13.5523 5.31024 13V8.12813H0.999999C0.447714 8.12813 0 7.68041 0 7.12813V6.85786C0 6.30557 0.447715 5.85786 1 5.85786H5.31024V0.999999C5.31024 0.447714 5.75795 0 6.31024 0H6.66288C7.21516 0 7.66288 0.447715 7.66288 1V5.85786H12C12.5523 5.85786 13 6.30557 13 6.85786V7.12813Z"
                             fill="#3B3731" />
@@ -205,8 +203,8 @@
                                 <input type="checkbox" data-day-status {{ $dayStatus ? 'checked' : '' }}>
                                 <span class="ma-switch-slider"></span>
                                 <span class="ma-switch-check-icon" aria-hidden="true">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                        viewBox="0 0 20 20" fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
+                                        fill="none">
                                         <path
                                             d="M9.99391 0C4.49726 0 0 4.49726 0 9.99391C0 15.4906 4.49726 19.9878 9.99391 19.9878C15.4906 19.9878 19.9878 15.4906 19.9878 9.99391C19.9878 4.49726 15.4906 0 9.99391 0ZM8.41154 14.5744C8.18156 14.8044 7.80869 14.8044 7.57871 14.5744L3.70323 10.699C3.31384 10.3096 3.31384 9.67824 3.70323 9.28885C4.09225 8.89984 4.72282 8.8994 5.11237 9.28786L7.99513 12.1626L14.8709 5.28678C15.2624 4.8953 15.8975 4.89642 16.2876 5.28928C16.6757 5.68019 16.6746 6.31139 16.2851 6.70092L8.41154 14.5744Z"
                                             fill="white" />
@@ -216,8 +214,8 @@
                         </div>
                     </div>
                     <div class="ma-cell ma-time-range is-disabled" data-day="{{ $dayKey }}" data-day-cell="time">
-                        <span class="ma-time-chip" data-time-type="start" data-time-value="{{ $dayStart }}"
-                            role="button" tabindex="0">
+                        <span class="ma-time-chip" data-time-type="start" data-time-value="{{ $dayStart }}" role="button"
+                            tabindex="0">
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                 <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1.5" />
                                 <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
@@ -225,8 +223,8 @@
                             <span data-time-start>{{ $maFormatTime($dayStart) }}</span>
                         </span>
                         <span class="ma-time-separator"></span>
-                        <span class="ma-time-chip" data-time-type="end" data-time-value="{{ $dayEnd }}"
-                            role="button" tabindex="0">
+                        <span class="ma-time-chip" data-time-type="end" data-time-value="{{ $dayEnd }}" role="button"
+                            tabindex="0">
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                 <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1.5" />
                                 <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
@@ -236,35 +234,28 @@
                         <div class="ma-time-disabled">
                             <span class="ma-time-disabled-chip">
                                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                    <circle cx="8" cy="8" r="6" stroke="#3B3731"
-                                        stroke-width="1.5" />
-                                    <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5"
-                                        stroke-linecap="round" />
+                                    <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1.5" />
+                                    <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
                                 </svg>
                                 <span data-time-start-readonly>{{ $maFormatTime($dayStart) }}</span>
                             </span>
                             <span class="ma-time-disabled-separator"></span>
                             <span class="ma-time-disabled-chip">
                                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                    <circle cx="8" cy="8" r="6" stroke="#3B3731"
-                                        stroke-width="1.5" />
-                                    <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5"
-                                        stroke-linecap="round" />
+                                    <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1.5" />
+                                    <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
                                 </svg>
                                 <span data-time-end-readonly>{{ $maFormatTime($dayEnd) }}</span>
                             </span>
                         </div>
                     </div>
-                    <div class="ma-cell ma-edit-cell is-disabled" data-day="{{ $dayKey }}"
-                        data-day-cell="edit">
+                    <div class="ma-cell ma-edit-cell is-disabled" data-day="{{ $dayKey }}" data-day-cell="edit">
                         <button type="button" class="ma-save-mini" data-day-action="save">
                             <span class="ma-save-mini__label" data-save-label>Save</span>
                             <span class="ma-save-spinner" data-save-spinner aria-hidden="true"></span>
                         </button>
-                        <button type="button" class="ma-row-action" data-day-action="edit"
-                            aria-label="Edit day slot">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16"
-                                viewBox="0 0 17 16" fill="none">
+                        <button type="button" class="ma-row-action" data-day-action="edit" aria-label="Edit day slot">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16" fill="none">
                                 <path
                                     d="M10.8529 2.51425L13.6765 5.29691M8.97059 15.5H16.5M1.44118 11.7898L0.5 15.5L4.26471 14.5724L15.1692 3.82581C15.5221 3.47793 15.7203 3.00616 15.7203 2.51425C15.7203 2.02234 15.5221 1.55057 15.1692 1.20269L15.0073 1.04315C14.6543 0.695371 14.1756 0.5 13.6765 0.5C13.1773 0.5 12.6986 0.695371 12.3456 1.04315L1.44118 11.7898Z"
                                     stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
@@ -284,8 +275,8 @@
                             <span>Date From</span>
                             <span class="ma-field-value">
                                 <span class="ma-field-value__icon" aria-hidden="true">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="14"
-                                        viewBox="0 0 15 14" fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="14" viewBox="0 0 15 14"
+                                        fill="none">
                                         <path
                                             d="M0.5 6.83383C0.5 4.32006 0.5 3.06284 1.3162 2.28224C2.13239 1.50164 3.44513 1.50098 6.0713 1.50098H8.85695C11.4831 1.50098 12.7966 1.50098 13.612 2.28224C14.4275 3.0635 14.4282 4.32006 14.4282 6.83383V8.16705C14.4282 10.6808 14.4282 11.938 13.612 12.7186C12.7959 13.4992 11.4831 13.4999 8.85695 13.4999H6.0713C3.44513 13.4999 2.13169 13.4999 1.3162 12.7186C0.500696 11.9374 0.5 10.6808 0.5 8.16705V6.83383Z"
                                             stroke="#3B3731" />
@@ -303,8 +294,8 @@
                             <span>Date To</span>
                             <span class="ma-field-value" style="background: #F7F7F7;">
                                 <span class="ma-field-value__icon" aria-hidden="true">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="14"
-                                        viewBox="0 0 15 14" fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="14" viewBox="0 0 15 14"
+                                        fill="none">
                                         <path
                                             d="M0.5 6.83383C0.5 4.32006 0.5 3.06284 1.3162 2.28224C2.13239 1.50164 3.44513 1.50098 6.0713 1.50098H8.85695C11.4831 1.50098 12.7966 1.50098 13.612 2.28224C14.4275 3.0635 14.4282 4.32006 14.4282 6.83383V8.16705C14.4282 10.6808 14.4282 11.938 13.612 12.7186C12.7959 13.4992 11.4831 13.4999 8.85695 13.4999H6.0713C3.44513 13.4999 2.13169 13.4999 1.3162 12.7186C0.500696 11.9374 0.5 10.6808 0.5 8.16705V6.83383Z"
                                             stroke="#3B3731" />
@@ -320,8 +311,7 @@
                         </label>
                     </div>
                     <label class="ma-field">
-                        <span style="margin-top: 1.5rem;">Reason<span
-                                style="font-weight: 400;">(optional)</span></span>
+                        <span style="margin-top: 1.5rem;">Reason<span style="font-weight: 400;">(optional)</span></span>
                         <textarea rows="3" data-holiday-reason></textarea>
                     </label>
                     <div class="ma-form-actions">
@@ -350,8 +340,7 @@
                     <input type="checkbox" data-pause-booking {{ $activePauseBooking ? 'checked' : '' }}>
                     <span class="ma-switch-slider"></span>
                     <span class="ma-switch-check-icon" aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
-                            fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
                             <path
                                 d="M9.99391 0C4.49726 0 0 4.49726 0 9.99391C0 15.4906 4.49726 19.9878 9.99391 19.9878C15.4906 19.9878 19.9878 15.4906 19.9878 9.99391C19.9878 4.49726 15.4906 0 9.99391 0ZM8.41154 14.5744C8.18156 14.8044 7.80869 14.8044 7.57871 14.5744L3.70323 10.699C3.31384 10.3096 3.31384 9.67824 3.70323 9.28885C4.09225 8.89984 4.72282 8.8994 5.11237 9.28786L7.99513 12.1626L14.8709 5.28678C15.2624 4.8953 15.8975 4.89642 16.2876 5.28928C16.6757 5.68019 16.6746 6.31139 16.2851 6.70092L8.41154 14.5744Z"
                                 fill="white" />
@@ -373,7 +362,7 @@
         margin-top: 2rem;
         width: 100%;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
     }
 
     .ma-holiday-form {
@@ -671,7 +660,7 @@
         border: 0;
         padding: 8px 12px;
         border-radius: 8px;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         font-weight: 500;
         color: #3B3731;
@@ -912,7 +901,7 @@
         border-radius: 10px;
         background: #F7F7F7;
         overflow: hidden;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         color: #3B3731;
     }
 
@@ -1063,7 +1052,7 @@
         box-sizing: border-box;
         box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         opacity: 0;
         transform: translateY(-4px);
         pointer-events: none;
@@ -1097,7 +1086,7 @@
         width: 28px;
         height: 28px;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 20px;
         font-weight: 600;
         line-height: 1;
@@ -1114,7 +1103,7 @@
 
     .ma-mini-cal__title {
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-style: normal;
         font-weight: 600;
@@ -1135,7 +1124,7 @@
     .ma-mini-cal__weekdays span {
         text-align: center;
         color: #9C9790;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         font-style: normal;
         font-weight: 600;
@@ -1154,7 +1143,7 @@
         justify-content: center;
         text-align: center;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         font-style: normal;
         font-weight: 600;
@@ -1494,7 +1483,7 @@
                 for (let h = 0; h < 24; h += 1) {
                     for (let m = 0; m < 60; m += 30) {
                         const value =
-                            `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+                            `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
                         opts.push({
                             value,
                             label: formatTime(value),
@@ -1654,7 +1643,7 @@
                                 };
                                 activePill.dataset.staffPayload = JSON.stringify(
                                     parsed);
-                            } catch (err) {}
+                            } catch (err) { }
                         }
 
                         saveBtn.classList.add('is-saving');
@@ -1691,7 +1680,7 @@
 
                 document.addEventListener('click', (event) => {
                     if (!timeDropdownEl || !timeDropdownEl.classList.contains(
-                            'is-open')) return;
+                        'is-open')) return;
                     if (event.target.closest('.ma-time-dropdown')) return;
                     if (event.target.closest('.ma-time-chip')) return;
                     closeTimeDropdown();
@@ -1762,7 +1751,7 @@
             let activeDateTrigger = null;
 
             const formatISO = (year, month, day) =>
-                `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2,'0')}`;
+                `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
             const isoToDate = (iso) => {
                 if (!iso) return null;

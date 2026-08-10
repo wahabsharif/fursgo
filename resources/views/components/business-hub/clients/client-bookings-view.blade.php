@@ -70,8 +70,8 @@
                         <td class="client-bookings-service-type">{{ $booking->service }}</td>
                         <td>
                             <span class="client-bookings-rating">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                    viewBox="0 0 16 16" fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
+                                    fill="none">
                                     <path
                                         d="M7.00521 0.75483C7.31833 -0.251612 8.68168 -0.251609 8.9948 0.754833L10.1663 4.52021C10.3063 4.97031 10.7079 5.27504 11.1611 5.27504H14.952C15.9653 5.27504 16.3866 6.6292 15.5668 7.25122L12.4999 9.57835C12.1333 9.85652 11.9799 10.3496 12.1199 10.7997L13.2914 14.5651C13.6045 15.5715 12.5015 16.4084 11.6818 15.7864L8.61482 13.4593C8.24821 13.1811 7.75179 13.1811 7.38518 13.4593L4.31824 15.7864C3.49848 16.4084 2.39551 15.5715 2.70863 14.5651L3.8801 10.7997C4.02013 10.3496 3.86673 9.85652 3.50012 9.57835L0.433177 7.25122C-0.38658 6.6292 0.0347219 5.27504 1.048 5.27504H4.83894C5.29209 5.27504 5.69371 4.97031 5.83374 4.52021L7.00521 0.75483Z"
                                         fill="#FFC97A" />
@@ -83,10 +83,9 @@
                         <td class="client-bookings-view-col">
                             <div class="client-bookings-view-col-inner">
                                 <button type="button" class="client-bookings-icon-btn"
-                                    wire:click="openCompletedBookingModal({{ $booking->id }})"
-                                    aria-label="View booking">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="19" height="13"
-                                        viewBox="0 0 19 13" fill="none">
+                                    wire:click="openCompletedBookingModal({{ $booking->id }})" aria-label="View booking">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="19" height="13" viewBox="0 0 19 13"
+                                        fill="none">
                                         <path
                                             d="M9.49609 12C11.4291 12 12.9961 10.433 12.9961 8.5C12.9961 6.567 11.4291 5 9.49609 5C7.5631 5 5.99609 6.567 5.99609 8.5C5.99609 10.433 7.5631 12 9.49609 12Z"
                                             stroke="black" />
@@ -103,8 +102,8 @@
                                     data-invoice-url="{{ route('business-hub.bookings.invoice-pdf', $booking) }}"
                                     onclick="window.downloadBookingInvoicePdf(this.dataset.invoiceUrl)"
                                     aria-label="Download invoice">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
-                                        viewBox="0 0 16 19" fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19"
+                                        fill="none">
                                         <path
                                             d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
                                             stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
@@ -133,7 +132,7 @@
 @once
     <script>
         if (!window.downloadBookingInvoicePdf) {
-            window.downloadBookingInvoicePdf = async function(invoiceUrl) {
+            window.downloadBookingInvoicePdf = async function (invoiceUrl) {
                 if (!invoiceUrl) {
                     return;
                 }
@@ -238,7 +237,7 @@
 
     .client-bookings-pet-type {
         color: #9D9B98;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 400;
         line-height: normal;

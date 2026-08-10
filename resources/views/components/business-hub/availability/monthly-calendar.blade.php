@@ -17,8 +17,7 @@
                                 [slot.type]: true,
                                 'is-calendar-slot-clickable': slot.bookingId || (slot.label && String(slot.label).trim()
                                     .startsWith('+')),
-                            }"
-                                @click.stop="onCalendarSlotClick(slot)">
+                            }" @click.stop="onCalendarSlotClick(slot)">
                                 <svg x-show="!slot.label.trim().startsWith('+')" class="slot-icon"
                                     xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 14 13"
                                     fill="none" aria-hidden="true">
@@ -88,7 +87,7 @@
     .availability-calendar-title h3 {
         margin: 0;
         color: #4c473f;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 22px;
         font-weight: 500;
         text-align: center;
@@ -251,7 +250,7 @@
 </style>
 
 <script>
-    (function() {
+    (function () {
         if (window.availabilityCalendarShell) return;
 
         const MONTHS = [
@@ -321,7 +320,7 @@
             return `${h - 12}PM`;
         };
 
-        window.availabilityCalendarShell = function() {
+        window.availabilityCalendarShell = function () {
             return {
                 today: null,
                 activeView: 'month',

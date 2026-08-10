@@ -49,7 +49,8 @@ new class extends Component {
     }
 }; ?>
 
-<section class="service-area-form-panel" aria-label="Add service area form" x-data="serviceAreaFormMap(@entangle('latitude').live, @entangle('longitude').live, @entangle('radius').live, @entangle('address').live)">
+<section class="service-area-form-panel" aria-label="Add service area form"
+    x-data="serviceAreaFormMap(@entangle('latitude').live, @entangle('longitude').live, @entangle('radius').live, @entangle('address').live)">
     <form class="service-area-form" wire:submit.prevent="save">
         <div class="service-area-form-layout">
             <div class="service-area-form-fields">
@@ -89,8 +90,8 @@ new class extends Component {
 
                 <label class="service-field service-area-radius-field">
                     <span>Service Radius (miles)</span>
-                    <input type="number" wire:model.live="radius" min="0.1" max="50" step="0.1"
-                        inputmode="decimal" placeholder="e.g. 1" aria-describedby="service-area-radius-hint" />
+                    <input type="number" wire:model.live="radius" min="0.1" max="50" step="0.1" inputmode="decimal"
+                        placeholder="e.g. 1" aria-describedby="service-area-radius-hint" />
                     <p id="service-area-radius-hint" class="service-area-radius-hint">Between 0.1 and 50 miles.</p>
                 </label>
 
@@ -248,8 +249,8 @@ new class extends Component {
                                 .map((entry) => ({
                                     postcode: entry.result.postcode,
                                     label: [entry.result.admin_district, entry.result
-                                            .region
-                                        ]
+                                        .region
+                                    ]
                                         .filter(Boolean)
                                         .join(', '),
                                     lat: entry.result.latitude,
@@ -381,16 +382,16 @@ new class extends Component {
 
                         L.tileLayer(
                             'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-                                subdomains: 'abcd',
-                                maxZoom: 20,
-                            }).addTo(this.map);
+                            subdomains: 'abcd',
+                            maxZoom: 20,
+                        }).addTo(this.map);
 
                         L.tileLayer(
                             'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
-                                subdomains: 'abcd',
-                                maxZoom: 20,
-                                pane: 'overlayPane',
-                            }).addTo(this.map);
+                            subdomains: 'abcd',
+                            maxZoom: 20,
+                            pane: 'overlayPane',
+                        }).addTo(this.map);
 
                         const pinIcon = L.divIcon({
                             className: 'service-area-pin-wrap',
@@ -553,7 +554,7 @@ new class extends Component {
 
     .service-field>span {
         color: #3b3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 600;
     }
@@ -566,7 +567,7 @@ new class extends Component {
         border-radius: 10px;
         background: #fff;
         color: #3b3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         padding: 0.65rem 0.9rem;
     }
@@ -607,7 +608,7 @@ new class extends Component {
         background: transparent;
         text-align: left;
         cursor: pointer;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
     }
 
     .service-area-postcode-suggestion:hover,
@@ -631,13 +632,13 @@ new class extends Component {
     .service-area-searching-hint {
         margin: 0.35rem 0 0;
         color: #9d9b98;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
     }
 
     .service-area-field-hint {
         margin: 0.35rem 0 0;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
     }
 
@@ -648,7 +649,7 @@ new class extends Component {
     .service-area-radius-hint {
         margin: 0;
         color: #9d9b98;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 13px;
         font-weight: 400;
         line-height: 1.35;
@@ -657,7 +658,7 @@ new class extends Component {
     .service-area-map-hint {
         margin: 0;
         color: #9d9b98;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         line-height: 1.4;
     }
@@ -705,7 +706,7 @@ new class extends Component {
         min-width: 133px;
         height: 48px;
         border-radius: 75px;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 18px;
         font-weight: 600;
         cursor: pointer;
