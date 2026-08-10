@@ -1447,9 +1447,9 @@ new #[Layout('layouts.dashboard')] class extends Component {
     }
 
     /**
-     * Handle business verification submission
+     * Handle "Verify Your Account for Payouts" Continue.
      */
-    public function submit(): void
+    public function submitAccountPayouts(): void
     {
         $user = Auth::guard('groomer_spacer')->user();
         if (!$user) {
@@ -1481,7 +1481,6 @@ new #[Layout('layouts.dashboard')] class extends Component {
             $locationTypesForSave = array_values($user->select_location_type);
         }
 
-        // Update user profile with verification data
         $user->update([
             'user_type' => $usageForSave,
             'account_type' => $accountTypeForSave,
@@ -1492,6 +1491,12 @@ new #[Layout('layouts.dashboard')] class extends Component {
         $this->verification_review_mode = false;
 
         $this->applyVerifyQualifySubstep($this->personalInfoSubstepForAccountType($accountTypeForSave));
+    }
+
+    /** @deprecated Use submitAccountPayouts() */
+    public function submit(): void
+    {
+        $this->submitAccountPayouts();
     }
 
     /**
@@ -1863,8 +1868,8 @@ new #[Layout('layouts.dashboard')] class extends Component {
                     if (typeof window.VqDocUpload.init === 'function') window.VqDocUpload.init();
                     if (typeof window.VqDocUpload.afterMorph === 'function') window.VqDocUpload.afterMorph();
                 }
-            JS
-            ,
+            JS,
+
         );
     }
 
@@ -2859,29 +2864,17 @@ new #[Layout('layouts.dashboard')] class extends Component {
         if ($step < 1 || $step > 4) {
             return false;
         }
-        if ($this->shouldUseDevDbPreview()) {
-            return true;
-        }
-        $user = Auth::guard('groomer_spacer')->user();
-        if (!$user instanceof GroomerSpacerProfile) {
-            return $step === 1;
-        }
 
-        $dbMax = $this->resolveMaximumSidebarStep($user);
-        $forwardCap = $this->resolveForwardNavigationCapFromCurrentUi($user);
-
-        return $step <= min($dbMax, $forwardCap);
+        // Only previously completed (filled) steps are clickable.
+        // Current / upcoming steps are locked — no forward jump, no dev unlock.
+        return $step < $this->currentSidebarStep();
     }
 
     /**
-     * Caps how far forward the user may jump while the current screen has unsatisfied required fields.
+     * Caps how far forward progress has unlocked (used for display / resume, not sidebar clicks).
      */
     private function resolveForwardNavigationCapFromCurrentUi(GroomerSpacerProfile $user): int
     {
-        if ($this->shouldUseDevDbPreview($user)) {
-            return 4;
-        }
-
         $dbMax = $this->resolveMaximumSidebarStep($user);
 
         if (!$user->hasCompletedVerifyQualifyPersonalStep()) {
@@ -2918,10 +2911,6 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
     private function resolveMaximumSidebarStep(GroomerSpacerProfile $user): int
     {
-        if ($this->shouldUseDevDbPreview($user)) {
-            return 4;
-        }
-
         if (!$user->hasCompletedVerifyQualifyPersonalStep()) {
             return 1;
         }
@@ -2951,43 +2940,17 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
     public function goToSidebarStep(int $step): void
     {
-        if ($step < 1 || $step > 4) {
-            return;
-        }
-        $user = Auth::guard('groomer_spacer')->user();
-        if (!$user instanceof GroomerSpacerProfile) {
-            return;
-        }
         if (!$this->sidebarStepIsAvailable($step)) {
             return;
         }
 
-        if ($step === 1) {
-            $this->applySidebarStepOneForGroomerSpaceUser($user);
-
-            return;
-        }
-
-        if ($this->currentSidebarStep() === $step) {
-            return;
-        }
-
-        if ($this->shouldUseDevDbPreview($user)) {
-            match ($step) {
-                2 => $this->applySidebarStepTwoForGroomerSpaceUser($user),
-                3 => $this->applySidebarStepThreeForGroomerSpaceUser($user),
-                4 => $this->applySidebarStepFourForGroomerSpaceUser($user),
-                default => null,
-            };
-
-            return;
-        }
-
-        if (!$this->verificationIsApproved() || !$this->hasEnteredBuildProfilePhase($user)) {
+        $user = Auth::guard('groomer_spacer')->user();
+        if (!$user instanceof GroomerSpacerProfile) {
             return;
         }
 
         match ($step) {
+            1 => $this->applySidebarStepOneForGroomerSpaceUser($user),
             2 => $this->applySidebarStepTwoForGroomerSpaceUser($user),
             3 => $this->applySidebarStepThreeForGroomerSpaceUser($user),
             4 => $this->applySidebarStepFourForGroomerSpaceUser($user),
@@ -3516,7 +3479,12 @@ new #[Layout('layouts.dashboard')] class extends Component {
             $selectedSpecialties[] = $specialtyLabels[$key] ?? $key;
         }
         if (in_array('other', $this->groomer_pet_specialties, true) && trim($this->groomer_specialty_other) !== '') {
-            $selectedSpecialties[] = trim($this->groomer_specialty_other);
+            foreach (explode(',', $this->groomer_specialty_other) as $part) {
+                $tag = trim($part);
+                if ($tag !== '') {
+                    $selectedSpecialties[] = $tag;
+                }
+            }
         }
 
         $user->update([
@@ -4108,9 +4076,9 @@ new #[Layout('layouts.dashboard')] class extends Component {
 <section class="container verify-qualify-page mt-5 mb-5">
     <div class="verification-wrapper{{ $showVerificationCard || $showVerificationStatus || $showStartEarningComplete ? ' verification-wrapper--no-sidebar' : '' }}"
         wire:loading.class="verification-wrapper--navigating"
-        wire:target="goToSidebarStep,goToVerifyQualifySubstep,goToBuildProfileSubstep,goBack,submitBusinessBasics,submit,submitPersonalInfo,submitGroomerBusinessProfile,submitSpacerBusinessProfile,submitLegalPolicy">
+        wire:target="goToSidebarStep,goToVerifyQualifySubstep,goToBuildProfileSubstep,goBack,submitBusinessBasics,submitAccountPayouts,submit,submitPersonalInfo,submitGroomerBusinessProfile,submitSpacerBusinessProfile,submitLegalPolicy">
         <div class="verification-step-loading-bar" wire:loading
-            wire:target="goToSidebarStep,goToVerifyQualifySubstep,goToBuildProfileSubstep,goBack,submitBusinessBasics,submit,submitPersonalInfo,submitGroomerBusinessProfile,submitSpacerBusinessProfile,submitLegalPolicy"
+            wire:target="goToSidebarStep,goToVerifyQualifySubstep,goToBuildProfileSubstep,goBack,submitBusinessBasics,submitAccountPayouts,submit,submitPersonalInfo,submitGroomerBusinessProfile,submitSpacerBusinessProfile,submitLegalPolicy"
             aria-hidden="true">
             <span class="verification-step-loading-bar__sweep"></span>
         </div>
@@ -4120,43 +4088,44 @@ new #[Layout('layouts.dashboard')] class extends Component {
                 <div class="sidebar-header">
                     <h1>{{ $this->activeSidebarStepLabel() }}</h1>
                 </div>
-                <div class="steps-list" role="list">
-                    <div @if ($this->sidebarStepIsAvailable(1)) wire:click="goToSidebarStep(1)" role="button"
-                        tabindex="0" @else aria-disabled="true" tabindex="-1" @endif
-                        class="step-item {{ $this->currentSidebarStep() === 1 ? 'active' : '' }} {{ $this->sidebarStepIsAvailable(1) ? 'step-item--clickable' : 'step-item--disabled' }}">
-                        <div class="step-content">
-                            <div class="step-title"><span>1.</span>
-                                <p>Verify & Qualify</p>
+                <div class="steps-list" role="list" aria-label="Progress guide">
+                    @php
+                        $currentSidebarStep = $this->currentSidebarStep();
+                        $sidebarSteps = [
+                            1 => 'Verify & Qualify',
+                            2 => 'Build Your Profile',
+                            3 => 'Legal & Policy Agreement',
+                            4 => 'Start Grooming & Earning!',
+                        ];
+                    @endphp
+                    @foreach ($sidebarSteps as $stepNum => $stepLabel)
+                        @php
+                            $isCurrent = $currentSidebarStep === $stepNum;
+                            $isFilled = $currentSidebarStep > $stepNum;
+                        @endphp
+                        <div @if ($isFilled) wire:click="goToSidebarStep({{ $stepNum }})" role="button"
+                            tabindex="0" @else role="listitem" aria-disabled="true" tabindex="-1" @endif
+                            aria-current="{{ $isCurrent ? 'step' : 'false' }}"
+                            class="step-item {{ $isCurrent ? 'active' : '' }} {{ $isFilled ? 'step-item--filled' : 'step-item--upcoming' }}">
+                            <div class="step-content">
+                                <div class="step-title">
+                                    @if ($isFilled)
+                                        <span class="step-title__tick" aria-hidden="true">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="11"
+                                                viewBox="0 0 15 11" fill="none">
+                                                <path opacity="0.5"
+                                                    d="M4.63054 8.88958L1.52383 5.85408C1.35643 5.69051 1.12938 5.59862 0.892639 5.59862C0.655896 5.59862 0.42885 5.69051 0.261448 5.85408C0.0940456 6.01764 0 6.23949 0 6.4708C0 6.58534 0.023089 6.69875 0.0679483 6.80457C0.112808 6.91039 0.178559 7.00654 0.261448 7.08752L4.00383 10.7441C4.353 11.0853 4.91704 11.0853 5.26621 10.7441L14.7386 1.4889C14.906 1.32534 15 1.10349 15 0.872179C15 0.640862 14.906 0.419021 14.7386 0.255455C14.5712 0.0918902 14.3441 0 14.1074 0C13.8706 0 13.6436 0.0918902 13.4762 0.255455L4.63054 8.88958Z"
+                                                    fill="#3B3731" />
+                                            </svg>
+                                        </span>
+                                    @else
+                                        <span>{{ $stepNum }}.</span>
+                                    @endif
+                                    <p>{{ $stepLabel }}</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div @if ($this->sidebarStepIsAvailable(2)) wire:click="goToSidebarStep(2)" role="button"
-                        tabindex="0" @else aria-disabled="true" tabindex="-1" @endif
-                        class="step-item {{ $this->currentSidebarStep() === 2 ? 'active' : '' }} {{ $this->sidebarStepIsAvailable(2) ? 'step-item--clickable' : 'step-item--disabled' }}">
-                        <div class="step-content">
-                            <div class="step-title"><span>2.</span>
-                                <p>Build Your Profile</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div @if ($this->sidebarStepIsAvailable(3)) wire:click="goToSidebarStep(3)" role="button"
-                        tabindex="0" @else aria-disabled="true" tabindex="-1" @endif
-                        class="step-item {{ $this->currentSidebarStep() === 3 ? 'active' : '' }} {{ $this->sidebarStepIsAvailable(3) ? 'step-item--clickable' : 'step-item--disabled' }}">
-                        <div class="step-content">
-                            <div class="step-title"><span>3.</span>
-                                <p>Legal & Policy Agreement</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div @if ($this->sidebarStepIsAvailable(4)) wire:click="goToSidebarStep(4)" role="button"
-                        tabindex="0" @else aria-disabled="true" tabindex="-1" @endif
-                        class="step-item {{ $this->currentSidebarStep() === 4 ? 'active' : '' }} {{ $this->sidebarStepIsAvailable(4) ? 'step-item--clickable' : 'step-item--disabled' }}">
-                        <div class="step-content">
-                            <div class="step-title"><span>4.</span>
-                                <p>Start Grooming & Earning!</p>
-                            </div>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
             </div>
         @endunless
@@ -4181,12 +4150,13 @@ new #[Layout('layouts.dashboard')] class extends Component {
                             <div class="basics-field">
                                 <label class="form-label" for="business-display-name">Business Name</label>
                                 <div class="input-field-wrap">
-                                    <textarea id="business-display-name" wire:model.live="business_display_name" class="form-input"
+                                    <textarea id="business-display-name" wire:model.live="business_display_name"
+                                        class="form-input"
                                         placeholder="Enter your business display name (what customers see) if different from legal name (e.g. Companies House)."
                                         style="width: 100%; height: 70px; resize: none; overflow: hidden;"></textarea>
                                     <span class="input-valid-icon" aria-hidden="true"><svg
-                                            xmlns="http://www.w3.org/2000/svg" width="19" height="19"
-                                            viewBox="0 0 19 19" fill="none">
+                                            xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
+                                            fill="none">
                                             <path
                                                 d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
                                                 fill="#C9DDA0" />
@@ -4206,7 +4176,8 @@ new #[Layout('layouts.dashboard')] class extends Component {
                             </div>
                             <div class="basics-field">
                                 <label class="form-label" for="business-bio">Bio</label>
-                                <textarea id="business-bio" wire:model.live="business_bio" class="form-input basics-textarea"
+                                <textarea id="business-bio" wire:model.live="business_bio"
+                                    class="form-input basics-textarea"
                                     style="resize: none; overflow: hidden; height: 90px; width: 100%;"
                                     placeholder="Tell customers a bit about yourself (and your space), it would be good to provide information for them to learn a bit more about your experience and training."></textarea>
                                 @error('business_bio')
@@ -4221,16 +4192,16 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                 <p class="basics-section-muted">Upload your profile photo or logo.</p>
                             </div>
                             @php
-                                $__avatarSavedFileEntries =
-                                    ($business_avatar_path ?? '') !== ''
-                                        ? [
-                                            $this->savedDocUploadEntry(
-                                                (string) $business_avatar_path,
-                                                'groomer-spacer.business-basics-file',
-                                            ),
-                                        ]
-                                        : [];
-                                $__avatarSavedKey = md5(implode("\0", array_column($__avatarSavedFileEntries, 'path')));
+    $__avatarSavedFileEntries =
+        ($business_avatar_path ?? '') !== ''
+        ? [
+            $this->savedDocUploadEntry(
+                (string) $business_avatar_path,
+                'groomer-spacer.business-basics-file',
+            ),
+        ]
+        : [];
+    $__avatarSavedKey = md5(implode("\0", array_column($__avatarSavedFileEntries, 'path')));
                             @endphp
                             <input type="hidden" id="profile-photo-saved-urls-json"
                                 value="{{ htmlspecialchars(json_encode($__avatarSavedFileEntries), ENT_QUOTES, 'UTF-8') }}"
@@ -4242,8 +4213,8 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                 :multiple="false" accept=".jpg,.jpeg,.png,.gif,.webp"
                                 hint="JPEG, PNG, GIF, and WebP formats, up to 50 MB." header-label="Upload Image"
                                 browse-label="Browse File" empty-title="Choose an image or drag & drop it here."
-                                :saved-entries="$__avatarSavedFileEntries" :saved-entries-key="$__avatarSavedKey" saved-json-id="profile-photo-saved-urls-json"
-                                saved-window-key="__avatarSavedFileEntries"
+                                :saved-entries="$__avatarSavedFileEntries" :saved-entries-key="$__avatarSavedKey"
+                                saved-json-id="profile-photo-saved-urls-json" saved-window-key="__avatarSavedFileEntries"
                                 remove-stored-fn="removeBusinessAvatarStoredFile"
                                 pending-clear-call="removeBusinessAvatar" />
                             @error('business_avatar_upload')
@@ -4258,51 +4229,48 @@ new #[Layout('layouts.dashboard')] class extends Component {
                             </div>
                             <div class="gallery-slots">
                                 @php
-                                    $gallery_items = [];
-                                    foreach ($business_gallery_paths as $pi => $p) {
-                                        $gallery_items[] = ['kind' => 'path', 'path' => $p, 'pathIndex' => $pi];
-                                    }
-                                    foreach ($business_gallery_pending as $i => $f) {
-                                        $gallery_items[] = ['kind' => 'pending', 'idx' => $i, 'file' => $f];
-                                    }
-                                    $gallery_used = count($gallery_items);
-                                    $gallery_total_slots = $this->galleryVisibleSlotCount();
-                                    $gallery_slots_key = md5(
-                                        implode("\0", $business_gallery_paths) .
-                                            '|' .
-                                            count($business_gallery_pending) .
-                                            '|' .
-                                            $gallery_total_slots,
-                                    );
+    $gallery_items = [];
+    foreach ($business_gallery_paths as $pi => $p) {
+        $gallery_items[] = ['kind' => 'path', 'path' => $p, 'pathIndex' => $pi];
+    }
+    foreach ($business_gallery_pending as $i => $f) {
+        $gallery_items[] = ['kind' => 'pending', 'idx' => $i, 'file' => $f];
+    }
+    $gallery_used = count($gallery_items);
+    $gallery_total_slots = $this->galleryVisibleSlotCount();
+    $gallery_slots_key = md5(
+        implode("\0", $business_gallery_paths) .
+        '|' .
+        count($business_gallery_pending) .
+        '|' .
+        $gallery_total_slots,
+    );
                                 @endphp
                                 @foreach (range(0, $gallery_total_slots - 1) as $slot)
                                     @php $item = $gallery_items[$slot] ?? null; @endphp
-                                    <div class="gallery-slot"
-                                        wire:key="gallery-slot-{{ $slot }}-{{ $gallery_slots_key }}">
+                                    <div class="gallery-slot" wire:key="gallery-slot-{{ $slot }}-{{ $gallery_slots_key }}">
                                         @if ($item && $item['kind'] === 'path')
-                                            <img class="gallery-slot-img"
-                                                src="{{ $this->publicDiskUrl($item['path']) }}" alt="">
+                                            <img class="gallery-slot-img" src="{{ $this->publicDiskUrl($item['path']) }}" alt="">
                                             <button type="button" class="gallery-slot-remove"
                                                 wire:click="removeBusinessGalleryPath({{ (int) $item['pathIndex'] }})"
                                                 aria-label="Remove photo">&times;</button>
                                         @elseif (
-                                            $item &&
-                                                $item['kind'] === 'pending' &&
-                                                $item['file'] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile)
-                                            <img class="gallery-slot-img" src="{{ $item['file']->temporaryUrl() }}"
-                                                alt="">
+            $item &&
+            $item['kind'] === 'pending' &&
+            $item['file'] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile
+        )
+                                            <img class="gallery-slot-img" src="{{ $item['file']->temporaryUrl() }}" alt="">
                                             <button type="button" class="gallery-slot-remove"
                                                 wire:click="removeBusinessGalleryPending({{ (int) $item['idx'] }})"
                                                 aria-label="Remove photo">&times;</button>
                                         @elseif ($slot === $gallery_used)
                                             <label class="gallery-slot-empty">
-                                                <input type="file" id="business-gallery-pick-input"
-                                                    class="hidden-input" accept=".jpg,.jpeg,.png,.gif,.webp" multiple>
+                                                <input type="file" id="business-gallery-pick-input" class="hidden-input"
+                                                    accept=".jpg,.jpeg,.png,.gif,.webp" multiple>
                                                 @include('livewire.auth.partials.verify-qualify-gallery-paw')
                                             </label>
                                         @else
-                                            <div class="gallery-slot-empty gallery-slot-placeholder"
-                                                aria-hidden="true">
+                                            <div class="gallery-slot-empty gallery-slot-placeholder" aria-hidden="true">
                                                 @include('livewire.auth.partials.verify-qualify-gallery-paw')
                                             </div>
                                         @endif
@@ -4332,9 +4300,10 @@ new #[Layout('layouts.dashboard')] class extends Component {
             @elseif ($showLegalPolicyForm)
                 @include('livewire.auth.verify-qualify-legal-policy')
             @elseif (
-                $fursgo_usage === 'space' &&
-                    !$showBusinessBasicsForm &&
-                    ($showSpacerBusinessProfileForm || $showGroomerBusinessProfileForm))
+    $fursgo_usage === 'space' &&
+    !$showBusinessBasicsForm &&
+    ($showSpacerBusinessProfileForm || $showGroomerBusinessProfileForm)
+)
                 @include('livewire.auth.verify-qualify-spacer-business-profile')
             @elseif ($fursgo_usage === 'groomer' && !$showBusinessBasicsForm && $showGroomerBusinessProfileForm)
                 @include('livewire.auth.verify-qualify-groomer-business-profile')
@@ -4346,8 +4315,8 @@ new #[Layout('layouts.dashboard')] class extends Component {
                 <div class="verification-card">
                     <div class="verification-header">
                         <div class="icon-wrapper">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="138" height="135"
-                                viewBox="0 0 138 135" fill="none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="138" height="135" viewBox="0 0 138 135"
+                                fill="none">
                                 <g filter="url(#filter0_d_14_635)">
                                     <path
                                         d="M72.0689 18.8712C72.2854 18.7938 72.522 18.7934 72.7388 18.87L109.21 31.766C109.609 31.9072 109.876 32.285 109.876 32.7088V70.8439C109.876 91.5939 77.1721 108.667 73.0304 110.746C72.7583 110.883 72.4436 110.883 72.1715 110.746C68.0298 108.667 35.3257 91.5939 35.3257 70.8439V32.7063C35.3257 32.2837 35.5913 31.9068 35.9892 31.7646L72.0689 18.8712Z"
@@ -4358,8 +4327,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                     <path
                                         d="M57.5518 67.7464L69.0816 79.2762L91.3519 57.006C92.3984 55.9596 92.4014 54.2639 91.3586 53.2138C90.3107 52.1584 88.6046 52.1554 87.553 53.207L69.0816 71.6783L61.3373 63.9556C60.2908 62.912 58.5969 62.9132 57.5518 63.9583C56.5057 65.0043 56.5057 66.7004 57.5518 67.7464Z"
                                         fill="#FFC97A" />
-                                    <rect x="16.9937" y="12.9932" width="20.9817" height="23.313" rx="3"
-                                        fill="white" />
+                                    <rect x="16.9937" y="12.9932" width="20.9817" height="23.313" rx="3" fill="white" />
                                     <path
                                         d="M28.461 6.21127C28.155 6.07285 27.8272 6 27.4848 6C27.1424 6 26.8146 6.07285 26.5086 6.21127L12.7903 12.0322C11.1875 12.7098 9.99275 14.2907 10 16.1995C10.0365 23.4265 13.0089 36.6494 25.5615 42.6598C26.7781 43.2426 28.1915 43.2426 29.4081 42.6598C41.9607 36.6494 44.9331 23.4265 44.9696 16.1995C44.9769 14.2907 43.7821 12.7098 42.1793 12.0322L28.461 6.21127ZM20.5565 26.8506C20.9062 26.938 21.2777 26.9817 21.6565 26.9817C24.2283 26.9817 26.3191 24.8908 26.3191 22.3191V17.6565H29.5393C30.4208 17.6565 31.2295 18.1519 31.6229 18.946L32.1474 19.9878H36.81C37.4511 19.9878 37.9757 20.5124 37.9757 21.1535V23.4848C37.9757 26.7049 35.3675 29.313 32.1474 29.313H28.6504V33.0067C28.6504 33.5385 28.2206 33.9756 27.6815 33.9756C27.5504 33.9756 27.4192 33.9465 27.3027 33.8955L20.1121 30.8138C19.6312 30.6098 19.3252 30.1363 19.3252 29.619C19.3252 29.415 19.369 29.2183 19.4637 29.0362L20.5565 26.8506ZM20.4909 17.6565H23.9878V22.3191C23.9878 23.6086 22.946 24.6504 21.6565 24.6504C20.367 24.6504 19.3252 23.6086 19.3252 22.3191V18.8222C19.3252 18.1811 19.8498 17.6565 20.4909 17.6565ZM29.8161 21.1535C29.8161 20.8443 29.6933 20.5478 29.4747 20.3292C29.2561 20.1106 28.9596 19.9878 28.6504 19.9878C28.3413 19.9878 28.0448 20.1106 27.8262 20.3292C27.6076 20.5478 27.4848 20.8443 27.4848 21.1535C27.4848 21.4626 27.6076 21.7591 27.8262 21.9777C28.0448 22.1963 28.3413 22.3191 28.6504 22.3191C28.9596 22.3191 29.2561 22.1963 29.4747 21.9777C29.6933 21.7591 29.8161 21.4626 29.8161 21.1535Z"
                                         fill="#C9DDA0" />
@@ -4371,14 +4339,12 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                         fill="#CBDCE8" />
                                     <path
                                         d="M119.52 94.0211L112.026 101.984M108.696 101.595C106.373 102.487 104.515 102.334 102.658 101.598C103.126 107.634 105.94 109.954 109.692 110.883C109.692 110.883 112.518 108.884 112.926 104.145C112.97 103.632 112.992 103.376 112.886 103.086C112.779 102.797 112.569 102.59 112.15 102.175C111.461 101.493 111.117 101.152 110.708 101.066C110.298 100.981 109.764 101.186 108.696 101.595Z"
-                                        stroke="white" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" />
+                                        stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                     <path
                                         d="M104.063 106.618C104.063 106.618 106.405 107.071 108.747 105.263L104.063 106.618Z"
                                         fill="#CBDCE8" />
                                     <path d="M104.063 106.618C104.063 106.618 106.405 107.071 108.747 105.263"
-                                        stroke="white" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" />
+                                        stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                     <path
                                         d="M107.81 98.0027C107.81 98.3133 107.687 98.6111 107.467 98.8307C107.248 99.0503 106.95 99.1737 106.639 99.1737C106.329 99.1737 106.031 99.0503 105.811 98.8307C105.592 98.6111 105.468 98.3133 105.468 98.0027C105.468 97.6921 105.592 97.3943 105.811 97.1747C106.031 96.9551 106.329 96.8317 106.639 96.8317C106.95 96.8317 107.248 96.9551 107.467 97.1747C107.687 97.3943 107.81 97.6921 107.81 98.0027Z"
                                         fill="#CBDCE8" stroke="white" />
@@ -4395,8 +4361,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                         <feOffset dy="4" />
                                         <feGaussianBlur stdDeviation="5" />
                                         <feComposite in2="hardAlpha" operator="out" />
-                                        <feColorMatrix type="matrix"
-                                            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.28 0" />
+                                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.28 0" />
                                         <feBlend mode="normal" in2="BackgroundImageFix"
                                             result="effect1_dropShadow_14_635" />
                                         <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_14_635"
@@ -4419,40 +4384,44 @@ new #[Layout('layouts.dashboard')] class extends Component {
                     </div>
                 </div>
             @elseif ($showAccountPayoutsForm)
-                <div class="verification-card">
+                <div class="verification-card" wire:key="verify-qualify-account-payouts">
                     <div class="step-heading">
                         <h2>Verify Your Account for Payouts</h2>
                     </div>
 
-                    <form wire:submit="submit" class="verification-form" x-data="{
-                        fursgoUsage: @js($fursgo_usage),
-                        accountType: @js($account_type),
-                        locationTypes: @js($location_types),
-                        devPreview: @js($this->shouldUseDevDbPreview()),
-                        get canContinue() {
-                            if (this.devPreview) {
-                                return true;
-                            }
-                    
-                            return Boolean(this.fursgoUsage) &&
-                                Boolean(this.accountType) &&
-                                this.locationTypes.length > 0;
-                        },
-                        isLocationChecked(value) {
-                            return this.locationTypes.includes(value);
-                        },
-                        toggleLocation(value, checked) {
-                            if (checked) {
-                                if (!this.locationTypes.includes(value)) {
-                                    this.locationTypes.push(value);
-                                }
-                    
-                                return;
-                            }
-                    
-                            this.locationTypes = this.locationTypes.filter((item) => item !== value);
-                        },
-                    }">
+                    <div class="verification-form" x-data="{
+                                    fursgoUsage: @js($fursgo_usage),
+                                    accountType: @js($account_type),
+                                    locationTypes: @js(array_values($location_types ?? [])),
+                                    devPreview: @js($this->shouldUseDevDbPreview()),
+                                    get canContinue() {
+                                        if (this.devPreview) {
+                                            return true;
+                                        }
+
+                                        return Boolean(this.fursgoUsage) &&
+                                            Boolean(this.accountType) &&
+                                            Array.isArray(this.locationTypes) &&
+                                            this.locationTypes.length > 0;
+                                    },
+                                    isLocationChecked(value) {
+                                        return Array.isArray(this.locationTypes) && this.locationTypes.includes(value);
+                                    },
+                                    toggleLocation(value, checked) {
+                                        if (!Array.isArray(this.locationTypes)) {
+                                            this.locationTypes = [];
+                                        }
+                                        if (checked) {
+                                            if (!this.locationTypes.includes(value)) {
+                                                this.locationTypes.push(value);
+                                            }
+
+                                            return;
+                                        }
+
+                                        this.locationTypes = this.locationTypes.filter((item) => item !== value);
+                                    },
+                                }">
                         <div>
                             <div class="form-section">
                                 <div class="section-title">
@@ -4461,8 +4430,8 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                 </div>
                                 <div class="radio-group">
                                     <label class="radio-item" :class="{ 'checked': fursgoUsage === 'groomer' }">
-                                        <input type="radio" wire:model="fursgo_usage" value="groomer"
-                                            id="groomer" name="fursgo_usage" @change="fursgoUsage = 'groomer'">
+                                        <input type="radio" wire:model="fursgo_usage" value="groomer" id="groomer"
+                                            name="fursgo_usage" @change="fursgoUsage = 'groomer'">
                                         <div class="radio-content">
                                             <p class="radio-title">Pet Groomer</p>
                                             <p class="radio-description">I provide grooming services for pets and
@@ -4472,8 +4441,8 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                         <span class="radio-custom"></span>
                                     </label>
                                     <label class="radio-item" :class="{ 'checked': fursgoUsage === 'space' }">
-                                        <input type="radio" wire:model="fursgo_usage" value="space"
-                                            id="space" name="fursgo_usage" @change="fursgoUsage = 'space'">
+                                        <input type="radio" wire:model="fursgo_usage" value="space" id="space"
+                                            name="fursgo_usage" @change="fursgoUsage = 'space'">
                                         <div class="radio-content">
                                             <p class="radio-title">Space Host</p>
                                             <p class="radio-description">I rent out a grooming space for
@@ -4492,8 +4461,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                             <div class="form-section">
                                 <h3 class="section-title">Select Account Type</h3>
                                 <div class="radio-group">
-                                    <label class="radio-item"
-                                        :class="{ 'checked': accountType === 'registered_business' }">
+                                    <label class="radio-item" :class="{ 'checked': accountType === 'registered_business' }">
                                         <input type="radio" wire:model="account_type" value="registered_business"
                                             id="registered_business" name="account_type"
                                             @change="accountType = 'registered_business'">
@@ -4504,8 +4472,8 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                         <span class="radio-custom"></span>
                                     </label>
                                     <label class="radio-item" :class="{ 'checked': accountType === 'freelance' }">
-                                        <input type="radio" wire:model="account_type" value="freelance"
-                                            id="freelance" name="account_type" @change="accountType = 'freelance'">
+                                        <input type="radio" wire:model="account_type" value="freelance" id="freelance"
+                                            name="account_type" @change="accountType = 'freelance'">
                                         <div class="radio-content">
                                             <p class="radio-title">Freelance</p>
                                             <p class="radio-description">I operate independently.</p>
@@ -4522,8 +4490,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                             <div class="form-section">
                                 <h3 class="section-title">Select location type</h3>
                                 <div class="checkbox-group">
-                                    <label class="checkbox-item"
-                                        :class="{ 'checked': isLocationChecked('space_visits') }">
+                                    <label class="checkbox-item" :class="{ 'checked': isLocationChecked('space_visits') }">
                                         <input type="checkbox" wire:model="location_types" value="space_visits"
                                             id="space_visits" name="location_types"
                                             @change="toggleLocation('space_visits', $event.target.checked)">
@@ -4542,8 +4509,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                         </div>
                                         <span class="checkbox-custom"></span>
                                     </label>
-                                    <label class="checkbox-item"
-                                        :class="{ 'checked': isLocationChecked('home_studio') }">
+                                    <label class="checkbox-item" :class="{ 'checked': isLocationChecked('home_studio') }">
                                         <input type="checkbox" wire:model="location_types" value="home_studio"
                                             id="home_studio" name="location_types"
                                             @change="toggleLocation('home_studio', $event.target.checked)">
@@ -4552,8 +4518,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                         </div>
                                         <span class="checkbox-custom"></span>
                                     </label>
-                                    <label class="checkbox-item"
-                                        :class="{ 'checked': isLocationChecked('house_visit') }">
+                                    <label class="checkbox-item" :class="{ 'checked': isLocationChecked('house_visit') }">
                                         <input type="checkbox" wire:model="location_types" value="house_visit"
                                             id="house_visit" name="location_types"
                                             @change="toggleLocation('house_visit', $event.target.checked)">
@@ -4562,8 +4527,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                         </div>
                                         <span class="checkbox-custom"></span>
                                     </label>
-                                    <label class="checkbox-item"
-                                        :class="{ 'checked': isLocationChecked('mobile_van') }">
+                                    <label class="checkbox-item" :class="{ 'checked': isLocationChecked('mobile_van') }">
                                         <input type="checkbox" wire:model="location_types" value="mobile_van"
                                             id="mobile_van" name="location_types"
                                             @change="toggleLocation('mobile_van', $event.target.checked)">
@@ -4583,15 +4547,21 @@ new #[Layout('layouts.dashboard')] class extends Component {
                             <x-common.button type="button" label="Back" width="105px" bg-color="#FFFFFF"
                                 text-color="#9D9B98" border="1px solid rgba(59, 55, 49, 0.10)" :shadow="false"
                                 wire:click="goBack" />
-                            <x-common.button type="submit" label="Continue" width="105px" loading-target="submit"
-                                x-bind:disabled="!canContinue" x-bind:class="{ 'common-btn--disabled': !canContinue }"
-                                x-bind:style="{
-                                    backgroundColor: canContinue ? '#FFC97A' : '#e5e7eb',
-                                    color: canContinue ? '#FFFFFF' : '#9ca3af',
-                                    boxShadow: canContinue ? '0 5px 8px 0 rgba(0, 0, 0, 0.10)' : 'none',
-                                }" />
+                            <x-common.button type="button" label="Continue" width="105px"
+                                loading-target="submitAccountPayouts" x-bind:disabled="!canContinue"
+                                x-bind:class="{ 'common-btn--disabled': !canContinue }" x-bind:style="{
+                                                backgroundColor: canContinue ? '#FFC97A' : '#e5e7eb',
+                                                color: canContinue ? '#FFFFFF' : '#9ca3af',
+                                                boxShadow: canContinue ? '0 5px 8px 0 rgba(0, 0, 0, 0.10)' : 'none',
+                                            }" @click="
+                                                if (!canContinue) { return; }
+                                                $wire.set('fursgo_usage', fursgoUsage, false);
+                                                $wire.set('account_type', accountType, false);
+                                                $wire.set('location_types', locationTypes, false);
+                                                $wire.submitAccountPayouts();
+                                            " />
                         </div>
-                    </form>
+                    </div>
                 </div>
             @elseif ($showRegisteredBusiness)
                 <div class="verification-card" wire:key="verify-qualify-registered">
@@ -4706,14 +4676,14 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                         documents must be in English and dated within the last 3 months.</p>
 
                                     @php
-                                        $__boSavedFileEntries = $this->savedDocUploadEntriesForPaths(
-                                            is_array($business_owner_id_paths ?? null) ? $business_owner_id_paths : [],
-                                            is_array($business_owner_id_file_names ?? null)
-                                                ? $business_owner_id_file_names
-                                                : [],
-                                            'groomer-spacer.business-owner-id-file',
-                                        );
-                                        $__boSavedKey = md5(implode("\0", array_column($__boSavedFileEntries, 'path')));
+    $__boSavedFileEntries = $this->savedDocUploadEntriesForPaths(
+        is_array($business_owner_id_paths ?? null) ? $business_owner_id_paths : [],
+        is_array($business_owner_id_file_names ?? null)
+        ? $business_owner_id_file_names
+        : [],
+        'groomer-spacer.business-owner-id-file',
+    );
+    $__boSavedKey = md5(implode("\0", array_column($__boSavedFileEntries, 'path')));
                                     @endphp
                                     <input type="hidden" id="business-owner-saved-urls-json-registered"
                                         value="{{ htmlspecialchars(json_encode($__boSavedFileEntries), ENT_QUOTES, 'UTF-8') }}"
@@ -4723,13 +4693,12 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                     </script>
 
                                     <!-- Business Owner ID upload -->
-                                    <x-common.doc-upload upload-id="business-owner-id"
-                                        wire-model="business_owner_id_images" :saved-entries="$__boSavedFileEntries" :saved-entries-key="$__boSavedKey"
+                                    <x-common.doc-upload upload-id="business-owner-id" wire-model="business_owner_id_images"
+                                        :saved-entries="$__boSavedFileEntries" :saved-entries-key="$__boSavedKey"
                                         saved-json-id="business-owner-saved-urls-json-registered"
                                         saved-window-key="__boSavedFileEntriesRegistered"
                                         remove-stored-fn="removeBusinessOwnerStoredFile"
-                                        empty-title="Choose files or drag & drop them here."
-                                        browse-label="Browse Files" />
+                                        empty-title="Choose files or drag & drop them here." browse-label="Browse Files" />
                                 </div>
                             </div>
 
@@ -4740,8 +4709,8 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                     <label class="form-label">Account Holder Name</label>
                                     <div class="input-container">
                                         <div class="input-field-wrap">
-                                            <input type="text" wire:model.live="account_holder_name"
-                                                class="form-input" placeholder=" " required>
+                                            <input type="text" wire:model.live="account_holder_name" class="form-input"
+                                                placeholder=" " required>
                                             <span class="input-valid-icon" aria-hidden="true"><svg
                                                     xmlns="http://www.w3.org/2000/svg" width="19" height="19"
                                                     viewBox="0 0 19 19" fill="none">
@@ -4788,8 +4757,8 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                     <label class="form-label">IBAN</label>
                                     <div class="input-container">
                                         <div class="input-field-wrap">
-                                            <input type="text" wire:model.live="iban" class="form-input"
-                                                placeholder=" " required>
+                                            <input type="text" wire:model.live="iban" class="form-input" placeholder=" "
+                                                required>
                                             <span class="input-valid-icon" aria-hidden="true"><svg
                                                     xmlns="http://www.w3.org/2000/svg" width="19" height="19"
                                                     viewBox="0 0 19 19" fill="none">
@@ -4808,18 +4777,18 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                 <div>
                                     <label class="form-label">Insurance Certificate <span>(Optional)</span></label>
                                     @php
-                                        $__insSavedFileEntries = $this->savedDocUploadEntriesForPaths(
-                                            is_array($insurance_certificate_paths ?? null)
-                                                ? $insurance_certificate_paths
-                                                : [],
-                                            is_array($insurance_certificate_file_names ?? null)
-                                                ? $insurance_certificate_file_names
-                                                : [],
-                                            'groomer-spacer.insurance-certificate-file',
-                                        );
-                                        $__insSavedKey = md5(
-                                            implode("\0", array_column($__insSavedFileEntries, 'path')),
-                                        );
+    $__insSavedFileEntries = $this->savedDocUploadEntriesForPaths(
+        is_array($insurance_certificate_paths ?? null)
+        ? $insurance_certificate_paths
+        : [],
+        is_array($insurance_certificate_file_names ?? null)
+        ? $insurance_certificate_file_names
+        : [],
+        'groomer-spacer.insurance-certificate-file',
+    );
+    $__insSavedKey = md5(
+        implode("\0", array_column($__insSavedFileEntries, 'path')),
+    );
                                     @endphp
                                     <input type="hidden" id="insurance-saved-urls-json"
                                         value="{{ htmlspecialchars(json_encode($__insSavedFileEntries), ENT_QUOTES, 'UTF-8') }}"
@@ -4828,19 +4797,16 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                         window.__insSavedFileEntries = @json($__insSavedFileEntries);
                                     </script>
                                     <!-- Insurance certificate upload -->
-                                    <x-common.doc-upload upload-id="insurance"
-                                        wire-model="insurance_certificate_upload" :saved-entries="$__insSavedFileEntries" :saved-entries-key="$__insSavedKey"
-                                        saved-json-id="insurance-saved-urls-json"
-                                        saved-window-key="__insSavedFileEntries"
+                                    <x-common.doc-upload upload-id="insurance" wire-model="insurance_certificate_upload"
+                                        :saved-entries="$__insSavedFileEntries" :saved-entries-key="$__insSavedKey"
+                                        saved-json-id="insurance-saved-urls-json" saved-window-key="__insSavedFileEntries"
                                         remove-stored-fn="removeInsuranceStoredFile"
-                                        empty-title="Choose files or drag & drop them here."
-                                        browse-label="Browse Files" />
+                                        empty-title="Choose files or drag & drop them here." browse-label="Browse Files" />
                                     @error('insurance_certificate_upload')
                                         <span class="error-text">{{ $message }}</span>
                                     @enderror
                                     @if ($errors->has('insurance_certificate_upload.*'))
-                                        <span
-                                            class="error-text">{{ $errors->first('insurance_certificate_upload.*') }}</span>
+                                        <span class="error-text">{{ $errors->first('insurance_certificate_upload.*') }}</span>
                                     @endif
                                 </div>
 
@@ -4871,225 +4837,225 @@ new #[Layout('layouts.dashboard')] class extends Component {
 </section>
 
 @script
-    <script>
-        (function() {
-            function easeInOutCubic(t) {
-                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-            }
+<script>
+    (function () {
+        function easeInOutCubic(t) {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
 
-            function revealMainContent() {
-                const main = document.querySelector(
-                    ".verification-wrapper .main-content",
-                );
-                if (!main) {
-                    return;
-                }
-                main.classList.remove("vq-step-enter");
-                void main.offsetWidth;
-                main.classList.add("vq-step-enter");
-                main.addEventListener(
-                    "animationend",
-                    () => main.classList.remove("vq-step-enter"), {
-                        once: true
-                    },
-                );
-            }
-
-            if (!window.__vqScrollStepToTop) {
-                window.__vqScrollStepToTop = function __vqScrollStepToTop() {
-                    const reduceMotion = window.matchMedia(
-                        "(prefers-reduced-motion: reduce)",
-                    ).matches;
-                    const root =
-                        document.scrollingElement || document.documentElement;
-                    const startTop = root.scrollTop || window.scrollY || 0;
-                    const targetTop = 0;
-                    const distance = targetTop - startTop;
-
-                    const snapToTop = () => {
-                        window.scrollTo({
-                            top: 0,
-                            left: 0,
-                            behavior: "auto",
-                        });
-                        root.scrollTop = 0;
-                        document.body.scrollTop = 0;
-                        revealMainContent();
-                    };
-
-                    if (reduceMotion || Math.abs(distance) < 6) {
-                        snapToTop();
-                        return;
-                    }
-
-                    const duration = Math.min(
-                        780,
-                        Math.max(420, Math.abs(distance) * 0.5),
-                    );
-                    const startTime = performance.now();
-
-                    const tick = (now) => {
-                        const progress = Math.min((now - startTime) / duration, 1);
-                        const nextTop =
-                            startTop + distance * easeInOutCubic(progress);
-                        window.scrollTo(0, nextTop);
-                        root.scrollTop = nextTop;
-                        if (progress < 1) {
-                            requestAnimationFrame(tick);
-                        } else {
-                            snapToTop();
-                        }
-                    };
-
-                    requestAnimationFrame(() => requestAnimationFrame(tick));
-                };
-            }
-
-            if (window.__verifyQualifyDebugInstalled) {
+        function revealMainContent() {
+            const main = document.querySelector(
+                ".verification-wrapper .main-content",
+            );
+            if (!main) {
                 return;
             }
-            window.__verifyQualifyDebugInstalled = true;
+            main.classList.remove("vq-step-enter");
+            void main.offsetWidth;
+            main.classList.add("vq-step-enter");
+            main.addEventListener(
+                "animationend",
+                () => main.classList.remove("vq-step-enter"), {
+                once: true
+            },
+            );
+        }
 
-            let t = null;
-            const debounceMs = 250;
+        if (!window.__vqScrollStepToTop) {
+            window.__vqScrollStepToTop = function __vqScrollStepToTop() {
+                const reduceMotion = window.matchMedia(
+                    "(prefers-reduced-motion: reduce)",
+                ).matches;
+                const root =
+                    document.scrollingElement || document.documentElement;
+                const startTop = root.scrollTop || window.scrollY || 0;
+                const targetTop = 0;
+                const distance = targetTop - startTop;
 
-            function wireRootFromNode(node) {
-                if (!node || !node.closest) {
-                    return null;
-                }
-                return node.closest('[wire\\:id]');
-            }
+                const snapToTop = () => {
+                    window.scrollTo({
+                        top: 0,
+                        left: 0,
+                        behavior: "auto",
+                    });
+                    root.scrollTop = 0;
+                    document.body.scrollTop = 0;
+                    revealMainContent();
+                };
 
-            function resolveComponent(component, el) {
-                if (component && typeof component.call === 'function') {
-                    return component;
-                }
-                const root = wireRootFromNode(el);
-                const id = root && root.getAttribute('wire:id');
-                if (!id || typeof Livewire === 'undefined' || typeof Livewire.find !== 'function') {
-                    return null;
-                }
-                return Livewire.find(id);
-            }
-
-            function logVerifyQualifyState(component, el) {
-                const cmp = resolveComponent(component, el);
-                if (!cmp || typeof cmp.call !== 'function') {
+                if (reduceMotion || Math.abs(distance) < 6) {
+                    snapToTop();
                     return;
                 }
-                clearTimeout(t);
-                t = setTimeout(() => {
-                    cmp.call('getSubmitButtonDebug').then((data) => {
-                        const p = data.personal_step;
-                        const c = data.continue_step;
 
-                        if (data.step.showBusinessBasicsForm) {
-                            console.log(
-                                '%c[verify-qualify]%c Business basics (Build Your Profile)',
-                                'color:#ca8a04;font-weight:bold',
-                                'color:inherit',
-                                data.business_basics?.continue_enabled ? 'Continue ENABLED' :
-                                'Continue DISABLED — Business name required',
-                                data
-                            );
-                            return;
-                        }
+                const duration = Math.min(
+                    780,
+                    Math.max(420, Math.abs(distance) * 0.5),
+                );
+                const startTime = performance.now();
 
-                        if (data.step.showVerificationStatus) {
-                            console.log(
-                                '%c[verify-qualify]%c Verification approved screen',
-                                'color:#16a34a;font-weight:bold',
-                                'color:inherit',
-                                data
-                            );
-                            return;
-                        }
+                const tick = (now) => {
+                    const progress = Math.min((now - startTime) / duration, 1);
+                    const nextTop =
+                        startTop + distance * easeInOutCubic(progress);
+                    window.scrollTo(0, nextTop);
+                    root.scrollTop = nextTop;
+                    if (progress < 1) {
+                        requestAnimationFrame(tick);
+                    } else {
+                        snapToTop();
+                    }
+                };
 
-                        if (data.step.showAccountPayoutsForm) {
-                            const continueReasons = [];
-                            if (!c.continue_would_enable) {
-                                if (!data.continue_step.fursgo_usage) {
-                                    continueReasons.push(
-                                        'Choose how you use FursGo (groomer vs space)');
-                                }
-                                if (!data.continue_step.account_type) {
-                                    continueReasons.push('Select account type');
-                                }
-                                if (data.continue_step.location_types_count < 1) {
-                                    continueReasons.push('Select at least one location type');
-                                }
-                            }
-                            console.log(
-                                '%c[verify-qualify]%c Continue',
-                                'color:#2563eb;font-weight:bold',
-                                'color:inherit',
-                                c.continue_would_enable ? 'ENABLED' : 'DISABLED — ' +
-                                continueReasons.join('; '),
-                                data
-                            );
-                        }
+                requestAnimationFrame(() => requestAnimationFrame(tick));
+            };
+        }
 
-                        if (data.step.showRegisteredBusiness || data.step.showFreelance) {
-                            const submitReasons = [];
-                            if (!p.submit_would_enable) {
-                                const skipKeys = new Set([
-                                    'email_format_ok',
-                                    'business_owner_id_images_count',
-                                    'id_documents_count',
-                                    'has_id_proof',
-                                    'submit_would_enable',
-                                ]);
-                                Object.entries(p).forEach(([key, ok]) => {
-                                    if (skipKeys.has(key) || key.endsWith('_count')) {
-                                        return;
-                                    }
-                                    if (ok === false) {
-                                        submitReasons.push('missing or empty: ' + key);
-                                    }
-                                });
-                                if (!p.email_format_ok && p.business_email) {
-                                    submitReasons.push('business_email fails email validation');
-                                }
-                                if (!p.has_id_proof) {
-                                    submitReasons.push(
-                                        'no ID files on server (upload Business Owner ID; drag-drop must fire change on the Livewire input)'
-                                    );
-                                }
-                            }
-                            console.log(
-                                '%c[verify-qualify]%c Submit',
-                                'color:#059669;font-weight:bold',
-                                'color:inherit',
-                                p.submit_would_enable ? 'ENABLED' : 'DISABLED — ' + submitReasons
-                                .join('; '),
-                                data
-                            );
-                        }
-                    }).catch((e) => console.warn('[verify-qualify] getSubmitButtonDebug failed', e));
-                }, debounceMs);
+        if (window.__verifyQualifyDebugInstalled) {
+            return;
+        }
+        window.__verifyQualifyDebugInstalled = true;
+
+        let t = null;
+        const debounceMs = 250;
+
+        function wireRootFromNode(node) {
+            if (!node || !node.closest) {
+                return null;
             }
+            return node.closest('[wire\\:id]');
+        }
 
-            document.addEventListener('livewire:init', () => {
-                Livewire.hook('morph.updated', ({
-                    el,
-                    component
-                }) => {
-                    const root = wireRootFromNode(el);
-                    if (!root || !root.querySelector('.verification-wrapper')) {
+        function resolveComponent(component, el) {
+            if (component && typeof component.call === 'function') {
+                return component;
+            }
+            const root = wireRootFromNode(el);
+            const id = root && root.getAttribute('wire:id');
+            if (!id || typeof Livewire === 'undefined' || typeof Livewire.find !== 'function') {
+                return null;
+            }
+            return Livewire.find(id);
+        }
+
+        function logVerifyQualifyState(component, el) {
+            const cmp = resolveComponent(component, el);
+            if (!cmp || typeof cmp.call !== 'function') {
+                return;
+            }
+            clearTimeout(t);
+            t = setTimeout(() => {
+                cmp.call('getSubmitButtonDebug').then((data) => {
+                    const p = data.personal_step;
+                    const c = data.continue_step;
+
+                    if (data.step.showBusinessBasicsForm) {
+                        console.log(
+                            '%c[verify-qualify]%c Business basics (Build Your Profile)',
+                            'color:#ca8a04;font-weight:bold',
+                            'color:inherit',
+                            data.business_basics?.continue_enabled ? 'Continue ENABLED' :
+                                'Continue DISABLED — Business name required',
+                            data
+                        );
                         return;
                     }
-                    logVerifyQualifyState(component, el);
-                });
 
-                queueMicrotask(() => {
-                    const wrap = document.querySelector('.verification-wrapper');
-                    if (wrap) {
-                        logVerifyQualifyState(null, wrap);
+                    if (data.step.showVerificationStatus) {
+                        console.log(
+                            '%c[verify-qualify]%c Verification approved screen',
+                            'color:#16a34a;font-weight:bold',
+                            'color:inherit',
+                            data
+                        );
+                        return;
                     }
-                });
+
+                    if (data.step.showAccountPayoutsForm) {
+                        const continueReasons = [];
+                        if (!c.continue_would_enable) {
+                            if (!data.continue_step.fursgo_usage) {
+                                continueReasons.push(
+                                    'Choose how you use FursGo (groomer vs space)');
+                            }
+                            if (!data.continue_step.account_type) {
+                                continueReasons.push('Select account type');
+                            }
+                            if (data.continue_step.location_types_count < 1) {
+                                continueReasons.push('Select at least one location type');
+                            }
+                        }
+                        console.log(
+                            '%c[verify-qualify]%c Continue',
+                            'color:#2563eb;font-weight:bold',
+                            'color:inherit',
+                            c.continue_would_enable ? 'ENABLED' : 'DISABLED — ' +
+                                continueReasons.join('; '),
+                            data
+                        );
+                    }
+
+                    if (data.step.showRegisteredBusiness || data.step.showFreelance) {
+                        const submitReasons = [];
+                        if (!p.submit_would_enable) {
+                            const skipKeys = new Set([
+                                'email_format_ok',
+                                'business_owner_id_images_count',
+                                'id_documents_count',
+                                'has_id_proof',
+                                'submit_would_enable',
+                            ]);
+                            Object.entries(p).forEach(([key, ok]) => {
+                                if (skipKeys.has(key) || key.endsWith('_count')) {
+                                    return;
+                                }
+                                if (ok === false) {
+                                    submitReasons.push('missing or empty: ' + key);
+                                }
+                            });
+                            if (!p.email_format_ok && p.business_email) {
+                                submitReasons.push('business_email fails email validation');
+                            }
+                            if (!p.has_id_proof) {
+                                submitReasons.push(
+                                    'no ID files on server (upload Business Owner ID; drag-drop must fire change on the Livewire input)'
+                                );
+                            }
+                        }
+                        console.log(
+                            '%c[verify-qualify]%c Submit',
+                            'color:#059669;font-weight:bold',
+                            'color:inherit',
+                            p.submit_would_enable ? 'ENABLED' : 'DISABLED — ' + submitReasons
+                                .join('; '),
+                            data
+                        );
+                    }
+                }).catch((e) => console.warn('[verify-qualify] getSubmitButtonDebug failed', e));
+            }, debounceMs);
+        }
+
+        document.addEventListener('livewire:init', () => {
+            Livewire.hook('morph.updated', ({
+                el,
+                component
+            }) => {
+                const root = wireRootFromNode(el);
+                if (!root || !root.querySelector('.verification-wrapper')) {
+                    return;
+                }
+                logVerifyQualifyState(component, el);
             });
-        })();
-    </script>
+
+            queueMicrotask(() => {
+                const wrap = document.querySelector('.verification-wrapper');
+                if (wrap) {
+                    logVerifyQualifyState(null, wrap);
+                }
+            });
+        });
+    })();
+</script>
 @endscript
 
 <style>
@@ -5233,32 +5199,29 @@ new #[Layout('layouts.dashboard')] class extends Component {
         padding: 0.75rem;
         padding-left: 1.5rem;
         border-radius: 96px;
-        cursor: default;
+        cursor: not-allowed;
+        user-select: none;
+        pointer-events: auto;
+    }
+
+    .step-item.active,
+    .step-item--filled {
+        cursor: pointer;
+    }
+
+    .step-item--filled:hover:not(.active) {
+        background: #F0EFEB;
+        border-radius: 96px;
+    }
+
+    .step-item--filled:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 2px #fff, 0 0 0 4px #FFC97A;
     }
 
     .step-item.active {
         border-radius: 96px;
         background: #FFC97A;
-    }
-
-    .step-item--clickable {
-        cursor: pointer;
-        outline: none;
-        transition: box-shadow 0.15s ease, background 0.15s ease;
-    }
-
-    .step-item--clickable:focus-visible {
-        box-shadow: 0 0 0 2px #fff, 0 0 0 4px #FFC97A;
-    }
-
-    .step-item--clickable:hover:not(.active) {
-        background: #F0EFEB;
-        border-radius: 96px;
-    }
-
-    .step-item--disabled {
-        opacity: 0.48;
-        cursor: not-allowed !important;
     }
 
     .step-content {
@@ -5277,12 +5240,39 @@ new #[Layout('layouts.dashboard')] class extends Component {
         line-height: normal;
     }
 
-    .step-item:not(.active) .step-title {
-        color: #3B3731;
+    .step-title span,
+    .step-title p {
+        margin: 0;
+        color: inherit;
+        font: inherit;
     }
 
-    .step-item.active .step-title {
+    .step-title__tick {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1rem;
+        flex-shrink: 0;
+        line-height: 0;
+    }
+
+    .step-title__tick svg {
+        display: block;
+    }
+
+    .step-item.active .step-title,
+    .step-item.active .step-title span,
+    .step-item.active .step-title p {
         color: #FFF;
+    }
+
+    .step-item--filled:not(.active) .step-title,
+    .step-item--filled:not(.active) .step-title span,
+    .step-item--filled:not(.active) .step-title p,
+    .step-item--upcoming:not(.active) .step-title,
+    .step-item--upcoming:not(.active) .step-title span,
+    .step-item--upcoming:not(.active) .step-title p {
+        color: #9D9B98;
     }
 
     /* Main Content */
@@ -5715,7 +5705,8 @@ new #[Layout('layouts.dashboard')] class extends Component {
         background: #FFF4E4;
     }
 
-    .radio-item.checked {
+    .radio-item.checked,
+    .radio-item:has(> input[type="radio"]:checked) {
         background: #FFF4E4;
         border-color: transparent;
     }
@@ -5804,7 +5795,8 @@ new #[Layout('layouts.dashboard')] class extends Component {
         background: transparent;
     }
 
-    .checkbox-item.checked {
+    .checkbox-item.checked,
+    .checkbox-item:has(> input[type="checkbox"]:checked) {
         background: #FFF4E4;
         border-color: transparent;
     }
@@ -6526,8 +6518,8 @@ new #[Layout('layouts.dashboard')] class extends Component {
             main.addEventListener(
                 "animationend",
                 () => main.classList.remove("vq-step-enter"), {
-                    once: true
-                },
+                once: true
+            },
             );
         }
 
@@ -6638,13 +6630,13 @@ new #[Layout('layouts.dashboard')] class extends Component {
     }
 
     if (!window.removeBusinessOwnerStoredFile) {
-        window.removeBusinessOwnerStoredFile = function(storagePath) {
+        window.removeBusinessOwnerStoredFile = function (storagePath) {
             if (!storagePath) {
                 return Promise.reject(new Error("Missing storage path"));
             }
             const result = vqCallLivewire('removeStoredBusinessOwnerImage', storagePath);
             if (result && typeof result.then === 'function') {
-                return result.then(function() {
+                return result.then(function () {
                     vqAfterDocUploadMorph();
                 });
             }
@@ -6654,13 +6646,13 @@ new #[Layout('layouts.dashboard')] class extends Component {
     }
 
     if (!window.removeInsuranceStoredFile) {
-        window.removeInsuranceStoredFile = function(storagePath) {
+        window.removeInsuranceStoredFile = function (storagePath) {
             if (!storagePath) {
                 return Promise.reject(new Error("Missing storage path"));
             }
             const result = vqCallLivewire('removeStoredInsuranceCertificate', storagePath);
             if (result && typeof result.then === 'function') {
-                return result.then(function() {
+                return result.then(function () {
                     vqAfterDocUploadMorph();
                 });
             }
@@ -6670,10 +6662,10 @@ new #[Layout('layouts.dashboard')] class extends Component {
     }
 
     if (!window.removeBusinessAvatarStoredFile) {
-        window.removeBusinessAvatarStoredFile = function() {
+        window.removeBusinessAvatarStoredFile = function () {
             const result = vqCallLivewire('removeBusinessAvatar');
             if (result && typeof result.then === 'function') {
-                return result.then(function() {
+                return result.then(function () {
                     vqAfterDocUploadMorph();
                 });
             }
@@ -6683,13 +6675,13 @@ new #[Layout('layouts.dashboard')] class extends Component {
     }
 
     if (!window.removeBusinessGalleryStoredFile) {
-        window.removeBusinessGalleryStoredFile = function(storagePath) {
+        window.removeBusinessGalleryStoredFile = function (storagePath) {
             if (!storagePath) {
                 return Promise.reject(new Error("Missing storage path"));
             }
             const result = vqCallLivewire('removeBusinessGalleryStoredFile', storagePath);
             if (result && typeof result.then === 'function') {
-                return result.then(function() {
+                return result.then(function () {
                     vqAfterDocUploadMorph();
                 });
             }
@@ -6851,7 +6843,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
             if (batch.fileSlots.has(fp)) {
                 return batch.fileSlots.get(fp);
             }
-            const idx = batch.files.findIndex(function(item) {
+            const idx = batch.files.findIndex(function (item) {
                 return galleryFileFingerprint(item) === fp;
             });
             if (idx < 0) {
@@ -6895,8 +6887,8 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
             const prop =
                 e.detail && (e.detail.property || e.detail.name) ?
-                e.detail.property || e.detail.name :
-                '';
+                    e.detail.property || e.detail.name :
+                    '';
             if (prop && prop !== 'business_gallery_pending') {
                 return false;
             }
@@ -6907,7 +6899,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
             }
 
             const fp = galleryFileFingerprint(file);
-            return batch.files.some(function(item) {
+            return batch.files.some(function (item) {
                 return galleryFileFingerprint(item) === fp;
             });
         }
@@ -6925,7 +6917,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                 return;
             }
             batch.fileSlots = new Map();
-            files.forEach(function(file, i) {
+            files.forEach(function (file, i) {
                 const slot = ensureGallerySlotAtIndex(startIndex + i);
                 if (slot) {
                     batch.fileSlots.set(galleryFileFingerprint(file), slot);
@@ -6974,7 +6966,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
         function showAllGallerySlotPreviews(input, files, startIndex) {
             rememberGalleryBatchSlots(files, startIndex);
             const isBatch = files.length > 1;
-            files.forEach(function(file, i) {
+            files.forEach(function (file, i) {
                 const slot = ensureGallerySlotAtIndex(startIndex + i);
                 showGalleryFilePreviewInSlot(slot, file, {
                     withProgress: true,
@@ -6997,7 +6989,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                 return;
             }
 
-            const onFinish = function() {
+            const onFinish = function () {
                 if (slot) {
                     const ring = slot.querySelector('.gallery-upload-ring');
                     if (ring) {
@@ -7005,18 +6997,18 @@ new #[Layout('layouts.dashboard')] class extends Component {
                     }
                 }
             };
-            const onError = function() {
+            const onError = function () {
                 if (slot) {
                     clearGallerySlotClientState(slot);
                 }
             };
-            const onProgress = function(event) {
+            const onProgress = function (event) {
                 const percent =
                     event && event.detail && event.detail.progress != null ?
-                    event.detail.progress :
-                    event && event.progress != null ?
-                    event.progress :
-                    null;
+                        event.detail.progress :
+                        event && event.progress != null ?
+                            event.progress :
+                            null;
                 if (slot && percent != null) {
                     const ring = slot.querySelector('.gallery-upload-ring');
                     if (ring) {
@@ -7048,8 +7040,8 @@ new #[Layout('layouts.dashboard')] class extends Component {
             rememberGalleryBatchSlots(
                 files,
                 window.__vqGalleryBatch ?
-                window.__vqGalleryBatch.startIndex :
-                0,
+                    window.__vqGalleryBatch.startIndex :
+                    0,
             );
 
             const uploadMultipleFn = wire.$uploadMultiple || wire.uploadMultiple;
@@ -7059,7 +7051,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                 return true;
             }
 
-            files.forEach(function(file) {
+            files.forEach(function (file) {
                 uploadSingleGalleryFile(wire, file);
             });
 
@@ -7093,7 +7085,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                 return;
             }
 
-            remaining.forEach(function(file, i) {
+            remaining.forEach(function (file, i) {
                 const slot = ensureGallerySlotAtIndex(remainingStart + i);
                 if (!slot) {
                     return;
@@ -7123,7 +7115,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                 return;
             }
 
-            getGallerySlotElements().forEach(function(slot) {
+            getGallerySlotElements().forEach(function (slot) {
                 if (slot.querySelector('.gallery-slot-img:not(.gallery-slot-preview)')) {
                     clearGallerySlotClientState(slot);
                 }
@@ -7132,7 +7124,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
             document
                 .querySelectorAll('.gallery-slot[data-vq-gallery-client-slot="1"]')
-                .forEach(function(slot) {
+                .forEach(function (slot) {
                     if (!slot.querySelector('.gallery-slot-img:not(.gallery-slot-preview)')) {
                         clearGallerySlotClientState(slot);
                         slot.remove();
@@ -7147,7 +7139,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
         }
 
         function handleGalleryInputChange(input) {
-            const files = Array.from(input.files || []).filter(function(file) {
+            const files = Array.from(input.files || []).filter(function (file) {
                 return String(file.type || '').startsWith('image/');
             });
             if (!files.length) {
@@ -7249,11 +7241,11 @@ new #[Layout('layouts.dashboard')] class extends Component {
             const delta = goal - startValue;
             const startedAt = performance.now();
             const duration = Math.min(900, Math.max(300, delta * 16));
-            const easeInOut = function(t) {
+            const easeInOut = function (t) {
                 return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
             };
 
-            const step = function(now) {
+            const step = function (now) {
                 const elapsed = Math.min(1, (now - startedAt) / duration);
                 paintGalleryProgress(ring, startValue + delta * easeInOut(elapsed));
                 if (elapsed < 1) {
@@ -7279,7 +7271,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
             state.target = 1;
             paintGalleryProgress(ring, 1);
 
-            state.creepTimer = setInterval(function() {
+            state.creepTimer = setInterval(function () {
                 if (!state.uploading) {
                     clearGalleryProgressCreep(state);
                     return;
@@ -7373,13 +7365,13 @@ new #[Layout('layouts.dashboard')] class extends Component {
             }
         }
 
-        document.addEventListener('change', function(e) {
+        document.addEventListener('change', function (e) {
             const input = e.target;
             if (!isGalleryInput(input) || !input.files || !input.files.length) return;
             handleGalleryInputChange(input);
         });
 
-        document.addEventListener('livewire-upload-start', function(e) {
+        document.addEventListener('livewire-upload-start', function (e) {
             if (!isActiveGalleryUploadEvent(e)) return;
             const slot = resolveGalleryEventSlot(e);
             const ring = ensureGalleryUploadRing(slot);
@@ -7392,7 +7384,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
             }
         });
 
-        document.addEventListener('livewire-upload-progress', function(e) {
+        document.addEventListener('livewire-upload-progress', function (e) {
             if (!isActiveGalleryUploadEvent(e)) return;
             const percent = e.detail && e.detail.progress != null ? e.detail.progress : 1;
             const slot = resolveGalleryEventSlot(e);
@@ -7401,14 +7393,14 @@ new #[Layout('layouts.dashboard')] class extends Component {
             }
         });
 
-        document.addEventListener('livewire-upload-finish', function(e) {
+        document.addEventListener('livewire-upload-finish', function (e) {
             if (!isActiveGalleryUploadEvent(e)) return;
             const slot = resolveGalleryEventSlot(e);
             const ring = slot ? slot.querySelector('.gallery-upload-ring') : null;
             if (ring) finishGalleryUploadProgress(ring);
         });
 
-        document.addEventListener('livewire-upload-error', function(e) {
+        document.addEventListener('livewire-upload-error', function (e) {
             if (!isActiveGalleryUploadEvent(e)) return;
             const slot = resolveGalleryEventSlot(e);
             if (slot) {
@@ -7420,7 +7412,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
             }
         });
 
-        document.addEventListener('livewire-upload-cancel', function(e) {
+        document.addEventListener('livewire-upload-cancel', function (e) {
             if (!isActiveGalleryUploadEvent(e)) return;
             const slot = resolveGalleryEventSlot(e);
             if (slot) {
@@ -7479,7 +7471,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
             if (window.__vqGalleryActiveSlot) {
                 slots.push(window.__vqGalleryActiveSlot);
             }
-            document.querySelectorAll('.gallery-slot--uploading').forEach(function(slot) {
+            document.querySelectorAll('.gallery-slot--uploading').forEach(function (slot) {
                 if (slots.indexOf(slot) === -1) slots.push(slot);
             });
 
@@ -7487,7 +7479,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                 return;
             }
 
-            slots.forEach(function(slot) {
+            slots.forEach(function (slot) {
                 const serverImg = slot.querySelector('.gallery-slot-img:not(.gallery-slot-preview)');
 
                 if (slot.classList.contains('gallery-slot--batch-pending')) {
@@ -7496,9 +7488,9 @@ new #[Layout('layouts.dashboard')] class extends Component {
                         if (ring) {
                             finishGalleryUploadProgress(ring);
                         }
-                        const revealServerImage = function() {
+                        const revealServerImage = function () {
                             serverImg.style.opacity = '1';
-                            requestAnimationFrame(function() {
+                            requestAnimationFrame(function () {
                                 clearGallerySlotClientState(slot);
                                 slot.classList.remove('gallery-slot--batch-pending');
                             });
@@ -7532,9 +7524,9 @@ new #[Layout('layouts.dashboard')] class extends Component {
                     return;
                 }
 
-                const revealServerImage = function() {
+                const revealServerImage = function () {
                     serverImg.style.opacity = '1';
-                    requestAnimationFrame(function() {
+                    requestAnimationFrame(function () {
                         clearGallerySlotClientState(slot);
                         if (window.__vqGalleryActiveSlot === slot) {
                             window.__vqGalleryActiveSlot = null;
@@ -7563,10 +7555,10 @@ new #[Layout('layouts.dashboard')] class extends Component {
         function registerGalleryMorphCleanup() {
             if (window.__vqGalleryMorphCleanupHooked) return;
             window.__vqGalleryMorphCleanupHooked = true;
-            const register = function() {
-                Livewire.hook('commit', function(payload) {
+            const register = function () {
+                Livewire.hook('commit', function (payload) {
                     if (typeof payload.succeed !== 'function') return;
-                    payload.succeed(function() {
+                    payload.succeed(function () {
                         finalizeGallerySlotAfterMorph();
                     });
                 });

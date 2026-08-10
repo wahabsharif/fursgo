@@ -4,7 +4,7 @@
         $legalPolicyDevPreview = $this->shouldUseDevDbPreview();
     @endphp
     <form wire:submit="submitLegalPolicy" x-data="{
-        accepted: @entangle('legal_terms_accepted').defer,
+        accepted: @entangle('legal_terms_accepted'),
         devPreview: @js($legalPolicyDevPreview),
     }">
         <div
@@ -33,8 +33,7 @@
         <div class="legal-policy-actions">
             <div>
                 <a href="{{ route('verify-qualify.legal-agreements-pdf') }}" data-download-legal-pdf>Download Document
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21" viewBox="0 0 18 21"
-                        fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21" viewBox="0 0 18 21" fill="none">
                         <path
                             d="M0.75 16.584V18.1673C0.75 18.5872 0.90165 18.99 1.17159 19.2869C1.44153 19.5838 1.80764 19.7507 2.18939 19.7507H15.1439C15.5257 19.7507 15.8918 19.5838 16.1617 19.2869C16.4317 18.99 16.5833 18.5872 16.5833 18.1673V16.584"
                             stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -88,7 +87,7 @@
         left: 0;
         right: 8px;
         bottom: 0;
-        height: 3.5rem;
+        height: 8rem;
         pointer-events: none;
         z-index: 1;
         border-radius: 0 0 9px 9px;
@@ -311,7 +310,7 @@
         width: 281px;
         height: 48px;
         border-radius: 96px;
-        border: 1px solid #9D9B98;
+        border: 1px solid rgba(59, 55, 49, 0.10);
         box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.10);
         color: #3B3731;
         font-family: Lato;
@@ -362,14 +361,28 @@
     }
 
     .legal-policy-btn--outline {
-        background: #fff;
-        color: #6b7280;
-        border: 1px solid #d4d4d4;
+        background: transparent;
+        color: #3B3731;
+        border: 1px solid #9D9B98;
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+        transition:
+            box-shadow 0.25s ease,
+            border-color 0.25s ease,
+            background-color 0.25s ease,
+            transform 0.25s ease;
     }
 
     .legal-policy-btn--outline:hover {
-        border-color: #9ca3af;
-        color: #3B3731;
+        box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.10);
+        border-color: #7d7b78;
+        background-color: rgba(59, 55, 49, 0.02);
+        transform: translateY(-1px);
+    }
+
+    .legal-policy-btn--outline:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+        transition-duration: 0.12s;
     }
 
     .legal-policy-btn--continue {
@@ -380,7 +393,8 @@
     }
 
     .legal-policy-btn--continue-active {
-        background: #FFC97A;
+        background: #C9DDA0;
+        box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.10);
         color: #FFFFFF;
         border: none;
     }
@@ -429,13 +443,13 @@
 @once
     @push('script')
         <script>
-            (function() {
+            (function () {
                 if (window.__fursgoLegalPdfDownloadInit) {
                     return;
                 }
                 window.__fursgoLegalPdfDownloadInit = true;
 
-                document.addEventListener('click', async function(e) {
+                document.addEventListener('click', async function (e) {
                     const link = e.target.closest('[data-download-legal-pdf]');
                     if (!link || !link.href) {
                         return;
@@ -467,7 +481,7 @@
                     }
                 });
             })
-            ();
+                ();
         </script>
     @endpush
 @endonce

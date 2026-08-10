@@ -145,16 +145,62 @@
                 };
             },
 
+            resolveWire() {
+                const root =
+                    (this.$el && this.$el.closest("[wire\\:id]")) ||
+                    document.querySelector(
+                        ".verify-qualify-page [wire\\:id]",
+                    ) ||
+                    document.querySelector("[wire\\:id]");
+                const id = root && root.getAttribute("wire:id");
+                if (
+                    id &&
+                    typeof Livewire !== "undefined" &&
+                    typeof Livewire.find === "function"
+                ) {
+                    const found = Livewire.find(id);
+                    if (found) {
+                        return found;
+                    }
+                }
+
+                return this.$wire || null;
+            },
+
             async submitForm() {
                 if (this.submitting) {
                     return;
                 }
 
+                const wire = this.resolveWire();
+                const callFn =
+                    wire &&
+                    (typeof wire.submitSpacerBusinessProfile === "function"
+                        ? wire.submitSpacerBusinessProfile.bind(wire)
+                        : typeof wire.call === "function"
+                          ? (payload) =>
+                                wire.call(
+                                    "submitSpacerBusinessProfile",
+                                    payload,
+                                )
+                          : typeof wire.$call === "function"
+                            ? (payload) =>
+                                  wire.$call(
+                                      "submitSpacerBusinessProfile",
+                                      payload,
+                                  )
+                            : null);
+
+                if (!callFn) {
+                    console.error(
+                        "[verify-qualify] Unable to call submitSpacerBusinessProfile — Livewire component not found.",
+                    );
+                    return;
+                }
+
                 this.submitting = true;
                 try {
-                    await this.$wire.submitSpacerBusinessProfile(
-                        this.clientPayload(),
-                    );
+                    await callFn(this.clientPayload());
                 } finally {
                     this.submitting = false;
                 }

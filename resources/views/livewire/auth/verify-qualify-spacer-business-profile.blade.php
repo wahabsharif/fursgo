@@ -365,8 +365,7 @@
             <x-common.button type="submit" label="Continue" width="105px"
                 bg-color="{{ $this->isSpacerBusinessProfileContinueEnabled() ? '#FFC97A' : '#e5e7eb' }}"
                 text-color="{{ $this->isSpacerBusinessProfileContinueEnabled() ? '#FFFFFF' : '#9ca3af' }}"
-                loading-target="submitSpacerBusinessProfile"
-                x-bind:disabled="!@js($this->isSpacerBusinessProfileContinueEnabled()) || submitting" />
+                loading-target="submitSpacerBusinessProfile" :disabled="!$this->isSpacerBusinessProfileContinueEnabled()" />
         </div>
     </form>
 </div>

@@ -51,6 +51,29 @@
         }
     }
 
+    function parseSpecialtyOtherTags(raw) {
+        if (Array.isArray(raw)) {
+            return raw
+                .map((item) => String(item ?? "").trim())
+                .filter(
+                    (item, index, list) =>
+                        item !== "" && list.indexOf(item) === index,
+                );
+        }
+
+        if (typeof raw !== "string" || raw.trim() === "") {
+            return [];
+        }
+
+        return raw
+            .split(",")
+            .map((item) => item.trim())
+            .filter(
+                (item, index, list) =>
+                    item !== "" && list.indexOf(item) === index,
+            );
+    }
+
     function syncPricingMap(selectedNames, existingMap, keyFn) {
         const next = {};
         selectedNames.forEach((name) => {
@@ -81,7 +104,8 @@
             petSpecialties: Array.isArray(seed.petSpecialties)
                 ? [...seed.petSpecialties]
                 : [],
-            specialtyOther: seed.specialtyOther ?? "",
+            specialtyOtherInput: "",
+            specialtyOtherTags: parseSpecialtyOtherTags(seed.specialtyOther),
             petSizes: Array.isArray(seed.petSizes) ? [...seed.petSizes] : [],
             serviceInput: "",
             customServices: Array.isArray(seed.customServices)
@@ -117,7 +141,9 @@
             addonAddPending: false,
             submitting: false,
             serviceDescriptionsCommitted: {},
+            serviceDescriptionsEditing: {},
             addonDescriptionsCommitted: {},
+            addonDescriptionsEditing: {},
             addonsAddedViaInput: {},
 
             init() {
@@ -207,6 +233,36 @@
 
             togglePetSpecialty(value) {
                 toggleInArray(this.petSpecialties, value);
+            },
+
+            addSpecialtyOtherTags() {
+                const raw = String(this.specialtyOtherInput ?? "").trim();
+                if (raw === "") {
+                    return;
+                }
+
+                const next = [...this.specialtyOtherTags];
+                raw.split(",").forEach((part) => {
+                    const tag = part.trim();
+                    if (tag === "" || next.includes(tag)) {
+                        return;
+                    }
+                    next.push(tag);
+                });
+
+                this.specialtyOtherTags = next;
+                this.specialtyOtherInput = "";
+
+                if (!this.petSpecialties.includes("other")) {
+                    this.petSpecialties.push("other");
+                }
+            },
+
+            removeSpecialtyOtherTag(index) {
+                if (index < 0 || index >= this.specialtyOtherTags.length) {
+                    return;
+                }
+                this.specialtyOtherTags.splice(index, 1);
             },
 
             togglePetSize(value) {
@@ -335,6 +391,11 @@
                 const custom = String(
                     this.servicesPricing[key]?.description ?? "",
                 ).trim();
+
+                if (Boolean(this.serviceDescriptionsCommitted[key])) {
+                    return custom;
+                }
+
                 const defaultDesc = this.serviceDefaultDescription(name);
                 if (defaultDesc !== "" && custom === "") {
                     return defaultDesc;
@@ -345,29 +406,53 @@
 
             showServiceDescriptionText(name) {
                 const key = serviceKey(name);
+                if (this.serviceDescriptionsEditing[key]) {
+                    return false;
+                }
+
+                if (Boolean(this.serviceDescriptionsCommitted[key])) {
+                    return true;
+                }
+
                 const custom = String(
                     this.servicesPricing[key]?.description ?? "",
                 ).trim();
                 const defaultDesc = this.serviceDefaultDescription(name);
-                if (defaultDesc !== "" && custom === "") {
-                    return true;
+
+                return defaultDesc !== "" && custom === "";
+            },
+
+            editServiceDescription(name) {
+                const key = serviceKey(name);
+                if (!this.servicesPricing[key]) {
+                    return;
                 }
 
-                return (
-                    Boolean(this.serviceDescriptionsCommitted[key]) &&
-                    custom !== ""
-                );
+                const custom = String(
+                    this.servicesPricing[key].description ?? "",
+                ).trim();
+                if (
+                    custom === "" &&
+                    !Boolean(this.serviceDescriptionsCommitted[key])
+                ) {
+                    const defaultDesc = this.serviceDefaultDescription(name);
+                    if (defaultDesc !== "") {
+                        this.servicesPricing[key].description = defaultDesc;
+                    }
+                }
+
+                this.serviceDescriptionsEditing[key] = true;
             },
 
             commitServiceDescription(name) {
                 const key = serviceKey(name);
-                const desc = String(
-                    this.servicesPricing[key]?.description ?? "",
-                ).trim();
-                if (desc === "") {
-                    return;
+                if (this.servicesPricing[key]) {
+                    this.servicesPricing[key].description = String(
+                        this.servicesPricing[key].description ?? "",
+                    ).trim();
                 }
                 this.serviceDescriptionsCommitted[key] = true;
+                this.serviceDescriptionsEditing[key] = false;
             },
 
             addonDescriptionText(name) {
@@ -378,39 +463,31 @@
 
             showAddonDescriptionText(name) {
                 const key = addonKey(name);
-                const desc = this.addonDescriptionText(name);
-
-                return (
-                    Boolean(this.addonDescriptionsCommitted[key]) && desc !== ""
-                );
-            },
-
-            showAddonDescriptionRow(name) {
-                const key = addonKey(name);
-                if (this.showAddonDescriptionText(name)) {
+                if (this.addonDescriptionsEditing[key]) {
                     return false;
                 }
-                if (this.addonsAddedViaInput[key]) {
-                    return true;
-                }
-                if (this.customAddons.includes(name)) {
-                    return true;
-                }
 
-                return this.addonDescriptionText(name) !== "";
+                return Boolean(this.addonDescriptionsCommitted[key]);
             },
 
             showAddonDescriptionEditor(name) {
-                return this.showAddonDescriptionRow(name);
+                return !this.showAddonDescriptionText(name);
+            },
+
+            editAddonDescription(name) {
+                const key = addonKey(name);
+                this.addonDescriptionsEditing[key] = true;
             },
 
             commitAddonDescription(name) {
                 const key = addonKey(name);
-                const desc = this.addonDescriptionText(name);
-                if (desc === "") {
-                    return;
+                if (this.addonPricing[key]) {
+                    this.addonPricing[key].description = String(
+                        this.addonPricing[key].description ?? "",
+                    ).trim();
                 }
                 this.addonDescriptionsCommitted[key] = true;
+                this.addonDescriptionsEditing[key] = false;
             },
 
             get canContinue() {
@@ -421,7 +498,7 @@
                 const hasSpecialty = this.petSpecialties.length > 0;
                 const otherOk =
                     !this.petSpecialties.includes("other") ||
-                    this.specialtyOther.trim() !== "";
+                    this.specialtyOtherTags.length > 0;
 
                 return (
                     this.experience.trim() !== "" &&
@@ -435,7 +512,7 @@
                 return {
                     experience: this.experience,
                     petSpecialties: this.petSpecialties,
-                    specialtyOther: this.specialtyOther,
+                    specialtyOther: this.specialtyOtherTags.join(", "),
                     petSizes: this.petSizes,
                     customServices: this.customServices,
                     selectedServices: this.selectedServices,
@@ -446,16 +523,62 @@
                 };
             },
 
+            resolveWire() {
+                const root =
+                    (this.$el && this.$el.closest("[wire\\:id]")) ||
+                    document.querySelector(
+                        ".verify-qualify-page [wire\\:id]",
+                    ) ||
+                    document.querySelector("[wire\\:id]");
+                const id = root && root.getAttribute("wire:id");
+                if (
+                    id &&
+                    typeof Livewire !== "undefined" &&
+                    typeof Livewire.find === "function"
+                ) {
+                    const found = Livewire.find(id);
+                    if (found) {
+                        return found;
+                    }
+                }
+
+                return this.$wire || null;
+            },
+
             async submitForm() {
                 if (!this.canContinue || this.submitting) {
                     return;
                 }
 
+                const wire = this.resolveWire();
+                const callFn =
+                    wire &&
+                    (typeof wire.submitGroomerBusinessProfile === "function"
+                        ? wire.submitGroomerBusinessProfile.bind(wire)
+                        : typeof wire.call === "function"
+                          ? (payload) =>
+                                wire.call(
+                                    "submitGroomerBusinessProfile",
+                                    payload,
+                                )
+                          : typeof wire.$call === "function"
+                            ? (payload) =>
+                                  wire.$call(
+                                      "submitGroomerBusinessProfile",
+                                      payload,
+                                  )
+                            : null);
+
+                if (!callFn) {
+                    console.error(
+                        "[verify-qualify] Unable to call submitGroomerBusinessProfile — Livewire component not found.",
+                    );
+                    return;
+                }
+
                 this.submitting = true;
                 try {
-                    await this.$wire.submitGroomerBusinessProfile(
-                        this.payload(),
-                    );
+                    await callFn(this.payload());
                 } finally {
                     this.submitting = false;
                 }
