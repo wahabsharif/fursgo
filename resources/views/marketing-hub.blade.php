@@ -585,7 +585,7 @@
     .active-section-header h2,
     .active-section-header>div>h2 {
         color: #3B3731;
-        text-align: right;
+        text-align: left;
         font-family: "Playfair Display";
         font-size: 28px;
         font-style: normal;
