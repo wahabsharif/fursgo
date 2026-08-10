@@ -15,7 +15,7 @@
 <div x-data="{
     mobileOpen: false,
 }"
-    style="{{ $variant === 'dashboard' ? 'max-width: 190px; margin: 0; padding: 0; width: 100%; position: relative;' : 'position: relative;' }}">
+    style="{{ $variant === 'dashboard' ? 'max-width: 14rem; margin: 0; padding: 0; width: 100%; position: relative;' : 'position: relative;' }}">
     <style>
         :root {
             --sidebar-active-bg:
@@ -35,7 +35,9 @@
 
         .aside {
             flex-shrink: 0;
-            width: 190px;
+            width: max-content;
+            min-width: 190px;
+            max-width: 14rem;
             position: sticky;
             top: 2rem;
             align-self: flex-start;
@@ -63,8 +65,9 @@
             display: flex;
             flex-direction: column;
             gap: 0;
-            width: 100%;
-            max-width: 190px;
+            width: max-content;
+            min-width: 190px;
+            max-width: 14rem;
         }
 
         .nav-section-label {
@@ -79,6 +82,7 @@
             padding: 0;
             margin: 0.5rem 0 0.5rem;
             list-style: none;
+            white-space: nowrap;
         }
 
         .nav-list>.nav-section-label:first-child {
@@ -104,13 +108,14 @@
             display: flex;
             align-items: center;
             gap: 0.625rem;
-            padding: 0.8125rem 1.25rem;
+            padding: 0.8125rem 1rem;
             min-height: 48px;
             border-radius: 96px;
             transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
             text-decoration: none;
             box-sizing: border-box;
             width: 100%;
+            white-space: nowrap;
         }
 
         .nav-link svg {
@@ -153,8 +158,8 @@
             font-style: normal;
             font-weight: 400;
             line-height: normal;
-            flex: 1 1 auto;
-            min-width: 0;
+            flex: 0 0 auto;
+            white-space: nowrap;
         }
 
         @media (max-width: 991.98px) {
