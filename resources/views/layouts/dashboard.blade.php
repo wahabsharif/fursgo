@@ -41,12 +41,12 @@
 
     @if ($isDashboardHub)
         <script>
-            (function() {
+            (function () {
                 if ('scrollRestoration' in history) {
                     history.scrollRestoration = 'manual';
                 }
 
-                window.__scrollDashboardToTop = function() {
+                window.__scrollDashboardToTop = function () {
                     const root = document.scrollingElement || document.documentElement;
                     root.scrollTop = 0;
                     document.body.scrollTop = 0;
@@ -148,12 +148,10 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
         .dashboard-info-main {
             position: relative;
             z-index: 2;
-            width: 100%;
-            max-width: min(100%, max(110rem, 92vw), 2450px);
+            width: min(1240px, calc(100% - 2rem));
+            max-width: 1240px;
             margin-left: auto;
             margin-right: auto;
-            padding-left: clamp(0.75rem, 4vw, 2rem);
-            padding-right: clamp(0.75rem, 4vw, 2rem);
             padding-bottom: 2rem;
             box-sizing: border-box;
         }

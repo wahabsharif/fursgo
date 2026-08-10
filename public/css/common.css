@@ -485,6 +485,26 @@ nav ul a.active {
     line-height: normal !important;
 }
 
+.logo-toggle-button,
+.logo-toggle-button:focus,
+.logo-toggle-button:focus-visible,
+.logo-toggle-button:active {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent;
+}
+
+.logo-toggle-button > a,
+.logo-toggle-button > a:focus,
+.logo-toggle-button > a:focus-visible,
+.logo-toggle-button > a:active {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    text-decoration: none;
+}
+
 .login-signup-div {
     display: flex;
     gap: 20px;

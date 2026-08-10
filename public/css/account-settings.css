@@ -1,17 +1,17 @@
 .account-settings-page {
     position: relative;
-    width: 100%;
-    max-width: min(100%, max(110rem, 92vw), 2450px);
+    width: min(1240px, calc(100% - 2rem));
+    max-width: 1240px;
     margin: 0 auto;
-    padding: 0 clamp(0.75rem, 4vw, 2rem) 3rem;
+    padding: 0 0 3rem;
     box-sizing: border-box;
 }
 
 .account-settings-loading-bar {
     position: absolute;
     top: 0;
-    left: clamp(0.75rem, 4vw, 2rem);
-    right: clamp(0.75rem, 4vw, 2rem);
+    left: 0;
+    right: 0;
     z-index: 30;
     height: 4px;
     overflow: hidden;
@@ -621,7 +621,7 @@
     background: #fff;
     box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
     color: #3b3731;
-    font-family: Lato, sans-serif;
+    font-family: Lato;
     transform: translateY(10px) scale(0.97);
     transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -640,7 +640,7 @@
 .account-settings-modal-header h3 {
     margin: 0;
     color: #3b3731;
-    font-family: Lato, sans-serif;
+    font-family: Lato;
     font-size: 20px;
     font-weight: 600;
 }
@@ -667,7 +667,7 @@
 
 .account-settings-modal-field > span:first-child {
     color: #3b3731;
-    font-family: Lato, sans-serif;
+    font-family: Lato;
     font-size: 16px;
     font-weight: 600;
 }
@@ -678,7 +678,7 @@
     border-radius: 10px;
     background: #fff;
     color: #3b3731;
-    font-family: Lato, sans-serif;
+    font-family: Lato;
     font-size: 15px;
     font-weight: 400;
     padding: 0.85rem 1rem;
@@ -715,7 +715,7 @@
     flex: 0 0 auto;
     min-width: 7.5rem;
     color: #ffc97a;
-    font-family: Lato, sans-serif;
+    font-family: Lato;
     font-size: 13px;
     font-weight: 600;
     text-align: left;
@@ -769,14 +769,14 @@
 .account-settings-password-meter__rules p {
     margin: 0 0 0.15rem;
     color: #3b3731;
-    font-family: Lato, sans-serif;
+    font-family: Lato;
     font-size: 13px;
     font-weight: 600;
 }
 
 .account-settings-password-meter__rules span {
     color: #9d9b98;
-    font-family: Lato, sans-serif;
+    font-family: Lato;
     font-size: 13px;
     font-weight: 400;
     transition: color 0.2s ease;
@@ -806,7 +806,7 @@
     border: 1px solid #3b3731;
     background: transparent;
     color: #3b3731;
-    font-family: Lato, sans-serif;
+    font-family: Lato;
     font-size: 16px;
     font-weight: 400;
 }
@@ -817,7 +817,7 @@
     background: #bacf8e;
     box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.1);
     color: #fff;
-    font-family: Lato, sans-serif;
+    font-family: Lato;
     font-size: 16px;
     font-weight: 600;
 }

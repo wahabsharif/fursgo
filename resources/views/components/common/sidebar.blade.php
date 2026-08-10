@@ -52,38 +52,37 @@
         completed: {{ $completedCount }},
         cancelled: {{ $cancelledCount }},
     }
-}"
-    @booking-status-changed.window="
+}" @booking-status-changed.window="
         activeBookingStatus = $event.detail.status ?? '';
         if (activeSection === 'bookings') {
             bookingsOpen = true;
         }
-    "
-    @booking-counts-updated.window="
+    " @booking-counts-updated.window="
         bookingCounts = {
             pending: Number($event.detail?.counts?.pending ?? bookingCounts.pending),
             confirmed: Number($event.detail?.counts?.confirmed ?? bookingCounts.confirmed),
             completed: Number($event.detail?.counts?.completed ?? bookingCounts.completed),
             cancelled: Number($event.detail?.counts?.cancelled ?? bookingCounts.cancelled),
         }
-    "
-    @earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'"
+    " @earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'"
     @settings-menu-selected.window="activeSettingsMenu = $event.detail?.menu || 'general'"
-    style="{{ $variant === 'dashboard' ? 'max-width: 16rem; margin: 0; padding: 0; width: 100%; position: relative;' : 'position: relative;' }}">
+    style="{{ $variant === 'dashboard' ? 'max-width: 190px; margin: 0; padding: 0; width: 100%; position: relative;' : 'position: relative;' }}">
     <style>
         :root {
-            --sidebar-active-bg: {{ $activeBgColor }};
+            --sidebar-active-bg:
+                {{ $activeBgColor }}
+            ;
         }
     </style>
 
     <!-- Mobile Toggle Button -->
     <button @click="mobileOpen = !mobileOpen" class="mobile-toggle" aria-label="Toggle Sidebar">
-        <svg x-show="!mobileOpen" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-            stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+        <svg x-show="!mobileOpen" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+            stroke="currentColor" class="w-6 h-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
         </svg>
-        <svg x-show="mobileOpen" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-            stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+        <svg x-show="mobileOpen" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+            stroke="currentColor" class="w-6 h-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
     </button>
@@ -91,6 +90,8 @@
     <!-- Horizontal Navigation (above content) -->
     <aside class="aside">
         <ul class="nav-list">
+            <li class="nav-section-label" aria-hidden="true">Overview</li>
+
             <!-- Business Hub -->
             <li class="nav-item">
                 <a href="{{ route('business-hub') }}"
@@ -107,13 +108,14 @@
                 </a>
             </li>
 
+            <li class="nav-section-label" aria-hidden="true">Manage</li>
+
             <!-- Bookings -->
             <li class="nav-item">
                 <a href="#"
                     @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'bookings'; bookingsOpen = true; availabilityOpen = false; activeBookingStatus = ''; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-filter-reset'); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: '' } }))"
                     :class="{ 'active': activeSection === 'bookings' }" class="nav-link">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14"
-                        fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14" fill="none">
                         <path
                             d="M4.29615 6.9274C4.38027 6.94943 4.46964 6.96044 4.56076 6.96044C5.17935 6.96044 5.68228 6.43367 5.68228 5.78576V4.61108H6.45683C6.66887 4.61108 6.86339 4.73589 6.95801 4.93596L7.08418 5.19842H8.20571C8.35992 5.19842 8.48609 5.33057 8.48609 5.49209V6.07943C8.48609 6.89069 7.85874 7.54778 7.08418 7.54778H6.24304V8.47834C6.24304 8.61233 6.13965 8.72246 6.00998 8.72246C5.97843 8.72246 5.94689 8.71511 5.91885 8.70227L4.18926 7.92588C4.0736 7.87449 4 7.75518 4 7.62487C4 7.57347 4.01051 7.52392 4.0333 7.47803L4.29615 6.9274ZM4.28038 4.61108H5.12152V5.78576C5.12152 6.11063 4.87093 6.3731 4.56076 6.3731C4.25059 6.3731 4 6.11063 4 5.78576V4.90475C4 4.74324 4.12617 4.61108 4.28038 4.61108Z"
                             fill="#3B3731" />
@@ -122,6 +124,8 @@
                             stroke="#3B3731" stroke-width="1.25" />
                     </svg>
                     <span class="nav-text">Bookings</span>
+                    <span class="nav-badge" x-show="bookingCounts.pending > 0" x-cloak
+                        x-text="bookingCounts.pending">{{ $pendingCount }}</span>
                 </a>
                 <ul x-cloak x-show="bookingsOpen" x-transition:enter="bookings-transition-enter"
                     x-transition:enter-start="bookings-transition-enter-start"
@@ -174,8 +178,7 @@
                     @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'availability'; bookingsOpen = false; availabilityOpen = !availabilityOpen"
                     :class="{ 'active': activeSection === 'availability' || activeSection === 'manage-availability' }"
                     class="nav-link">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 14 13"
-                        fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 14 13" fill="none">
                         <path
                             d="M0.625 6.08193C0.625 3.91602 0.625 2.83278 1.3282 2.16021C2.0314 1.48763 3.1624 1.48706 5.425 1.48706H7.825C10.0876 1.48706 11.2192 1.48706 11.9218 2.16021C12.6244 2.83336 12.625 3.91602 12.625 6.08193V7.23064C12.625 9.39655 12.625 10.4798 11.9218 11.1524C11.2186 11.8249 10.0876 11.8255 7.825 11.8255H5.425C3.1624 11.8255 2.0308 11.8255 1.3282 11.1524C0.6256 10.4792 0.625 9.39655 0.625 7.23064V6.08193Z"
                             stroke="#3B3731" stroke-width="1.25" />
@@ -209,8 +212,7 @@
                 <a href="#"
                     @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; bookingsOpen = false; availabilityOpen = false; servicesOpen = true; activeServiceMenu = 'services'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'services' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'services', active_service_menu: 'services' } }))"
                     :class="{ 'active': activeSection === 'services' }" class="nav-link">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14"
-                        fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14" fill="none">
                         <path
                             d="M4.21939 9.58489C5.2611 10.6266 7.79466 9.7823 9.87807 7.69855C11.9618 5.61513 12.8061 3.08155 11.7644 2.03984M7.28448 1.33225L7.75598 1.80409M5.63423 2.98285L6.10573 3.45435M4.21906 4.8692L4.69056 5.3407M3.74756 7.22704L4.21906 7.69855M9.87807 0.625L10.3496 1.0965M9.40657 3.45469L10.3496 4.39769M7.75631 5.10528L8.69932 6.04829M5.86998 6.51979L6.81298 7.4628"
                             stroke="#3B3731" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
@@ -261,8 +263,7 @@
                 <a href="#"
                     @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'clients'; bookingsOpen = false; availabilityOpen = false; servicesOpen = false"
                     :class="{ 'active': activeSection === 'clients' }" class="nav-link">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="10" viewBox="0 0 14 10"
-                        fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="10" viewBox="0 0 14 10" fill="none">
                         <path
                             d="M10.5336 2.55354C10.4551 3.64289 9.64702 4.48207 8.76578 4.48207C7.88455 4.48207 7.0751 3.64316 6.99796 2.55354C6.9176 1.42025 7.70428 0.625 8.76578 0.625C9.82728 0.625 10.614 1.44088 10.5336 2.55354Z"
                             stroke="#3B3731" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
@@ -280,13 +281,14 @@
                 </a>
             </li>
 
+            <li class="nav-section-label" aria-hidden="true">Finance</li>
+
             <!-- Earnings -->
             <li class="nav-item">
                 <a href="#"
                     @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'earnings'; bookingsOpen = false; availabilityOpen = false; servicesOpen = false; earningsOpen = true; activeEarningsMenu = 'overview'; window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: 'overview' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: 'overview' } }))"
                     :class="{ 'active': activeSection === 'earnings' }" class="nav-link">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="12" viewBox="0 0 14 12"
-                        fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="12" viewBox="0 0 14 12" fill="none">
                         <path
                             d="M0.625 3.29167V1.95833C0.625 1.60471 0.765476 1.26557 1.01552 1.01552C1.26557 0.765476 1.60471 0.625 1.95833 0.625H3.29167M0.625 3.29167C1.51367 3.29167 3.29167 2.75833 3.29167 0.625M0.625 3.29167V5.95833M3.29167 0.625H9.95833M0.625 5.95833V7.29167C0.625 7.64529 0.765476 7.98443 1.01552 8.23448C1.26557 8.48452 1.60471 8.625 1.95833 8.625H3.29167M0.625 5.95833C1.51367 5.95833 3.29167 6.49167 3.29167 8.625M12.625 3.29167V1.95833C12.625 1.60471 12.4845 1.26557 12.2345 1.01552C11.9844 0.765476 11.6453 0.625 11.2917 0.625H9.95833M12.625 3.29167C11.7363 3.29167 9.95833 2.75833 9.95833 0.625M12.625 3.29167V4.625M3.29167 8.625H5.95833"
                             stroke="#3B3731" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
@@ -332,13 +334,14 @@
                 </ul>
             </li>
 
+            <li class="nav-section-label" aria-hidden="true">Account</li>
+
             <!-- Settings -->
             <li class="nav-item">
                 <a href="#"
                     @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'settings'; bookingsOpen = false; availabilityOpen = false; servicesOpen = false; earningsOpen = false; settingsOpen = true; activeSettingsMenu = 'general'; window.dispatchEvent(new CustomEvent('settings-menu-selected', { detail: { menu: 'general' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'settings', active_settings_menu: 'general' } }))"
                     :class="{ 'active': activeSection === 'settings' }" class="nav-link">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
-                        fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
                         <path
                             d="M6.62511 8.89793C7.67952 8.89793 8.53428 8.04316 8.53428 6.98876C8.53428 5.93435 7.67952 5.07959 6.62511 5.07959C5.57071 5.07959 4.71594 5.93435 4.71594 6.98876C4.71594 8.04316 5.57071 8.89793 6.62511 8.89793Z"
                             stroke="#3B3731" stroke-width="1.25" />
@@ -388,14 +391,15 @@
             display: none !important;
         }
 
-        /* Dashboard Layout */
+        /* Dashboard Layout — 1240px content shell (Figma 1440 with ~100px side margins) */
         .dashboard-wrapper {
             display: flex;
-            gap: 4rem;
+            gap: 1.25rem;
             padding-top: 2rem;
-            max-width: 110rem;
+            max-width: 1240px;
+            width: min(1240px, calc(100% - 2rem));
             margin: 0 auto;
-            width: 100%;
+            box-sizing: border-box;
         }
 
         .dashboard-main {
@@ -405,6 +409,7 @@
 
         .aside {
             flex-shrink: 0;
+            width: 190px;
             position: sticky;
             top: 2rem;
             align-self: flex-start;
@@ -433,12 +438,35 @@
             padding: 0;
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
-            max-width: 240px;
+            gap: 0;
+            width: 100%;
+            max-width: 190px;
+        }
+
+        .nav-section-label {
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+            text-transform: uppercase;
+            padding: 0;
+            margin: 0.5rem 0 0.5rem;
+            list-style: none;
+        }
+
+        .nav-list>.nav-section-label:first-child {
+            margin-top: 0;
         }
 
         .nav-item {
             position: relative;
+            margin-bottom: 0.875rem;
+        }
+
+        .nav-item:last-child {
+            margin-bottom: 0;
         }
 
         .booking-status-list {
@@ -612,15 +640,20 @@
             line-height: normal;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1rem;
-            border-radius: 9999px;
-            transition: all 0.2s ease;
+            gap: 0.625rem;
+            padding: 0.8125rem 1.25rem;
+            min-height: 48px;
+            border-radius: 96px;
+            transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
+            box-sizing: border-box;
+            width: 100%;
         }
 
         .nav-link svg {
-            width: 20px;
-            height: 20px;
+            width: 12px;
+            height: 12px;
+            flex-shrink: 0;
         }
 
         .nav-link:hover {
@@ -629,9 +662,13 @@
         }
 
         .nav-link:hover svg path,
-        .nav-link:hover svg circle {
+        .nav-link:hover svg circle,
+        .nav-link:hover svg rect {
             stroke: #FFF;
-            fill: none;
+        }
+
+        .nav-link:hover svg [fill]:not([fill="none"]) {
+            fill: #FFF;
         }
 
         .nav-link.active {
@@ -639,23 +676,57 @@
             color: #FFF;
             border: none;
             outline: none;
+            box-shadow: 0 0 10px 0 rgba(255, 216, 140, 0.7);
+        }
+
+        .nav-link.active .nav-text {
+            font-weight: 700;
         }
 
         .nav-link.active svg path,
         .nav-link.active svg rect,
         .nav-link.active svg circle {
             stroke: #FFF;
-            fill: none;
+        }
+
+        .nav-link.active svg [fill]:not([fill="none"]) {
+            fill: #FFF;
         }
 
         .nav-icon {
-            width: 20px;
-            height: 20px;
+            width: 12px;
+            height: 12px;
             flex-shrink: 0;
         }
 
         .nav-text {
-            font-weight: 500;
+            font-weight: 400;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .nav-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 6px;
+            margin-left: auto;
+            border-radius: 9999px;
+            background: #FFC97A;
+            color: #FFF;
+            font-family: Lato;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .nav-link:hover .nav-badge,
+        .nav-link.active .nav-badge {
+            background: #FFF;
+            color: #FFC97A;
         }
 
         /* Mobile Overlay */

@@ -104,8 +104,8 @@
                             <a href="{{ $dashboardLogoHref }}" wire:navigate
                                 @click="activeSection = @js($isMarketingHubRoute ? 'marketing-hub' : 'business-hub')"
                                 class="d-inline-flex align-items-end gap-10" aria-label="FursGo Business dashboard">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40"
-                                    viewBox="0 0 145 40" fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40" viewBox="0 0 145 40"
+                                    fill="none">
                                     <path
                                         d="M132.206 12.7941C134.795 12.7941 137.035 13.2385 138.927 14.1273C140.852 14.9832 142.345 16.3987 143.407 18.3738C144.469 20.349 145 22.9989 145 26.3237C145 29.6485 144.469 32.2985 143.407 34.2736C142.345 36.2487 140.852 37.6642 138.927 38.5201C137.035 39.376 134.795 39.8039 132.206 39.8039C129.651 39.8039 127.41 39.376 125.485 38.5201C123.561 37.6642 122.067 36.2487 121.005 34.2736C119.943 32.2985 119.412 29.6485 119.412 26.3237C119.412 22.9989 119.943 20.349 121.005 18.3738C122.067 16.3987 123.561 14.9832 125.485 14.1273C127.41 13.2385 129.651 12.7941 132.206 12.7941ZM132.206 13.7817C131.21 13.7817 130.381 14.7692 129.717 16.7444C129.053 18.7195 128.721 21.9126 128.721 26.3237C128.721 30.7348 129.053 33.9279 129.717 35.9031C130.381 37.8453 131.21 38.8164 132.206 38.8164C133.202 38.8164 134.031 37.8453 134.695 35.9031C135.359 33.9279 135.691 30.7348 135.691 26.3237C135.691 21.9126 135.359 18.7195 134.695 16.7444C134.031 14.7692 133.202 13.7817 132.206 13.7817Z"
                                         fill="#FFC97A" />
@@ -150,25 +150,24 @@
                                 <a href="{{ route('business-homepage-groomer-space-owner') }}"
                                     class="{{ $isForGroomersHostsActive ? 'active' : '' }}" wire:navigate>FursGo
                                     Business</a>
-                                <a href="{{ route('help-and-support') }}"
-                                    class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
+                                <a href="{{ route('help-and-support') }}" class="{{ $isHelpCentreRoute ? 'active' : '' }}"
+                                    wire:navigate>Help Centre</a>
                             @else
                                 @if ($variant !== 'dashboard')
-                                    <a href="#" class="{{ $isBusinessLandingRoute ? 'active' : '' }}"
-                                        wire:navigate>Our Mission</a>
+                                    <a href="#" class="{{ $isBusinessLandingRoute ? 'active' : '' }}" wire:navigate>Our Mission</a>
                                 @endif
                                 <a href="{{ route('business-homepage-groomer-space-owner') }}"
                                     class="{{ $isBusinessHomepageRoute ? 'active' : '' }}" wire:navigate>FursGo
                                     Business</a>
-                                <a href="{{ route('help-and-support') }}"
-                                    class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
+                                <a href="{{ route('help-and-support') }}" class="{{ $isHelpCentreRoute ? 'active' : '' }}"
+                                    wire:navigate>Help Centre</a>
                             @endif
                         </div>
                         <div class="session-login-signup-div dashboard-header-icons d-flex align-items-center gap-40">
                             <div class="messages-content-tab">
                                 <a class="messages-btn cursor">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="22"
-                                        viewBox="0 0 26 22" fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="22" viewBox="0 0 26 22"
+                                        fill="none">
                                         <path
                                             d="M0.75 10.75C0.75 6.03625 0.75 3.67875 2.215 2.215C3.68 0.75125 6.03625 0.75 10.75 0.75H15.75C20.4637 0.75 22.8212 0.75 24.285 2.215C25.7487 3.68 25.75 6.03625 25.75 10.75C25.75 15.4637 25.75 17.8212 24.285 19.285C22.82 20.7487 20.4637 20.75 15.75 20.75H10.75C6.03625 20.75 3.67875 20.75 2.215 19.285C0.75125 17.82 0.75 15.4637 0.75 10.75Z"
                                             stroke="#3B3731" stroke-width="1.5" />
@@ -199,8 +198,7 @@
                                             </p>
                                         </div>
                                         <div class="tags">
-                                            <p class="simple-font muted-color cursor">Unread <span
-                                                    class="count">5</span>
+                                            <p class="simple-font muted-color cursor">Unread <span class="count">5</span>
                                             </p>
                                         </div>
                                     </div>
@@ -210,11 +208,11 @@
                                             <div class="profile-pic">
                                                 <div class="profile-image-wrapper">
 
-                                                    <img src="{{ asset('images/message_profile_1.png') }}"
-                                                        alt="Hero Image" class="rounded-image">
+                                                    <img src="{{ asset('images/message_profile_1.png') }}" alt="Hero Image"
+                                                        class="rounded-image">
                                                     <div class="top-left-svg">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20"
-                                                            height="22" viewBox="0 0 20 22" fill="none">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="22"
+                                                            viewBox="0 0 20 22" fill="none">
                                                             <path
                                                                 d="M10.5114 0.120327C10.3372 0.0415119 10.1505 3.05176e-05 9.95555 3.05176e-05C9.76059 3.05176e-05 9.57393 0.0415119 9.3997 0.120327L1.58876 3.43469C0.676166 3.82047 -0.00412927 4.72061 1.88678e-05 5.80743C0.0207596 9.92238 1.7132 17.4513 8.86045 20.8735C9.55319 21.2053 10.3579 21.2053 11.0507 20.8735C18.1979 17.4513 19.8903 9.92238 19.9111 5.80743C19.9152 4.72061 19.2349 3.82047 18.3224 3.43469L10.5114 0.120327Z"
                                                                 fill="#CBDCE8" />
@@ -268,10 +266,10 @@
                                                     <img src="{{ asset('images/groomer-profile.png') }}"
                                                         class="rounded-image" alt="Hero Image">
                                                     <div class="top-left-svg">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="21"
-                                                            height="23" viewBox="0 0 21 23" fill="none">
-                                                            <ellipse cx="10.9241" cy="11.3744" rx="6.44549"
-                                                                ry="6.06626" fill="white" />
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="21" height="23"
+                                                            viewBox="0 0 21 23" fill="none">
+                                                            <ellipse cx="10.9241" cy="11.3744" rx="6.44549" ry="6.06626"
+                                                                fill="white" />
                                                             <path
                                                                 d="M10.6272 0.127384C10.4511 0.0439255 10.2623 0 10.0652 0C9.86812 0 9.6794 0.0439255 9.50326 0.127384L1.60626 3.63703C0.683615 4.04554 -0.00417476 4.99872 1.90757e-05 6.14957C0.0209883 10.507 1.73207 18.4795 8.95806 22.1033C9.65843 22.4547 10.472 22.4547 11.1724 22.1033C18.3984 18.4795 20.1095 10.507 20.1304 6.14957C20.1346 4.99872 19.4469 4.04554 18.5242 3.63703L10.6272 0.127384ZM6.07689 12.5715C6.2782 12.6242 6.49208 12.6505 6.71016 12.6505C8.19059 12.6505 9.39422 11.3899 9.39422 9.83931V7.02808H11.2479C11.7554 7.02808 12.2209 7.32677 12.4473 7.80556L12.7493 8.43369H15.4333C15.8024 8.43369 16.1044 8.74996 16.1044 9.1365V10.5421C16.1044 12.4836 14.603 14.0562 12.7493 14.0562H10.7362V16.2832C10.7362 16.6038 10.4888 16.8674 10.1785 16.8674C10.103 16.8674 10.0275 16.8498 9.96039 16.8191L5.82107 14.961C5.54428 14.838 5.36813 14.5525 5.36813 14.2406C5.36813 14.1177 5.3933 13.9991 5.44782 13.8892L6.07689 12.5715ZM6.03915 7.02808H8.05219V9.83931C8.05219 10.6168 7.45247 11.2449 6.71016 11.2449C5.96785 11.2449 5.36813 10.6168 5.36813 9.83931V7.73089C5.36813 7.34434 5.67009 7.02808 6.03915 7.02808ZM11.4073 9.1365C11.4073 8.9501 11.3366 8.77134 11.2107 8.63954C11.0849 8.50774 10.9142 8.43369 10.7362 8.43369C10.5583 8.43369 10.3876 8.50774 10.2618 8.63954C10.1359 8.77134 10.0652 8.9501 10.0652 9.1365C10.0652 9.3229 10.1359 9.50166 10.2618 9.63346C10.3876 9.76526 10.5583 9.83931 10.7362 9.83931C10.9142 9.83931 11.0849 9.76526 11.2107 9.63346C11.3366 9.50166 11.4073 9.3229 11.4073 9.1365Z"
                                                                 fill="#C9DDA0" />
@@ -302,11 +300,11 @@
 
                                             <div class="profile-pic">
                                                 <div class="profile-image-wrapper">
-                                                    <img src="{{ asset('images/space_card1.png') }}"
-                                                        class="rounded-image" alt="Hero Image">
+                                                    <img src="{{ asset('images/space_card1.png') }}" class="rounded-image"
+                                                        alt="Hero Image">
                                                     <div class="top-left-svg">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20"
-                                                            height="22" viewBox="0 0 20 22" fill="none">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="22"
+                                                            viewBox="0 0 20 22" fill="none">
                                                             <path
                                                                 d="M10.5114 0.120357C10.3372 0.0415424 10.1505 6.10352e-05 9.95555 6.10352e-05C9.76059 6.10352e-05 9.57393 0.0415424 9.3997 0.120357L1.58876 3.43472C0.676166 3.8205 -0.00412927 4.72064 1.88678e-05 5.80746C0.0207596 9.92241 1.7132 17.4513 8.86045 20.8735C9.55319 21.2054 10.3579 21.2054 11.0507 20.8735C18.1979 17.4513 19.8903 9.92241 19.9111 5.80746C19.9152 4.72064 19.2349 3.8205 18.3224 3.43472L10.5114 0.120357Z"
                                                                 fill="#CBDCE8" />
@@ -327,8 +325,7 @@
                                                             <path
                                                                 d="M8.69331 8.0266C8.69331 8.20343 8.62307 8.37302 8.49803 8.49806C8.37299 8.6231 8.2034 8.69334 8.02657 8.69334C7.84974 8.69334 7.68015 8.6231 7.55512 8.49806C7.43008 8.37302 7.35983 8.20343 7.35983 8.0266C7.35983 7.84977 7.43008 7.68018 7.55512 7.55515C7.68015 7.43011 7.84974 7.35986 8.02657 7.35986C8.2034 7.35986 8.37299 7.43011 8.49803 7.55515C8.62307 7.68018 8.69331 7.84977 8.69331 8.0266Z"
                                                                 fill="#CBDCE8" stroke="white" />
-                                                            <path d="M10.0268 6.29364V6.34698V6.29364Z"
-                                                                fill="#CBDCE8" />
+                                                            <path d="M10.0268 6.29364V6.34698V6.29364Z" fill="#CBDCE8" />
                                                             <path d="M10.0268 6.29364V6.34698" stroke="white"
                                                                 stroke-linecap="round" stroke-linejoin="round" />
                                                         </svg>
@@ -352,8 +349,7 @@
 
                                         </div>
                                     </div>
-                                    <div
-                                        class="view-all-mark-read d-flex align-items-center justify-content-between mt-4">
+                                    <div class="view-all-mark-read d-flex align-items-center justify-content-between mt-4">
                                         <a href="{{ url('/messages_notification/messages') }}"
                                             class="dark-color-font link-tag" wire:navigate>View
                                             All</a>
@@ -365,8 +361,7 @@
                                                     stroke-linecap="round" stroke-linejoin="round" />
                                                 <path
                                                     d="M15.5 8V13.625C15.5 14.1223 15.3025 14.5992 14.9508 14.9508C14.5992 15.3025 14.1223 15.5 13.625 15.5H2.375C1.87772 15.5 1.40081 15.3025 1.04917 14.9508C0.697544 14.5992 0.5 14.1223 0.5 13.625V2.375C0.5 1.87772 0.697544 1.40081 1.04917 1.04917C1.40081 0.697544 1.87772 0.5 2.375 0.5H10.8125"
-                                                    stroke="#3B3731" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
+                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
                                             <a href="" class="dark-color-font link-tag" wire:navigate>Mark as
                                                 Read</a>
@@ -377,8 +372,8 @@
 
                             <div class="notification-content-tab">
                                 <a class="notification-btn cursor">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
-                                        viewBox="0 0 22 22" fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22"
+                                        fill="none">
                                         <path
                                             d="M16.134 10C16.715 15.375 19 17 19 17H1C1 17 4 14.867 4 7.4C4 5.703 4.632 4.075 5.757 2.875C6.882 1.675 8.41 1 10 1C10.338 1 10.6713 1.03 11 1.09M11.73 20C11.5542 20.3031 11.3018 20.5547 10.9982 20.7295C10.6946 20.9044 10.3504 20.9965 10 20.9965C9.6496 20.9965 9.3054 20.9044 9.0018 20.7295C8.6982 20.5547 8.4458 20.3031 8.27 20M17 7C17.7956 7 18.5587 6.68393 19.1213 6.12132C19.6839 5.55871 20 4.79565 20 4C20 3.20435 19.6839 2.44129 19.1213 1.87868C18.5587 1.31607 17.7956 1 17 1C16.2044 1 15.4413 1.31607 14.8787 1.87868C14.3161 2.44129 14 3.20435 14 4C14 4.79565 14.3161 5.55871 14.8787 6.12132C15.4413 6.68393 16.2044 7 17 7Z"
                                             stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
@@ -407,23 +402,19 @@
                                             </p>
                                         </div>
                                         <div class="tags">
-                                            <p class="simple-font muted-color cursor">Bookings <span
-                                                    class="count">5</span>
+                                            <p class="simple-font muted-color cursor">Bookings <span class="count">5</span>
                                             </p>
                                         </div>
                                         <div class="tags">
-                                            <p class="simple-font muted-color cursor">Payments <span
-                                                    class="count">3</span>
+                                            <p class="simple-font muted-color cursor">Payments <span class="count">3</span>
                                             </p>
                                         </div>
                                         <div class="tags">
-                                            <p class="simple-font muted-color cursor">Reviews <span
-                                                    class="count">2</span>
+                                            <p class="simple-font muted-color cursor">Reviews <span class="count">2</span>
                                             </p>
                                         </div>
                                         <div class="tags">
-                                            <p class="simple-font muted-color cursor">Updates <span
-                                                    class="count">3</span>
+                                            <p class="simple-font muted-color cursor">Updates <span class="count">3</span>
                                             </p>
                                         </div>
                                     </div>
@@ -431,28 +422,24 @@
                                         <div class="header-notifications-list booking-confirmed cursor mt-4">
                                             <div
                                                 class="header-notification-list-item d-flex align-items-center justify-content-between">
-                                                <div
-                                                    class="notification-list-item-inner-left d-flex align-items-center">
+                                                <div class="notification-list-item-inner-left d-flex align-items-center">
                                                     <div class="notification-list-item-inner-left-icon">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="86"
-                                                            height="86" viewBox="0 0 86 86" fill="none">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="86" height="86"
+                                                            viewBox="0 0 86 86" fill="none">
                                                             <g opacity="0.8" filter="url(#filter0_d_10_2216)">
-                                                                <circle cx="43" cy="39" r="28"
-                                                                    fill="#C9DDA0" />
+                                                                <circle cx="43" cy="39" r="28" fill="#C9DDA0" />
                                                             </g>
                                                             <path
                                                                 d="M33 39.0948C33 35.4849 33 33.6795 34.172 32.5586C35.344 31.4376 37.229 31.4366 41 31.4366H45C48.771 31.4366 50.657 31.4366 51.828 32.5586C52.999 33.6805 53 35.4849 53 39.0948V41.0093C53 44.6191 53 46.4245 51.828 47.5455C50.656 48.6664 48.771 48.6674 45 48.6674H41C37.229 48.6674 35.343 48.6674 34.172 47.5455C33.001 46.4236 33 44.6191 33 41.0093V39.0948Z"
                                                                 stroke="white" stroke-width="1.5" />
                                                             <path d="M38 31.4359V30M48 31.4359V30M33.5 36.2222H52.5"
-                                                                stroke="white" stroke-width="1.5"
-                                                                stroke-linecap="round" />
+                                                                stroke="white" stroke-width="1.5" stroke-linecap="round" />
                                                             <path
                                                                 d="M49.0002 43.8804C49.0002 44.1343 48.8949 44.3778 48.7074 44.5573C48.5198 44.7368 48.2655 44.8377 48.0002 44.8377C47.735 44.8377 47.4807 44.7368 47.2931 44.5573C47.1056 44.3778 47.0002 44.1343 47.0002 43.8804C47.0002 43.6266 47.1056 43.3831 47.2931 43.2035C47.4807 43.024 47.735 42.9232 48.0002 42.9232C48.2655 42.9232 48.5198 43.024 48.7074 43.2035C48.8949 43.3831 49.0002 43.6266 49.0002 43.8804ZM49.0002 40.0514C49.0002 40.3053 48.8949 40.5487 48.7074 40.7283C48.5198 40.9078 48.2655 41.0086 48.0002 41.0086C47.735 41.0086 47.4807 40.9078 47.2931 40.7283C47.1056 40.5487 47.0002 40.3053 47.0002 40.0514C47.0002 39.7975 47.1056 39.554 47.2931 39.3745C47.4807 39.195 47.735 39.0941 48.0002 39.0941C48.2655 39.0941 48.5198 39.195 48.7074 39.3745C48.8949 39.554 49.0002 39.7975 49.0002 40.0514ZM44.0002 43.8804C44.0002 44.1343 43.8949 44.3778 43.7074 44.5573C43.5198 44.7368 43.2655 44.8377 43.0002 44.8377C42.735 44.8377 42.4807 44.7368 42.2931 44.5573C42.1056 44.3778 42.0002 44.1343 42.0002 43.8804C42.0002 43.6266 42.1056 43.3831 42.2931 43.2035C42.4807 43.024 42.735 42.9232 43.0002 42.9232C43.2655 42.9232 43.5198 43.024 43.7074 43.2035C43.8949 43.3831 44.0002 43.6266 44.0002 43.8804ZM44.0002 40.0514C44.0002 40.3053 43.8949 40.5487 43.7074 40.7283C43.5198 40.9078 43.2655 41.0086 43.0002 41.0086C42.735 41.0086 42.4807 40.9078 42.2931 40.7283C42.1056 40.5487 42.0002 40.3053 42.0002 40.0514C42.0002 39.7975 42.1056 39.554 42.2931 39.3745C42.4807 39.195 42.735 39.0941 43.0002 39.0941C43.2655 39.0941 43.5198 39.195 43.7074 39.3745C43.8949 39.554 44.0002 39.7975 44.0002 40.0514ZM39.0002 43.8804C39.0002 44.1343 38.8949 44.3778 38.7074 44.5573C38.5198 44.7368 38.2655 44.8377 38.0002 44.8377C37.735 44.8377 37.4807 44.7368 37.2931 44.5573C37.1056 44.3778 37.0002 44.1343 37.0002 43.8804C37.0002 43.6266 37.1056 43.3831 37.2931 43.2035C37.4807 43.024 37.735 42.9232 38.0002 42.9232C38.2655 42.9232 38.5198 43.024 38.7074 43.2035C38.8949 43.3831 39.0002 43.6266 39.0002 43.8804ZM39.0002 40.0514C39.0002 40.3053 38.8949 40.5487 38.7074 40.7283C38.5198 40.9078 38.2655 41.0086 38.0002 41.0086C37.735 41.0086 37.4807 40.9078 37.2931 40.7283C37.1056 40.5487 37.0002 40.3053 37.0002 40.0514C37.0002 39.7975 37.1056 39.554 37.2931 39.3745C37.4807 39.195 37.735 39.0941 38.0002 39.0941C38.2655 39.0941 38.5198 39.195 38.7074 39.3745C38.8949 39.554 39.0002 39.7975 39.0002 40.0514Z"
                                                                 fill="white" />
                                                             <defs>
-                                                                <filter id="filter0_d_10_2216" x="0" y="0"
-                                                                    width="86" height="86"
-                                                                    filterUnits="userSpaceOnUse"
+                                                                <filter id="filter0_d_10_2216" x="0" y="0" width="86"
+                                                                    height="86" filterUnits="userSpaceOnUse"
                                                                     color-interpolation-filters="sRGB">
                                                                     <feFlood flood-opacity="0"
                                                                         result="BackgroundImageFix" />
@@ -470,8 +457,7 @@
                                                                     <feBlend mode="normal" in2="BackgroundImageFix"
                                                                         result="effect1_dropShadow_10_2216" />
                                                                     <feBlend mode="normal" in="SourceGraphic"
-                                                                        in2="effect1_dropShadow_10_2216"
-                                                                        result="shape" />
+                                                                        in2="effect1_dropShadow_10_2216" result="shape" />
                                                                 </filter>
                                                             </defs>
                                                         </svg>
@@ -487,8 +473,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="notification-list-item-inner-right">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10"
-                                                        height="10" viewBox="0 0 10 10" fill="none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"
+                                                        viewBox="0 0 10 10" fill="none">
                                                         <circle cx="5" cy="5" r="5" fill="#C9DDA0" />
                                                     </svg>
                                                 </div>
@@ -497,22 +483,19 @@
                                         <div class="header-notifications-list booking-reminder cursor mt-4">
                                             <div
                                                 class="header-notification-list-item d-flex align-items-center justify-content-between">
-                                                <div
-                                                    class="notification-list-item-inner-left d-flex align-items-center">
+                                                <div class="notification-list-item-inner-left d-flex align-items-center">
                                                     <div class="notification-list-item-inner-left-icon">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="82"
-                                                            height="82" viewBox="0 0 82 82" fill="none">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="82" height="82"
+                                                            viewBox="0 0 82 82" fill="none">
                                                             <g filter="url(#filter0_d_10_1928)">
-                                                                <circle cx="41" cy="37" r="28"
-                                                                    fill="#FBAC83" />
+                                                                <circle cx="41" cy="37" r="28" fill="#FBAC83" />
                                                             </g>
                                                             <path
                                                                 d="M41 28.2656C41.0605 28.2656 41.1132 28.2837 41.1504 28.3096C41.1824 28.3319 41.2169 28.3701 41.2393 28.4453L42.9014 34.0469C43.1217 34.7896 43.8044 35.2988 44.5791 35.2988H50.1377C50.3741 35.2991 50.4781 35.5978 50.293 35.7451L45.6445 39.4443C45.0864 39.8886 44.8539 40.6267 45.0566 41.3105L46.7939 47.1699C46.8631 47.404 46.5906 47.5881 46.3994 47.4365L42.0898 44.0068C41.452 43.4993 40.548 43.4993 39.9102 44.0068L35.6006 47.4365C35.4094 47.5881 35.1369 47.404 35.2061 47.1699L36.9434 41.3105C37.1461 40.6267 36.9135 39.8886 36.3555 39.4443L31.707 35.7451C31.5219 35.5978 31.6259 35.2991 31.8623 35.2988H37.4209C38.1956 35.2988 38.8783 34.7896 39.0986 34.0469L40.7607 28.4453C40.7831 28.3701 40.8176 28.3319 40.8496 28.3096C40.8868 28.2837 40.9395 28.2656 41 28.2656Z"
                                                                 stroke="white" stroke-width="1.5" />
                                                             <defs>
-                                                                <filter id="filter0_d_10_1928" x="0" y="0"
-                                                                    width="82" height="82"
-                                                                    filterUnits="userSpaceOnUse"
+                                                                <filter id="filter0_d_10_1928" x="0" y="0" width="82"
+                                                                    height="82" filterUnits="userSpaceOnUse"
                                                                     color-interpolation-filters="sRGB">
                                                                     <feFlood flood-opacity="0"
                                                                         result="BackgroundImageFix" />
@@ -530,8 +513,7 @@
                                                                     <feBlend mode="normal" in2="BackgroundImageFix"
                                                                         result="effect1_dropShadow_10_1928" />
                                                                     <feBlend mode="normal" in="SourceGraphic"
-                                                                        in2="effect1_dropShadow_10_1928"
-                                                                        result="shape" />
+                                                                        in2="effect1_dropShadow_10_1928" result="shape" />
                                                                 </filter>
                                                             </defs>
                                                         </svg>
@@ -547,8 +529,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="notification-list-item-inner-right">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10"
-                                                        height="10" viewBox="0 0 10 10" fill="none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"
+                                                        viewBox="0 0 10 10" fill="none">
                                                         <circle cx="5" cy="5" r="5" fill="#FBAC83" />
                                                     </svg>
                                                 </div>
@@ -557,26 +539,23 @@
                                         <div class="header-notifications-list payment-failed cursor mt-4">
                                             <div
                                                 class="header-notification-list-item d-flex align-items-center justify-content-between">
-                                                <div
-                                                    class="notification-list-item-inner-left d-flex align-items-center">
+                                                <div class="notification-list-item-inner-left d-flex align-items-center">
                                                     <div class="notification-list-item-inner-left-icon">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="82"
-                                                            height="82" viewBox="0 0 82 82" fill="none">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="82" height="82"
+                                                            viewBox="0 0 82 82" fill="none">
                                                             <g filter="url(#filter0_d_10_1934)">
-                                                                <circle cx="41" cy="37" r="28"
-                                                                    fill="#FFA899" />
+                                                                <circle cx="41" cy="37" r="28" fill="#FFA899" />
                                                             </g>
                                                             <path
                                                                 d="M31 33.5714V32.6571C31 31.3771 31 30.7371 31.2422 30.248C31.4556 29.8171 31.7944 29.4686 32.2133 29.2491C32.6889 29 33.3111 29 34.5556 29H47.4444C48.6889 29 49.3111 29 49.7856 29.2491C50.2044 29.4686 50.5444 29.8171 50.7578 30.248C51 30.736 51 31.376 51 32.6537V33.5714M31 33.5714H51H31ZM31 33.5714V41.3429C31 42.6229 31 43.2629 31.2422 43.752C31.4553 44.1821 31.7952 44.5317 32.2133 44.7509C32.6878 45 33.31 45 34.5522 45H47.4478C48.69 45 49.3111 45 49.7856 44.7509C50.2044 44.5314 50.5444 44.1817 50.7578 43.752C51 43.2629 51 42.6251 51 41.3474V33.5714M34.3333 40.4286H38.7778H34.3333Z"
                                                                 fill="#FFA899" />
                                                             <path
                                                                 d="M31 33.5714V32.6571C31 31.3771 31 30.7371 31.2422 30.248C31.4556 29.8171 31.7944 29.4686 32.2133 29.2491C32.6889 29 33.3111 29 34.5556 29H47.4444C48.6889 29 49.3111 29 49.7856 29.2491C50.2044 29.4686 50.5444 29.8171 50.7578 30.248C51 30.736 51 31.376 51 32.6537V33.5714M31 33.5714H51M31 33.5714V41.3429C31 42.6229 31 43.2629 31.2422 43.752C31.4553 44.1821 31.7952 44.5317 32.2133 44.7509C32.6878 45 33.31 45 34.5522 45H47.4478C48.69 45 49.3111 45 49.7856 44.7509C50.2044 44.5314 50.5444 44.1817 50.7578 43.752C51 43.2629 51 42.6251 51 41.3474V33.5714M34.3333 40.4286H38.7778"
-                                                                stroke="white" stroke-width="1.5"
-                                                                stroke-linecap="round" stroke-linejoin="round" />
+                                                                stroke="white" stroke-width="1.5" stroke-linecap="round"
+                                                                stroke-linejoin="round" />
                                                             <defs>
-                                                                <filter id="filter0_d_10_1934" x="0" y="0"
-                                                                    width="82" height="82"
-                                                                    filterUnits="userSpaceOnUse"
+                                                                <filter id="filter0_d_10_1934" x="0" y="0" width="82"
+                                                                    height="82" filterUnits="userSpaceOnUse"
                                                                     color-interpolation-filters="sRGB">
                                                                     <feFlood flood-opacity="0"
                                                                         result="BackgroundImageFix" />
@@ -594,8 +573,7 @@
                                                                     <feBlend mode="normal" in2="BackgroundImageFix"
                                                                         result="effect1_dropShadow_10_1934" />
                                                                     <feBlend mode="normal" in="SourceGraphic"
-                                                                        in2="effect1_dropShadow_10_1934"
-                                                                        result="shape" />
+                                                                        in2="effect1_dropShadow_10_1934" result="shape" />
                                                                 </filter>
                                                             </defs>
                                                         </svg>
@@ -609,8 +587,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="notification-list-item-inner-right">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10"
-                                                        height="10" viewBox="0 0 10 10" fill="none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"
+                                                        viewBox="0 0 10 10" fill="none">
                                                         <circle cx="5" cy="5" r="5" fill="#FFA899" />
                                                     </svg>
                                                 </div>
@@ -619,23 +597,20 @@
                                         <div class="header-notifications-list cursor mt-4">
                                             <div
                                                 class="header-notification-list-item d-flex align-items-center justify-content-between">
-                                                <div
-                                                    class="notification-list-item-inner-left d-flex align-items-center">
+                                                <div class="notification-list-item-inner-left d-flex align-items-center">
                                                     <div class="notification-list-item-inner-left-icon">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="82"
-                                                            height="82" viewBox="0 0 82 82" fill="none">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="82" height="82"
+                                                            viewBox="0 0 82 82" fill="none">
                                                             <g filter="url(#filter0_d_10_1940)">
-                                                                <circle cx="41" cy="37" r="28"
-                                                                    fill="white" />
+                                                                <circle cx="41" cy="37" r="28" fill="white" />
                                                             </g>
                                                             <path
                                                                 d="M46.9305 35.4737C47.5421 41.1316 49.9474 42.8421 49.9474 42.8421H31C31 42.8421 34.1579 40.5968 34.1579 32.7368C34.1579 30.9505 34.8232 29.2368 36.0074 27.9737C37.1916 26.7105 38.8 26 40.4737 26C40.8295 26 41.1804 26.0316 41.5263 26.0947M42.2947 46C42.1097 46.319 41.844 46.5838 41.5244 46.7679C41.2049 46.952 40.8425 47.0489 40.4737 47.0489C40.1049 47.0489 39.7425 46.952 39.4229 46.7679C39.1033 46.5838 38.8377 46.319 38.6526 46M47.8421 32.3158C48.6796 32.3158 49.4829 31.9831 50.0751 31.3909C50.6673 30.7986 51 29.9954 51 29.1579C51 28.3204 50.6673 27.5171 50.0751 26.9249C49.4829 26.3327 48.6796 26 47.8421 26C47.0046 26 46.2014 26.3327 45.6091 26.9249C45.0169 27.5171 44.6842 28.3204 44.6842 29.1579C44.6842 29.9954 45.0169 30.7986 45.6091 31.3909C46.2014 31.9831 47.0046 32.3158 47.8421 32.3158Z"
-                                                                stroke="#3B3731" stroke-width="1.5"
-                                                                stroke-linecap="round" stroke-linejoin="round" />
+                                                                stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
+                                                                stroke-linejoin="round" />
                                                             <defs>
-                                                                <filter id="filter0_d_10_1940" x="0" y="0"
-                                                                    width="82" height="82"
-                                                                    filterUnits="userSpaceOnUse"
+                                                                <filter id="filter0_d_10_1940" x="0" y="0" width="82"
+                                                                    height="82" filterUnits="userSpaceOnUse"
                                                                     color-interpolation-filters="sRGB">
                                                                     <feFlood flood-opacity="0"
                                                                         result="BackgroundImageFix" />
@@ -653,8 +628,7 @@
                                                                     <feBlend mode="normal" in2="BackgroundImageFix"
                                                                         result="effect1_dropShadow_10_1940" />
                                                                     <feBlend mode="normal" in="SourceGraphic"
-                                                                        in2="effect1_dropShadow_10_1940"
-                                                                        result="shape" />
+                                                                        in2="effect1_dropShadow_10_1940" result="shape" />
                                                                 </filter>
                                                             </defs>
                                                         </svg>
@@ -673,8 +647,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div
-                                        class="view-all-mark-read d-flex align-items-center justify-content-between mt-4">
+                                    <div class="view-all-mark-read d-flex align-items-center justify-content-between mt-4">
                                         <a href="{{ url('/messages_notification/notifications') }}"
                                             class="dark-color-font link-tag" wire:navigate>View
                                             All</a>
@@ -686,8 +659,7 @@
                                                     stroke-linecap="round" stroke-linejoin="round" />
                                                 <path
                                                     d="M15.5 8V13.625C15.5 14.1223 15.3025 14.5992 14.9508 14.9508C14.5992 15.3025 14.1223 15.5 13.625 15.5H2.375C1.87772 15.5 1.40081 15.3025 1.04917 14.9508C0.697544 14.5992 0.5 14.1223 0.5 13.625V2.375C0.5 1.87772 0.697544 1.40081 1.04917 1.04917C1.40081 0.697544 1.87772 0.5 2.375 0.5H10.8125"
-                                                    stroke="#3B3731" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
+                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
                                             <a href="" class="dark-color-font link-tag" wire:navigate>Mark as
                                                 Read</a>
@@ -698,8 +670,8 @@
 
                             <div class="user-content-tab">
                                 <a class="user-btn cursor">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="22"
-                                        viewBox="0 0 20 22" fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="22" viewBox="0 0 20 22"
+                                        fill="none">
                                         <path
                                             d="M0 20.0004V18.8893C0 15.2115 2.98889 12.2227 6.66667 12.2227H11.1111C14.7889 12.2227 17.7778 15.2115 17.7778 18.8893V20.0004"
                                             stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
@@ -752,12 +724,10 @@
                                                 viewBox="0 0 13 13" fill="none">
                                                 <path
                                                     d="M0.961537 6.49898C0.961537 6.49898 0.5 6.32591 0.5 5.57591C0.5 4.82591 0.961537 4.65284 0.961537 4.65284M12.0384 6.21052C12.0384 6.21052 12.5 6.08562 12.5 5.57591C12.5 5.0662 12.0384 4.9413 12.0384 4.9413M6.49998 3.72976V7.42206M2.34615 3.72976V7.42206M10.8828 0.620733C10.8828 0.620733 8.38363 3.72976 6.03844 3.72976H1.42307C1.30067 3.72976 1.18327 3.77839 1.09672 3.86494C1.01016 3.9515 0.961537 4.06889 0.961537 4.1913V6.96052C0.961537 7.08293 1.01016 7.20032 1.09672 7.28688C1.18327 7.37343 1.30067 7.42206 1.42307 7.42206H6.03844C8.38363 7.42206 10.8828 10.5441 10.8828 10.5441C11.0577 10.7748 11.5769 10.6168 11.5769 10.2605V0.902847C11.5769 0.547752 11.0865 0.359964 10.8828 0.620733Z"
-                                                    stroke="#3B3731" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
+                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                                 <path
                                                     d="M3.26922 7.42206V12.2682C3.26922 12.3294 3.29353 12.3881 3.33681 12.4314C3.38009 12.4747 3.43878 12.499 3.49999 12.499H5.02883C5.10113 12.499 5.17242 12.482 5.23696 12.4494C5.30151 12.4169 5.35749 12.3696 5.40041 12.3114C5.44332 12.2532 5.47197 12.1857 5.48404 12.1145C5.49611 12.0432 5.49126 11.9701 5.46988 11.901C5.22815 11.1256 4.65383 10.2513 4.65383 8.80667H5.11537C5.23777 8.80667 5.35517 8.75804 5.44172 8.67149C5.52828 8.58493 5.5769 8.46754 5.5769 8.34513V7.8836C5.5769 7.76119 5.52828 7.64379 5.44172 7.55724C5.35517 7.47068 5.23777 7.42206 5.11537 7.42206H4.65383"
-                                                    stroke="#3B3731" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
+                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
                                             <p class="medium-light-font">Marketing Hub</p>
                                         </a>
@@ -773,8 +743,7 @@
                                             </svg>
                                             <p class="medium-light-font">Account Settings</p>
                                         </a>
-                                        <a href="#" class="profile-item d-flex align-items-center gap-40"
-                                            wire:navigate>
+                                        <a href="#" class="profile-item d-flex align-items-center gap-40" wire:navigate>
                                             <svg xmlns="http://www.w3.org/2000/svg" width="19" height="22"
                                                 viewBox="0 0 19 22" fill="none">
                                                 <path
@@ -790,8 +759,8 @@
                                                 @csrf
                                                 <button type="submit"
                                                     class="mt-3 d-flex align-items-center gap-40 border-0 bg-transparent p-0 w-100 cursor-pointer">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="17"
-                                                        height="22" viewBox="0 0 17 22" fill="none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="22"
+                                                        viewBox="0 0 17 22" fill="none">
                                                         <path
                                                             d="M15.5645 0C15.9787 0 16.3145 0.335786 16.3145 0.75V4.4541C16.3142 4.86813 15.9785 5.2041 15.5645 5.2041C15.1505 5.20391 14.8147 4.86801 14.8145 4.4541V1.5H1.5V20H14.8145V17.0459C14.8147 16.632 15.1505 16.2961 15.5645 16.2959C15.9785 16.2959 16.3142 16.6319 16.3145 17.0459V20.75C16.3145 21.1642 15.9787 21.5 15.5645 21.5H0.75C0.335787 21.5 3.5434e-07 21.1642 0 20.75V0.75C0 0.335786 0.335786 0 0.75 0H15.5645ZM12.0293 6.84473C12.2246 6.64946 12.5411 6.64946 12.7363 6.84473L15.918 10.0264C16.1131 10.2216 16.1132 10.5382 15.918 10.7334L12.7363 13.915C12.5411 14.1101 12.2245 14.1101 12.0293 13.915C11.8342 13.7198 11.8342 13.4032 12.0293 13.208L14.3574 10.8799H5.19434C4.91827 10.8799 4.69447 10.6559 4.69434 10.3799C4.69434 10.1037 4.91819 9.87988 5.19434 9.87988H14.3574L12.0293 7.55176C11.8341 7.35658 11.8343 7.04001 12.0293 6.84473Z"
                                                             fill="#3B3731" />
@@ -833,8 +802,8 @@
                                             class="welcome-profile-img">
                                         <div class="verified-badge">
                                             @if (auth()->check() && auth()->user()->user_type === 'space')
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="29" height="31"
-                                                    viewBox="0 0 29 31" fill="none">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="29" height="31" viewBox="0 0 29 31"
+                                                    fill="none">
                                                     <path
                                                         d="M15.3096 0.175208C15.0558 0.0604166 14.784 0 14.5 0C14.216 0 13.9442 0.0604166 13.6904 0.175208L2.31398 5.00249C0.984817 5.56436 -0.00601417 6.8754 2.74804e-05 8.45832C0.0302358 14.4516 2.49523 25.4172 12.905 30.4016C13.914 30.8849 15.086 30.8849 16.095 30.4016C26.5048 25.4172 28.9698 14.4516 29 8.45832C29.006 6.8754 28.0152 5.56436 26.686 5.00249L15.3096 0.175208Z"
                                                         fill="#CBDCE8" />
@@ -843,27 +812,23 @@
                                                         fill="#CBDCE8" />
                                                     <path
                                                         d="M22.3736 8.39014L16.1586 14.9935M13.3976 14.6711C11.471 15.4107 9.93043 15.2841 8.38989 14.6735C8.77833 19.6789 11.112 21.6032 14.2234 22.3738C14.2234 22.3738 16.5672 20.716 16.9052 16.7858C16.9417 16.3601 16.9596 16.148 16.8718 15.9079C16.7832 15.6679 16.6092 15.4962 16.2619 15.152C15.6902 14.5865 15.405 14.3037 15.0655 14.2322C14.7261 14.1623 14.2832 14.3316 13.3976 14.6711Z"
-                                                        stroke="white" stroke-linecap="round"
-                                                        stroke-linejoin="round" />
+                                                        stroke="white" stroke-linecap="round" stroke-linejoin="round" />
                                                     <path
                                                         d="M9.55615 18.8365C9.55615 18.8365 11.4983 19.2125 13.4405 17.7131L9.55615 18.8365Z"
                                                         fill="#CBDCE8" />
-                                                    <path
-                                                        d="M9.55615 18.8365C9.55615 18.8365 11.4983 19.2125 13.4405 17.7131"
-                                                        stroke="white" stroke-linecap="round"
-                                                        stroke-linejoin="round" />
+                                                    <path d="M9.55615 18.8365C9.55615 18.8365 11.4983 19.2125 13.4405 17.7131"
+                                                        stroke="white" stroke-linecap="round" stroke-linejoin="round" />
                                                     <path
                                                         d="M12.6631 11.6923C12.6631 11.9498 12.5608 12.1968 12.3787 12.3789C12.1966 12.5611 11.9496 12.6634 11.692 12.6634C11.4345 12.6634 11.1875 12.5611 11.0054 12.3789C10.8233 12.1968 10.7209 11.9498 10.7209 11.6923C10.7209 11.4347 10.8233 11.1877 11.0054 11.0056C11.1875 10.8235 11.4345 10.7212 11.692 10.7212C11.9496 10.7212 12.1966 10.8235 12.3787 11.0056C12.5608 11.1877 12.6631 11.4347 12.6631 11.6923Z"
                                                         fill="#CBDCE8" stroke="white" />
                                                     <path d="M14.6052 9.16699V9.24468V9.16699Z" fill="#CBDCE8" />
-                                                    <path d="M14.6052 9.16699V9.24468" stroke="white"
-                                                        stroke-linecap="round" stroke-linejoin="round" />
+                                                    <path d="M14.6052 9.16699V9.24468" stroke="white" stroke-linecap="round"
+                                                        stroke-linejoin="round" />
                                                 </svg>
                                             @else
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="33"
-                                                    viewBox="0 0 30 33" fill="none">
-                                                    <ellipse cx="15.873" cy="16.5256" rx="9.3645"
-                                                        ry="8.81365" fill="white" />
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="33" viewBox="0 0 30 33"
+                                                    fill="none">
+                                                    <ellipse cx="15.873" cy="16.5256" rx="9.3645" ry="8.81365" fill="white" />
                                                     <path
                                                         d="M15.44 0.185076C15.1841 0.0638192 14.9099 0 14.6235 0C14.3372 0 14.063 0.0638192 13.8071 0.185076L2.3337 5.28423C0.993208 5.87775 -0.00606541 7.26263 2.77146e-05 8.93469C0.0304934 15.2656 2.51649 26.8487 13.015 32.1138C14.0325 32.6244 15.2146 32.6244 16.2321 32.1138C26.7306 26.8487 29.2166 15.2656 29.247 8.93469C29.2531 7.26263 28.2539 5.87775 26.9134 5.28423L15.44 0.185076ZM8.82897 18.2651C9.12144 18.3416 9.43219 18.3799 9.74903 18.3799C11.8999 18.3799 13.6486 16.5483 13.6486 14.2955V10.2111H16.3418C17.0791 10.2111 17.7554 10.645 18.0844 11.3407L18.5231 12.2533H22.4227C22.9589 12.2533 23.3976 12.7128 23.3976 13.2744V15.3166C23.3976 18.1374 21.2163 20.4222 18.5231 20.4222H15.5984V23.6578C15.5984 24.1237 15.2389 24.5066 14.7881 24.5066C14.6784 24.5066 14.5687 24.4811 14.4712 24.4364L8.45729 21.7368C8.05514 21.5581 7.79923 21.1433 7.79923 20.6902C7.79923 20.5115 7.83579 20.3392 7.915 20.1796L8.82897 18.2651ZM8.77413 10.2111H11.6988V14.2955C11.6988 15.4251 10.8275 16.3377 9.74903 16.3377C8.67055 16.3377 7.79923 15.4251 7.79923 14.2955V11.2322C7.79923 10.6706 8.23794 10.2111 8.77413 10.2111ZM16.5733 13.2744C16.5733 13.0036 16.4706 12.7439 16.2878 12.5524C16.105 12.3609 15.857 12.2533 15.5984 12.2533C15.3399 12.2533 15.0919 12.3609 14.9091 12.5524C14.7262 12.7439 14.6235 13.0036 14.6235 13.2744C14.6235 13.5452 14.7262 13.8049 14.9091 13.9964C15.0919 14.1879 15.3399 14.2955 15.5984 14.2955C15.857 14.2955 16.105 14.1879 16.2878 13.9964C16.4706 13.8049 16.5733 13.5452 16.5733 13.2744Z"
                                                         fill="#C9DDA0" />
@@ -884,8 +849,8 @@
                                     @endif
                                 </div>
                                 <div class="welcome-right d-flex align-items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                        viewBox="0 0 20 20" fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
+                                        fill="none">
                                         <path
                                             d="M8.75651 0.943537C9.14791 -0.314515 10.8521 -0.314511 11.2435 0.943541L12.7078 5.65027C12.8829 6.21288 13.3849 6.5938 13.9513 6.5938H18.69C19.9566 6.5938 20.4832 8.2865 19.4585 9.06402L15.6249 11.9729C15.1666 12.3207 14.9748 12.937 15.1499 13.4996L16.6142 18.2063C17.0056 19.4644 15.6269 20.5105 14.6022 19.733L10.7685 16.8241C10.3103 16.4764 9.68974 16.4764 9.23148 16.8241L5.3978 19.733C4.37311 20.5105 2.99439 19.4644 3.38579 18.2063L4.85012 13.4996C5.02516 12.937 4.83341 12.3207 4.37515 11.9729L0.541471 9.06402C-0.483225 8.2865 0.0434023 6.5938 1.31 6.5938H6.04868C6.61512 6.5938 7.11714 6.21288 7.29217 5.65027L8.75651 0.943537Z"
                                             fill="#FFC97A" />
@@ -924,8 +889,8 @@
 
             .dashboard-header .dashboard-header-container {
                 position: relative;
-                width: 100%;
-                max-width: 110rem;
+                width: min(1240px, calc(100% - 2rem));
+                max-width: 1240px;
                 margin-left: auto;
                 margin-right: auto;
                 box-sizing: border-box;
@@ -945,6 +910,14 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+            }
+
+            .logo-toggle-button,
+            .logo-toggle-button>a {
+                border: none !important;
+                outline: none !important;
+                box-shadow: none !important;
+                background: transparent;
             }
 
             .dash-menu-items>div:nth-child(2) {
@@ -1195,7 +1168,7 @@
                 font-family: "Playfair Display";
                 font-size: 36px;
                 font-style: normal;
-                font-weight: 600;
+                font-weight: 700;
                 line-height: normal;
             }
 
@@ -1239,7 +1212,7 @@
 
             @media (max-width: 1399.98px) {
                 .dashboard-header .dashboard-header-container {
-                    max-width: min(1320px, 100%);
+                    max-width: min(1240px, 100%);
                 }
 
                 .dashboard-header .dash-menu-items>div:nth-child(2) {
@@ -1253,7 +1226,7 @@
 
             @media (max-width: 1199.98px) {
                 .dashboard-header .dashboard-header-container {
-                    max-width: min(1140px, 100%);
+                    max-width: min(1240px, 100%);
                 }
 
                 .dashboard-header .dash-menu-items>div:nth-child(2) {
@@ -1375,8 +1348,8 @@
                     <div>
                         <div class="logo-toggle-button d-flex justify-content-between">
                             <a href="{{ route('home') }}" wire:navigate class="d-inline-flex align-items-end gap-10">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40"
-                                    viewBox="0 0 145 40" fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40" viewBox="0 0 145 40"
+                                    fill="none">
                                     <path
                                         d="M132.206 12.7941C134.795 12.7941 137.035 13.2385 138.927 14.1273C140.852 14.9832 142.345 16.3987 143.407 18.3738C144.469 20.349 145 22.9989 145 26.3237C145 29.6485 144.469 32.2985 143.407 34.2736C142.345 36.2487 140.852 37.6642 138.927 38.5201C137.035 39.376 134.795 39.8039 132.206 39.8039C129.651 39.8039 127.41 39.376 125.485 38.5201C123.561 37.6642 122.067 36.2487 121.005 34.2736C119.943 32.2985 119.412 29.6485 119.412 26.3237C119.412 22.9989 119.943 20.349 121.005 18.3738C122.067 16.3987 123.561 14.9832 125.485 14.1273C127.41 13.2385 129.651 12.7941 132.206 12.7941ZM132.206 13.7817C131.21 13.7817 130.381 14.7692 129.717 16.7444C129.053 18.7195 128.721 21.9126 128.721 26.3237C128.721 30.7348 129.053 33.9279 129.717 35.9031C130.381 37.8453 131.21 38.8164 132.206 38.8164C133.202 38.8164 134.031 37.8453 134.695 35.9031C135.359 33.9279 135.691 30.7348 135.691 26.3237C135.691 21.9126 135.359 18.7195 134.695 16.7444C134.031 14.7692 133.202 13.7817 132.206 13.7817Z"
                                         fill="#FFC97A" />
@@ -1414,16 +1387,16 @@
                             <a href="{{ route('business-homepage-groomer-space-owner') }}"
                                 class="{{ $isForGroomersHostsActive ? 'active' : '' }}" wire:navigate>FursGo
                                 Business</a>
-                            <a href="{{ route('help-and-support') }}"
-                                class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
+                            <a href="{{ route('help-and-support') }}" class="{{ $isHelpCentreRoute ? 'active' : '' }}"
+                                wire:navigate>Help Centre</a>
                         @else
                             <a href="#" class="{{ $isBusinessLandingRoute ? 'active' : '' }}" wire:navigate>Our
                                 Mission</a>
                             <a href="{{ route('business-homepage-groomer-space-owner') }}"
                                 class="{{ $isBusinessHomepageRoute ? 'active' : '' }}" wire:navigate>FursGo
                                 Business</a>
-                            <a href="{{ route('help-and-support') }}"
-                                class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
+                            <a href="{{ route('help-and-support') }}" class="{{ $isHelpCentreRoute ? 'active' : '' }}"
+                                wire:navigate>Help Centre</a>
                         @endif
                     </div>
                     <div class="d-flex justify-content-between align-items-center gap-20">
@@ -1492,7 +1465,7 @@
 
         if (msgsBtn && !msgsBtn._dropdownAttached) {
             msgsBtn._dropdownAttached = true;
-            msgsBtn.addEventListener('click', function(e) {
+            msgsBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 toggleDropdown('.messages-notifications');
@@ -1501,7 +1474,7 @@
 
         if (notifBtn && !notifBtn._dropdownAttached) {
             notifBtn._dropdownAttached = true;
-            notifBtn.addEventListener('click', function(e) {
+            notifBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 toggleDropdown('.header-notifications');
@@ -1510,7 +1483,7 @@
 
         if (userBtn && !userBtn._dropdownAttached) {
             userBtn._dropdownAttached = true;
-            userBtn.addEventListener('click', function(e) {
+            userBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 toggleDropdown('.user-profile-options');
@@ -1519,7 +1492,7 @@
     }
 
     // Close on outside click
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         const target = e.target;
         const isButton = target.closest('.messages-btn') || target.closest('.notification-btn') || target
             .closest('.user-btn');
@@ -1565,7 +1538,7 @@
     }
 
     // Re-initialize after Livewire
-    document.addEventListener('livewire:navigated', function() {
+    document.addEventListener('livewire:navigated', function () {
         setTimeout(initHeaderDropdowns, 100);
     });
 </script>
