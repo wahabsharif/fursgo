@@ -15,10 +15,10 @@ class BookingSeeder extends Seeder
 {
     public function run(): void
     {
-        $groomerSpacer = GroomerSpacerProfile::where('email', 'dev@dev.com')->first();
+        $groomerSpacer = GroomerSpacerProfile::where('email', 'groomer@dev.com')->first();
 
         if (!$groomerSpacer) {
-            $this->command?->warn('BookingSeeder skipped: dev@dev.com not found in goormer_spacer_profiles.');
+            $this->command?->warn('BookingSeeder skipped: groomer@dev.com not found in goormer_spacer_profiles.');
             return;
         }
 

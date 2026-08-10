@@ -136,7 +136,6 @@
                 ? seed.addonCatalog
                 : [],
             serviceDefaultDescriptions: seed.serviceDefaultDescriptions ?? {},
-            devPreview: Boolean(seed.devPreview),
             serviceAddPending: false,
             addonAddPending: false,
             submitting: false,
@@ -491,10 +490,6 @@
             },
 
             get canContinue() {
-                if (this.devPreview) {
-                    return true;
-                }
-
                 const hasSpecialty = this.petSpecialties.length > 0;
                 const otherOk =
                     !this.petSpecialties.includes("other") ||

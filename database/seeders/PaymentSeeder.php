@@ -13,13 +13,13 @@ class PaymentSeeder extends Seeder
 {
     public function run(): void
     {
-        $devEmail = 'dev@dev.com';
+        $groomerEmail = 'groomer@dev.com';
         $groomerSpacer = GroomerSpacerProfile::query()
-            ->where(['email' => $devEmail])
+            ->where(['email' => $groomerEmail])
             ->first();
 
         if (!$groomerSpacer) {
-            $this->command?->warn("PaymentSeeder skipped: {$devEmail} not found in goormer_spacer_profiles.");
+            $this->command?->warn("PaymentSeeder skipped: {$groomerEmail} not found in goormer_spacer_profiles.");
 
             return;
         }

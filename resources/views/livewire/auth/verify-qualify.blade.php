@@ -237,30 +237,6 @@ new #[Layout('layouts.dashboard')] class extends Component {
         }
     }
 
-    private function shouldBypassDevValidation(?\Illuminate\Contracts\Auth\Authenticatable $user = null): bool
-    {
-        $user = $user ?? Auth::guard('groomer_spacer')->user();
-        $email = strtolower(trim((string) ($user->email ?? '')));
-
-        return $email === 'dev@dev.com';
-    }
-
-    /**
-     * Dev preview mode is enabled only when dev has DB-driven type selections.
-     */
-    private function shouldUseDevDbPreview(?\Illuminate\Contracts\Auth\Authenticatable $user = null): bool
-    {
-        $user = $user ?? Auth::guard('groomer_spacer')->user();
-        if (!$user || !$this->shouldBypassDevValidation($user)) {
-            return false;
-        }
-
-        $usage = $this->normalizeFursgoUsage((string) ($user->user_type ?? ''));
-        $accountType = (string) ($user->account_type ?? '');
-
-        return in_array($usage, ['groomer', 'space'], true) && in_array($accountType, ['registered_business', 'freelance'], true);
-    }
-
     private function persistRealtimeVerificationTypeSelections(): void
     {
         $user = Auth::guard('groomer_spacer')->user();
@@ -322,11 +298,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
         $hasValidUsage = in_array($this->fursgo_usage, ['groomer', 'space'], true);
         $hasValidAccount = in_array($this->account_type, ['registered_business', 'freelance'], true);
         $hasValidLocations = is_array($this->location_types) && count($this->location_types) > 0;
-        $allowWithoutLocations = $this->shouldUseDevDbPreview();
         $canContinue = $hasValidUsage && $hasValidAccount && $hasValidLocations;
-        if (!$canContinue && $allowWithoutLocations) {
-            $canContinue = $hasValidUsage && $hasValidAccount;
-        }
 
         if (!$canContinue) {
             $this->showRegisteredBusiness = false;
@@ -651,7 +623,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                 $substep = $this->inferVerificationBuildProfileSubstep($user);
             }
 
-            if ($substep === 'start_grooming' && !$user->legal_policy_agreements && !$this->shouldUseDevDbPreview($user)) {
+            if ($substep === 'start_grooming' && !$user->legal_policy_agreements) {
                 $substep = 'legal_policy';
             }
 
@@ -1456,15 +1428,12 @@ new #[Layout('layouts.dashboard')] class extends Component {
             return;
         }
 
-        $isDevBypass = $this->shouldUseDevDbPreview($user);
-        if (!$isDevBypass) {
-            $this->validate([
-                'fursgo_usage' => ['required', 'string', 'in:groomer,space'],
-                'account_type' => ['required', 'string', 'in:registered_business,freelance'],
-                'location_types' => ['required', 'array', 'min:1'],
-                'location_types.*' => ['string', 'in:space_visits,commercial_salon,home_studio,house_visit,mobile_van'],
-            ]);
-        }
+        $this->validate([
+            'fursgo_usage' => ['required', 'string', 'in:groomer,space'],
+            'account_type' => ['required', 'string', 'in:registered_business,freelance'],
+            'location_types' => ['required', 'array', 'min:1'],
+            'location_types.*' => ['string', 'in:space_visits,commercial_salon,home_studio,house_visit,mobile_van'],
+        ]);
 
         $usageForSave = in_array($this->fursgo_usage, ['groomer', 'space'], true) ? $this->normalizeFursgoUsage($this->fursgo_usage) : $this->normalizeFursgoUsage((string) ($user->user_type ?? 'groomer'));
         if (!in_array($usageForSave, ['groomer', 'space'], true)) {
@@ -1504,10 +1473,6 @@ new #[Layout('layouts.dashboard')] class extends Component {
      */
     public function isFormValid(): bool
     {
-        if ($this->shouldUseDevDbPreview()) {
-            return true;
-        }
-
         return $this->fursgo_usage && $this->account_type && count($this->location_types) > 0;
     }
 
@@ -1653,10 +1618,6 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
     private function highlightPersonalStepValidationErrors(GroomerSpacerProfile $user): void
     {
-        if ($this->shouldUseDevDbPreview($user)) {
-            return;
-        }
-
         $rules = $this->isFreelanceAccount($user)
             ? [
                 'full_name' => ['required', 'string', 'max:255'],
@@ -2537,19 +2498,11 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
     public function isBusinessBasicsContinueEnabled(): bool
     {
-        if ($this->shouldUseDevDbPreview()) {
-            return true;
-        }
-
         return trim($this->business_display_name) !== '';
     }
 
     public function isGroomerBusinessProfileContinueEnabled(): bool
     {
-        if ($this->shouldUseDevDbPreview()) {
-            return true;
-        }
-
         $hasSpecialty = count($this->groomer_pet_specialties) > 0;
         $otherOk = !in_array('other', $this->groomer_pet_specialties, true) || trim($this->groomer_specialty_other) !== '';
 
@@ -2558,10 +2511,6 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
     public function isSpacerBusinessProfileContinueEnabled(): bool
     {
-        if ($this->shouldUseDevDbPreview()) {
-            return true;
-        }
-
         if (trim($this->spacer_bio) === '') {
             return false;
         }
@@ -2576,10 +2525,6 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
     public function isLegalPolicyContinueEnabled(): bool
     {
-        if ($this->shouldUseDevDbPreview()) {
-            return true;
-        }
-
         return $this->legal_terms_accepted;
     }
 
@@ -2595,11 +2540,9 @@ new #[Layout('layouts.dashboard')] class extends Component {
             return;
         }
 
-        if (!$this->shouldUseDevDbPreview($user)) {
-            $this->validate([
-                'legal_terms_accepted' => ['accepted'],
-            ]);
-        }
+        $this->validate([
+            'legal_terms_accepted' => ['accepted'],
+        ]);
 
         $user->update(['legal_policy_agreements' => true]);
 
@@ -2780,10 +2723,6 @@ new #[Layout('layouts.dashboard')] class extends Component {
         if (!$user instanceof GroomerSpacerProfile) {
             return $key === 'background_checks';
         }
-        if ($this->shouldUseDevDbPreview($user)) {
-            return true;
-        }
-
         $maxIdx = $this->maxUnlockedVerifyQualifySubstepIndex($user);
         foreach ($this->verifyQualifySubsteps($user) as $i => $step) {
             if ($step['key'] === $key) {
@@ -2799,9 +2738,6 @@ new #[Layout('layouts.dashboard')] class extends Component {
         $user = $user ?? Auth::guard('groomer_spacer')->user();
         if (!$user instanceof GroomerSpacerProfile) {
             return false;
-        }
-        if ($this->shouldUseDevDbPreview($user)) {
-            return true;
         }
         if (!$this->hasEnteredBuildProfilePhase($user)) {
             return false;
@@ -3175,22 +3111,17 @@ new #[Layout('layouts.dashboard')] class extends Component {
             return;
         }
 
-        $isDevPreview = $this->shouldUseDevDbPreview($user);
-        if (!$isDevPreview) {
-            $this->validate([
-                'business_display_name' => ['required', 'string', 'max:255'],
-                'business_tagline' => ['nullable', 'string', 'max:500'],
-                'business_bio' => ['nullable', 'string', 'max:5000'],
-                'business_avatar_upload' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:51200'],
-            ]);
-        }
+        $this->validate([
+            'business_display_name' => ['required', 'string', 'max:255'],
+            'business_tagline' => ['nullable', 'string', 'max:500'],
+            'business_bio' => ['nullable', 'string', 'max:5000'],
+            'business_avatar_upload' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:51200'],
+        ]);
 
-        if (!$isDevPreview) {
-            foreach ($this->pendingBusinessGalleryUploads() as $i => $file) {
-                $this->validate([
-                    "business_gallery_pending.$i" => ['file', 'mimes:jpg,jpeg,png,gif,webp', 'max:51200'],
-                ]);
-            }
+        foreach ($this->pendingBusinessGalleryUploads() as $i => $file) {
+            $this->validate([
+                "business_gallery_pending.$i" => ['file', 'mimes:jpg,jpeg,png,gif,webp', 'max:51200'],
+            ]);
         }
 
         $avatarPath = $this->business_avatar_path;
@@ -3399,7 +3330,6 @@ new #[Layout('layouts.dashboard')] class extends Component {
             'serviceCatalog' => $this->groomerServiceCatalog(),
             'addonCatalog' => $this->groomerAddonCatalog(),
             'serviceDefaultDescriptions' => $defaultDescriptions,
-            'devPreview' => $this->shouldUseDevDbPreview(),
         ];
     }
 
@@ -3443,27 +3373,24 @@ new #[Layout('layouts.dashboard')] class extends Component {
             $this->assignGroomerBusinessProfileFromClient($form);
         }
 
-        $isDevPreview = $this->shouldUseDevDbPreview($user);
-        if (!$isDevPreview) {
-            $this->validate([
-                'groomer_experience' => ['required', 'string', 'max:1000'],
-                'groomer_pet_specialties' => ['required', 'array', 'min:1'],
-                'groomer_pet_specialties.*' => ['in:dog,cat,other'],
-                'groomer_specialty_other' => ['nullable', 'string', 'max:255'],
-                'groomer_pet_sizes' => ['required', 'array', 'min:1'],
-                'groomer_pet_sizes.*' => ['in:small,medium,large'],
-                'groomer_custom_addons' => ['nullable', 'array'],
-                'groomer_custom_addons.*' => ['string', 'max:255'],
-                'groomer_selected_addons' => ['nullable', 'array'],
-                'groomer_selected_addons.*' => ['string', 'max:255'],
-                'groomer_custom_services' => ['nullable', 'array'],
-                'groomer_custom_services.*' => ['string', 'max:255'],
-                'groomer_selected_services' => ['nullable', 'array'],
-                'groomer_selected_services.*' => ['string', 'max:255'],
-            ]);
-        }
+        $this->validate([
+            'groomer_experience' => ['required', 'string', 'max:1000'],
+            'groomer_pet_specialties' => ['required', 'array', 'min:1'],
+            'groomer_pet_specialties.*' => ['in:dog,cat,other'],
+            'groomer_specialty_other' => ['nullable', 'string', 'max:255'],
+            'groomer_pet_sizes' => ['required', 'array', 'min:1'],
+            'groomer_pet_sizes.*' => ['in:small,medium,large'],
+            'groomer_custom_addons' => ['nullable', 'array'],
+            'groomer_custom_addons.*' => ['string', 'max:255'],
+            'groomer_selected_addons' => ['nullable', 'array'],
+            'groomer_selected_addons.*' => ['string', 'max:255'],
+            'groomer_custom_services' => ['nullable', 'array'],
+            'groomer_custom_services.*' => ['string', 'max:255'],
+            'groomer_selected_services' => ['nullable', 'array'],
+            'groomer_selected_services.*' => ['string', 'max:255'],
+        ]);
 
-        if (!$isDevPreview && in_array('other', $this->groomer_pet_specialties, true) && trim($this->groomer_specialty_other) === '') {
+        if (in_array('other', $this->groomer_pet_specialties, true) && trim($this->groomer_specialty_other) === '') {
             $this->addError('groomer_specialty_other', 'Please specify your other specialty.');
 
             return;
@@ -3519,18 +3446,15 @@ new #[Layout('layouts.dashboard')] class extends Component {
             $this->assignSpacerBusinessProfileFromClient($form);
         }
 
-        $isDevPreview = $this->shouldUseDevDbPreview($user);
-        if (!$isDevPreview) {
-            $this->validate([
-                'spacer_bio' => ['required', 'string', 'max:5000'],
-                'spacer_services_pricing' => ['required', 'array'],
-                'spacer_addon_custom_rows' => ['nullable', 'array'],
-                'spacer_suitable_for' => ['nullable', 'array'],
-                'spacer_suitable_for.*' => ['string', 'max:255'],
-                'spacer_rules_custom' => ['nullable', 'array'],
-                'spacer_amenities_custom' => ['nullable', 'array'],
-            ]);
-        }
+        $this->validate([
+            'spacer_bio' => ['required', 'string', 'max:5000'],
+            'spacer_services_pricing' => ['required', 'array'],
+            'spacer_addon_custom_rows' => ['nullable', 'array'],
+            'spacer_suitable_for' => ['nullable', 'array'],
+            'spacer_suitable_for.*' => ['string', 'max:255'],
+            'spacer_rules_custom' => ['nullable', 'array'],
+            'spacer_amenities_custom' => ['nullable', 'array'],
+        ]);
 
         $anyService = false;
         foreach ($this->spacer_services_pricing as $row) {
@@ -3539,7 +3463,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                 break;
             }
         }
-        if (!$isDevPreview && !$anyService) {
+        if (!$anyService) {
             $this->addError('spacer_services_pricing', 'Select at least one pricing option (Hourly, Half-Day, or Full-Day).');
 
             return;
@@ -3677,10 +3601,9 @@ new #[Layout('layouts.dashboard')] class extends Component {
             $this->account_type = $persistedType;
         }
 
-        $isDevBypass = $this->shouldUseDevDbPreview($user);
         $isFreelance = $this->isFreelanceAccount($user);
 
-        if (!$isDevBypass && $isFreelance) {
+        if ($isFreelance) {
             $this->validate([
                 'full_name' => ['required', 'string', 'max:255'],
                 'business_email' => ['required', 'email'],
@@ -3702,7 +3625,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
                 return;
             }
-        } elseif (!$isDevBypass) {
+        } else {
             $this->validate([
                 'full_name' => ['required', 'string', 'max:255'],
                 'business_email' => ['required', 'email'],
@@ -3733,11 +3656,9 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
         foreach ($pendingUploads as $index => $image) {
             if ($image instanceof UploadedFile) {
-                if (!$isDevBypass) {
-                    $this->validate([
-                        "{$idUploadProperty}.{$index}" => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:51200'],
-                    ]);
-                }
+                $this->validate([
+                    "{$idUploadProperty}.{$index}" => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:51200'],
+                ]);
             } elseif (!is_string($image) || trim($image) === '') {
                 $this->addError($idUploadProperty, "Each {$idUploadLabel} entry must be a valid file or saved path.");
                 return;
@@ -3747,11 +3668,9 @@ new #[Layout('layouts.dashboard')] class extends Component {
         if ($this->id_documents && is_array($this->id_documents)) {
             foreach ($this->id_documents as $index => $document) {
                 if ($document instanceof UploadedFile) {
-                    if (!$isDevBypass) {
-                        $this->validate([
-                            "id_documents.$index" => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-                        ]);
-                    }
+                    $this->validate([
+                        "id_documents.$index" => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+                    ]);
                 } elseif ($document !== null && $document !== '' && !is_string($document)) {
                     $this->addError('id_documents', 'Invalid ID document entry.');
                     return;
@@ -3768,11 +3687,9 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
         foreach ($insuranceUploadFiles as $index => $certificate) {
             if ($certificate instanceof UploadedFile || $certificate instanceof TemporaryUploadedFile) {
-                if (!$isDevBypass) {
-                    $this->validate([
-                        "insurance_certificate_upload.$index" => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:51200'],
-                    ]);
-                }
+                $this->validate([
+                    "insurance_certificate_upload.$index" => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:51200'],
+                ]);
             } elseif (is_string($certificate) && $certificate !== '') {
                 continue;
             } else {
@@ -3952,10 +3869,6 @@ new #[Layout('layouts.dashboard')] class extends Component {
      */
     public function isPersonalInfoFormValid(): bool
     {
-        if ($this->shouldUseDevDbPreview()) {
-            return true;
-        }
-
         $hasIdProof = $this->isFreelanceAccount() ? count($this->storedGovernmentIdPathsForDisplay()) > 0 || count($this->pendingGovernmentIdUploads()) > 0 : count($this->storedBusinessOwnerIdPathsForDisplay()) > 0 || count($this->pendingBusinessOwnerIdUploads()) > 0;
         $emailOk = (bool) filter_var($this->business_email, FILTER_VALIDATE_EMAIL);
 
@@ -4393,12 +4306,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                     fursgoUsage: @js($fursgo_usage),
                                     accountType: @js($account_type),
                                     locationTypes: @js(array_values($location_types ?? [])),
-                                    devPreview: @js($this->shouldUseDevDbPreview()),
                                     get canContinue() {
-                                        if (this.devPreview) {
-                                            return true;
-                                        }
-
                                         return Boolean(this.fursgoUsage) &&
                                             Boolean(this.accountType) &&
                                             Array.isArray(this.locationTypes) &&

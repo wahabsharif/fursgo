@@ -26,7 +26,6 @@
 <body>
 
     <x-common.header />
-    <x-common.dev-mode-float />
 
     <main>
         @if (isset($slot))

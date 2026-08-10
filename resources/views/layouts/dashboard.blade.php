@@ -107,7 +107,6 @@ window.addEventListener('load', () => scrollDashboardToTop(false));
 window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNav(event.detail ?? {}));">
 
     <x-common.header variant="dashboard" :dashboard-nav-view="$dashboardNavView" />
-    <x-common.dev-mode-float />
 
     @if ($isDashboardHub)
         <div class="dashboard-wrapper">

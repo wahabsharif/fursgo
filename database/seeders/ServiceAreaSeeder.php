@@ -10,10 +10,10 @@ class ServiceAreaSeeder extends Seeder
 {
     public function run(): void
     {
-        $groomerSpacer = GroomerSpacerProfile::where('email', 'dev@dev.com')->first();
+        $groomerSpacer = GroomerSpacerProfile::where('email', 'groomer@dev.com')->first();
 
         if (!$groomerSpacer) {
-            $this->command?->warn('ServiceAreaSeeder skipped: dev@dev.com not found in groomer_spacer_profiles.');
+            $this->command?->warn('ServiceAreaSeeder skipped: groomer@dev.com not found in groomer_spacer_profiles.');
 
             return;
         }

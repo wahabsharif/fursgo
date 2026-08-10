@@ -1,11 +1,7 @@
 <div class="legal-policy-wrap" wire:key="verify-qualify-legal-policy">
     <h1 class="business-basics-title">Legal &amp; Policy Agreements</h1>
-    @php
-        $legalPolicyDevPreview = $this->shouldUseDevDbPreview();
-    @endphp
     <form wire:submit="submitLegalPolicy" x-data="{
         accepted: @entangle('legal_terms_accepted'),
-        devPreview: @js($legalPolicyDevPreview),
     }">
         <div
             class="legal-agreements-content-card {{ $legal_agreements_expanded ? 'legal-agreements-content-card--expanded' : '' }}">
@@ -48,8 +44,8 @@
                     Decline
                 </button>
                 <button type="submit" class="legal-policy-btn legal-policy-btn--continue"
-                    x-bind:class="(devPreview || accepted) ? 'legal-policy-btn--continue-active' : 'legal-policy-btn--continue-muted'"
-                    x-bind:disabled="!devPreview && !accepted" wire:loading.attr="disabled"
+                    x-bind:class="accepted ? 'legal-policy-btn--continue-active' : 'legal-policy-btn--continue-muted'"
+                    x-bind:disabled="!accepted" wire:loading.attr="disabled"
                     wire:target="submitLegalPolicy">
                     <span wire:loading.remove wire:target="submitLegalPolicy">Agree &amp; Continue</span>
                     <span class="legal-policy-btn__spinner" wire:loading wire:target="submitLegalPolicy"

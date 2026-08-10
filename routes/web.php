@@ -4,13 +4,11 @@ use App\Http\Controllers\AccountDataExportController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BookingInvoicePdfController;
 use App\Http\Controllers\PetDetailController;
-use App\Models\GroomerSpacerProfile;
 use App\Support\BusinessHubNav;
 use App\Support\BusinessPageShell;
 use App\Support\MarketingHubNav;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\LivewireManager;
 use Livewire\Volt\Volt;
@@ -181,62 +179,6 @@ Route::middleware(['auth:web,groomer_spacer'])->group(function () {
     Route::delete('/bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
     Route::patch('/bookings/{booking}/accept', [BookingController::class, 'accept'])->name('bookings.accept');
     Route::patch('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
-
-    Route::post('/dev-mode/update-meta', function (Request $request) {
-        $request->validate([
-            'user_type' => 'nullable|in:groomer,space',
-            'account_type' => 'nullable|in:freelance,registered_business',
-        ]);
-
-        $guard = Auth::guard('groomer_spacer')->check()
-            ? 'groomer_spacer'
-            : (Auth::guard('web')->check() ? 'web' : null);
-
-        abort_unless((bool) $guard, 403);
-
-        $user = Auth::guard($guard)->user();
-        abort_unless((bool) $user, 403);
-
-        $requestedUserType = $request->input('user_type');
-        $requestedAccountType = $request->input('account_type');
-
-        if ($requestedUserType !== null && $requestedUserType !== '') {
-            $user->user_type = $requestedUserType;
-            $user->save();
-        }
-
-        // If the authenticated model is a groomer/spacer profile, persist account_type directly there.
-        if ($user instanceof GroomerSpacerProfile) {
-            if ($requestedAccountType !== null && $requestedAccountType !== '') {
-                $user->account_type = $requestedAccountType;
-                $user->save();
-            }
-        }
-
-        // When logged in via web guard, keep the linked groomer/spacer profile in sync too.
-        if ($guard === 'web' && method_exists($user, 'groomerSpacerProfile')) {
-            $profile = $user->groomerSpacerProfile;
-            if ($profile instanceof GroomerSpacerProfile) {
-                if ($requestedUserType !== null && $requestedUserType !== '') {
-                    $profile->user_type = $requestedUserType;
-                }
-                if ($requestedAccountType !== null && $requestedAccountType !== '') {
-                    $profile->account_type = $requestedAccountType;
-                }
-                $profile->save();
-            }
-        }
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'ok' => true,
-                'guard' => $guard,
-                'user_id' => $user->id ?? null,
-            ]);
-        }
-
-        return redirect()->back();
-    })->name('dev-mode.update-meta');
 });
 
 require __DIR__ . '/auth.php';

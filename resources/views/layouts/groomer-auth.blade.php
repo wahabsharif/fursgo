@@ -18,7 +18,6 @@
 
 <body>
     <x-common.header />
-    <x-common.dev-mode-float />
 
     <main>
         {{ $slot }}
