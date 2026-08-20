@@ -130,7 +130,9 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
         </main>
     @endif
 
-    <x-common.footer variant="dashboard" />
+    @unless ($isDashboardHub)
+        <x-common.footer variant="dashboard" />
+    @endunless
 
     <style>
         [x-cloak] {

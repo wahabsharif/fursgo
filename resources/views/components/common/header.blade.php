@@ -890,7 +890,7 @@
             .dashboard-header .dashboard-header-container {
                 position: relative;
                 width: 100%;
-                max-width: 110rem;
+                max-width: 1240px;
                 margin-left: auto;
                 margin-right: auto;
                 box-sizing: border-box;
