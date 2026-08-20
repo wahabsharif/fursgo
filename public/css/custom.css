@@ -159,16 +159,6 @@ img {
   cursor: pointer;
 }
 
-.find-groomer.active {
-  background: var(--groomer-color);
-  color: #FFF;
-}
-
-.find-space.active {
-  background: var(--groomer-color);
-  color: #FFF;
-}
-
 .find-groomer-content-area {
   position: absolute;
   width: 1030px;
@@ -762,7 +752,7 @@ section.rating-section.section {
 
 .how-it-works-grid {
   display: grid;
-  grid-template-columns: 300px 150px 300px 150px 300px;
+  grid-template-columns: 1fr 150px 1fr 150px 1fr;
   align-items: start;
   gap: 10px;
   max-width: 1200px;

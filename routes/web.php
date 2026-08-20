@@ -109,6 +109,18 @@ Route::get('/account-settings/download-data', AccountDataExportController::class
 Route::redirect('/account-and-setting/settings', '/account-settings')
     ->middleware(['auth:web,groomer_spacer']);
 
+Volt::route('/account_and_setting/settings', 'account_and_setting/settings')
+    ->name('account_and_setting.settings');
+
+Volt::route('/profile_pets_preferences/about_us', 'profile_pets_preferences/about_us')
+    ->name('profile_pets_preferences.about_us');
+
+Volt::route('/profile_pets_preferences/contact_us', 'profile_pets_preferences/contact_us')
+    ->name('profile_pets_preferences.contact_us');
+
+Volt::route('/profile_pets_preferences/company_information', 'profile_pets_preferences/company_information')
+    ->name('profile_pets_preferences.company_information');
+
 // Cookie and overlay components
 Route::get('/cookies-overlay-card', function () {
     return view('components.ui.cookies-overlay-card');

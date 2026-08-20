@@ -1348,8 +1348,8 @@
                     <div>
                         <div class="logo-toggle-button d-flex justify-content-between">
                             <a href="{{ route('home') }}" wire:navigate class="d-inline-flex align-items-end gap-10">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40" viewBox="0 0 145 40"
-                                    fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40"
+                                    viewBox="0 0 145 40" fill="none">
                                     <path
                                         d="M132.206 12.7941C134.795 12.7941 137.035 13.2385 138.927 14.1273C140.852 14.9832 142.345 16.3987 143.407 18.3738C144.469 20.349 145 22.9989 145 26.3237C145 29.6485 144.469 32.2985 143.407 34.2736C142.345 36.2487 140.852 37.6642 138.927 38.5201C137.035 39.376 134.795 39.8039 132.206 39.8039C129.651 39.8039 127.41 39.376 125.485 38.5201C123.561 37.6642 122.067 36.2487 121.005 34.2736C119.943 32.2985 119.412 29.6485 119.412 26.3237C119.412 22.9989 119.943 20.349 121.005 18.3738C122.067 16.3987 123.561 14.9832 125.485 14.1273C127.41 13.2385 129.651 12.7941 132.206 12.7941ZM132.206 13.7817C131.21 13.7817 130.381 14.7692 129.717 16.7444C129.053 18.7195 128.721 21.9126 128.721 26.3237C128.721 30.7348 129.053 33.9279 129.717 35.9031C130.381 37.8453 131.21 38.8164 132.206 38.8164C133.202 38.8164 134.031 37.8453 134.695 35.9031C135.359 33.9279 135.691 30.7348 135.691 26.3237C135.691 21.9126 135.359 18.7195 134.695 16.7444C134.031 14.7692 133.202 13.7817 132.206 13.7817Z"
                                         fill="#FFC97A" />
@@ -1387,16 +1387,16 @@
                             <a href="{{ route('business-homepage-groomer-space-owner') }}"
                                 class="{{ $isForGroomersHostsActive ? 'active' : '' }}" wire:navigate>FursGo
                                 Business</a>
-                            <a href="{{ route('help-and-support') }}" class="{{ $isHelpCentreRoute ? 'active' : '' }}"
-                                wire:navigate>Help Centre</a>
+                            <a href="{{ route('help-and-support') }}"
+                                class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
                         @else
                             <a href="#" class="{{ $isBusinessLandingRoute ? 'active' : '' }}" wire:navigate>Our
                                 Mission</a>
                             <a href="{{ route('business-homepage-groomer-space-owner') }}"
                                 class="{{ $isBusinessHomepageRoute ? 'active' : '' }}" wire:navigate>FursGo
                                 Business</a>
-                            <a href="{{ route('help-and-support') }}" class="{{ $isHelpCentreRoute ? 'active' : '' }}"
-                                wire:navigate>Help Centre</a>
+                            <a href="{{ route('help-and-support') }}"
+                                class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
                         @endif
                     </div>
                     <div class="d-flex justify-content-between align-items-center gap-20">

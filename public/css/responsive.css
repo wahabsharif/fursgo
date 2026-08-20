@@ -12,6 +12,13 @@
 
 @font-face {
     font-family: "Playfair Display";
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-SemiBoldItalic.ttf") format("truetype");
+    font-style: italic;
+    font-weight: 600;
+}
+
+@font-face {
+    font-family: "Playfair Display";
     src: url("../fonts/Playfair_Display/static/PlayfairDisplay-ExtraBoldItalic.ttf") format("truetype");
     font-style: italic;
     font-weight: 900;
@@ -60,94 +67,6 @@
         "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-nav {
-    display: flex;
-    justify-content: space-evenly;
-    align-items: center;
-    padding: 49px 20px;
-}
-
-nav ul {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    list-style: none;
-}
-
-nav ul li a {
-    color: var(--font-color);
-    font-family: "Lato";
-    font-size: 16px;
-    font-weight: 600;
-    /* normal */
-    font-style: normal;
-}
-
-nav ul li a:hover {
-    color: var(--groomer-color);
-    font-weight: 600;
-}
-
-a {
-    text-decoration: none;
-    color: var(--font-color);
-}
-
-nav ul a.active {
-    color: var(--groomer-color);
-    font-weight: 600;
-    text-decoration-line: underline;
-    text-decoration-style: solid;
-    text-decoration-skip-ink: auto;
-    text-decoration-thickness: auto;
-    text-underline-offset: 4px;
-    text-underline-position: from-font;
-}
-
-.login-signup-div {
-    display: flex;
-    gap: 20px;
-}
-
-.login-btn,
-.signup-btn {
-    padding: 10px 35px 10px 35px;
-    color: var(--font-color);
-    background: none;
-    border: 1px solid var(--font-color);
-    border-radius: 5px;
-    font-family: "Lato";
-    font-size: 16px;
-    font-style: normal;
-    text-align: center;
-    border-radius: 25px;
-    cursor: pointer;
-}
-
-.login-btn:hover {
-    color: var(--font-color);
-}
-
-.signup-btn.active {
-    background-color: var(--groomer-color);
-    ;
-    color: white;
-    border: none;
-    text-decoration: none;
-}
-
 /* Hamburger icon */
 .menu-toggle {
     display: none;
@@ -163,11 +82,14 @@ nav ul a.active {
 .submit-button {
     margin-top: 3%;
     height: 48px;
+    flex: 0 0 auto;
 }
 
 button.form-submit-button {
-    padding: 12px 52px 12px 52px;
-    border-radius: 20px;
+    width: 165px;
+    height: 48px;
+    padding: 0;
+    border-radius: 96px;
     border: none;
     color: white;
     text-align: center;
@@ -177,15 +99,10 @@ button.form-submit-button {
     font-weight: 700;
     line-height: normal;
     cursor: pointer;
-    background-color: var(--space-color);
-}
-
-.find-grommer-content .find-groomer.active~.find-groomer-content-area .form-submit-button {
     background-color: var(--groomer-color);
-    ;
 }
 
-.find-grommer-content .find-space.active~.find-groomer-content-area .form-submit-button {
+.find-space-content-area .form-submit-button {
     background-color: var(--space-color);
 }
 
@@ -200,7 +117,7 @@ a {
 
 .hero-section img {
     width: 100%;
-    height: 436px;
+    height: 500px;
     object-fit: cover;
 }
 
@@ -218,51 +135,72 @@ a {
     justify-self: center;
 }
 
-.find-groomer.active {
-    background-color: var(--groomer-color);
-    ;
-    color: #fff
+.find-groomer-space-text {
+    width: 200px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #F0EAD9;
+    color: var(--font-color);
 }
 
-.find-space.active {
-    background-color: var(--space-color);
-    color: #fff
+.find-groomer-space-text svg path[stroke] {
+    stroke: var(--font-color);
+}
+
+.find-groomer-space-text svg path[fill] {
+    fill: var(--font-color);
+}
+
+.find-groomer-space-text.active {
+    color: #FDFCF8 !important;
+    background: #FBAC83;
+    box-shadow: 0 2px 10px 0 rgba(59, 55, 49, 0.30);
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.find-space .find-groomer-space-text.active {
+    background: #FFA999;
+}
+
+.find-groomer-space-text.active svg path[stroke] {
+    stroke: #FDFCF8;
+}
+
+.find-groomer-space-text.active svg path[fill] {
+    fill: #FDFCF8;
 }
 
 .find-groomer {
-    color: var(--font-color);
-    background: #FDFCF8;
-    padding: 12px 45px 12px 45px;
+    color: #FDFCF8;
+    background: #F0EAD9;
+    padding: 5px;
     text-align: center;
     font-family: "Lato";
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 400;
     text-align: center;
     border-top-left-radius: 10px;
     cursor: pointer;
 }
 
-.find-groomer-content-area {
+.find-groomer-content-area,
+.find-space-content-area {
     position: absolute;
-    width: 1030px;
+    width: 1080px;
     height: 235px;
-    border-radius: 0 0 10px 10px;
-    background: #FDFCF8;
+    border-radius: 0 10px 10px 10px;
+    background: #F7F4EC;
     box-shadow: 0 5px 55px 0 rgba(0, 0, 0, 0.05);
 }
 
 .find-space-content-area {
-    position: absolute;
-    width: 1030px;
-    height: 235px;
-    border-radius: 0 0 10px 10px;
-    background: #FDFCF8;
-    box-shadow: 0 5px 55px 0 rgba(0, 0, 0, 0.05);
     top: 100%;
-    /* aligns below the button */
     left: 0;
     display: none;
-    /* hidden by default */
     z-index: 10;
 }
 
@@ -282,7 +220,7 @@ a {
 
 .label {
     font-family: "Lato";
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
     margin-bottom: 10px;
     color: var(--font-color);
@@ -311,7 +249,7 @@ a {
     transition: all 0.2s ease;
 
     font-family: "Lato";
-    font-size: 16px;
+    font-size: 18px;
     font-style: normal;
     text-align: center;
 }
@@ -352,7 +290,7 @@ a {
 }
 
 .weight-toggle {
-    display: inline-flex;
+    display: flex;
     /* shrink to content */
     border: 1px solid #e5e5e5;
     border-radius: 10px;
@@ -378,7 +316,7 @@ a {
     transition: background 0.2s ease, color 0.2s ease;
 
     font-family: "Lato";
-    font-size: 16px;
+    font-size: 18px;
     white-space: nowrap;
     /* prevent wrap */
 }
@@ -407,11 +345,11 @@ a {
 
 .find-space {
     color: var(--font-color);
-    background: #FDFCF8;
-    padding: 12px 45px 12px 45px;
+    background: #F0EAD9;
+    padding: 5px;
     text-align: center;
     font-family: "Lato";
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 400;
     text-align: center;
     border-top-right-radius: 10px;
@@ -427,7 +365,7 @@ a {
     border-color: #FFC97A;
     color: var(--font-color);
     font-family: Lato;
-    font-size: 16px;
+    font-size: 18px;
     font-style: normal;
     font-weight: 400;
     line-height: normal;
@@ -511,13 +449,13 @@ a {
 /* CSS */
 .search-box {
     position: relative;
-    width: 410px;
+    width: 447px;
     /* adjust width */
 }
 
 .search-box input {
     width: 100%;
-    padding: 10px 40px 10px 15px;
+    padding: 10px 40px 10px 16px;
     height: 48px;
     /* space for icon */
     border-radius: 10px;
@@ -554,29 +492,32 @@ a {
 
 .bottom-right {
     position: absolute;
-    bottom: -2px;
+    bottom: 0px;
     right: 6px;
 }
 
 .hero-text {
-    color: var(--font-color);
+    color: #3B3731;
     font-family: "Playfair Display";
-    line-height: 60px;
+    font-size: 45px;
+    font-style: normal;
     font-weight: 900;
+    line-height: 60px;
 }
 
 .book-text {
-    color: var(--font-color);
+    color: #3B3731;
     font-family: "Playfair Display";
+    font-size: 45px;
     font-style: italic;
-    line-height: 60px;
     font-weight: 600;
+    line-height: 60px;
 }
 
 .hero-section .book-text,
 .hero-text {
     font-size: clamp(30px, 5vw, 45px);
-    line-height: clamp(30px, 6vw, 57px);
+    line-height: clamp(36px, 6vw, 60px);
 }
 
 .inverted-radius {
@@ -585,7 +526,7 @@ a {
     --x: 264px;
     --y: 135px;
     position: relative;
-    height: 436px;
+    height: 500px;
     overflow: hidden;
     border-radius: var(--r);
     --_m: /calc(2*var(--r)) calc(2*var(--r)) radial-gradient(#000 70%, #0000 72%);
@@ -700,7 +641,7 @@ a {
 .points>div {
     display: flex;
     align-items: center;
-    gap: clamp(20px, 5vw, 40px);
+    gap: clamp(20px, 5vw, 35px);
     padding: 30px 0 0 0;
 }
 
@@ -824,9 +765,6 @@ a {
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 0;
-}
-
-.book-and-pay-content::before {
     background: rgba(203, 220, 232, 0.50);
 }
 
@@ -888,11 +826,6 @@ section.rating-section.section {
     padding: 300px 0 0 0px;
 }
 
-/* Consistent spacing for all main sections */
-.section {
-    padding: 70px 0;
-}
-
 /* Optional: smaller spacing variant */
 .section-sm {
     padding: 50px 0;
@@ -907,11 +840,12 @@ section.rating-section.section {
     width: 200px;
     height: 200px;
     aspect-ratio: 1/1;
+    position: relative;
 }
 
 .how-it-works-grid {
     display: grid;
-    grid-template-columns: 300px 150px 300px 150px 300px;
+    grid-template-columns: 1fr 150px 1fr 150px 1fr;
     align-items: start;
     max-width: 1200px;
     margin: 0 auto;
@@ -1009,7 +943,7 @@ section.rating-section.section {
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center;
+    text-align: left;
 }
 
 .testimonial-heading {
@@ -1214,7 +1148,7 @@ section.rating-section.section {
             left: 172px;
             bottom: 0;
         }
-
+        
 
         .testimonial-section .card.active .avatar {
             position: absolute;
@@ -1296,7 +1230,10 @@ section.rating-section.section {
     background: var(--font-color);
 }
 
-.testimonial-section .protected-text {
+.payments-protected-text{
+    /* margin-top: 2rem; */
+}
+.protected-text {
     color: var(--font-color);
     font-family: "Lato";
     font-size: 14px;
@@ -1311,11 +1248,13 @@ section.rating-section.section {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    align-self: stretch;
+    text-align: left;
 }
 
 .text-area h2 {
     color: var(--font-color);
-    text-align: center;
+    text-align: left;
     font-family: "Playfair Display";
     font-size: 28px;
     font-style: normal;
@@ -1328,7 +1267,7 @@ section.rating-section.section {
     font-size: 16px;
     font-style: normal;
     font-weight: 400;
-    text-align: center;
+    text-align: left;
 }
 
 .our-mission {
@@ -1414,10 +1353,10 @@ h1.fursgo-address-heading {
 }
 
 .fursgo-map-image-wrapper {
-    width: 78%;
+    width: 80%;
     max-width: 955px;
     position: absolute;
-    right: 2%;
+    right: 0;
     top: 2%;
 }
 
@@ -1559,7 +1498,7 @@ ul.fursgo-locations li {
     max-width: 280px;
     width: 222px;
     height: 48px;
-    border-radius: 12px 0 0 10px !important;
+    border-radius: 12px 0 0 10px;
 }
 
 .field.time {
@@ -1613,10 +1552,11 @@ ul.fursgo-locations li {
     width: auto;
     background: transparent;
     border: none;
-    font-size: 16px;
+    font-size: 18px;
+    font-weight: 400;
     color: var(--text-muted);
     text-align: left;
-    padding: 3px 0;
+    padding: 3px 8px;
     outline: none;
     cursor: pointer;
 }
@@ -1628,35 +1568,27 @@ ul.fursgo-locations li {
     display: block;
 }
 
-input#dateInput {
+/* input#dateInput {
     text-align: center;
-}
-
-
-.rotate-left {
-    transform: rotate(90deg);
-}
-
-.rotate-right {
-    transform: rotate(-90deg);
-}
+} */
 
 #prevMonth,
 #nextMonth {
     width: 24px;
-    /* smaller width */
     height: 24px;
-    /* smaller height */
-    border: 1px solid #ccc;
+    aspect-ratio: 1 / 1;
+    border: 2px solid #F5F5F5;
     border-radius: 50%;
     background: transparent;
     cursor: pointer;
-
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
-    /* remove extra space */
+    padding: 2px;
+}
+
+#nextMonth {
+    background: #F5F5F5;
 }
 
 #prevMonth:hover,
@@ -1675,7 +1607,7 @@ input#dateInput {
     border: 1px solid var(--border);
     box-shadow: 0 8px 24px rgba(20, 20, 20, 0.08);
     display: none;
-    z-index: 10;
+    z-index: 401;
     overflow: hidden;
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
@@ -1696,6 +1628,17 @@ input#dateInput {
     justify-content: space-between;
     font-weight: 600;
     margin-bottom: 20px;
+}
+
+#monthLabel,
+p.time-text {
+    color: #3B3731;
+    text-align: center;
+    font-family: Lato;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
 }
 
 .month-nav button {
@@ -1730,7 +1673,12 @@ input#dateInput {
     justify-content: center;
     border-radius: 15px;
     cursor: pointer;
-    font-size: 13px;
+    color: #3B3731;
+    font-family: Lato;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
 }
 
 .day:hover {
@@ -1782,7 +1730,7 @@ input#dateInput {
 }
 
 .time-item {
-    padding: 10px 12px;
+    padding: 10px 10px;
     border-radius: 999px;
     margin-bottom: 6px;
     margin-right: 10px;
@@ -1792,9 +1740,12 @@ input#dateInput {
     cursor: pointer;
     user-select: none;
     background: transparent;
-    color: #999;
-    font-family: "Lato";
-    font-weight: 600;
+    color: #D4D4D4;
+    font-family: Lato;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
 }
 
 .time-item:hover {
@@ -1809,33 +1760,37 @@ input#dateInput {
     transform: translateX(6px);
 }
 
+.time-list {
+    overflow-y: auto;
+    /* required */
+}
+
 /* scrollbar width */
 .time-list::-webkit-scrollbar {
     width: 8px;
 }
 
-/* scrollbar track (background) */
-.time-list::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-/* scrollbar thumb (the draggable part) */
+/* scrollbar thumb */
 .time-list::-webkit-scrollbar-thumb {
     background-color: var(--active-bg);
-    /* ← your color */
     border-radius: 6px;
 }
 
-/* thumb on hover */
+/* hover */
 .time-list::-webkit-scrollbar-thumb:hover {
     background-color: #555;
 }
 
+.time-list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--active-bg) transparent;
+                     /* thumb color  ^   track color ^ */
+}
 
 /* custom select dropdown styles  */
 .custom-select {
     position: relative;
-    width: 100%;
+    width: 270px;
     max-width: 350px;
     font-weight: 400;
     font-family: "lato";
@@ -1850,7 +1805,7 @@ input#dateInput {
     align-items: center;
     cursor: pointer;
     background: #fff;
-    width: 270px;
+    width: 100%;
     transition: border 0.3s;
     /* smooth border change */
 }
@@ -1869,7 +1824,8 @@ input#dateInput {
 
 .custom-select .select-trigger span {
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: 18px;
+    font-weight: 400;
 }
 
 .custom-select .select-options {
