@@ -30,10 +30,11 @@
     @click.window="if (openMore && !$refs.moreBtn.contains($event.target) && (!$refs.moreMenu || !$refs.moreMenu.contains($event.target))) { openMore = false }">
     <button type="button" class="more-action-trigger" aria-label="More actions" x-ref="moreBtn"
         @click.stop="toggleMore()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="5" viewBox="0 0 25 5" fill="none">
-            <circle cx="2.5" cy="2.5" r="2.5" fill="#3B3731" />
-            <circle cx="12.5" cy="2.5" r="2.5" fill="#3B3731" />
-            <circle cx="22.5" cy="2.5" r="2.5" fill="#3B3731" />
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="17.5" fill="white" stroke="#E2E2E2"/>
+            <ellipse cx="10.8" cy="17.8" rx="1.8" ry="1.8" fill="#3B3731"/>
+            <ellipse cx="18" cy="17.8" rx="1.8" ry="1.8" fill="#3B3731"/>
+            <ellipse cx="25.2" cy="17.8" rx="1.8" ry="1.8" fill="#3B3731"/>
         </svg>
     </button>
 
@@ -71,8 +72,8 @@
 <style>
     .more-action-trigger,
     .booking-message-btn {
-        width: 26px;
-        height: 26px;
+        width: 36px;
+        height: 36px;
         border-radius: 999px;
         border: none;
         background: transparent;

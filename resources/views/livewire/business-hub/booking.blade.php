@@ -23,6 +23,7 @@ new class extends Component {
     public ?int $rescheduleBookingId = null;
     public ?int $completedBookingId = null;
     public ?int $cancelledBookingId = null;
+    public ?int $bookingDetailsId = null;
     public ?string $rescheduleCalendarMonth = null;
     public ?string $rescheduleSelectedDate = null;
     public ?string $rescheduleSelectedTime = null;
@@ -59,11 +60,26 @@ new class extends Component {
         $query->orderByDesc('created_at')->orderByDesc(self::BOOKING_ID_COLUMN);
     }
 
+    public function formatServiceTypeLabel(?string $service): string
+    {
+        $words = preg_split('/\s+/', trim((string) $service), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        if ($words === []) {
+            return 'N/A';
+        }
+
+        if (count($words) <= 2) {
+            return e(implode(' ', $words));
+        }
+
+        return e(implode(' ', array_slice($words, 0, 2))) . '<br>' . e(implode(' ', array_slice($words, 2)));
+    }
+
     public function refreshBookingsAndCounts(bool $force = false, bool $refreshCounts = true): void
     {
         // Avoid heavy polling refresh while a modal is open, so calendar
         // interactions (day/time/month selection) stay responsive.
-        if (!$force && ($this->declineBookingId !== null || $this->rescheduleBookingId !== null || $this->completedBookingId !== null || $this->cancelledBookingId !== null)) {
+        if (!$force && ($this->declineBookingId !== null || $this->rescheduleBookingId !== null || $this->completedBookingId !== null || $this->cancelledBookingId !== null || $this->bookingDetailsId !== null)) {
             return;
         }
 
@@ -312,6 +328,28 @@ new class extends Component {
         $this->dispatch('cancelled-booking-modal-opened');
     }
 
+    public function openBookingViewModal(int $bookingId): void
+    {
+        $bookingExists = $this->scopedBookingQuery($bookingId)->exists();
+        if (!$bookingExists) {
+            $this->dispatch('bookings-tabs-loading-end');
+            return;
+        }
+
+        $this->bookingDetailsId = $bookingId;
+        $this->dispatch('bookings-tabs-loading-end');
+        $this->dispatch('booking-details-drawer-opened');
+        $this->js('window.__lockBookingDetailsDrawer && window.__lockBookingDetailsDrawer()');
+    }
+
+    public function closeBookingDetailsDrawer(): void
+    {
+        $this->bookingDetailsId = null;
+        $this->dispatch('bookings-tabs-loading-end');
+        $this->dispatch('booking-details-drawer-closed');
+        $this->js('window.__unlockBookingDetailsDrawer && window.__unlockBookingDetailsDrawer()');
+    }
+
     public function closeCancelledBookingModal(): void
     {
         $this->cancelledBookingId = null;
@@ -393,10 +431,10 @@ new class extends Component {
                 @php
                     $bookingPills = [
                         ['status' => 'all', 'label' => 'All Bookings', 'class' => 'all'],
-                        ['status' => 'pending', 'label' => 'Pending Bookings', 'class' => 'pending'],
-                        ['status' => 'confirmed', 'label' => 'Confirmed Bookings', 'class' => 'confirmed'],
-                        ['status' => 'completed', 'label' => 'Completed Bookings', 'class' => 'completed'],
-                        ['status' => 'cancelled', 'label' => 'Cancelled Bookings', 'class' => 'cancelled'],
+                        ['status' => 'pending', 'label' => 'Pending', 'class' => 'pending'],
+                        ['status' => 'confirmed', 'label' => 'Confirmed', 'class' => 'confirmed'],
+                        ['status' => 'completed', 'label' => 'Completed', 'class' => 'completed'],
+                        ['status' => 'cancelled', 'label' => 'Cancelled', 'class' => 'cancelled'],
                     ];
                     $allBookingsCount = array_sum($statusCounts);
                 @endphp
@@ -678,7 +716,7 @@ new class extends Component {
                                 </td>
                                 <td
                                     class="service-type {{ auth()->check() && in_array(strtolower((string) auth()->user()->user_type), ['groomer', 'space'], true) ? 'service-type-groomer' : '' }}">
-                                    {{ $booking->service }}
+                                    {!! $this->formatServiceTypeLabel($booking->service) !!}
                                 </td>
                                 <td>
                                     <div class="booking-details">
@@ -692,12 +730,9 @@ new class extends Component {
                                 <td class="action-col">
                                     <div class="booking-action-cell">
                                         <button type="button" class="booking-accept-btn"
-                                            wire:click="acceptBooking({{ $booking->id }})"
-                                            wire:loading.attr="disabled"
-                                            wire:target="acceptBooking({{ $booking->id }})"
-                                            aria-label="Accept booking">
-                                            <span wire:loading.remove
-                                                wire:target="acceptBooking({{ $booking->id }})">Accept</span>
+                                            wire:click="acceptBooking({{ $booking->id }})" wire:loading.attr="disabled"
+                                            wire:target="acceptBooking({{ $booking->id }})" aria-label="Accept booking">
+                                            <span wire:loading.remove wire:target="acceptBooking({{ $booking->id }})">Accept</span>
                                             <span class="booking-accept-loading" wire:loading.inline-flex
                                                 wire:target="acceptBooking({{ $booking->id }})">
                                                 <span class="booking-accept-spinner" aria-hidden="true"></span>
@@ -705,10 +740,9 @@ new class extends Component {
                                         </button>
                                         <button type="button" class="booking-decline-btn"
                                             @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                                            wire:click="openDeclineModal({{ $booking->id }})"
-                                            aria-label="Decline booking">
-                                            <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg"
-                                                    width="36" height="36" viewBox="0 0 36 36" fill="none">
+                                            wire:click="openDeclineModal({{ $booking->id }})" aria-label="Decline booking">
+                                            <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
+                                                    viewBox="0 0 36 36" fill="none">
                                                     <rect width="36" height="36" rx="18" fill="#FF6E6E" />
                                                     <path d="M13 23L23 13M13 13L23 23" stroke="white" stroke-width="1.5"
                                                         stroke-linecap="round" />
@@ -730,8 +764,7 @@ new class extends Component {
                         <button type="button" class="bookings-load-more-btn" wire:click="loadMoreBookings"
                             wire:loading.attr="disabled" wire:target="loadMoreBookings">
                             <span wire:loading.remove wire:target="loadMoreBookings">Load more</span>
-                            <span class="bookings-load-more-loading" wire:loading.inline-flex
-                                wire:target="loadMoreBookings">
+                            <span class="bookings-load-more-loading" wire:loading.inline-flex wire:target="loadMoreBookings">
                                 <span class="bookings-load-more-spinner" aria-hidden="true"></span>
                             </span>
                         </button>
@@ -847,16 +880,16 @@ new class extends Component {
                                 $locationLabel = str_replace('_', ' ', $locationLabel);
                                 $locationLabel =
                                     $locationLabel === 'home' || $locationLabel === 'home visit'
-                                        ? 'Home Visit'
-                                        : ($locationLabel === 'salon' || $locationLabel === 'salon visit'
-                                            ? 'Salon Visit'
-                                            : ucfirst($locationLabel ?: 'N/A'));
+                                    ? 'Home Visit'
+                                    : ($locationLabel === 'salon' || $locationLabel === 'salon visit'
+                                        ? 'Salon Visit'
+                                        : ucfirst($locationLabel ?: 'N/A'));
                             @endphp
                             <tr wire:key="booking-row-confirmed-{{ $booking->id }}">
                                 <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
                                 @if ($isSpaceUser)
                                     <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
-                                    <td class="service-type">{{ $booking->service }}</td>
+                                    <td class="service-type">{!! $this->formatServiceTypeLabel($booking->service) !!}</td>
                                     <td><span class="confirmed-space-label">{{ $locationLabel }}</span></td>
                                     <td>
                                         <div class="confirmed-appointment-cell">
@@ -887,41 +920,40 @@ new class extends Component {
                                             </span>
                                         </div>
                                     </td>
-                                    <td class="service-type">{{ $booking->service }}</td>
+                                    <td class="service-type">{!! $this->formatServiceTypeLabel($booking->service) !!}</td>
                                     <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
                                     <td>{{ $locationLabel }}</td>
                                     <td>{{ $booking->staff ?: 'N/A' }}</td>
                                 @endif
                                 <td class="confirmed-action-col">
-                                    <div class="confirmed-action-cell" x-data="{
-                                        rowId: {{ $booking->id }},
-                                        openMore: false,
-                                        menuLeft: 8,
-                                        menuTop: 8,
-                                        repositionMore() {
-                                            const rect = $refs.moreBtn.getBoundingClientRect();
-                                            const menuWidth = 210;
-                                            this.menuLeft = Math.min(Math.max(8, rect.left), window.innerWidth - menuWidth - 8);
-                                            this.menuTop = Math.max(8, rect.bottom + 8);
-                                        },
-                                        toggleMore() {
-                                            if (!this.openMore) {
-                                                window.dispatchEvent(new CustomEvent('confirmed-more-opened', { detail: { id: this.rowId } }));
-                                                this.repositionMore();
-                                            }
-                                            this.openMore = !this.openMore;
-                                        }
-                                    }"
+                                    <div class="confirmed-action-cell"
+                                        x-data="{
+                                                                                                                                                                                                                                                                                                                            rowId: {{ $booking->id }},
+                                                                                                                                                                                                                                                                                                                            openMore: false,
+                                                                                                                                                                                                                                                                                                                            menuLeft: 8,
+                                                                                                                                                                                                                                                                                                                            menuTop: 8,
+                                                                                                                                                                                                                                                                                                                            repositionMore() {
+                                                                                                                                                                                                                                                                                                                                const rect = $refs.moreBtn.getBoundingClientRect();
+                                                                                                                                                                                                                                                                                                                                const menuWidth = 210;
+                                                                                                                                                                                                                                                                                                                                this.menuLeft = Math.min(Math.max(8, rect.left), window.innerWidth - menuWidth - 8);
+                                                                                                                                                                                                                                                                                                                                this.menuTop = Math.max(8, rect.bottom + 8);
+                                                                                                                                                                                                                                                                                                                            },
+                                                                                                                                                                                                                                                                                                                            toggleMore() {
+                                                                                                                                                                                                                                                                                                                                if (!this.openMore) {
+                                                                                                                                                                                                                                                                                                                                    window.dispatchEvent(new CustomEvent('confirmed-more-opened', { detail: { id: this.rowId } }));
+                                                                                                                                                                                                                                                                                                                                    this.repositionMore();
+                                                                                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                                                                                this.openMore = !this.openMore;
+                                                                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                                                                  }"
                                         :class="{ 'is-open': openMore }"
                                         @confirmed-more-opened.window="if (($event.detail?.id ?? null) !== rowId) { openMore = false }"
-                                        @keydown.escape.window="openMore = false"
-                                        @resize.window="if (openMore) repositionMore()"
+                                        @keydown.escape.window="openMore = false" @resize.window="if (openMore) repositionMore()"
                                         @scroll.window="if (openMore) repositionMore()"
                                         @click.window="if (openMore && !$refs.moreBtn.contains($event.target) && (!$refs.moreMenu || !$refs.moreMenu.contains($event.target))) { openMore = false }">
-                                        <button type="button" class="confirmed-action-btn is-message"
-                                            aria-label="Message">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
-                                                viewBox="0 0 36 36" fill="none">
+                                        <button type="button" class="confirmed-action-btn is-message" aria-label="Message">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"
+                                                fill="none">
                                                 <rect width="36" height="36" rx="18" fill="#CBDCE8" />
                                                 <path
                                                     d="M18.3955 11.25C22.4278 11.25 25.542 14.1354 25.542 17.5137C25.542 20.892 22.4278 23.7773 18.3955 23.7773H18.3945C17.6796 23.779 16.9672 23.6847 16.2764 23.4971L15.9951 23.4209L15.7373 23.5537C15.3001 23.7782 14.314 24.2099 12.6807 24.5547C12.9199 23.8218 13.1163 22.9878 13.1914 22.1934L13.2236 21.8457L12.9795 21.5967C11.8924 20.4903 11.25 19.0614 11.25 17.5137C11.25 14.1355 14.3634 11.2502 18.3955 11.25Z"
@@ -930,14 +962,12 @@ new class extends Component {
                                         </button>
                                         <button type="button" class="confirmed-action-btn is-reschedule"
                                             @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                                            wire:click="openRescheduleModal({{ $booking->id }})"
-                                            aria-label="Reschedule">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
-                                                viewBox="0 0 36 36" fill="none">
+                                            wire:click="openRescheduleModal({{ $booking->id }})" aria-label="Reschedule">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"
+                                                fill="none">
                                                 <rect width="36" height="36" rx="18" fill="#FFC97A" />
-                                                <path d="M12.2312 25.4951V22.6123H15.114" stroke="white"
-                                                    stroke-width="1.5" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
+                                                <path d="M12.2312 25.4951V22.6123H15.114" stroke="white" stroke-width="1.5"
+                                                    stroke-linecap="round" stroke-linejoin="round" />
                                                 <path
                                                     d="M25.3656 16.6225C25.6715 18.2545 25.4269 19.9419 24.6702 21.4199C23.9135 22.8978 22.6875 24.0827 21.1846 24.7887C19.6818 25.4946 17.987 25.6817 16.3664 25.3204C14.7458 24.9592 13.2909 24.0701 12.2301 22.7927M10.6283 19.3775C10.3224 17.7455 10.567 16.0581 11.3237 14.5801C12.0804 13.1022 13.3064 11.9173 14.8093 11.2113C16.3121 10.5054 18.0069 10.3183 19.6275 10.6796C21.2481 11.0408 22.703 11.9299 23.7638 13.2073"
                                                     stroke="white" stroke-width="1.5" stroke-linecap="round"
@@ -951,8 +981,8 @@ new class extends Component {
                                         <button type="button" class="confirmed-action-btn is-cancel"
                                             @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
                                             wire:click="openDeclineModal({{ $booking->id }})" aria-label="Cancel">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
-                                                viewBox="0 0 36 36" fill="none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"
+                                                fill="none">
                                                 <rect width="36" height="36" rx="18" fill="#FF6E6E" />
                                                 <path d="M13 23L23 13M13 13L23 23" stroke="white" stroke-width="1.5"
                                                     stroke-linecap="round" />
@@ -974,8 +1004,7 @@ new class extends Component {
                         <button type="button" class="bookings-load-more-btn" wire:click="loadMoreBookings"
                             wire:loading.attr="disabled" wire:target="loadMoreBookings">
                             <span wire:loading.remove wire:target="loadMoreBookings">Load more</span>
-                            <span class="bookings-load-more-loading" wire:loading.inline-flex
-                                wire:target="loadMoreBookings">
+                            <span class="bookings-load-more-loading" wire:loading.inline-flex wire:target="loadMoreBookings">
                                 <span class="bookings-load-more-spinner" aria-hidden="true"></span>
                             </span>
                         </button>
@@ -1002,7 +1031,6 @@ new class extends Component {
                             <th class="invoice-col">
                                 <span class="view-col-inner">Invoice</span>
                             </th>
-                            <th class="more-col"></th>
                         </tr>
                     </thead>
                     <tbody wire:key="bookings-table-completed" class="bookings-table-body">
@@ -1031,11 +1059,11 @@ new class extends Component {
                                 $completedLocationLabel = str_replace('_', ' ', $completedLocationLabel);
                                 $completedLocationLabel =
                                     $completedLocationLabel === 'home' || $completedLocationLabel === 'home visit'
-                                        ? 'Home Visit'
-                                        : ($completedLocationLabel === 'salon' ||
+                                    ? 'Home Visit'
+                                    : ($completedLocationLabel === 'salon' ||
                                         $completedLocationLabel === 'salon visit'
-                                            ? 'Salon Visit'
-                                            : ucfirst($completedLocationLabel ?: 'N/A'));
+                                        ? 'Salon Visit'
+                                        : ucfirst($completedLocationLabel ?: 'N/A'));
                             @endphp
                             <tr>
                                 <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
@@ -1052,11 +1080,11 @@ new class extends Component {
                                         </div>
                                     @endif
                                 </td>
-                                <td class="service-type">{{ $booking->service }}</td>
+                                <td class="service-type">{!! $this->formatServiceTypeLabel($booking->service) !!}</td>
                                 <td>
                                     <span class="completed-rating">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                                            viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
+                                            fill="none" aria-hidden="true">
                                             <path
                                                 d="M7.00014 1.16699L8.80195 4.81649L12.8335 5.40528L9.91681 8.24742L10.6051 12.2612L7.00014 10.3662L3.39522 12.2612L4.08348 8.24742L1.16681 5.40528L5.19833 4.81649L7.00014 1.16699Z"
                                                 fill="#FFBA55" />
@@ -1071,16 +1099,16 @@ new class extends Component {
                                             @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
                                             wire:click="openCompletedBookingModal({{ $booking->id }})"
                                             aria-label="View completed booking">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="13"
-                                                viewBox="0 0 19 13" fill="none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"
+                                                fill="none">
+                                                <circle cx="18" cy="18" r="17.5" fill="white" stroke="#E2E2E2" />
                                                 <path
-                                                    d="M9.49609 12C11.4291 12 12.9961 10.433 12.9961 8.5C12.9961 6.567 11.4291 5 9.49609 5C7.5631 5 5.99609 6.567 5.99609 8.5C5.99609 10.433 7.5631 12 9.49609 12Z"
-                                                    stroke="black" />
-                                                <path
-                                                    d="M18.4961 8.5C18.4961 8.5 17.4961 0.5 9.49609 0.5C1.49609 0.5 0.496094 8.5 0.496094 8.5"
-                                                    stroke="black" />
+                                                    d="M18 23.5C19.933 23.5 21.5 21.933 21.5 20C21.5 18.067 19.933 16.5 18 16.5C16.067 16.5 14.5 18.067 14.5 20C14.5 21.933 16.067 23.5 18 23.5Z"
+                                                    stroke="#3B3731" />
+                                                <path d="M27 20C27 20 26 12 18 12C10 12 9 20 9 20" stroke="#3B3731" />
                                             </svg>
                                         </button>
+                                        <x-business-hub.common.more-action-btn :row-id="$booking->id" />
                                     </div>
                                 </td>
                                 <td class="invoice-col">
@@ -1089,28 +1117,21 @@ new class extends Component {
                                             data-invoice-url="{{ route('business-hub.bookings.invoice-pdf', $booking) }}"
                                             onclick="window.downloadBookingInvoicePdf(this.dataset.invoiceUrl)"
                                             aria-label="Download invoice">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
-                                                viewBox="0 0 16 19" fill="none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19"
+                                                fill="none">
                                                 <path
                                                     d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
-                                                    stroke="#3B3731" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
+                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                                 <path d="M7.99997 0.5V12.875M12.0909 8.75L7.99997 13.25L3.90906 8.75"
-                                                    stroke="#3B3731" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
+                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
                                         </button>
-                                    </div>
-                                </td>
-                                <td class="more-col">
-                                    <div class="view-col-inner">
-                                        <x-business-hub.common.more-action-btn :row-id="$booking->id" />
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="empty-bookings">No completed bookings found.</td>
+                                <td colspan="8" class="empty-bookings">No completed bookings found.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -1120,8 +1141,7 @@ new class extends Component {
                         <button type="button" class="bookings-load-more-btn" wire:click="loadMoreBookings"
                             wire:loading.attr="disabled" wire:target="loadMoreBookings">
                             <span wire:loading.remove wire:target="loadMoreBookings">Load more</span>
-                            <span class="bookings-load-more-loading" wire:loading.inline-flex
-                                wire:target="loadMoreBookings">
+                            <span class="bookings-load-more-loading" wire:loading.inline-flex wire:target="loadMoreBookings">
                                 <span class="bookings-load-more-spinner" aria-hidden="true"></span>
                             </span>
                         </button>
@@ -1149,7 +1169,6 @@ new class extends Component {
                             <th class="invoice-col">
                                 <span class="view-col-inner">Invoice</span>
                             </th>
-                            <th class="more-col"></th>
                         </tr>
                     </thead>
                     <tbody wire:key="bookings-table-cancelled" class="bookings-table-body">
@@ -1179,10 +1198,10 @@ new class extends Component {
                                 $refundStatus = (string) ($booking->refund_status ?? 'In Progress');
                                 $refundStatusClass =
                                     $refundStatus === 'Rejected'
-                                        ? 'rejected'
-                                        : ($refundStatus === 'In Progress'
-                                            ? 'in-progress'
-                                            : 'processed');
+                                    ? 'rejected'
+                                    : ($refundStatus === 'In Progress'
+                                        ? 'in-progress'
+                                        : 'processed');
                             @endphp
                             <tr>
                                 <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
@@ -1217,16 +1236,16 @@ new class extends Component {
                                             @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
                                             wire:click="openCancelledBookingModal({{ $booking->id }})"
                                             aria-label="View cancelled booking">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="13"
-                                                viewBox="0 0 19 13" fill="none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"
+                                                fill="none">
+                                                <circle cx="18" cy="18" r="17.5" fill="white" stroke="#E2E2E2" />
                                                 <path
-                                                    d="M9.49609 12C11.4291 12 12.9961 10.433 12.9961 8.5C12.9961 6.567 11.4291 5 9.49609 5C7.5631 5 5.99609 6.567 5.99609 8.5C5.99609 10.433 7.5631 12 9.49609 12Z"
-                                                    stroke="black" />
-                                                <path
-                                                    d="M18.4961 8.5C18.4961 8.5 17.4961 0.5 9.49609 0.5C1.49609 0.5 0.496094 8.5 0.496094 8.5"
-                                                    stroke="black" />
+                                                    d="M18 23.5C19.933 23.5 21.5 21.933 21.5 20C21.5 18.067 19.933 16.5 18 16.5C16.067 16.5 14.5 18.067 14.5 20C14.5 21.933 16.067 23.5 18 23.5Z"
+                                                    stroke="#3B3731" />
+                                                <path d="M27 20C27 20 26 12 18 12C10 12 9 20 9 20" stroke="#3B3731" />
                                             </svg>
                                         </button>
+                                        <x-business-hub.common.more-action-btn :row-id="$booking->id" />
                                     </div>
                                 </td>
                                 <td class="invoice-col">
@@ -1235,28 +1254,21 @@ new class extends Component {
                                             data-invoice-url="{{ route('business-hub.bookings.invoice-pdf', $booking) }}"
                                             onclick="window.downloadBookingInvoicePdf(this.dataset.invoiceUrl)"
                                             aria-label="Download invoice">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
-                                                viewBox="0 0 16 19" fill="none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19"
+                                                fill="none">
                                                 <path
                                                     d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
-                                                    stroke="#3B3731" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
+                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                                 <path d="M7.99997 0.5V12.875M12.0909 8.75L7.99997 13.25L3.90906 8.75"
-                                                    stroke="#3B3731" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
+                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
                                         </button>
-                                    </div>
-                                </td>
-                                <td class="more-col">
-                                    <div class="view-col-inner">
-                                        <x-business-hub.common.more-action-btn :row-id="$booking->id" />
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="empty-bookings">No cancelled bookings found.</td>
+                                <td colspan="9" class="empty-bookings">No cancelled bookings found.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -1266,8 +1278,7 @@ new class extends Component {
                         <button type="button" class="bookings-load-more-btn" wire:click="loadMoreBookings"
                             wire:loading.attr="disabled" wire:target="loadMoreBookings">
                             <span wire:loading.remove wire:target="loadMoreBookings">Load more</span>
-                            <span class="bookings-load-more-loading" wire:loading.inline-flex
-                                wire:target="loadMoreBookings">
+                            <span class="bookings-load-more-loading" wire:loading.inline-flex wire:target="loadMoreBookings">
                                 <span class="bookings-load-more-spinner" aria-hidden="true"></span>
                             </span>
                         </button>
@@ -1333,7 +1344,7 @@ new class extends Component {
                                 </td>
                                 <td
                                     class="service-type {{ auth()->check() && in_array(strtolower((string) auth()->user()->user_type), ['groomer', 'space'], true) ? 'service-type-groomer' : '' }}">
-                                    {{ $booking->service }}
+                                    {!! $this->formatServiceTypeLabel($booking->service) !!}
                                 </td>
                                 <td>{{ optional($booking->date)->format('d/m/y') }}</td>
                                 <td>
@@ -1343,18 +1354,20 @@ new class extends Component {
                                 </td>
                                 <td>£{{ number_format((float) $booking->amount, 2) }}</td>
                                 <td class="view-col">
-                                    <div class="view-col-inner">
-                                        <button type="button" class="view-btn" aria-label="View booking">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="13"
-                                                viewBox="0 0 19 13" fill="none">
+                                    <div class="view-col-inner all-bookings-actions">
+                                        <button type="button" class="view-btn"
+                                            @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
+                                            wire:click="openBookingViewModal({{ $booking->id }})" aria-label="View booking">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"
+                                                fill="none" aria-hidden="true">
+                                                <circle cx="18" cy="18" r="17.5" fill="white" stroke="#E2E2E2" />
                                                 <path
-                                                    d="M9.49609 12C11.4291 12 12.9961 10.433 12.9961 8.5C12.9961 6.567 11.4291 5 9.49609 5C7.5631 5 5.99609 6.567 5.99609 8.5C5.99609 10.433 7.5631 12 9.49609 12Z"
-                                                    stroke="black" />
-                                                <path
-                                                    d="M18.4961 8.5C18.4961 8.5 17.4961 0.5 9.49609 0.5C1.49609 0.5 0.496094 8.5 0.496094 8.5"
-                                                    stroke="black" />
+                                                    d="M18 23.5C19.933 23.5 21.5 21.933 21.5 20C21.5 18.067 19.933 16.5 18 16.5C16.067 16.5 14.5 18.067 14.5 20C14.5 21.933 16.067 23.5 18 23.5Z"
+                                                    stroke="#3B3731" />
+                                                <path d="M27 20C27 20 26 12 18 12C10 12 9 20 9 20" stroke="#3B3731" />
                                             </svg>
                                         </button>
+                                        <x-business-hub.common.more-action-btn :row-id="$booking->id" />
                                     </div>
                                 </td>
                             </tr>
@@ -1370,8 +1383,7 @@ new class extends Component {
                         <button type="button" class="bookings-load-more-btn" wire:click="loadMoreBookings"
                             wire:loading.attr="disabled" wire:target="loadMoreBookings">
                             <span wire:loading.remove wire:target="loadMoreBookings">Load more</span>
-                            <span class="bookings-load-more-loading" wire:loading.inline-flex
-                                wire:target="loadMoreBookings">
+                            <span class="bookings-load-more-loading" wire:loading.inline-flex wire:target="loadMoreBookings">
                                 <span class="bookings-load-more-spinner" aria-hidden="true"></span>
                             </span>
                         </button>
@@ -1387,7 +1399,10 @@ new class extends Component {
                 return null;
             }
 
-            return Booking::with(['petOwner:id,name', 'pets:id,name,pet_type,breed,photo'])
+            return Booking::with([
+                'petOwner:id,name,profile_image',
+                'pets:id,name,pet_type,breed,sex,weight,notes,photo',
+            ])
                 ->where('goormer_spacer_id', Auth::id())
                 ->where('id', $bookingId)
                 ->first();
@@ -1395,11 +1410,16 @@ new class extends Component {
 
         $completedBooking = $loadModalBooking($completedBookingId);
         $cancelledBooking = $loadModalBooking($cancelledBookingId);
+        $bookingDetails = $loadModalBooking($bookingDetailsId);
         $declineBooking = $loadModalBooking($declineBookingId);
         $rescheduleBooking = $loadModalBooking($rescheduleBookingId);
     @endphp
 
-    <x-business-hub.common.completed-booking-modal :booking="$completedBooking" loading-event="bookings-tabs-loading-start" />
+    <x-business-hub.common.booking-details-drawer :booking="$bookingDetails"
+        loading-event="bookings-tabs-loading-start" />
+
+    <x-business-hub.common.completed-booking-modal :booking="$completedBooking"
+        loading-event="bookings-tabs-loading-start" />
 
     @if ($cancelledBooking)
         @php
@@ -1448,162 +1468,161 @@ new class extends Component {
             $cancelledRefundStatus = (string) ($cancelledBooking->refund_status ?? 'In Progress');
             $cancelledRefundStatusClass =
                 $cancelledRefundStatus === 'Rejected'
-                    ? 'rejected'
-                    : ($cancelledRefundStatus === 'In Progress'
-                        ? 'in-progress'
-                        : 'processed');
+                ? 'rejected'
+                : ($cancelledRefundStatus === 'In Progress'
+                    ? 'in-progress'
+                    : 'processed');
         @endphp
         @teleport('body')
-            <div class="completed-booking-modal-overlay cancelled-booking-modal-overlay"
-                wire:keydown.escape="closeCancelledBookingModal">
-                <div class="completed-booking-modal-card cancelled-booking-modal-card" role="dialog" aria-modal="true"
-                    aria-labelledby="cancelled-booking-modal-title">
-                    <div class="completed-booking-modal-head cancelled-booking-modal-head">
-                        <h3 class="completed-booking-modal-title" id="cancelled-booking-modal-title">Cancelled Booking
-                        </h3>
-                        <button type="button" class="completed-booking-modal-close"
-                            @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                            wire:click="closeCancelledBookingModal" aria-label="Close modal">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"
-                                fill="none">
-                                <circle cx="18" cy="18" r="17.5" stroke="#3B3731" />
-                                <path d="M12.8 23.9998L24 12.7998M12.8 12.7998L24 23.9998" stroke="#3B3731"
-                                    stroke-width="1.5" stroke-linecap="round" />
+        <div class="completed-booking-modal-overlay cancelled-booking-modal-overlay"
+            wire:keydown.escape="closeCancelledBookingModal">
+            <div class="completed-booking-modal-card cancelled-booking-modal-card" role="dialog" aria-modal="true"
+                aria-labelledby="cancelled-booking-modal-title">
+                <div class="completed-booking-modal-head cancelled-booking-modal-head">
+                    <h3 class="completed-booking-modal-title" id="cancelled-booking-modal-title">Cancelled Booking
+                    </h3>
+                    <button type="button" class="completed-booking-modal-close"
+                        @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
+                        wire:click="closeCancelledBookingModal" aria-label="Close modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none">
+                            <circle cx="18" cy="18" r="17.5" stroke="#3B3731" />
+                            <path d="M12.8 23.9998L24 12.7998M12.8 12.7998L24 23.9998" stroke="#3B3731" stroke-width="1.5"
+                                stroke-linecap="round" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="completed-booking-modal-booking-row">
+                    <div class="cancelled-modal-id-row">
+                        <strong>Booking ID: {{ $cancelledBookingIdLabel }}</strong>
+                        @unless ($isSpaceUser)
+                            <span
+                                class="refund-status-chip {{ $cancelledRefundStatusClass }}">{{ $cancelledRefundStatus }}</span>
+                        @endunless
+                    </div>
+                    <div class="completed-booking-modal-booking-meta">
+                        <span>{{ $cancelledDateLabel }}</span>
+                        <button type="button"
+                            data-invoice-url="{{ route('business-hub.bookings.invoice-pdf', $cancelledBooking) }}"
+                            onclick="window.downloadBookingInvoicePdf(this.dataset.invoiceUrl)"
+                            class="completed-booking-download-btn" aria-label="Download invoice">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19" fill="none">
+                                <path
+                                    d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
+                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M7.99997 0.5V12.875M12.0909 8.75L7.99997 13.25L3.90906 8.75" stroke="#3B3731"
+                                    stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </button>
                     </div>
+                </div>
 
-                    <div class="completed-booking-modal-booking-row">
-                        <div class="cancelled-modal-id-row">
-                            <strong>Booking ID: {{ $cancelledBookingIdLabel }}</strong>
-                            @unless ($isSpaceUser)
-                                <span
-                                    class="refund-status-chip {{ $cancelledRefundStatusClass }}">{{ $cancelledRefundStatus }}</span>
-                            @endunless
-                        </div>
-                        <div class="completed-booking-modal-booking-meta">
-                            <span>{{ $cancelledDateLabel }}</span>
-                            <button type="button"
-                                data-invoice-url="{{ route('business-hub.bookings.invoice-pdf', $cancelledBooking) }}"
-                                onclick="window.downloadBookingInvoicePdf(this.dataset.invoiceUrl)"
-                                class="completed-booking-download-btn" aria-label="Download invoice">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
-                                    viewBox="0 0 16 19" fill="none">
-                                    <path
-                                        d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
-                                        stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M7.99997 0.5V12.875M12.0909 8.75L7.99997 13.25L3.90906 8.75" stroke="#3B3731"
-                                        stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </button>
-                        </div>
+                <div class="completed-booking-modal-customer">
+                    <div class="completed-booking-modal-user-icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="36" viewBox="0 0 32 36" fill="none">
+                            <ellipse cx="17.3667" cy="18.0807" rx="10.2458" ry="9.64315" fill="white" />
+                            <path
+                                d="M16.8932 0.202494C16.6132 0.0698256 16.3132 0 15.9998 0C15.6865 0 15.3865 0.0698256 15.1065 0.202494L2.55333 5.78156C1.08668 6.43094 -0.00663626 7.94615 3.03229e-05 9.77559C0.0333633 16.7023 2.75333 29.3756 14.2399 35.1362C15.3532 35.6949 16.6465 35.6949 17.7598 35.1362C29.2463 29.3756 31.9663 16.7023 31.9996 9.77559C32.0063 7.94615 30.913 6.43094 29.4463 5.78156L16.8932 0.202494ZM9.65991 19.9841C9.97991 20.0679 10.3199 20.1098 10.6666 20.1098C13.0199 20.1098 14.9332 18.1058 14.9332 15.6409V11.1721H17.8798C18.6865 11.1721 19.4265 11.6469 19.7865 12.408L20.2665 13.4065H24.5331C25.1197 13.4065 25.5997 13.9093 25.5997 14.5237V16.7581C25.5997 19.8444 23.2131 22.3442 20.2665 22.3442H17.0665V25.8844C17.0665 26.3941 16.6732 26.813 16.1798 26.813C16.0598 26.813 15.9398 26.7851 15.8332 26.7362L9.25325 23.7826C8.81326 23.5871 8.53326 23.1332 8.53326 22.6375C8.53326 22.4419 8.57326 22.2534 8.65993 22.0789L9.65991 19.9841ZM9.59992 11.1721H12.7999V15.6409C12.7999 16.8769 11.8466 17.8754 10.6666 17.8754C9.48658 17.8754 8.53326 16.8769 8.53326 15.6409V12.2893C8.53326 11.6748 9.01326 11.1721 9.59992 11.1721ZM18.1331 14.5237C18.1331 14.2274 18.0208 13.9433 17.8207 13.7337C17.6207 13.5242 17.3494 13.4065 17.0665 13.4065C16.7836 13.4065 16.5123 13.5242 16.3123 13.7337C16.1122 13.9433 15.9998 14.2274 15.9998 14.5237C15.9998 14.82 16.1122 15.1042 16.3123 15.3137C16.5123 15.5232 16.7836 15.6409 17.0665 15.6409C17.3494 15.6409 17.6207 15.5232 17.8207 15.3137C18.0208 15.1042 18.1331 14.82 18.1331 14.5237Z"
+                                fill="#E2E2E2" />
+                        </svg>
                     </div>
+                    <div>
+                        <p class="completed-booking-modal-owner">{{ $cancelledOwnerName }}</p>
+                        @unless ($isSpaceUser)
+                            <p class="completed-booking-modal-pet">{{ $cancelledPetName }}<span
+                                    class="completed-booking-modal-pet-type">{{ $cancelledPetType }}</span></p>
+                        @endunless
+                    </div>
+                </div>
 
-                    <div class="completed-booking-modal-customer">
-                        <div class="completed-booking-modal-user-icon" aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="36" viewBox="0 0 32 36"
-                                fill="none">
-                                <ellipse cx="17.3667" cy="18.0807" rx="10.2458" ry="9.64315" fill="white" />
+                <div class="completed-booking-modal-section">
+                    <p class="completed-booking-modal-section-label">
+                        @if ($isSpaceUser)
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="13" viewBox="0 0 15 13" fill="none">
                                 <path
-                                    d="M16.8932 0.202494C16.6132 0.0698256 16.3132 0 15.9998 0C15.6865 0 15.3865 0.0698256 15.1065 0.202494L2.55333 5.78156C1.08668 6.43094 -0.00663626 7.94615 3.03229e-05 9.77559C0.0333633 16.7023 2.75333 29.3756 14.2399 35.1362C15.3532 35.6949 16.6465 35.6949 17.7598 35.1362C29.2463 29.3756 31.9663 16.7023 31.9996 9.77559C32.0063 7.94615 30.913 6.43094 29.4463 5.78156L16.8932 0.202494ZM9.65991 19.9841C9.97991 20.0679 10.3199 20.1098 10.6666 20.1098C13.0199 20.1098 14.9332 18.1058 14.9332 15.6409V11.1721H17.8798C18.6865 11.1721 19.4265 11.6469 19.7865 12.408L20.2665 13.4065H24.5331C25.1197 13.4065 25.5997 13.9093 25.5997 14.5237V16.7581C25.5997 19.8444 23.2131 22.3442 20.2665 22.3442H17.0665V25.8844C17.0665 26.3941 16.6732 26.813 16.1798 26.813C16.0598 26.813 15.9398 26.7851 15.8332 26.7362L9.25325 23.7826C8.81326 23.5871 8.53326 23.1332 8.53326 22.6375C8.53326 22.4419 8.57326 22.2534 8.65993 22.0789L9.65991 19.9841ZM9.59992 11.1721H12.7999V15.6409C12.7999 16.8769 11.8466 17.8754 10.6666 17.8754C9.48658 17.8754 8.53326 16.8769 8.53326 15.6409V12.2893C8.53326 11.6748 9.01326 11.1721 9.59992 11.1721ZM18.1331 14.5237C18.1331 14.2274 18.0208 13.9433 17.8207 13.7337C17.6207 13.5242 17.3494 13.4065 17.0665 13.4065C16.7836 13.4065 16.5123 13.5242 16.3123 13.7337C16.1122 13.9433 15.9998 14.2274 15.9998 14.5237C15.9998 14.82 16.1122 15.1042 16.3123 15.3137C16.5123 15.5232 16.7836 15.6409 17.0665 15.6409C17.3494 15.6409 17.6207 15.5232 17.8207 15.3137C18.0208 15.1042 18.1331 14.82 18.1331 14.5237Z"
-                                    fill="#E2E2E2" />
+                                    d="M13.1097 12.1166V3.83417C13.1097 3.81429 13.1113 3.79482 13.1144 3.77576L10.875 1.86616C10.3988 1.46067 10.0698 1.18119 9.79071 0.998982C9.52119 0.823101 9.34008 0.766834 9.16683 0.766834C8.99372 0.766835 8.81374 0.823306 8.54452 0.998982C8.26536 1.18121 7.93548 1.46044 7.45863 1.86616L5.2177 3.77576C5.22078 3.7949 5.22398 3.81422 5.22398 3.83417V12.1166C5.22364 12.3281 5.04366 12.5 4.82168 12.5C4.59985 12.4998 4.41972 12.328 4.41938 12.1166V4.45573L4.00451 4.81069C3.83888 4.95183 3.58373 4.93709 3.43564 4.77924C3.28813 4.62148 3.30193 4.3796 3.46707 4.23856L6.92118 1.29553H6.92275C7.38366 0.90337 7.75691 0.583679 8.08879 0.366942C8.4307 0.143752 8.77013 2.24995e-07 9.16683 0C9.56348 0 9.90284 0.143743 10.2449 0.366942C10.577 0.583731 10.9518 0.903225 11.4125 1.29553L14.8666 4.23856C15.0317 4.3796 15.0455 4.62148 14.898 4.77924C14.7499 4.93709 14.4948 4.95183 14.3291 4.81069L13.9143 4.45573V12.1166C13.9139 12.328 13.7338 12.4998 13.512 12.5C13.29 12.5 13.11 12.3281 13.1097 12.1166Z"
+                                    fill="#9D9B98" />
+                                <path
+                                    d="M1.82418 6.66737C1.82418 6.37816 1.74192 6.13002 1.62487 5.96249C1.50777 5.79507 1.37173 5.7247 1.25 5.7247C1.12833 5.7248 0.992145 5.79519 0.875132 5.96249C0.758177 6.13002 0.675818 6.37832 0.675818 6.66737C0.675926 6.95653 0.758033 7.20483 0.875132 7.37226C0.992124 7.53946 1.12837 7.60853 1.25 7.60863C1.37164 7.60863 1.50783 7.53939 1.62487 7.37226C1.74197 7.20483 1.82407 6.95653 1.82418 6.66737ZM2.5 6.66737C2.49989 7.09818 2.37897 7.50235 2.16605 7.80679C1.95294 8.11149 1.63215 8.33333 1.25 8.33333C0.868121 8.33323 0.548331 8.11124 0.335269 7.80679C0.12233 7.50234 0.000106589 7.0982 0 6.66737C0 6.23634 0.122237 5.83113 0.335269 5.52654C0.548331 5.22219 0.868196 5.0001 1.25 5C1.63209 5 1.95294 5.22191 2.16605 5.52654C2.37908 5.83113 2.5 6.23634 2.5 6.66737Z"
+                                    fill="#9D9B98" />
+                                <path
+                                    d="M0.833008 12.1094V7.8906C0.833008 7.67488 1.01956 7.5 1.24967 7.5C1.47979 7.5 1.66634 7.67488 1.66634 7.8906V12.1094C1.66617 12.325 1.47968 12.5 1.24967 12.5C1.01966 12.5 0.833183 12.325 0.833008 12.1094Z"
+                                    fill="#9D9B98" />
+                                <path
+                                    d="M10.6579 9.31364C10.6579 8.9734 10.6564 8.75738 10.6348 8.59906C10.6147 8.4523 10.584 8.41411 10.5654 8.39576C10.5468 8.37748 10.5083 8.34577 10.3588 8.32597C10.1978 8.30466 9.97715 8.30473 9.63096 8.30473H8.92167C8.57549 8.30473 8.35488 8.30466 8.19387 8.32597C8.04438 8.34577 8.00583 8.37748 7.98725 8.39576C7.96865 8.41411 7.93793 8.4523 7.91787 8.59906C7.89622 8.75738 7.89474 8.9734 7.89474 9.31364V11.7229H10.6579V9.31364ZM9.98715 5.42972C10.2048 5.42988 10.3816 5.60399 10.3819 5.81811C10.3819 6.03251 10.205 6.20634 9.98715 6.2065H8.56548C8.34762 6.20634 8.17074 6.03251 8.17074 5.81811C8.17108 5.60399 8.34782 5.42988 8.56548 5.42972H9.98715ZM9.98715 3.33301L10.0658 3.34059C10.246 3.37657 10.3819 3.53349 10.3819 3.7214C10.3819 3.90931 10.246 4.06623 10.0658 4.10221L9.98715 4.10979H8.56548C8.34762 4.10963 8.17074 3.9358 8.17074 3.7214C8.17074 3.507 8.34762 3.33317 8.56548 3.33301H9.98715ZM11.4474 11.7229H14.6053C14.8233 11.7229 15 11.8968 15 12.1113C14.9997 12.3255 14.8231 12.4997 14.6053 12.4997H0.394737C0.176935 12.4997 0.000332468 12.3255 0 12.1113C0 11.8968 0.17673 11.7229 0.394737 11.7229H7.10526V9.31364C7.10526 8.99552 7.10427 8.71791 7.13456 8.4959C7.16648 8.26247 7.23958 8.03308 7.42907 7.84655C7.61867 7.66 7.85172 7.58819 8.08902 7.55678C8.31486 7.52691 8.59793 7.52795 8.92167 7.52795H9.63096C9.95471 7.52795 10.2378 7.52691 10.4636 7.55678C10.7009 7.58819 10.934 7.66 11.1236 7.84655C11.313 8.03308 11.3862 8.26247 11.4181 8.4959C11.4484 8.71791 11.4474 8.99552 11.4474 9.31364V11.7229Z"
+                                    fill="#9D9B98" />
                             </svg>
-                        </div>
-                        <div>
-                            <p class="completed-booking-modal-owner">{{ $cancelledOwnerName }}</p>
-                            @unless ($isSpaceUser)
-                                <p class="completed-booking-modal-pet">{{ $cancelledPetName }}<span
-                                        class="completed-booking-modal-pet-type">{{ $cancelledPetType }}</span></p>
-                            @endunless
-                        </div>
-                    </div>
-
-                    <div class="completed-booking-modal-section">
-                        <p class="completed-booking-modal-section-label">
-                            @if ($isSpaceUser)
-                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="13"
-                                    viewBox="0 0 15 13" fill="none">
-                                    <path
-                                        d="M13.1097 12.1166V3.83417C13.1097 3.81429 13.1113 3.79482 13.1144 3.77576L10.875 1.86616C10.3988 1.46067 10.0698 1.18119 9.79071 0.998982C9.52119 0.823101 9.34008 0.766834 9.16683 0.766834C8.99372 0.766835 8.81374 0.823306 8.54452 0.998982C8.26536 1.18121 7.93548 1.46044 7.45863 1.86616L5.2177 3.77576C5.22078 3.7949 5.22398 3.81422 5.22398 3.83417V12.1166C5.22364 12.3281 5.04366 12.5 4.82168 12.5C4.59985 12.4998 4.41972 12.328 4.41938 12.1166V4.45573L4.00451 4.81069C3.83888 4.95183 3.58373 4.93709 3.43564 4.77924C3.28813 4.62148 3.30193 4.3796 3.46707 4.23856L6.92118 1.29553H6.92275C7.38366 0.90337 7.75691 0.583679 8.08879 0.366942C8.4307 0.143752 8.77013 2.24995e-07 9.16683 0C9.56348 0 9.90284 0.143743 10.2449 0.366942C10.577 0.583731 10.9518 0.903225 11.4125 1.29553L14.8666 4.23856C15.0317 4.3796 15.0455 4.62148 14.898 4.77924C14.7499 4.93709 14.4948 4.95183 14.3291 4.81069L13.9143 4.45573V12.1166C13.9139 12.328 13.7338 12.4998 13.512 12.5C13.29 12.5 13.11 12.3281 13.1097 12.1166Z"
-                                        fill="#9D9B98" />
-                                    <path
-                                        d="M1.82418 6.66737C1.82418 6.37816 1.74192 6.13002 1.62487 5.96249C1.50777 5.79507 1.37173 5.7247 1.25 5.7247C1.12833 5.7248 0.992145 5.79519 0.875132 5.96249C0.758177 6.13002 0.675818 6.37832 0.675818 6.66737C0.675926 6.95653 0.758033 7.20483 0.875132 7.37226C0.992124 7.53946 1.12837 7.60853 1.25 7.60863C1.37164 7.60863 1.50783 7.53939 1.62487 7.37226C1.74197 7.20483 1.82407 6.95653 1.82418 6.66737ZM2.5 6.66737C2.49989 7.09818 2.37897 7.50235 2.16605 7.80679C1.95294 8.11149 1.63215 8.33333 1.25 8.33333C0.868121 8.33323 0.548331 8.11124 0.335269 7.80679C0.12233 7.50234 0.000106589 7.0982 0 6.66737C0 6.23634 0.122237 5.83113 0.335269 5.52654C0.548331 5.22219 0.868196 5.0001 1.25 5C1.63209 5 1.95294 5.22191 2.16605 5.52654C2.37908 5.83113 2.5 6.23634 2.5 6.66737Z"
-                                        fill="#9D9B98" />
-                                    <path
-                                        d="M0.833008 12.1094V7.8906C0.833008 7.67488 1.01956 7.5 1.24967 7.5C1.47979 7.5 1.66634 7.67488 1.66634 7.8906V12.1094C1.66617 12.325 1.47968 12.5 1.24967 12.5C1.01966 12.5 0.833183 12.325 0.833008 12.1094Z"
-                                        fill="#9D9B98" />
-                                    <path
-                                        d="M10.6579 9.31364C10.6579 8.9734 10.6564 8.75738 10.6348 8.59906C10.6147 8.4523 10.584 8.41411 10.5654 8.39576C10.5468 8.37748 10.5083 8.34577 10.3588 8.32597C10.1978 8.30466 9.97715 8.30473 9.63096 8.30473H8.92167C8.57549 8.30473 8.35488 8.30466 8.19387 8.32597C8.04438 8.34577 8.00583 8.37748 7.98725 8.39576C7.96865 8.41411 7.93793 8.4523 7.91787 8.59906C7.89622 8.75738 7.89474 8.9734 7.89474 9.31364V11.7229H10.6579V9.31364ZM9.98715 5.42972C10.2048 5.42988 10.3816 5.60399 10.3819 5.81811C10.3819 6.03251 10.205 6.20634 9.98715 6.2065H8.56548C8.34762 6.20634 8.17074 6.03251 8.17074 5.81811C8.17108 5.60399 8.34782 5.42988 8.56548 5.42972H9.98715ZM9.98715 3.33301L10.0658 3.34059C10.246 3.37657 10.3819 3.53349 10.3819 3.7214C10.3819 3.90931 10.246 4.06623 10.0658 4.10221L9.98715 4.10979H8.56548C8.34762 4.10963 8.17074 3.9358 8.17074 3.7214C8.17074 3.507 8.34762 3.33317 8.56548 3.33301H9.98715ZM11.4474 11.7229H14.6053C14.8233 11.7229 15 11.8968 15 12.1113C14.9997 12.3255 14.8231 12.4997 14.6053 12.4997H0.394737C0.176935 12.4997 0.000332468 12.3255 0 12.1113C0 11.8968 0.17673 11.7229 0.394737 11.7229H7.10526V9.31364C7.10526 8.99552 7.10427 8.71791 7.13456 8.4959C7.16648 8.26247 7.23958 8.03308 7.42907 7.84655C7.61867 7.66 7.85172 7.58819 8.08902 7.55678C8.31486 7.52691 8.59793 7.52795 8.92167 7.52795H9.63096C9.95471 7.52795 10.2378 7.52691 10.4636 7.55678C10.7009 7.58819 10.934 7.66 11.1236 7.84655C11.313 8.03308 11.3862 8.26247 11.4181 8.4959C11.4484 8.71791 11.4474 8.99552 11.4474 9.31364V11.7229Z"
-                                        fill="#9D9B98" />
-                                </svg>
-                                Space
-                            @else
-                                Service
-                            @endif
-                        </p>
-                        <div class="completed-booking-modal-line">
-                            <div>
-                                <p class="cancelled-modal-strike">{{ $cancelledService }}</p>
-                                <p class="completed-booking-modal-line-sub"
-                                    style="color: #9D9B98;text-decoration-line: line-through;
-">
-                                    {{ $isSpaceUser ? $cancelledServiceTimeLabelForSpace : $cancelledPetName }}</p>
-                            </div>
-                            <span class="cancelled-modal-strike">£{{ number_format($cancelledServiceAmount, 2) }}</span>
-                        </div>
-                    </div>
-
-                    <div class="completed-booking-modal-section">
-                        <p class="completed-booking-modal-section-title">Extras &amp; Add-ons</p>
-                        @if ($cancelledExtraAddOns->isNotEmpty())
-                            @foreach ($cancelledExtraAddOns as $addon)
-                                <div class="completed-booking-modal-line completed-booking-addon-line">
-                                    <p class="completed-booking-modal-line-sub cancelled-modal-strike">
-                                        {{ $addon['label'] }}</p>
-                                    <span
-                                        class="cancelled-modal-strike">£{{ number_format((float) $addon['amount'], 2) }}</span>
-                                </div>
-                            @endforeach
+                            Space
                         @else
-                            <div class="completed-booking-modal-line">
-                                <p class="completed-booking-modal-line-sub">No add-ons recorded</p>
-                                <span>£{{ number_format($cancelledExtrasAmount, 2) }}</span>
-                            </div>
+                            Service
                         @endif
+                    </p>
+                    <div class="completed-booking-modal-line">
+                        <div>
+                            <p class="cancelled-modal-strike">{{ $cancelledService }}</p>
+                            <p class="completed-booking-modal-line-sub"
+                                style="color: #9D9B98;text-decoration-line: line-through;
+                                                                                                                            ">
+                                {{ $isSpaceUser ? $cancelledServiceTimeLabelForSpace : $cancelledPetName }}
+                            </p>
+                        </div>
+                        <span class="cancelled-modal-strike">£{{ number_format($cancelledServiceAmount, 2) }}</span>
                     </div>
+                </div>
 
-                    <div class="completed-booking-modal-total-block">
-                        <div class="completed-booking-modal-total-row">
-                            <span>Service:</span>
-                            <span class="cancelled-modal-strike">£{{ number_format($cancelledServiceAmount, 2) }}</span>
+                <div class="completed-booking-modal-section">
+                    <p class="completed-booking-modal-section-title">Extras &amp; Add-ons</p>
+                    @if ($cancelledExtraAddOns->isNotEmpty())
+                        @foreach ($cancelledExtraAddOns as $addon)
+                            <div class="completed-booking-modal-line completed-booking-addon-line">
+                                <p class="completed-booking-modal-line-sub cancelled-modal-strike">
+                                    {{ $addon['label'] }}
+                                </p>
+                                <span class="cancelled-modal-strike">£{{ number_format((float) $addon['amount'], 2) }}</span>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="completed-booking-modal-line">
+                            <p class="completed-booking-modal-line-sub">No add-ons recorded</p>
+                            <span>£{{ number_format($cancelledExtrasAmount, 2) }}</span>
                         </div>
-                        <div class="completed-booking-modal-total-row">
-                            <span>Extras &amp; Add-ons:</span>
-                            <span class="cancelled-modal-strike">£{{ number_format($cancelledExtrasAmount, 2) }}</span>
-                        </div>
-                        <div class="completed-booking-modal-total-row">
-                            <span>Promo discount:</span>
-                            <span class="cancelled-modal-strike" style="color: #9D9B98;">-
-                                £{{ number_format($cancelledPromoDiscount, 2) }}</span>
-                        </div>
-                        <div class="completed-booking-modal-total-row is-grand">
-                            <span>Total</span>
-                            <span class="cancelled-modal-strike">£{{ number_format($cancelledTotalAmount, 2) }}</span>
-                        </div>
+                    @endif
+                </div>
+
+                <div class="completed-booking-modal-total-block">
+                    <div class="completed-booking-modal-total-row">
+                        <span>Service:</span>
+                        <span class="cancelled-modal-strike">£{{ number_format($cancelledServiceAmount, 2) }}</span>
+                    </div>
+                    <div class="completed-booking-modal-total-row">
+                        <span>Extras &amp; Add-ons:</span>
+                        <span class="cancelled-modal-strike">£{{ number_format($cancelledExtrasAmount, 2) }}</span>
+                    </div>
+                    <div class="completed-booking-modal-total-row">
+                        <span>Promo discount:</span>
+                        <span class="cancelled-modal-strike" style="color: #9D9B98;">-
+                            £{{ number_format($cancelledPromoDiscount, 2) }}</span>
+                    </div>
+                    <div class="completed-booking-modal-total-row is-grand">
+                        <span>Total</span>
+                        <span class="cancelled-modal-strike">£{{ number_format($cancelledTotalAmount, 2) }}</span>
                     </div>
                 </div>
             </div>
+        </div>
         @endteleport
     @endif
 
     <x-business-hub.common.decline-modal :decline-booking="$declineBooking" />
-    <x-business-hub.common.reschedule-modal :reschedule-booking="$rescheduleBooking" :bookings="$rescheduleCalendarBookings" :reschedule-selected-date="$rescheduleSelectedDate" :reschedule-selected-time="$rescheduleSelectedTime"
-        :reschedule-calendar-month="$rescheduleCalendarMonth" :reschedule-duration-minutes="$rescheduleDurationMinutes" />
+    <x-business-hub.common.reschedule-modal :reschedule-booking="$rescheduleBooking"
+        :bookings="$rescheduleCalendarBookings" :reschedule-selected-date="$rescheduleSelectedDate"
+        :reschedule-selected-time="$rescheduleSelectedTime" :reschedule-calendar-month="$rescheduleCalendarMonth"
+        :reschedule-duration-minutes="$rescheduleDurationMinutes" />
 </section>
 
 <script>
     if (!window.downloadBookingInvoicePdf) {
-        window.downloadBookingInvoicePdf = async function(invoiceUrl) {
+        window.downloadBookingInvoicePdf = async function (invoiceUrl) {
             if (!invoiceUrl) {
                 return;
             }
@@ -1659,7 +1678,7 @@ new class extends Component {
     }
 
     if (!window.reschedulePicker) {
-        window.reschedulePicker = function(config) {
+        window.reschedulePicker = function (config) {
             const monthNames = [
                 'January', 'February', 'March', 'April', 'May', 'June',
                 'July', 'August', 'September', 'October', 'November', 'December'
@@ -1806,10 +1825,65 @@ new class extends Component {
             document.body.style.overflow = '';
             document.documentElement.style.overflow = '';
         });
+
+        const lockBookingDetailsPage = () => {
+            if (document.body.classList.contains('booking-details-drawer-open')) {
+                return;
+            }
+
+            const scrollY = window.scrollY || window.pageYOffset || 0;
+            document.body.dataset.bookingDetailsScrollY = String(scrollY);
+            document.body.classList.add('booking-details-drawer-open');
+            document.documentElement.classList.add('booking-details-drawer-open');
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.left = '0';
+            document.body.style.right = '0';
+            document.body.style.width = '100%';
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+        };
+
+        const unlockBookingDetailsPage = () => {
+            if (!document.body.classList.contains('booking-details-drawer-open')) {
+                return;
+            }
+
+            const scrollY = parseInt(document.body.dataset.bookingDetailsScrollY || '0', 10);
+            document.body.classList.remove('booking-details-drawer-open');
+            document.documentElement.classList.remove('booking-details-drawer-open');
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.left = '';
+            document.body.style.right = '';
+            document.body.style.width = '';
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+            delete document.body.dataset.bookingDetailsScrollY;
+            window.scrollTo(0, scrollY);
+        };
+
+        window.__lockBookingDetailsDrawer = lockBookingDetailsPage;
+        window.__unlockBookingDetailsDrawer = unlockBookingDetailsPage;
+
+        window.addEventListener('booking-details-drawer-opened', lockBookingDetailsPage);
+        window.addEventListener('booking-details-drawer-closed', unlockBookingDetailsPage);
+
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('booking-details-drawer-opened', lockBookingDetailsPage);
+            Livewire.on('booking-details-drawer-closed', unlockBookingDetailsPage);
+        });
     }
 </script>
 
 <style>
+    html.booking-details-drawer-open,
+    body.booking-details-drawer-open {
+        overflow: hidden !important;
+        overscroll-behavior: none;
+        touch-action: none;
+    }
+
     [x-cloak] {
         display: none !important;
     }
@@ -2184,6 +2258,7 @@ new class extends Component {
     .bookings-table {
         width: 100%;
         border-collapse: collapse;
+        table-layout: fixed;
         min-width: 980px;
     }
 
@@ -2254,15 +2329,37 @@ new class extends Component {
         padding: 1.15rem 1.25rem;
         text-align: left;
         white-space: nowrap;
+        width: auto;
+        vertical-align: middle !important;
     }
 
-    .bookings-table th {
-        color: #000;
+    .bookings-table thead {
+        border-radius: 10px 10px 0 0;
+        background: #F6F5F5;
+        color: #948F88;
         font-family: Lato;
         font-size: 16px;
         font-style: normal;
         font-weight: 600;
         line-height: normal;
+    }
+
+    .bookings-table th {
+        background: #F6F5F5;
+        color: #948F88;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .bookings-table thead th:first-child {
+        border-top-left-radius: 10px;
+    }
+
+    .bookings-table thead th:last-child {
+        border-top-right-radius: 10px;
     }
 
     .bookings-table td {
@@ -2339,8 +2436,6 @@ new class extends Component {
 
     .view-col {
         vertical-align: middle;
-        border-left: 1px solid #E5E2DF;
-        width: 8rem;
         padding: 0 !important;
     }
 
@@ -2351,6 +2446,8 @@ new class extends Component {
         font-style: normal !important;
         font-weight: 600 !important;
         line-height: normal !important;
+        white-space: normal !important;
+        vertical-align: middle !important;
     }
 
     .service-type-groomer {
@@ -2360,12 +2457,7 @@ new class extends Component {
     .invoice-col,
     .more-col {
         vertical-align: middle;
-        width: 6.2rem;
         padding: 0 !important;
-    }
-
-    .more-col {
-        width: 4.8rem;
     }
 
     .view-col-inner {
@@ -2373,6 +2465,7 @@ new class extends Component {
         display: flex;
         align-items: center;
         justify-content: center;
+        gap: 0.7rem;
         text-align: center;
     }
 
@@ -2383,8 +2476,26 @@ new class extends Component {
         background: transparent;
         border: 0;
         padding: 0;
-        margin: 0 auto;
+        margin: 0;
         cursor: pointer;
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        line-height: 0;
+    }
+
+    .view-btn svg {
+        display: block;
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+    }
+
+    .all-bookings-actions {
+        width: 130px;
+        min-height: 36px;
+        justify-content: center;
+        gap: 0.35rem;
     }
 
     a.view-btn {
@@ -2546,13 +2657,6 @@ new class extends Component {
         font-weight: 400;
     }
 
-    .action-col {
-        border-left: 1px solid #E5E2DF;
-    }
-
-    .confirmed-bookings-table .confirmed-action-col {
-        border-left: 1px solid #E5E2DF;
-    }
 
     .confirmed-appointment-cell {
         display: flex;
