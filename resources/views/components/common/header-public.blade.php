@@ -32,7 +32,7 @@
                                     d="M100.537 11.2333C100.537 10.5865 100.882 10.4248 101.208 10.4248C101.579 10.4248 101.879 10.7868 101.879 11.2333C101.879 11.6799 101.847 11.2333 101.477 11.2333C101.106 11.2333 100.537 11.6799 100.537 11.2333Z"
                                     fill="#FFC97A" />
                             </svg>
-                            @if ($isBusinessLandingRoute)
+                            @if ($isBusinessSiteRoute && !$isBusinessHomepageRoute)
                                 <span class="fs-18-500">Business</span>
                             @endif
                         </a>
@@ -41,27 +41,44 @@
                 </div>
                 <div class="col-lg-7">
                     <ul class="menu-items">
-                        <li>
-                            <a href="{{ url('/') }}#how_it_works">How it works</a>
-                        </li>
-                        <li>
-                            <a href="{{ route('business-homepage-groomer-space-owner') }}"
-                                class="{{ $isForGroomersHostsActive ? 'active' : '' }}"
-                                wire:navigate>For Groomers &amp; Hosts</a>
-                        </li>
-                        <li>
-                            <a href="{{ route('help-and-support') }}"
-                                class="{{ $isHelpCentreRoute ? 'active' : '' }}"
-                                wire:navigate>Help Centre</a>
-                        </li>
+                        @if ($isBusinessSiteRoute && !$isBusinessHomepageRoute)
+                            <li>
+                                <a href="{{ route('business-homepage-groomer-space-owner') }}"
+                                    class="{{ $isForGroomersHostsActive ? 'active' : '' }}" wire:navigate>FursGo
+                                    Business</a>
+                            </li>
+                            <li>
+                                <a href="{{ route('help-and-support') }}" class="{{ $isHelpCentreRoute ? 'active' : '' }}"
+                                    wire:navigate>Help Centre</a>
+                            </li>
+                        @else
+                            <li>
+                                <a href="{{ url('/') }}#how_it_works">How it works</a>
+                            </li>
+                            <li>
+                                <a href="{{ route('business-homepage-groomer-space-owner') }}"
+                                    class="{{ $isForGroomersHostsActive ? 'active' : '' }}" wire:navigate>For Groomers &amp;
+                                    Hosts</a>
+                            </li>
+                            <li>
+                                <a href="{{ route('help-and-support') }}" class="{{ $isHelpCentreRoute ? 'active' : '' }}"
+                                    wire:navigate>Help Centre</a>
+                            </li>
+                        @endif
                     </ul>
                 </div>
                 <div class="col-lg-3">
                     <ul class="menu-items justify-content-end">
                         <li>
                             <div class="login-signup-div">
-                                <a href="{{ route('login') }}" class="login-btn" wire:navigate>Log in</a>
-                                <a href="{{ route('signup') }}" class="signup-btn active" wire:navigate>Sign Up</a>
+                                @if ($isBusinessSiteRoute)
+                                    <a href="{{ route('login-groomer-space') }}" class="login-btn" wire:navigate>Log in</a>
+                                    <a href="{{ route('signup-groomer-space') }}" class="signup-btn active"
+                                        wire:navigate>Sign Up</a>
+                                @else
+                                    <a href="{{ route('login') }}" class="login-btn" wire:navigate>Log in</a>
+                                    <a href="{{ route('signup') }}" class="signup-btn active" wire:navigate>Sign Up</a>
+                                @endif
                             </div>
                         </li>
                     </ul>

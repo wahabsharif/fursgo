@@ -7,7 +7,7 @@
         $pageTitle = empty($segments)
             ? 'Fursgo'
             : 'Fursgo - ' .
-                collect($segments)->map(fn($s) => ucfirst(str_replace(['-', '_'], ' ', $s)))->implode(' - ');
+            collect($segments)->map(fn($s) => ucfirst(str_replace(['-', '_'], ' ', $s)))->implode(' - ');
     @endphp
 
     <title>{{ $pageTitle }}</title>
@@ -22,6 +22,11 @@
     <main>
         {{ $slot }}
     </main>
+
+    <x-common.footer />
+
+    <script src="{{ asset('js/custom-dropdown.js') }}" defer></script>
+    <script src="{{ asset('js/custom.js') }}" defer></script>
 
     @stack('script')
 </body>
