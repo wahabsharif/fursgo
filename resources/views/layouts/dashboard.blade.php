@@ -31,7 +31,7 @@
 
     <title>@yield('title', $pageTitle)</title>
 
-    @include('partials.head')
+    <x-partials.head />
     @if (request()->routeIs('account-settings'))
         <link rel="stylesheet" href="{{ asset('css/account-settings.css') }}">
     @endif
@@ -39,7 +39,7 @@
     @yield('styles')
     @stack('styles')
 
-    @if ($isDashboardHub)
+    @if ($isDashboardHub || $dashboardNavView === 'help-centre')
         <script>
             (function () {
                 if ('scrollRestoration' in history) {
