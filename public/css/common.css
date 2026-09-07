@@ -390,6 +390,17 @@
     font-weight: 500;
 }
 
+.logo-b-text {
+    color: #3b3731;
+    font-family: Lato;
+    font-size: 18px;
+    font-style: italic;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
 .fs-18-400 {
     color: #3b3731;
     font-family: Lato;
@@ -1240,6 +1251,10 @@ header {
     background-color: white;
 }
 
+header.scrolled ~ main {
+    --help-tabs-sticky-top: 4.75rem;
+}
+
 .tab-panel {
     scroll-margin-top: 100px;
 }
@@ -1320,6 +1335,9 @@ nav ul a.active {
     outline: none !important;
     box-shadow: none !important;
     text-decoration: none;
+    flex-shrink: 0;
+    min-width: max-content;
+    overflow: visible;
 }
 
 .login-signup-div {

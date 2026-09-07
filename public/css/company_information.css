@@ -1,13 +1,13 @@
 .top-head.d-flex.align-items-center.justify-content-center {
     padding: 25px 50px;
     border-radius: 10px;
-    background: #F8F8F8;
+    background: #f8f8f8;
 }
 
 .common-topics p.bg {
     border-radius: 100px;
     background: rgba(255, 201, 122, 0.13);
-    color: #FFC97A;
+    color: #ffc97a;
     text-align: center;
     font-family: Lato;
     font-size: 14px;
@@ -25,8 +25,8 @@ body {
     position: relative;
     margin: 40px auto;
     border-radius: 100px;
-    border: 1px solid #FFC97A;
-    background: #FFF;
+    border: 1px solid #ffc97a;
+    background: #fff;
     box-shadow: 0 10px 20px 2px rgba(0, 0, 0, 0.05);
 }
 
@@ -43,6 +43,22 @@ body {
     color: rgba(59, 55, 49, 0.25);
 }
 
+.help-centre-page.is-business .search-wrapper {
+    width: 610px;
+    height: 48px;
+    margin: 32px auto 24px;
+}
+
+.help-centre-page.is-business .search-wrapper input {
+    height: 48px;
+    padding: 12px 56px 12px 20px;
+    font-size: 16px;
+}
+
+.help-contact-support .large-font {
+    line-height: normal;
+}
+
 .search-btn {
     position: absolute;
     top: 50%;
@@ -57,9 +73,8 @@ body {
     font-size: 16px;
 }
 
-
 .large-font {
-    color: #3B3731;
+    color: #3b3731;
     font-family: "Playfair Display";
     font-size: 28px;
     font-weight: 600;
@@ -82,49 +97,49 @@ body {
 }
 
 .medium-font {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 20px;
     font-weight: 600;
 }
 
 .normal-font-weight {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 16px;
     font-weight: 400;
 }
 
 .normal-font-weight.active {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 16px;
     font-weight: 600;
 }
 
 .normal-font-bold {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 16px !important;
     font-weight: 600 !important;
 }
 
 .medium-font-bold {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 18px !important;
     font-weight: 600 !important;
 }
 
 .medium-light-font {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 18px !important;
     font-weight: 400 !important;
 }
 
 .light-color-font {
-    color: #9D9B98;
+    color: #9d9b98;
     font-family: Lato;
     font-size: 14px;
     font-weight: 600;
@@ -138,7 +153,7 @@ body {
 }
 
 .simple-light-font {
-    color: #9D9B98;
+    color: #9d9b98;
     font-family: Lato;
     font-size: 14px;
     font-style: normal;
@@ -184,21 +199,28 @@ body {
     padding: 20px 30px;
 }
 
-
 .tab-btn.active {
     border-radius: 96px;
-    background: #F8F8F8;
+    background: #f8f8f8;
+}
+
+.help-tabs {
+    transition:
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        background-color 0.25s ease,
+        transform 0.25s ease;
 }
 
 .help-tabs.active {
     border-radius: 10px;
-    border: 1px solid #FFC97A;
-    background: #FFF;
+    border: 1px solid #ffc97a !important;
+    background: #fff;
     box-shadow: 0 10px 20px 2px rgba(0, 0, 0, 0.05);
 }
 
 .help-tabs.active p {
-    color: #FFC97A !important;
+    color: #ffc97a !important;
 }
 
 /* Tab content */
@@ -224,14 +246,14 @@ body {
 
 /* Scoped so settings.php (and similar) can use their own font classes */
 .company-info-content .tab-panel p {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 18px;
     font-weight: 400;
 }
 
 .tab-panel .link-tag {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 18px;
     font-weight: 400;
@@ -241,7 +263,7 @@ body {
 }
 
 .tab-panel .small-link-tag {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 16px;
     font-weight: 600;
@@ -252,6 +274,10 @@ body {
 
 .tab-panel.active {
     display: block;
+}
+
+.help-centre-page .tab-panel {
+    width: 100%;
 }
 
 /* Responsive */
@@ -276,7 +302,6 @@ body {
     }
 }
 
-
 /* contact us css */
 .contact-left-section.mt-5 {
     height: 427px;
@@ -285,13 +310,13 @@ body {
 .contact-right-section.mt-5 {
     padding: 10px 30px;
     border-radius: 10px;
-    background: rgba(255, 201, 122, 0.20);
+    background: rgba(255, 201, 122, 0.2);
     height: auto;
 }
 
 .fursgo-app-container {
     border-radius: 10px;
-    background: #F2F6F9;
+    background: #f2f6f9;
     padding: 40px;
 }
 
@@ -308,7 +333,7 @@ body {
 
 .explore-app-container {
     border-radius: 10px;
-    background: #F5F9ED;
+    background: #f5f9ed;
     padding: 40px 255px;
 }
 
@@ -324,7 +349,6 @@ body {
     }
 }
 
-
 .groomer-container {
     width: 330px;
     height: 160px;
@@ -336,64 +360,74 @@ body {
     width: 330px;
     height: 160px;
     border-radius: 10px;
-    background: #FFF4F2;
+    background: #fff4f2;
 }
-
 
 /* help and support css */
 /* default: show inactive icon */
 /* Default (inactive) */
 .tab-icon .bg {
-    fill: #EFEFEF;
+    fill: #efefef;
     fill-opacity: 0.125;
 }
 
 .tab-icon .check {
-    fill: #EFEFEF;
+    fill: #efefef;
 }
 
 .tab-icon .stroke {
-    stroke: #3B3731;
+    stroke: #3b3731;
 }
 
 /* Active state */
 .tab-btn.active .tab-icon .bg {
-    fill: #FFC97A;
+    fill: #ffc97a;
 }
 
-
 .tab-btn.active .tab-icon .check {
-    fill: #FFC97A;
+    fill: #ffc97a;
 }
 
 /* default (inactive) */
 .tab-icon .accent {
-    fill: #D4D4D4;
+    fill: #d4d4d4;
 }
 
 /* active tab */
 .tab-btn.active .tab-icon .accent {
-    fill: #FFC97A;
+    fill: #ffc97a;
+}
+
+.tab-icon--policies .bg {
+    fill-opacity: 1;
+}
+
+.tab-btn.active .tab-icon--policies .bg {
+    fill: rgb(255, 201, 122);
+    fill-opacity: 0.13;
+}
+
+.tab-btn.active .tab-icon--policies .accent {
+    fill: #ffc97a;
 }
 
 /* Default (inactive) */
 .tab-btn .circle {
     fill: none;
-    /* or a light gray if you want */
 }
 
 .tab-btn .bottom {
-    fill: #EFEFEF;
+    fill: #efefef;
 }
 
 /* Active tab */
 .tab-btn.active .circle {
-    fill: #FFF8EE;
+    fill: #fff8ee;
     /* your desired upper circle color */
 }
 
 .tab-btn.active .bottom {
-    fill: #FFF8EE;
+    fill: #fff8ee;
     /* example, change bottom color when active if needed */
 }
 
@@ -405,19 +439,18 @@ body {
 
 /* Default inactive colors */
 .tab-btn .check {
-    fill: #D4D4D4;
+    fill: #d4d4d4;
     transition: fill 0.3s ease;
 }
 
-
 /* Active tab colors */
 .tab-btn.active .check {
-    fill: #FFC97A;
+    fill: #ffc97a;
     /* active color */
 }
 
 .accordion {
-    background-color: #FFF;
+    background-color: #fff;
     cursor: pointer;
     padding: 30px 0;
     width: 100%;
@@ -427,15 +460,12 @@ body {
     transition: 0.4s;
 }
 
-
-
 .accordion:after {
     color: #777;
     font-weight: bold;
     float: right;
     margin-left: 5px;
     content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" fill="none"><path d="M0.5 0.75656L7.24344 7.5L13.8737 0.75656" stroke="%233B3731" stroke-linecap="round" stroke-linejoin="round"/></svg>');
-
 }
 
 .acc-active:after {
@@ -458,14 +488,14 @@ body {
     width: 450px;
     min-height: 320px;
     border-radius: 10px;
-    border: 1px solid #D4D4D4;
-    background: #FFF;
+    border: 1px solid #d4d4d4;
+    background: #fff;
     padding: 30px 36px;
 }
 
 .bg-div {
     border-radius: 10px;
-    background: rgba(255, 216, 140, 0.20);
+    background: rgba(255, 216, 140, 0.2);
     padding: 30px;
 }
 
@@ -484,7 +514,7 @@ a.underline {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(59, 55, 49, 0.10);
+    background: rgba(59, 55, 49, 0.1);
     justify-content: center;
     align-items: center;
     z-index: 1000;
@@ -496,7 +526,7 @@ a.underline {
 #request_modal .modal-content {
     padding: 20px;
     border-radius: 10px;
-    background: #FDFCF8;
+    background: #fdfcf8;
     width: 820px;
     height: auto;
 }
@@ -537,7 +567,7 @@ a.underline {
 
 .custom-select.open .select-trigger,
 .custom-select.has-value .select-trigger {
-    border-color: var(--border)
+    border-color: var(--border);
 }
 
 /* upload box css */
@@ -585,7 +615,7 @@ a.underline {
 }
 
 .file-size {
-    color: #9D9B98;
+    color: #9d9b98;
     font-family: Lato;
     font-size: 10px;
     font-style: normal;
@@ -608,12 +638,11 @@ a.underline {
 .toggle-button-content .bold-font,
 .settings-section-content .bold-font,
 .active-sessions .bold-font {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 18px;
     font-weight: 600;
 }
-
 
 /* toggle button */
 /* Container for the toggle */
@@ -621,7 +650,7 @@ a.underline {
     position: relative;
     width: 58px;
     height: 33px;
-    background: rgba(255, 201, 122, 0.50);
+    background: rgba(255, 201, 122, 0.5);
     /* off color */
     border-radius: 24px;
     cursor: pointer;
@@ -644,15 +673,15 @@ a.underline {
 }
 
 /* Checkmark inside circle */
-.toggle-circle::after {
-    /* content: '\2714';
+/* .toggle-circle::after {
+    content: "\2714";
     font-family: "Segoe UI Symbol", Arial, sans-serif;
     font-style: normal;
-    color: #FFC97A;
+    color: #ffc97a;
     font-size: 24px;
     font-weight: 900;
-    display: none; */
-}
+    display: none;
+} */
 
 .toggle-switch.on .toggle-circle {
     background-color: transparent;
@@ -663,7 +692,7 @@ a.underline {
 
 /* ON state styles */
 .toggle-switch.on {
-    background-color: #FFC97A;
+    background-color: #ffc97a;
 }
 
 .toggle-switch.on .toggle-circle {
@@ -674,13 +703,12 @@ a.underline {
     display: block;
 }
 
-
 .user-sessions {
     width: 100%;
 }
 
 .logged-devices {
-    padding: 0 0px 20px 20px
+    padding: 0 0px 20px 20px;
 }
 
 .rounded-circle {
@@ -697,9 +725,8 @@ img.social-icons {
 .border-and-bg {
     padding: 10px;
     border-radius: 5px;
-    border: 1px solid #D4D4D4;
+    border: 1px solid #d4d4d4;
 }
-
 
 /* light and dark mode css */
 .toggle-wrap {
@@ -741,12 +768,12 @@ body.dark .label {
     position: absolute;
     inset: 0;
     border-radius: 999px;
-    background: #FFC97A;
-    transition: background 0.45s cubic-bezier(.4, 0, .2, 1);
+    background: #ffc97a;
+    transition: background 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.toggle-dark-light input:checked~.track {
-    background: #3B3731;
+.toggle-dark-light input:checked ~ .track {
+    background: #3b3731;
 }
 
 .thumb {
@@ -763,13 +790,15 @@ body.dark .label {
     overflow: hidden;
 }
 
-.toggle-dark-light input:checked~.track .thumb {
+.toggle-dark-light input:checked ~ .track .thumb {
     transform: translateX(26px);
 }
 
 .icon-dark-light {
     position: absolute;
-    transition: opacity 0.3s, transform 0.4s;
+    transition:
+        opacity 0.3s,
+        transform 0.4s;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -785,30 +814,29 @@ body.dark .label {
     transform: scale(0.5) rotate(-30deg);
 }
 
-.toggle-dark-light input:checked~.track .thumb .icon-sun {
+.toggle-dark-light input:checked ~ .track .thumb .icon-sun {
     opacity: 0;
     transform: scale(0.5) rotate(30deg);
 }
 
-.toggle-dark-light input:checked~.track .thumb .icon-moon {
+.toggle-dark-light input:checked ~ .track .thumb .icon-moon {
     opacity: 1;
     transform: scale(1) rotate(0deg);
 }
-
 
 /* payments tab css */
 
 .card-details {
     border-radius: 10px;
-    border: 1px solid #EEE;
-    background: #FFF;
+    border: 1px solid #eee;
+    background: #fff;
     min-width: 550px;
     padding: 20px 30px;
 }
 
 .card-details.active {
     border-radius: 10px;
-    background: #FFF;
+    background: #fff;
     box-shadow: 0 4px 20px 5px rgba(0, 0, 0, 0.05);
     padding: 20px 30px;
 }
@@ -823,8 +851,8 @@ body.dark .label {
 /* custom table */
 table.custom-table {
     border-radius: 10px;
-    border: 1px solid #E2E2E2;
-    background: #FFF;
+    border: 1px solid #e2e2e2;
+    background: #fff;
     width: 100%;
 }
 
@@ -833,7 +861,7 @@ table.custom-table td,
 table.custom-table th,
 table.custom-table thead {
     padding: 12px;
-    border-bottom: 1px solid #E2E2E2;
+    border-bottom: 1px solid #e2e2e2;
 }
 
 /* Remove border from last row */
@@ -841,14 +869,13 @@ table.custom-table tr:last-child td {
     border-bottom: none !important;
 }
 
-
 /* invoice modal css */
 #invoice_modal {
     backdrop-filter: blur(2px);
 }
 
 #invoice_modal .invoice-font {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 20px;
     font-style: normal;
@@ -858,19 +885,850 @@ table.custom-table tr:last-child td {
 
 #invoice_modal .modal-content {
     border-radius: 10px;
-    border: 1px solid #D4D4D4;
-    background: #FFF;
+    border: 1px solid #d4d4d4;
+    background: #fff;
     width: 670px;
     padding: 0;
 }
 
 #invoice_modal .modal-head {
     border-radius: 10px 10px 0 0;
-    border: 1px solid #D4D4D4;
-    background: #F8F8F8;
+    border: 1px solid #d4d4d4;
+    background: #f8f8f8;
     padding: 15px;
 }
 
 #invoice_modal .modal-body {
     padding: 25px;
+}
+
+.help-centre-page .help-ticket-banner {
+    border-radius: 10px;
+    background: #f5f9ed;
+    color: #3b3731;
+    font-family: Lato;
+    font-size: 16px;
+    padding: 16px 20px;
+}
+
+.help-centre-page .common-topics p.bg.is-selected {
+    border: 1px solid #ffc97a;
+}
+
+.help-centre-page.is-business .common-topics p.bg,
+.help-centre-page.is-business .common-topics p.bg.is-selected {
+    border: none;
+}
+
+.help-faq-item {
+    background-color: #fff;
+    cursor: pointer;
+    padding: 30px 0;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    transition: 0.4s;
+}
+
+.help-faq-item:after {
+    color: #777;
+    font-weight: bold;
+    float: right;
+    margin-left: 5px;
+    content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" fill="none"><path d="M0.5 0.75656L7.24344 7.5L13.8737 0.75656" stroke="%233B3731" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+}
+
+.help-faq-item.acc-active:after {
+    content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" fill="none"><path d="M13.8737 7.24344L7.13022 0.499998L0.499976 7.13024" stroke="%233B3731" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+}
+
+.help-centre-page .panel.is-open {
+    max-height: 640px;
+    overflow: hidden;
+    opacity: 1;
+}
+
+.help-results-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 30px;
+}
+
+@media (max-width: 992px) {
+    .help-results-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.help-read-more {
+    background: none;
+    border: none;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+}
+
+.help-centre-page #request_modal.help-request-modal {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow: hidden;
+    background: rgba(59, 55, 49, 0.1);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+body.help-modal-open {
+    overflow: hidden;
+}
+
+.help-modal-backdrop-enter {
+    transition: opacity 0.2s ease;
+}
+
+.help-modal-backdrop-enter-start,
+.help-modal-backdrop-leave-end {
+    opacity: 0;
+}
+
+.help-modal-backdrop-enter-end,
+.help-modal-backdrop-leave-start {
+    opacity: 1;
+}
+
+.help-modal-backdrop-leave {
+    transition: opacity 0.16s ease;
+}
+
+.help-centre-page #request_modal .help-modal-panel {
+    width: 820px;
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0;
+    flex-shrink: 1;
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: #c8c5c0 transparent;
+    padding: 18px 40px 40px;
+    border-radius: 10px;
+    background: #fdfcf8;
+    box-shadow: 0 10px 40px rgba(59, 55, 49, 0.08);
+}
+
+.help-centre-page #request_modal .help-modal-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.help-centre-page #request_modal .help-modal-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.help-centre-page #request_modal .help-modal-panel::-webkit-scrollbar-thumb {
+    background: #c8c5c0;
+    border-radius: 8px;
+}
+
+@keyframes help-modal-panel-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.help-centre-page .help-modal-close {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    line-height: 0;
+}
+
+.help-centre-page .help-modal-header {
+    text-align: center;
+}
+
+.help-centre-page .help-modal-header .large-font {
+    margin: 0;
+}
+
+.help-centre-page .help-modal-header p {
+    max-width: 400px;
+    margin: 5px auto 0;
+    color: #3b3731;
+    font-family: Lato;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.help-centre-page .help-modal-form {
+    width: 465px;
+    max-width: 100%;
+    margin: 43px auto 0;
+}
+
+.help-centre-page .help-modal-form .form-field + .form-field {
+    margin-top: 20px;
+}
+
+.help-centre-page .help-modal-form .form-field label {
+    margin-bottom: 9px;
+}
+
+.help-centre-page .help-modal-form .form-field label span {
+    color: #9d9b98;
+    font-weight: 600;
+}
+
+.help-centre-page .help-modal-form .form-field input,
+.help-centre-page .help-modal-form .form-field textarea {
+    height: 48px;
+    padding: 14px 16px;
+    border: 1px solid #d4d4d4;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.help-centre-page .help-modal-form .form-field textarea {
+    height: 96px;
+    resize: none;
+    border-radius: 10px 10px 0 0;
+}
+
+.help-centre-page .help-modal-form .form-field input::placeholder,
+.help-centre-page .help-modal-form .form-field textarea::placeholder {
+    color: #d4d4d4;
+}
+
+.help-centre-page .help-modal-attachments > label {
+    margin-bottom: 5px;
+}
+
+.help-centre-page .help-modal-hint {
+    margin: 0 0 15px;
+    color: #9d9b98;
+    font-family: Lato;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.help-centre-page .help-modal-form .upload-box {
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid #e2e2e2;
+    border-radius: 10px;
+    background: #f8f8f8;
+}
+
+.help-centre-page .help-modal-form .upload-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 48px;
+    min-height: 48px;
+    padding: 0 20px;
+    border-bottom: 0;
+    background: #f8f8f8;
+}
+
+.help-centre-page .help-modal-form .upload-box.has-files .upload-header {
+    border-bottom: 1px solid #e2e2e2;
+}
+
+.help-centre-page .help-file-list {
+    max-height: 288px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: #c8c5c0 transparent;
+}
+
+.help-centre-page .help-file-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.help-centre-page .help-file-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.help-centre-page .help-file-list::-webkit-scrollbar-thumb {
+    background: #c8c5c0;
+    border-radius: 8px;
+}
+
+.help-centre-page .help-upload-divider {
+    width: 1px;
+    height: 20px;
+    background: #d4d4d4;
+    flex-shrink: 0;
+}
+
+.help-centre-page .help-upload-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: Lato;
+    font-size: 14px;
+    font-weight: 600;
+    color: #3b3731;
+    line-height: normal;
+}
+
+.help-centre-page .help-upload-icon {
+    width: 12px;
+    height: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+}
+
+.help-centre-page .help-upload-icon img {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.help-centre-page .help-modal-form .file-item {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 48px;
+    height: auto;
+    padding: 10px 20px;
+    background: #fff;
+    border: 0;
+}
+
+.help-centre-page .help-modal-form .file-item.is-visible {
+    display: flex;
+}
+
+.help-centre-page .help-modal-form .file-item.help-file-uploading {
+    display: none;
+}
+
+.help-centre-page .help-modal-form .file-item .file-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
+}
+
+.help-centre-page .help-modal-form .file-item .file-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.help-centre-page .help-file-icon {
+    width: 21px;
+    height: 25px;
+    margin-top: 1px;
+    overflow: visible;
+    flex-shrink: 0;
+    display: flex;
+}
+
+.help-centre-page .help-file-icon img,
+.help-centre-page .help-file-icon svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.help-centre-page .help-file-name {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+    color: #3b3731;
+    font-family: Lato;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.help-centre-page .help-modal-form .file-item .file-size {
+    color: #9d9b98;
+    font-family: Lato;
+    font-size: 10px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.help-centre-page .help-modal-form .remove-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.help-centre-page .help-file-remove-icon {
+    width: 12px;
+    height: 12px;
+    overflow: hidden;
+    display: flex;
+}
+
+.help-centre-page .help-file-remove-icon img,
+.help-centre-page .help-file-remove-icon svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.help-centre-page .help-modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 40px;
+}
+
+.help-centre-page .help-modal-cancel,
+.help-centre-page .help-modal-submit {
+    height: 48px;
+    padding: 0 28px;
+    border-radius: 75px;
+    font-family: Lato;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.help-centre-page .help-modal-cancel {
+    min-width: 133px;
+    border: 1px solid #9d9b98;
+    background: transparent;
+    color: #9d9b98;
+    font-weight: 400;
+}
+
+.help-centre-page .help-modal-submit {
+    min-width: 152px;
+    border: 0;
+    background: #ffc97a;
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 5px 8px rgba(0, 0, 0, 0.05);
+}
+
+.help-centre-page .custom-select.help-category-select {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    z-index: 6;
+}
+
+.help-centre-page .custom-select.help-category-select.open .select-trigger,
+.help-centre-page
+    .custom-select.help-category-select.has-value
+    .select-trigger {
+    border-color: #d4d4d4;
+}
+
+.help-centre-page .custom-select.help-category-select .select-trigger,
+.help-centre-page .custom-select.help-category-select.open .select-trigger {
+    height: 48px;
+    padding: 0 16px;
+    border: 1px solid #d4d4d4;
+    border-radius: 10px !important;
+}
+
+.help-centre-page .custom-select.help-category-select .select-trigger span {
+    font-size: 16px;
+    color: #d4d4d4;
+}
+
+.help-centre-page
+    .custom-select.help-category-select.has-value
+    .select-trigger
+    span {
+    color: #3b3731;
+}
+
+.help-centre-page .help-request-modal > .help-category-options,
+.help-centre-page .custom-select.help-category-select .select-options {
+    display: block;
+    position: fixed;
+    inset: auto;
+    width: 235px;
+    max-height: none;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    list-style: none;
+    background: #fff;
+    border: 1px solid #d4d4d4;
+    border-radius: 0 0 10px 10px;
+    box-shadow: none;
+    z-index: 2100;
+    transform-origin: left top;
+}
+
+.help-centre-page .help-category-select .select-trigger svg {
+    transition: transform 0.2s ease;
+}
+
+.help-centre-page .help-category-select.open .select-trigger svg {
+    transform: rotate(180deg);
+}
+
+.help-category-menu-enter,
+.help-category-menu-leave {
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+}
+
+.help-category-menu-enter-start,
+.help-category-menu-leave-end {
+    opacity: 0;
+    transform: translateX(12px);
+}
+
+.help-category-menu-enter-end,
+.help-category-menu-leave-start {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.help-centre-page .help-request-modal > .help-category-options li,
+.help-centre-page .custom-select.help-category-select .select-options li {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 20px;
+    color: rgba(59, 55, 49, 0.25);
+    font-size: 16px;
+    cursor: pointer;
+    box-sizing: border-box;
+    border: 1px solid transparent;
+}
+
+.help-centre-page
+    .help-request-modal
+    > .help-category-options
+    li:not(:last-child),
+.help-centre-page
+    .custom-select.help-category-select
+    .select-options
+    li:not(:last-child) {
+    border-bottom-color: #d4d4d4;
+}
+
+.help-centre-page .help-request-modal > .help-category-options li:hover,
+.help-centre-page .help-request-modal > .help-category-options li.is-active,
+.help-centre-page .custom-select.help-category-select .select-options li:hover,
+.help-centre-page
+    .custom-select.help-category-select
+    .select-options
+    li.is-active {
+    border: 1px solid #ffc97a;
+    background: #fff1dd;
+    color: #3b3731;
+}
+
+@media (max-width: 860px) {
+    .help-centre-page #request_modal .help-modal-panel {
+        width: 100%;
+        padding: 24px 16px 32px;
+    }
+
+    .help-centre-page .help-modal-form {
+        width: 100%;
+        margin-top: 28px;
+    }
+
+    .help-centre-page .help-modal-close {
+        top: 16px;
+        right: 16px;
+    }
+
+    .help-centre-page .help-modal-header .large-font {
+        line-height: 1.2;
+        padding-right: 36px;
+    }
+}
+
+.help-subject-check {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+    display: flex;
+}
+
+.help-field-error {
+    display: block;
+    margin-top: 8px;
+    color: #c45c4a;
+    font-family: Lato;
+    font-size: 13px;
+}
+
+.help-category-select {
+    position: relative;
+    width: 100%;
+}
+
+.help-category-select .select-trigger {
+    width: 100%;
+    font: inherit;
+}
+
+.help-category-select .select-options li.is-active {
+    border: 1px solid #ffc97a;
+    background: #fff1dd;
+    color: #3b3731;
+}
+
+.help-upload-trigger {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+}
+
+.file-item.is-visible {
+    display: flex;
+}
+
+.help-centre-page {
+    overflow: visible;
+}
+
+.help-faq-layout {
+    overflow: visible;
+}
+
+.help-support-tabs-sticky {
+    position: sticky;
+    top: var(--help-tabs-sticky-top, 5.5rem);
+    z-index: 40;
+    background: #fff;
+    padding: 12px 0 8px;
+}
+
+.help-centre-page .support-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+    gap: 12px;
+}
+
+.help-centre-page .support-tabs > button,
+.help-centre-page .support-tabs .tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 170px;
+    min-height: 120px;
+    padding: 22px 8px 16px;
+    background: #fff;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    text-align: center;
+    transition:
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        background-color 0.25s ease,
+        transform 0.25s ease;
+}
+
+.help-centre-page .support-tabs .tab-btn p {
+    white-space: nowrap;
+    margin-bottom: 0;
+}
+
+.help-centre-page .support-tabs .tab-btn:hover {
+    transform: translateY(-2px);
+}
+
+.help-centre-page .help-faq-item {
+    border-bottom: 1px solid #d4d4d4;
+}
+
+.help-faq-subtitle {
+    color: #9d9b98;
+    line-height: 25px;
+}
+
+.help-centre-page.is-business .help-faq-stack {
+    max-width: 610px;
+    margin: 40px auto 0;
+}
+
+.help-centre-page.is-pet-owner .help-panel.tab-panels {
+    margin-top: 40px;
+}
+
+.help-centre-page.is-business .help-faq-section {
+    scroll-margin-top: calc(var(--help-tabs-sticky-top) + 9.5rem);
+}
+
+.help-centre-page.is-business .help-faq-section + .help-faq-section {
+    margin-top: 80px;
+}
+
+.help-centre-page.is-business .help-faq-section .large-font {
+    line-height: 25px;
+    margin: 0;
+}
+
+.help-centre-page.is-business .help-faq-subtitle {
+    margin: 8px 0 15px 0;
+}
+
+.help-centre-page.is-business .help-faq-item {
+    padding: 22px 0;
+}
+
+.help-centre-page.is-business .panel p {
+    padding: 20px 0;
+    font-size: 14px;
+    color: #3b3731;
+}
+
+.help-centre-page.is-pet-owner .panel p {
+    font-size: 16px;
+}
+
+.help-contact-card--chat {
+    background: #f8f8f8;
+    border-color: transparent;
+    box-shadow: 0 10px 20px 2px rgba(0, 0, 0, 0.05);
+}
+
+.help-centre-page.is-business .box-wrapper.help-contact-card {
+    width: 400px;
+    min-height: 270px;
+}
+
+.help-centre-page .help-panel.tab-panels {
+    display: block;
+    position: relative;
+}
+
+.help-centre-page .tab-panel.help-tab-panel {
+    display: block;
+    width: 100%;
+}
+
+.help-centre-page [x-cloak] {
+    display: none !important;
+}
+
+.help-tab-enter {
+    transition:
+        opacity 0.35s ease,
+        transform 0.35s ease;
+}
+
+.help-tab-enter-start {
+    opacity: 0;
+    transform: translateY(14px);
+}
+
+.help-tab-enter-end {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.help-centre-page .help-faq-block {
+    animation: help-fade-up 0.4s ease both;
+}
+
+.help-centre-page .panel {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition:
+        max-height 0.4s ease,
+        opacity 0.3s ease;
+}
+
+.help-centre-page .panel.is-open {
+    max-height: 640px;
+    opacity: 1;
+}
+
+.help-result-card {
+    animation: help-fade-up 0.4s ease both;
+}
+
+.help-centre-page .common-topics p.bg {
+    transition:
+        background-color 0.25s ease,
+        border-color 0.25s ease,
+        transform 0.25s ease;
+}
+
+@keyframes help-fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .help-tab-enter,
+    .help-centre-page .help-faq-block,
+    .help-result-card,
+    .help-centre-page .panel,
+    .help-centre-page .support-tabs .tab-btn,
+    .help-centre-page .common-topics p.bg,
+    .help-modal-backdrop-enter,
+    .help-modal-backdrop-leave,
+    .help-category-menu-enter,
+    .help-category-menu-leave,
+    .help-centre-page #request_modal .help-modal-panel {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+    }
 }
