@@ -164,6 +164,10 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
             margin-right: auto;
         }
 
+        .dashboard-shell--help-centre {
+            --help-tabs-sticky-top: 8.75rem;
+        }
+
         /* Verify & Qualify: content width matches header (Bootstrap .container only) */
         .dashboard-shell--verify-qualify {
             --dashboard-sticky-header-offset: 9.5rem;

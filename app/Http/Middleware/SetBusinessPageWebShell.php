@@ -13,6 +13,14 @@ class SetBusinessPageWebShell
     {
         BusinessPageShell::useWeb();
 
+        if ($request->routeIs('home')) {
+            BusinessPageShell::clearPublicBusinessChrome();
+        }
+
+        if ($request->routeIs('business-landing-page')) {
+            BusinessPageShell::usePublicBusinessChrome();
+        }
+
         return $next($request);
     }
 }

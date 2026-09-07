@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo('/');
         $middleware->web(append: [
             \App\Http\Middleware\TrackAccountLoginSession::class,
+            \App\Http\Middleware\ApplyBusinessPageShellFromRequest::class,
         ]);
         $middleware->alias([
             'auth.groomer_spacer' => \App\Http\Middleware\EnsureGroomerSpacerAuthenticated::class,

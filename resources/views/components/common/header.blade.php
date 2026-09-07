@@ -2,6 +2,8 @@
 
 @php
     use App\Models\GroomerSpacerProfile;
+    use App\Support\BusinessPageShell;
+    use App\Support\HelpCentre;
     use Illuminate\Support\Facades\Auth;
 
     $gsp = Auth::guard('groomer_spacer')->user();
@@ -24,7 +26,13 @@
         'verify-qualify',
         'verify-qualify.*',
     ]);
-    $isBusinessSiteRoute = $isBusinessLandingRoute || $isBusinessHomepageRoute || $isBusinessAuthRoute;
+    $isBusinessSiteRoute = $isBusinessLandingRoute
+        || $isBusinessHomepageRoute
+        || $isBusinessAuthRoute
+        || ($isHelpCentreRoute && (
+            HelpCentre::audience() === HelpCentre::AUDIENCE_BUSINESS
+            || BusinessPageShell::prefersBusinessChrome()
+        ));
     $isForGroomersHostsActive = $isBusinessHomepageRoute || $isBusinessLandingRoute;
     $dashboardLogoHref = $isVerifyQualifyRoute
         ? route('verify-qualify')
@@ -84,7 +92,7 @@
 @if ($variant === 'dashboard')
     {{-- Dashboard Header --}}
     <header
-        class="dashboard-header{{ $isVerifyQualifyRoute ? ' dashboard-header--verify-qualify' : '' }}{{ $isBusinessHubRoute ? ' dashboard-header--business-hub' : '' }}{{ $isMarketingHubRoute ? ' dashboard-header--marketing-hub' : '' }}{{ $isAccountSettingsRoute ? ' dashboard-header--account-settings' : '' }}">
+        class="dashboard-header{{ $isVerifyQualifyRoute ? ' dashboard-header--verify-qualify' : '' }}{{ $isBusinessHubRoute ? ' dashboard-header--business-hub' : '' }}{{ $isMarketingHubRoute ? ' dashboard-header--marketing-hub' : '' }}{{ $isAccountSettingsRoute ? ' dashboard-header--account-settings' : '' }}{{ $isHelpCentreRoute ? ' dashboard-header--help-centre' : '' }}">
         @unless ($isVerifyQualifyRoute)
             {{-- Full-viewport curve (sibling to max-width content wrapper) --}}
             <div class="curve-shape-container" aria-hidden="true">
@@ -132,7 +140,7 @@
                                         fill="#FFC97A" />
                                 </svg>
                                 @if ($variant === 'dashboard' || ($isBusinessSiteRoute && !$isBusinessHomepageRoute))
-                                    <span class="logo-b-text">Business</span>
+                                    <span class="logo-b-text fs-18-500">Business</span>
                                 @endif
                             </a>
                             <button class="menu-toggle">&#9776;</button>
@@ -142,16 +150,17 @@
                                 <a href="{{ route('business-homepage-groomer-space-owner', ['shell' => 'business-hub']) }}"
                                     wire:navigate
                                     class="{{ in_array($dashboardNavView, ['for-groomers-hosts', 'account-settings'], true) ? 'active' : '' }}">
-                                    {{ $dashboardNavView === 'account-settings' ? 'For Groomers & Hosts' : 'FursGo Business' }}
+                                    {{ in_array($dashboardNavView, ['account-settings', 'help-centre'], true) ? 'For Groomers & Hosts' : 'FursGo Business' }}
                                 </a>
-                                <a href="{{ route('help-and-support', ['shell' => 'business-hub']) }}" wire:navigate
-                                    class="{{ $dashboardNavView === 'help-centre' ? 'active' : '' }}">Help Centre</a>
+                                <a href="{{ route('help-and-support', ['shell' => 'business-hub', 'chrome' => 'business']) }}"
+                                    wire:navigate class="{{ $dashboardNavView === 'help-centre' ? 'active' : '' }}">Help
+                                    Centre</a>
                             @elseif ($isBusinessSiteRoute && !$isBusinessHomepageRoute)
                                 <a href="{{ route('business-homepage-groomer-space-owner') }}"
                                     class="{{ $isForGroomersHostsActive ? 'active' : '' }}" wire:navigate>FursGo
                                     Business</a>
-                                <a href="{{ route('help-and-support') }}" class="{{ $isHelpCentreRoute ? 'active' : '' }}"
-                                    wire:navigate>Help Centre</a>
+                                <a href="{{ route('help-and-support', ['chrome' => 'business']) }}"
+                                    class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
                             @else
                                 @if ($variant !== 'dashboard')
                                     <a href="#" class="{{ $isBusinessLandingRoute ? 'active' : '' }}" wire:navigate>Our Mission</a>
@@ -159,8 +168,8 @@
                                 <a href="{{ route('business-homepage-groomer-space-owner') }}"
                                     class="{{ $isBusinessHomepageRoute ? 'active' : '' }}" wire:navigate>FursGo
                                     Business</a>
-                                <a href="{{ route('help-and-support') }}" class="{{ $isHelpCentreRoute ? 'active' : '' }}"
-                                    wire:navigate>Help Centre</a>
+                                <a href="{{ $isBusinessHomepageRoute ? route('help-and-support', ['chrome' => 'business']) : route('help-and-support') }}"
+                                    class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
                             @endif
                         </div>
                         <div class="session-login-signup-div dashboard-header-icons d-flex align-items-center gap-40">
@@ -889,6 +898,7 @@
 
             .dashboard-header .dashboard-header-container {
                 position: relative;
+                z-index: 2;
                 width: 100%;
                 max-width: 1240px;
                 margin-left: auto;
@@ -912,6 +922,10 @@
                 align-items: center;
             }
 
+            .dash-menu-items>.logo-toggle-button {
+                flex-shrink: 0;
+            }
+
             .dash-menu-items>div:nth-child(2) {
                 display: flex;
                 justify-content: center;
@@ -933,6 +947,11 @@
                 color: #3B3731;
                 text-decoration: underline;
                 text-underline-offset: 6px;
+            }
+
+            .dashboard-header--help-centre .dash-menu-items>div:nth-child(2)>a.active {
+                color: #FFA577;
+                font-weight: 500;
             }
 
             /* Dashboard Dropdown Positioning - Matches Default Header */

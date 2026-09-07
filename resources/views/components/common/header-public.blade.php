@@ -2,7 +2,7 @@
     <nav class="navbar">
         <div class="container">
             <div class="row align-items-center">
-                <div class="col-lg-2">
+                <div class="{{ ($isBusinessSiteRoute && !$isBusinessHomepageRoute) ? 'col-lg-3' : 'col-lg-2' }}">
                     <div class="logo-toggle-button d-flex justify-content-between">
                         <a href="{{ route('home') }}" wire:navigate class="d-inline-flex align-items-end gap-10">
                             <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40" viewBox="0 0 145 40"
@@ -33,13 +33,13 @@
                                     fill="#FFC97A" />
                             </svg>
                             @if ($isBusinessSiteRoute && !$isBusinessHomepageRoute)
-                                <span class="fs-18-500">Business</span>
+                                <span class="logo-b-text fs-18-500">Business</span>
                             @endif
                         </a>
                         <button type="button" class="menu-toggle" aria-label="Toggle menu">&#9776;</button>
                     </div>
                 </div>
-                <div class="col-lg-7">
+                <div class="{{ ($isBusinessSiteRoute && !$isBusinessHomepageRoute) ? 'col-lg-6' : 'col-lg-7' }}">
                     <ul class="menu-items">
                         @if ($isBusinessSiteRoute && !$isBusinessHomepageRoute)
                             <li>
@@ -48,8 +48,8 @@
                                     Business</a>
                             </li>
                             <li>
-                                <a href="{{ route('help-and-support') }}" class="{{ $isHelpCentreRoute ? 'active' : '' }}"
-                                    wire:navigate>Help Centre</a>
+                                <a href="{{ route('help-and-support', ['chrome' => 'business']) }}"
+                                    class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
                             </li>
                         @else
                             <li>
@@ -61,8 +61,8 @@
                                     Hosts</a>
                             </li>
                             <li>
-                                <a href="{{ route('help-and-support') }}" class="{{ $isHelpCentreRoute ? 'active' : '' }}"
-                                    wire:navigate>Help Centre</a>
+                                <a href="{{ $isBusinessHomepageRoute ? route('help-and-support', ['chrome' => 'business']) : route('help-and-support') }}"
+                                    class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
                             </li>
                         @endif
                     </ul>
