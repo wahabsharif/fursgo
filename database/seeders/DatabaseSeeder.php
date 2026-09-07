@@ -4,17 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Database\Seeders\AddOnSeeder;
-use Database\Seeders\BookingSeeder;
-use Database\Seeders\DevUserSeeder;
-use Database\Seeders\PaymentSeeder;
-use Database\Seeders\PetMedicationDetailSeeder;
-use Database\Seeders\PetPreferenceSeeder;
-use Database\Seeders\ReviewSeeder;
-use Database\Seeders\ServiceAreaSeeder;
-use Database\Seeders\ServicePolicySeeder;
-use Database\Seeders\ServiceSeeder;
-use Database\Seeders\StaffSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -43,6 +32,7 @@ class DatabaseSeeder extends Seeder
             AddOnSeeder::class,
             PetPreferenceSeeder::class,
             StaffSeeder::class,
+            FaqSeeder::class,
         ]);
     }
 }
