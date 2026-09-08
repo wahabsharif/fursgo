@@ -39,6 +39,17 @@
         : ($isMarketingHubRoute
             ? route('marketing-hub')
             : route('business-hub'));
+    $businessHomepageUrl = route('business-homepage-groomer-space-owner');
+    $businessHomepageHubUrl = route('business-homepage-groomer-space-owner', ['shell' => 'business-hub']);
+    $helpCentreUrl = route('help-and-support');
+    $helpCentreBusinessUrl = route('help-and-support', ['chrome' => 'business']);
+    $helpCentreHubUrl = route('help-and-support', ['shell' => 'business-hub', 'chrome' => 'business']);
+    $businessHubUrl = route('business-hub');
+    $marketingHubUrl = route('marketing-hub');
+    $accountSettingsUrl = route('account-settings');
+    $logoutUrl = route('logout');
+    $loginGroomerSpaceUrl = route('login-groomer-space');
+    $headerPublicView = 'components.common.header-public';
 
     if (!$isGroomerSpacerSession && auth()->check()) {
         $authUser = auth()->user();
@@ -93,15 +104,15 @@
     {{-- Dashboard Header --}}
     <header
         class="dashboard-header{{ $isVerifyQualifyRoute ? ' dashboard-header--verify-qualify' : '' }}{{ $isBusinessHubRoute ? ' dashboard-header--business-hub' : '' }}{{ $isMarketingHubRoute ? ' dashboard-header--marketing-hub' : '' }}{{ $isAccountSettingsRoute ? ' dashboard-header--account-settings' : '' }}{{ $isHelpCentreRoute ? ' dashboard-header--help-centre' : '' }}">
-        @unless ($isVerifyQualifyRoute)
-            {{-- Full-viewport curve (sibling to max-width content wrapper) --}}
+        @if (in_array($dashboardNavView, ['hub', 'marketing-hub', 'account-settings'], true))
+            {{-- Peach curve only behind the Welcome banner (Business Hub / Marketing Hub / Account Settings) --}}
             <div class="curve-shape-container" aria-hidden="true">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 260" fill="none" preserveAspectRatio="none">
                     <path d="M0 0H1440V260H260C116.406 260 0 143.594 0 0Z"
                         fill="{{ $headerUserType === 'space' ? '#FFA89933' : '#FFF4E4' }}" />
                 </svg>
             </div>
-        @endunless
+        @endif
 
         <div class="dashboard-header-container">
             {{-- Main Navigation Bar --}}
@@ -147,28 +158,27 @@
                         </div>
                         <div>
                             @if ($variant === 'dashboard')
-                                <a href="{{ route('business-homepage-groomer-space-owner', ['shell' => 'business-hub']) }}"
-                                    wire:navigate
+                                <a href="{{ $businessHomepageHubUrl }}" wire:navigate
                                     class="{{ in_array($dashboardNavView, ['for-groomers-hosts', 'account-settings'], true) ? 'active' : '' }}">
                                     {{ in_array($dashboardNavView, ['account-settings', 'help-centre'], true) ? 'For Groomers & Hosts' : 'FursGo Business' }}
                                 </a>
-                                <a href="{{ route('help-and-support', ['shell' => 'business-hub', 'chrome' => 'business']) }}"
-                                    wire:navigate class="{{ $dashboardNavView === 'help-centre' ? 'active' : '' }}">Help
+                                <a href="{{ $helpCentreHubUrl }}" wire:navigate
+                                    class="{{ $dashboardNavView === 'help-centre' ? 'active' : '' }}">Help
                                     Centre</a>
                             @elseif ($isBusinessSiteRoute && !$isBusinessHomepageRoute)
-                                <a href="{{ route('business-homepage-groomer-space-owner') }}"
-                                    class="{{ $isForGroomersHostsActive ? 'active' : '' }}" wire:navigate>FursGo
+                                <a href="{{ $businessHomepageUrl }}" class="{{ $isForGroomersHostsActive ? 'active' : '' }}"
+                                    wire:navigate>FursGo
                                     Business</a>
-                                <a href="{{ route('help-and-support', ['chrome' => 'business']) }}"
-                                    class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
+                                <a href="{{ $helpCentreBusinessUrl }}" class="{{ $isHelpCentreRoute ? 'active' : '' }}"
+                                    wire:navigate>Help Centre</a>
                             @else
                                 @if ($variant !== 'dashboard')
                                     <a href="#" class="{{ $isBusinessLandingRoute ? 'active' : '' }}" wire:navigate>Our Mission</a>
                                 @endif
-                                <a href="{{ route('business-homepage-groomer-space-owner') }}"
-                                    class="{{ $isBusinessHomepageRoute ? 'active' : '' }}" wire:navigate>FursGo
+                                <a href="{{ $businessHomepageUrl }}" class="{{ $isBusinessHomepageRoute ? 'active' : '' }}"
+                                    wire:navigate>FursGo
                                     Business</a>
-                                <a href="{{ $isBusinessHomepageRoute ? route('help-and-support', ['chrome' => 'business']) : route('help-and-support') }}"
+                                <a href="{{ $isBusinessHomepageRoute ? $helpCentreBusinessUrl : $helpCentreUrl }}"
                                     class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
                             @endif
                         </div>
@@ -713,7 +723,7 @@
                                         </div>
                                     @endif
                                     <div class="profile-menu">
-                                        <a href="{{ route('business-hub') }}"
+                                        <a href="{{ $businessHubUrl }}"
                                             class="profile-item d-flex align-items-center gap-40"
                                             :class="{ 'profile-item--active': @js($isBusinessHubRoute) }"
                                             @click="activeSection = 'business-hub'" wire:navigate>
@@ -725,7 +735,7 @@
                                             </svg>
                                             <p class="medium-light-font">Business Hub</p>
                                         </a>
-                                        <a href="{{ route('marketing-hub') }}"
+                                        <a href="{{ $marketingHubUrl }}"
                                             class="profile-item d-flex align-items-center gap-40"
                                             :class="{ 'profile-item--active': @js($isMarketingHubRoute) }"
                                             @click="activeSection = 'marketing-hub'" wire:navigate>
@@ -740,7 +750,7 @@
                                             </svg>
                                             <p class="medium-light-font">Marketing Hub</p>
                                         </a>
-                                        <a href="{{ route('account-settings') }}"
+                                        <a href="{{ $accountSettingsUrl }}"
                                             class="profile-item d-flex align-items-center gap-40"
                                             :class="{ 'profile-item--active': @js($isAccountSettingsRoute) }"
                                             @click="activeSection = 'account-settings'" wire:navigate>
@@ -764,7 +774,7 @@
                                     </div>
                                     @if ($isHeaderAuthenticated)
                                         <div class="logout-option" onclick="this.querySelector('form').submit()">
-                                            <form method="POST" action="{{ route('logout') }}" class="d-flex">
+                                            <form method="POST" action="{{ $logoutUrl }}" class="d-flex">
                                                 @csrf
                                                 <button type="submit"
                                                     class="mt-3 d-flex align-items-center gap-40 border-0 bg-transparent p-0 w-100 cursor-pointer">
@@ -780,8 +790,8 @@
                                         </div>
                                     @else
                                         <div class="logout-option">
-                                            <a href="{{ route('login-groomer-space') }}"
-                                                class="mt-3 d-flex align-items-center gap-40" wire:navigate>
+                                            <a href="{{ $loginGroomerSpaceUrl }}" class="mt-3 d-flex align-items-center gap-40"
+                                                wire:navigate>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="17" height="22"
                                                     viewBox="0 0 17 22" fill="none">
                                                     <path
@@ -1026,6 +1036,7 @@
                 padding: 49px 0;
             }
 
+            .dashboard-header:not(.dashboard-header--business-hub):not(.dashboard-header--marketing-hub):not(.dashboard-header--account-settings) .curve-shape-container,
             .dashboard-header.dashboard-header--verify-qualify .curve-shape-container {
                 display: none;
             }
@@ -1351,7 +1362,7 @@
         </style>
     </header>
 @else
-    @include('components.common.header-public')
+    @include($headerPublicView)
 @endif
 <script>
     function initHeaderDropdowns() {
