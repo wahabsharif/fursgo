@@ -385,6 +385,32 @@ new #[Layout('layouts.dashboard')]
         return 'background_checks';
     }
 
+    /**
+     * Map stored JSON values (including Figma labels) to the three UI tones.
+     *
+     * @return 'approved'|'pending'|'rejected'|''
+     */
+    private function normalizeVerificationStatus(string $status): string
+    {
+        $status = strtolower(trim($status));
+        $status = str_replace(['-', ' '], '_', $status);
+
+        return match ($status) {
+            'approved', 'approve', 'accepted', 'success' => 'approved',
+            'pending', 'more_info_needed', 'more_info', 'more_information_needed', 'info_needed', 'action_required' => 'pending',
+            'rejected', 'failed', 'fail', 'failure', 'declined', 'denied' => 'rejected',
+            default => '',
+        };
+    }
+
+    /**
+     * @return 'approved'|'pending'|'rejected'|''
+     */
+    private function verificationStatusFromDetails(array $details): string
+    {
+        return $this->normalizeVerificationStatus((string) ($details['verification_status'] ?? ''));
+    }
+
     private function resolveVerificationStatus(?GroomerSpacerProfile $user = null): string
     {
         $user = $user ?? Auth::guard('groomer_spacer')->user();
@@ -392,23 +418,23 @@ new #[Layout('layouts.dashboard')]
             return '';
         }
 
+        $freelance = $this->decodeProfileJson($user->freelance_details ?? null);
+        $business = $this->decodeProfileJson($user->business_details ?? null);
+
         if ($this->isFreelanceAccount($user)) {
-            $details = $this->decodeProfileJson($user->freelance_details ?? null);
+            $primary = $freelance;
+            $secondary = $business;
         } else {
-            $details = $this->decodeProfileJson($user->business_details ?? null);
+            $primary = $business;
+            $secondary = $freelance;
         }
 
-        $status = strtolower(trim((string) ($details['verification_status'] ?? '')));
-
-        if (in_array($status, ['approved', 'pending', 'rejected'], true)) {
+        $status = $this->verificationStatusFromDetails($primary);
+        if ($status !== '') {
             return $status;
         }
 
-        if ($user->hasCompletedVerifyQualifyPersonalStep()) {
-            return 'approved';
-        }
-
-        return '';
+        return $this->verificationStatusFromDetails($secondary);
     }
 
     private function persistVerificationStatus(GroomerSpacerProfile $user, string $status): void
@@ -440,11 +466,27 @@ new #[Layout('layouts.dashboard')]
 
     public function verificationIsApproved(): bool
     {
-        if ((bool) session('verify_qualify_show_approved', false)) {
-            return true;
+        return $this->verificationStatusTone() === 'approved';
+    }
+
+    /**
+     * Prefer the stored JSON status. Session is only a same-request fallback
+     * when the profile has not persisted a status yet.
+     *
+     * @return 'approved'|'pending'|'rejected'
+     */
+    public function verificationStatusTone(): string
+    {
+        $status = $this->resolveVerificationStatus();
+        if (in_array($status, ['approved', 'pending', 'rejected'], true)) {
+            return $status;
         }
 
-        return $this->resolveVerificationStatus() === 'approved';
+        if ((bool) session('verify_qualify_show_approved', false)) {
+            return 'approved';
+        }
+
+        return 'pending';
     }
 
     /**
@@ -507,6 +549,9 @@ new #[Layout('layouts.dashboard')]
                 break;
             case 'verification_notices':
                 $this->showVerificationStatus = true;
+                if ($this->resolveVerificationStatus() !== 'approved') {
+                    session()->forget('verify_qualify_show_approved');
+                }
                 break;
         }
 
@@ -3880,7 +3925,16 @@ new #[Layout('layouts.dashboard')]
             if (Schema::hasColumn($table, 'id_document_paths')) {
                 $payload['id_document_paths'] = $documentPaths;
             }
+
+            $status = $this->isPersonalInfoFormValid() ? 'approved' : 'pending';
+            if ($isFreelance) {
+                $payload['freelance_details']['verification_status'] = $status;
+            } else {
+                $payload['business_details']['verification_status'] = $status;
+            }
+
             $user->update($payload);
+            $user->refresh();
 
             $this->insurance_certificate_paths = $insuranceCertificatePaths;
             $this->insurance_certificate_file_names = $insuranceFileNames;
@@ -3891,9 +3945,6 @@ new #[Layout('layouts.dashboard')]
             $this->government_id_paths = $governmentIdPaths;
             $this->government_id_file_names = $governmentIdFileNames;
             $this->government_id = [];
-
-            $status = $this->isPersonalInfoFormValid() ? 'approved' : 'pending';
-            $this->persistVerificationStatus($user, $status);
 
             session()->forget(['verification_build_profile_step', 'verification_build_profile_substep', 'verification_review_mode']);
             $this->verification_review_mode = false;
@@ -4032,7 +4083,7 @@ new #[Layout('layouts.dashboard')]
 @endPushOnce
 
 <section
-    class="container verify-qualify-page{{ $showVerificationCard ? ' verify-qualify-page--background-checks' : '' }}">
+    class="container verify-qualify-page{{ $showVerificationCard ? ' verify-qualify-page--background-checks' : '' }}{{ $showVerificationStatus ? ' verify-qualify-page--status verify-qualify-page--status-' . $this->verificationStatusTone() : '' }}">
     <div class="verification-wrapper{{ $showVerificationCard || $showVerificationStatus || $showStartEarningComplete ? ' verification-wrapper--no-sidebar' : '' }}"
         wire:loading.class="verification-wrapper--navigating"
         wire:target="goToSidebarStep,goToVerifyQualifySubstep,goToBuildProfileSubstep,goBack,submitBusinessBasics,submitAccountPayouts,submit,submitPersonalInfo,submitGroomerBusinessProfile,submitSpacerBusinessProfile,submitLegalPolicy">
@@ -4092,11 +4143,7 @@ new #[Layout('layouts.dashboard')]
         <!-- Main Content -->
         <div class="main-content">
             @if ($showVerificationStatus)
-                @if ($this->verificationIsApproved())
-                    @include($this->vqView('verification-status'))
-                @else
-                    @include($this->vqView('verification-status-pending'))
-                @endif
+                @include($this->vqView('verification-status'))
             @elseif ($showStartEarningComplete)
                 @include($this->vqView('start-grooming-complete'))
             @elseif ($showBusinessBasicsForm)
@@ -4353,32 +4400,33 @@ new #[Layout('layouts.dashboard')]
                         <h2>Verify Your Account for Payouts</h2>
                     </div>
 
-                    <div class="verification-form" x-data="{
-                                                                                                                fursgoUsage: @js($fursgo_usage),
-                                                                                                                accountType: @js($account_type),
-                                                                                                                locationTypes: @js(array_values($location_types ?? [])),
-                                                                                                                get canContinue() {
-                                                                                                                    return Boolean(this.fursgoUsage) &&
-                                                                                                                        Boolean(this.accountType) &&
-                                                                                                                        Array.isArray(this.locationTypes) &&
-                                                                                                                        this.locationTypes.length > 0;
-                                                                                                                },
-                                                                                                                isLocationChecked(value) {
-                                                                                                                    return Array.isArray(this.locationTypes) && this.locationTypes.includes(value);
-                                                                                                                },
-                                                                                                                toggleLocation(value, checked) {
-                                                                                                                    if (!Array.isArray(this.locationTypes)) {
-                                                                                                                        this.locationTypes = [];
-                                                                                                                    }
-                                                                                                                    if (checked) {
-                                                                                                                        if (!this.locationTypes.includes(value)) {
-                                                                                                                            this.locationTypes.push(value);
-                                                                                                                        }
-                                                                                                                        return;
-                                                                                                                    }
-                                                                                                                    this.locationTypes = this.locationTypes.filter((item) => item !== value);
-                                                                                                                },
-                                                                                                            }">
+                    <div class="verification-form"
+                        x-data="{
+                                                                                                                                                            fursgoUsage: @js($fursgo_usage),
+                                                                                                                                                            accountType: @js($account_type),
+                                                                                                                                                            locationTypes: @js(array_values($location_types ?? [])),
+                                                                                                                                                            get canContinue() {
+                                                                                                                                                                return Boolean(this.fursgoUsage) &&
+                                                                                                                                                                    Boolean(this.accountType) &&
+                                                                                                                                                                    Array.isArray(this.locationTypes) &&
+                                                                                                                                                                    this.locationTypes.length > 0;
+                                                                                                                                                            },
+                                                                                                                                                            isLocationChecked(value) {
+                                                                                                                                                                return Array.isArray(this.locationTypes) && this.locationTypes.includes(value);
+                                                                                                                                                            },
+                                                                                                                                                            toggleLocation(value, checked) {
+                                                                                                                                                                if (!Array.isArray(this.locationTypes)) {
+                                                                                                                                                                    this.locationTypes = [];
+                                                                                                                                                                }
+                                                                                                                                                                if (checked) {
+                                                                                                                                                                    if (!this.locationTypes.includes(value)) {
+                                                                                                                                                                        this.locationTypes.push(value);
+                                                                                                                                                                    }
+                                                                                                                                                                    return;
+                                                                                                                                                                }
+                                                                                                                                                                this.locationTypes = this.locationTypes.filter((item) => item !== value);
+                                                                                                                                                            },
+                                                                                                                                                        }">
                         <div>
                             <div class="form-section">
                                 <div class="section-title">
@@ -4508,17 +4556,17 @@ new #[Layout('layouts.dashboard')]
                                 loading-target="submitAccountPayouts" x-bind:disabled="!canContinue"
                                 x-bind:class="{ 'common-btn--disabled': !canContinue }"
                                 x-bind:style="{
-                                                                                                                                backgroundColor: canContinue ? '#FFC97A' : '#e5e7eb',
-                                                                                                                                color: canContinue ? '#FFFFFF' : '#9ca3af',
-                                                                                                                                boxShadow: canContinue ? '0 5px 8px 0 rgba(0, 0, 0, 0.10)' : 'none',
-                                                                                                                            }"
+                                                                                                                                                                            backgroundColor: canContinue ? '#FFC97A' : '#e5e7eb',
+                                                                                                                                                                            color: canContinue ? '#FFFFFF' : '#9ca3af',
+                                                                                                                                                                            boxShadow: canContinue ? '0 5px 8px 0 rgba(0, 0, 0, 0.10)' : 'none',
+                                                                                                                                                                        }"
                                 @click="
-                                                                                                                                if (!canContinue) { return; }
-                                                                                                                                $wire.set('fursgo_usage', fursgoUsage, false);
-                                                                                                                                $wire.set('account_type', accountType, false);
-                                                                                                                                $wire.set('location_types', locationTypes, false);
-                                                                                                                                $wire.submitAccountPayouts();
-                                                                                                                            " />
+                                                                                                                                                                            if (!canContinue) { return; }
+                                                                                                                                                                            $wire.set('fursgo_usage', fursgoUsage, false);
+                                                                                                                                                                            $wire.set('account_type', accountType, false);
+                                                                                                                                                                            $wire.set('location_types', locationTypes, false);
+                                                                                                                                                                            $wire.submitAccountPayouts();
+                                                                                                                                                                        " />
                         </div>
                     </div>
                 </div>
@@ -5273,6 +5321,40 @@ new #[Layout('layouts.dashboard')]
         background: #FBFBFB;
     }
 
+    .verify-qualify-page--status {
+        width: 100%;
+        max-width: 1320px;
+        min-height: 620px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .verify-qualify-page--status .verification-wrapper {
+        min-height: 620px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .verify-qualify-page--status-approved {
+        background: rgba(212, 226, 236, 0.2);
+    }
+
+    .verify-qualify-page--status-pending {
+        background: rgba(255, 228, 189, 0.2);
+    }
+
+    .verify-qualify-page--status-rejected {
+        background: rgba(255, 183, 183, 0.2);
+    }
+
+    @media (max-width: 768px) {
+
+        .verify-qualify-page--status,
+        .verify-qualify-page--status .verification-wrapper {
+            min-height: 480px;
+        }
+    }
+
     .vq-background-checks {
         width: 100%;
         min-height: 620px;
@@ -5349,6 +5431,50 @@ new #[Layout('layouts.dashboard')]
         margin-bottom: 2rem;
     }
 
+    .verification-status-visual {
+        position: relative;
+        width: 128px;
+        height: 135px;
+        margin: 0 auto 2rem;
+        filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.18));
+    }
+
+    .verification-status-visual__shield {
+        position: absolute;
+        left: 10px;
+        top: 6px;
+        width: 108px;
+        height: 115px;
+        display: block;
+    }
+
+    .verification-status-visual__mark {
+        position: absolute;
+        z-index: 1;
+        display: block;
+    }
+
+    .verification-status-visual--approved .verification-status-visual__mark {
+        width: 51px;
+        height: 37px;
+        right: 0;
+        bottom: 8px;
+    }
+
+    .verification-status-visual--rejected .verification-status-visual__mark {
+        width: 38px;
+        height: 38px;
+        right: 4px;
+        bottom: 4px;
+    }
+
+    .verification-status-visual--pending .verification-status-visual__mark {
+        width: 9px;
+        height: 43px;
+        right: 14px;
+        bottom: 10px;
+    }
+
     .verification-approved-heading {
         color: #3B3731;
         text-align: center;
@@ -5357,19 +5483,23 @@ new #[Layout('layouts.dashboard')]
         font-style: normal;
         font-weight: 400;
         line-height: normal;
+        margin: 0;
     }
 
     .verification-approved-status {
         color: #3B3731;
+        text-align: center;
         font-family: "Playfair Display";
         font-size: 36px;
         font-style: normal;
         font-weight: 900;
         line-height: normal;
+        margin: 0;
     }
 
 
     .verification-approved-copy {
+        text-align: center;
         margin: 1rem 0;
     }
 
@@ -5406,13 +5536,9 @@ new #[Layout('layouts.dashboard')]
         margin-top: 2rem;
     }
 
-    .verification-pending-card .verification-pending-status {
-        color: #B45309;
-        font-family: "Playfair Display";
-        font-size: 36px;
-        font-style: normal;
-        font-weight: 900;
-        line-height: normal;
+    .verification-status-card--pending .verification-approved-status,
+    .verification-status-card--rejected .verification-approved-status {
+        color: #3B3731;
     }
 
     .verification-review-banner {
