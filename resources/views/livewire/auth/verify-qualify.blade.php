@@ -742,6 +742,11 @@ new #[Layout('layouts.dashboard')]
         return route($name, $parameters, $absolute);
     }
 
+    public function legalAgreementsPdfUrl(): string
+    {
+        return url('/verify-qualify/legal-agreements.pdf');
+    }
+
     private function vqView(string $key): string
     {
         return match ($key) {
@@ -4349,33 +4354,31 @@ new #[Layout('layouts.dashboard')]
                     </div>
 
                     <div class="verification-form" x-data="{
-                                                                                                        fursgoUsage: @js($fursgo_usage),
-                                                                                                        accountType: @js($account_type),
-                                                                                                        locationTypes: @js(array_values($location_types ?? [])),
-                                                                                                        get canContinue() {
-                                                                                                            return Boolean(this.fursgoUsage) &&
-                                                                                                                Boolean(this.accountType) &&
-                                                                                                                Array.isArray(this.locationTypes) &&
-                                                                                                                this.locationTypes.length > 0;
-                                                                                                        },
-                                                                                                        isLocationChecked(value) {
-                                                                                                            return Array.isArray(this.locationTypes) && this.locationTypes.includes(value);
-                                                                                                        },
-                                                                                                        toggleLocation(value, checked) {
-                                                                                                            if (!Array.isArray(this.locationTypes)) {
-                                                                                                                this.locationTypes = [];
-                                                                                                            }
-                                                                                                            if (checked) {
-                                                                                                                if (!this.locationTypes.includes(value)) {
-                                                                                                                    this.locationTypes.push(value);
-                                                                                                                }
-
-                                                                                                                return;
-                                                                                                            }
-
-                                                                                                            this.locationTypes = this.locationTypes.filter((item) => item !== value);
-                                                                                                        },
-                                                                                                    }">
+                                                                                                                fursgoUsage: @js($fursgo_usage),
+                                                                                                                accountType: @js($account_type),
+                                                                                                                locationTypes: @js(array_values($location_types ?? [])),
+                                                                                                                get canContinue() {
+                                                                                                                    return Boolean(this.fursgoUsage) &&
+                                                                                                                        Boolean(this.accountType) &&
+                                                                                                                        Array.isArray(this.locationTypes) &&
+                                                                                                                        this.locationTypes.length > 0;
+                                                                                                                },
+                                                                                                                isLocationChecked(value) {
+                                                                                                                    return Array.isArray(this.locationTypes) && this.locationTypes.includes(value);
+                                                                                                                },
+                                                                                                                toggleLocation(value, checked) {
+                                                                                                                    if (!Array.isArray(this.locationTypes)) {
+                                                                                                                        this.locationTypes = [];
+                                                                                                                    }
+                                                                                                                    if (checked) {
+                                                                                                                        if (!this.locationTypes.includes(value)) {
+                                                                                                                            this.locationTypes.push(value);
+                                                                                                                        }
+                                                                                                                        return;
+                                                                                                                    }
+                                                                                                                    this.locationTypes = this.locationTypes.filter((item) => item !== value);
+                                                                                                                },
+                                                                                                            }">
                         <div>
                             <div class="form-section">
                                 <div class="section-title">
@@ -4503,17 +4506,19 @@ new #[Layout('layouts.dashboard')]
                                 wire:click="goBack" />
                             <x-common.button type="button" label="Continue" width="105px"
                                 loading-target="submitAccountPayouts" x-bind:disabled="!canContinue"
-                                x-bind:class="{ 'common-btn--disabled': !canContinue }" x-bind:style="{
-                                                                                                                    backgroundColor: canContinue ? '#FFC97A' : '#e5e7eb',
-                                                                                                                    color: canContinue ? '#FFFFFF' : '#9ca3af',
-                                                                                                                    boxShadow: canContinue ? '0 5px 8px 0 rgba(0, 0, 0, 0.10)' : 'none',
-                                                                                                                }" @click="
-                                                                                                                    if (!canContinue) { return; }
-                                                                                                                    $wire.set('fursgo_usage', fursgoUsage, false);
-                                                                                                                    $wire.set('account_type', accountType, false);
-                                                                                                                    $wire.set('location_types', locationTypes, false);
-                                                                                                                    $wire.submitAccountPayouts();
-                                                                                                                " />
+                                x-bind:class="{ 'common-btn--disabled': !canContinue }"
+                                x-bind:style="{
+                                                                                                                                backgroundColor: canContinue ? '#FFC97A' : '#e5e7eb',
+                                                                                                                                color: canContinue ? '#FFFFFF' : '#9ca3af',
+                                                                                                                                boxShadow: canContinue ? '0 5px 8px 0 rgba(0, 0, 0, 0.10)' : 'none',
+                                                                                                                            }"
+                                @click="
+                                                                                                                                if (!canContinue) { return; }
+                                                                                                                                $wire.set('fursgo_usage', fursgoUsage, false);
+                                                                                                                                $wire.set('account_type', accountType, false);
+                                                                                                                                $wire.set('location_types', locationTypes, false);
+                                                                                                                                $wire.submitAccountPayouts();
+                                                                                                                            " />
                         </div>
                     </div>
                 </div>
@@ -5239,8 +5244,9 @@ new #[Layout('layouts.dashboard')]
         display: flex;
         flex-direction: column;
         justify-content: center;
-        align-items: center;
-        max-width: 35rem;
+        align-items: stretch;
+        width: 100%;
+        max-width: 715px;
         margin: 0 auto;
     }
 
@@ -5431,20 +5437,23 @@ new #[Layout('layouts.dashboard')]
         display: flex;
         flex-direction: column;
         gap: 2rem;
+        width: 100%;
     }
 
     .verification-form>div:nth-child(1) {
         border-radius: 10px;
         background: #FBFBFB;
         padding: 4rem;
-        width: 715px;
+        width: 100%;
         height: auto;
+        box-sizing: border-box;
     }
 
     .form-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 1.5rem;
+        width: 100%;
     }
 
     .form-group {
@@ -6094,7 +6103,8 @@ new #[Layout('layouts.dashboard')]
 
     /* Business Basics (step 2) */
     .business-basics-wrap {
-        max-width: 35rem;
+        width: 100%;
+        max-width: 715px;
         margin: 0 auto;
     }
 

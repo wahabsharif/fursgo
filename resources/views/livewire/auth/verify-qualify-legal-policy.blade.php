@@ -10,7 +10,7 @@
                 tabindex="0" role="region"
                 aria-label="Legal agreement text. Click to expand or collapse the full document."
                 aria-expanded="{{ $legal_agreements_expanded ? 'true' : 'false' }}">
-                @include('partials.legal-agreements-document')
+                <x-partials.legal-agreements-document />
             </div>
         </div>
 
@@ -28,7 +28,7 @@
 
         <div class="legal-policy-actions">
             <div>
-                <a href="{{ route('verify-qualify.legal-agreements-pdf') }}" data-download-legal-pdf>Download Document
+                <a href="{{ $this->legalAgreementsPdfUrl() }}" data-download-legal-pdf>Download Document
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21" viewBox="0 0 18 21" fill="none">
                         <path
                             d="M0.75 16.584V18.1673C0.75 18.5872 0.90165 18.99 1.17159 19.2869C1.44153 19.5838 1.80764 19.7507 2.18939 19.7507H15.1439C15.5257 19.7507 15.8918 19.5838 16.1617 19.2869C16.4317 18.99 16.5833 18.5872 16.5833 18.1673V16.584"
@@ -45,8 +45,7 @@
                 </button>
                 <button type="submit" class="legal-policy-btn legal-policy-btn--continue"
                     x-bind:class="accepted ? 'legal-policy-btn--continue-active' : 'legal-policy-btn--continue-muted'"
-                    x-bind:disabled="!accepted" wire:loading.attr="disabled"
-                    wire:target="submitLegalPolicy">
+                    x-bind:disabled="!accepted" wire:loading.attr="disabled" wire:target="submitLegalPolicy">
                     <span wire:loading.remove wire:target="submitLegalPolicy">Agree &amp; Continue</span>
                     <span class="legal-policy-btn__spinner" wire:loading wire:target="submitLegalPolicy"
                         aria-hidden="true"></span>
@@ -59,8 +58,8 @@
 <style>
     .legal-policy-wrap {
         margin: 0 auto;
-        /* width: 40rem; */
-        width: 715px;
+        width: 100%;
+        max-width: 715px;
     }
 
     .legal-policy-wrap>form {

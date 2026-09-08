@@ -65,7 +65,7 @@
         </div>
     @endif
 
-    @include('partials.legal-agreements-document')
+    <x-partials.legal-agreements-document />
 </body>
 
 </html>
