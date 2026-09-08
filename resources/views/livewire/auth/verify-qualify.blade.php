@@ -68,7 +68,9 @@ new #[Layout('layouts.dashboard')]
 
     public $business_gallery_pick = null;
 
-    private const GALLERY_MIN_VISIBLE_SLOTS = 3;
+    public string $business_pet_other_input = '';
+
+    private const GALLERY_MIN_VISIBLE_SLOTS = 4;
 
     /** Step 2A — Groomer business profile. */
     public string $groomer_experience = '';
@@ -799,6 +801,7 @@ new #[Layout('layouts.dashboard')]
             'verification-status-pending' => 'livewire.auth.verify-qualify-verification-status-pending',
             'start-grooming-complete' => 'livewire.auth.verify-qualify-start-grooming-complete',
             'gallery-paw' => 'livewire.auth.partials.verify-qualify-gallery-paw',
+            'pet-preferences' => 'livewire.auth.partials.verify-qualify-pet-preferences',
             'legal-policy' => 'livewire.auth.verify-qualify-legal-policy',
             'spacer-business-profile' => 'livewire.auth.verify-qualify-spacer-business-profile',
             'groomer-business-profile' => 'livewire.auth.verify-qualify-groomer-business-profile',
@@ -1851,8 +1854,15 @@ new #[Layout('layouts.dashboard')]
             $petSpecialties = [];
         }
         $this->groomer_pet_specialties = array_values(array_filter($petSpecialties, fn($v) => in_array($v, ['dog', 'cat', 'other'], true)));
-        $this->groomer_specialty_other = trim((string) ($groomerProfile['specialty_other'] ?? ''));
-        $petSizes = $groomerProfile['pet_sizes'] ?? [];
+        if ($this->groomer_pet_specialties === []) {
+            $fromBasics = $bb['pet_specialties'] ?? [];
+            if (!is_array($fromBasics)) {
+                $fromBasics = [];
+            }
+            $this->groomer_pet_specialties = array_values(array_filter($fromBasics, fn($v) => in_array($v, ['dog', 'cat', 'other'], true)));
+        }
+        $this->groomer_specialty_other = trim((string) ($groomerProfile['specialty_other'] ?? $bb['specialty_other'] ?? ''));
+        $petSizes = $groomerProfile['pet_sizes'] ?? $bb['pet_sizes'] ?? [];
         if (!is_array($petSizes)) {
             $petSizes = [];
         }
@@ -2593,6 +2603,87 @@ new #[Layout('layouts.dashboard')]
         return trim($this->business_display_name) !== '';
     }
 
+    /**
+     * @return list<string>
+     */
+    public function businessSpecialtyOtherTags(): array
+    {
+        $tags = [];
+        foreach (explode(',', $this->groomer_specialty_other) as $part) {
+            $tag = trim($part);
+            if ($tag !== '') {
+                $tags[] = $tag;
+            }
+        }
+
+        return $tags;
+    }
+
+    public function toggleBusinessPetSpecialty(string $key): void
+    {
+        if (!in_array($key, ['dog', 'cat', 'other'], true)) {
+            return;
+        }
+
+        if (in_array($key, $this->groomer_pet_specialties, true)) {
+            $this->groomer_pet_specialties = array_values(array_filter($this->groomer_pet_specialties, fn($value) => $value !== $key));
+
+            return;
+        }
+
+        $this->groomer_pet_specialties[] = $key;
+    }
+
+    public function toggleBusinessPetSize(string $key): void
+    {
+        if (!in_array($key, ['small', 'medium', 'large'], true)) {
+            return;
+        }
+
+        if (in_array($key, $this->groomer_pet_sizes, true)) {
+            $this->groomer_pet_sizes = array_values(array_filter($this->groomer_pet_sizes, fn($value) => $value !== $key));
+
+            return;
+        }
+
+        $this->groomer_pet_sizes[] = $key;
+    }
+
+    public function addBusinessSpecialtyOtherTags(): void
+    {
+        if (!in_array('other', $this->groomer_pet_specialties, true)) {
+            return;
+        }
+
+        $existing = $this->businessSpecialtyOtherTags();
+        foreach (preg_split('/\s*,\s*/', $this->business_pet_other_input) ?: [] as $part) {
+            $tag = trim((string) $part);
+            if ($tag === '') {
+                continue;
+            }
+            foreach ($existing as $have) {
+                if (strcasecmp($have, $tag) === 0) {
+                    continue 2;
+                }
+            }
+            $existing[] = $tag;
+        }
+
+        $this->groomer_specialty_other = implode(', ', $existing);
+        $this->business_pet_other_input = '';
+    }
+
+    public function removeBusinessSpecialtyOtherTag(int $index): void
+    {
+        $tags = $this->businessSpecialtyOtherTags();
+        if (!isset($tags[$index])) {
+            return;
+        }
+
+        unset($tags[$index]);
+        $this->groomer_specialty_other = implode(', ', array_values($tags));
+    }
+
     public function isGroomerBusinessProfileContinueEnabled(): bool
     {
         $hasSpecialty = count($this->groomer_pet_specialties) > 0;
@@ -3207,7 +3298,7 @@ new #[Layout('layouts.dashboard')]
             'business_display_name' => ['required', 'string', 'max:255'],
             'business_tagline' => ['nullable', 'string', 'max:500'],
             'business_bio' => ['nullable', 'string', 'max:5000'],
-            'business_avatar_upload' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:51200'],
+            'business_avatar_upload' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:51200'],
         ]);
 
         foreach ($this->pendingBusinessGalleryUploads() as $i => $file) {
@@ -3236,6 +3327,11 @@ new #[Layout('layouts.dashboard')]
             $existing = is_string($existing) ? (json_decode($existing, true) ?: []) : [];
         }
 
+        $groomerProfile = $user->groomer_business_profile ?? [];
+        if (!is_array($groomerProfile)) {
+            $groomerProfile = is_string($groomerProfile) ? (json_decode($groomerProfile, true) ?: []) : [];
+        }
+
         $user->update([
             'business_basics' => array_merge($existing, [
                 'display_name' => trim($this->business_display_name),
@@ -3243,6 +3339,14 @@ new #[Layout('layouts.dashboard')]
                 'bio' => trim($this->business_bio),
                 'profile_photo_path' => $avatarPath,
                 'gallery_paths' => $gallery,
+                'pet_specialties' => array_values($this->groomer_pet_specialties),
+                'specialty_other' => trim($this->groomer_specialty_other),
+                'pet_sizes' => array_values($this->groomer_pet_sizes),
+            ]),
+            'groomer_business_profile' => array_merge($groomerProfile, [
+                'pet_specialties' => array_values($this->groomer_pet_specialties),
+                'specialty_other' => trim($this->groomer_specialty_other),
+                'pet_sizes' => array_values($this->groomer_pet_sizes),
             ]),
         ]);
 
@@ -4153,13 +4257,13 @@ new #[Layout('layouts.dashboard')]
 
                     <form wire:submit="submitBusinessBasics" class="business-basics-form">
                         <div class="basics-card">
+                            <h2 class="basics-section-title">Business Details</h2>
                             <div class="basics-field">
                                 <label class="form-label" for="business-display-name">Business Name</label>
                                 <div class="input-field-wrap">
-                                    <textarea id="business-display-name" wire:model.live="business_display_name"
+                                    <input id="business-display-name" type="text" wire:model.live="business_display_name"
                                         class="form-input"
-                                        placeholder="Enter your business display name (what customers see) if different from legal name (e.g. Companies House)."
-                                        style="width: 100%; height: 70px; resize: none; overflow: hidden;"></textarea>
+                                        placeholder="Enter your business display name (what customers see)...">
                                     <span class="input-valid-icon" aria-hidden="true"><svg
                                             xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
                                             fill="none">
@@ -4174,18 +4278,35 @@ new #[Layout('layouts.dashboard')]
                             </div>
                             <div class="basics-field">
                                 <label class="form-label" for="business-tagline">Tagline</label>
-                                <input id="business-tagline" type="text" wire:model.live="business_tagline"
-                                    class="form-input" placeholder="e.g., Luxury grooming with a gentle touch.">
+                                <div class="input-field-wrap">
+                                    <input id="business-tagline" type="text" wire:model.live="business_tagline"
+                                        class="form-input" placeholder="e.g., Luxury grooming with a gentle touch.">
+                                    <span class="input-valid-icon" aria-hidden="true"><svg
+                                            xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
+                                            fill="none">
+                                            <path
+                                                d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
+                                                fill="#C9DDA0" />
+                                        </svg></span>
+                                </div>
                                 @error('business_tagline')
                                     <span class="error-text">{{ $message }}</span>
                                 @enderror
                             </div>
                             <div class="basics-field">
-                                <label class="form-label" for="business-bio">Bio</label>
-                                <textarea id="business-bio" wire:model.live="business_bio"
-                                    class="form-input basics-textarea"
-                                    style="resize: none; overflow: hidden; height: 90px; width: 100%;"
-                                    placeholder="Tell customers a bit about yourself (and your space), it would be good to provide information for them to learn a bit more about your experience and training."></textarea>
+                                <label class="form-label" for="business-bio">About You/Business</label>
+                                <div class="input-field-wrap input-field-wrap--textarea">
+                                    <textarea id="business-bio" wire:model.live="business_bio"
+                                        class="form-input basics-textarea"
+                                        placeholder="Tell customers a bit about yourself (and your space), it would be good to provide information for them to learn a bit more about your experience and training."></textarea>
+                                    <span class="input-valid-icon" aria-hidden="true"><svg
+                                            xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
+                                            fill="none">
+                                            <path
+                                                d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
+                                                fill="#C9DDA0" />
+                                        </svg></span>
+                                </div>
                                 @error('business_bio')
                                     <span class="error-text">{{ $message }}</span>
                                 @enderror
@@ -4193,8 +4314,9 @@ new #[Layout('layouts.dashboard')]
                         </div>
 
                         <div class="basics-card">
+                            <h2 class="basics-section-title">Images</h2>
                             <div class="basics-section-intro">
-                                <h2 class="basics-card-heading">Profile Photo</h2>
+                                <h3 class="basics-card-heading">Profile Photo</h3>
                                 <p class="basics-section-muted">Upload your profile photo or logo.</p>
                             </div>
                             @php
@@ -4216,9 +4338,9 @@ new #[Layout('layouts.dashboard')]
                                 window.__avatarSavedFileEntries = @json($__avatarSavedFileEntries);
                             </script>
                             <x-common.doc-upload upload-id="profile-photo" wire-model="business_avatar_upload"
-                                :multiple="false" accept=".jpg,.jpeg,.png,.gif,.webp"
-                                hint="JPEG, PNG, GIF, and WebP formats, up to 50 MB." header-label="Upload Image"
-                                browse-label="Browse File" empty-title="Choose an image or drag & drop it here."
+                                :multiple="false" accept=".jpg,.jpeg,.png,.pdf"
+                                hint="JPEG, PNG, and PDF formats, up to 50 MB." header-label="Upload"
+                                browse-label="Browse File" empty-title="Choose a file or drag & drop it here."
                                 :saved-entries="$__avatarSavedFileEntries" :saved-entries-key="$__avatarSavedKey"
                                 saved-json-id="profile-photo-saved-urls-json" saved-window-key="__avatarSavedFileEntries"
                                 remove-stored-fn="removeBusinessAvatarStoredFile"
@@ -4226,11 +4348,9 @@ new #[Layout('layouts.dashboard')]
                             @error('business_avatar_upload')
                                 <span class="error-text">{{ $message }}</span>
                             @enderror
-                        </div>
 
-                        <div class="basics-card">
-                            <div class="basics-section-intro">
-                                <h2 class="basics-card-heading">Photo Gallery</h2>
+                            <div class="basics-section-intro basics-section-intro--gallery">
+                                <h3 class="basics-card-heading">Photo Gallery</h3>
                                 <p class="basics-section-muted">Add more photos of your setup or services.</p>
                             </div>
                             <div class="gallery-slots">
@@ -4259,7 +4379,10 @@ new #[Layout('layouts.dashboard')]
                                             <img class="gallery-slot-img" src="{{ $this->publicDiskUrl($item['path']) }}" alt="">
                                             <button type="button" class="gallery-slot-remove"
                                                 wire:click="removeBusinessGalleryPath({{ (int) $item['pathIndex'] }})"
-                                                aria-label="Remove photo">&times;</button>
+                                                aria-label="Remove photo">
+                                                <img src="{{ asset('images/verify-qualify/icon-gallery-remove.svg') }}" alt=""
+                                                    width="18" height="18">
+                                            </button>
                                         @elseif (
                                                 $item &&
                                                 $item['kind'] === 'pending' &&
@@ -4268,16 +4391,27 @@ new #[Layout('layouts.dashboard')]
                                             <img class="gallery-slot-img" src="{{ $item['file']->temporaryUrl() }}" alt="">
                                             <button type="button" class="gallery-slot-remove"
                                                 wire:click="removeBusinessGalleryPending({{ (int) $item['idx'] }})"
-                                                aria-label="Remove photo">&times;</button>
+                                                aria-label="Remove photo">
+                                                <img src="{{ asset('images/verify-qualify/icon-gallery-remove.svg') }}" alt=""
+                                                    width="18" height="18">
+                                            </button>
                                         @elseif ($slot === $gallery_used)
                                             <label class="gallery-slot-empty">
                                                 <input type="file" id="business-gallery-pick-input" class="hidden-input"
                                                     accept=".jpg,.jpeg,.png,.gif,.webp" multiple>
-                                                @include($this->vqView('gallery-paw'))
+                                                <span class="gallery-slot-add">
+                                                    <img src="{{ asset('images/verify-qualify/icon-add-photo.svg') }}" alt=""
+                                                        width="20" height="19">
+                                                    <span class="gallery-slot-add__label">Add Photo</span>
+                                                </span>
                                             </label>
                                         @else
                                             <div class="gallery-slot-empty gallery-slot-placeholder" aria-hidden="true">
-                                                @include($this->vqView('gallery-paw'))
+                                                <span class="gallery-slot-add">
+                                                    <img src="{{ asset('images/verify-qualify/icon-add-photo.svg') }}" alt=""
+                                                        width="20" height="19">
+                                                    <span class="gallery-slot-add__label">Add Photo</span>
+                                                </span>
                                             </div>
                                         @endif
                                     </div>
@@ -4290,6 +4424,8 @@ new #[Layout('layouts.dashboard')]
                                 <span class="error-text">{{ $errors->first('business_gallery_pending.*') }}</span>
                             @endif
                         </div>
+
+                        @include($this->vqView('pet-preferences'))
 
                         <div class="form-buttons basics-actions">
                             <x-common.button type="button" label="Back" width="105px" bg-color="#FFFFFF"
@@ -4402,31 +4538,31 @@ new #[Layout('layouts.dashboard')]
 
                     <div class="verification-form"
                         x-data="{
-                                                                                                                                                            fursgoUsage: @js($fursgo_usage),
-                                                                                                                                                            accountType: @js($account_type),
-                                                                                                                                                            locationTypes: @js(array_values($location_types ?? [])),
-                                                                                                                                                            get canContinue() {
-                                                                                                                                                                return Boolean(this.fursgoUsage) &&
-                                                                                                                                                                    Boolean(this.accountType) &&
-                                                                                                                                                                    Array.isArray(this.locationTypes) &&
-                                                                                                                                                                    this.locationTypes.length > 0;
-                                                                                                                                                            },
-                                                                                                                                                            isLocationChecked(value) {
-                                                                                                                                                                return Array.isArray(this.locationTypes) && this.locationTypes.includes(value);
-                                                                                                                                                            },
-                                                                                                                                                            toggleLocation(value, checked) {
-                                                                                                                                                                if (!Array.isArray(this.locationTypes)) {
-                                                                                                                                                                    this.locationTypes = [];
-                                                                                                                                                                }
-                                                                                                                                                                if (checked) {
-                                                                                                                                                                    if (!this.locationTypes.includes(value)) {
-                                                                                                                                                                        this.locationTypes.push(value);
-                                                                                                                                                                    }
-                                                                                                                                                                    return;
-                                                                                                                                                                }
-                                                                                                                                                                this.locationTypes = this.locationTypes.filter((item) => item !== value);
-                                                                                                                                                            },
-                                                                                                                                                        }">
+                                                                                                                                                                                    fursgoUsage: @js($fursgo_usage),
+                                                                                                                                                                                    accountType: @js($account_type),
+                                                                                                                                                                                    locationTypes: @js(array_values($location_types ?? [])),
+                                                                                                                                                                                    get canContinue() {
+                                                                                                                                                                                        return Boolean(this.fursgoUsage) &&
+                                                                                                                                                                                            Boolean(this.accountType) &&
+                                                                                                                                                                                            Array.isArray(this.locationTypes) &&
+                                                                                                                                                                                            this.locationTypes.length > 0;
+                                                                                                                                                                                    },
+                                                                                                                                                                                    isLocationChecked(value) {
+                                                                                                                                                                                        return Array.isArray(this.locationTypes) && this.locationTypes.includes(value);
+                                                                                                                                                                                    },
+                                                                                                                                                                                    toggleLocation(value, checked) {
+                                                                                                                                                                                        if (!Array.isArray(this.locationTypes)) {
+                                                                                                                                                                                            this.locationTypes = [];
+                                                                                                                                                                                        }
+                                                                                                                                                                                        if (checked) {
+                                                                                                                                                                                            if (!this.locationTypes.includes(value)) {
+                                                                                                                                                                                                this.locationTypes.push(value);
+                                                                                                                                                                                            }
+                                                                                                                                                                                            return;
+                                                                                                                                                                                        }
+                                                                                                                                                                                        this.locationTypes = this.locationTypes.filter((item) => item !== value);
+                                                                                                                                                                                    },
+                                                                                                                                                                                }">
                         <div>
                             <div class="form-section">
                                 <div class="section-title">
@@ -4556,17 +4692,17 @@ new #[Layout('layouts.dashboard')]
                                 loading-target="submitAccountPayouts" x-bind:disabled="!canContinue"
                                 x-bind:class="{ 'common-btn--disabled': !canContinue }"
                                 x-bind:style="{
-                                                                                                                                                                            backgroundColor: canContinue ? '#FFC97A' : '#e5e7eb',
-                                                                                                                                                                            color: canContinue ? '#FFFFFF' : '#9ca3af',
-                                                                                                                                                                            boxShadow: canContinue ? '0 5px 8px 0 rgba(0, 0, 0, 0.10)' : 'none',
-                                                                                                                                                                        }"
+                                                                                                                                                                                                    backgroundColor: canContinue ? '#FFC97A' : '#e5e7eb',
+                                                                                                                                                                                                    color: canContinue ? '#FFFFFF' : '#9ca3af',
+                                                                                                                                                                                                    boxShadow: canContinue ? '0 5px 8px 0 rgba(0, 0, 0, 0.10)' : 'none',
+                                                                                                                                                                                                }"
                                 @click="
-                                                                                                                                                                            if (!canContinue) { return; }
-                                                                                                                                                                            $wire.set('fursgo_usage', fursgoUsage, false);
-                                                                                                                                                                            $wire.set('account_type', accountType, false);
-                                                                                                                                                                            $wire.set('location_types', locationTypes, false);
-                                                                                                                                                                            $wire.submitAccountPayouts();
-                                                                                                                                                                        " />
+                                                                                                                                                                                                    if (!canContinue) { return; }
+                                                                                                                                                                                                    $wire.set('fursgo_usage', fursgoUsage, false);
+                                                                                                                                                                                                    $wire.set('account_type', accountType, false);
+                                                                                                                                                                                                    $wire.set('location_types', locationTypes, false);
+                                                                                                                                                                                                    $wire.submitAccountPayouts();
+                                                                                                                                                                                                " />
                         </div>
                     </div>
                 </div>
@@ -5066,6 +5202,10 @@ new #[Layout('layouts.dashboard')]
 @endscript
 
 <style>
+    [x-cloak] {
+        display: none !important;
+    }
+
     .verification-wrapper {
         display: flex;
         gap: 10rem;
@@ -6237,8 +6377,8 @@ new #[Layout('layouts.dashboard')]
     .business-basics-title {
         color: #3B3731;
         font-family: "Playfair Display", serif;
-        font-size: 36px;
-        font-weight: 700;
+        font-size: 24px;
+        font-weight: 600;
         margin: 0 0 2rem;
         text-align: center;
     }
@@ -6264,6 +6404,60 @@ new #[Layout('layouts.dashboard')]
         font-weight: 600;
         line-height: normal;
         margin: 0 0 1.25rem;
+    }
+
+    .basics-section-title {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 20px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        margin: 0 0 1.5rem;
+    }
+
+    .basics-section-intro--gallery {
+        margin-top: 1.75rem;
+    }
+
+    .form-label-muted {
+        color: #9D9B98;
+        font-weight: 600;
+    }
+
+    .business-basics-form .form-input {
+        border: 1px solid #D4D4D4;
+        border-radius: 10px;
+        height: 48px;
+        padding: 0 1.25rem;
+        color: #3B3731;
+        background: #fff;
+    }
+
+    .business-basics-form .form-input:focus {
+        transform: none;
+        border-color: #D4D4D4;
+        box-shadow: none;
+    }
+
+    .business-basics-form .form-input::placeholder {
+        color: #9D9B98;
+    }
+
+    .business-basics-form textarea.form-input {
+        height: 97px;
+        padding: 0.9rem 1.25rem;
+        resize: none;
+        overflow: hidden;
+    }
+
+    .input-field-wrap--textarea {
+        align-items: flex-start;
+    }
+
+    .input-field-wrap--textarea .input-valid-icon {
+        top: 1.05rem;
+        transform: none;
     }
 
     .basics-section-intro .basics-card-heading {
@@ -6300,6 +6494,113 @@ new #[Layout('layouts.dashboard')]
 
     .basics-field:last-child {
         margin-bottom: 0;
+    }
+
+    .basics-pet-chip-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .basics-pet-chip-group--sizes {
+        flex-wrap: nowrap;
+        gap: 0.5rem;
+    }
+
+    .basics-pet-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 48px;
+        padding: 0 1.15rem;
+        border: none;
+        border-radius: 10px;
+        background: #fff;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: normal;
+        cursor: pointer;
+    }
+
+    .basics-pet-chip__icon {
+        color: #9D9B98;
+        flex-shrink: 0;
+    }
+
+    .basics-pet-chip.is-active {
+        background: #FFF4E4;
+        color: #3B3731;
+    }
+
+    .basics-pet-chip.is-active .basics-pet-chip__icon {
+        color: #FFC97A;
+    }
+
+    .basics-pet-chip__check {
+        width: 14px;
+        height: 14px;
+        display: block;
+        flex-shrink: 0;
+    }
+
+    .basics-other-input-wrap .basics-other-plus {
+        position: absolute;
+        right: 0.6rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: 50%;
+        background: #FFC97A;
+        color: #fff;
+        font-size: 20px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        padding: 0;
+    }
+
+    .basics-other-input-wrap .form-input {
+        padding-right: 3rem;
+    }
+
+    .basics-pet-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin: 0 0 1.25rem;
+    }
+
+    .basics-pet-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-height: 48px;
+        padding: 0 1rem;
+        border: 1px solid #F0F0F0;
+        border-radius: 10px;
+        background: #fff;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+    }
+
+    .basics-pet-tag__remove {
+        border: none;
+        background: transparent;
+        color: #9D9B98;
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+        padding: 0;
     }
 
     .groomer-focus-wrap {
@@ -6446,8 +6747,19 @@ new #[Layout('layouts.dashboard')]
 
     .gallery-slots {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 1rem;
+        padding-bottom: 10px;
+    }
+
+    @media (max-width: 768px) {
+        .gallery-slots {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .basics-pet-chip-group--sizes {
+            flex-wrap: wrap;
+        }
     }
 
     .gallery-slot {
@@ -6455,8 +6767,8 @@ new #[Layout('layouts.dashboard')]
         aspect-ratio: 1;
         border-radius: 12px;
         border: none;
-        background: #fff;
-        overflow: hidden;
+        background: transparent;
+        overflow: visible;
     }
 
     .gallery-slot-img {
@@ -6465,6 +6777,7 @@ new #[Layout('layouts.dashboard')]
         width: 100%;
         height: 100%;
         object-fit: cover;
+        border-radius: 12px;
         z-index: 0;
     }
 
@@ -6479,17 +6792,23 @@ new #[Layout('layouts.dashboard')]
     .gallery-slot-remove {
         z-index: 4;
         position: absolute;
-        top: 6px;
-        right: 6px;
-        width: 28px;
-        height: 28px;
+        left: 50%;
+        bottom: -2rem;
+        transform: translateX(-50%);
+        width: 18px;
+        height: 18px;
+        padding: 0;
         border: none;
-        border-radius: 5px;
-        background: rgba(0, 0, 0, 0.45);
-        color: #fff;
-        font-size: 18px;
-        line-height: 1;
+        border-radius: 0;
+        background: transparent;
         cursor: pointer;
+        line-height: 0;
+    }
+
+    .gallery-slot-remove img {
+        display: block;
+        width: 18px;
+        height: 18px;
     }
 
     .gallery-slot-empty,
@@ -6497,7 +6816,7 @@ new #[Layout('layouts.dashboard')]
         position: absolute;
         inset: 0;
         z-index: 1;
-        border: none;
+        border: 1px dashed #E0E0E0;
         border-radius: 10px;
         background: #FFF;
         display: flex;
@@ -6507,6 +6826,30 @@ new #[Layout('layouts.dashboard')]
         height: 100%;
         min-height: 120px;
         cursor: pointer;
+    }
+
+    .gallery-slot-add {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        pointer-events: none;
+    }
+
+    .gallery-slot-add img {
+        width: 20px;
+        height: 19px;
+        display: block;
+    }
+
+    .gallery-slot-add__label {
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: normal;
+        text-align: center;
     }
 
     .gallery-paw {
@@ -6530,7 +6873,8 @@ new #[Layout('layouts.dashboard')]
         pointer-events: none;
     }
 
-    .gallery-slot--uploading .gallery-slot-empty .gallery-paw {
+    .gallery-slot--uploading .gallery-slot-empty .gallery-paw,
+    .gallery-slot--uploading .gallery-slot-empty .gallery-slot-add {
         opacity: 0;
     }
 
