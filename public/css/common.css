@@ -1459,33 +1459,137 @@ p.messages-count {
 /* user profile options  */
 .user-profile-options {
     position: absolute;
-    width: 280px;
+    width: 295px;
     height: auto;
     border-radius: 10px 0 10px 10px;
-    border: 1px solid #e2e2e2;
+    border: 1px solid #d4d4d4;
     background: #fff;
     right: 0;
     top: 45px;
     z-index: 1001;
     display: none;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
-.user-profile-image {
-    border-bottom: 1px solid #e2e2e2;
-    padding: 25px;
+.user-profile-options.is-open {
+    display: block;
 }
 
-.profile-menu a {
-    padding: 15px 25px 15px 25px;
+.user-profile-options .user-profile-image {
+    display: flex;
+    align-items: center;
+    gap: 35px;
+    border-bottom: 1px solid #d4d4d4;
+    padding: 20px 19px 20px 20px;
+    min-height: 90px;
+    box-sizing: border-box;
 }
 
-.logout-option {
-    border-top: 1px solid #e2e2e2;
-    padding: 0 25px 15px 25px;
+.user-profile-options .user-profile-avatar {
+    position: relative;
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
 }
 
-.profile-item:hover {
+.user-profile-options .user-profile-avatar-img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+}
+
+.user-profile-options .user-profile-verified {
+    position: absolute;
+    top: 0;
+    left: -1px;
+    width: 18px;
+    height: 20px;
+    pointer-events: none;
+}
+
+.user-profile-options .name-email {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.user-profile-options .name-email p {
+    margin: 0;
+    line-height: normal;
+}
+
+.user-profile-options .user-profile-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700 !important;
+}
+
+.user-profile-options .profile-menu {
+    padding: 0;
+}
+
+.user-profile-options .profile-item {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    height: 48px;
+    padding: 0 24px;
+    color: #3b3731;
+    text-decoration: none;
+    background: transparent;
+    border: 0;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+    appearance: none;
+    font: inherit;
+}
+
+.user-profile-options .profile-item-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: hidden;
+}
+
+.user-profile-options .profile-item-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: left center;
+    display: block;
+}
+
+.user-profile-options .profile-item .medium-light-font {
+    margin: 0;
+}
+
+.user-profile-options .profile-item:hover,
+.user-profile-options .profile-item--active {
     background: rgba(255, 201, 122, 0.25);
+    background: color-mix(
+        in srgb,
+        var(--profile-menu-hover-bg, #ffc97a) 25%,
+        transparent
+    );
+}
+
+.user-profile-options .logout-option {
+    border-top: 1px solid #d4d4d4;
+    padding: 0;
+}
+
+.user-profile-options .logout-option form {
+    margin: 0;
 }
 
 /* user profile options  */

@@ -4,68 +4,89 @@ use App\Models\GroomerSpacerProfile;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Renderless;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.app')] class extends Component {
+new #[Layout('layouts.groomer-auth')]
+    class extends Component {
     public string $name = '';
     public string $email = '';
     public string $password = '';
     public bool $emailExists = false;
-    public bool $showPassword = false;
 
-    /**
-     * Check if email already exists in database
-     */
-    public function checkEmail(): void
+    #[Renderless]
+    public function checkEmail(string $email = ''): bool
     {
-        if ($this->email && filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
-            $this->emailExists = \DB::table('goormer_spacer_profiles')->where('email', $this->email)->exists();
-        } else {
+        $email = Str::lower(trim($email !== '' ? $email : $this->email));
+        $this->email = $email;
+
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->emailExists = false;
+
+            return false;
         }
+
+        $this->emailExists = GroomerSpacerProfile::query()->where('email', $email)->exists();
+
+        return $this->emailExists;
     }
 
-    /**
-     * Toggle password visibility
-     */
-    public function togglePassword(): void
+    public function register(string $name = '', string $email = '', string $password = ''): void
     {
-        $this->showPassword = !$this->showPassword;
-    }
+        if ($name !== '') {
+            $this->name = $name;
+        }
 
-    /**
-     * Check if form is valid for enabling submit button
-     */
-    public function isFormValid(): bool
-    {
-        $emailValid = $this->email && preg_match('/^[^\s@]+@[^\s@]+\.[^\s@]+$/', $this->email) && !$this->emailExists;
-        $passwordValid = $this->password && strlen($this->password) >= 8 && preg_match('/[A-Z]/', $this->password) && preg_match('/[\d\W]/', $this->password);
+        if ($email !== '') {
+            $this->email = $email;
+        }
 
-        return $this->name && $emailValid && $passwordValid;
-    }
+        if ($password !== '') {
+            $this->password = $password;
+        }
 
-    /**
-     * Handle an incoming registration request.
-     */
-    public function register(): void
-    {
+        $this->email = Str::lower(trim($this->email));
+        $this->name = trim($this->name);
+
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:goormer_spacer_profiles,email'],
             'password' => ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[\d\W]/'],
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
-        $validated['user_type'] = 'groomer';
-        $validated['full_name'] = $validated['name'];
+        $profile = GroomerSpacerProfile::create([
+            'full_name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'user_type' => null,
+            'account_type' => null,
+            'select_location_type' => null,
+            'id_document_paths' => null,
+            'business_details' => null,
+            'payout_details' => null,
+            'insurance_details' => null,
+            'freelance_details' => null,
+            'business_basics' => null,
+            'groomer_business_profile' => null,
+            'spacer_business_profile' => null,
+            'legal_policy_agreements' => false,
+            'information_accuracy_confirmed' => false,
+            'profile_visit' => 0,
+            'auto_accept_booking' => false,
+        ]);
 
-        event(new Registered(($profile = GroomerSpacerProfile::create($validated))));
+        event(new Registered($profile));
 
         Auth::guard('groomer_spacer')->login($profile);
 
         $this->redirectRoute('business-homepage-groomer-space-owner', navigate: true);
+    }
+
+    public function loginGroomerSpaceUrl(): string
+    {
+        return url('/login-groomer-space');
     }
 };
 ?>
@@ -74,29 +95,77 @@ new #[Layout('layouts.app')] class extends Component {
     <div class="login-form login-form-container">
         <h1>Just a few details<br /> to get started.</h1>
 
-        <form wire:submit="register" class="mt-4">
+        <form @submit.prevent="submit()" class="mt-4" x-data="{
+            name: '',
+            email: '',
+            password: '',
+            emailExists: false,
+            showPassword: false,
+            emailTimer: null,
+            emailFormatValid() {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((this.email || '').trim());
+            },
+            get hasLength() {
+                return (this.password || '').length >= 8;
+            },
+            get hasUpper() {
+                return /[A-Z]/.test(this.password || '');
+            },
+            get hasNumSym() {
+                return /[\d\W]/.test(this.password || '');
+            },
+            get passwordValid() {
+                return this.hasLength && this.hasUpper && this.hasNumSym;
+            },
+            get canSubmit() {
+                return (this.name || '').trim() !== '' && this.emailFormatValid() && !this.emailExists && this.passwordValid;
+            },
+            get emailValid() {
+                return this.emailFormatValid() && !this.emailExists;
+            },
+            get emailInvalid() {
+                return (this.email || '').trim() !== '' && !this.emailValid;
+            },
+            onEmailInput() {
+                this.emailExists = false;
+                clearTimeout(this.emailTimer);
+                const value = (this.email || '').trim().toLowerCase();
+                if (value !== this.email) {
+                    this.email = value;
+                }
+                if (!this.emailFormatValid()) {
+                    return;
+                }
+                this.emailTimer = setTimeout(async () => {
+                    this.emailExists = await $wire.checkEmail(this.email);
+                }, 400);
+            },
+            async submit() {
+                if (!this.canSubmit) {
+                    return;
+                }
+                await $wire.register(
+                    (this.name || '').trim(),
+                    (this.email || '').trim().toLowerCase(),
+                    this.password
+                );
+            },
+        }">
 
             <!-- Name -->
             <div class="form-field mt-4">
                 <label>Full Name</label>
                 <div class="input-wrapper">
-                    <input type="text" id="name" wire:model.live="name" required>
-                    <span class="icon success"
-                        style="display: {{ $name && !$errors->has('name') ? 'block' : 'none' }} !important;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
-                            fill="none">
-                            <path
-                                d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
-                                fill="#C9DDA0" />
-                        </svg>
+                    <input type="text" id="name" x-model="name" required autocomplete="name"
+                        :class="{ success: (name || '').trim() !== '', error: {{ $errors->has('name') ? 'true' : 'false' }} }">
+                    <span class="icon success" :class="{ show: (name || '').trim() !== '' }" @mousedown.prevent>
+                        <img src="{{ asset('images/signup/icon-success.svg') }}" width="19" height="19" alt=""
+                            draggable="false">
                     </span>
-                    <span class="icon error" style="display: {{ $errors->has('name') ? 'block' : 'none' }} !important;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
-                            fill="none">
-                            <path
-                                d="M9.5 0C14.7467 0 19 4.25329 19 9.5C19 14.7467 14.7467 19 9.5 19C4.25329 19 0 14.7467 0 9.5C0 4.25329 4.25329 0 9.5 0ZM13.1973 6.22559C12.9044 5.9327 12.4296 5.9327 12.1367 6.22559L9.71094 8.65039L7.28613 6.22559C6.99324 5.93269 6.51848 5.93269 6.22559 6.22559C5.93294 6.5185 5.93277 6.99332 6.22559 7.28613L8.65039 9.71094L6.22559 12.1367C5.93295 12.4296 5.93278 12.9045 6.22559 13.1973C6.51841 13.4898 6.9933 13.4898 7.28613 13.1973L9.71094 10.7715L12.1367 13.1973C12.4296 13.4898 12.9044 13.4898 13.1973 13.1973C13.4901 12.9045 13.4899 12.4296 13.1973 12.1367L10.7715 9.71094L13.1973 7.28613C13.4901 6.99332 13.4899 6.5185 13.1973 6.22559Z"
-                                fill="#FF6E6E" />
-                        </svg>
+                    <span class="icon error" :class="{ show: {{ $errors->has('name') ? 'true' : 'false' }} }"
+                        @mousedown.prevent>
+                        <img src="{{ asset('images/signup/icon-error.svg') }}" width="19" height="19" alt=""
+                            draggable="false">
                     </span>
                 </div>
                 @error('name')
@@ -108,114 +177,84 @@ new #[Layout('layouts.app')] class extends Component {
             <div class="form-field mt-4">
                 <label>Email Address</label>
                 <div class="input-wrapper">
-                    <input type="email" id="email" wire:model.live="email" wire:blur="checkEmail" required>
-                    @if ($email && !$errors->has('email') && !$emailExists)
-                        <span class="icon success" style="display: block !important;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
-                                fill="none">
-                                <path
-                                    d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
-                                    fill="#C9DDA0" />
-                            </svg>
-                        </span>
-                    @endif
-                    @if ($errors->has('email') || $emailExists)
-                        <span class="icon error" style="display: block !important;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
-                                fill="none">
-                                <path
-                                    d="M9.5 0C14.7467 0 19 4.25329 19 9.5C19 14.7467 14.7467 19 9.5 19C4.25329 19 0 14.7467 0 9.5C0 4.25329 4.25329 0 9.5 0ZM13.1973 6.22559C12.9044 5.9327 12.4296 5.9327 12.1367 6.22559L9.71094 8.65039L7.28613 6.22559C6.99324 5.93269 6.51848 5.93269 6.22559 6.22559C5.93294 6.5185 5.93277 6.99332 6.22559 7.28613L8.65039 9.71094L6.22559 12.1367C5.93295 12.4296 5.93278 12.9045 6.22559 13.1973C6.51841 13.4898 6.9933 13.4898 7.28613 13.1973L9.71094 10.7715L12.1367 13.1973C12.4296 13.4898 12.9044 13.4898 13.1973 13.1973C13.4901 12.9045 13.4899 12.4296 13.1973 12.1367L10.7715 9.71094L13.1973 7.28613C13.4901 6.99332 13.4899 6.5185 13.1973 6.22559Z"
-                                    fill="#FF6E6E" />
-                            </svg>
-                        </span>
-                    @endif
+                    <input type="email" id="email" x-model="email" x-on:input="onEmailInput()" required
+                        autocomplete="email"
+                        :class="{ success: emailValid, error: emailInvalid || {{ $errors->has('email') ? 'true' : 'false' }} }">
+                    <span class="icon success" :class="{ show: emailValid }" @mousedown.prevent>
+                        <img src="{{ asset('images/signup/icon-success.svg') }}" width="19" height="19" alt=""
+                            draggable="false">
+                    </span>
+                    <span class="icon error"
+                        :class="{ show: emailInvalid || {{ $errors->has('email') ? 'true' : 'false' }} }"
+                        @mousedown.prevent>
+                        <img src="{{ asset('images/signup/icon-error.svg') }}" width="19" height="19" alt=""
+                            draggable="false">
+                    </span>
                 </div>
                 @error('email')
                     <div class="error-text" style="display: block;">{{ $message }}</div>
                 @enderror
-                @if ($emailExists)
-                    <div class="error-text" style="display: block;">This email is already registered.</div>
-                @endif
+                <div class="error-text" x-cloak x-show="emailExists" style="display: none;">This email is already
+                    registered.</div>
+                <div class="error-text" x-cloak
+                    x-show="(email || '').trim() !== '' && !emailFormatValid() && !emailExists" style="display: none;">
+                    Please enter valid email address</div>
             </div>
 
             <!-- Password -->
             <div class="form-field mt-4">
                 <label>Create a Password</label>
                 <div class="input-wrapper" style="position: relative;">
-                    <input type="{{ $showPassword ? 'text' : 'password' }}" id="password" wire:model.live="password"
-                        required>
-
-                    @php
-                        $hasLength = $password && strlen($password) >= 8;
-                        $hasUpper = $password && preg_match('/[A-Z]/', $password);
-                        $hasNumSym = $password && preg_match('/[\d\W]/', $password);
-                        $passwordValid = $hasLength && $hasUpper && $hasNumSym;
-                    @endphp
+                    <input :type="showPassword ? 'text' : 'password'" id="password" x-model="password" required
+                        autocomplete="new-password"
+                        :class="{ success: passwordValid, warning: password && !passwordValid }">
 
                     {{-- Show / Hide Toggle --}}
-                    <span wire:click="togglePassword"
-                        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; display: flex; align-items: center; color: #9D9B98; z-index: 2;">
-                        @if ($showPassword)
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <path
-                                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                                <line x1="1" y1="1" x2="23" y2="23" />
-                            </svg>
-                        @else
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                <circle cx="12" cy="12" r="3" />
-                            </svg>
-                        @endif
+                    <span class="password-toggle" @mousedown.prevent @click="showPassword = !showPassword" role="button"
+                        tabindex="0" @keydown.enter.prevent="showPassword = !showPassword">
+                        <svg x-cloak x-show="showPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                            <line x1="1" y1="1" x2="23" y2="23" />
+                        </svg>
+                        <svg x-cloak x-show="!showPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
                     </span>
 
-                    {{-- Success / Error icons shifted left to avoid overlapping eye icon --}}
-                    @if ($passwordValid && !$errors->has('password'))
-                        <span class="icon success" style="display: block !important; right: 40px;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
-                                fill="none">
-                                <path
-                                    d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
-                                    fill="#C9DDA0" />
-                            </svg>
-                        </span>
-                    @endif
-                    @if ($errors->has('password'))
-                        <span class="icon error" style="display: block !important; right: 40px;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
-                                fill="none">
-                                <path
-                                    d="M9.5 0C14.7467 0 19 4.25329 19 9.5C19 14.7467 14.7467 19 9.5 19C4.25329 19 0 14.7467 0 9.5C0 4.25329 4.25329 0 9.5 0ZM13.1973 6.22559C12.9044 5.9327 12.4296 5.9327 12.1367 6.22559L9.71094 8.65039L7.28613 6.22559C6.99324 5.93269 6.51848 5.93269 6.22559 6.22559C5.93294 6.5185 5.93277 6.99332 6.22559 7.28613L8.65039 9.71094L6.22559 12.1367C5.93295 12.4296 5.93278 12.9045 6.22559 13.1973C6.51841 13.4898 6.9933 13.4898 7.28613 13.1973L9.71094 10.7715L12.1367 13.1973C12.4296 13.4898 12.9044 13.4898 13.1973 13.1973C13.4901 12.9045 13.4899 12.4296 13.1973 12.1367L10.7715 9.71094L13.1973 7.28613C13.4901 6.99332 13.4899 6.5185 13.1973 6.22559Z"
-                                    fill="#FF6E6E" />
-                            </svg>
-                        </span>
-                    @endif
+                    <span class="icon success icon--password" :class="{ show: passwordValid }" @mousedown.prevent>
+                        <img src="{{ asset('images/signup/icon-success.svg') }}" width="19" height="19" alt=""
+                            draggable="false">
+                    </span>
+                    <span class="icon error icon--password"
+                        :class="{ show: {{ $errors->has('password') ? 'true' : 'false' }} }" @mousedown.prevent>
+                        <img src="{{ asset('images/signup/icon-error.svg') }}" width="19" height="19" alt=""
+                            draggable="false">
+                    </span>
                 </div>
 
-                {{-- Password requirements with live green highlights --}}
                 <div class="d-flex justify-content-between mt-3">
                     <div class="password-rules">
                         <p>Password requirements</p>
-                        <span style="color: {{ $hasLength ? '#C9DDA0' : 'inherit' }}; transition: color 0.2s;">
+                        <span :style="{ color: hasLength ? '#C9DDA0' : 'inherit' }">
                             • At least 8 characters
                         </span>
-                        <span style="color: {{ $hasUpper ? '#C9DDA0' : 'inherit' }}; transition: color 0.2s;">
+                        <span :style="{ color: hasUpper ? '#C9DDA0' : 'inherit' }">
                             • Includes a capital letter
                         </span>
-                        <span style="color: {{ $hasNumSym ? '#C9DDA0' : 'inherit' }}; transition: color 0.2s;">
+                        <span :style="{ color: hasNumSym ? '#C9DDA0' : 'inherit' }">
                             • Includes a number or symbol
                         </span>
                     </div>
-                    <div class="password-status"
-                        style="color: {{ $passwordValid ? '#C9DDA0' : ($password ? '#FFC97A' : '') }};">
-                        @if ($password)
-                            {{ $passwordValid ? 'Good Password' : 'Weak Password' }}
-                        @endif
+                    <div class="password-status" :style="{ color: password ? '#FFC97A' : '' }">
+                        <template x-if="password">
+                            <span x-text="passwordValid ? 'Good Password' : 'Weak Password'"></span>
+                        </template>
                     </div>
                 </div>
 
@@ -227,9 +266,9 @@ new #[Layout('layouts.app')] class extends Component {
             <div class="submit-button d-flex justify-content-center mt-4">
                 <button type="submit"
                     style="width: 105px;height: 48px;padding:0;color: #FFF;text-align: center;font-family: Lato;font-size: 16px;font-style: normal;font-weight: 600;line-height: normal;"
-                    class="btn-custom {{ $this->isFormValid() ? 'btn-active-bg' : 'btn-disabled' }} btn-custom-hover btn-shadow login-width text-center"
-                    id="submitBtn" wire:loading.attr="disabled"
-                    @if ($this->isFormValid()) @else disabled @endif>Sign
+                    class="btn-custom btn-custom-hover btn-shadow login-width text-center" id="submitBtn"
+                    :class="canSubmit ? 'btn-active-bg' : 'btn-disabled'" :disabled="!canSubmit"
+                    wire:loading.attr="disabled" wire:target="register">Sign
                     Up</button>
             </div>
         </form>
@@ -279,7 +318,7 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
         <div class="login-cta-text">
             Already have a Fursgo business account?
-            <a href="{{ route('login-groomer-space') }}" wire:navigate>Log in now</a>
+            <a href="{{ $this->loginGroomerSpaceUrl() }}" wire:navigate>Log in now</a>
         </div>
 
     </div>
@@ -288,6 +327,85 @@ new #[Layout('layouts.app')] class extends Component {
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/login_signup.css') }}">
     <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        .signup-groomer-section .login-form .input-wrapper {
+            height: 48px;
+            overflow: visible;
+        }
+
+        .signup-groomer-section .icon {
+            display: none;
+            top: 50%;
+            right: 14px;
+            width: 19px;
+            height: 19px;
+            transform: translateY(-50%);
+            line-height: 0;
+            overflow: visible;
+            z-index: 2;
+            pointer-events: auto;
+            cursor: default;
+            user-select: none;
+            -webkit-user-select: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .signup-groomer-section .icon.success,
+        .signup-groomer-section .icon.error {
+            display: none;
+        }
+
+        .signup-groomer-section .input-wrapper .icon.show {
+            display: flex !important;
+        }
+
+        .signup-groomer-section .icon img {
+            display: block;
+            width: 19px;
+            height: 19px;
+            max-width: 19px;
+            max-height: 19px;
+            flex-shrink: 0;
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .signup-groomer-section .icon--password {
+            right: 40px;
+        }
+
+        .signup-groomer-section .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: #9D9B98;
+            z-index: 2;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .signup-groomer-section input.success {
+            border-color: #C9DDA0;
+        }
+
+        .signup-groomer-section input.error {
+            border-color: #FF6E6E;
+        }
+
+        .signup-groomer-section input.warning {
+            border-color: #FFC97A;
+        }
+
         .login-form-container {
             max-width: 400px;
             margin: 0 auto;
@@ -302,7 +420,7 @@ new #[Layout('layouts.app')] class extends Component {
             color: #3B3731;
             text-align: center;
             font-family: "Playfair Display";
-            font-size: 44px;
+            font-size: 50px;
             font-style: normal;
             font-weight: 700;
             line-height: 1.05;
@@ -349,6 +467,8 @@ new #[Layout('layouts.app')] class extends Component {
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .social-btn svg {
