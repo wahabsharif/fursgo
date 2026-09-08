@@ -12,7 +12,8 @@ use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 
-new #[Layout('layouts.dashboard')] class extends Component {
+new #[Layout('layouts.dashboard')]
+    class extends Component {
     use WithFileUploads;
 
     // Form display control
@@ -734,6 +735,55 @@ new #[Layout('layouts.dashboard')] class extends Component {
     }
 
     /**
+     * @param  array<string, mixed>  $parameters
+     */
+    private function vqRoute(string $name, array $parameters = [], bool $absolute = true): string
+    {
+        return route($name, $parameters, $absolute);
+    }
+
+    private function vqView(string $key): string
+    {
+        return match ($key) {
+            'verification-status' => 'livewire.auth.verify-qualify-verification-status',
+            'verification-status-pending' => 'livewire.auth.verify-qualify-verification-status-pending',
+            'start-grooming-complete' => 'livewire.auth.verify-qualify-start-grooming-complete',
+            'gallery-paw' => 'livewire.auth.partials.verify-qualify-gallery-paw',
+            'legal-policy' => 'livewire.auth.verify-qualify-legal-policy',
+            'spacer-business-profile' => 'livewire.auth.verify-qualify-spacer-business-profile',
+            'groomer-business-profile' => 'livewire.auth.verify-qualify-groomer-business-profile',
+            'accuracy-confirm' => 'livewire.auth.verify-qualify-accuracy-confirm',
+            'freelance-step' => 'livewire.auth.verify-qualify-freelance-step',
+            default => throw new \InvalidArgumentException("Unknown verify-qualify view [{$key}]."),
+        };
+    }
+
+    /**
+     * Disk used for verify-qualify uploads (same root as store(..., 'public')).
+     */
+    private function storedUploadDisk(): \Illuminate\Contracts\Filesystem\Filesystem
+    {
+        return Storage::build([
+            'driver' => 'local',
+            'root' => storage_path('app/public'),
+            'visibility' => 'public',
+            'throw' => false,
+        ]);
+    }
+
+    private function deleteStoredUpload(?string $path): void
+    {
+        if (!is_string($path) || $path === '' || str_contains($path, '..')) {
+            return;
+        }
+
+        $disk = $this->storedUploadDisk();
+        if ($disk->exists($path)) {
+            $disk->delete($path);
+        }
+    }
+
+    /**
      * @param  list<string>  $paths
      */
     private function resolveStoredPublicDiskPath(string $path, array $paths): string
@@ -1364,9 +1414,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
         $user->update($payload);
 
-        if (Storage::disk('public')->exists($diskPath)) {
-            Storage::disk('public')->delete($diskPath);
-        }
+        $this->deleteStoredUpload($diskPath);
     }
 
     /**
@@ -1413,9 +1461,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
         $user->update(['insurance_details' => $insuranceDetails]);
 
-        if (Storage::disk('public')->exists($diskPath)) {
-            Storage::disk('public')->delete($diskPath);
-        }
+        $this->deleteStoredUpload($diskPath);
     }
 
     /**
@@ -2369,9 +2415,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
         $path = $this->business_avatar_path;
         $this->business_avatar_path = '';
 
-        if ($path !== '' && !str_contains($path, '..') && Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
-        }
+        $this->deleteStoredUpload($path);
 
         $user = Auth::guard('groomer_spacer')->user();
         if ($user) {
@@ -2429,9 +2473,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
         unset($this->business_gallery_paths[$index]);
         $this->business_gallery_paths = array_values($this->business_gallery_paths);
 
-        if (is_string($path) && $path !== '' && !str_contains($path, '..') && Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
-        }
+        $this->deleteStoredUpload(is_string($path) ? $path : null);
 
         $user = Auth::guard('groomer_spacer')->user();
         if ($user) {
@@ -2990,7 +3032,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
     public function goToDashboard(): void
     {
-        $this->redirect(route('business-hub', absolute: false), navigate: true);
+        $this->redirect($this->vqRoute('business-hub', [], false), navigate: true);
     }
 
     /** @return array<string, string> slug => label */
@@ -3126,9 +3168,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
         $avatarPath = $this->business_avatar_path;
         if ($this->business_avatar_upload instanceof TemporaryUploadedFile) {
-            if ($avatarPath !== '' && !str_contains($avatarPath, '..') && Storage::disk('public')->exists($avatarPath)) {
-                Storage::disk('public')->delete($avatarPath);
-            }
+            $this->deleteStoredUpload($avatarPath);
             $dir = $this->storageDirectoryForUpload($this->business_avatar_upload, 'groomer_spacer_profile');
             $avatarPath = $this->business_avatar_upload->store($dir, 'public');
         }
@@ -3538,7 +3578,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
             return '';
         }
 
-        return route('groomer-spacer.business-basics-file', [
+        return $this->vqRoute('groomer-spacer.business-basics-file', [
             't' => Crypt::encryptString($path),
         ]);
     }
@@ -3986,7 +4026,8 @@ new #[Layout('layouts.dashboard')] class extends Component {
     <script src="{{ asset('js/vq-spacer-business-profile.js') }}"></script>
 @endPushOnce
 
-<section class="container verify-qualify-page mt-5 mb-5">
+<section
+    class="container verify-qualify-page{{ $showVerificationCard ? ' verify-qualify-page--background-checks' : '' }}">
     <div class="verification-wrapper{{ $showVerificationCard || $showVerificationStatus || $showStartEarningComplete ? ' verification-wrapper--no-sidebar' : '' }}"
         wire:loading.class="verification-wrapper--navigating"
         wire:target="goToSidebarStep,goToVerifyQualifySubstep,goToBuildProfileSubstep,goBack,submitBusinessBasics,submitAccountPayouts,submit,submitPersonalInfo,submitGroomerBusinessProfile,submitSpacerBusinessProfile,submitLegalPolicy">
@@ -4016,16 +4057,16 @@ new #[Layout('layouts.dashboard')] class extends Component {
                             $isCurrent = $currentSidebarStep === $stepNum;
                             $isFilled = $currentSidebarStep > $stepNum;
                         @endphp
-                        <div @if ($isFilled) wire:click="goToSidebarStep({{ $stepNum }})" role="button"
-                            tabindex="0" @else role="listitem" aria-disabled="true" tabindex="-1" @endif
+                        <div @if ($isFilled) wire:click="goToSidebarStep({{ $stepNum }})" role="button" tabindex="0" @else
+                        role="listitem" aria-disabled="true" tabindex="-1" @endif
                             aria-current="{{ $isCurrent ? 'step' : 'false' }}"
                             class="step-item {{ $isCurrent ? 'active' : '' }} {{ $isFilled ? 'step-item--filled' : 'step-item--upcoming' }}">
                             <div class="step-content">
                                 <div class="step-title">
                                     @if ($isFilled)
                                         <span class="step-title__tick" aria-hidden="true">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="11"
-                                                viewBox="0 0 15 11" fill="none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="11" viewBox="0 0 15 11"
+                                                fill="none">
                                                 <path opacity="0.5"
                                                     d="M4.63054 8.88958L1.52383 5.85408C1.35643 5.69051 1.12938 5.59862 0.892639 5.59862C0.655896 5.59862 0.42885 5.69051 0.261448 5.85408C0.0940456 6.01764 0 6.23949 0 6.4708C0 6.58534 0.023089 6.69875 0.0679483 6.80457C0.112808 6.91039 0.178559 7.00654 0.261448 7.08752L4.00383 10.7441C4.353 11.0853 4.91704 11.0853 5.26621 10.7441L14.7386 1.4889C14.906 1.32534 15 1.10349 15 0.872179C15 0.640862 14.906 0.419021 14.7386 0.255455C14.5712 0.0918902 14.3441 0 14.1074 0C13.8706 0 13.6436 0.0918902 13.4762 0.255455L4.63054 8.88958Z"
                                                     fill="#3B3731" />
@@ -4047,12 +4088,12 @@ new #[Layout('layouts.dashboard')] class extends Component {
         <div class="main-content">
             @if ($showVerificationStatus)
                 @if ($this->verificationIsApproved())
-                    @include('livewire.auth.verify-qualify-verification-status')
+                    @include($this->vqView('verification-status'))
                 @else
-                    @include('livewire.auth.verify-qualify-verification-status-pending')
+                    @include($this->vqView('verification-status-pending'))
                 @endif
             @elseif ($showStartEarningComplete)
-                @include('livewire.auth.verify-qualify-start-grooming-complete')
+                @include($this->vqView('start-grooming-complete'))
             @elseif ($showBusinessBasicsForm)
                 <div class="business-basics-wrap" wire:key="verify-qualify-business-basics"
                     wire:init="initVerifyQualifyDocUploads">
@@ -4105,16 +4146,16 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                 <p class="basics-section-muted">Upload your profile photo or logo.</p>
                             </div>
                             @php
-    $__avatarSavedFileEntries =
-        ($business_avatar_path ?? '') !== ''
-        ? [
-            $this->savedDocUploadEntry(
-                (string) $business_avatar_path,
-                'groomer-spacer.business-basics-file',
-            ),
-        ]
-        : [];
-    $__avatarSavedKey = md5(implode("\0", array_column($__avatarSavedFileEntries, 'path')));
+                                $__avatarSavedFileEntries =
+                                    ($business_avatar_path ?? '') !== ''
+                                    ? [
+                                        $this->savedDocUploadEntry(
+                                            (string) $business_avatar_path,
+                                            'groomer-spacer.business-basics-file',
+                                        ),
+                                    ]
+                                    : [];
+                                $__avatarSavedKey = md5(implode("\0", array_column($__avatarSavedFileEntries, 'path')));
                             @endphp
                             <input type="hidden" id="profile-photo-saved-urls-json"
                                 value="{{ htmlspecialchars(json_encode($__avatarSavedFileEntries), ENT_QUOTES, 'UTF-8') }}"
@@ -4142,22 +4183,22 @@ new #[Layout('layouts.dashboard')] class extends Component {
                             </div>
                             <div class="gallery-slots">
                                 @php
-    $gallery_items = [];
-    foreach ($business_gallery_paths as $pi => $p) {
-        $gallery_items[] = ['kind' => 'path', 'path' => $p, 'pathIndex' => $pi];
-    }
-    foreach ($business_gallery_pending as $i => $f) {
-        $gallery_items[] = ['kind' => 'pending', 'idx' => $i, 'file' => $f];
-    }
-    $gallery_used = count($gallery_items);
-    $gallery_total_slots = $this->galleryVisibleSlotCount();
-    $gallery_slots_key = md5(
-        implode("\0", $business_gallery_paths) .
-        '|' .
-        count($business_gallery_pending) .
-        '|' .
-        $gallery_total_slots,
-    );
+                                    $gallery_items = [];
+                                    foreach ($business_gallery_paths as $pi => $p) {
+                                        $gallery_items[] = ['kind' => 'path', 'path' => $p, 'pathIndex' => $pi];
+                                    }
+                                    foreach ($business_gallery_pending as $i => $f) {
+                                        $gallery_items[] = ['kind' => 'pending', 'idx' => $i, 'file' => $f];
+                                    }
+                                    $gallery_used = count($gallery_items);
+                                    $gallery_total_slots = $this->galleryVisibleSlotCount();
+                                    $gallery_slots_key = md5(
+                                        implode("\0", $business_gallery_paths) .
+                                        '|' .
+                                        count($business_gallery_pending) .
+                                        '|' .
+                                        $gallery_total_slots,
+                                    );
                                 @endphp
                                 @foreach (range(0, $gallery_total_slots - 1) as $slot)
                                     @php $item = $gallery_items[$slot] ?? null; @endphp
@@ -4168,10 +4209,10 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                                 wire:click="removeBusinessGalleryPath({{ (int) $item['pathIndex'] }})"
                                                 aria-label="Remove photo">&times;</button>
                                         @elseif (
-            $item &&
-            $item['kind'] === 'pending' &&
-            $item['file'] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile
-        )
+                                                $item &&
+                                                $item['kind'] === 'pending' &&
+                                                $item['file'] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile
+                                            )
                                             <img class="gallery-slot-img" src="{{ $item['file']->temporaryUrl() }}" alt="">
                                             <button type="button" class="gallery-slot-remove"
                                                 wire:click="removeBusinessGalleryPending({{ (int) $item['idx'] }})"
@@ -4180,11 +4221,11 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                             <label class="gallery-slot-empty">
                                                 <input type="file" id="business-gallery-pick-input" class="hidden-input"
                                                     accept=".jpg,.jpeg,.png,.gif,.webp" multiple>
-                                                @include('livewire.auth.partials.verify-qualify-gallery-paw')
+                                                @include($this->vqView('gallery-paw'))
                                             </label>
                                         @else
                                             <div class="gallery-slot-empty gallery-slot-placeholder" aria-hidden="true">
-                                                @include('livewire.auth.partials.verify-qualify-gallery-paw')
+                                                @include($this->vqView('gallery-paw'))
                                             </div>
                                         @endif
                                     </div>
@@ -4211,89 +4252,94 @@ new #[Layout('layouts.dashboard')] class extends Component {
                     </form>
                 </div>
             @elseif ($showLegalPolicyForm)
-                @include('livewire.auth.verify-qualify-legal-policy')
+                @include($this->vqView('legal-policy'))
             @elseif (
-    $fursgo_usage === 'space' &&
-    !$showBusinessBasicsForm &&
-    ($showSpacerBusinessProfileForm || $showGroomerBusinessProfileForm)
-)
-                @include('livewire.auth.verify-qualify-spacer-business-profile')
+                    $fursgo_usage === 'space' &&
+                    !$showBusinessBasicsForm &&
+                    ($showSpacerBusinessProfileForm || $showGroomerBusinessProfileForm)
+                )
+                @include($this->vqView('spacer-business-profile'))
             @elseif ($fursgo_usage === 'groomer' && !$showBusinessBasicsForm && $showGroomerBusinessProfileForm)
-                @include('livewire.auth.verify-qualify-groomer-business-profile')
+                @include($this->vqView('groomer-business-profile'))
             @elseif ($showSpacerBusinessProfileForm)
-                @include('livewire.auth.verify-qualify-spacer-business-profile')
+                @include($this->vqView('spacer-business-profile'))
             @elseif ($showGroomerBusinessProfileForm)
-                @include('livewire.auth.verify-qualify-groomer-business-profile')
+                @include($this->vqView('groomer-business-profile'))
             @elseif ($showVerificationCard)
-                <div class="verification-card">
-                    <div class="verification-header">
-                        <div class="icon-wrapper">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="138" height="135" viewBox="0 0 138 135"
-                                fill="none">
-                                <g filter="url(#filter0_d_14_635)">
-                                    <path
-                                        d="M72.0689 18.8712C72.2854 18.7938 72.522 18.7934 72.7388 18.87L109.21 31.766C109.609 31.9072 109.876 32.285 109.876 32.7088V70.8439C109.876 91.5939 77.1721 108.667 73.0304 110.746C72.7583 110.883 72.4436 110.883 72.1715 110.746C68.0298 108.667 35.3257 91.5939 35.3257 70.8439V32.7063C35.3257 32.2837 35.5913 31.9068 35.9892 31.7646L72.0689 18.8712Z"
-                                        fill="#FFF8EE" />
-                                    <path
-                                        d="M72.4527 11.1946L115.737 26.5003C115.837 26.5357 115.904 26.6298 115.904 26.7357V71.9329C115.904 77.902 113.536 83.6508 109.848 88.9808C106.161 94.3099 101.184 99.1785 96.0406 103.37C85.7542 111.755 74.9016 117.355 72.6812 118.465C72.62 118.496 72.5822 118.496 72.5211 118.465C70.3012 117.355 59.4484 111.755 49.1617 103.37C44.0186 99.1785 39.0411 94.3099 35.3541 88.9808C31.6666 83.6508 29.2984 77.902 29.2984 71.9329V26.7337C29.2984 26.6281 29.365 26.5339 29.4644 26.4984L72.2857 11.1956C72.3397 11.1764 72.3986 11.1756 72.4527 11.1946Z"
-                                        stroke="#3B3731" stroke-width="1.5" />
-                                    <path
-                                        d="M57.5518 67.7464L69.0816 79.2762L91.3519 57.006C92.3984 55.9596 92.4014 54.2639 91.3586 53.2138C90.3107 52.1584 88.6046 52.1554 87.553 53.207L69.0816 71.6783L61.3373 63.9556C60.2908 62.912 58.5969 62.9132 57.5518 63.9583C56.5057 65.0043 56.5057 66.7004 57.5518 67.7464Z"
-                                        fill="#FFC97A" />
-                                    <rect x="16.9937" y="12.9932" width="20.9817" height="23.313" rx="3" fill="white" />
-                                    <path
-                                        d="M28.461 6.21127C28.155 6.07285 27.8272 6 27.4848 6C27.1424 6 26.8146 6.07285 26.5086 6.21127L12.7903 12.0322C11.1875 12.7098 9.99275 14.2907 10 16.1995C10.0365 23.4265 13.0089 36.6494 25.5615 42.6598C26.7781 43.2426 28.1915 43.2426 29.4081 42.6598C41.9607 36.6494 44.9331 23.4265 44.9696 16.1995C44.9769 14.2907 43.7821 12.7098 42.1793 12.0322L28.461 6.21127ZM20.5565 26.8506C20.9062 26.938 21.2777 26.9817 21.6565 26.9817C24.2283 26.9817 26.3191 24.8908 26.3191 22.3191V17.6565H29.5393C30.4208 17.6565 31.2295 18.1519 31.6229 18.946L32.1474 19.9878H36.81C37.4511 19.9878 37.9757 20.5124 37.9757 21.1535V23.4848C37.9757 26.7049 35.3675 29.313 32.1474 29.313H28.6504V33.0067C28.6504 33.5385 28.2206 33.9756 27.6815 33.9756C27.5504 33.9756 27.4192 33.9465 27.3027 33.8955L20.1121 30.8138C19.6312 30.6098 19.3252 30.1363 19.3252 29.619C19.3252 29.415 19.369 29.2183 19.4637 29.0362L20.5565 26.8506ZM20.4909 17.6565H23.9878V22.3191C23.9878 23.6086 22.946 24.6504 21.6565 24.6504C20.367 24.6504 19.3252 23.6086 19.3252 22.3191V18.8222C19.3252 18.1811 19.8498 17.6565 20.4909 17.6565ZM29.8161 21.1535C29.8161 20.8443 29.6933 20.5478 29.4747 20.3292C29.2561 20.1106 28.9596 19.9878 28.6504 19.9878C28.3413 19.9878 28.0448 20.1106 27.8262 20.3292C27.6076 20.5478 27.4848 20.8443 27.4848 21.1535C27.4848 21.4626 27.6076 21.7591 27.8262 21.9777C28.0448 22.1963 28.3413 22.3191 28.6504 22.3191C28.9596 22.3191 29.2561 22.1963 29.4747 21.9777C29.6933 21.7591 29.8161 21.4626 29.8161 21.1535Z"
-                                        fill="#C9DDA0" />
-                                    <path
-                                        d="M111.002 84.1144C110.696 83.976 110.368 83.9031 110.025 83.9031C109.683 83.9031 109.355 83.976 109.049 84.1144L95.3308 89.9354C93.7281 90.6129 92.5333 92.1938 92.5406 94.1026C92.577 101.33 95.5494 114.553 108.102 120.563C109.319 121.146 110.732 121.146 111.949 120.563C124.501 114.553 127.474 101.33 127.51 94.1026C127.517 92.1938 126.323 90.6129 124.72 89.9354L111.002 84.1144Z"
-                                        fill="#CBDCE8" />
-                                    <path
-                                        d="M119.52 94.0211L112.026 101.984L119.52 94.0211ZM108.696 101.595C106.373 102.487 104.515 102.334 102.658 101.598C103.126 107.634 105.94 109.954 109.692 110.883C109.692 110.883 112.518 108.884 112.926 104.145C112.97 103.632 112.992 103.376 112.886 103.086C112.779 102.797 112.569 102.59 112.15 102.175C111.461 101.493 111.117 101.152 110.708 101.066C110.298 100.981 109.764 101.186 108.696 101.595Z"
-                                        fill="#CBDCE8" />
-                                    <path
-                                        d="M119.52 94.0211L112.026 101.984M108.696 101.595C106.373 102.487 104.515 102.334 102.658 101.598C103.126 107.634 105.94 109.954 109.692 110.883C109.692 110.883 112.518 108.884 112.926 104.145C112.97 103.632 112.992 103.376 112.886 103.086C112.779 102.797 112.569 102.59 112.15 102.175C111.461 101.493 111.117 101.152 110.708 101.066C110.298 100.981 109.764 101.186 108.696 101.595Z"
-                                        stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path
-                                        d="M104.063 106.618C104.063 106.618 106.405 107.071 108.747 105.263L104.063 106.618Z"
-                                        fill="#CBDCE8" />
-                                    <path d="M104.063 106.618C104.063 106.618 106.405 107.071 108.747 105.263"
-                                        stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path
-                                        d="M107.81 98.0027C107.81 98.3133 107.687 98.6111 107.467 98.8307C107.248 99.0503 106.95 99.1737 106.639 99.1737C106.329 99.1737 106.031 99.0503 105.811 98.8307C105.592 98.6111 105.468 98.3133 105.468 98.0027C105.468 97.6921 105.592 97.3943 105.811 97.1747C106.031 96.9551 106.329 96.8317 106.639 96.8317C106.95 96.8317 107.248 96.9551 107.467 97.1747C107.687 97.3943 107.81 97.6921 107.81 98.0027Z"
-                                        fill="#CBDCE8" stroke="white" />
-                                    <path d="M110.152 94.9579V95.0512V94.9579Z" fill="#CBDCE8" />
-                                    <path d="M110.152 94.9579V95.0512" stroke="white" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round" />
-                                </g>
-                                <defs>
-                                    <filter id="filter0_d_14_635" x="0" y="0" width="137.51" height="135"
-                                        filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                                        <feFlood flood-opacity="0" result="BackgroundImageFix" />
-                                        <feColorMatrix in="SourceAlpha" type="matrix"
-                                            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
-                                        <feOffset dy="4" />
-                                        <feGaussianBlur stdDeviation="5" />
-                                        <feComposite in2="hardAlpha" operator="out" />
-                                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.28 0" />
-                                        <feBlend mode="normal" in2="BackgroundImageFix"
-                                            result="effect1_dropShadow_14_635" />
-                                        <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_14_635"
-                                            result="shape" />
-                                    </filter>
-                                </defs>
-                            </svg>
-                        </div>
-                        <h2>Background Checks</h2>
-                        <div class="verification-subtitle">
-                            <p>Please complete your background checks</p>
-                            <span>Complete verification to start receiving payouts.</span>
+                <div class="vq-background-checks" wire:key="verify-qualify-background-checks">
+                    <div class="verification-card">
+                        <div class="verification-header">
+                            <div class="icon-wrapper" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="138" height="135" viewBox="0 0 138 135"
+                                    fill="none">
+                                    <g filter="url(#filter0_d_14_635)">
+                                        <path
+                                            d="M72.0689 18.8712C72.2854 18.7938 72.522 18.7934 72.7388 18.8701L109.21 31.766C109.609 31.9073 109.876 32.285 109.876 32.7088V70.8439C109.876 91.594 77.1721 108.667 73.0304 110.746C72.7583 110.883 72.4436 110.883 72.1715 110.746C68.0298 108.667 35.3257 91.594 35.3257 70.8439V32.7063C35.3257 32.2837 35.5913 31.9068 35.9892 31.7646L72.0689 18.8712Z"
+                                            fill="#FFE0B2" />
+                                        <path
+                                            d="M71.7017 12.7318C72.1348 12.577 72.608 12.5756 73.0416 12.7289L113.32 26.971C114.119 27.2535 114.654 28.0094 114.654 28.8568V71.933C114.654 82.5306 106.724 92.5925 97.2115 100.761C87.8052 108.838 77.3726 114.621 73.3775 116.705C72.8774 116.966 72.3249 116.966 71.8248 116.705C67.8297 114.621 57.3962 108.838 47.9898 100.761C38.4772 92.5925 30.5484 82.5306 30.5484 71.933V28.847L30.5543 28.6898C30.6155 27.9096 31.1295 27.2298 31.8755 26.9632L71.7017 12.7318Z"
+                                            stroke="#3B3731" stroke-width="4" />
+                                        <path
+                                            d="M57.5518 67.7465L69.0816 79.2763L91.3519 57.006C92.3984 55.9596 92.4014 54.2639 91.3586 53.2138C90.3107 52.1584 88.6046 52.1554 87.553 53.2071L69.0816 71.6784L61.3373 63.9556C60.2908 62.9121 58.5969 62.9132 57.5518 63.9583C56.5057 65.0044 56.5057 66.7004 57.5518 67.7465Z"
+                                            fill="#FFC97A" />
+                                        <rect x="16.9937" y="12.9932" width="20.9817" height="23.313" rx="3" fill="white" />
+                                        <path
+                                            d="M28.461 6.21127C28.155 6.07285 27.8272 6 27.4848 6C27.1424 6 26.8146 6.07285 26.5086 6.21127L12.7903 12.0322C11.1875 12.7098 9.99275 14.2907 10 16.1995C10.0365 23.4265 13.0089 36.6494 25.5615 42.6598C26.7781 43.2426 28.1915 43.2426 29.4081 42.6598C41.9607 36.6494 44.9331 23.4265 44.9696 16.1995C44.9769 14.2907 43.7821 12.7098 42.1793 12.0322L28.461 6.21127ZM20.5565 26.8506C20.9062 26.938 21.2777 26.9817 21.6565 26.9817C24.2283 26.9817 26.3191 24.8908 26.3191 22.3191V17.6565H29.5393C30.4208 17.6565 31.2295 18.1519 31.6229 18.946L32.1474 19.9878H36.81C37.4511 19.9878 37.9757 20.5124 37.9757 21.1535V23.4848C37.9757 26.7049 35.3675 29.313 32.1474 29.313H28.6504V33.0067C28.6504 33.5385 28.2206 33.9756 27.6815 33.9756C27.5504 33.9756 27.4192 33.9465 27.3027 33.8955L20.1121 30.8138C19.6312 30.6098 19.3252 30.1363 19.3252 29.619C19.3252 29.415 19.369 29.2183 19.4637 29.0362L20.5565 26.8506ZM20.4909 17.6565H23.9878V22.3191C23.9878 23.6086 22.946 24.6504 21.6565 24.6504C20.367 24.6504 19.3252 23.6086 19.3252 22.3191V18.8222C19.3252 18.1811 19.8498 17.6565 20.4909 17.6565ZM29.8161 21.1535C29.8161 20.8443 29.6933 20.5478 29.4747 20.3292C29.2561 20.1106 28.9596 19.9878 28.6504 19.9878C28.3413 19.9878 28.0448 20.1106 27.8262 20.3292C27.6076 20.5478 27.4848 20.8443 27.4848 21.1535C27.4848 21.4626 27.6076 21.7591 27.8262 21.9777C28.0448 22.1963 28.3413 22.3191 28.6504 22.3191C28.9596 22.3191 29.2561 22.1963 29.4747 21.9777C29.6933 21.7591 29.8161 21.4626 29.8161 21.1535Z"
+                                            fill="#C9DDA0" />
+                                        <path
+                                            d="M111.002 84.1144C110.696 83.976 110.368 83.9031 110.025 83.9031C109.683 83.9031 109.355 83.976 109.049 84.1144L95.3308 89.9354C93.7281 90.6129 92.5333 92.1938 92.5406 94.1026C92.577 101.33 95.5494 114.553 108.102 120.563C109.319 121.146 110.732 121.146 111.949 120.563C124.501 114.553 127.474 101.33 127.51 94.1026C127.517 92.1938 126.323 90.6129 124.72 89.9354L111.002 84.1144Z"
+                                            fill="#CBDCE8" />
+                                        <path
+                                            d="M119.52 94.0211L112.026 101.984L119.52 94.0211ZM108.696 101.595C106.373 102.487 104.515 102.334 102.658 101.598C103.126 107.634 105.94 109.954 109.692 110.883C109.692 110.883 112.518 108.884 112.926 104.145C112.97 103.632 112.992 103.376 112.886 103.086C112.779 102.797 112.569 102.59 112.15 102.175C111.461 101.493 111.117 101.152 110.708 101.066C110.298 100.981 109.764 101.186 108.696 101.595Z"
+                                            fill="#CBDCE8" />
+                                        <path
+                                            d="M119.52 94.0211L112.026 101.984M108.696 101.595C106.373 102.487 104.515 102.334 102.658 101.598C103.126 107.634 105.94 109.954 109.692 110.883C109.692 110.883 112.518 108.884 112.926 104.145C112.97 103.632 112.992 103.376 112.886 103.086C112.779 102.797 112.569 102.59 112.15 102.175C111.461 101.493 111.117 101.152 110.708 101.066C110.298 100.981 109.764 101.186 108.696 101.595Z"
+                                            stroke="white" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <path
+                                            d="M104.063 106.618C104.063 106.618 106.405 107.071 108.747 105.263L104.063 106.618Z"
+                                            fill="#CBDCE8" />
+                                        <path d="M104.063 106.618C104.063 106.618 106.405 107.071 108.747 105.263"
+                                            stroke="white" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <path
+                                            d="M107.81 98.0027C107.81 98.3133 107.687 98.6111 107.467 98.8307C107.248 99.0503 106.95 99.1737 106.639 99.1737C106.329 99.1737 106.031 99.0503 105.811 98.8307C105.592 98.6111 105.468 98.3133 105.468 98.0027C105.468 97.6921 105.592 97.3943 105.811 97.1747C106.031 96.9551 106.329 96.8317 106.639 96.8317C106.95 96.8317 107.248 96.9551 107.467 97.1747C107.687 97.3943 107.81 97.6921 107.81 98.0027Z"
+                                            fill="#CBDCE8" stroke="white" />
+                                        <path d="M110.152 94.9579V95.0512V94.9579Z" fill="#CBDCE8" />
+                                        <path d="M110.152 94.9579V95.0512" stroke="white" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </g>
+                                    <defs>
+                                        <filter id="filter0_d_14_635" x="0" y="0" width="137.51" height="135"
+                                            filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                            <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                                            <feColorMatrix in="SourceAlpha" type="matrix"
+                                                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+                                            <feOffset dy="4" />
+                                            <feGaussianBlur stdDeviation="5" />
+                                            <feComposite in2="hardAlpha" operator="out" />
+                                            <feColorMatrix type="matrix"
+                                                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.28 0" />
+                                            <feBlend mode="normal" in2="BackgroundImageFix"
+                                                result="effect1_dropShadow_14_635" />
+                                            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_14_635"
+                                                result="shape" />
+                                        </filter>
+                                    </defs>
+                                </svg>
+                            </div>
+                            <h2 style="margin-bottom: 0.8rem;">Background Checks</h2>
+                            <div class="verification-subtitle">
+                                <p>Please complete your background checks</p>
+                                <span>Complete verification to start receiving payouts.</span>
+                            </div>
+
                         </div>
 
-                    </div>
-
-                    <div class="verification-card-actions">
-                        <x-common.button label="Verify Business" wire:click="verifyBusiness"
-                            loading-target="verifyBusiness" />
+                        <div class="verification-card-actions">
+                            <x-common.button label="Verify Business" wire:click="verifyBusiness"
+                                loading-target="verifyBusiness" />
+                        </div>
                     </div>
                 </div>
             @elseif ($showAccountPayoutsForm)
@@ -4303,33 +4349,33 @@ new #[Layout('layouts.dashboard')] class extends Component {
                     </div>
 
                     <div class="verification-form" x-data="{
-                                    fursgoUsage: @js($fursgo_usage),
-                                    accountType: @js($account_type),
-                                    locationTypes: @js(array_values($location_types ?? [])),
-                                    get canContinue() {
-                                        return Boolean(this.fursgoUsage) &&
-                                            Boolean(this.accountType) &&
-                                            Array.isArray(this.locationTypes) &&
-                                            this.locationTypes.length > 0;
-                                    },
-                                    isLocationChecked(value) {
-                                        return Array.isArray(this.locationTypes) && this.locationTypes.includes(value);
-                                    },
-                                    toggleLocation(value, checked) {
-                                        if (!Array.isArray(this.locationTypes)) {
-                                            this.locationTypes = [];
-                                        }
-                                        if (checked) {
-                                            if (!this.locationTypes.includes(value)) {
-                                                this.locationTypes.push(value);
-                                            }
+                                                                                                        fursgoUsage: @js($fursgo_usage),
+                                                                                                        accountType: @js($account_type),
+                                                                                                        locationTypes: @js(array_values($location_types ?? [])),
+                                                                                                        get canContinue() {
+                                                                                                            return Boolean(this.fursgoUsage) &&
+                                                                                                                Boolean(this.accountType) &&
+                                                                                                                Array.isArray(this.locationTypes) &&
+                                                                                                                this.locationTypes.length > 0;
+                                                                                                        },
+                                                                                                        isLocationChecked(value) {
+                                                                                                            return Array.isArray(this.locationTypes) && this.locationTypes.includes(value);
+                                                                                                        },
+                                                                                                        toggleLocation(value, checked) {
+                                                                                                            if (!Array.isArray(this.locationTypes)) {
+                                                                                                                this.locationTypes = [];
+                                                                                                            }
+                                                                                                            if (checked) {
+                                                                                                                if (!this.locationTypes.includes(value)) {
+                                                                                                                    this.locationTypes.push(value);
+                                                                                                                }
 
-                                            return;
-                                        }
+                                                                                                                return;
+                                                                                                            }
 
-                                        this.locationTypes = this.locationTypes.filter((item) => item !== value);
-                                    },
-                                }">
+                                                                                                            this.locationTypes = this.locationTypes.filter((item) => item !== value);
+                                                                                                        },
+                                                                                                    }">
                         <div>
                             <div class="form-section">
                                 <div class="section-title">
@@ -4458,16 +4504,16 @@ new #[Layout('layouts.dashboard')] class extends Component {
                             <x-common.button type="button" label="Continue" width="105px"
                                 loading-target="submitAccountPayouts" x-bind:disabled="!canContinue"
                                 x-bind:class="{ 'common-btn--disabled': !canContinue }" x-bind:style="{
-                                                backgroundColor: canContinue ? '#FFC97A' : '#e5e7eb',
-                                                color: canContinue ? '#FFFFFF' : '#9ca3af',
-                                                boxShadow: canContinue ? '0 5px 8px 0 rgba(0, 0, 0, 0.10)' : 'none',
-                                            }" @click="
-                                                if (!canContinue) { return; }
-                                                $wire.set('fursgo_usage', fursgoUsage, false);
-                                                $wire.set('account_type', accountType, false);
-                                                $wire.set('location_types', locationTypes, false);
-                                                $wire.submitAccountPayouts();
-                                            " />
+                                                                                                                    backgroundColor: canContinue ? '#FFC97A' : '#e5e7eb',
+                                                                                                                    color: canContinue ? '#FFFFFF' : '#9ca3af',
+                                                                                                                    boxShadow: canContinue ? '0 5px 8px 0 rgba(0, 0, 0, 0.10)' : 'none',
+                                                                                                                }" @click="
+                                                                                                                    if (!canContinue) { return; }
+                                                                                                                    $wire.set('fursgo_usage', fursgoUsage, false);
+                                                                                                                    $wire.set('account_type', accountType, false);
+                                                                                                                    $wire.set('location_types', locationTypes, false);
+                                                                                                                    $wire.submitAccountPayouts();
+                                                                                                                " />
                         </div>
                     </div>
                 </div>
@@ -4584,14 +4630,14 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                         documents must be in English and dated within the last 3 months.</p>
 
                                     @php
-    $__boSavedFileEntries = $this->savedDocUploadEntriesForPaths(
-        is_array($business_owner_id_paths ?? null) ? $business_owner_id_paths : [],
-        is_array($business_owner_id_file_names ?? null)
-        ? $business_owner_id_file_names
-        : [],
-        'groomer-spacer.business-owner-id-file',
-    );
-    $__boSavedKey = md5(implode("\0", array_column($__boSavedFileEntries, 'path')));
+                                        $__boSavedFileEntries = $this->savedDocUploadEntriesForPaths(
+                                            is_array($business_owner_id_paths ?? null) ? $business_owner_id_paths : [],
+                                            is_array($business_owner_id_file_names ?? null)
+                                            ? $business_owner_id_file_names
+                                            : [],
+                                            'groomer-spacer.business-owner-id-file',
+                                        );
+                                        $__boSavedKey = md5(implode("\0", array_column($__boSavedFileEntries, 'path')));
                                     @endphp
                                     <input type="hidden" id="business-owner-saved-urls-json-registered"
                                         value="{{ htmlspecialchars(json_encode($__boSavedFileEntries), ENT_QUOTES, 'UTF-8') }}"
@@ -4685,18 +4731,18 @@ new #[Layout('layouts.dashboard')] class extends Component {
                                 <div>
                                     <label class="form-label">Insurance Certificate <span>(Optional)</span></label>
                                     @php
-    $__insSavedFileEntries = $this->savedDocUploadEntriesForPaths(
-        is_array($insurance_certificate_paths ?? null)
-        ? $insurance_certificate_paths
-        : [],
-        is_array($insurance_certificate_file_names ?? null)
-        ? $insurance_certificate_file_names
-        : [],
-        'groomer-spacer.insurance-certificate-file',
-    );
-    $__insSavedKey = md5(
-        implode("\0", array_column($__insSavedFileEntries, 'path')),
-    );
+                                        $__insSavedFileEntries = $this->savedDocUploadEntriesForPaths(
+                                            is_array($insurance_certificate_paths ?? null)
+                                            ? $insurance_certificate_paths
+                                            : [],
+                                            is_array($insurance_certificate_file_names ?? null)
+                                            ? $insurance_certificate_file_names
+                                            : [],
+                                            'groomer-spacer.insurance-certificate-file',
+                                        );
+                                        $__insSavedKey = md5(
+                                            implode("\0", array_column($__insSavedFileEntries, 'path')),
+                                        );
                                     @endphp
                                     <input type="hidden" id="insurance-saved-urls-json"
                                         value="{{ htmlspecialchars(json_encode($__insSavedFileEntries), ENT_QUOTES, 'UTF-8') }}"
@@ -4721,7 +4767,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                             </div>
                         </div>
 
-                        @include('livewire.auth.verify-qualify-accuracy-confirm')
+                        @include($this->vqView('accuracy-confirm'))
 
                         <!-- Buttons -->
                         <div class="form-buttons">
@@ -4737,7 +4783,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
                     </form>
                 </div>
             @elseif ($showFreelance)
-                @include('livewire.auth.verify-qualify-freelance-step')
+                @include($this->vqView('freelance-step'))
             @endif
 
         </div>
@@ -5217,13 +5263,39 @@ new #[Layout('layouts.dashboard')] class extends Component {
         margin-bottom: 3rem;
     }
 
+    .verify-qualify-page--background-checks {
+        background: #FBFBFB;
+    }
+
+    .vq-background-checks {
+        width: 100%;
+        min-height: 620px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @media (max-width: 768px) {
+        .vq-background-checks {
+            min-height: 480px;
+        }
+    }
+
     .icon-wrapper {
-        width: 117.51px;
-        height: 115px;
-        aspect-ratio: 47/46;
+        width: 138px;
+        height: 135px;
+        aspect-ratio: 138 / 135;
         display: flex;
         justify-content: center;
+        align-items: center;
+        overflow: visible;
         margin-bottom: 2rem;
+    }
+
+    .verification-header .icon-wrapper svg {
+        width: 138px;
+        height: 135px;
+        max-width: none;
     }
 
     .verification-header h2 {
@@ -5234,6 +5306,10 @@ new #[Layout('layouts.dashboard')] class extends Component {
         font-style: normal;
         font-weight: 900;
         line-height: normal;
+    }
+
+    .verification-subtitle {
+        text-align: center;
     }
 
     .verification-subtitle>p {
