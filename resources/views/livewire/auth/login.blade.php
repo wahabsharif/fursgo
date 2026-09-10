@@ -11,7 +11,8 @@ use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Validate;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.app')] class extends Component {
+new #[Layout('layouts.app')]
+    class extends Component {
     #[Validate('required|string|email')]
     public string $email = '';
 
@@ -80,10 +81,11 @@ new #[Layout('layouts.app')] class extends Component {
 
             RateLimiter::clear($this->throttleKey());
             request()->session()->regenerate();
+            Auth::shouldUse('groomer_spacer');
 
             $default = route('business-hub');
             $target = session()->pull('url.intended', $default);
-            $this->redirect(is_string($target) && $target !== '' ? $target : $default, navigate: true);
+            $this->redirect($this->safePostLoginUrl($target, $default), navigate: false);
 
             return;
         } else {
@@ -107,7 +109,7 @@ new #[Layout('layouts.app')] class extends Component {
             if ($target === route('business-hub')) {
                 $target = $default;
             }
-            $this->redirect(is_string($target) && $target !== '' ? $target : $default, navigate: true);
+            $this->redirect($this->safePostLoginUrl($target, $default), navigate: false);
         }
     }
 
@@ -136,6 +138,35 @@ new #[Layout('layouts.app')] class extends Component {
                 'minutes' => ceil($seconds / 60),
             ]),
         ]);
+    }
+
+    /**
+     * Ignore leftover auth pages stored as url.intended (for example /verify-email).
+     */
+    protected function safePostLoginUrl(mixed $target, string $fallback): string
+    {
+        if (!is_string($target) || $target === '') {
+            return $fallback;
+        }
+
+        $path = parse_url($target, PHP_URL_PATH);
+        $path = is_string($path) && $path !== '' ? '/' . ltrim($path, '/') : $target;
+
+        $blocked = [
+            '/login',
+            '/login-groomer-space',
+            '/signup',
+            '/signup-groomer-space',
+            '/verify-email',
+        ];
+
+        foreach ($blocked as $prefix) {
+            if ($path === $prefix || str_starts_with($path, $prefix . '/')) {
+                return $fallback;
+            }
+        }
+
+        return $target;
     }
 
     /**
