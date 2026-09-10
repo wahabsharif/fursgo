@@ -17,6 +17,7 @@ class EnsureWebOrGroomerSpacerAuthenticated
         foreach (['web', 'groomer_spacer'] as $guard) {
             if (Auth::guard($guard)->check()) {
                 Auth::shouldUse($guard);
+                $request->setUserResolver(fn(?string $guardName = null) => Auth::guard($guardName)->user());
 
                 return $next($request);
             }
