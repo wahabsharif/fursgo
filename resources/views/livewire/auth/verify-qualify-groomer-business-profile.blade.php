@@ -1,191 +1,19 @@
 <div class="business-basics-wrap" wire:key="verify-qualify-groomer-business-profile"
     x-data="groomerBusinessProfile(@js($this->groomerBusinessProfileClientState()))">
-    <svg aria-hidden="true" focusable="false" width="0" height="0"
-        style="position: absolute; width: 0; height: 0; overflow: hidden;">
-        <defs>
-            <filter id="filter0_d_58_696" x="0" y="0" width="64" height="64" filterUnits="userSpaceOnUse"
-                color-interpolation-filters="sRGB">
-                <feFlood flood-opacity="0" result="BackgroundImageFix" />
-                <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                    result="hardAlpha" />
-                <feOffset dy="5" />
-                <feGaussianBlur stdDeviation="4" />
-                <feComposite in2="hardAlpha" operator="out" />
-                <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0" />
-                <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_58_696" />
-                <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_58_696" result="shape" />
-            </filter>
-        </defs>
-    </svg>
     <h1 class="business-basics-title">About Your Business</h1>
 
     <form @submit.prevent="submitForm()" class="business-basics-form">
-        <div class="basics-card">
-            <div class="basics-field">
-                <label class="form-label" for="groomer-experience">Bio</label>
-                <textarea id="groomer-experience" x-model="experience" class="form-input basics-textarea"
-                    placeholder="Describe your services, experience, and philosophy."
-                    style="resize: none; overflow: hidden; height: 150px; width: 100%;"></textarea>
-                @error('groomer_experience')
-                    <span class="error-text">{{ $message }}</span>
-                @enderror
-            </div>
-        </div>
-
-        <div class="basics-card">
-            <div class="basics-field">
-                <label class="form-label" style="margin-bottom: 2rem;">Pet Preferences</label>
-                <div class="groomer-focus-wrap">
-                    <label class="form-label">Select Pet Specialty:</label>
-                    <div class="groomer-pill-group">
-                        <label class="groomer-pill-option groomer-pill-specialty"
-                            :class="{ 'is-active': petSpecialties.includes('dog') }">
-                            <input type="checkbox" value="dog" :checked="petSpecialties.includes('dog')"
-                                @change="togglePetSpecialty('dog')">
-                            <span>Dog
-                                <svg class="groomer-pill-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="15"
-                                    viewBox="0 0 16 15" fill="none">
-                                    <path fill-rule="evenodd" clip-rule="evenodd"
-                                        d="M8.02515 0C8.64209 0.000213345 9.22451 0.285449 9.60328 0.772461L11.7185 3.49219C11.8776 3.69667 12.1105 3.83152 12.3669 3.86816L14.3513 4.15137C14.7092 4.20264 15.0125 4.44317 15.1209 4.78809C15.3556 5.53533 15.6937 6.86423 15.4334 7.6582C15.1017 8.66932 14.5694 9.17545 13.6101 9.42285C11.9669 9.84646 10.6081 9.36208 9.00269 10.5859C8.61476 10.8817 8.32298 11.2488 8.10816 11.6592L7.93433 12.0166C6.99837 13.8635 4.67318 15.7352 2.92652 14.708C1.76272 14.0232 1.19689 12.6471 1.54273 11.3418L2.01832 9.5459C2.13774 9.53792 2.2548 9.52867 2.36597 9.51465C2.6604 9.47748 2.95561 9.41272 3.15406 9.28711C3.31249 9.18662 3.47116 9.01627 3.61597 8.83105C3.76469 8.64081 3.91577 8.41352 4.05836 8.18066C4.34353 7.71488 4.60442 7.20842 4.75855 6.88281C4.81749 6.75812 4.76399 6.60893 4.63941 6.5498C4.5149 6.49107 4.36662 6.54376 4.30738 6.66797C4.15908 6.98129 3.90564 7.47235 3.6316 7.91992C3.49464 8.14359 3.35417 8.35266 3.22144 8.52246C3.08483 8.69719 2.96988 8.81132 2.88648 8.86426C2.78857 8.92626 2.59053 8.98231 2.30347 9.01855C2.0271 9.05342 1.70289 9.06706 1.38257 9.06641C1.06811 9.06575 0.762227 9.04878 0.516364 9.03125C0.129202 8.76968 -0.0880056 8.27103 0.0339417 7.80859C1.06233 3.9097 1.6697 2.10636 2.67847 1.09766C3.77006 0.00665437 5.94579 3.69894e-05 5.97144 0H8.02515ZM8.57496 3.66016C8.11053 3.66016 7.61807 3.89064 7.61793 4.8125C7.61793 5.44915 8.42917 4.8125 8.95777 4.8125C9.48622 4.81262 9.53199 5.44909 9.53199 4.8125C9.5318 4.17611 9.10336 3.66027 8.57496 3.66016Z"
-                                        fill="currentColor" />
-                                </svg>
-                            </span>
-                        </label>
-                        <label class="groomer-pill-option groomer-pill-specialty"
-                            :class="{ 'is-active': petSpecialties.includes('cat') }">
-                            <input type="checkbox" value="cat" :checked="petSpecialties.includes('cat')"
-                                @change="togglePetSpecialty('cat')">
-                            <span>Cat
-                                <svg class="groomer-pill-icon" xmlns="http://www.w3.org/2000/svg" width="11" height="15"
-                                    viewBox="0 0 11 15" fill="none">
-                                    <path fill-rule="evenodd" clip-rule="evenodd"
-                                        d="M4.99889 2.53516C5.53684 2.4688 6.2816 2.4856 6.994 2.72656C7.78167 2.99305 8.5426 3.54017 8.9149 4.55566L10.4501 5.29199L10.4833 5.41211C10.6868 6.146 10.8081 7.28565 10.493 8.32324C10.3341 8.84623 10.0619 9.34947 9.62877 9.75684C9.19459 10.1652 8.61113 10.4656 7.8485 10.6016C5.10446 11.0909 3.54731 13.4378 3.11803 14.5459C2.94136 15.0506 1.89466 15.1787 1.6483 14.7041C-2.03157 7.61478 1.27786 2.01708 3.56236 0L4.99889 2.53516ZM6.69908 5.09961C6.29638 5.09961 5.869 5.30013 5.869 6.09961C5.86942 6.65073 6.57298 6.09961 7.03111 6.09961C7.48905 6.09978 7.52914 6.65064 7.52916 6.09961C7.52916 5.54772 7.15731 5.09966 6.69908 5.09961Z"
-                                        fill="currentColor" />
-                                </svg>
-                            </span>
-                        </label>
-                        <label class="groomer-pill-option groomer-pill-specialty"
-                            :class="{ 'is-active': petSpecialties.includes('other') }">
-                            <input type="checkbox" value="other" :checked="petSpecialties.includes('other')"
-                                @change="togglePetSpecialty('other')">
-                            <span>Other
-                                <svg class="groomer-pill-icon" xmlns="http://www.w3.org/2000/svg" width="19" height="15"
-                                    viewBox="0 0 19 15" fill="none">
-                                    <path fill-rule="evenodd" clip-rule="evenodd"
-                                        d="M6.10714 0C5.43536 0 4.90879 0.410454 4.58307 0.902727C4.25329 1.39909 4.07143 2.04682 4.07143 2.72727C4.07143 3.40773 4.25329 4.05545 4.58307 4.55182C4.90879 5.04273 5.43536 5.45455 6.10714 5.45455C6.77893 5.45455 7.3055 5.04409 7.63121 4.55182C7.961 4.05545 8.14286 3.40773 8.14286 2.72727C8.14286 2.04682 7.961 1.39909 7.63121 0.902727C7.3055 0.411818 6.77893 0 6.10714 0ZM12.8929 0C12.2211 0 11.6945 0.410454 11.3688 0.902727C11.039 1.39909 10.8571 2.04682 10.8571 2.72727C10.8571 3.40773 11.039 4.05545 11.3688 4.55182C11.6945 5.04273 12.2211 5.45455 12.8929 5.45455C13.5646 5.45455 14.0912 5.04409 14.4169 4.55182C14.7467 4.05545 14.9286 3.40773 14.9286 2.72727C14.9286 2.04682 14.7467 1.39909 14.4169 0.902727C14.0912 0.411818 13.5646 0 12.8929 0ZM2.03571 6.13636C1.36393 6.13636 0.837357 6.54682 0.511643 7.03909C0.181857 7.53545 0 8.18318 0 8.86364C0 9.54409 0.181857 10.1918 0.511643 10.6882C0.837357 11.1791 1.36393 11.5909 2.03571 11.5909C2.7075 11.5909 3.23407 11.1805 3.55979 10.6882C3.88957 10.1918 4.07143 9.54409 4.07143 8.86364C4.07143 8.18318 3.88957 7.53545 3.55979 7.03909C3.23407 6.54818 2.7075 6.13636 2.03571 6.13636ZM9.5 6.13636C7.87143 6.13636 6.66493 7.01455 5.89407 8.10409C5.13271 9.17727 4.75 10.5095 4.75 11.5909C4.75 12.8509 5.50321 13.7277 6.42743 14.2527C7.33671 14.7709 8.47671 15 9.5 15C10.5233 15 11.6633 14.7723 12.5726 14.2527C13.4954 13.7264 14.25 12.8509 14.25 11.5909C14.25 10.5095 13.8673 9.17727 13.1059 8.10409C12.3364 7.01318 11.1299 6.13636 9.5 6.13636ZM16.9643 6.13636C16.2925 6.13636 15.7659 6.54682 15.4402 7.03909C15.1104 7.53545 14.9286 8.18318 14.9286 8.86364C14.9286 9.54409 15.1104 10.1918 15.4402 10.6882C15.7659 11.1791 16.2925 11.5909 16.9643 11.5909C17.6361 11.5909 18.1626 11.1805 18.4884 10.6882C18.8181 10.1918 19 9.54409 19 8.86364C19 8.18318 18.8181 7.53545 18.4884 7.03909C18.1626 6.54818 17.6361 6.13636 16.9643 6.13636Z"
-                                        fill="currentColor" />
-                                </svg>
-                            </span>
-                        </label>
-                    </div>
-                    @error('groomer_pet_specialties')
-                        <span class="error-text">{{ $message }}</span>
-                    @enderror
-
-                    <template x-if="petSpecialties.includes('other') && specialtyOtherTags.length > 0">
-                        <div class="groomer-other-tags" aria-label="Custom pet types">
-                            <template x-for="(tag, tagIndex) in specialtyOtherTags"
-                                :key="'other-tag-' + tag + '-' + tagIndex">
-                                <span class="groomer-other-tag">
-                                    <span class="groomer-other-tag__label" x-text="tag"></span>
-                                    <button type="button" class="groomer-other-tag__remove"
-                                        :aria-label="'Remove ' + tag" @click="removeSpecialtyOtherTag(tagIndex)">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="7" height="7" viewBox="0 0 7 7"
-                                            fill="none">
-                                            <path d="M6 0.5L3.25 3.25M3.25 3.25L0.5 6M3.25 3.25L6 6M3.25 3.25L0.5 0.5"
-                                                stroke="#9D9B98" stroke-linecap="round" />
-                                        </svg>
-                                    </button>
-                                </span>
-                            </template>
-                        </div>
-                    </template>
-
-                    <div class="groomer-other-input-block" x-show="petSpecialties.includes('other')" x-cloak
-                        x-transition:enter="groomer-other-anim" x-transition:enter-start="groomer-other-anim-start"
-                        x-transition:enter-end="groomer-other-anim-end" x-transition:leave="groomer-other-anim"
-                        x-transition:leave-start="groomer-other-anim-end"
-                        x-transition:leave-end="groomer-other-anim-start">
-                        <label class="form-label" for="groomer-specialty-other">Other <span>(Please
-                                specify)</span></label>
-                        <div class="addon-picker-input-wrap groomer-other-input-wrap">
-                            <input id="groomer-specialty-other" type="text" class="form-input"
-                                placeholder='e.g. "Rabbit, Ferret, Hamster"' x-model="specialtyOtherInput"
-                                @keydown.enter.stop.prevent="addSpecialtyOtherTags()">
-                            <button type="button" class="addon-picker-plus groomer-other-plus"
-                                aria-label="Add pet types" @click="addSpecialtyOtherTags()">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44"
-                                    fill="none" aria-hidden="true">
-                                    <g filter="url(#filter0_d_470_682)">
-                                        <rect x="8" y="3" width="28" height="28" rx="14" fill="#FFC97A" />
-                                    </g>
-                                    <path
-                                        d="M22 12.332V17.2874M22 17.2874V22.2429M22 17.2874H26.9554M22 17.2874H17.0446"
-                                        stroke="white" stroke-width="2" stroke-linecap="round" />
-                                    <defs>
-                                        <filter id="filter0_d_470_682" x="0" y="0" width="44" height="44"
-                                            filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                                            <feFlood flood-opacity="0" result="BackgroundImageFix" />
-                                            <feColorMatrix in="SourceAlpha" type="matrix"
-                                                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
-                                            <feOffset dy="5" />
-                                            <feGaussianBlur stdDeviation="4" />
-                                            <feComposite in2="hardAlpha" operator="out" />
-                                            <feColorMatrix type="matrix"
-                                                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0" />
-                                            <feBlend mode="normal" in2="BackgroundImageFix"
-                                                result="effect1_dropShadow_470_682" />
-                                            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_470_682"
-                                                result="shape" />
-                                        </filter>
-                                    </defs>
-                                </svg>
-                            </button>
-                        </div>
-                        @error('groomer_specialty_other')
-                            <span class="error-text">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <label class="form-label">Select Pet Size:</label>
-                    <div class="groomer-pill-group groomer-pill-group--sizes">
-                        <label class="groomer-pill-option groomer-pill-size"
-                            :class="{ 'is-active': petSizes.includes('small') }">
-                            <input type="checkbox" value="small" :checked="petSizes.includes('small')"
-                                @change="togglePetSize('small')">
-                            <span>Small 0-7 kg</span>
-                        </label>
-                        <label class="groomer-pill-option groomer-pill-size"
-                            :class="{ 'is-active': petSizes.includes('medium') }">
-                            <input type="checkbox" value="medium" :checked="petSizes.includes('medium')"
-                                @change="togglePetSize('medium')">
-                            <span>Medium 8-18 kg</span>
-                        </label>
-                        <label class="groomer-pill-option groomer-pill-size"
-                            :class="{ 'is-active': petSizes.includes('large') }">
-                            <input type="checkbox" value="large" :checked="petSizes.includes('large')"
-                                @change="togglePetSize('large')">
-                            <span>Large 19+ kg</span>
-                        </label>
-                    </div>
-                    @error('groomer_pet_sizes')
-                        <span class="error-text">{{ $message }}</span>
-                    @enderror
-                </div>
-            </div>
-        </div>
-
         <div class="basics-card addon-picker-card">
+            <h2 class="basics-section-title">Services</h2>
             <div class="basics-field">
-                <label class="form-label">Services offered <span>(Choose core services you want to
-                        offer)</span></label>
+                <label class="form-label">Services offered</label>
                 <div class="addon-picker-input-wrap">
-                    <input type="text" class="form-input" placeholder="Paw fur trim" x-model="serviceInput"
+                    <input type="text" class="form-input" placeholder="e.g. Paw fur trim ..." x-model="serviceInput"
                         @keydown.enter.stop.prevent="addCustomService()">
                     <button type="button" class="addon-picker-plus" aria-label="Add service"
                         :disabled="serviceAddPending" @click="addCustomService()">
                         <span class="addon-picker-plus-icon" x-show="!serviceAddPending" x-cloak>
-                            @include('livewire.auth.partials.groomer-plus-icon')
+                            <x-verify-qualify.plus-icon />
                         </span>
                         <span class="addon-picker-plus-spinner" x-show="serviceAddPending" x-cloak aria-hidden="true">
                             <span class="groomer-plus-spinner"></span>
@@ -193,20 +21,22 @@
                     </button>
                 </div>
                 <template x-if="customServices.length > 0">
-                    <div class="groomer-chip-list groomer-chip-list-custom">
+                    <div class="basics-pet-tags" aria-label="Custom services">
                         <template x-for="service in customServices" :key="'custom-service-' + service">
-                            <label class="groomer-service-chip" :class="{ 'is-selected': isServiceSelected(service) }">
-                                <input type="checkbox" :value="service" :checked="isServiceSelected(service)"
-                                    @change="toggleService(service)">
-                                <span x-text="service"></span>
-                            </label>
+                            <span class="basics-pet-tag">
+                                <span class="basics-pet-tag__label" x-text="service"></span>
+                                <button type="button" class="basics-pet-tag__remove" :aria-label="'Remove ' + service"
+                                    @click="removeCustomService(service)">
+                                    <x-verify-qualify.tag-remove-icon />
+                                </button>
+                            </span>
                         </template>
                     </div>
                 </template>
                 <p class="addon-picker-label">Or choose from FursGo services:</p>
-                <div class="groomer-chip-list groomer-chip-list-fursgo">
+                <div class="addon-checkbox-list">
                     <template x-for="service in serviceCatalog" :key="'catalog-service-' + service">
-                        <label class="groomer-service-chip" :class="{ 'is-selected': isServiceSelected(service) }">
+                        <label class="addon-checkbox-item" :class="{ 'is-selected': isServiceSelected(service) }">
                             <input type="checkbox" :value="service" :checked="isServiceSelected(service)"
                                 @change="toggleService(service)">
                             <span x-text="service"></span>
@@ -219,44 +49,28 @@
         <template x-if="selectedServices.length > 0">
             <div class="services-card">
                 <div class="services-header">
-                    <p>List of services</p>
+                    <p>List of Services &amp; Pricing</p>
                     <span>Price <span>(£)</span></span>
                 </div>
                 <div class="services-list services-list--single">
                     <template x-for="(serviceName, index) in selectedServices"
                         :key="'service-row-' + serviceKey(serviceName)">
                         <div class="service-item">
-                            <div>
-                                <p x-text="(index + 1) + '. ' + serviceName"></p>
+                            <div class="service-item-main">
+                                <p class="service-item-name" x-text="(index + 1) + '. ' + serviceName"></p>
                                 <div class="service-price-control">
                                     <span class="service-price-currency">£</span>
                                     <input type="number" class="service-price-input" min="0" step="1"
                                         x-model="servicesPricing[serviceKey(serviceName)].price">
-                                    <div class="service-price-steppers">
-                                        <button type="button" class="service-stepper-btn" aria-label="Increase price"
-                                            @click="stepPrice(serviceKey(serviceName), 1, 'service')"><svg
-                                                xmlns="http://www.w3.org/2000/svg" width="11" height="6"
-                                                viewBox="0 0 11 6" fill="none">
-                                                <path d="M10.374 5.47852L5.3952 0.499696L0.499963 5.39494"
-                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg></button>
-                                        <button type="button" class="service-stepper-btn" aria-label="Decrease price"
-                                            @click="stepPrice(serviceKey(serviceName), -1, 'service')"><svg
-                                                xmlns="http://www.w3.org/2000/svg" width="11" height="6"
-                                                viewBox="0 0 11 6" fill="none">
-                                                <path d="M10.374 0.5L5.3952 5.47882L0.499963 0.583578" stroke="#3B3731"
-                                                    stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg></button>
-                                    </div>
+                                    <x-verify-qualify.price-steppers
+                                        increase="stepPrice(serviceKey(serviceName), 1, 'service')"
+                                        decrease="stepPrice(serviceKey(serviceName), -1, 'service')" />
                                 </div>
                             </div>
                             <template x-if="showServiceDescriptionText(serviceName)">
-                                <div class="service-item-desc-row">
-                                    <div class="service-item-default-description"
-                                        x-show="serviceDescriptionText(serviceName)">
-                                        <p class="service-item-description-text"
-                                            x-text="serviceDescriptionText(serviceName)"></p>
-                                    </div>
+                                <div class="service-item-saved">
+                                    <p class="service-item-description-text"
+                                        x-text="serviceDescriptionText(serviceName)"></p>
                                     <button type="button" class="service-item-edit-btn"
                                         @click="editServiceDescription(serviceName)">
                                         Edit
@@ -274,7 +88,7 @@
                                         <button type="button" class="service-description-plus"
                                             aria-label="Save description"
                                             @click="commitServiceDescription(serviceName)">
-                                            @include('livewire.auth.partials.groomer-plus-icon')
+                                            <x-verify-qualify.plus-icon />
                                         </button>
                                     </div>
                                 </div>
@@ -286,16 +100,17 @@
         </template>
 
         <div class="basics-card addon-picker-card">
+            <h2 class="basics-section-title">Add-ons</h2>
             <div class="basics-field">
-                <label class="form-label">Extra's &amp; Add-ons <span>(List out your add-ons (inc. short
-                        description))</span></label>
+                <label class="form-label">Add-ons <span class="form-label-muted">Choose add-ons and pricing
+                        structure</span></label>
                 <div class="addon-picker-input-wrap">
-                    <input type="text" class="form-input" placeholder="Flea & Tick Treatment" x-model="addonInput"
+                    <input type="text" class="form-input" placeholder="e.g. Paw fur trim ..." x-model="addonInput"
                         @keydown.enter.stop.prevent="addCustomAddon()">
                     <button type="button" class="addon-picker-plus" aria-label="Add add-on" :disabled="addonAddPending"
                         @click="addCustomAddon()">
                         <span class="addon-picker-plus-icon" x-show="!addonAddPending" x-cloak>
-                            @include('livewire.auth.partials.groomer-plus-icon')
+                            <x-verify-qualify.plus-icon />
                         </span>
                         <span class="addon-picker-plus-spinner" x-show="addonAddPending" x-cloak aria-hidden="true">
                             <span class="groomer-plus-spinner"></span>
@@ -303,13 +118,15 @@
                     </button>
                 </div>
                 <template x-if="customAddons.length > 0">
-                    <div class="groomer-chip-list groomer-chip-list-custom">
+                    <div class="basics-pet-tags" aria-label="Custom add-ons">
                         <template x-for="addon in customAddons" :key="'custom-addon-' + addon">
-                            <label class="groomer-service-chip" :class="{ 'is-selected': isAddonSelected(addon) }">
-                                <input type="checkbox" :value="addon" :checked="isAddonSelected(addon)"
-                                    @change="toggleAddon(addon)">
-                                <span x-text="addon"></span>
-                            </label>
+                            <span class="basics-pet-tag">
+                                <span class="basics-pet-tag__label" x-text="addon"></span>
+                                <button type="button" class="basics-pet-tag__remove" :aria-label="'Remove ' + addon"
+                                    @click="removeCustomAddon(addon)">
+                                    <x-verify-qualify.tag-remove-icon />
+                                </button>
+                            </span>
                         </template>
                     </div>
                 </template>
@@ -323,75 +140,106 @@
                         </label>
                     </template>
                 </div>
-            </div>
-        </div>
 
-        <template x-if="selectedAddons.length > 0">
-            <div class="services-card">
-                <div class="services-header">
-                    <p>List of Extra's &amp; Add-ons</p>
-                    <span>Price <span>(£)</span></span>
-                </div>
-                <div class="services-list services-list--single">
-                    <template x-for="(addonName, index) in selectedAddons" :key="'addon-row-' + addonKey(addonName)">
-                        <div class="service-item">
-                            <div>
-                                <p x-text="(index + 1) + '. ' + addonName"></p>
-                                <div class="service-price-control">
-                                    <span class="service-price-currency">£</span>
-                                    <input type="number" class="service-price-input" min="0" step="1"
-                                        x-model="addonPricing[addonKey(addonName)].price">
-                                    <div class="service-price-steppers">
-                                        <button type="button" class="service-stepper-btn" aria-label="Increase price"
-                                            @click="stepPrice(addonKey(addonName), 1, 'addon')"><svg
-                                                xmlns="http://www.w3.org/2000/svg" width="11" height="6"
-                                                viewBox="0 0 11 6" fill="none">
-                                                <path d="M10.374 5.47852L5.3952 0.499696L0.499963 5.39494"
-                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg></button>
-                                        <button type="button" class="service-stepper-btn" aria-label="Decrease price"
-                                            @click="stepPrice(addonKey(addonName), -1, 'addon')"><svg
-                                                xmlns="http://www.w3.org/2000/svg" width="11" height="6"
-                                                viewBox="0 0 11 6" fill="none">
-                                                <path d="M10.374 0.5L5.3952 5.47882L0.499963 0.583578" stroke="#3B3731"
-                                                    stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg></button>
+                <template x-if="selectedAddons.length > 0">
+                    <div class="services-card addon-pricing-card">
+                        <div class="services-header">
+                            <p>List of Add-ons &amp; Pricing</p>
+                            <span>Price <span>(£)</span></span>
+                        </div>
+                        <div class="services-list services-list--single">
+                            <template x-for="(addonName, index) in selectedAddons"
+                                :key="'addon-row-' + addonKey(addonName)">
+                                <div class="service-item">
+                                    <div class="service-item-main">
+                                        <p class="service-item-name" x-text="(index + 1) + '. ' + addonName"></p>
+                                        <div class="service-price-control">
+                                            <span class="service-price-currency">£</span>
+                                            <input type="number" class="service-price-input" min="0" step="1"
+                                                x-model="addonPricing[addonKey(addonName)].price">
+                                            <x-verify-qualify.price-steppers
+                                                increase="stepPrice(addonKey(addonName), 1, 'addon')"
+                                                decrease="stepPrice(addonKey(addonName), -1, 'addon')" />
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                            <template x-if="showAddonDescriptionText(addonName)">
-                                <div class="service-item-desc-row">
-                                    <div class="service-item-default-description"
-                                        x-show="addonDescriptionText(addonName)">
-                                        <p class="service-item-description-text"
-                                            x-text="addonDescriptionText(addonName)"></p>
-                                    </div>
-                                    <button type="button" class="service-item-edit-btn"
-                                        @click="editAddonDescription(addonName)">
-                                        Edit
-                                    </button>
-                                </div>
-                            </template>
-                            <template x-if="!showAddonDescriptionText(addonName)">
-                                <div class="service-item-description">
-                                    <p>Description (optional)</p>
-                                    <div class="service-item-description-input-wrap">
-                                        <input type="text"
-                                            placeholder="Please write a short description of add-on provided."
-                                            x-model="addonPricing[addonKey(addonName)].description"
-                                            @keydown.enter.prevent="commitAddonDescription(addonName)">
-                                        <button type="button" class="service-description-plus"
-                                            aria-label="Save description" @click="commitAddonDescription(addonName)">
-                                            @include('livewire.auth.partials.groomer-plus-icon')
-                                        </button>
-                                    </div>
+                                    <template x-if="showAddonDescriptionText(addonName)">
+                                        <div class="service-item-saved">
+                                            <p class="service-item-description-text"
+                                                x-text="addonDescriptionText(addonName)">
+                                            </p>
+                                            <button type="button" class="service-item-edit-btn"
+                                                @click="editAddonDescription(addonName)">
+                                                Edit
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <template x-if="!showAddonDescriptionText(addonName)">
+                                        <div class="service-item-description">
+                                            <p>Description (optional)</p>
+                                            <div class="service-item-description-input-wrap">
+                                                <input type="text"
+                                                    placeholder="Please write a short description of add-on provided."
+                                                    x-model="addonPricing[addonKey(addonName)].description"
+                                                    @keydown.enter.prevent="commitAddonDescription(addonName)">
+                                                <button type="button" class="service-description-plus"
+                                                    aria-label="Save description"
+                                                    @click="commitAddonDescription(addonName)">
+                                                    <x-verify-qualify.plus-icon />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </template>
                                 </div>
                             </template>
                         </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <div class="basics-card addon-picker-card">
+            <h2 class="basics-section-title">Rules &amp; Restrictions</h2>
+            <div class="basics-field">
+                <label class="form-label">Rules &amp; Restrictions <span class="form-label-muted">Set expectations for
+                        clients booking with you</span></label>
+                <div class="addon-picker-input-wrap">
+                    <input type="text" class="form-input" placeholder="e.g. No Food or Drink" x-model="ruleInput"
+                        @keydown.enter.stop.prevent="addCustomRule()">
+                    <button type="button" class="addon-picker-plus" aria-label="Add rule" :disabled="ruleAddPending"
+                        @click="addCustomRule()">
+                        <span class="addon-picker-plus-icon" x-show="!ruleAddPending" x-cloak>
+                            <x-verify-qualify.plus-icon />
+                        </span>
+                        <span class="addon-picker-plus-spinner" x-show="ruleAddPending" x-cloak aria-hidden="true">
+                            <span class="groomer-plus-spinner"></span>
+                        </span>
+                    </button>
+                </div>
+                <template x-if="customRules.length > 0">
+                    <div class="basics-pet-tags" aria-label="Custom rules">
+                        <template x-for="rule in customRules" :key="'custom-rule-' + rule">
+                            <span class="basics-pet-tag">
+                                <span class="basics-pet-tag__label" x-text="rule"></span>
+                                <button type="button" class="basics-pet-tag__remove" :aria-label="'Remove ' + rule"
+                                    @click="removeCustomRule(rule)">
+                                    <x-verify-qualify.tag-remove-icon />
+                                </button>
+                            </span>
+                        </template>
+                    </div>
+                </template>
+                <p class="addon-picker-label">Or choose from FursGo rules &amp; restrictions:</p>
+                <div class="addon-checkbox-list">
+                    <template x-for="rule in ruleCatalog" :key="'catalog-rule-' + rule">
+                        <label class="addon-checkbox-item" :class="{ 'is-selected': selectedRules.includes(rule) }">
+                            <input type="checkbox" :value="rule" :checked="selectedRules.includes(rule)"
+                                @change="toggleRule(rule)">
+                            <span x-text="rule"></span>
+                        </label>
                     </template>
                 </div>
             </div>
-        </template>
+        </div>
 
         <div class="form-buttons basics-actions">
             <x-common.button type="button" label="Back" width="105px" bg-color="#FFFFFF" text-color="#9D9B98"
@@ -433,6 +281,15 @@
         gap: 4px;
     }
 
+    .services-header>span {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
     .services-header>span>span {
         color: #9D9B98;
         font-family: Lato;
@@ -459,24 +316,29 @@
     .service-item {
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
+        justify-content: flex-start;
+        align-items: stretch;
+        position: relative;
+        padding: 20px 0;
+        gap: 0;
     }
 
-    .service-item>div:first-child {
+    .service-item-main {
         display: flex;
         justify-content: space-between;
         align-items: center;
         width: 100%;
+        gap: 1rem;
     }
 
-    .service-item>div:first-child>p {
+    .service-item-name {
         color: #3B3731;
         font-family: Lato;
         font-size: 16px;
         font-style: normal;
         font-weight: 600;
         line-height: normal;
+        margin: 0;
     }
 
     .service-price-control {
@@ -489,6 +351,7 @@
         padding: 0;
         box-sizing: border-box;
         transition: border-color 0.15s ease;
+        flex-shrink: 0;
     }
 
     .service-price-currency {
@@ -499,13 +362,13 @@
         font-weight: 400;
         line-height: normal;
         position: absolute;
-        left: 10px;
+        left: 15px;
         top: 50%;
         transform: translateY(-50%);
     }
 
     .service-price-input {
-        width: 40px;
+        width: 2.25rem;
         border: none;
         outline: none;
         color: #3B3731;
@@ -515,11 +378,13 @@
         font-weight: 400;
         line-height: normal;
         position: absolute;
-        left: 24px;
+        left: 28px;
         top: 50%;
         transform: translateY(-50%);
         padding: 0;
         background: transparent;
+        appearance: textfield;
+        -moz-appearance: textfield;
     }
 
     .service-price-input::-webkit-outer-spin-button,
@@ -529,44 +394,51 @@
     }
 
     .service-price-steppers {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        color: #3B3731;
-        font-size: 14px;
-        line-height: 1;
-        align-items: center;
-        justify-content: center;
+        width: 11px;
+        height: 27px;
         position: absolute;
         right: 10px;
         top: 50%;
         transform: translateY(-50%);
     }
 
+    .service-price-steppers__icon {
+        display: block;
+        width: 11px;
+        height: 27px;
+        pointer-events: none;
+    }
+
     .service-stepper-btn {
+        position: absolute;
+        left: 0;
+        width: 11px;
+        height: 13px;
         border: none;
         background: transparent;
         padding: 0;
         margin: 0;
-        width: 12px;
-        height: 8px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         cursor: pointer;
+    }
+
+    .service-stepper-btn--up {
+        top: 0;
+    }
+
+    .service-stepper-btn--down {
+        bottom: 0;
     }
 
     .service-item-description {
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
-        align-items: start;
+        justify-content: flex-start;
+        align-items: stretch;
         width: 100%;
-
     }
 
     .service-item-description>p {
-        margin-top: 15px;
+        margin: 10px 0 10px;
         color: #9D9B98;
         font-family: Lato;
         font-size: 16px;
@@ -576,35 +448,46 @@
     }
 
     .service-item-description-input-wrap {
-        display: flex;
-        align-items: center;
-        gap: 0.9rem;
+        position: relative;
+        display: block;
         width: 100%;
+        max-width: none;
     }
 
-    .service-item-description>div>input,
     .service-item-description-input-wrap>input {
-        padding: 15px;
-        flex: 1;
-        max-width: 390px;
+        padding: 0 3.25rem 0 10px;
+        width: 100%;
+        max-width: none;
         height: 48px;
         border-radius: 10px;
         border: 1px solid #D4D4D4;
         background: #FFF;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
         transition: border-color 0.15s ease;
+        box-sizing: border-box;
+    }
+
+    .service-item-description-input-wrap>input::placeholder {
+        color: #9D9B98;
     }
 
     .business-basics-wrap .service-item-description-input-wrap>input:focus {
         outline: none;
-        border-color: var(--active-bg, #FFC97A);
+        border-color: #D4D4D4;
     }
 
     .business-basics-wrap .service-price-control:focus-within {
-        border-color: var(--active-bg, #FFC97A);
+        border-color: #D4D4D4;
     }
 
     .service-description-plus {
-        margin-top: 0.8rem;
+        position: absolute;
+        top: 60%;
+        right: 2px;
+        transform: translateY(-50%);
         border: none;
         display: inline-flex;
         align-items: center;
@@ -612,42 +495,78 @@
         cursor: pointer;
         background: transparent;
         flex-shrink: 0;
-        width: 64px;
-        height: 64px;
+        width: 44px;
+        height: 44px;
         padding: 0;
+        z-index: 1;
     }
 
     .service-description-plus .groomer-plus-icon-svg,
-    .service-description-plus svg {
-        width: 64px;
-        height: 64px;
+    .service-description-plus img {
+        width: 44px;
+        height: 44px;
         display: block;
     }
 
     .service-item-description-text {
-        color: #9D9B98 !important;
-        font-family: Lato !important;
-        font-size: 14px !important;
-        font-style: normal !important;
-        font-weight: 400 !important;
-        line-height: normal !important;
-        width: 21rem !important;
-        text-align: left !important;
-        margin: 0 !important;
-        align-self: flex-start !important;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        max-width: 360px;
+        text-align: left;
+        margin: 0;
+        flex: 1;
+        min-width: 0;
     }
 
-    .service-item>div:last-child {
-        width: 100%;
+    .service-item-saved {
         display: flex;
-        justify-content: flex-start;
-        margin-top: -13px;
-        margin-left: 31px;
+        justify-content: space-between;
+        align-items: flex-start;
+        width: 100%;
+        gap: 1rem;
+        margin-top: 4px;
     }
 
-    .service-item>div:last-child .service-item-description-text {
-        width: 100% !important;
-        max-width: 390px;
+    .service-item-saved .service-item-edit-btn {
+        flex-shrink: 0;
+        width: 85px;
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    .business-basics-wrap .addon-picker-card .basics-pet-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin: 0.75rem 0 1rem;
+    }
+
+    .basics-pet-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-height: 48px;
+        padding: 0 1rem;
+        border: 1px solid #F0F0F0;
+        border-radius: 10px;
+        background: #fff;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+    }
+
+    .basics-pet-tag__remove {
+        border: none;
+        background: transparent;
+        color: #9D9B98;
+        cursor: pointer;
+        line-height: 0;
+        padding: 0;
     }
 
     .addon-picker-card {
@@ -655,14 +574,23 @@
         padding-bottom: 1.25rem;
     }
 
+    .addon-picker-card .addon-pricing-card {
+        margin-top: 1.25rem;
+    }
+
     .addon-picker-card>.basics-field>.form-label>span {
         line-height: 20px;
     }
 
     .addon-picker-input-wrap {
-        display: flex;
-        align-items: center;
-        gap: 0.9rem;
+        position: relative;
+        display: block;
+    }
+
+    .addon-picker-input-wrap .form-input,
+    .business-basics-wrap .addon-picker-input-wrap .form-input {
+        width: 100%;
+        padding-right: 3.25rem;
     }
 
     .groomer-other-tags {
@@ -760,10 +688,14 @@
         cursor: pointer;
         background: transparent;
         flex-shrink: 0;
-        width: 64px;
-        height: 64px;
+        width: 44px;
+        height: 44px;
         padding: 0;
-        position: relative;
+        position: absolute;
+        top: 60%;
+        right: 0.15rem;
+        transform: translateY(-50%);
+        z-index: 1;
     }
 
     .addon-picker-plus.groomer-other-plus {
@@ -778,7 +710,8 @@
         margin-top: 10px
     }
 
-    .addon-picker-plus.groomer-other-plus svg {
+    .addon-picker-plus.groomer-other-plus svg,
+    .addon-picker-plus.groomer-other-plus img {
         width: 44px;
         height: 44px;
         display: block;
@@ -795,14 +728,15 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 64px;
-        height: 64px;
+        width: 44px;
+        height: 44px;
     }
 
     .addon-picker-plus-icon .groomer-plus-icon-svg,
-    .addon-picker-plus-icon svg {
-        width: 64px;
-        height: 64px;
+    .addon-picker-plus-icon svg,
+    .addon-picker-plus-icon img {
+        width: 44px;
+        height: 44px;
         display: block;
     }
 
@@ -811,10 +745,10 @@
     }
 
     .groomer-plus-spinner {
-        width: 48px;
-        height: 48px;
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
-        background: #FFC97A;
+        background: #C9DDA0;
         box-shadow: 0 5px 8px rgba(0, 0, 0, 0.1);
         display: inline-flex;
         align-items: center;
@@ -824,8 +758,8 @@
 
     .groomer-plus-spinner::after {
         content: "";
-        width: 20px;
-        height: 20px;
+        width: 12px;
+        height: 12px;
         border: 2px solid rgba(255, 255, 255, 0.45);
         border-top-color: #fff;
         border-radius: 50%;
@@ -891,7 +825,7 @@
     }
 
     .addon-checkbox-item.is-selected input[type="checkbox"] {
-        border-color: #F6C676;
+        border-color: #FFD88C;
     }
 
     .addon-checkbox-item.is-selected input[type="checkbox"]::after {
@@ -903,7 +837,7 @@
         height: 16px;
         border-radius: 999px;
         transform: translate(-50%, -50%);
-        background: #F6C676;
+        background: #FFD88C;
     }
 
     .addon-checkbox-item span {
@@ -992,8 +926,8 @@
     }
 
     .services-list--single .service-item:not(:last-child) {
-        padding-bottom: 1.25rem;
-        margin-bottom: 1.25rem;
+        padding-bottom: 20px;
+        margin-bottom: 0;
     }
 
     .services-list--single .service-item:not(:last-child)::after {
@@ -1003,37 +937,6 @@
         right: -25px;
         bottom: 0;
         border-bottom: 1px solid #E2E2E2;
-    }
-
-    .service-item-default-description {
-        width: 100%;
-        margin-top: -13px;
-        margin-left: 31px;
-    }
-
-    .service-item-desc-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        width: 100%;
-        gap: 1rem;
-    }
-
-    .service-item-desc-row .service-item-default-description {
-        flex: 1;
-        min-width: 0;
-        margin-top: -13px;
-        margin-left: 1rem;
-    }
-
-    .service-item-desc-row .service-item-edit-btn {
-        flex-shrink: 0;
-        width: 85px;
-        text-align: center;
-        margin-top: 0.35rem;
-        position: relative;
-        z-index: 1;
-        margin-left: auto;
     }
 
     .service-item-edit-btn {

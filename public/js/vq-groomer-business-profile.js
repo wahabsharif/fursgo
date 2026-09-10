@@ -135,6 +135,17 @@
             addonCatalog: Array.isArray(seed.addonCatalog)
                 ? seed.addonCatalog
                 : [],
+            ruleCatalog: Array.isArray(seed.ruleCatalog)
+                ? seed.ruleCatalog
+                : [],
+            customRules: Array.isArray(seed.customRules)
+                ? [...seed.customRules]
+                : [],
+            selectedRules: Array.isArray(seed.selectedRules)
+                ? [...seed.selectedRules]
+                : [],
+            ruleInput: "",
+            ruleAddPending: false,
             serviceDefaultDescriptions: seed.serviceDefaultDescriptions ?? {},
             serviceAddPending: false,
             addonAddPending: false,
@@ -286,6 +297,39 @@
                 this.syncAddonPricing();
             },
 
+            toggleRule(name) {
+                toggleInArray(this.selectedRules, name);
+            },
+
+            removeCustomService(name) {
+                this.customServices = this.customServices.filter(
+                    (item) => item !== name,
+                );
+                this.selectedServices = this.selectedServices.filter(
+                    (item) => item !== name,
+                );
+                this.syncServicesPricing();
+            },
+
+            removeCustomAddon(name) {
+                this.customAddons = this.customAddons.filter(
+                    (item) => item !== name,
+                );
+                this.selectedAddons = this.selectedAddons.filter(
+                    (item) => item !== name,
+                );
+                this.syncAddonPricing();
+            },
+
+            removeCustomRule(name) {
+                this.customRules = this.customRules.filter(
+                    (item) => item !== name,
+                );
+                this.selectedRules = this.selectedRules.filter(
+                    (item) => item !== name,
+                );
+            },
+
             syncServicesPricing() {
                 this.servicesPricing = syncPricingMap(
                     this.selectedServices,
@@ -363,6 +407,37 @@
                         this.syncAddonPricing();
                     } finally {
                         this.addonAddPending = false;
+                    }
+                });
+            },
+
+            addCustomRule() {
+                if (this.ruleAddPending) {
+                    return;
+                }
+                const name = this.ruleInput.trim();
+                if (name === "") {
+                    return;
+                }
+
+                this.ruleAddPending = true;
+                window.requestAnimationFrame(() => {
+                    try {
+                        if (this.ruleCatalog.includes(name)) {
+                            if (!this.selectedRules.includes(name)) {
+                                this.selectedRules.push(name);
+                            }
+                        } else {
+                            if (!this.customRules.includes(name)) {
+                                this.customRules.push(name);
+                            }
+                            if (!this.selectedRules.includes(name)) {
+                                this.selectedRules.push(name);
+                            }
+                        }
+                        this.ruleInput = "";
+                    } finally {
+                        this.ruleAddPending = false;
                     }
                 });
             },
@@ -490,17 +565,7 @@
             },
 
             get canContinue() {
-                const hasSpecialty = this.petSpecialties.length > 0;
-                const otherOk =
-                    !this.petSpecialties.includes("other") ||
-                    this.specialtyOtherTags.length > 0;
-
-                return (
-                    this.experience.trim() !== "" &&
-                    hasSpecialty &&
-                    this.petSizes.length > 0 &&
-                    otherOk
-                );
+                return this.selectedServices.length > 0;
             },
 
             payload() {
@@ -513,6 +578,8 @@
                     selectedServices: this.selectedServices,
                     customAddons: this.customAddons,
                     selectedAddons: this.selectedAddons,
+                    customRules: this.customRules,
+                    selectedRules: this.selectedRules,
                     servicesPricing: this.servicesPricing,
                     addonPricing: this.addonPricing,
                 };
