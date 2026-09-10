@@ -1,4 +1,4 @@
-<div class="verification-card verification-pending-card" wire:key="verify-qualify-pending">
+<div class="verification-card verification-pending-card" wire:key="business-verification-pending">
     <div class="verification-approved-visual" aria-hidden="true">
         <svg xmlns="http://www.w3.org/2000/svg" width="128" height="135" viewBox="0 0 128 135" fill="none">
             <g filter="url(#filter0_d_pending)">

@@ -589,7 +589,7 @@
                 const root =
                     (this.$el && this.$el.closest("[wire\\:id]")) ||
                     document.querySelector(
-                        ".verify-qualify-page [wire\\:id]",
+                        ".business-verification-page [wire\\:id]",
                     ) ||
                     document.querySelector("[wire\\:id]");
                 const id = root && root.getAttribute("wire:id");
@@ -633,7 +633,7 @@
 
                 if (!callFn) {
                     console.error(
-                        "[verify-qualify] Unable to call submitGroomerBusinessProfile — Livewire component not found.",
+                        "[business-verification] Unable to call submitGroomerBusinessProfile — Livewire component not found.",
                     );
                     return;
                 }

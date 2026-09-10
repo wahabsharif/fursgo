@@ -196,7 +196,7 @@ new #[Layout('layouts.dashboard')]
     public function mount(): void
     {
         $this->loadExistingData();
-        $this->scrollVerifyQualifyStepToTop();
+        $this->scrollBusinessVerificationStepToTop();
     }
 
     /**
@@ -373,7 +373,7 @@ new #[Layout('layouts.dashboard')]
             return 'background_checks';
         }
 
-        if ($user->hasCompletedVerifyQualifyPersonalStep()) {
+        if ($user->hasCompletedBusinessVerificationPersonalStep()) {
             return 'verification_notices';
         }
 
@@ -487,7 +487,7 @@ new #[Layout('layouts.dashboard')]
             return $status;
         }
 
-        if ((bool) session('verify_qualify_show_approved', false)) {
+        if ((bool) session('business_verification_show_approved', false)) {
             return 'approved';
         }
 
@@ -518,7 +518,7 @@ new #[Layout('layouts.dashboard')]
     /**
      * Show a single Verify & Qualify screen (2.3–2.7).
      */
-    private function applyVerifyQualifySubstep(string $step): void
+    private function applyBusinessVerificationSubstep(string $step): void
     {
         $user = Auth::guard('groomer_spacer')->user();
         if ($user instanceof GroomerSpacerProfile && in_array($step, ['registered_business', 'freelance_groomer'], true)) {
@@ -555,17 +555,17 @@ new #[Layout('layouts.dashboard')]
             case 'verification_notices':
                 $this->showVerificationStatus = true;
                 if ($this->resolveVerificationStatus() !== 'approved') {
-                    session()->forget('verify_qualify_show_approved');
+                    session()->forget('business_verification_show_approved');
                 }
                 break;
         }
 
         session(['verification_current_step' => $step]);
         session()->save();
-        $this->scrollVerifyQualifyStepToTop();
+        $this->scrollBusinessVerificationStepToTop();
     }
 
-    private function scrollVerifyQualifyStepToTop(): void
+    private function scrollBusinessVerificationStepToTop(): void
     {
         $this->js('window.__vqRequestStepScrollToTop?.()');
     }
@@ -644,7 +644,7 @@ new #[Layout('layouts.dashboard')]
     {
         $user = Auth::guard('groomer_spacer')->user();
         if (!$user instanceof GroomerSpacerProfile) {
-            $this->applyVerifyQualifySubstep('background_checks');
+            $this->applyBusinessVerificationSubstep('background_checks');
 
             return;
         }
@@ -688,7 +688,7 @@ new #[Layout('layouts.dashboard')]
         $sessionStep = session('verification_current_step');
         $sessionStep = is_string($sessionStep) && $sessionStep !== '' ? $sessionStep : null;
         $step = $this->resolveVerificationCurrentStepFromDb($user, $sessionStep);
-        $this->applyVerifyQualifySubstep($step);
+        $this->applyBusinessVerificationSubstep($step);
 
         if ($this->verification_review_mode && in_array($step, ['registered_business', 'freelance_groomer'], true)) {
             $this->highlightPersonalStepValidationErrors($user);
@@ -794,28 +794,28 @@ new #[Layout('layouts.dashboard')]
 
     public function legalAgreementsPdfUrl(): string
     {
-        return url('/verify-qualify/legal-agreements.pdf');
+        return url('/business-verification/legal-agreements.pdf');
     }
 
     private function vqView(string $key): string
     {
         return match ($key) {
-            'verification-status' => 'livewire.auth.verify-qualify-verification-status',
-            'verification-status-pending' => 'livewire.auth.verify-qualify-verification-status-pending',
-            'start-grooming-complete' => 'livewire.auth.verify-qualify-start-grooming-complete',
-            'gallery-paw' => 'livewire.auth.partials.verify-qualify-gallery-paw',
-            'pet-preferences' => 'livewire.auth.partials.verify-qualify-pet-preferences',
-            'legal-policy' => 'livewire.auth.verify-qualify-legal-policy',
-            'spacer-business-profile' => 'livewire.auth.verify-qualify-spacer-business-profile',
-            'groomer-business-profile' => 'livewire.auth.verify-qualify-groomer-business-profile',
-            'accuracy-confirm' => 'livewire.auth.verify-qualify-accuracy-confirm',
-            'freelance-step' => 'livewire.auth.verify-qualify-freelance-step',
-            default => throw new \InvalidArgumentException("Unknown verify-qualify view [{$key}]."),
+            'verification-status' => 'livewire.auth.business-verification-verification-status',
+            'verification-status-pending' => 'livewire.auth.business-verification-verification-status-pending',
+            'start-grooming-complete' => 'livewire.auth.business-verification-start-grooming-complete',
+            'gallery-paw' => 'livewire.auth.partials.business-verification-gallery-paw',
+            'pet-preferences' => 'livewire.auth.partials.business-verification-pet-preferences',
+            'legal-policy' => 'livewire.auth.business-verification-legal-policy',
+            'spacer-business-profile' => 'livewire.auth.business-verification-spacer-business-profile',
+            'groomer-business-profile' => 'livewire.auth.business-verification-groomer-business-profile',
+            'accuracy-confirm' => 'livewire.auth.business-verification-accuracy-confirm',
+            'freelance-step' => 'livewire.auth.business-verification-freelance-step',
+            default => throw new \InvalidArgumentException("Unknown business-verification view [{$key}]."),
         };
     }
 
     /**
-     * Disk used for verify-qualify uploads (same root as store(..., 'public')).
+     * Disk used for business-verification uploads (same root as store(..., 'public')).
      */
     private function storedUploadDisk(): \Illuminate\Contracts\Filesystem\Filesystem
     {
@@ -1558,10 +1558,10 @@ new #[Layout('layouts.dashboard')]
             'select_location_type' => $locationTypesForSave,
         ]);
 
-        session()->forget(['verify_qualify_show_approved', 'verification_review_mode']);
+        session()->forget(['business_verification_show_approved', 'verification_review_mode']);
         $this->verification_review_mode = false;
 
-        $this->applyVerifyQualifySubstep($this->personalInfoSubstepForAccountType($accountTypeForSave));
+        $this->applyBusinessVerificationSubstep($this->personalInfoSubstepForAccountType($accountTypeForSave));
     }
 
     /** @deprecated Use submitAccountPayouts() */
@@ -1582,7 +1582,7 @@ new #[Layout('layouts.dashboard')]
     {
         $this->verification_review_mode = false;
         session()->forget('verification_review_mode');
-        $this->applyVerifyQualifySubstep('account_payouts');
+        $this->applyBusinessVerificationSubstep('account_payouts');
     }
 
     /**
@@ -1611,13 +1611,13 @@ new #[Layout('layouts.dashboard')]
         if ($this->showRegisteredBusiness || $this->showFreelance) {
             $this->verification_review_mode = false;
             session()->forget('verification_review_mode');
-            $this->applyVerifyQualifySubstep('account_payouts');
+            $this->applyBusinessVerificationSubstep('account_payouts');
 
             return;
         }
 
         if ($this->showAccountPayoutsForm) {
-            $this->applyVerifyQualifySubstep('background_checks');
+            $this->applyBusinessVerificationSubstep('background_checks');
         }
     }
 
@@ -1650,11 +1650,11 @@ new #[Layout('layouts.dashboard')]
         }
 
         if ($this->showBusinessBasicsForm) {
-            if ($user->hasCompletedVerifyQualifyPersonalStep()) {
+            if ($user->hasCompletedBusinessVerificationPersonalStep()) {
                 session()->forget(['verification_build_profile_step', 'verification_build_profile_substep']);
-                $this->applyVerifyQualifySubstep('verification_notices');
+                $this->applyBusinessVerificationSubstep('verification_notices');
             } else {
-                $this->applyVerifyQualifySubstep('account_payouts');
+                $this->applyBusinessVerificationSubstep('account_payouts');
             }
 
             return;
@@ -1683,18 +1683,18 @@ new #[Layout('layouts.dashboard')]
     {
         $user = Auth::guard('groomer_spacer')->user();
         if (!$user instanceof GroomerSpacerProfile) {
-            $this->applyVerifyQualifySubstep('background_checks');
+            $this->applyBusinessVerificationSubstep('background_checks');
 
             return;
         }
 
         $accountType = (string) ($user->account_type ?? '');
         if ($accountType === 'freelance') {
-            $this->applyVerifyQualifySubstep('freelance_groomer');
+            $this->applyBusinessVerificationSubstep('freelance_groomer');
         } elseif ($accountType === 'registered_business') {
-            $this->applyVerifyQualifySubstep('registered_business');
+            $this->applyBusinessVerificationSubstep('registered_business');
         } else {
-            $this->applyVerifyQualifySubstep('account_payouts');
+            $this->applyBusinessVerificationSubstep('account_payouts');
         }
     }
 
@@ -1710,11 +1710,11 @@ new #[Layout('layouts.dashboard')]
 
         $this->verification_review_mode = true;
         session(['verification_review_mode' => true]);
-        session()->forget('verify_qualify_show_approved');
+        session()->forget('business_verification_show_approved');
 
         $accountType = (string) ($user->account_type ?? '');
         $step = in_array($accountType, ['registered_business', 'freelance'], true) ? $this->personalInfoSubstepForAccountType($accountType) : ($this->isFreelanceAccount($user) ? 'freelance_groomer' : 'registered_business');
-        $this->applyVerifyQualifySubstep($step);
+        $this->applyBusinessVerificationSubstep($step);
         $this->highlightPersonalStepValidationErrors($user);
     }
 
@@ -1774,7 +1774,7 @@ new #[Layout('layouts.dashboard')]
             return;
         }
 
-        session()->forget('verify_qualify_show_approved');
+        session()->forget('business_verification_show_approved');
         session([
             'verification_current_step' => '',
             'verification_build_profile_step' => true,
@@ -1813,7 +1813,7 @@ new #[Layout('layouts.dashboard')]
         }
 
         if ($scrollToTop) {
-            $this->scrollVerifyQualifyStepToTop();
+            $this->scrollBusinessVerificationStepToTop();
         }
     }
 
@@ -1944,7 +1944,7 @@ new #[Layout('layouts.dashboard')]
         return $out;
     }
 
-    public function initVerifyQualifyDocUploads(): void
+    public function initBusinessVerificationDocUploads(): void
     {
         $this->js(
             <<<'JS'
@@ -1957,10 +1957,10 @@ new #[Layout('layouts.dashboard')]
         );
     }
 
-    /** @deprecated Use initVerifyQualifyDocUploads() */
+    /** @deprecated Use initBusinessVerificationDocUploads() */
     public function initBusinessBasicsDocUploads(): void
     {
-        $this->initVerifyQualifyDocUploads();
+        $this->initBusinessVerificationDocUploads();
     }
 
     private function syncBusinessBasicsMediaFromDb(): void
@@ -2757,7 +2757,7 @@ new #[Layout('layouts.dashboard')]
         session(['verification_build_profile_step' => true]);
         $this->setBuildProfileSubstep('start_grooming');
         session()->save();
-        $this->scrollVerifyQualifyStepToTop();
+        $this->scrollBusinessVerificationStepToTop();
     }
 
     public function currentSidebarStep(): int
@@ -2775,7 +2775,7 @@ new #[Layout('layouts.dashboard')]
         return 1;
     }
 
-    public function currentVerifyQualifySubstepKey(): string
+    public function currentBusinessVerificationSubstepKey(): string
     {
         if ($this->showVerificationStatus) {
             return 'verification_notices';
@@ -2796,7 +2796,7 @@ new #[Layout('layouts.dashboard')]
     /**
      * @return list<array{key: string, label: string}>
      */
-    public function verifyQualifySubsteps(?GroomerSpacerProfile $user = null): array
+    public function businessVerificationSubsteps(?GroomerSpacerProfile $user = null): array
     {
         $user = $user ?? Auth::guard('groomer_spacer')->user();
         $isFreelance = $this->isFreelanceAccount($user);
@@ -2843,9 +2843,9 @@ new #[Layout('layouts.dashboard')]
         return trim((string) ($bb['display_name'] ?? '')) !== '';
     }
 
-    private function maxUnlockedVerifyQualifySubstepIndex(GroomerSpacerProfile $user): int
+    private function maxUnlockedBusinessVerificationSubstepIndex(GroomerSpacerProfile $user): int
     {
-        if ($user->hasCompletedVerifyQualifyPersonalStep()) {
+        if ($user->hasCompletedBusinessVerificationPersonalStep()) {
             return 3;
         }
 
@@ -2921,14 +2921,14 @@ new #[Layout('layouts.dashboard')]
         return 0;
     }
 
-    public function verifyQualifySubstepIsNavigable(string $key, ?GroomerSpacerProfile $user = null): bool
+    public function businessVerificationSubstepIsNavigable(string $key, ?GroomerSpacerProfile $user = null): bool
     {
         $user = $user ?? Auth::guard('groomer_spacer')->user();
         if (!$user instanceof GroomerSpacerProfile) {
             return $key === 'background_checks';
         }
-        $maxIdx = $this->maxUnlockedVerifyQualifySubstepIndex($user);
-        foreach ($this->verifyQualifySubsteps($user) as $i => $step) {
+        $maxIdx = $this->maxUnlockedBusinessVerificationSubstepIndex($user);
+        foreach ($this->businessVerificationSubsteps($user) as $i => $step) {
             if ($step['key'] === $key) {
                 return $i <= $maxIdx;
             }
@@ -2956,13 +2956,13 @@ new #[Layout('layouts.dashboard')]
         };
     }
 
-    public function goToVerifyQualifySubstep(string $key): void
+    public function goToBusinessVerificationSubstep(string $key): void
     {
         $user = Auth::guard('groomer_spacer')->user();
         if (!$user instanceof GroomerSpacerProfile) {
             return;
         }
-        if (!$this->verifyQualifySubstepIsNavigable($key, $user)) {
+        if (!$this->businessVerificationSubstepIsNavigable($key, $user)) {
             return;
         }
 
@@ -2970,7 +2970,7 @@ new #[Layout('layouts.dashboard')]
         if (in_array($key, ['registered_business', 'freelance_groomer'], true)) {
             $key = $this->reconcilePersonalInfoSubstepWithDb($user, $key);
         }
-        $this->applyVerifyQualifySubstep($key);
+        $this->applyBusinessVerificationSubstep($key);
     }
 
     public function goToBuildProfileSubstep(string $key): void
@@ -3017,7 +3017,7 @@ new #[Layout('layouts.dashboard')]
     {
         $dbMax = $this->resolveMaximumSidebarStep($user);
 
-        if (!$user->hasCompletedVerifyQualifyPersonalStep()) {
+        if (!$user->hasCompletedBusinessVerificationPersonalStep()) {
             return 1;
         }
 
@@ -3051,7 +3051,7 @@ new #[Layout('layouts.dashboard')]
 
     private function resolveMaximumSidebarStep(GroomerSpacerProfile $user): int
     {
-        if (!$user->hasCompletedVerifyQualifyPersonalStep()) {
+        if (!$user->hasCompletedBusinessVerificationPersonalStep()) {
             return 1;
         }
 
@@ -3138,14 +3138,14 @@ new #[Layout('layouts.dashboard')]
             $this->showLegalPolicyForm = false;
             $this->showStartEarningComplete = false;
         }
-        $this->scrollVerifyQualifyStepToTop();
+        $this->scrollBusinessVerificationStepToTop();
     }
 
     private function applySidebarStepOneForGroomerSpaceUser(GroomerSpacerProfile $user): void
     {
-        session()->forget(['verification_build_profile_step', 'verification_build_profile_substep', 'verification_review_mode', 'verify_qualify_show_approved']);
+        session()->forget(['verification_build_profile_step', 'verification_build_profile_substep', 'verification_review_mode', 'business_verification_show_approved']);
         $this->verification_review_mode = false;
-        $this->applyVerifyQualifySubstep('background_checks');
+        $this->applyBusinessVerificationSubstep('background_checks');
     }
 
     private function applySidebarStepTwoForGroomerSpaceUser(GroomerSpacerProfile $user): void
@@ -3437,7 +3437,7 @@ new #[Layout('layouts.dashboard')]
             $this->js('alert(' . json_encode('Please select how you use FursGo (groomer or space).') . ')');
         }
 
-        $this->scrollVerifyQualifyStepToTop();
+        $this->scrollBusinessVerificationStepToTop();
     }
 
     public function spacerBusinessProfileClientState(): array
@@ -3725,7 +3725,7 @@ new #[Layout('layouts.dashboard')]
         $this->showGroomerBusinessProfileForm = false;
         $this->showLegalPolicyForm = true;
         $this->setBuildProfileSubstep('legal_policy');
-        $this->scrollVerifyQualifyStepToTop();
+        $this->scrollBusinessVerificationStepToTop();
     }
 
     public function submitSpacerBusinessProfile(array $form = []): void
@@ -3792,7 +3792,7 @@ new #[Layout('layouts.dashboard')]
         $this->showStartEarningComplete = false;
         $this->showLegalPolicyForm = true;
         $this->setBuildProfileSubstep('legal_policy');
-        $this->scrollVerifyQualifyStepToTop();
+        $this->scrollBusinessVerificationStepToTop();
     }
 
     /**
@@ -4153,13 +4153,13 @@ new #[Layout('layouts.dashboard')]
             $this->verification_review_mode = false;
 
             if ($status === 'approved') {
-                session(['verify_qualify_show_approved' => true]);
+                session(['business_verification_show_approved' => true]);
             } else {
-                session()->forget('verify_qualify_show_approved');
+                session()->forget('business_verification_show_approved');
             }
             session()->save();
 
-            $this->applyVerifyQualifySubstep('verification_notices');
+            $this->applyBusinessVerificationSubstep('verification_notices');
         }
     }
 
@@ -4286,12 +4286,12 @@ new #[Layout('layouts.dashboard')]
 @endPushOnce
 
 <section
-    class="container verify-qualify-page{{ $showVerificationCard ? ' verify-qualify-page--background-checks' : '' }}{{ $showVerificationStatus ? ' verify-qualify-page--status verify-qualify-page--status-' . $this->verificationStatusTone() : '' }}">
+    class="container business-verification-page{{ $showVerificationCard ? ' business-verification-page--background-checks' : '' }}{{ $showVerificationStatus ? ' business-verification-page--status business-verification-page--status-' . $this->verificationStatusTone() : '' }}">
     <div class="verification-wrapper{{ $showVerificationCard || $showVerificationStatus || $showStartEarningComplete ? ' verification-wrapper--no-sidebar' : '' }}"
         wire:loading.class="verification-wrapper--navigating"
-        wire:target="goToSidebarStep,goToVerifyQualifySubstep,goToBuildProfileSubstep,goBack,submitBusinessBasics,submitAccountPayouts,submit,submitPersonalInfo,submitGroomerBusinessProfile,submitSpacerBusinessProfile,submitLegalPolicy">
+        wire:target="goToSidebarStep,goToBusinessVerificationSubstep,goToBuildProfileSubstep,goBack,submitBusinessBasics,submitAccountPayouts,submit,submitPersonalInfo,submitGroomerBusinessProfile,submitSpacerBusinessProfile,submitLegalPolicy">
         <div class="verification-step-loading-bar" wire:loading
-            wire:target="goToSidebarStep,goToVerifyQualifySubstep,goToBuildProfileSubstep,goBack,submitBusinessBasics,submitAccountPayouts,submit,submitPersonalInfo,submitGroomerBusinessProfile,submitSpacerBusinessProfile,submitLegalPolicy"
+            wire:target="goToSidebarStep,goToBusinessVerificationSubstep,goToBuildProfileSubstep,goBack,submitBusinessBasics,submitAccountPayouts,submit,submitPersonalInfo,submitGroomerBusinessProfile,submitSpacerBusinessProfile,submitLegalPolicy"
             aria-hidden="true">
             <span class="verification-step-loading-bar__sweep"></span>
         </div>
@@ -4350,8 +4350,8 @@ new #[Layout('layouts.dashboard')]
             @elseif ($showStartEarningComplete)
                 @include($this->vqView('start-grooming-complete'))
             @elseif ($showBusinessBasicsForm)
-                <div class="business-basics-wrap" wire:key="verify-qualify-business-basics"
-                    wire:init="initVerifyQualifyDocUploads">
+                <div class="business-basics-wrap" wire:key="business-verification-business-basics"
+                    wire:init="initBusinessVerificationDocUploads">
                     <h1 class="business-basics-title">Business Basics</h1>
 
                     <form wire:submit="submitBusinessBasics" class="business-basics-form">
@@ -4479,7 +4479,7 @@ new #[Layout('layouts.dashboard')]
                                             <button type="button" class="gallery-slot-remove"
                                                 wire:click="removeBusinessGalleryPath({{ (int) $item['pathIndex'] }})"
                                                 aria-label="Remove photo">
-                                                <img src="{{ asset('images/verify-qualify/icon-gallery-remove.svg') }}" alt=""
+                                                <img src="{{ asset('images/business-verification/icon-gallery-remove.svg') }}" alt=""
                                                     width="18" height="18">
                                             </button>
                                         @elseif (
@@ -4491,7 +4491,7 @@ new #[Layout('layouts.dashboard')]
                                             <button type="button" class="gallery-slot-remove"
                                                 wire:click="removeBusinessGalleryPending({{ (int) $item['idx'] }})"
                                                 aria-label="Remove photo">
-                                                <img src="{{ asset('images/verify-qualify/icon-gallery-remove.svg') }}" alt=""
+                                                <img src="{{ asset('images/business-verification/icon-gallery-remove.svg') }}" alt=""
                                                     width="18" height="18">
                                             </button>
                                         @elseif ($slot === $gallery_used)
@@ -4499,7 +4499,7 @@ new #[Layout('layouts.dashboard')]
                                                 <input type="file" id="business-gallery-pick-input" class="hidden-input"
                                                     accept=".jpg,.jpeg,.png,.gif,.webp" multiple>
                                                 <span class="gallery-slot-add">
-                                                    <img src="{{ asset('images/verify-qualify/icon-add-photo.svg') }}" alt=""
+                                                    <img src="{{ asset('images/business-verification/icon-add-photo.svg') }}" alt=""
                                                         width="20" height="19">
                                                     <span class="gallery-slot-add__label">Add Photo</span>
                                                 </span>
@@ -4507,7 +4507,7 @@ new #[Layout('layouts.dashboard')]
                                         @else
                                             <div class="gallery-slot-empty gallery-slot-placeholder" aria-hidden="true">
                                                 <span class="gallery-slot-add">
-                                                    <img src="{{ asset('images/verify-qualify/icon-add-photo.svg') }}" alt=""
+                                                    <img src="{{ asset('images/business-verification/icon-add-photo.svg') }}" alt=""
                                                         width="20" height="19">
                                                     <span class="gallery-slot-add__label">Add Photo</span>
                                                 </span>
@@ -4553,7 +4553,7 @@ new #[Layout('layouts.dashboard')]
             @elseif ($showGroomerBusinessProfileForm)
                 @include($this->vqView('groomer-business-profile'))
             @elseif ($showVerificationCard)
-                <div class="vq-background-checks" wire:key="verify-qualify-background-checks">
+                <div class="vq-background-checks" wire:key="business-verification-background-checks">
                     <div class="verification-card">
                         <div class="verification-header">
                             <div class="icon-wrapper" aria-hidden="true">
@@ -4630,7 +4630,7 @@ new #[Layout('layouts.dashboard')]
                     </div>
                 </div>
             @elseif ($showAccountPayoutsForm)
-                <div class="verification-card" wire:key="verify-qualify-account-payouts">
+                <div class="verification-card" wire:key="business-verification-account-payouts">
                     <div class="step-heading">
                         <h2>Verify Your Account for Payouts</h2>
                     </div>
@@ -4806,7 +4806,7 @@ new #[Layout('layouts.dashboard')]
                     </div>
                 </div>
             @elseif ($showRegisteredBusiness)
-                <div class="verification-card" wire:key="verify-qualify-registered">
+                <div class="verification-card" wire:key="business-verification-registered">
                     <div class="step-heading">
                         <h2>Registered Business</h2>
                     </div>
@@ -4817,7 +4817,7 @@ new #[Layout('layouts.dashboard')]
                         </div>
                     @endif
 
-                    <form wire:submit="submitPersonalInfo" novalidate wire:init="initVerifyQualifyDocUploads">
+                    <form wire:submit="submitPersonalInfo" novalidate wire:init="initBusinessVerificationDocUploads">
                         <div class="form-grid">
                             <!-- Full Name -->
                             <div class="form-group full-width">
@@ -5153,10 +5153,10 @@ new #[Layout('layouts.dashboard')]
             };
         }
 
-        if (window.__verifyQualifyDebugInstalled) {
+        if (window.__businessVerificationDebugInstalled) {
             return;
         }
-        window.__verifyQualifyDebugInstalled = true;
+        window.__businessVerificationDebugInstalled = true;
 
         let t = null;
         const debounceMs = 250;
@@ -5180,7 +5180,7 @@ new #[Layout('layouts.dashboard')]
             return Livewire.find(id);
         }
 
-        function logVerifyQualifyState(component, el) {
+        function logBusinessVerificationState(component, el) {
             const cmp = resolveComponent(component, el);
             if (!cmp || typeof cmp.call !== 'function') {
                 return;
@@ -5193,7 +5193,7 @@ new #[Layout('layouts.dashboard')]
 
                     if (data.step.showBusinessBasicsForm) {
                         console.log(
-                            '%c[verify-qualify]%c Business basics (Build Your Profile)',
+                            '%c[business-verification]%c Business basics (Build Your Profile)',
                             'color:#ca8a04;font-weight:bold',
                             'color:inherit',
                             data.business_basics?.continue_enabled ? 'Continue ENABLED' :
@@ -5205,7 +5205,7 @@ new #[Layout('layouts.dashboard')]
 
                     if (data.step.showVerificationStatus) {
                         console.log(
-                            '%c[verify-qualify]%c Verification approved screen',
+                            '%c[business-verification]%c Verification approved screen',
                             'color:#16a34a;font-weight:bold',
                             'color:inherit',
                             data
@@ -5228,7 +5228,7 @@ new #[Layout('layouts.dashboard')]
                             }
                         }
                         console.log(
-                            '%c[verify-qualify]%c Continue',
+                            '%c[business-verification]%c Continue',
                             'color:#2563eb;font-weight:bold',
                             'color:inherit',
                             c.continue_would_enable ? 'ENABLED' : 'DISABLED — ' +
@@ -5265,7 +5265,7 @@ new #[Layout('layouts.dashboard')]
                             }
                         }
                         console.log(
-                            '%c[verify-qualify]%c Submit',
+                            '%c[business-verification]%c Submit',
                             'color:#059669;font-weight:bold',
                             'color:inherit',
                             p.submit_would_enable ? 'ENABLED' : 'DISABLED — ' + submitReasons
@@ -5273,7 +5273,7 @@ new #[Layout('layouts.dashboard')]
                             data
                         );
                     }
-                }).catch((e) => console.warn('[verify-qualify] getSubmitButtonDebug failed', e));
+                }).catch((e) => console.warn('[business-verification] getSubmitButtonDebug failed', e));
             }, debounceMs);
         }
 
@@ -5286,13 +5286,13 @@ new #[Layout('layouts.dashboard')]
                 if (!root || !root.querySelector('.verification-wrapper')) {
                     return;
                 }
-                logVerifyQualifyState(component, el);
+                logBusinessVerificationState(component, el);
             });
 
             queueMicrotask(() => {
                 const wrap = document.querySelector('.verification-wrapper');
                 if (wrap) {
-                    logVerifyQualifyState(null, wrap);
+                    logBusinessVerificationState(null, wrap);
                 }
             });
         });
@@ -5556,11 +5556,11 @@ new #[Layout('layouts.dashboard')]
         margin-bottom: 3rem;
     }
 
-    .verify-qualify-page--background-checks {
+    .business-verification-page--background-checks {
         background: #FBFBFB;
     }
 
-    .verify-qualify-page--status {
+    .business-verification-page--status {
         width: 100%;
         max-width: 1320px;
         min-height: 620px;
@@ -5568,28 +5568,28 @@ new #[Layout('layouts.dashboard')]
         margin-right: auto;
     }
 
-    .verify-qualify-page--status .verification-wrapper {
+    .business-verification-page--status .verification-wrapper {
         min-height: 620px;
         align-items: center;
         justify-content: center;
     }
 
-    .verify-qualify-page--status-approved {
+    .business-verification-page--status-approved {
         background: rgba(212, 226, 236, 0.2);
     }
 
-    .verify-qualify-page--status-pending {
+    .business-verification-page--status-pending {
         background: rgba(255, 228, 189, 0.2);
     }
 
-    .verify-qualify-page--status-rejected {
+    .business-verification-page--status-rejected {
         background: rgba(255, 183, 183, 0.2);
     }
 
     @media (max-width: 768px) {
 
-        .verify-qualify-page--status,
-        .verify-qualify-page--status .verification-wrapper {
+        .business-verification-page--status,
+        .business-verification-page--status .verification-wrapper {
             min-height: 480px;
         }
     }
@@ -7153,7 +7153,7 @@ new #[Layout('layouts.dashboard')]
         };
 
         window.addEventListener("pageshow", (event) => {
-            if (!document.querySelector(".verify-qualify-page")) {
+            if (!document.querySelector(".business-verification-page")) {
                 return;
             }
             if (event.persisted) {
@@ -7256,7 +7256,7 @@ new #[Layout('layouts.dashboard')]
     function syncDashboardStickyHeaderOffset() {
         const header = document.querySelector('.dashboard-header');
         const root =
-            document.querySelector('.dashboard-shell--verify-qualify') ||
+            document.querySelector('.dashboard-shell--business-verification') ||
             document.body;
         if (!header || !root) {
             return;
@@ -7307,7 +7307,7 @@ new #[Layout('layouts.dashboard')]
         }
         bindGalleryUploadProgress();
 
-        if (document.querySelector('.verify-qualify-page')) {
+        if (document.querySelector('.business-verification-page')) {
             window.__vqPendingStepScroll = true;
             window.__vqFlushPendingStepScroll?.();
         }

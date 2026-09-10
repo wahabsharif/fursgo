@@ -5,7 +5,7 @@
 ])
 
 <div class="service-price-steppers">
-    <img src="{{ asset('images/verify-qualify/icon-price-stepper.svg') }}" alt="" width="11" height="27"
+    <img src="{{ asset('images/business-verification/icon-price-stepper.svg') }}" alt="" width="11" height="27"
         class="service-price-steppers__icon" aria-hidden="true">
     @if ($stepInput)
         <button type="button" class="service-stepper-btn service-stepper-btn--up" aria-label="Increase price"

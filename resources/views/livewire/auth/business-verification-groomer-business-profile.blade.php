@@ -1,4 +1,4 @@
-<div class="business-basics-wrap" wire:key="verify-qualify-groomer-business-profile"
+<div class="business-basics-wrap" wire:key="business-verification-groomer-business-profile"
     x-data="groomerBusinessProfile(@js($this->groomerBusinessProfileClientState()))">
     <h1 class="business-basics-title">About Your Business</h1>
 
@@ -13,7 +13,7 @@
                     <button type="button" class="addon-picker-plus" aria-label="Add service"
                         :disabled="serviceAddPending" @click="addCustomService()">
                         <span class="addon-picker-plus-icon" x-show="!serviceAddPending" x-cloak>
-                            <x-verify-qualify.plus-icon />
+                            <x-business-verification.plus-icon />
                         </span>
                         <span class="addon-picker-plus-spinner" x-show="serviceAddPending" x-cloak aria-hidden="true">
                             <span class="groomer-plus-spinner"></span>
@@ -27,7 +27,7 @@
                                 <span class="basics-pet-tag__label" x-text="service"></span>
                                 <button type="button" class="basics-pet-tag__remove" :aria-label="'Remove ' + service"
                                     @click="removeCustomService(service)">
-                                    <x-verify-qualify.tag-remove-icon />
+                                    <x-business-verification.tag-remove-icon />
                                 </button>
                             </span>
                         </template>
@@ -62,7 +62,7 @@
                                     <span class="service-price-currency">£</span>
                                     <input type="number" class="service-price-input" min="0" step="1"
                                         x-model="servicesPricing[serviceKey(serviceName)].price">
-                                    <x-verify-qualify.price-steppers
+                                    <x-business-verification.price-steppers
                                         increase="stepPrice(serviceKey(serviceName), 1, 'service')"
                                         decrease="stepPrice(serviceKey(serviceName), -1, 'service')" />
                                 </div>
@@ -88,7 +88,7 @@
                                         <button type="button" class="service-description-plus"
                                             aria-label="Save description"
                                             @click="commitServiceDescription(serviceName)">
-                                            <x-verify-qualify.plus-icon />
+                                            <x-business-verification.plus-icon />
                                         </button>
                                     </div>
                                 </div>
@@ -110,7 +110,7 @@
                     <button type="button" class="addon-picker-plus" aria-label="Add add-on" :disabled="addonAddPending"
                         @click="addCustomAddon()">
                         <span class="addon-picker-plus-icon" x-show="!addonAddPending" x-cloak>
-                            <x-verify-qualify.plus-icon />
+                            <x-business-verification.plus-icon />
                         </span>
                         <span class="addon-picker-plus-spinner" x-show="addonAddPending" x-cloak aria-hidden="true">
                             <span class="groomer-plus-spinner"></span>
@@ -124,7 +124,7 @@
                                 <span class="basics-pet-tag__label" x-text="addon"></span>
                                 <button type="button" class="basics-pet-tag__remove" :aria-label="'Remove ' + addon"
                                     @click="removeCustomAddon(addon)">
-                                    <x-verify-qualify.tag-remove-icon />
+                                    <x-business-verification.tag-remove-icon />
                                 </button>
                             </span>
                         </template>
@@ -157,7 +157,7 @@
                                             <span class="service-price-currency">£</span>
                                             <input type="number" class="service-price-input" min="0" step="1"
                                                 x-model="addonPricing[addonKey(addonName)].price">
-                                            <x-verify-qualify.price-steppers
+                                            <x-business-verification.price-steppers
                                                 increase="stepPrice(addonKey(addonName), 1, 'addon')"
                                                 decrease="stepPrice(addonKey(addonName), -1, 'addon')" />
                                         </div>
@@ -184,7 +184,7 @@
                                                 <button type="button" class="service-description-plus"
                                                     aria-label="Save description"
                                                     @click="commitAddonDescription(addonName)">
-                                                    <x-verify-qualify.plus-icon />
+                                                    <x-business-verification.plus-icon />
                                                 </button>
                                             </div>
                                         </div>
@@ -208,7 +208,7 @@
                     <button type="button" class="addon-picker-plus" aria-label="Add rule" :disabled="ruleAddPending"
                         @click="addCustomRule()">
                         <span class="addon-picker-plus-icon" x-show="!ruleAddPending" x-cloak>
-                            <x-verify-qualify.plus-icon />
+                            <x-business-verification.plus-icon />
                         </span>
                         <span class="addon-picker-plus-spinner" x-show="ruleAddPending" x-cloak aria-hidden="true">
                             <span class="groomer-plus-spinner"></span>
@@ -222,7 +222,7 @@
                                 <span class="basics-pet-tag__label" x-text="rule"></span>
                                 <button type="button" class="basics-pet-tag__remove" :aria-label="'Remove ' + rule"
                                     @click="removeCustomRule(rule)">
-                                    <x-verify-qualify.tag-remove-icon />
+                                    <x-business-verification.tag-remove-icon />
                                 </button>
                             </span>
                         </template>

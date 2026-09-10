@@ -1,4 +1,4 @@
-<div class="legal-policy-wrap" wire:key="verify-qualify-legal-policy">
+<div class="legal-policy-wrap" wire:key="business-verification-legal-policy">
     <h1 class="business-basics-title">Legal &amp; Policy Agreements</h1>
     <form wire:submit="submitLegalPolicy" x-data="{
         accepted: @entangle('legal_terms_accepted'),

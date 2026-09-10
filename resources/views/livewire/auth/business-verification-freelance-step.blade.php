@@ -1,10 +1,10 @@
 @if ($showFreelance)
-    <div class="verification-card" wire:key="verify-qualify-freelance">
+    <div class="verification-card" wire:key="business-verification-freelance">
         <div class="step-heading">
             <h2>Freelance Groomer</h2>
         </div>
 
-        <form wire:submit="submitPersonalInfo" novalidate wire:init="initVerifyQualifyDocUploads">
+        <form wire:submit="submitPersonalInfo" novalidate wire:init="initBusinessVerificationDocUploads">
             <div class="form-grid">
                 <!-- Full Name -->
                 <div class="form-group full-width">
@@ -226,7 +226,7 @@
                 </div>
             </div>
 
-            @include('livewire.auth.verify-qualify-accuracy-confirm')
+            @include('livewire.auth.business-verification-accuracy-confirm')
 
             <!-- Buttons -->
             <div class="form-buttons">

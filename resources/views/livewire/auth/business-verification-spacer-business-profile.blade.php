@@ -1,4 +1,4 @@
-<div class="business-basics-wrap" wire:key="verify-qualify-spacer-business-profile"
+<div class="business-basics-wrap" wire:key="business-verification-spacer-business-profile"
     x-data="spacerBusinessProfile(@js($this->spacerBusinessProfileClientState()))">
     <h1 class="business-basics-title">About Your Business</h1>
 
@@ -27,13 +27,13 @@
                                     <span class="spacer-service-label spacer-service-label--with-icon">
                                         <span class="spacer-service-label__icon" aria-hidden="true">
                                             @if ($slug === 'hourly')
-                                                <img src="{{ asset('images/verify-qualify/icon-clock-hourly.svg') }}" alt=""
+                                                <img src="{{ asset('images/business-verification/icon-clock-hourly.svg') }}" alt=""
                                                     width="26" height="22">
                                             @elseif ($slug === 'half_day')
-                                                <img src="{{ asset('images/verify-qualify/icon-clock-half-day.svg') }}" alt=""
+                                                <img src="{{ asset('images/business-verification/icon-clock-half-day.svg') }}" alt=""
                                                     width="26" height="22">
                                             @elseif ($slug === 'full_day')
-                                                <img src="{{ asset('images/verify-qualify/icon-clock-full-day.svg') }}" alt=""
+                                                <img src="{{ asset('images/business-verification/icon-clock-full-day.svg') }}" alt=""
                                                     width="26" height="22">
                                             @endif
                                         </span>
@@ -50,7 +50,7 @@
                                     <span class="service-price-currency">£</span>
                                     <input type="number" class="service-price-input" min="0" step="1"
                                         x-model="servicesPricing[{{ json_encode($slug) }}].price">
-                                    <x-verify-qualify.price-steppers step-input />
+                                    <x-business-verification.price-steppers step-input />
                                 </div>
                             </div>
                         </div>
@@ -74,7 +74,7 @@
                     <button type="button" class="addon-picker-plus" aria-label="Add add-on" :disabled="addonAddPending"
                         @click="addCustomAddon()">
                         <span class="addon-picker-plus-icon" x-show="!addonAddPending" x-cloak>
-                            <x-verify-qualify.plus-icon />
+                            <x-business-verification.plus-icon />
                         </span>
                         <span class="addon-picker-plus-spinner" x-show="addonAddPending" x-cloak aria-hidden="true">
                             <span class="groomer-plus-spinner"></span>
@@ -88,7 +88,7 @@
                                 <span class="basics-pet-tag__label" x-text="row.name"></span>
                                 <button type="button" class="basics-pet-tag__remove" :aria-label="'Remove ' + row.name"
                                     @click="removeCustomAddon(index)">
-                                    <x-verify-qualify.tag-remove-icon />
+                                    <x-business-verification.tag-remove-icon />
                                 </button>
                             </span>
                         </template>
@@ -121,7 +121,7 @@
                                             <input type="number" class="service-price-input" min="0" step="1"
                                                 :value="addonEntryRow(entry)?.price"
                                                 @input="addonEntryRow(entry).price = $event.target.value">
-                                            <x-verify-qualify.price-steppers step-input />
+                                            <x-business-verification.price-steppers step-input />
                                         </div>
                                     </div>
                                     <template x-if="showAddonDescriptionText(entry)">
@@ -147,7 +147,7 @@
                                                 <button type="button" class="service-description-plus"
                                                     aria-label="Save description"
                                                     @click="commitAddonDescription(entry)">
-                                                    <x-verify-qualify.plus-icon />
+                                                    <x-business-verification.plus-icon />
                                                 </button>
                                             </div>
                                         </div>
@@ -172,7 +172,7 @@
                     <button type="button" class="addon-picker-plus" aria-label="Add amenity"
                         :disabled="amenityAddPending" @click="addCustomAmenity()">
                         <span class="addon-picker-plus-icon" x-show="!amenityAddPending" x-cloak>
-                            <x-verify-qualify.plus-icon />
+                            <x-business-verification.plus-icon />
                         </span>
                         <span class="addon-picker-plus-spinner" x-show="amenityAddPending" x-cloak aria-hidden="true">
                             <span class="groomer-plus-spinner"></span>
@@ -186,7 +186,7 @@
                                 <span class="basics-pet-tag__label" x-text="amenity.text"></span>
                                 <button type="button" class="basics-pet-tag__remove"
                                     :aria-label="'Remove ' + amenity.text" @click="removeCustomAmenity(index)">
-                                    <x-verify-qualify.tag-remove-icon />
+                                    <x-business-verification.tag-remove-icon />
                                 </button>
                             </span>
                         </template>
@@ -218,7 +218,7 @@
                             <input type="checkbox" x-model="suitableFor" value="{{ $option }}">
                             <span>{{ $option }}</span>
                             <span class="spacer-suitable-chip__check" aria-hidden="true">
-                                <img src="{{ asset('images/verify-qualify/icon-suitability-check.svg') }}" alt="" width="19"
+                                <img src="{{ asset('images/business-verification/icon-suitability-check.svg') }}" alt="" width="19"
                                     height="19">
                             </span>
                         </label>
@@ -239,7 +239,7 @@
                     <button type="button" class="addon-picker-plus" aria-label="Add rule" :disabled="ruleAddPending"
                         @click="addCustomRule()">
                         <span class="addon-picker-plus-icon" x-show="!ruleAddPending" x-cloak>
-                            <x-verify-qualify.plus-icon />
+                            <x-business-verification.plus-icon />
                         </span>
                         <span class="addon-picker-plus-spinner" x-show="ruleAddPending" x-cloak aria-hidden="true">
                             <span class="groomer-plus-spinner"></span>
@@ -253,7 +253,7 @@
                                 <span class="basics-pet-tag__label" x-text="rule.text"></span>
                                 <button type="button" class="basics-pet-tag__remove" :aria-label="'Remove ' + rule.text"
                                     @click="removeCustomRule(index)">
-                                    <x-verify-qualify.tag-remove-icon />
+                                    <x-business-verification.tag-remove-icon />
                                 </button>
                             </span>
                         </template>

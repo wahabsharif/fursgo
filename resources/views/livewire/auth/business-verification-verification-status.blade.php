@@ -16,15 +16,15 @@
             : 'Please upload the missing documents or correct any highlighted fields.');
 
     $shield = $isRejected
-        ? 'images/verify-qualify/icon-status-failed-shield.svg'
-        : 'images/verify-qualify/icon-status-pending-shield.svg';
+        ? 'images/business-verification/icon-status-failed-shield.svg'
+        : 'images/business-verification/icon-status-pending-shield.svg';
     $mark = $isRejected
-        ? 'images/verify-qualify/icon-status-failed-mark.svg'
-        : 'images/verify-qualify/icon-status-pending-mark.svg';
+        ? 'images/business-verification/icon-status-failed-mark.svg'
+        : 'images/business-verification/icon-status-pending-mark.svg';
 @endphp
 
 <div class="verification-card verification-status-card verification-status-card--{{ $tone }}"
-    wire:key="verify-qualify-status-{{ $tone }}">
+    wire:key="business-verification-status-{{ $tone }}">
     @if ($isApproved)
         <div class="verification-approved-visual" aria-hidden="true">
             <svg xmlns="http://www.w3.org/2000/svg" width="128" height="135" viewBox="0 0 128 135" fill="none">

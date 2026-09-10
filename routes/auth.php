@@ -25,7 +25,6 @@ Route::middleware('guest')->group(function () {
 
     Volt::route('reset-password/{token}', 'auth.reset-password')
         ->name('password.reset');
-
 });
 
 Route::middleware('auth')->group(function () {
@@ -41,11 +40,11 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware('auth.groomer_spacer')->group(function () {
-    Volt::route('verify-qualify', 'auth.verify-qualify')
-        ->name('verify-qualify');
+    Volt::route('business-verification', 'auth.business-verification')
+        ->name('business-verification');
 
-    Route::get('verify-qualify/legal-agreements.pdf', LegalAgreementsPdfController::class)
-        ->name('verify-qualify.legal-agreements-pdf');
+    Route::get('business-verification/legal-agreements.pdf', LegalAgreementsPdfController::class)
+        ->name('business-verification.legal-agreements-pdf');
 
     Route::get('groomer-spacer/business-owner-id-file', [GroomerSpacerPrivateFileController::class, 'businessOwnerIdImage'])
         ->name('groomer-spacer.business-owner-id-file');

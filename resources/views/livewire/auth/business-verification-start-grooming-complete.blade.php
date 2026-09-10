@@ -1,4 +1,4 @@
-<div class="vq-start-grooming-complete" wire:key="verify-qualify-start-grooming-complete">
+<div class="vq-start-grooming-complete" wire:key="business-verification-start-grooming-complete">
     <svg xmlns="http://www.w3.org/2000/svg" width="151" height="100" viewBox="0 0 151 100" fill="none">
         <path
             d="M23.7623 17.8218C23.7623 7.97908 31.7414 0 41.5841 0H105.941C115.783 0 123.762 7.97908 123.762 17.8218C123.762 27.6645 115.783 35.6436 105.941 35.6436H41.5841C31.7414 35.6436 23.7623 27.6645 23.7623 17.8218Z"
