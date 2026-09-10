@@ -20,7 +20,7 @@
             request()->routeIs('business-homepage-groomer-space-owner') => 'for-groomers-hosts',
             request()->routeIs('help-and-support') => 'help-centre',
             request()->routeIs('account-settings') => 'account-settings',
-            request()->routeIs('verify-qualify', 'verify-qualify.*') => 'verify-qualify',
+            request()->routeIs('business-verification', 'business-verification.*') => 'business-verification',
             default => 'hub',
         };
 
@@ -183,18 +183,18 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
         }
 
         /* Verify & Qualify: content width matches header (Bootstrap .container only) */
-        .dashboard-shell--verify-qualify {
-            --dashboard-sticky-header-offset: 5.5rem;
+        .dashboard-shell--business-verification {
+            --dashboard-sticky-header-offset: 8.125rem;
         }
 
-        .dashboard-shell--verify-qualify .dashboard-info-main {
+        .dashboard-shell--business-verification .dashboard-info-main {
             max-width: 100%;
             width: 100%;
             padding-left: 0;
             padding-right: 0;
         }
 
-        .dashboard-shell--verify-qualify .dashboard-info-main>.container {
+        .dashboard-shell--business-verification .dashboard-info-main>.container {
             margin-left: auto;
             margin-right: auto;
         }

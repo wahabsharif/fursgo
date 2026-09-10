@@ -20,12 +20,12 @@
     $isMarketingHubRoute = request()->routeIs('marketing-hub', 'marketing-hub.*');
     $isAccountSettingsRoute = request()->routeIs('account-settings');
     $isHelpCentreRoute = request()->routeIs('help-and-support');
-    $isVerifyQualifyRoute = request()->routeIs('verify-qualify', 'verify-qualify.*');
+    $isBusinessVerificationRoute = request()->routeIs('business-verification', 'business-verification.*');
     $isBusinessAuthRoute = request()->routeIs([
         'login-groomer-space',
         'signup-groomer-space',
-        'verify-qualify',
-        'verify-qualify.*',
+        'business-verification',
+        'business-verification.*',
     ]);
     $isBusinessSiteRoute = $isBusinessLandingRoute
         || $isBusinessHomepageRoute
@@ -35,8 +35,8 @@
             || BusinessPageShell::prefersBusinessChrome()
         ));
     $isForGroomersHostsActive = $isBusinessHomepageRoute || $isBusinessLandingRoute;
-    $dashboardLogoHref = $isVerifyQualifyRoute
-        ? route('verify-qualify')
+    $dashboardLogoHref = $isBusinessVerificationRoute
+        ? route('business-verification')
         : ($isMarketingHubRoute
             ? route('marketing-hub')
             : route('business-hub'));
@@ -182,48 +182,76 @@
 @if ($variant === 'dashboard')
     {{-- Dashboard Header --}}
     <header
-        class="dashboard-header dashboard-header--{{ strtolower((string) $headerUserType) === 'space' ? 'space' : 'groomer' }}{{ $isVerifyQualifyRoute ? ' dashboard-header--verify-qualify' : '' }}{{ $isBusinessHubRoute ? ' dashboard-header--business-hub' : '' }}{{ $isMarketingHubRoute ? ' dashboard-header--marketing-hub' : '' }}{{ $isAccountSettingsRoute ? ' dashboard-header--account-settings' : '' }}{{ $isHelpCentreRoute ? ' dashboard-header--help-centre' : '' }}">
+        class="dashboard-header dashboard-header--{{ strtolower((string) $headerUserType) === 'space' ? 'space' : 'groomer' }}{{ $isBusinessVerificationRoute ? ' dashboard-header--business-verification' : '' }}{{ $isBusinessHubRoute ? ' dashboard-header--business-hub' : '' }}{{ $isMarketingHubRoute ? ' dashboard-header--marketing-hub' : '' }}{{ $isAccountSettingsRoute ? ' dashboard-header--account-settings' : '' }}{{ $isHelpCentreRoute ? ' dashboard-header--help-centre' : '' }}">
         <div class="dashboard-header-container">
             {{-- Main Navigation Bar --}}
             <nav class="navbar dashboard-navbar">
                 <div class="dashboard-header-inner">
-                    <div class="dashboard-header-brand">
-                        <div class="logo-toggle-button d-flex justify-content-between align-items-center">
-                            <a href="{{ $dashboardLogoHref }}" wire:navigate
-                                @click="activeSection = @js($isMarketingHubRoute ? 'marketing-hub' : 'business-hub')"
-                                class="dashboard-logo" aria-label="FursGo Business dashboard">
-                                <span class="dashboard-logo-mark" aria-hidden="true">
-                                    <img src="{{ asset('images/header/logo-fursgo.svg') }}" alt="" width="98" height="27">
-                                </span>
-                                <span class="dashboard-logo-pill">Business</span>
-                            </a>
-                            <button type="button" class="menu-toggle" aria-label="Toggle menu">&#9776;</button>
+                    @unless ($isBusinessVerificationRoute)
+                        <div class="dashboard-header-brand">
+                            <div class="logo-toggle-button d-flex justify-content-between align-items-center">
+                                <a href="{{ $dashboardLogoHref }}" wire:navigate
+                                    @click="activeSection = @js($isMarketingHubRoute ? 'marketing-hub' : 'business-hub')"
+                                    class="dashboard-logo" aria-label="FursGo Business dashboard">
+                                    <span class="dashboard-logo-mark" aria-hidden="true">
+                                        <img src="{{ asset('images/header/logo-fursgo.svg') }}" alt="" width="98" height="27">
+                                    </span>
+                                    <span class="dashboard-logo-pill">Business</span>
+                                </a>
+                                <button type="button" class="menu-toggle" aria-label="Toggle menu">&#9776;</button>
+                            </div>
                         </div>
-                    </div>
-                    <span class="dashboard-header-divider dashboard-header-divider--rail" aria-hidden="true"></span>
+                        <span class="dashboard-header-divider dashboard-header-divider--rail" aria-hidden="true"></span>
+                    @endunless
                     <div class="align-items-center dash-menu-items">
-                        <div class="dashboard-hub-tabs">
-                            <a href="{{ $businessHubUrl }}" wire:navigate @click="activeSection = 'business-hub'"
-                                class="dashboard-hub-tab{{ $isBusinessHubRoute ? ' is-active' : '' }}">
-                                <span class="dashboard-hub-tab-icon dashboard-hub-tab-icon--business"
-                                    aria-hidden="true"></span>
-                                Business Hub
-                            </a>
-                            <a href="{{ $marketingHubUrl }}" wire:navigate @click="activeSection = 'marketing-hub'"
-                                class="dashboard-hub-tab{{ $isMarketingHubRoute ? ' is-active' : '' }}">
-                                <span class="dashboard-hub-tab-icon dashboard-hub-tab-icon--marketing"
-                                    aria-hidden="true"></span>
-                                Marketing Hub
-                            </a>
-                        </div>
+                        @if ($isBusinessVerificationRoute)
+                            <div
+                                class="logo-toggle-button dashboard-vq-brand d-flex justify-content-between align-items-center">
+                                <a href="{{ $dashboardLogoHref }}" wire:navigate class="d-inline-flex align-items-end gap-10"
+                                    aria-label="FursGo Business">
+                                    <img src="{{ asset('images/logo/logo.svg') }}" alt="FursGo" width="145" height="40">
+                                    <span class="logo-b-text">Business</span>
+                                </a>
+                                <button type="button" class="menu-toggle" aria-label="Toggle menu">&#9776;</button>
+                            </div>
+                            <div class="dashboard-vq-links">
+                                <a href="{{ $businessHomepageUrl }}" class="dashboard-vq-link dashboard-vq-link--hosts"
+                                    wire:navigate>For Groomers &amp; Hosts</a>
+                                <a href="{{ $helpCentreBusinessUrl }}" class="dashboard-vq-link" wire:navigate>Help Centre</a>
+                            </div>
+                        @else
+                            <div class="dashboard-hub-tabs">
+                                <a href="{{ $businessHubUrl }}" wire:navigate @click="activeSection = 'business-hub'"
+                                    class="dashboard-hub-tab{{ $isBusinessHubRoute ? ' is-active' : '' }}">
+                                    <span class="dashboard-hub-tab-icon dashboard-hub-tab-icon--business"
+                                        aria-hidden="true"></span>
+                                    Business Hub
+                                </a>
+                                <a href="{{ $marketingHubUrl }}" wire:navigate @click="activeSection = 'marketing-hub'"
+                                    class="dashboard-hub-tab{{ $isMarketingHubRoute ? ' is-active' : '' }}">
+                                    <span class="dashboard-hub-tab-icon dashboard-hub-tab-icon--marketing"
+                                        aria-hidden="true"></span>
+                                    Marketing Hub
+                                </a>
+                            </div>
+                        @endif
                         <div class="session-login-signup-div dashboard-header-icons d-flex align-items-center">
                             <div class="messages-content-tab">
                                 <a class="messages-btn header-icon-btn cursor" aria-label="Messages">
-                                    <span class="header-icon-btn-glyph" aria-hidden="true">
-                                        <img src="{{ asset('images/header/icon-header-message.svg') }}" alt="" width="24"
-                                            height="20">
-                                    </span>
-                                    <span class="header-icon-badge">{{ $headerBadgeCount }}</span>
+                                    @if ($isBusinessVerificationRoute)
+                                        <span class="vq-icon vq-icon--mail" aria-hidden="true">
+                                            <img src="{{ asset('images/header/vq/icon-mail.svg') }}" alt="" class="vq-icon-mail"
+                                                width="25" height="20">
+                                            <img src="{{ asset('images/header/vq/icon-mail-flap.svg') }}" alt=""
+                                                class="vq-icon-mail-flap" width="15" height="5">
+                                        </span>
+                                    @else
+                                        <span class="header-icon-btn-glyph" aria-hidden="true">
+                                            <img src="{{ asset('images/header/icon-header-message.svg') }}" alt="" width="24"
+                                                height="20">
+                                        </span>
+                                        <span class="header-icon-badge">{{ $headerBadgeCount }}</span>
+                                    @endif
                                 </a>
                                 <div class="messages-notifications" style="display: none;">
                                     <div
@@ -421,11 +449,18 @@
 
                             <div class="notification-content-tab">
                                 <a class="notification-btn header-icon-btn cursor" aria-label="Notifications">
-                                    <span class="header-icon-btn-glyph" aria-hidden="true">
-                                        <img src="{{ asset('images/header/icon-header-bell.svg') }}" alt="" width="18"
-                                            height="18">
-                                    </span>
-                                    <span class="header-icon-badge">{{ $headerBadgeCount }}</span>
+                                    @if ($isBusinessVerificationRoute)
+                                        <span class="vq-icon vq-icon--bell" aria-hidden="true">
+                                            <img src="{{ asset('images/header/vq/icon-bell.svg') }}" alt="" width="19"
+                                                height="20">
+                                        </span>
+                                    @else
+                                        <span class="header-icon-btn-glyph" aria-hidden="true">
+                                            <img src="{{ asset('images/header/icon-header-bell.svg') }}" alt="" width="18"
+                                                height="18">
+                                        </span>
+                                        <span class="header-icon-badge">{{ $headerBadgeCount }}</span>
+                                    @endif
                                 </a>
                                 <div class="header-notifications" style="display: none;">
                                     <div
@@ -715,28 +750,40 @@
                                 </div>
                             </div>
 
-                            <span class="dashboard-header-divider" aria-hidden="true"></span>
+                            @unless ($isBusinessVerificationRoute)
+                                <span class="dashboard-header-divider" aria-hidden="true"></span>
+                            @endunless
                             <div class="user-content-tab">
-                                <button type="button" class="user-btn header-user-chip cursor" aria-label="Account menu"
-                                    aria-haspopup="true">
-                                    <span class="header-user-avatar">
-                                        <img src="{{ $headerAvatar }}" alt="" class="header-user-avatar-img" width="45"
-                                            height="45">
-                                        @if ($isHeaderAuthenticated)
-                                            <img src="{{ asset('images/header/icon-verified-badge.svg') }}" alt=""
-                                                class="header-user-verified" width="16" height="18">
-                                        @endif
-                                    </span>
-                                    <span class="header-user-copy">
-                                        <span
-                                            class="header-user-name">{{ $isHeaderAuthenticated ? $headerShortName : 'Guest' }}</span>
-                                        <span
-                                            class="header-user-business">{{ $isHeaderAuthenticated ? ($headerBusinessLabel ?: 'Business account') : 'Please log in' }}</span>
-                                    </span>
-                                    <span class="header-user-chevron" aria-hidden="true">
-                                        <img src="{{ asset('images/header/icon-chevron-down.svg') }}" alt="" width="12"
-                                            height="8">
-                                    </span>
+                                <button type="button"
+                                    class="user-btn {{ $isBusinessVerificationRoute ? 'header-icon-btn' : 'header-user-chip' }} cursor"
+                                    aria-label="Account menu" aria-haspopup="true">
+                                    @if ($isBusinessVerificationRoute)
+                                        <span class="vq-icon vq-icon--user" aria-hidden="true">
+                                            <img src="{{ asset('images/header/vq/icon-user-head.svg') }}" alt=""
+                                                class="vq-icon-user-head" width="9" height="9">
+                                            <img src="{{ asset('images/header/vq/icon-user-body.svg') }}" alt=""
+                                                class="vq-icon-user-body" width="18" height="8">
+                                        </span>
+                                    @else
+                                        <span class="header-user-avatar">
+                                            <img src="{{ $headerAvatar }}" alt="" class="header-user-avatar-img" width="45"
+                                                height="45">
+                                            @if ($isHeaderAuthenticated)
+                                                <img src="{{ asset('images/header/icon-verified-badge.svg') }}" alt=""
+                                                    class="header-user-verified" width="16" height="18">
+                                            @endif
+                                        </span>
+                                        <span class="header-user-copy">
+                                            <span
+                                                class="header-user-name">{{ $isHeaderAuthenticated ? $headerShortName : 'Guest' }}</span>
+                                            <span
+                                                class="header-user-business">{{ $isHeaderAuthenticated ? ($headerBusinessLabel ?: 'Business account') : 'Please log in' }}</span>
+                                        </span>
+                                        <span class="header-user-chevron" aria-hidden="true">
+                                            <img src="{{ asset('images/header/icon-chevron-down.svg') }}" alt="" width="12"
+                                                height="8">
+                                        </span>
+                                    @endif
                                 </button>
                                 <div class="user-profile-options">
                                     <div class="user-profile-image">
@@ -1503,10 +1550,147 @@
                 padding: 0 !important;
             }
 
-            .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
-                max-width: 1440px;
-                padding-left: 50px;
-                padding-right: 50px;
+            .dashboard-header.dashboard-header--business-verification.scrolled nav.navbar {
+                padding: 50px 0 40px !important;
+            }
+
+            .dashboard-header.dashboard-header--business-verification {
+                border-bottom: none;
+            }
+
+            .dashboard-header.dashboard-header--business-verification .dashboard-header-container {
+                max-width: 1400px;
+            }
+
+            .dashboard-header.dashboard-header--business-verification .dashboard-navbar {
+                min-height: 0;
+                padding: 50px 0 40px !important;
+                align-items: center;
+            }
+
+            .dashboard-header.dashboard-header--business-verification .dashboard-header-inner {
+                display: flex;
+                align-items: center;
+                min-height: 40px;
+            }
+
+            .dashboard-header.dashboard-header--business-verification .dash-menu-items {
+                position: relative;
+                padding-left: 0;
+                gap: 24px;
+            }
+
+            .dashboard-vq-brand {
+                flex-shrink: 0;
+                z-index: 1;
+            }
+
+            .dashboard-vq-links {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                display: flex;
+                align-items: center;
+                gap: 50px;
+                z-index: 1;
+            }
+
+            .dashboard-vq-links a {
+                color: #3b3731;
+                text-decoration: none;
+                font-family: Lato, sans-serif;
+                font-size: 18px;
+                line-height: 22px;
+                font-weight: 500;
+                white-space: nowrap;
+            }
+
+            .dashboard-vq-links a.dashboard-vq-link--hosts {
+                font-weight: 600;
+            }
+
+            .dashboard-vq-links a:hover {
+                color: #3b3731;
+            }
+
+            .dashboard-header--business-verification .dashboard-header-icons {
+                gap: 40px;
+                margin-left: auto;
+                z-index: 1;
+            }
+
+            .dashboard-header--business-verification .header-icon-btn {
+                width: auto;
+                height: auto;
+                min-width: 0;
+                min-height: 0;
+                padding: 0;
+                border: none !important;
+                border-radius: 0;
+                background: transparent !important;
+            }
+
+            .vq-icon {
+                position: relative;
+                display: block;
+                overflow: visible;
+            }
+
+            .vq-icon img {
+                display: block;
+            }
+
+            .vq-icon--bell img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+
+            .vq-icon--mail {
+                width: 25px;
+                height: 20px;
+            }
+
+            .vq-icon-mail {
+                position: absolute;
+                inset: 0;
+                width: 25px;
+                height: 20px;
+            }
+
+            .vq-icon-mail-flap {
+                position: absolute;
+                left: 5px;
+                top: 5px;
+                width: 15px;
+                height: 5px;
+            }
+
+            .vq-icon--bell {
+                width: 19px;
+                height: 20px;
+            }
+
+            .vq-icon--user {
+                width: 18px;
+                height: 21px;
+            }
+
+            .vq-icon-user-head {
+                position: absolute;
+                left: 4px;
+                top: 0;
+                width: 9px;
+                height: 9px;
+            }
+
+            .vq-icon-user-body {
+                position: absolute;
+                left: 0;
+                top: 12px;
+                width: 18px;
+                height: 8px;
             }
 
             .dashboard-header .menu-toggle {
@@ -1514,15 +1698,28 @@
             }
 
             @media (max-width: 1199.98px) {
+                .dashboard-header:not(.dashboard-header--business-verification) .dashboard-header-container {
+                    padding-left: 24px;
+                    padding-right: 24px;
+                }
 
-                .dashboard-header .dashboard-header-container,
-                .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
+                .dashboard-header.dashboard-header--business-verification .dashboard-header-container {
                     padding-left: 24px;
                     padding-right: 24px;
                 }
 
                 .header-user-business {
                     display: none;
+                }
+
+                .dashboard-vq-links {
+                    position: static;
+                    transform: none;
+                    gap: 1.5rem;
+                }
+
+                .dashboard-header--business-verification .dashboard-header-icons {
+                    gap: 24px;
                 }
             }
 
@@ -1554,11 +1751,23 @@
             }
 
             @media (max-width: 767.98px) {
-
-                .dashboard-header .dashboard-header-container,
-                .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
+                .dashboard-header:not(.dashboard-header--business-verification) .dashboard-header-container {
                     padding-left: 16px;
                     padding-right: 16px;
+                }
+
+                .dashboard-header.dashboard-header--business-verification .dashboard-header-container {
+                    padding-left: 16px;
+                    padding-right: 16px;
+                }
+
+                .dashboard-header.dashboard-header--business-verification .dashboard-navbar,
+                .dashboard-header.dashboard-header--business-verification.scrolled nav.navbar {
+                    padding: 24px 0 !important;
+                }
+
+                .dashboard-vq-links {
+                    display: none;
                 }
 
                 .header-user-copy {
@@ -1569,7 +1778,7 @@
                     display: none;
                 }
 
-                .header-icon-btn {
+                .dashboard-header:not(.dashboard-header--business-verification) .header-icon-btn {
                     width: 40px;
                     height: 40px;
                 }
