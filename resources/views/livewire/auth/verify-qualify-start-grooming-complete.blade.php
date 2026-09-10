@@ -24,13 +24,15 @@
 
 <style>
     .vq-start-grooming-complete {
-        max-width: 36rem;
+        max-width: 1340px;
         margin: 0 auto;
-        padding: 2rem 1.5rem 3rem;
+        padding: 4rem 1.5rem;
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
+        background: #FBFBFB;
+        box-sizing: border-box;
     }
 
     .vq-start-grooming-complete>svg {
