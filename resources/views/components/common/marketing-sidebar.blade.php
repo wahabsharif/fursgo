@@ -7,37 +7,91 @@
     $dashboardActiveSection = $dashboardNav['active_section'];
 
     $activeBgColor = '#FFC97A';
+    $activeShadow = '0 0 10px 0 rgba(255, 216, 140, 0.70)';
     if (auth()->check() && strtolower((string) auth()->user()->user_type) === 'space') {
         $activeBgColor = '#FFA899';
+        $activeShadow = '0 0 10px 0 rgba(255, 168, 153, 0.70)';
     }
+
+    $marketingHubUrl = url('/marketing-hub');
 @endphp
 
 <div x-data="{
     mobileOpen: false,
-}"
-    style="{{ $variant === 'dashboard' ? 'max-width: 14rem; margin: 0; padding: 0; width: 100%; position: relative;' : 'position: relative;' }}">
+}" class="{{ $variant === 'dashboard' ? 'dashboard-sidebar' : '' }}"
+    style="{{ $variant === 'dashboard' ? 'margin: 0; width: 100%; position: relative;' : 'position: relative;' }}">
     <style>
         :root {
             --sidebar-active-bg:
                 {{ $activeBgColor }}
             ;
+            --sidebar-active-shadow:
+                {{ $activeShadow }}
+            ;
         }
 
         .dashboard-wrapper {
-            display: flex;
-            gap: 1.25rem;
-            padding-top: 2rem;
-            max-width: 1240px;
-            width: min(1240px, calc(100% - 2rem));
+            --dashboard-sidebar-col: 14rem;
+            display: grid;
+            grid-template-columns: var(--dashboard-sidebar-col) 1px minmax(0, 1fr);
+            column-gap: 0;
+            padding: 0 50px;
+            max-width: 1440px;
+            width: 100%;
             margin: 0 auto;
+            box-sizing: border-box;
+            align-items: stretch;
+        }
+
+        .dashboard-wrapper::before {
+            content: '';
+            grid-column: 2;
+            grid-row: 1;
+            align-self: stretch;
+            width: 1px;
+            background: #e2e2e2;
+            min-height: calc(100vh - 85px);
+        }
+
+        .dashboard-wrapper>main {
+            grid-column: 3;
+            min-width: 0;
+            width: 100%;
+            padding-top: 2rem;
+            padding-left: 24px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 1199.98px) {
+            .dashboard-wrapper {
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .dashboard-wrapper {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+        }
+
+        .dashboard-sidebar {
+            grid-column: 1;
+            align-self: stretch;
+            width: 100%;
+            max-width: none;
+            min-height: calc(100vh - 85px);
+            margin: 0;
+            padding: 2rem 24px 0 0;
             box-sizing: border-box;
         }
 
         .aside {
             flex-shrink: 0;
-            width: max-content;
-            min-width: 190px;
-            max-width: 14rem;
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
             position: sticky;
             top: 2rem;
             align-self: flex-start;
@@ -65,9 +119,9 @@
             display: flex;
             flex-direction: column;
             gap: 0;
-            width: max-content;
-            min-width: 190px;
-            max-width: 14rem;
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
         }
 
         .nav-section-label {
@@ -149,7 +203,7 @@
             line-height: normal;
             border: none;
             outline: none;
-            box-shadow: 0 0 10px 0 rgba(255, 216, 140, 0.7);
+            box-shadow: var(--sidebar-active-shadow);
         }
 
         .nav-text {
@@ -167,6 +221,23 @@
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
+            }
+
+            .dashboard-sidebar {
+                min-height: 0;
+                padding: 0;
+            }
+
+            .dashboard-wrapper {
+                display: flex;
+            }
+
+            .dashboard-wrapper::before {
+                display: none;
+            }
+
+            .dashboard-wrapper>main {
+                padding-left: 0;
             }
 
             .aside {
@@ -200,7 +271,7 @@
             <li class="nav-section-label" aria-hidden="true">Overview</li>
 
             <li class="nav-item">
-                <a href="{{ route('marketing-hub') }}"
+                <a href="{{ $marketingHubUrl }}"
                     @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'marketing-hub'; window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'marketing-hub' } }))"
                     :class="{ 'active': activeSection === 'marketing-hub' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 13 13" fill="none"
@@ -219,7 +290,7 @@
             <li class="nav-section-label" aria-hidden="true">Manage</li>
 
             <li class="nav-item">
-                <a href="{{ route('marketing-hub') }}"
+                <a href="{{ $marketingHubUrl }}"
                     @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'promo-creation'; window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'promo-creation' } }))"
                     :class="{ 'active': activeSection === 'promo-creation' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14" fill="none"

@@ -8,11 +8,13 @@
     $dashboardActiveSection = $dashboardNav['active_section'];
 
     $activeBgColor = '#FFC97A';
+    $activeShadow = '0 0 10px 0 rgba(255, 216, 140, 0.70)';
     $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
     if (auth()->check()) {
         $userType = auth()->user()->user_type;
         if ($userType === 'space') {
             $activeBgColor = '#FFA899';
+            $activeShadow = '0 0 10px 0 rgba(255, 168, 153, 0.70)';
         }
     }
 
@@ -66,11 +68,15 @@
         }
     " @earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'"
     @settings-menu-selected.window="activeSettingsMenu = $event.detail?.menu || 'general'"
-    style="{{ $variant === 'dashboard' ? 'max-width: 14rem; margin: 0; padding: 0; width: 100%; position: relative;' : 'position: relative;' }}">
+    class="{{ $variant === 'dashboard' ? 'dashboard-sidebar' : '' }}"
+    style="{{ $variant === 'dashboard' ? 'margin: 0; width: 100%; position: relative;' : 'position: relative;' }}">
     <style>
         :root {
             --sidebar-active-bg:
                 {{ $activeBgColor }}
+            ;
+            --sidebar-active-shadow:
+                {{ $activeShadow }}
             ;
         }
     </style>
@@ -391,15 +397,51 @@
             display: none !important;
         }
 
-        /* Dashboard Layout — 1240px content shell (Figma 1440 with ~100px side margins) */
+        /* Dashboard Layout — 1440px shell; sidebar rail aligns with header divider */
         .dashboard-wrapper {
-            display: flex;
-            gap: 1.25rem;
-            padding-top: 2rem;
-            max-width: 1240px;
-            width: min(1240px, calc(100% - 2rem));
+            --dashboard-sidebar-col: 14rem;
+            display: grid;
+            grid-template-columns: var(--dashboard-sidebar-col) 1px minmax(0, 1fr);
+            column-gap: 0;
+            padding: 0 50px;
+            max-width: 1440px;
+            width: 100%;
             margin: 0 auto;
             box-sizing: border-box;
+            align-items: stretch;
+        }
+
+        .dashboard-wrapper::before {
+            content: '';
+            grid-column: 2;
+            grid-row: 1;
+            align-self: stretch;
+            width: 1px;
+            background: #e2e2e2;
+            min-height: calc(100vh - 85px);
+        }
+
+        .dashboard-wrapper>main {
+            grid-column: 3;
+            min-width: 0;
+            width: 100%;
+            padding-top: 2rem;
+            padding-left: 24px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 1199.98px) {
+            .dashboard-wrapper {
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .dashboard-wrapper {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
         }
 
         .dashboard-main {
@@ -407,11 +449,22 @@
             min-width: 0;
         }
 
+        .dashboard-sidebar {
+            grid-column: 1;
+            align-self: stretch;
+            width: 100%;
+            max-width: none;
+            min-height: calc(100vh - 85px);
+            margin: 0;
+            padding: 2rem 24px 0 0;
+            box-sizing: border-box;
+        }
+
         .aside {
             flex-shrink: 0;
-            width: max-content;
-            min-width: 190px;
-            max-width: 14rem;
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
             position: sticky;
             top: 2rem;
             align-self: flex-start;
@@ -441,9 +494,9 @@
             display: flex;
             flex-direction: column;
             gap: 0;
-            width: max-content;
-            min-width: 190px;
-            max-width: 14rem;
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
         }
 
         .nav-section-label {
@@ -682,7 +735,7 @@
             color: #FFF;
             border: none;
             outline: none;
-            box-shadow: 0 0 10px 0 rgba(255, 216, 140, 0.7);
+            box-shadow: var(--sidebar-active-shadow);
         }
 
         .nav-link.active .nav-text {

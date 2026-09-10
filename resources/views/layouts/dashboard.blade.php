@@ -150,12 +150,26 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
         .dashboard-info-main {
             position: relative;
             z-index: 2;
-            width: min(1240px, calc(100% - 2rem));
-            max-width: 1240px;
+            width: 100%;
+            max-width: 1440px;
             margin-left: auto;
             margin-right: auto;
-            padding-bottom: 2rem;
+            padding: 0 50px 2rem;
             box-sizing: border-box;
+        }
+
+        @media (max-width: 1199.98px) {
+            .dashboard-info-main {
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .dashboard-info-main {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
         }
 
         .dashboard-shell--for-groomers-hosts .dashboard-info-main .container,
@@ -165,12 +179,12 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
         }
 
         .dashboard-shell--help-centre {
-            --help-tabs-sticky-top: 8.75rem;
+            --help-tabs-sticky-top: 5.5rem;
         }
 
         /* Verify & Qualify: content width matches header (Bootstrap .container only) */
         .dashboard-shell--verify-qualify {
-            --dashboard-sticky-header-offset: 9.5rem;
+            --dashboard-sticky-header-offset: 5.5rem;
         }
 
         .dashboard-shell--verify-qualify .dashboard-info-main {

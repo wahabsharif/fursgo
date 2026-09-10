@@ -1,8 +1,8 @@
 .account-settings-page {
     position: relative;
-    width: min(1240px, calc(100% - 2rem));
-    max-width: 1240px;
-    margin: 0 auto;
+    width: 100%;
+    max-width: none;
+    margin: 0;
     padding: 0 0 3rem;
     box-sizing: border-box;
 }

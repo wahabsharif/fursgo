@@ -8,8 +8,34 @@
         : (BusinessPageShell::prefersBusinessChrome() ? ['chrome' => 'business'] : []);
 @endphp
 
-<footer class="mt-5 mb-5"
-    style="padding: 6rem; {{ $variant === 'dashboard' ? 'max-width: 1240px; width: min(1240px, calc(100% - 2rem)); margin: 0 auto; padding: 0; box-sizing: border-box;' : '' }}">
+@if ($variant === 'dashboard')
+    <style>
+        .dashboard-footer {
+            max-width: 1440px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 50px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 1199.98px) {
+            .dashboard-footer {
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .dashboard-footer {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+        }
+    </style>
+@endif
+
+<footer class="mt-5 mb-5{{ $variant === 'dashboard' ? ' dashboard-footer' : '' }}" @unless ($variant === 'dashboard')
+style="padding: 6rem;" @endunless>
     <section class="section">
         <div class="{{ $variant === 'dashboard' ? 'container-fluid' : 'container' }}">
             <div class="row align-items-end">

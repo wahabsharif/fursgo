@@ -2,6 +2,7 @@
 
 @php
     use App\Models\GroomerSpacerProfile;
+    use App\Models\ServiceArea;
     use App\Support\BusinessPageShell;
     use App\Support\HelpCentre;
     use Illuminate\Support\Facades\Auth;
@@ -49,7 +50,10 @@
     $accountSettingsUrl = route('account-settings');
     $logoutUrl = route('logout');
     $loginGroomerSpaceUrl = route('login-groomer-space');
+    $signupGroomerSpaceUrl = route('signup-groomer-space');
+    $switchBusinessUrl = route('business-hub.switch');
     $headerPublicView = 'components.common.header-public';
+    $headerBadgeCount = 3;
 
     if (!$isGroomerSpacerSession && auth()->check()) {
         $authUser = auth()->user();
@@ -103,102 +107,123 @@
         : (auth()->check()
             ? auth()->user()->user_type ?? 'groomer'
             : 'groomer');
+
+    $headerPersonName = $gsp instanceof GroomerSpacerProfile
+        ? ($gsp->full_name ?: $displayName)
+        : $displayName;
+    $headerNameParts = preg_split('/\s+/', trim((string) $headerPersonName), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+    $headerShortName = match (true) {
+        count($headerNameParts) >= 2 => $headerNameParts[0] . ' ' . mb_strtoupper(mb_substr($headerNameParts[count($headerNameParts) - 1], 0, 1)) . '.',
+        count($headerNameParts) === 1 => $headerNameParts[0],
+        default => $displayName ?: 'Account',
+    };
+    $headerBusinessLabel = $welcomeBusinessName ?: $displayName;
+    $headerEmail = $gsp instanceof GroomerSpacerProfile
+        ? ($gsp->email ?? null)
+        : (auth()->user()->email ?? $displaySubLabel);
+
+    $resolveHeaderProfileImage = static function (?GroomerSpacerProfile $profile): string {
+        $fallback = asset('images/user-placeholder.png');
+        if (!$profile instanceof GroomerSpacerProfile) {
+            return $fallback;
+        }
+
+        $bb = is_array($profile->business_basics) ? $profile->business_basics : [];
+        $avatarPath = trim((string) ($bb['profile_photo_path'] ?? ''));
+        if ($avatarPath === '') {
+            return $fallback;
+        }
+
+        $avatarAssetPath = ltrim(str_replace('\\', '/', $avatarPath), '/');
+        if (str_starts_with($avatarAssetPath, 'public/')) {
+            $avatarAssetPath = substr($avatarAssetPath, strlen('public/'));
+        }
+
+        return match (true) {
+            (bool) filter_var($avatarPath, FILTER_VALIDATE_URL) => $avatarPath,
+            file_exists(public_path($avatarAssetPath)) => asset($avatarAssetPath),
+            str_starts_with($avatarAssetPath, 'storage/') => asset($avatarAssetPath),
+            default => asset('storage/' . $avatarAssetPath),
+        };
+    };
+
+    $headerAvatar = $isHeaderAuthenticated
+        ? (auth()->check() && auth()->user()->profile_image
+            ? asset('storage/' . auth()->user()->profile_image)
+            : $headerProfileImage)
+        : asset('images/user-placeholder.png');
+
+    $headerSwitchBusinesses = [];
+    if ($gsp instanceof GroomerSpacerProfile && filled($gsp->email)) {
+        $headerSwitchBusinesses = GroomerSpacerProfile::query()
+            ->where('email', $gsp->email)
+            ->orderBy('id')
+            ->get()
+            ->map(function (GroomerSpacerProfile $profile) use ($gsp, $resolveHeaderProfileImage) {
+                $bd = is_array($profile->business_details) ? $profile->business_details : [];
+                $bb = is_array($profile->business_basics) ? $profile->business_basics : [];
+                $name = trim((string) ($bb['display_name'] ?? $bd['business_name'] ?? $profile->full_name ?? 'Business'));
+                $role = strtolower((string) ($profile->user_type ?? 'groomer')) === 'space' ? 'Space Host' : 'Groomer';
+                $area = ServiceArea::query()->where('groomer_spacer_id', $profile->id)->value('name');
+                $area = is_string($area) && trim($area) !== '' ? trim($area) : null;
+
+                return [
+                    'id' => $profile->id,
+                    'name' => $name !== '' ? $name : 'Business',
+                    'meta' => $area ? $role . ' · ' . $area : $role,
+                    'image' => $resolveHeaderProfileImage($profile),
+                    'active' => (int) $profile->id === (int) $gsp->id,
+                ];
+            })
+            ->all();
+    }
 @endphp
 
 @if ($variant === 'dashboard')
     {{-- Dashboard Header --}}
     <header
-        class="dashboard-header{{ $isVerifyQualifyRoute ? ' dashboard-header--verify-qualify' : '' }}{{ $isBusinessHubRoute ? ' dashboard-header--business-hub' : '' }}{{ $isMarketingHubRoute ? ' dashboard-header--marketing-hub' : '' }}{{ $isAccountSettingsRoute ? ' dashboard-header--account-settings' : '' }}{{ $isHelpCentreRoute ? ' dashboard-header--help-centre' : '' }}">
-        @if (in_array($dashboardNavView, ['hub', 'marketing-hub', 'account-settings'], true))
-            {{-- Peach curve only behind the Welcome banner (Business Hub / Marketing Hub / Account Settings) --}}
-            <div class="curve-shape-container" aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 260" fill="none" preserveAspectRatio="none">
-                    <path d="M0 0H1440V260H260C116.406 260 0 143.594 0 0Z"
-                        fill="{{ $headerUserType === 'space' ? '#FFA89933' : '#FFF4E4' }}" />
-                </svg>
-            </div>
-        @endif
-
+        class="dashboard-header dashboard-header--{{ strtolower((string) $headerUserType) === 'space' ? 'space' : 'groomer' }}{{ $isVerifyQualifyRoute ? ' dashboard-header--verify-qualify' : '' }}{{ $isBusinessHubRoute ? ' dashboard-header--business-hub' : '' }}{{ $isMarketingHubRoute ? ' dashboard-header--marketing-hub' : '' }}{{ $isAccountSettingsRoute ? ' dashboard-header--account-settings' : '' }}{{ $isHelpCentreRoute ? ' dashboard-header--help-centre' : '' }}">
         <div class="dashboard-header-container">
             {{-- Main Navigation Bar --}}
-            <nav class="navbar dashboard-navbar" style="padding: 50px 0;">
+            <nav class="navbar dashboard-navbar">
                 <div class="dashboard-header-inner">
-                    <div class="align-items-center dash-menu-items">
-                        <div class="logo-toggle-button d-flex justify-content-between">
+                    <div class="dashboard-header-brand">
+                        <div class="logo-toggle-button d-flex justify-content-between align-items-center">
                             <a href="{{ $dashboardLogoHref }}" wire:navigate
                                 @click="activeSection = @js($isMarketingHubRoute ? 'marketing-hub' : 'business-hub')"
-                                class="d-inline-flex align-items-end gap-10" aria-label="FursGo Business dashboard">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="145" height="40" viewBox="0 0 145 40"
-                                    fill="none">
-                                    <path
-                                        d="M132.206 12.7941C134.795 12.7941 137.035 13.2385 138.927 14.1273C140.852 14.9832 142.345 16.3987 143.407 18.3738C144.469 20.349 145 22.9989 145 26.3237C145 29.6485 144.469 32.2985 143.407 34.2736C142.345 36.2487 140.852 37.6642 138.927 38.5201C137.035 39.376 134.795 39.8039 132.206 39.8039C129.651 39.8039 127.41 39.376 125.485 38.5201C123.561 37.6642 122.067 36.2487 121.005 34.2736C119.943 32.2985 119.412 29.6485 119.412 26.3237C119.412 22.9989 119.943 20.349 121.005 18.3738C122.067 16.3987 123.561 14.9832 125.485 14.1273C127.41 13.2385 129.651 12.7941 132.206 12.7941ZM132.206 13.7817C131.21 13.7817 130.381 14.7692 129.717 16.7444C129.053 18.7195 128.721 21.9126 128.721 26.3237C128.721 30.7348 129.053 33.9279 129.717 35.9031C130.381 37.8453 131.21 38.8164 132.206 38.8164C133.202 38.8164 134.031 37.8453 134.695 35.9031C135.359 33.9279 135.691 30.7348 135.691 26.3237C135.691 21.9126 135.359 18.7195 134.695 16.7444C134.031 14.7692 133.202 13.7817 132.206 13.7817Z"
-                                        fill="#FFC97A" />
-                                    <path
-                                        d="M81.26 12.3203C82.7431 12.3203 84.0409 12.4877 85.1532 12.8227C86.2992 13.1242 87.125 13.4089 87.6306 13.6769C88.8104 14.3803 89.5351 13.9448 89.8047 12.3705H90.816C90.7485 13.3419 90.698 14.531 90.6643 15.9378C90.6306 17.3112 90.6137 19.1367 90.6137 21.4145H89.6025C89.4677 20.1751 89.1643 18.9525 88.6924 17.7466C88.2542 16.5408 87.5969 15.5359 86.7206 14.732C85.8779 13.9281 84.7656 13.5261 83.3836 13.5261C82.5409 13.5261 81.833 13.7773 81.26 14.2798C80.687 14.7822 80.4005 15.4689 80.4005 16.3398C80.4005 17.3447 80.7039 18.2491 81.3106 19.053C81.9173 19.8234 82.6926 20.5771 83.6364 21.314C84.5802 22.0174 85.524 22.7711 86.4678 23.575C87.5127 24.4124 88.4396 25.2331 89.2486 26.037C90.0576 26.8409 90.698 27.7285 91.1699 28.6999C91.6755 29.6378 91.9283 30.7599 91.9283 32.0663C91.9283 33.5736 91.4564 34.9135 90.5126 36.0858C89.6025 37.2582 88.3722 38.1793 86.8217 38.8493C85.3049 39.4857 83.6027 39.8039 81.7151 39.8039C80.5353 39.8039 79.5073 39.6699 78.6309 39.402C77.7545 39.1675 77.0467 38.8828 76.5074 38.5478C75.968 38.2798 75.4961 38.0789 75.0917 37.9449C74.7209 37.7774 74.3501 37.6937 73.9793 37.6937C73.6423 37.6937 73.3558 37.8779 73.1198 38.2463C72.8839 38.5813 72.6985 38.9833 72.5636 39.4522H71.5524C71.6198 38.3803 71.6704 37.074 71.7041 35.5331C71.7378 33.9923 71.7547 31.9491 71.7547 29.4033H72.7659C72.9681 31.1786 73.3557 32.753 73.9288 34.1263C74.5355 35.4997 75.2939 36.5883 76.204 37.3922C77.1478 38.1626 78.2264 38.5478 79.4399 38.5478C79.9792 38.5478 80.4679 38.4473 80.9061 38.2463C81.3443 38.0454 81.6982 37.7439 81.9679 37.3419C82.2375 36.94 82.3724 36.4208 82.3724 35.7844C82.3724 34.3105 81.9173 33.0712 81.0072 32.0663C80.1308 31.0614 79.0185 29.956 77.6702 28.7502C76.659 27.8123 75.6984 26.9079 74.7883 26.037C73.9119 25.1326 73.1872 24.1612 72.6142 23.1228C72.0412 22.0509 71.7547 20.8618 71.7547 19.5554C71.7547 18.0481 72.1929 16.7585 73.0692 15.6866C73.9793 14.6147 75.1591 13.7941 76.6085 13.2247C78.0579 12.6217 79.6084 12.3203 81.26 12.3203Z"
-                                        fill="#FFC97A" />
-                                    <path
-                                        d="M66.4997 12.3203C67.6942 12.3203 68.6232 12.5858 69.2868 13.1168C69.9504 13.6147 70.415 14.2619 70.6804 15.0585C70.9459 15.8219 71.0786 16.5853 71.0786 17.3486C71.0786 18.8422 70.6472 20.0371 69.7845 20.9332C68.955 21.7962 67.8601 22.2277 66.4997 22.2277C65.0398 22.2277 63.9282 21.8958 63.1651 21.232C62.4351 20.5681 62.0701 19.7052 62.0701 18.6431C62.0701 17.5146 62.3024 16.5853 62.7669 15.8551C63.2646 15.1249 63.8784 14.5108 64.6084 14.013C64.0112 14.013 63.4803 14.1291 63.0157 14.3615C62.6176 14.5274 62.236 14.7598 61.871 15.0585C61.506 15.3572 61.1908 15.7057 60.9254 16.104C60.6599 16.4691 60.4443 16.884 60.2784 17.3486C60.1456 17.8133 60.0793 18.2946 60.0793 18.7924V33.7282C60.0793 35.3214 60.4111 36.4001 61.0747 36.9643C61.7383 37.5286 62.8333 37.8107 64.3596 37.8107V38.8562C63.5964 38.823 62.4517 38.7898 60.9254 38.7566C59.4323 38.6903 57.8894 38.6571 56.2967 38.6571C54.8036 38.6571 53.2939 38.6903 51.7676 38.7566C50.2413 38.7898 49.0966 38.823 48.3334 38.8562V37.8107C49.362 37.8107 50.0754 37.5618 50.4736 37.0639C50.9049 36.566 51.1206 35.6201 51.1206 34.2261V18.4439C51.1206 16.9504 50.9215 15.8551 50.5233 15.1581C50.1252 14.4279 49.3952 14.0628 48.3334 14.0628V13.0173C49.3952 13.1168 50.4238 13.1666 51.4192 13.1666C53.0782 13.1666 54.6211 13.1168 56.0479 13.0173C57.5078 12.8845 58.8516 12.7019 60.0793 12.4696V16.0542C60.5106 15.1912 61.0415 14.4942 61.6719 13.9632C62.3024 13.399 63.0158 12.9841 63.8121 12.7185C64.6416 12.453 65.5375 12.3203 66.4997 12.3203Z"
-                                        fill="#FFC97A" />
-                                    <path
-                                        d="M13.9663 0C15.2964 0 16.4437 0.165628 17.408 0.496885C18.3724 0.82814 19.2203 1.27533 19.9519 1.83847C20.4174 2.20285 20.8331 2.74942 21.1989 3.47818C21.5979 4.17381 21.7974 5.00195 21.7974 5.96259C21.7974 6.98948 21.415 7.917 20.6502 8.74514C19.8854 9.57327 18.8878 9.98734 17.6574 9.98734C16.294 9.98734 15.1967 9.62296 14.3654 8.8942C13.5673 8.16544 13.1682 7.15511 13.1682 5.86322C13.1682 4.90258 13.4509 4.02475 14.0162 3.22974C14.5815 2.4016 15.4461 1.80534 16.6099 1.44096C16.5102 1.30846 16.3439 1.20908 16.1111 1.14283C15.9116 1.04345 15.629 0.993767 15.2632 0.993767C14.6979 0.993767 14.2323 1.07658 13.8666 1.24221C13.5008 1.40784 13.1849 1.63971 12.9188 1.93784C12.6196 2.30222 12.3868 2.81567 12.2205 3.47818C12.0543 4.14069 11.9711 5.13445 11.9711 6.45948V13.1177H17.3083V14.1115H11.9711V33.7383C11.9711 35.3615 12.3535 36.4546 13.1184 37.0178C13.8832 37.5478 14.9307 37.8128 16.2608 37.8128V38.8562C15.3297 38.8231 14.0328 38.79 12.3702 38.7568C10.7075 38.6906 8.94509 38.6575 7.08292 38.6575C5.75279 38.6575 4.43929 38.6906 3.14242 38.7568C1.84555 38.79 0.864582 38.8231 0.199519 38.8562V37.8128C1.23037 37.8128 1.94531 37.5643 2.34435 37.0674C2.77664 36.5706 2.99278 35.6265 2.99278 34.2352V14.1115H0V13.1177H2.99278C2.99278 11.1633 3.10917 9.54015 3.34194 8.24825C3.57471 6.95636 3.9405 5.86322 4.43929 4.96883C4.97134 4.04131 5.66966 3.21318 6.53424 2.48441C7.29906 1.8219 8.34654 1.24221 9.67666 0.745326C11.0068 0.248442 12.4367 0 13.9663 0Z"
-                                        fill="#FFC97A" />
-                                    <path
-                                        d="M33.6439 29.0632C33.6439 28.5398 33.1934 28.4314 32.5107 28.4314C31.828 28.4314 31.2746 28.5398 31.2746 29.0632C31.2746 29.5866 31.828 30.3268 32.5107 30.3268C33.1934 30.3268 33.6439 29.5866 33.6439 29.0632Z"
-                                        fill="#FFC97A" />
-                                    <path
-                                        d="M44.5664 33.4698C44.5664 34.9637 44.7648 36.0763 45.1611 36.8067C45.5906 37.5036 46.3171 37.8525 47.3408 37.8526V38.8985C46.3169 38.7989 45.2925 38.7491 44.2686 38.7491C42.6171 38.7491 41.0805 38.7989 39.6602 38.8985C38.2399 38.9981 36.9016 39.1808 35.6465 39.4464V35.8604C34.8537 37.1883 33.7801 38.1515 32.4258 38.7491C31.1046 39.3134 29.5521 39.5957 27.7686 39.5958C26.2493 39.5958 25.0432 39.3963 24.1514 38.9981C23.2926 38.633 22.6314 38.1679 22.169 37.6036C21.6735 37.006 21.3104 36.2088 21.0791 35.213C20.8479 34.2171 20.7315 32.8726 20.7315 31.1798V18.4805C20.7315 16.9869 20.5339 15.8907 20.1377 15.1934C19.7413 14.4631 19.014 14.0978 17.957 14.0977V13.0518C20.5231 13.4177 26.3254 13.9395 30.7471 13.4092L30.669 24.7432C30.6689 24.7725 30.66 26.4722 29.627 27.3477C28.8462 28.0094 26.9402 28.1797 26.918 28.1817C26.9181 31.1739 29.3907 33.079 32.4404 33.0792C35.4903 33.0791 37.9627 31.1739 37.9629 28.1817C37.9282 28.181 35.9649 28.1392 35.1504 27.3477C34.2208 26.4439 34.212 24.7723 34.2119 24.7432L34.292 13.2012H35.9444C37.596 13.2012 39.1324 13.1514 40.5527 13.0518C42.0061 12.919 43.3442 12.7364 44.5664 12.504V33.4698ZM28.377 24.1739C27.9725 24.1739 27.5431 24.3749 27.543 25.1778C27.543 25.7321 28.2496 25.1781 28.71 25.1778C29.1704 25.1778 29.21 25.7323 29.21 25.1778C29.2099 24.6235 28.8372 24.174 28.377 24.1739ZM36.5039 24.1739C36.0438 24.1742 35.671 24.6236 35.6709 25.1778C35.6709 25.7323 35.7105 25.1778 36.1709 25.1778C36.6313 25.1778 37.3379 25.7323 37.3379 25.1778C37.3378 24.3749 36.9084 24.1739 36.5039 24.1739Z"
-                                        fill="#FFC97A" />
-                                    <path
-                                        d="M117.203 3.54282C118.365 3.54286 119.229 3.85585 119.793 4.48227C120.358 5.10883 120.64 5.88413 120.64 6.80746C120.64 7.76388 120.374 8.50635 119.843 9.03403C119.345 9.56157 118.731 9.82501 118 9.82504C117.369 9.82504 116.788 9.61102 116.257 9.18246C115.759 8.75373 115.477 8.11025 115.41 7.25278C115.353 6.5126 115.58 5.60064 116.092 4.51645C115.148 4.90983 114.389 5.37609 113.816 5.91684C113.472 6.24131 113.156 6.62873 112.865 7.077C113.024 7.24404 113.175 7.41773 113.318 7.59946C114.247 8.75374 114.712 10.2377 114.712 12.0516C114.712 13.8654 114.247 15.3663 113.318 16.5536C112.388 17.7076 111.11 18.5652 109.483 19.1258C107.889 19.6865 106.062 19.9666 104.003 19.9666C103.534 19.9666 103.077 19.9498 102.63 19.9207C102.383 20.1079 102.126 20.3212 101.861 20.5604C101.496 20.8902 101.314 21.3684 101.314 21.995C101.314 23.0502 101.911 23.5779 103.107 23.578H107.939C110.097 23.578 111.973 23.8087 113.567 24.2704C115.194 24.7321 116.456 25.4904 117.353 26.5457C118.282 27.5681 118.747 28.9205 118.747 30.6024C118.747 32.2514 118.2 33.769 117.104 35.1541C116.041 36.5722 114.38 37.693 112.122 38.5174C109.864 39.3749 106.925 39.8036 103.306 39.8036C101.048 39.8036 99.0882 39.6224 97.4279 39.2596C95.801 38.9298 94.5393 38.4348 93.6427 37.7752C92.7464 37.1488 92.2982 36.3742 92.298 35.451C92.298 34.5276 92.7629 33.6534 93.6926 32.8289C94.6223 32.0374 96.1005 31.4108 98.1261 30.9491L98.6242 31.7401C98.0929 32.3667 97.7268 32.928 97.5275 33.4227C97.3616 33.9501 97.2785 34.4446 97.2785 34.9061C97.2785 36.1923 97.8604 37.1823 99.0226 37.8748C100.218 38.6002 101.878 38.9627 104.003 38.9627C105.497 38.9627 106.743 38.7489 107.739 38.3202C108.769 37.9244 109.532 37.3631 110.03 36.6375C110.562 35.912 110.827 35.0872 110.827 34.1639C110.827 33.2407 110.479 32.4494 109.781 31.7899C109.084 31.1303 107.672 30.8006 105.547 30.8006H102.858C101.33 30.8006 100.052 30.6025 99.0226 30.2069C97.9932 29.8111 97.2121 29.2666 96.6808 28.5741C96.1497 27.8486 95.884 27.0078 95.884 26.0516C95.884 24.5017 96.4983 23.1987 97.7267 22.1434C98.7256 21.2854 99.9565 20.506 101.416 19.8006C100.368 19.6626 99.3872 19.4402 98.4748 19.1258C96.8809 18.5652 95.6184 17.7078 94.6886 16.5536C93.7589 15.3663 93.2941 13.8654 93.2941 12.0516C93.2941 10.2378 93.759 8.75372 94.6886 7.59946C95.6184 6.41219 96.8808 5.53804 98.4748 4.97739C100.102 4.41683 101.944 4.13658 104.003 4.13657C106.062 4.13657 107.889 4.41673 109.483 4.97739C110.463 5.31528 111.317 5.76738 112.044 6.33286C112.46 5.75677 112.95 5.2552 113.517 4.82895C114.646 3.97148 115.875 3.54282 117.203 3.54282ZM98.8478 6.46078C97.3231 7.72555 95.7473 9.68375 95.8449 12.2752C96.0184 16.8802 98.8482 17.4014 99.7218 17.8182C99.391 15.4216 101.31 14.9187 102.184 14.8397C104.915 14.5235 104.911 11.8624 104.567 10.5711L103.137 9.93832C102.629 8.04141 100.649 8.0411 99.7218 8.27817L98.8478 6.46078Z"
-                                        fill="#FFC97A" />
-                                    <path
-                                        d="M100.537 11.2333C100.537 10.5865 100.882 10.4248 101.208 10.4248C101.579 10.4248 101.879 10.7868 101.879 11.2333C101.879 11.6799 101.847 11.2333 101.477 11.2333C101.106 11.2333 100.537 11.6799 100.537 11.2333Z"
-                                        fill="#FFC97A" />
-                                </svg>
-                                @if ($variant === 'dashboard' || ($isBusinessSiteRoute && !$isBusinessHomepageRoute))
-                                    <span class="logo-b-text fs-18-500">Business</span>
-                                @endif
+                                class="dashboard-logo" aria-label="FursGo Business dashboard">
+                                <span class="dashboard-logo-mark" aria-hidden="true">
+                                    <img src="{{ asset('images/header/logo-fursgo.svg') }}" alt="" width="98" height="27">
+                                </span>
+                                <span class="dashboard-logo-pill">Business</span>
                             </a>
-                            <button class="menu-toggle">&#9776;</button>
+                            <button type="button" class="menu-toggle" aria-label="Toggle menu">&#9776;</button>
                         </div>
-                        <div>
-                            @if ($variant === 'dashboard')
-                                <a href="{{ $businessHomepageHubUrl }}" wire:navigate
-                                    class="{{ in_array($dashboardNavView, ['for-groomers-hosts', 'account-settings'], true) ? 'active' : '' }}">
-                                    {{ in_array($dashboardNavView, ['account-settings', 'help-centre'], true) ? 'For Groomers & Hosts' : 'FursGo Business' }}
-                                </a>
-                                <a href="{{ $helpCentreHubUrl }}" wire:navigate
-                                    class="{{ $dashboardNavView === 'help-centre' ? 'active' : '' }}">Help
-                                    Centre</a>
-                            @elseif ($isBusinessSiteRoute && !$isBusinessHomepageRoute)
-                                <a href="{{ $businessHomepageUrl }}" class="{{ $isForGroomersHostsActive ? 'active' : '' }}"
-                                    wire:navigate>FursGo
-                                    Business</a>
-                                <a href="{{ $helpCentreBusinessUrl }}" class="{{ $isHelpCentreRoute ? 'active' : '' }}"
-                                    wire:navigate>Help Centre</a>
-                            @else
-                                @if ($variant !== 'dashboard')
-                                    <a href="#" class="{{ $isBusinessLandingRoute ? 'active' : '' }}" wire:navigate>Our Mission</a>
-                                @endif
-                                <a href="{{ $businessHomepageUrl }}" class="{{ $isBusinessHomepageRoute ? 'active' : '' }}"
-                                    wire:navigate>FursGo
-                                    Business</a>
-                                <a href="{{ $isBusinessHomepageRoute ? $helpCentreBusinessUrl : $helpCentreUrl }}"
-                                    class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
-                            @endif
+                    </div>
+                    <span class="dashboard-header-divider dashboard-header-divider--rail" aria-hidden="true"></span>
+                    <div class="align-items-center dash-menu-items">
+                        <div class="dashboard-hub-tabs">
+                            <a href="{{ $businessHubUrl }}" wire:navigate @click="activeSection = 'business-hub'"
+                                class="dashboard-hub-tab{{ $isBusinessHubRoute ? ' is-active' : '' }}">
+                                <span class="dashboard-hub-tab-icon dashboard-hub-tab-icon--business"
+                                    aria-hidden="true"></span>
+                                Business Hub
+                            </a>
+                            <a href="{{ $marketingHubUrl }}" wire:navigate @click="activeSection = 'marketing-hub'"
+                                class="dashboard-hub-tab{{ $isMarketingHubRoute ? ' is-active' : '' }}">
+                                <span class="dashboard-hub-tab-icon dashboard-hub-tab-icon--marketing"
+                                    aria-hidden="true"></span>
+                                Marketing Hub
+                            </a>
                         </div>
-                        <div class="session-login-signup-div dashboard-header-icons d-flex align-items-center gap-40">
+                        <div class="session-login-signup-div dashboard-header-icons d-flex align-items-center">
                             <div class="messages-content-tab">
-                                <a class="messages-btn cursor">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="22" viewBox="0 0 26 22"
-                                        fill="none">
-                                        <path
-                                            d="M0.75 10.75C0.75 6.03625 0.75 3.67875 2.215 2.215C3.68 0.75125 6.03625 0.75 10.75 0.75H15.75C20.4637 0.75 22.8212 0.75 24.285 2.215C25.7487 3.68 25.75 6.03625 25.75 10.75C25.75 15.4637 25.75 17.8212 24.285 19.285C22.82 20.7487 20.4637 20.75 15.75 20.75H10.75C6.03625 20.75 3.67875 20.75 2.215 19.285C0.75125 17.82 0.75 15.4637 0.75 10.75Z"
-                                            stroke="#3B3731" stroke-width="1.5" />
-                                        <path
-                                            d="M5.75 5.75L8.44875 8C10.745 9.9125 11.8925 10.8688 13.25 10.8688C14.6075 10.8688 15.7562 9.9125 18.0512 7.99875L20.75 5.75"
-                                            stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
-                                    </svg>
+                                <a class="messages-btn header-icon-btn cursor" aria-label="Messages">
+                                    <span class="header-icon-btn-glyph" aria-hidden="true">
+                                        <img src="{{ asset('images/header/icon-header-message.svg') }}" alt="" width="24"
+                                            height="20">
+                                    </span>
+                                    <span class="header-icon-badge">{{ $headerBadgeCount }}</span>
                                 </a>
                                 <div class="messages-notifications" style="display: none;">
                                     <div
@@ -395,14 +420,12 @@
                             </div>
 
                             <div class="notification-content-tab">
-                                <a class="notification-btn cursor">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22"
-                                        fill="none">
-                                        <path
-                                            d="M16.134 10C16.715 15.375 19 17 19 17H1C1 17 4 14.867 4 7.4C4 5.703 4.632 4.075 5.757 2.875C6.882 1.675 8.41 1 10 1C10.338 1 10.6713 1.03 11 1.09M11.73 20C11.5542 20.3031 11.3018 20.5547 10.9982 20.7295C10.6946 20.9044 10.3504 20.9965 10 20.9965C9.6496 20.9965 9.3054 20.9044 9.0018 20.7295C8.6982 20.5547 8.4458 20.3031 8.27 20M17 7C17.7956 7 18.5587 6.68393 19.1213 6.12132C19.6839 5.55871 20 4.79565 20 4C20 3.20435 19.6839 2.44129 19.1213 1.87868C18.5587 1.31607 17.7956 1 17 1C16.2044 1 15.4413 1.31607 14.8787 1.87868C14.3161 2.44129 14 3.20435 14 4C14 4.79565 14.3161 5.55871 14.8787 6.12132C15.4413 6.68393 16.2044 7 17 7Z"
-                                            stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
-                                            stroke-linejoin="round" />
-                                    </svg>
+                                <a class="notification-btn header-icon-btn cursor" aria-label="Notifications">
+                                    <span class="header-icon-btn-glyph" aria-hidden="true">
+                                        <img src="{{ asset('images/header/icon-header-bell.svg') }}" alt="" width="18"
+                                            height="18">
+                                    </span>
+                                    <span class="header-icon-badge">{{ $headerBadgeCount }}</span>
                                 </a>
                                 <div class="header-notifications" style="display: none;">
                                     <div
@@ -692,109 +715,133 @@
                                 </div>
                             </div>
 
+                            <span class="dashboard-header-divider" aria-hidden="true"></span>
                             <div class="user-content-tab">
-                                <button type="button" class="user-btn cursor" aria-label="Account menu"
+                                <button type="button" class="user-btn header-user-chip cursor" aria-label="Account menu"
                                     aria-haspopup="true">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="22" viewBox="0 0 20 22"
-                                        fill="none">
-                                        <path
-                                            d="M0 20.0004V18.8893C0 15.2115 2.98889 12.2227 6.66667 12.2227H11.1111C14.7889 12.2227 17.7778 15.2115 17.7778 18.8893V20.0004"
-                                            stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
-                                            stroke-linejoin="round" />
-                                        <path
-                                            d="M8.88889 8.88889C6.43333 8.88889 4.44444 6.9 4.44444 4.44444C4.44444 1.98889 6.43333 0 8.88889 0C11.3444 0 13.3333 1.98889 13.3333 4.44444C13.3333 6.9 11.3444 8.88889 8.88889 8.88889Z"
-                                            stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
-                                            stroke-linejoin="round" />
-                                    </svg>
+                                    <span class="header-user-avatar">
+                                        <img src="{{ $headerAvatar }}" alt="" class="header-user-avatar-img" width="45"
+                                            height="45">
+                                        @if ($isHeaderAuthenticated)
+                                            <img src="{{ asset('images/header/icon-verified-badge.svg') }}" alt=""
+                                                class="header-user-verified" width="16" height="18">
+                                        @endif
+                                    </span>
+                                    <span class="header-user-copy">
+                                        <span
+                                            class="header-user-name">{{ $isHeaderAuthenticated ? $headerShortName : 'Guest' }}</span>
+                                        <span
+                                            class="header-user-business">{{ $isHeaderAuthenticated ? ($headerBusinessLabel ?: 'Business account') : 'Please log in' }}</span>
+                                    </span>
+                                    <span class="header-user-chevron" aria-hidden="true">
+                                        <img src="{{ asset('images/header/icon-chevron-down.svg') }}" alt="" width="12"
+                                            height="8">
+                                    </span>
                                 </button>
-                                <div class="user-profile-options"
-                                    style="--profile-menu-hover-bg: {{ $headerUserType === 'space' ? '#FFA899' : '#FFC97A' }};">
-                                    @if ($isHeaderAuthenticated)
-                                        <div class="user-profile-image">
-                                            <div class="user-profile-avatar">
-                                                <img src="{{ auth()->check() && auth()->user()->profile_image ? asset('storage/' . auth()->user()->profile_image) : $headerProfileImage }}"
-                                                    alt="Profile Image" class="user-profile-avatar-img">
+                                <div class="user-profile-options">
+                                    <div class="user-profile-image">
+                                        <div class="user-profile-avatar">
+                                            <img src="{{ $headerAvatar }}" alt="" class="user-profile-avatar-img">
+                                            @if ($isHeaderAuthenticated)
                                                 <img src="{{ asset('images/header/icon-verified-badge.svg') }}" alt=""
-                                                    class="user-profile-verified" width="18" height="20">
-                                            </div>
-                                            <div class="name-email">
-                                                <p class="medium-font-bold user-profile-name" title="{{ $displayName }}">
-                                                    {{ $displayName }}
-                                                </p>
-                                                <p class="medium-muted-font">{{ $displaySubLabel }}</p>
-                                            </div>
+                                                    class="user-profile-verified" width="16" height="18">
+                                            @endif
                                         </div>
-                                    @else
-                                        <div class="user-profile-image">
-                                            <div class="user-profile-avatar">
-                                                <img src="{{ asset('images/user-placeholder.png') }}" alt="Profile Image"
-                                                    class="user-profile-avatar-img">
-                                            </div>
-                                            <div class="name-email">
-                                                <p class="medium-font-bold user-profile-name">Guest</p>
-                                                <p class="medium-muted-font">Please log in</p>
-                                            </div>
+                                        <div class="name-email">
+                                            <p class="user-profile-name"
+                                                title="{{ $isHeaderAuthenticated ? $headerShortName : 'Guest' }}">
+                                                {{ $isHeaderAuthenticated ? $headerShortName : 'Guest' }}
+                                            </p>
+                                            <p class="user-profile-email">
+                                                {{ $isHeaderAuthenticated ? $headerEmail : 'Please log in' }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    @if ($isHeaderAuthenticated && count($headerSwitchBusinesses) > 0)
+                                        <div class="profile-switch-business">
+                                            <p class="profile-switch-label">Switch business</p>
+                                            @foreach ($headerSwitchBusinesses as $business)
+                                                @if ($business['active'])
+                                                    <div class="profile-business-item is-active">
+                                                        <img src="{{ $business['image'] }}" alt="" class="profile-business-avatar"
+                                                            width="23" height="23">
+                                                        <span class="profile-business-copy">
+                                                            <span class="profile-business-name">{{ $business['name'] }}</span>
+                                                            <span class="profile-business-meta">{{ $business['meta'] }}</span>
+                                                        </span>
+                                                        <svg class="profile-business-check" xmlns="http://www.w3.org/2000/svg"
+                                                            width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">
+                                                            <path d="M1 4.5L3.66667 7L9 1" stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round" />
+                                                        </svg>
+                                                    </div>
+                                                @else
+                                                    <form method="POST" action="{{ $switchBusinessUrl }}"
+                                                        class="profile-business-switch-form">
+                                                        @csrf
+                                                        <input type="hidden" name="profile_id" value="{{ $business['id'] }}">
+                                                        <button type="submit" class="profile-business-item">
+                                                            <img src="{{ $business['image'] }}" alt="" class="profile-business-avatar"
+                                                                width="23" height="23">
+                                                            <span class="profile-business-copy">
+                                                                <span class="profile-business-name">{{ $business['name'] }}</span>
+                                                                <span class="profile-business-meta">{{ $business['meta'] }}</span>
+                                                            </span>
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            @endforeach
+                                            <a href="{{ $signupGroomerSpaceUrl }}" class="profile-add-business" wire:navigate>
+                                                <span class="profile-add-business-icon" aria-hidden="true">
+                                                    <img src="{{ asset('images/header/icon-add-business.svg') }}" alt=""
+                                                        width="23" height="23">
+                                                </span>
+                                                Add a business
+                                            </a>
                                         </div>
                                     @endif
                                     <div class="profile-menu">
-                                        <a href="{{ $businessHubUrl }}" class="profile-item"
-                                            :class="{ 'profile-item--active': @js($isBusinessHubRoute) }"
-                                            @click="activeSection = 'business-hub'" wire:navigate>
-                                            <span class="profile-item-icon">
-                                                <img src="{{ asset('images/header/icon-business-hub.svg') }}" alt=""
-                                                    width="22" height="22">
-                                            </span>
-                                            <span class="medium-light-font">Business Hub</span>
-                                        </a>
-                                        <a href="{{ $marketingHubUrl }}" class="profile-item"
-                                            :class="{ 'profile-item--active': @js($isMarketingHubRoute) }"
-                                            @click="activeSection = 'marketing-hub'" wire:navigate>
-                                            <span class="profile-item-icon">
-                                                <img src="{{ asset('images/header/icon-marketing-hub.svg') }}" alt=""
-                                                    width="22" height="22">
-                                            </span>
-                                            <span class="medium-light-font">Marketing Hub</span>
-                                        </a>
                                         <a href="{{ $accountSettingsUrl }}" class="profile-item"
                                             :class="{ 'profile-item--active': @js($isAccountSettingsRoute) }"
                                             @click="activeSection = 'account-settings'" wire:navigate>
                                             <span class="profile-item-icon">
-                                                <img src="{{ asset('images/header/icon-account-settings.svg') }}" alt=""
-                                                    width="22" height="22">
+                                                <img src="{{ asset('images/header/icon-account-settings-sm.svg') }}" alt=""
+                                                    width="15" height="16">
                                             </span>
-                                            <span class="medium-light-font">Account Settings</span>
+                                            <span>Account Settings</span>
                                         </a>
                                         <a href="{{ $helpCentreHubUrl }}" class="profile-item"
                                             :class="{ 'profile-item--active': @js($isHelpCentreRoute) }"
                                             @click="activeSection = 'help-and-support'" wire:navigate>
                                             <span class="profile-item-icon">
-                                                <img src="{{ asset('images/header/icon-help-support.svg') }}" alt=""
-                                                    width="22" height="22">
+                                                <img src="{{ asset('images/header/icon-help-support-sm.svg') }}" alt=""
+                                                    width="13" height="15">
                                             </span>
-                                            <span class="medium-light-font">Help &amp; Support</span>
+                                            <span>Help &amp; Support</span>
                                         </a>
                                     </div>
                                     @if ($isHeaderAuthenticated)
                                         <div class="logout-option">
                                             <form method="POST" action="{{ $logoutUrl }}">
                                                 @csrf
-                                                <button type="submit" class="profile-item">
+                                                <button type="submit" class="profile-item profile-item--logout">
                                                     <span class="profile-item-icon">
-                                                        <img src="{{ asset('images/header/icon-log-out.svg') }}" alt=""
-                                                            width="22" height="22">
+                                                        <img src="{{ asset('images/header/icon-log-out-sm.svg') }}" alt=""
+                                                            width="12" height="16">
                                                     </span>
-                                                    <span class="medium-light-font">Log out</span>
+                                                    <span>Log out</span>
                                                 </button>
                                             </form>
                                         </div>
                                     @else
                                         <div class="logout-option">
-                                            <a href="{{ $loginGroomerSpaceUrl }}" class="profile-item" wire:navigate>
+                                            <a href="{{ $loginGroomerSpaceUrl }}" class="profile-item profile-item--logout"
+                                                wire:navigate>
                                                 <span class="profile-item-icon">
-                                                    <img src="{{ asset('images/header/icon-log-out.svg') }}" alt="" width="22"
-                                                        height="22">
+                                                    <img src="{{ asset('images/header/icon-log-out-sm.svg') }}" alt=""
+                                                        width="12" height="16">
                                                 </span>
-                                                <span class="medium-light-font">Log in</span>
+                                                <span>Log in</span>
                                             </a>
                                         </div>
                                     @endif
@@ -805,163 +852,228 @@
                 </div>
             </nav>
 
-            {{-- Welcome Section (Business Hub / Marketing Hub) --}}
-            @if (in_array($dashboardNavView, ['hub', 'marketing-hub', 'account-settings'], true))
-                <div class="welcome-section">
-                    <div class="welcome-hub-content">
-                        <div class="dashboard-header-inner">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="welcome-left d-flex align-items-center gap-3">
-                                    <div class="profile-image-container">
-                                        <img src="{{ asset('images/groomer-profile.png') }}" alt="Profile"
-                                            class="welcome-profile-img">
-                                        <div class="verified-badge">
-                                            @if (auth()->check() && auth()->user()->user_type === 'space')
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="29" height="31" viewBox="0 0 29 31"
-                                                    fill="none">
-                                                    <path
-                                                        d="M15.3096 0.175208C15.0558 0.0604166 14.784 0 14.5 0C14.216 0 13.9442 0.0604166 13.6904 0.175208L2.31398 5.00249C0.984817 5.56436 -0.00601417 6.8754 2.74804e-05 8.45832C0.0302358 14.4516 2.49523 25.4172 12.905 30.4016C13.914 30.8849 15.086 30.8849 16.095 30.4016C26.5048 25.4172 28.9698 14.4516 29 8.45832C29.006 6.8754 28.0152 5.56436 26.686 5.00249L15.3096 0.175208Z"
-                                                        fill="#CBDCE8" />
-                                                    <path
-                                                        d="M22.3736 8.39014L16.1586 14.9935L22.3736 8.39014ZM13.3976 14.6711C11.471 15.4107 9.93043 15.2841 8.38989 14.6735C8.77833 19.6789 11.112 21.6032 14.2234 22.3738C14.2234 22.3738 16.5672 20.716 16.9052 16.7858C16.9417 16.3601 16.9596 16.148 16.8718 15.9079C16.7832 15.6679 16.6092 15.4962 16.2619 15.152C15.6902 14.5865 15.405 14.3037 15.0655 14.2322C14.7261 14.1623 14.2832 14.3316 13.3976 14.6711Z"
-                                                        fill="#CBDCE8" />
-                                                    <path
-                                                        d="M22.3736 8.39014L16.1586 14.9935M13.3976 14.6711C11.471 15.4107 9.93043 15.2841 8.38989 14.6735C8.77833 19.6789 11.112 21.6032 14.2234 22.3738C14.2234 22.3738 16.5672 20.716 16.9052 16.7858C16.9417 16.3601 16.9596 16.148 16.8718 15.9079C16.7832 15.6679 16.6092 15.4962 16.2619 15.152C15.6902 14.5865 15.405 14.3037 15.0655 14.2322C14.7261 14.1623 14.2832 14.3316 13.3976 14.6711Z"
-                                                        stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path
-                                                        d="M9.55615 18.8365C9.55615 18.8365 11.4983 19.2125 13.4405 17.7131L9.55615 18.8365Z"
-                                                        fill="#CBDCE8" />
-                                                    <path d="M9.55615 18.8365C9.55615 18.8365 11.4983 19.2125 13.4405 17.7131"
-                                                        stroke="white" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path
-                                                        d="M12.6631 11.6923C12.6631 11.9498 12.5608 12.1968 12.3787 12.3789C12.1966 12.5611 11.9496 12.6634 11.692 12.6634C11.4345 12.6634 11.1875 12.5611 11.0054 12.3789C10.8233 12.1968 10.7209 11.9498 10.7209 11.6923C10.7209 11.4347 10.8233 11.1877 11.0054 11.0056C11.1875 10.8235 11.4345 10.7212 11.692 10.7212C11.9496 10.7212 12.1966 10.8235 12.3787 11.0056C12.5608 11.1877 12.6631 11.4347 12.6631 11.6923Z"
-                                                        fill="#CBDCE8" stroke="white" />
-                                                    <path d="M14.6052 9.16699V9.24468V9.16699Z" fill="#CBDCE8" />
-                                                    <path d="M14.6052 9.16699V9.24468" stroke="white" stroke-linecap="round"
-                                                        stroke-linejoin="round" />
-                                                </svg>
-                                            @else
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="33" viewBox="0 0 30 33"
-                                                    fill="none">
-                                                    <ellipse cx="15.873" cy="16.5256" rx="9.3645" ry="8.81365" fill="white" />
-                                                    <path
-                                                        d="M15.44 0.185076C15.1841 0.0638192 14.9099 0 14.6235 0C14.3372 0 14.063 0.0638192 13.8071 0.185076L2.3337 5.28423C0.993208 5.87775 -0.00606541 7.26263 2.77146e-05 8.93469C0.0304934 15.2656 2.51649 26.8487 13.015 32.1138C14.0325 32.6244 15.2146 32.6244 16.2321 32.1138C26.7306 26.8487 29.2166 15.2656 29.247 8.93469C29.2531 7.26263 28.2539 5.87775 26.9134 5.28423L15.44 0.185076ZM8.82897 18.2651C9.12144 18.3416 9.43219 18.3799 9.74903 18.3799C11.8999 18.3799 13.6486 16.5483 13.6486 14.2955V10.2111H16.3418C17.0791 10.2111 17.7554 10.645 18.0844 11.3407L18.5231 12.2533H22.4227C22.9589 12.2533 23.3976 12.7128 23.3976 13.2744V15.3166C23.3976 18.1374 21.2163 20.4222 18.5231 20.4222H15.5984V23.6578C15.5984 24.1237 15.2389 24.5066 14.7881 24.5066C14.6784 24.5066 14.5687 24.4811 14.4712 24.4364L8.45729 21.7368C8.05514 21.5581 7.79923 21.1433 7.79923 20.6902C7.79923 20.5115 7.83579 20.3392 7.915 20.1796L8.82897 18.2651ZM8.77413 10.2111H11.6988V14.2955C11.6988 15.4251 10.8275 16.3377 9.74903 16.3377C8.67055 16.3377 7.79923 15.4251 7.79923 14.2955V11.2322C7.79923 10.6706 8.23794 10.2111 8.77413 10.2111ZM16.5733 13.2744C16.5733 13.0036 16.4706 12.7439 16.2878 12.5524C16.105 12.3609 15.857 12.2533 15.5984 12.2533C15.3399 12.2533 15.0919 12.3609 14.9091 12.5524C14.7262 12.7439 14.6235 13.0036 14.6235 13.2744C14.6235 13.5452 14.7262 13.8049 14.9091 13.9964C15.0919 14.1879 15.3399 14.2955 15.5984 14.2955C15.857 14.2955 16.105 14.1879 16.2878 13.9964C16.4706 13.8049 16.5733 13.5452 16.5733 13.2744Z"
-                                                        fill="#C9DDA0" />
-                                                </svg>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    @if ($dashboardNavView === 'marketing-hub')
-                                        <h1 class="welcome-text">
-                                            <span
-                                                style="font-weight: 600;">{{ $welcomeBusinessName ?? ($displayName ?? (auth()->user()->name ?? '')) }}</span>
-                                            - Marketing Hub
-                                        </h1>
-                                    @else
-                                        <h1 class="welcome-text">Welcome back,
-                                            <span>{{ $welcomeBusinessName ?? ($displayName ?? (auth()->user()->name ?? '')) }}</span>
-                                        </h1>
-                                    @endif
-                                </div>
-                                <div class="welcome-right d-flex align-items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
-                                        fill="none">
-                                        <path
-                                            d="M8.75651 0.943537C9.14791 -0.314515 10.8521 -0.314511 11.2435 0.943541L12.7078 5.65027C12.8829 6.21288 13.3849 6.5938 13.9513 6.5938H18.69C19.9566 6.5938 20.4832 8.2865 19.4585 9.06402L15.6249 11.9729C15.1666 12.3207 14.9748 12.937 15.1499 13.4996L16.6142 18.2063C17.0056 19.4644 15.6269 20.5105 14.6022 19.733L10.7685 16.8241C10.3103 16.4764 9.68974 16.4764 9.23148 16.8241L5.3978 19.733C4.37311 20.5105 2.99439 19.4644 3.38579 18.2063L4.85012 13.4996C5.02516 12.937 4.83341 12.3207 4.37515 11.9729L0.541471 9.06402C-0.483225 8.2865 0.0434023 6.5938 1.31 6.5938H6.04868C6.61512 6.5938 7.11714 6.21288 7.29217 5.65027L8.75651 0.943537Z"
-                                            fill="#FFC97A" />
-                                    </svg>
-                                    <span class="rating-text">4.3</span>
-                                    <span class="reviews-text">(20 reviews)</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
         </div>
 
         <style>
             .dashboard-header {
+                --dashboard-sidebar-col: 14rem;
+                --profile-item-active-bg: #fffbf4;
+                --profile-check-color: #ffc46e;
                 position: sticky;
                 top: 0;
                 z-index: 1020;
                 width: 100%;
                 background: #fff;
                 overflow: visible;
+                border-bottom: 1px solid #e2e2e2;
             }
 
-            .dashboard-header.dashboard-header--business-hub,
-            .dashboard-header.dashboard-header--marketing-hub {
-                position: static;
-            }
-
-            @media (max-width: 1200px) {
-
-                .dashboard-header.dashboard-header--business-hub,
-                .dashboard-header.dashboard-header--marketing-hub {
-                    position: static;
-                }
+            .dashboard-header--space {
+                --profile-item-active-bg: #ffeeeb;
+                --profile-check-color: #ffa899;
             }
 
             .dashboard-header .dashboard-header-container {
                 position: relative;
                 z-index: 2;
                 width: 100%;
-                max-width: 1240px;
-                margin-left: auto;
-                margin-right: auto;
+                max-width: 1440px;
+                margin: 0 auto;
+                padding: 0 50px;
+                box-sizing: border-box;
+                overflow: visible;
+            }
+
+            .dashboard-header .dashboard-header-container .dashboard-header-inner {
+                display: grid;
+                grid-template-columns: var(--dashboard-sidebar-col) 1px minmax(0, 1fr);
+                align-items: stretch;
+                width: 100%;
+                max-width: 100%;
+                min-height: 85px;
+                margin: 0;
+                padding: 0;
                 box-sizing: border-box;
             }
 
-            /* Custom inner (not Bootstrap .container) — avoids stacked CSS overriding max-width */
-            .dashboard-header .dashboard-header-container .dashboard-header-inner {
+            .dashboard-navbar {
+                position: relative;
+                z-index: 1000;
+                background: transparent;
+                min-height: 85px;
                 width: 100%;
-                max-width: 100%;
-                margin-left: auto;
-                margin-right: auto;
-                padding: 0;
-                box-sizing: border-box;
+                padding: 0 !important;
+                display: flex;
+                align-items: stretch;
             }
 
             .dash-menu-items {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                width: 100%;
+                min-width: 0;
+                gap: 24px;
+                padding-left: 24px;
+                box-sizing: border-box;
             }
 
-            .dash-menu-items>.logo-toggle-button {
-                flex-shrink: 0;
-            }
-
-            .dash-menu-items>div:nth-child(2) {
+            .dashboard-header-brand {
                 display: flex;
-                justify-content: center;
                 align-items: center;
-                gap: 5rem;
+                min-width: 0;
             }
 
-            .dash-menu-items>div:nth-child(2)>a {
-                color: #3B3731;
-                font-family: Lato;
-                font-size: 18px;
-                font-style: normal;
-                font-weight: 600;
-                line-height: normal;
+            .dashboard-header-left {
+                display: flex;
+                align-items: center;
+                gap: 3rem;
+                min-width: 0;
+            }
+
+            .dashboard-header .logo-toggle-button {
+                flex-shrink: 0;
+                gap: 12px;
+            }
+
+            .dashboard-logo {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
                 text-decoration: none;
             }
 
-            .dash-menu-items>div:nth-child(2)>a.active {
-                color: #3B3731;
-                text-decoration: underline;
-                text-underline-offset: 6px;
+            .dashboard-logo-mark {
+                width: 98px;
+                height: 27px;
+                overflow: clip;
+                flex-shrink: 0;
             }
 
-            .dashboard-header--help-centre .dash-menu-items>div:nth-child(2)>a.active {
-                color: #FFA577;
-                font-weight: 500;
+            .dashboard-logo-mark img {
+                width: 100%;
+                height: 100%;
+                display: block;
             }
 
-            /* Dashboard Dropdown Positioning - Matches Default Header */
+            .dashboard-logo-pill {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                height: 27px;
+                padding: 0 12px;
+                border-radius: 10px;
+                background: #f7f4ec;
+                color: #706a62;
+                font-family: Lato;
+                font-size: 14px;
+                font-style: normal;
+                font-weight: 600;
+                line-height: normal;
+                white-space: nowrap;
+            }
+
+            .dashboard-header-divider {
+                width: 1px;
+                height: 35px;
+                background: #e2e2e2;
+                flex-shrink: 0;
+            }
+
+            .dashboard-header-divider--rail {
+                height: 35px;
+                align-self: center;
+            }
+
+            .dashboard-hub-tabs {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .dashboard-hub-tab {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                height: 35px;
+                padding: 0 12px;
+                border-radius: 10px;
+                background: #fff;
+                color: #3b3731;
+                font-family: Lato, sans-serif;
+                font-size: 14px;
+                font-weight: 400;
+                line-height: 1;
+                text-decoration: none;
+                white-space: nowrap;
+            }
+
+            .dashboard-hub-tab-icon {
+                display: inline-block;
+                flex-shrink: 0;
+                width: 12px;
+                height: 12px;
+                background: currentColor;
+                -webkit-mask-repeat: no-repeat;
+                mask-repeat: no-repeat;
+                -webkit-mask-position: center;
+                mask-position: center;
+                -webkit-mask-size: contain;
+                mask-size: contain;
+            }
+
+            .dashboard-hub-tab-icon--business {
+                -webkit-mask-image: url('{{ asset('images/header/icon-hub-business.svg') }}');
+                mask-image: url('{{ asset('images/header/icon-hub-business.svg') }}');
+            }
+
+            .dashboard-hub-tab-icon--marketing {
+                width: 13px;
+                height: 13px;
+                -webkit-mask-image: url('{{ asset('images/header/icon-hub-marketing.svg') }}');
+                mask-image: url('{{ asset('images/header/icon-hub-marketing.svg') }}');
+            }
+
+            .dashboard-hub-tab.is-active {
+                border-radius: 10px;
+                background: #fffbf4;
+                color: #ffc97a;
+                font-family: Lato, sans-serif;
+                font-size: 14px;
+                font-style: normal;
+                font-weight: 600;
+                line-height: normal;
+            }
+
+            .dashboard-header--space .dashboard-hub-tab.is-active {
+                background: #fff7f5;
+                color: #ffa899;
+            }
+
+            .dashboard-hub-tab:hover {
+                color: #3b3731;
+                text-decoration: none;
+            }
+
+            .dashboard-hub-tab.is-active:hover {
+                color: #ffc97a;
+            }
+
+            .dashboard-header--space .dashboard-hub-tab.is-active:hover {
+                color: #ffa899;
+            }
+
+            .dashboard-header-icons {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-shrink: 0;
+            }
+
+            .dashboard-header-icons .dashboard-header-divider {
+                margin: 0 6px;
+            }
+
             .dashboard-header-icons .messages-content-tab,
             .dashboard-header-icons .notification-content-tab,
             .dashboard-header-icons .user-content-tab {
@@ -981,389 +1093,515 @@
                 z-index: 11;
                 position: relative;
                 user-select: none;
-                -webkit-user-select: none;
-                -moz-user-select: none;
-                -ms-user-select: none;
                 background: none;
                 border: none;
                 padding: 0;
                 appearance: none;
             }
 
-            .dashboard-header-icons svg {
+            .header-icon-btn {
+                width: 45px;
+                height: 45px;
+                border: 1px solid #f0ead9 !important;
+                border-radius: 5px;
+                background: #fff !important;
+            }
+
+            .header-icon-btn-glyph {
+                width: 24px;
+                height: 20px;
+                overflow: clip;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .notification-btn .header-icon-btn-glyph {
+                width: 18px;
+                height: 18px;
+            }
+
+            .header-icon-btn-glyph img {
+                width: 100%;
+                height: 100%;
+                display: block;
+            }
+
+            .header-icon-badge {
+                position: absolute;
+                top: -3px;
+                right: -3px;
+                min-width: 14px;
+                height: 14px;
+                padding: 0 3px;
+                border-radius: 50%;
+                background: #fe6f56;
+                color: #fff;
+                font-family: Lato, sans-serif;
+                font-size: 10px;
+                font-weight: 600;
+                line-height: 14px;
+                text-align: center;
+                box-sizing: border-box;
+            }
+
+            .header-user-chip {
+                gap: 10px;
+                padding: 0 !important;
+                background: transparent;
+                max-width: 260px;
+            }
+
+            .header-user-avatar {
+                position: relative;
+                width: 45px;
+                height: 45px;
+                flex-shrink: 0;
+            }
+
+            .header-user-avatar-img {
+                width: 45px;
+                height: 45px;
+                border-radius: 50%;
+                object-fit: cover;
+                display: block;
+            }
+
+            .header-user-verified {
+                position: absolute;
+                top: 0;
+                left: -1px;
+                width: 16px;
+                height: 18px;
                 pointer-events: none;
-                user-select: none;
-                -webkit-user-select: none;
-                -moz-user-select: none;
-                -ms-user-select: none;
+            }
+
+            .header-user-copy {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                min-width: 0;
+                text-align: left;
+            }
+
+            .header-user-name {
+                color: #3b3731;
+                font-family: "Playfair Display", serif;
+                font-size: 16px;
+                font-weight: 700;
+                line-height: 1.2;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 180px;
+            }
+
+            .header-user-business {
+                color: #9d9b98;
+                font-family: Lato, sans-serif;
+                font-size: 16px;
+                font-weight: 400;
+                line-height: 1.2;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 180px;
+            }
+
+            .header-user-chevron {
+                width: 12px;
+                height: 8px;
+                overflow: clip;
+                flex-shrink: 0;
+                transform: rotate(180deg);
+            }
+
+            .header-user-chevron img {
+                width: 100%;
+                height: 100%;
+                display: block;
             }
 
             .dashboard-header-icons .messages-notifications {
                 position: absolute;
                 right: 0;
-                top: 45px;
+                top: 55px;
                 z-index: 1001;
             }
 
             .dashboard-header-icons .header-notifications {
                 position: absolute;
                 right: 0;
-                top: 45px;
+                top: 55px;
                 z-index: 1001;
             }
 
-            .dashboard-header-icons .user-profile-options {
+            .dashboard-header .user-profile-options {
                 position: absolute;
-                right: -5px;
-                top: 45px;
+                right: 0;
+                top: 5.5rem;
                 z-index: 1001;
+                width: 270px;
+                height: auto;
+                border-radius: 10px;
+                border: 1px solid #f0ead9;
+                background: #fff;
+                display: none;
+                overflow: hidden;
+                box-sizing: border-box;
+                padding: 1rem 1.5rem 0.5rem;
             }
 
-            .dashboard-header-icons .user-profile-options.is-open {
+            .dashboard-header .user-profile-options.is-open {
                 display: block;
             }
 
-            .dashboard-header .curve-shape-container {
+            .dashboard-header .user-profile-options .user-profile-image {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                border-bottom: 1px solid #e2e2e2;
+                padding: 0 0 20px;
+                min-height: 0;
+            }
+
+            .dashboard-header .user-profile-options .user-profile-avatar {
+                position: relative;
+                width: 45px;
+                height: 45px;
+                flex-shrink: 0;
+            }
+
+            .dashboard-header .user-profile-options .user-profile-avatar-img {
+                width: 45px;
+                height: 45px;
+                border-radius: 50%;
+                object-fit: cover;
+                display: block;
+            }
+
+            .dashboard-header .user-profile-options .user-profile-verified {
                 position: absolute;
                 top: 0;
-                left: 0;
-                right: 0;
-                width: 100%;
-                height: 260px;
+                left: -1px;
+                width: 16px;
+                height: 18px;
                 pointer-events: none;
-                z-index: 1;
             }
 
-            /* Verify & Qualify: no header curve; align nav width with .verification-wrapper (.container) */
-            .dashboard-header.dashboard-header--verify-qualify {
-                background: #fff;
+            .dashboard-header .user-profile-options .name-email {
+                min-width: 0;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
             }
 
-            .dashboard-header.dashboard-header--verify-qualify>.dashboard-header-container>.dashboard-navbar {
-                padding: 49px 0;
+            .dashboard-header .user-profile-options .name-email p {
+                margin: 0;
+                line-height: normal;
             }
 
-            .dashboard-header:not(.dashboard-header--business-hub):not(.dashboard-header--marketing-hub):not(.dashboard-header--account-settings) .curve-shape-container,
-            .dashboard-header.dashboard-header--verify-qualify .curve-shape-container {
-                display: none;
+            .dashboard-header .user-profile-options .user-profile-name {
+                color: #3b3731;
+                font-family: "Playfair Display", serif;
+                font-size: 16px;
+                font-weight: 700;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
-            .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
+            .dashboard-header .user-profile-options .user-profile-email {
+                color: #9d9b98;
+                font-family: Lato, sans-serif;
+                font-size: 16px;
+                font-weight: 400;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .profile-switch-business {
+                padding: 1rem 0 0.5rem;
+                border-bottom: 1px solid #e2e2e2;
+            }
+
+            .profile-switch-label {
+                margin: 0 0 12px;
+                color: #9d9b98;
+                font-family: Lato, sans-serif;
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 1;
+                text-transform: uppercase;
+            }
+
+            .profile-business-switch-form {
+                margin: 0;
+            }
+
+            .profile-business-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
                 width: 100%;
-                max-width: 100%;
-                margin-left: auto;
-                margin-right: auto;
-                padding-left: var(--bs-gutter-x, 0.75rem);
-                padding-right: var(--bs-gutter-x, 0.75rem);
+                height: 43px;
+                padding: 0 10px;
+                border: 0;
+                border-radius: 10px;
+                background: transparent;
+                text-align: left;
+                cursor: pointer;
+                appearance: none;
                 box-sizing: border-box;
             }
 
-            @media (min-width: 576px) {
-                .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
-                    max-width: 540px;
-                }
+            .profile-business-item.is-active,
+            .profile-business-item:hover {
+                border-radius: 10px;
+                background: var(--profile-item-active-bg);
             }
 
-            @media (min-width: 768px) {
-                .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
-                    max-width: 720px;
-                }
+            .profile-business-avatar {
+                width: 23px;
+                height: 23px;
+                border-radius: 50%;
+                object-fit: cover;
+                flex-shrink: 0;
             }
 
-            @media (min-width: 992px) {
-                .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
-                    max-width: 960px;
-                }
+            .profile-business-copy {
+                min-width: 0;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
             }
 
-            @media (min-width: 1200px) {
-                .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
-                    max-width: 1140px;
-                }
+            .profile-business-name,
+            .profile-business-meta {
+                font-family: Lato, sans-serif;
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 1.2;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
-            @media (min-width: 1400px) {
-                .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
-                    max-width: 1320px;
-                }
+            .profile-business-name {
+                color: #3b3731;
             }
 
-            .curve-shape-container svg {
+            .profile-business-meta {
+                color: #9d9b98;
+            }
+
+            .profile-business-check {
+                width: 10px;
+                height: 8px;
+                flex-shrink: 0;
+                color: var(--profile-check-color);
+                display: block;
+            }
+
+            .profile-add-business {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                height: 43px;
+                padding: 0 10px;
+                color: #ffc46e;
+                font-family: Lato, sans-serif;
+                font-size: 12px;
+                font-weight: 600;
+                text-decoration: none;
+            }
+
+            .profile-add-business-icon {
+                width: 23px;
+                height: 23px;
+                overflow: clip;
+                flex-shrink: 0;
+            }
+
+            .profile-add-business-icon img {
                 width: 100%;
                 height: 100%;
                 display: block;
             }
 
-            .dashboard-navbar {
-                position: relative;
-                z-index: 1000;
+            .dashboard-header .user-profile-options .profile-menu {
+                padding: 8px 0 0;
+            }
+
+            .dashboard-header .user-profile-options .profile-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                height: 37px;
+                padding: 0 10px;
+                border-radius: 10px;
+                color: #3b3731;
+                font-family: Lato, sans-serif;
+                font-size: 14px;
+                font-weight: 400;
+                text-decoration: none;
+                background: transparent;
+                border: 0;
+                width: 100%;
+                text-align: left;
+                cursor: pointer;
+                box-sizing: border-box;
+                appearance: none;
+            }
+
+            .dashboard-header .user-profile-options .profile-item-icon {
+                flex-shrink: 0;
+                width: 15px;
+                height: 16px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+            }
+
+            .dashboard-header .user-profile-options .profile-item-icon img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                display: block;
+            }
+
+            .dashboard-header .user-profile-options .profile-item:hover,
+            .dashboard-header .user-profile-options .profile-item--active {
+                border-radius: 10px;
+                background: var(--profile-item-active-bg);
+            }
+
+            .dashboard-header .user-profile-options .profile-item--logout:hover,
+            .dashboard-header .user-profile-options .profile-item--logout.profile-item--active {
                 background: transparent;
             }
 
-            .dashboard-menu {
-                display: flex;
-                list-style: none;
-                gap: 32px;
+            .dashboard-header .user-profile-options .logout-option {
+                border-top: 1px solid #e2e2e2;
+                margin-top: 8px;
+                padding: 8px 0 0;
+            }
+
+            .dashboard-header .user-profile-options .logout-option form {
                 margin: 0;
-                padding: 0;
-                justify-content: center;
             }
 
-            .dashboard-menu li a {
-                color: #3B3731;
-                font-family: Lato;
-                font-size: 18px;
-                font-style: normal;
-                font-weight: 600;
-                line-height: normal;
-                transition: color 0.2s ease;
+            .dashboard-header .user-profile-options .profile-item--logout,
+            .dashboard-header .user-profile-options .profile-item--logout span {
+                color: #fe6f56;
             }
 
-            .dashboard-menu li a:hover {
-                color: #FFC97A;
+            .dashboard-header.scrolled nav.navbar {
+                padding: 0 !important;
             }
 
-            .dashboard-header-icons {
-                gap: 45px;
+            .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
+                max-width: 1440px;
+                padding-left: 50px;
+                padding-right: 50px;
             }
 
-            .header-icon {
-                color: #3B3731;
-                transition: color 0.2s ease;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .header-icon:hover {
-                color: #FFC97A;
-            }
-
-            .header-icon svg {
-                width: 25px;
-                height: 25px;
-            }
-
-            .welcome-section {
-                position: relative;
-                z-index: 2;
-                margin-top: 2rem;
-                width: 100%;
-                max-width: 100%;
-                box-sizing: border-box;
-                min-height: 7.25rem;
-            }
-
-            .welcome-section>.welcome-hub-content>.dashboard-header-inner>.d-flex,
-            .welcome-section>.dashboard-header-inner>.d-flex {
-                flex-wrap: wrap;
-                row-gap: 0.75rem;
-                column-gap: 1rem;
-            }
-
-            .welcome-left {
-                display: flex;
-                align-items: center;
-                gap: 16px;
-                min-width: 0;
-                flex: 1 1 auto;
-            }
-
-            .profile-image-container {
-                position: relative;
-                width: 83px;
-                height: 83px;
-            }
-
-            .welcome-profile-img {
-                width: 83px;
-                height: 83px;
-                border-radius: 50%;
-                object-fit: cover;
-                border: 3px solid white;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            }
-
-            .verified-badge {
-                position: absolute;
-                top: -2px;
-                left: -2px;
-                width: 20px;
-                height: 20px;
-            }
-
-            .welcome-text {
-                color: #3B3731;
-                font-family: "Playfair Display";
-                font-size: 36px;
-                font-style: normal;
-                font-weight: 600;
-                line-height: normal;
-            }
-
-            .welcome-text>span {
-                font-weight: 600;
-            }
-
-            .dashboard-header--marketing-hub .welcome-text,
-            .dashboard-header--marketing-hub .welcome-text>span {
-                color: #3B3731;
-                font-family: "Playfair Display";
-                font-size: 36px;
-                font-style: normal;
-                font-weight: 700;
-                line-height: normal;
-            }
-
-            .welcome-right {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-            }
-
-            .rating-text {
-                color: #3B3731;
-                font-family: Lato;
-                font-size: 18px;
-                font-style: normal;
-                font-weight: 500;
-                line-height: normal;
-            }
-
-            .reviews-text {
-                color: #9D9B98;
-                font-family: Lato;
-                font-size: 18px;
-                font-style: normal;
-                font-weight: 500;
-                line-height: normal;
-            }
-
-            @media (max-width: 1399.98px) {
-                .dashboard-header .dashboard-header-container {
-                    max-width: min(1320px, 100%);
-                }
-
-                .dashboard-header .dash-menu-items>div:nth-child(2) {
-                    gap: 3rem;
-                }
-
-                .dashboard-header .dashboard-header-icons {
-                    gap: 2rem;
-                }
+            .dashboard-header .menu-toggle {
+                display: none !important;
             }
 
             @media (max-width: 1199.98px) {
-                .dashboard-header .dashboard-header-container {
-                    max-width: min(1140px, 100%);
+
+                .dashboard-header .dashboard-header-container,
+                .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
+                    padding-left: 24px;
+                    padding-right: 24px;
                 }
 
-                .dashboard-header .dash-menu-items>div:nth-child(2) {
-                    gap: 2rem;
-                }
-
-                .dashboard-header .dash-menu-items>div:nth-child(2)>a {
-                    font-size: 16px;
+                .header-user-business {
+                    display: none;
                 }
             }
 
             @media (max-width: 991.98px) {
-                .dashboard-header .dashboard-header-container {
-                    max-width: min(960px, 100%);
+                .dashboard-header .dashboard-header-container .dashboard-header-inner {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    gap: 12px;
                 }
 
-                .dashboard-header .curve-shape-container {
-                    height: 220px;
+                .dashboard-header-brand {
+                    flex: 0 0 auto;
                 }
 
-                .dashboard-header .dash-menu-items>div:nth-child(2) {
-                    gap: 1.25rem;
+                .dash-menu-items {
+                    padding-left: 0;
+                    flex: 1 1 auto;
                 }
 
-                .dashboard-header .dash-menu-items>div:nth-child(2)>a {
-                    font-size: 15px;
+                .dashboard-header-left {
+                    flex-wrap: wrap;
+                    gap: 12px;
                 }
 
-                .dashboard-header .dashboard-header-icons {
-                    gap: 1.25rem;
-                }
-
-                .dashboard-header .welcome-section {
-                    margin-top: 1.5rem;
+                .dashboard-header-divider {
+                    display: none;
                 }
             }
 
             @media (max-width: 767.98px) {
-                .dashboard-header .dashboard-header-container {
-                    max-width: min(720px, 100%);
+
+                .dashboard-header .dashboard-header-container,
+                .dashboard-header.dashboard-header--verify-qualify .dashboard-header-container {
+                    padding-left: 16px;
+                    padding-right: 16px;
                 }
 
-                .dashboard-header .curve-shape-container {
-                    height: 200px;
+                .header-user-copy {
+                    display: none;
                 }
 
-                .dashboard-header .dash-menu-items {
-                    flex-wrap: wrap;
-                    row-gap: 0.75rem;
+                .header-user-chevron {
+                    display: none;
                 }
 
-                .dashboard-header .dash-menu-items>div:nth-child(2) {
-                    gap: 0.75rem;
+                .header-icon-btn {
+                    width: 40px;
+                    height: 40px;
                 }
 
-                .dashboard-header .dash-menu-items>div:nth-child(2)>a {
-                    font-size: 14px;
-                }
-
-                .dashboard-header .dashboard-header-icons {
-                    gap: 1rem;
-                }
-
-                .dashboard-header .header-icon svg {
-                    width: 22px;
-                    height: 22px;
-                }
-
-                .dashboard-header .welcome-section {
-                    margin-top: 1rem;
-                }
-
-                .dashboard-header .profile-image-container,
-                .dashboard-header .welcome-profile-img {
-                    width: 64px;
-                    height: 64px;
-                }
-
-                .dashboard-header .rating-text,
-                .dashboard-header .reviews-text {
-                    font-size: 16px;
+                .header-user-avatar,
+                .header-user-avatar-img {
+                    width: 40px;
+                    height: 40px;
                 }
             }
 
-            @media (max-width: 575.98px) {
-                .dashboard-header .dashboard-header-container {
-                    max-width: 100%;
-                }
+            .dashboard-shell.dashboard-content-loading::after {
+                content: '';
+                position: fixed;
+                top: 85px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                z-index: 40;
+                background: rgba(255, 255, 255, 0.42);
+                backdrop-filter: blur(6px);
+                -webkit-backdrop-filter: blur(6px);
+                cursor: wait;
+                pointer-events: auto;
+            }
 
-                .dashboard-header .curve-shape-container {
-                    height: 180px;
-                }
-
-                .dashboard-header .dash-menu-items>div:nth-child(2) {
-                    gap: 0.5rem;
-                }
-
-                .dashboard-header .dash-menu-items>div:nth-child(2)>a {
-                    font-size: 13px;
-                }
-
-                .dashboard-header .dashboard-header-icons {
-                    gap: 0.75rem;
-                }
-
-                .dashboard-header .rating-text,
-                .dashboard-header .reviews-text {
-                    font-size: 14px;
+            @media (prefers-reduced-motion: reduce) {
+                .dashboard-shell.dashboard-content-loading::after {
+                    backdrop-filter: none;
+                    -webkit-backdrop-filter: none;
+                    background: rgba(255, 255, 255, 0.72);
                 }
             }
         </style>
@@ -1503,4 +1741,88 @@
     document.addEventListener('livewire:navigated', function () {
         setTimeout(initHeaderDropdowns, 100);
     });
+</script>
+<script>
+    (function () {
+        if (window.__fursgoDashboardContentLoading) {
+            return;
+        }
+        window.__fursgoDashboardContentLoading = true;
+
+        const LOADING_CLASS = 'dashboard-content-loading';
+        const MAX_WAIT_MS = 6000;
+        let generation = 0;
+        let failsafeTimer = null;
+
+        function isDashboard() {
+            return document.body.classList.contains('dashboard-shell');
+        }
+
+        function contentRoots() {
+            return Array.from(document.querySelectorAll('.dashboard-wrapper, .dashboard-info-main'));
+        }
+
+        function startLoading() {
+            if (!isDashboard()) {
+                return;
+            }
+
+            generation += 1;
+            document.body.classList.add(LOADING_CLASS);
+            clearTimeout(failsafeTimer);
+            failsafeTimer = setTimeout(() => stopLoading(true), MAX_WAIT_MS);
+        }
+
+        function waitForContentReady() {
+            const roots = contentRoots();
+            const images = roots.flatMap((root) =>
+                Array.from(root.querySelectorAll('img')).filter((img) => !img.complete)
+            );
+            const imageWait = images.length
+                ? Promise.all(images.map((img) => new Promise((resolve) => {
+                    img.addEventListener('load', resolve, { once: true });
+                    img.addEventListener('error', resolve, { once: true });
+                })))
+                : Promise.resolve();
+            const fontsWait = document.fonts?.ready ?? Promise.resolve();
+            const paintWait = new Promise((resolve) => {
+                requestAnimationFrame(() => requestAnimationFrame(resolve));
+            });
+            const settleWait = new Promise((resolve) => setTimeout(resolve, 200));
+
+            return Promise.all([imageWait, fontsWait, paintWait, settleWait]);
+        }
+
+        function stopLoading(force = false) {
+            if (!isDashboard() && !document.body.classList.contains(LOADING_CLASS)) {
+                return;
+            }
+            const current = generation;
+            const finish = () => {
+                if (!force && current !== generation) {
+                    return;
+                }
+                clearTimeout(failsafeTimer);
+                failsafeTimer = null;
+                document.body.classList.remove(LOADING_CLASS);
+            };
+
+            if (force) {
+                finish();
+                return;
+            }
+
+            waitForContentReady().then(finish).catch(finish);
+        }
+
+        document.addEventListener('livewire:navigate', startLoading);
+        document.addEventListener('livewire:navigated', () => stopLoading(false));
+        document.addEventListener('nav-list-loading-start', (event) => {
+            startLoading();
+            if (!event.detail?.persistent) {
+                stopLoading(false);
+            }
+        });
+        document.addEventListener('nav-list-loading-end', () => stopLoading(false));
+    })();
 </script>
