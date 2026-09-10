@@ -2,15 +2,72 @@
     <h1 class="business-basics-title">Legal &amp; Policy Agreements</h1>
     <form wire:submit="submitLegalPolicy" x-data="{
         accepted: @entangle('legal_terms_accepted'),
+        expanded: false,
+        animating: false,
+        collapsedMax() {
+            return Math.min(window.innerHeight * 0.52, 32 * 16);
+        },
+        toggleAgreements() {
+            if (this.animating) {
+                return;
+            }
+            const viewport = this.$refs.viewport;
+            const inner = this.$refs.agreements;
+            if (!viewport || !inner) {
+                return;
+            }
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const collapsing = this.expanded;
+            const from = viewport.getBoundingClientRect().height;
+            const to = collapsing ? this.collapsedMax() : inner.scrollHeight;
+            this.expanded = !collapsing;
+            if (reduceMotion || Math.abs(from - to) < 1) {
+                viewport.style.height = collapsing ? '' : 'auto';
+                viewport.style.maxHeight = collapsing ? '' : 'none';
+                viewport.style.overflow = collapsing ? '' : 'visible';
+                return;
+            }
+            this.animating = true;
+            viewport.style.maxHeight = 'none';
+            viewport.style.overflow = 'hidden';
+            viewport.style.transition = 'none';
+            viewport.style.height = from + 'px';
+            viewport.offsetHeight;
+            requestAnimationFrame(() => {
+                viewport.style.transition = 'height 0.35s cubic-bezier(0.22, 1, 0.36, 1)';
+                viewport.style.height = to + 'px';
+            });
+        },
+        onAgreementsTransitionEnd(event) {
+            if (event.target !== this.$refs.viewport || event.propertyName !== 'height') {
+                return;
+            }
+            const viewport = this.$refs.viewport;
+            this.animating = false;
+            if (!viewport) {
+                return;
+            }
+            viewport.style.transition = '';
+            if (this.expanded) {
+                viewport.style.height = 'auto';
+                viewport.style.maxHeight = 'none';
+                viewport.style.overflow = 'visible';
+            } else {
+                viewport.style.height = '';
+                viewport.style.maxHeight = '';
+                viewport.style.overflow = '';
+            }
+        },
     }">
-        <div
-            class="legal-agreements-content-card {{ $legal_agreements_expanded ? 'legal-agreements-content-card--expanded' : '' }}">
-            <div class="legal-agreements-container {{ $legal_agreements_expanded ? 'is-expanded' : '' }}"
-                wire:click="toggleLegalAgreementsExpanded" wire:keydown.enter.prevent="toggleLegalAgreementsExpanded"
-                tabindex="0" role="region"
+        <div class="legal-agreements-content-card" :class="{ 'legal-agreements-content-card--expanded': expanded }">
+            <div class="legal-agreements-viewport" :class="{ 'is-expanded': expanded }" x-ref="viewport"
+                @click="toggleAgreements()" @keydown.enter.prevent="toggleAgreements()"
+                @transitionend="onAgreementsTransitionEnd($event)" tabindex="0" role="region"
                 aria-label="Legal agreement text. Click to expand or collapse the full document."
-                aria-expanded="{{ $legal_agreements_expanded ? 'true' : 'false' }}">
-                <x-partials.legal-agreements-document />
+                :aria-expanded="expanded ? 'true' : 'false'">
+                <div class="legal-agreements-container" x-ref="agreements">
+                    <x-partials.legal-agreements-document />
+                </div>
             </div>
         </div>
 
@@ -75,8 +132,8 @@
         overflow: hidden;
     }
 
-    /* Bottom fade: only when collapsed (scroll mode) */
-    .legal-agreements-content-card:not(.legal-agreements-content-card--expanded)::after {
+    /* Bottom fade: visible when collapsed, fades out on expand */
+    .legal-agreements-content-card::after {
         content: "";
         position: absolute;
         left: 0;
@@ -86,55 +143,59 @@
         pointer-events: none;
         z-index: 1;
         border-radius: 0 0 9px 9px;
+        opacity: 1;
         background: linear-gradient(to bottom,
                 rgba(250, 250, 250, 0) 0%,
                 rgba(250, 250, 250, 0.72) 40%,
                 rgba(250, 250, 250, 1) 100%);
+        transition: opacity 0.28s ease;
     }
 
-    .legal-agreements-container {
+    .legal-agreements-content-card--expanded::after {
+        opacity: 0;
+    }
+
+    .legal-agreements-viewport {
         position: relative;
         z-index: 0;
+        box-sizing: border-box;
         max-height: min(52vh, 32rem);
         overflow-y: auto;
-        padding: 3rem;
         background: #FAFAFA;
         scrollbar-width: thin;
         scrollbar-color: #E3E3E3 #ffffff;
         cursor: pointer;
-        transition: box-shadow 0.15s ease;
     }
 
-    .legal-agreements-container:hover:not(.is-expanded) {
+    .legal-agreements-viewport:hover:not(.is-expanded) {
         box-shadow: inset 0 0 0 1px rgba(59, 55, 49, 0.08);
     }
 
-    .legal-agreements-container.is-expanded {
-        max-height: none;
-        overflow-y: visible;
-        cursor: pointer;
+    .legal-agreements-container {
+        padding: 3rem;
+        background: #FAFAFA;
     }
 
-    .legal-agreements-container::-webkit-scrollbar {
+    .legal-agreements-viewport::-webkit-scrollbar {
         width: 8px;
     }
 
-    .legal-agreements-container::-webkit-scrollbar-track {
+    .legal-agreements-viewport::-webkit-scrollbar-track {
         background: #FAFAFA;
         border-radius: 4px;
     }
 
-    .legal-agreements-container::-webkit-scrollbar-thumb {
+    .legal-agreements-viewport::-webkit-scrollbar-thumb {
         background: #E3E3E3;
         border-radius: 4px;
         border: 2px solid #ffffff;
     }
 
-    .legal-agreements-container::-webkit-scrollbar-thumb:hover {
+    .legal-agreements-viewport::-webkit-scrollbar-thumb:hover {
         background: #E3E3E3;
     }
 
-    .legal-agreements-container::-webkit-scrollbar-corner {
+    .legal-agreements-viewport::-webkit-scrollbar-corner {
         background: #ffffff;
     }
 
