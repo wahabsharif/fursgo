@@ -84,6 +84,9 @@ new #[Layout('layouts.dashboard')]
     public string $groomer_addon_input = '';
     public array $groomer_custom_addons = [];
     public array $groomer_selected_addons = [];
+    public string $groomer_rule_input = '';
+    public array $groomer_custom_rules = [];
+    public array $groomer_selected_rules = [];
 
     /**
      * Service rows keyed by slug. Stored in groomer_business_profile.services.
@@ -109,15 +112,15 @@ new #[Layout('layouts.dashboard')]
     ];
 
     public array $spacer_addons_service = [
-        'storage_locker' => ['selected' => false, 'price' => ''],
-        'deep_clean' => ['selected' => false, 'price' => ''],
-        'after_hours_access' => ['selected' => false, 'price' => ''],
-        'early_hours_access' => ['selected' => false, 'price' => ''],
+        'storage_locker' => ['selected' => false, 'price' => '', 'description' => ''],
+        'deep_clean' => ['selected' => false, 'price' => '', 'description' => ''],
+        'after_hours_access' => ['selected' => false, 'price' => '', 'description' => ''],
+        'early_hours_access' => ['selected' => false, 'price' => '', 'description' => ''],
     ];
 
     public string $spacer_addon_input = '';
 
-    /** @var array<int, array{name: string, selected: bool, price: string}> */
+    /** @var array<int, array{name: string, selected: bool, price: string, description: string}> */
     public array $spacer_addon_custom_rows = [];
 
     public array $spacer_suitable_for = [];
@@ -1889,6 +1892,20 @@ new #[Layout('layouts.dashboard')]
         $this->groomer_selected_services = array_values(array_filter($selectedServices, fn($v) => is_string($v) && trim($v) !== ''));
         $this->groomer_service_input = '';
         $this->groomer_addon_input = '';
+        $this->groomer_rule_input = '';
+        $customRules = $groomerProfile['custom_rules'] ?? [];
+        if (!is_array($customRules)) {
+            $customRules = [];
+        }
+        $this->groomer_custom_rules = array_values(array_filter($customRules, fn($v) => is_string($v) && trim($v) !== ''));
+        $selectedRules = $groomerProfile['selected_rules'] ?? [];
+        if (!is_array($selectedRules)) {
+            $selectedRules = [];
+        }
+        $this->groomer_selected_rules = array_values(array_filter($selectedRules, fn($v) => is_string($v) && trim($v) !== ''));
+        if ($this->groomer_experience === '') {
+            $this->groomer_experience = trim((string) ($bb['bio'] ?? $this->business_bio));
+        }
 
         $this->hydrateGroomerServiceAndAddonPricing($groomerProfile);
 
@@ -2132,6 +2149,16 @@ new #[Layout('layouts.dashboard')]
         return ['Flea & Tick Treatment', 'Hypoallergenic Shampoo Upgrade', 'Tear-Stain Treatment', 'Coat Shine Spray', 'Nail Grinding', 'Coat Colour Enhancing Shampoo', 'Fast-Dry Service (express grooming)', 'Breath Freshner Gel', 'Deep Conditioning Mask', 'Shed-Control Shampoo', 'Deodorising Treatment', 'Anti-Itch Treatment', 'Soft-Claws / Nail Caps Application', 'Premium Fragrance Upgrade', 'Paw Fur Shaping'];
     }
 
+    /** @return list<string> */
+    public function groomerRulesCatalog(): array
+    {
+        return [
+            'Works with dogs & cats up to 35kg',
+            'Special care for seniors & anxious pets',
+            'Not suitable for aggressive pets',
+        ];
+    }
+
     public function groomerServiceDefaultDescription(string $name): string
     {
         return match ($name) {
@@ -2328,12 +2355,11 @@ new #[Layout('layouts.dashboard')]
         $svcIn = $data['services_pricing'] ?? [];
         $this->spacer_services_pricing = $this->mergeSpacerProfileKeyedRows($defSvc, is_array($svcIn) ? $svcIn : []);
 
-        $defF = [];
-        foreach ($this->spacerFursgoAddonCatalog() as $slug => $_label) {
-            $defF[$slug] = ['selected' => false, 'price' => ''];
-        }
         $fuIn = $data['addons_service'] ?? ($data['addons_fursgo'] ?? []);
-        $this->spacer_addons_service = $this->mergeSpacerProfileKeyedRows($defF, is_array($fuIn) ? $fuIn : []);
+        $this->spacer_addons_service = $this->mergeSpacerProfileKeyedRows(
+            $this->defaultAddonServiceRows(),
+            is_array($fuIn) ? $fuIn : [],
+        );
 
         $this->spacer_addon_custom_rows = [];
         $customIn = $data['addons_custom'] ?? [];
@@ -2344,15 +2370,16 @@ new #[Layout('layouts.dashboard')]
                         'name' => trim((string) $row['name']),
                         'selected' => (bool) ($row['selected'] ?? true),
                         'price' => trim((string) ($row['price'] ?? '')),
+                        'description' => trim((string) ($row['description'] ?? '')),
                     ];
                 } elseif (is_string($row) && trim($row) !== '') {
-                    $this->spacer_addon_custom_rows[] = ['name' => trim($row), 'selected' => true, 'price' => ''];
+                    $this->spacer_addon_custom_rows[] = ['name' => trim($row), 'selected' => true, 'price' => '', 'description' => ''];
                 }
             }
         }
 
         $sf = $data['suitable_for'] ?? [];
-        $this->spacer_suitable_for = is_array($sf) ? array_values(array_filter($sf, fn($v) => is_string($v) && $v !== '')) : [];
+        $this->spacer_suitable_for = $this->normalizeSpacerSuitableFor(is_array($sf) ? $sf : []);
 
         $this->spacer_rules_preset_selected = [];
         $this->spacer_rules_custom = [];
@@ -2686,17 +2713,11 @@ new #[Layout('layouts.dashboard')]
 
     public function isGroomerBusinessProfileContinueEnabled(): bool
     {
-        $hasSpecialty = count($this->groomer_pet_specialties) > 0;
-        $otherOk = !in_array('other', $this->groomer_pet_specialties, true) || trim($this->groomer_specialty_other) !== '';
-
-        return trim($this->groomer_experience) !== '' && $hasSpecialty && count($this->groomer_pet_sizes) > 0 && $otherOk;
+        return count($this->groomer_selected_services) > 0;
     }
 
     public function isSpacerBusinessProfileContinueEnabled(): bool
     {
-        if (trim($this->spacer_bio) === '') {
-            return false;
-        }
         foreach ($this->spacer_services_pricing as $row) {
             if (!empty($row['selected'])) {
                 return true;
@@ -3187,6 +3208,44 @@ new #[Layout('layouts.dashboard')]
         ];
     }
 
+    /** @return array<string, array{selected: bool, price: string, description: string}> */
+    private function defaultAddonServiceRows(): array
+    {
+        $rows = [];
+        foreach ($this->spacerFursgoAddonCatalog() as $slug => $_label) {
+            $rows[$slug] = ['selected' => false, 'price' => '', 'description' => ''];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @param  array<int, mixed>  $values
+     * @return list<string>
+     */
+    private function normalizeSpacerSuitableFor(array $values): array
+    {
+        $aliases = [
+            'Deshedding' => 'De-shedding',
+            'Dematting' => 'De-matting',
+        ];
+        $catalog = $this->spacerSuitableForCatalog();
+        $out = [];
+
+        foreach ($values as $value) {
+            if (!is_string($value)) {
+                continue;
+            }
+            $label = $aliases[trim($value)] ?? trim($value);
+            if ($label === '' || !in_array($label, $catalog, true) || in_array($label, $out, true)) {
+                continue;
+            }
+            $out[] = $label;
+        }
+
+        return $out;
+    }
+
     /** @return array<string, array{name: string, meta: string|null}> */
     public function spacerServicesPricingRowLabels(): array
     {
@@ -3200,7 +3259,7 @@ new #[Layout('layouts.dashboard')]
     /** @return list<string> */
     public function spacerSuitableForCatalog(): array
     {
-        return ['Full Groom', 'Bath & Brush', 'Nail Trim', 'Ear Cleaning', 'Medicated Bath', 'Teeth Brushing', 'Deshedding', 'Sanitary Trim', 'Dematting', 'Paw Pad Trim', 'Anal Gland Expression'];
+        return ['Full Groom', 'Ear Cleaning', 'De-shedding', 'Bath & Brush', 'Medicated Bath', 'Sanitary Trim', 'Nail Trim', 'Teeth Brushing', 'Paw Pad Trim', 'De-matting', 'Anal Gland Expression'];
     }
 
     /** @return list<string> */
@@ -3225,6 +3284,7 @@ new #[Layout('layouts.dashboard')]
             'name' => $name,
             'selected' => true,
             'price' => '',
+            'description' => '',
         ];
         $this->spacer_addon_input = '';
     }
@@ -3382,10 +3442,18 @@ new #[Layout('layouts.dashboard')]
 
     public function spacerBusinessProfileClientState(): array
     {
+        $addonCatalog = [];
+        foreach ($this->spacerFursgoAddonCatalog() as $slug => $label) {
+            $addonCatalog[] = ['slug' => $slug, 'label' => $label];
+        }
+
         return [
             'suitableFor' => $this->spacer_suitable_for,
             'selectedRules' => $this->spacer_rules_preset_selected,
             'selectedAmenities' => $this->spacer_amenities_preset_selected,
+            'servicesPricing' => $this->spacer_services_pricing,
+            'fursgoAddons' => $this->spacer_addons_service,
+            'addonCatalog' => $addonCatalog,
             'customAddonRows' => $this->spacer_addon_custom_rows,
             'rulesCustom' => $this->spacer_rules_custom,
             'amenitiesCustom' => $this->spacer_amenities_custom,
@@ -3460,13 +3528,31 @@ new #[Layout('layouts.dashboard')]
     private function assignSpacerBusinessProfileFromClient(array $form): void
     {
         $suitableFor = $form['suitableFor'] ?? [];
-        $this->spacer_suitable_for = is_array($suitableFor) ? array_values(array_filter($suitableFor, fn($v) => is_string($v) && trim($v) !== '')) : [];
+        $this->spacer_suitable_for = $this->normalizeSpacerSuitableFor(is_array($suitableFor) ? $suitableFor : []);
 
         $selectedRules = $form['selectedRules'] ?? [];
         $this->spacer_rules_preset_selected = is_array($selectedRules) ? array_values(array_filter($selectedRules, fn($v) => is_string($v) && trim($v) !== '')) : [];
 
         $selectedAmenities = $form['selectedAmenities'] ?? [];
         $this->spacer_amenities_preset_selected = is_array($selectedAmenities) ? array_values(array_filter($selectedAmenities, fn($v) => is_string($v) && trim($v) !== '')) : [];
+
+        if (isset($form['servicesPricing']) && is_array($form['servicesPricing'])) {
+            $this->spacer_services_pricing = $this->mergeSpacerProfileKeyedRows(
+                [
+                    'hourly' => ['selected' => false, 'price' => ''],
+                    'half_day' => ['selected' => false, 'price' => ''],
+                    'full_day' => ['selected' => false, 'price' => ''],
+                ],
+                $form['servicesPricing'],
+            );
+        }
+
+        if (isset($form['fursgoAddons']) && is_array($form['fursgoAddons'])) {
+            $this->spacer_addons_service = $this->mergeSpacerProfileKeyedRows(
+                $this->defaultAddonServiceRows(),
+                $form['fursgoAddons'],
+            );
+        }
 
         $customAddonRows = $form['customAddonRows'] ?? [];
         $normalizedRows = [];
@@ -3480,10 +3566,12 @@ new #[Layout('layouts.dashboard')]
                     continue;
                 }
                 $price = $row['price'] ?? '';
+                $description = $row['description'] ?? '';
                 $normalizedRows[] = [
                     'name' => $name,
                     'selected' => !empty($row['selected']),
                     'price' => is_scalar($price) ? trim((string) $price) : '',
+                    'description' => is_scalar($description) ? trim((string) $description) : '',
                 ];
             }
         }
@@ -3523,6 +3611,9 @@ new #[Layout('layouts.dashboard')]
             'addonPricing' => $this->groomer_addon_pricing,
             'serviceCatalog' => $this->groomerServiceCatalog(),
             'addonCatalog' => $this->groomerAddonCatalog(),
+            'ruleCatalog' => $this->groomerRulesCatalog(),
+            'customRules' => $this->groomer_custom_rules,
+            'selectedRules' => $this->groomer_selected_rules,
             'serviceDefaultDescriptions' => $defaultDescriptions,
         ];
     }
@@ -3546,6 +3637,10 @@ new #[Layout('layouts.dashboard')]
         $this->groomer_custom_addons = is_array($customAddons) ? array_values(array_filter($customAddons, fn($v) => is_string($v) && trim($v) !== '')) : [];
         $selectedAddons = $form['selectedAddons'] ?? [];
         $this->groomer_selected_addons = is_array($selectedAddons) ? array_values(array_filter($selectedAddons, fn($v) => is_string($v) && trim($v) !== '')) : [];
+        $customRules = $form['customRules'] ?? [];
+        $this->groomer_custom_rules = is_array($customRules) ? array_values(array_filter($customRules, fn($v) => is_string($v) && trim($v) !== '')) : [];
+        $selectedRules = $form['selectedRules'] ?? [];
+        $this->groomer_selected_rules = is_array($selectedRules) ? array_values(array_filter($selectedRules, fn($v) => is_string($v) && trim($v) !== '')) : [];
         $servicesPricing = $form['servicesPricing'] ?? [];
         $this->groomer_services_pricing = is_array($servicesPricing) ? $servicesPricing : [];
         $addonPricing = $form['addonPricing'] ?? [];
@@ -3568,11 +3663,11 @@ new #[Layout('layouts.dashboard')]
         }
 
         $this->validate([
-            'groomer_experience' => ['required', 'string', 'max:1000'],
-            'groomer_pet_specialties' => ['required', 'array', 'min:1'],
+            'groomer_experience' => ['nullable', 'string', 'max:1000'],
+            'groomer_pet_specialties' => ['nullable', 'array'],
             'groomer_pet_specialties.*' => ['in:dog,cat,other'],
             'groomer_specialty_other' => ['nullable', 'string', 'max:255'],
-            'groomer_pet_sizes' => ['required', 'array', 'min:1'],
+            'groomer_pet_sizes' => ['nullable', 'array'],
             'groomer_pet_sizes.*' => ['in:small,medium,large'],
             'groomer_custom_addons' => ['nullable', 'array'],
             'groomer_custom_addons.*' => ['string', 'max:255'],
@@ -3580,14 +3675,16 @@ new #[Layout('layouts.dashboard')]
             'groomer_selected_addons.*' => ['string', 'max:255'],
             'groomer_custom_services' => ['nullable', 'array'],
             'groomer_custom_services.*' => ['string', 'max:255'],
-            'groomer_selected_services' => ['nullable', 'array'],
+            'groomer_selected_services' => ['required', 'array', 'min:1'],
             'groomer_selected_services.*' => ['string', 'max:255'],
+            'groomer_custom_rules' => ['nullable', 'array'],
+            'groomer_custom_rules.*' => ['string', 'max:255'],
+            'groomer_selected_rules' => ['nullable', 'array'],
+            'groomer_selected_rules.*' => ['string', 'max:255'],
         ]);
 
-        if (in_array('other', $this->groomer_pet_specialties, true) && trim($this->groomer_specialty_other) === '') {
-            $this->addError('groomer_specialty_other', 'Please specify your other specialty.');
-
-            return;
+        if (trim($this->groomer_experience) === '') {
+            $this->groomer_experience = trim($this->business_bio);
         }
 
         $specialtyLabels = [
@@ -3619,6 +3716,8 @@ new #[Layout('layouts.dashboard')]
                 'selected_addons' => array_values($this->groomer_selected_addons),
                 'custom_services' => array_values($this->groomer_custom_services),
                 'selected_services' => array_values($this->groomer_selected_services),
+                'custom_rules' => array_values($this->groomer_custom_rules),
+                'selected_rules' => array_values($this->groomer_selected_rules),
                 'services' => $this->groomer_services_pricing,
                 'addon_pricing' => $this->groomer_addon_pricing,
             ],
@@ -3641,7 +3740,7 @@ new #[Layout('layouts.dashboard')]
         }
 
         $this->validate([
-            'spacer_bio' => ['required', 'string', 'max:5000'],
+            'spacer_bio' => ['nullable', 'string', 'max:5000'],
             'spacer_services_pricing' => ['required', 'array'],
             'spacer_addon_custom_rows' => ['nullable', 'array'],
             'spacer_suitable_for' => ['nullable', 'array'],
@@ -3667,7 +3766,7 @@ new #[Layout('layouts.dashboard')]
         $amenitiesMerged = array_values(array_unique(array_merge($this->spacer_amenities_preset_selected, $this->selectedSpacerCustomEntryTexts($this->spacer_amenities_custom))));
 
         $payload = [
-            'bio' => trim($this->spacer_bio),
+            'bio' => trim($this->spacer_bio) !== '' ? trim($this->spacer_bio) : trim($this->business_bio),
             'services_pricing' => $this->spacer_services_pricing,
             'addons_service' => $this->spacer_addons_service,
             'addons_custom' => $this->spacer_addon_custom_rows,
@@ -4538,31 +4637,31 @@ new #[Layout('layouts.dashboard')]
 
                     <div class="verification-form"
                         x-data="{
-                                                                                                                                                                                    fursgoUsage: @js($fursgo_usage),
-                                                                                                                                                                                    accountType: @js($account_type),
-                                                                                                                                                                                    locationTypes: @js(array_values($location_types ?? [])),
-                                                                                                                                                                                    get canContinue() {
-                                                                                                                                                                                        return Boolean(this.fursgoUsage) &&
-                                                                                                                                                                                            Boolean(this.accountType) &&
-                                                                                                                                                                                            Array.isArray(this.locationTypes) &&
-                                                                                                                                                                                            this.locationTypes.length > 0;
-                                                                                                                                                                                    },
-                                                                                                                                                                                    isLocationChecked(value) {
-                                                                                                                                                                                        return Array.isArray(this.locationTypes) && this.locationTypes.includes(value);
-                                                                                                                                                                                    },
-                                                                                                                                                                                    toggleLocation(value, checked) {
-                                                                                                                                                                                        if (!Array.isArray(this.locationTypes)) {
-                                                                                                                                                                                            this.locationTypes = [];
-                                                                                                                                                                                        }
-                                                                                                                                                                                        if (checked) {
-                                                                                                                                                                                            if (!this.locationTypes.includes(value)) {
-                                                                                                                                                                                                this.locationTypes.push(value);
-                                                                                                                                                                                            }
-                                                                                                                                                                                            return;
-                                                                                                                                                                                        }
-                                                                                                                                                                                        this.locationTypes = this.locationTypes.filter((item) => item !== value);
-                                                                                                                                                                                    },
-                                                                                                                                                                                }">
+                                                                                                                                                                                                fursgoUsage: @js($fursgo_usage),
+                                                                                                                                                                                                accountType: @js($account_type),
+                                                                                                                                                                                                locationTypes: @js(array_values($location_types ?? [])),
+                                                                                                                                                                                                get canContinue() {
+                                                                                                                                                                                                    return Boolean(this.fursgoUsage) &&
+                                                                                                                                                                                                        Boolean(this.accountType) &&
+                                                                                                                                                                                                        Array.isArray(this.locationTypes) &&
+                                                                                                                                                                                                        this.locationTypes.length > 0;
+                                                                                                                                                                                                },
+                                                                                                                                                                                                isLocationChecked(value) {
+                                                                                                                                                                                                    return Array.isArray(this.locationTypes) && this.locationTypes.includes(value);
+                                                                                                                                                                                                },
+                                                                                                                                                                                                toggleLocation(value, checked) {
+                                                                                                                                                                                                    if (!Array.isArray(this.locationTypes)) {
+                                                                                                                                                                                                        this.locationTypes = [];
+                                                                                                                                                                                                    }
+                                                                                                                                                                                                    if (checked) {
+                                                                                                                                                                                                        if (!this.locationTypes.includes(value)) {
+                                                                                                                                                                                                            this.locationTypes.push(value);
+                                                                                                                                                                                                        }
+                                                                                                                                                                                                        return;
+                                                                                                                                                                                                    }
+                                                                                                                                                                                                    this.locationTypes = this.locationTypes.filter((item) => item !== value);
+                                                                                                                                                                                                },
+                                                                                                                                                                                            }">
                         <div>
                             <div class="form-section">
                                 <div class="section-title">
@@ -4692,17 +4791,17 @@ new #[Layout('layouts.dashboard')]
                                 loading-target="submitAccountPayouts" x-bind:disabled="!canContinue"
                                 x-bind:class="{ 'common-btn--disabled': !canContinue }"
                                 x-bind:style="{
-                                                                                                                                                                                                    backgroundColor: canContinue ? '#FFC97A' : '#e5e7eb',
-                                                                                                                                                                                                    color: canContinue ? '#FFFFFF' : '#9ca3af',
-                                                                                                                                                                                                    boxShadow: canContinue ? '0 5px 8px 0 rgba(0, 0, 0, 0.10)' : 'none',
-                                                                                                                                                                                                }"
+                                                                                                                                                                                                                backgroundColor: canContinue ? '#FFC97A' : '#e5e7eb',
+                                                                                                                                                                                                                color: canContinue ? '#FFFFFF' : '#9ca3af',
+                                                                                                                                                                                                                boxShadow: canContinue ? '0 5px 8px 0 rgba(0, 0, 0, 0.10)' : 'none',
+                                                                                                                                                                                                            }"
                                 @click="
-                                                                                                                                                                                                    if (!canContinue) { return; }
-                                                                                                                                                                                                    $wire.set('fursgo_usage', fursgoUsage, false);
-                                                                                                                                                                                                    $wire.set('account_type', accountType, false);
-                                                                                                                                                                                                    $wire.set('location_types', locationTypes, false);
-                                                                                                                                                                                                    $wire.submitAccountPayouts();
-                                                                                                                                                                                                " />
+                                                                                                                                                                                                                if (!canContinue) { return; }
+                                                                                                                                                                                                                $wire.set('fursgo_usage', fursgoUsage, false);
+                                                                                                                                                                                                                $wire.set('account_type', accountType, false);
+                                                                                                                                                                                                                $wire.set('location_types', locationTypes, false);
+                                                                                                                                                                                                                $wire.submitAccountPayouts();
+                                                                                                                                                                                                            " />
                         </div>
                     </div>
                 </div>
@@ -6540,8 +6639,8 @@ new #[Layout('layouts.dashboard')]
     }
 
     .basics-pet-chip__check {
-        width: 14px;
-        height: 14px;
+        width: 19px;
+        height: 19px;
         display: block;
         flex-shrink: 0;
     }
