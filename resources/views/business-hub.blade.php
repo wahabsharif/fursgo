@@ -1,13 +1,24 @@
 @php
+    use App\Models\GroomerSpacerProfile;
     use App\Support\BusinessHubNav;
+    use Illuminate\Support\Facades\Auth;
 
     $dashboardNav = BusinessHubNav::fromSession();
     $dashboardActiveSection = $dashboardNav['active_section'];
+
+    $gsp = Auth::guard('groomer_spacer')->user();
+    $welcomeFirstName = 'there';
+    if ($gsp instanceof GroomerSpacerProfile) {
+        $nameParts = preg_split('/\s+/', trim((string) ($gsp->full_name ?: '')), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $welcomeFirstName = $nameParts[0] ?? (trim((string) $gsp->full_name) !== '' ? trim((string) $gsp->full_name) : 'there');
+    }
+    $welcomeBackTitle = 'Welcome back, ' . $welcomeFirstName . ' 👋';
 @endphp
 
 <section class="dashboard-content-wrapper">
     <div class="active-section-header"
-        x-data="{ tabsLoading: false, navLoading: false, navLoadingTimeout: null, activeBookingFilter: @js($dashboardNav['active_booking_status']), serviceFormOpen: false, activeServiceMenu: @js($dashboardNav['active_service_menu']), activeEarningsMenu: @js($dashboardNav['active_earnings_menu']), clientProfileOpen: false }"
+        x-data="{ tabsLoading: false, navLoading: false, navLoadingTimeout: null, activeBookingFilter: @js($dashboardNav['active_booking_status']), serviceFormOpen: false, activeServiceMenu: @js($dashboardNav['active_service_menu']), activeEarningsMenu: @js($dashboardNav['active_earnings_menu']), clientProfileOpen: false, showWelcome: @js($dashboardActiveSection === 'business-hub') }"
+        x-effect="if (activeSection !== 'business-hub') showWelcome = false"
         x-show="activeSection !== 'clients' || !clientProfileOpen" x-cloak
         x-on:bookings-tabs-loading-start.window="tabsLoading = true"
         x-on:bookings-tabs-loading-end.window="tabsLoading = false"
@@ -20,6 +31,13 @@
         x-on:service-form-closed.window="serviceFormOpen = false"
         x-on:services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'"
         x-on:earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'">
+        <template x-if="activeSection === 'business-hub'">
+            <div class="active-section-header">
+                <h2 class="active-section-header-welcome"
+                    x-text="showWelcome ? @js($welcomeBackTitle) : 'Business Hub'"></h2>
+            </div>
+        </template>
+
         <template x-if="activeSection === 'bookings'">
             <div class="active-section-header">
                 <h2
@@ -111,7 +129,7 @@
         </template>
 
         <template
-            x-if="activeSection !== 'bookings' && activeSection !== 'availability' && activeSection !== 'manage-availability' && activeSection !== 'services' && activeSection !== 'clients' && activeSection !== 'earnings' && activeSection !== 'settings'">
+            x-if="activeSection !== 'business-hub' && activeSection !== 'bookings' && activeSection !== 'availability' && activeSection !== 'manage-availability' && activeSection !== 'services' && activeSection !== 'clients' && activeSection !== 'earnings' && activeSection !== 'settings'">
             <div x-text="activeSection.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())"></div>
         </template>
 
@@ -240,6 +258,10 @@
         font-weight: 600;
         line-height: normal;
         text-transform: capitalize;
+    }
+
+    .active-section-header h2.active-section-header-welcome {
+        text-transform: none;
     }
 
     .active-section-header p,
