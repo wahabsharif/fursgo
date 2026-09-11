@@ -80,8 +80,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 74px;
     height: 27px;
-    padding: 0 12px;
+    padding: 0;
     border-radius: 10px;
     background: #f7f4ec;
     color: #706a62;
@@ -197,7 +198,7 @@
 }
 
 .header-icon-btn-glyph {
-    width: 24px;
+    width: 25px;
     height: 20px;
     overflow: clip;
     display: inline-flex;

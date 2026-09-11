@@ -35,7 +35,26 @@
     @if (request()->routeIs('account-settings'))
         <link rel="stylesheet" href="{{ asset('css/account-settings.css') }}">
     @endif
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    @if ($isDashboardHub)
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    @endif
+    @if ($dashboardNavView === 'business-verification')
+        <link rel="preload" as="image" href="{{ asset('images/logo/logo.svg') }}">
+        <style>
+            .dashboard-header {
+                position: sticky;
+                top: 0;
+                z-index: 1020;
+                width: 100%;
+                background: #fff;
+            }
+
+            .dashboard-header.dashboard-header--business-verification .dashboard-navbar {
+                min-height: 0;
+                padding: 50px 0 40px !important;
+            }
+        </style>
+    @endif
     @yield('styles')
     @stack('styles')
 
@@ -203,10 +222,12 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
     <script src="{{ asset('js/custom-dropdown.js') }}" defer></script>
     <script src="{{ asset('js/custom.js') }}" defer></script>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
-    <script src="{{ asset('js/weekly-revenue-chart.js') }}"></script>
-    <script src="{{ asset('js/earnings-charts.js') }}"></script>
+    @if ($isDashboardHub)
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+        <script src="{{ asset('js/weekly-revenue-chart.js') }}"></script>
+        <script src="{{ asset('js/earnings-charts.js') }}"></script>
+    @endif
 
     @fluxScripts
 
