@@ -26,6 +26,13 @@ new #[Layout('layouts.groomer-auth')]
 
     public string $emailErrorMessage = '';
 
+    public function mount(): void
+    {
+        if (Auth::guard('groomer_spacer')->check()) {
+            $this->redirect($this->defaultPostLoginUrl(), navigate: false);
+        }
+    }
+
     #[Renderless]
     public function checkEmail(): void
     {
@@ -86,9 +93,14 @@ new #[Layout('layouts.groomer-auth')]
         request()->session()->regenerate();
         Auth::shouldUse('groomer_spacer');
 
-        $default = url('/business-verification');
+        $default = $this->defaultPostLoginUrl();
         $target = session()->pull('url.intended', $default);
         $this->redirect($this->safePostLoginUrl($target, $default), navigate: false);
+    }
+
+    protected function defaultPostLoginUrl(): string
+    {
+        return url('/business-hub');
     }
 
     protected function ensureIsNotRateLimited(): bool

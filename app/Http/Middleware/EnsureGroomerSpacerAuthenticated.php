@@ -15,7 +15,11 @@ class EnsureGroomerSpacerAuthenticated
     public function handle(Request $request, Closure $next): Response
     {
         if (!Auth::guard('groomer_spacer')->check()) {
-            return redirect('/login-groomer-space');
+            if ($request->expectsJson()) {
+                abort(401);
+            }
+
+            return redirect()->guest('/login-groomer-space');
         }
 
         Auth::shouldUse('groomer_spacer');
