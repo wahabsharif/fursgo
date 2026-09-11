@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\Booking;
+use App\Models\GroomerSpacerProfile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Volt\Component;
@@ -110,16 +112,14 @@ new class extends Component {
         return $labels->isEmpty() ? '—' : $labels->implode(', ');
     }
 
-    private function loggedInSpacerId(): ?int
+    private function loggedInSpacerId(): int
     {
-        return auth('groomer_spacer')->id();
+        return (int) (Auth::guard('groomer_spacer')->id() ?? Auth::id() ?? 0);
     }
 
     private function bookingsQuery()
     {
-        $spacerId = $this->loggedInSpacerId();
-
-        return Booking::query()->where('goormer_spacer_id', $spacerId ?? 0);
+        return Booking::query()->where('goormer_spacer_id', $this->loggedInSpacerId());
     }
 
     public function getTodaysBookings()
@@ -303,7 +303,7 @@ new class extends Component {
 
         $totalRevenue = (float) ($completedStats->total_revenue ?? 0);
         $avgRevenue = $completedBookings > 0 ? round($totalRevenue / max($completedBookings, 1)) : 0;
-        $profileVisits = (int) (auth('groomer_spacer')->user()?->profile_visit ?? 0);
+        $profileVisits = (int) (GroomerSpacerProfile::query()->find($this->loggedInSpacerId())?->profile_visit ?? 0);
 
         $repeatClients = $this->bookingsQuery()->where('booking_status', 'completed')->select('pet_owner_id')->groupBy('pet_owner_id')->havingRaw('COUNT(*) > 1')->get()->count();
 
@@ -579,12 +579,14 @@ new class extends Component {
         .booking-item {
             padding: 12px;
             border-radius: 10px;
-            transition: background 0.2s ease;
+            background-color: transparent;
+            transition: background-color 0.2s ease;
             cursor: pointer;
         }
 
-        .booking-item:hover {
-            background: var(--booking-item-hover-bg);
+        .card-content .booking-item:hover,
+        .card-modal-body .booking-item:hover {
+            background: var(--booking-item-hover-bg, #FFFBF4);
         }
 
         .booking-header {
@@ -982,14 +984,16 @@ new class extends Component {
             box-sizing: border-box;
         }
 
-        /* Pending Requests — grey panel only on first row */
         .request-item {
             padding: 1rem;
+            border-radius: 10px;
+            background-color: transparent;
+            transition: background-color 0.2s ease;
         }
 
-        .request-item.request-item--odd {
+        .card-content .request-item:hover,
+        .card-modal-body .request-item:hover {
             background: #F6F6F6;
-            border-radius: 10px;
         }
 
         .request-item>div:first-child {
@@ -1096,23 +1100,25 @@ new class extends Component {
             background: #E5E2DD;
         }
 
-        /* Bottom Row — Figma: 610 / 400 with 20px gap */
+        /* Bottom Row — Figma: 610 / 400 with 20px gap.
+           This Month lines up with Upcoming booking items, not the section title. */
         .dashboard-bottom-row {
             margin-top: 1rem;
             display: grid;
             grid-template-columns: minmax(0, 610fr) minmax(0, 400fr);
-            gap: 1.25rem;
+            grid-template-rows: auto auto auto;
+            column-gap: 1.25rem;
             align-items: start;
         }
 
         .upcoming-bookings {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-rows: subgrid;
+            grid-row: 1 / 4;
             min-width: 0;
         }
 
         .upcoming-bookings .card-content {
-            flex: 1;
             max-height: none;
             overflow-y: auto;
         }
@@ -1122,11 +1128,29 @@ new class extends Component {
             margin-top: 0.75rem;
         }
 
+        .stats-column {
+            grid-column: 2;
+            grid-row: 2;
+            min-width: 0;
+            align-self: stretch;
+        }
+
         /* Upcoming Bookings */
         .upcoming-booking-item {
             border: 1px solid #D8E8B7;
             border-radius: 12px;
             margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: background-color 0.2s ease;
+        }
+
+        .upcoming-bookings .upcoming-booking-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .card-content .upcoming-booking-item:hover,
+        .card-modal-body .upcoming-booking-item:hover {
+            background: #F6F6F6;
         }
 
         .booking-status-bar {
@@ -1281,9 +1305,6 @@ new class extends Component {
         }
 
         /* Stats Column — single “This Month” card */
-        .stats-column {
-            min-width: 0;
-        }
 
         .this-month-card {
             border-radius: 10px;
@@ -1443,6 +1464,18 @@ new class extends Component {
 
             .dashboard-bottom-row {
                 grid-template-columns: 1fr;
+                grid-template-rows: none;
+            }
+
+            .upcoming-bookings {
+                display: flex;
+                flex-direction: column;
+                grid-row: auto;
+            }
+
+            .stats-column {
+                grid-column: auto;
+                grid-row: auto;
             }
 
             .booking-info-grid {
@@ -1472,7 +1505,9 @@ new class extends Component {
     </style>
 
     @php
-        $isSpaceAccount = (auth('groomer_spacer')->user()?->user_type ?? '') === 'space';
+        $isSpaceAccount = strtolower((string) (Auth::guard('groomer_spacer')->user()?->user_type
+            ?? GroomerSpacerProfile::query()->find($this->loggedInSpacerId())?->user_type
+            ?? '')) === 'space';
     @endphp
 
     <!-- Top Row: Today's Bookings, Weekly Revenue, Pending Requests -->
@@ -1631,7 +1666,7 @@ new class extends Component {
             </div>
             <div class="card-content">
                 @foreach (collect($this->pendingRequests)->take(2) as $request)
-                    <div class="request-item {{ $loop->odd ? 'request-item--odd' : '' }}">
+                    <div class="request-item">
                         <div>
                             <div class="pet-avatar-wrap">
                                 <div class="pet-avatar-stack">
@@ -2116,7 +2151,7 @@ new class extends Component {
                             @endforeach
                         @elseif ($activeModal === 'pending')
                             @foreach ($this->pendingRequests as $request)
-                                <div class="request-item {{ $loop->odd ? 'request-item--odd' : '' }}">
+                                <div class="request-item">
                                     <div>
                                         <div class="pet-avatar-wrap">
                                             <div class="pet-avatar-stack">
