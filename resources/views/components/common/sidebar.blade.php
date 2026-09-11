@@ -53,7 +53,29 @@
         confirmed: {{ $confirmedCount }},
         completed: {{ $completedCount }},
         cancelled: {{ $cancelledCount }},
-    }
+    },
+    closeMenus(except = null) {
+        if (except !== 'bookings') this.bookingsOpen = false;
+        if (except !== 'availability') this.availabilityOpen = false;
+        if (except !== 'services') this.servicesOpen = false;
+        if (except !== 'earnings') this.earningsOpen = false;
+        if (except !== 'settings') this.settingsOpen = false;
+    },
+    shouldNavigate(section, currentSection) {
+        const onSection = section === 'availability'
+            ? currentSection === 'availability' || currentSection === 'manage-availability'
+            : currentSection === section;
+        if (onSection) {
+            this[section + 'Open'] = !this[section + 'Open'];
+            return false;
+        }
+        this.closeMenus(section);
+        this[section + 'Open'] = true;
+        return true;
+    },
+    startNavLoading() {
+        window.dispatchEvent(new CustomEvent('nav-list-loading-start'));
+    },
 }" @booking-status-changed.window="
         activeBookingStatus = $event.detail.status ?? '';
         if (activeSection === 'bookings') {
@@ -101,7 +123,7 @@
             <!-- Business Hub -->
             <li class="nav-item">
                 <a href="{{ route('business-hub') }}"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'business-hub'; bookingsOpen = false; availabilityOpen = false"
+                    @click.prevent="if (activeSection !== 'business-hub') startNavLoading(); closeMenus(); activeSection = 'business-hub'"
                     :class="{ 'active': activeSection === 'business-hub' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor" class="nav-icon">
@@ -119,7 +141,7 @@
             <!-- Bookings -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'bookings'; bookingsOpen = true; availabilityOpen = false; activeBookingStatus = ''; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-filter-reset'); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: '' } }))"
+                    @click.prevent="if (shouldNavigate('bookings', activeSection)) { startNavLoading(); activeSection = 'bookings'; activeBookingStatus = ''; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-filter-reset'); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: '' } })) }"
                     :class="{ 'active': activeSection === 'bookings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14" fill="none">
                         <path
@@ -133,55 +155,54 @@
                     <span class="nav-badge" x-show="bookingCounts.pending > 0" x-cloak
                         x-text="bookingCounts.pending">{{ $pendingCount }}</span>
                 </a>
-                <ul x-cloak x-show="bookingsOpen" x-transition:enter="bookings-transition-enter"
-                    x-transition:enter-start="bookings-transition-enter-start"
-                    x-transition:enter-end="bookings-transition-enter-end"
-                    x-transition:leave="bookings-transition-leave"
-                    x-transition:leave-start="bookings-transition-leave-start"
-                    x-transition:leave-end="bookings-transition-leave-end" class="booking-status-list">
-                    <li class="booking-status-item">
-                        <span class="booking-status-dot pending"></span>
-                        <button type="button" class="booking-status-trigger pending"
-                            :class="{ 'is-active': activeBookingStatus === 'pending' }"
-                            @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'pending'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'pending' }); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'pending' } }))">
-                            Pending Requests <span class="booking-status-count"
-                                x-text="`(${bookingCounts.pending})`">({{ $pendingCount }})</span>
-                        </button>
-                    </li>
-                    <li class="booking-status-item">
-                        <span class="booking-status-dot confirmed"></span>
-                        <button type="button" class="booking-status-trigger confirmed"
-                            :class="{ 'is-active': activeBookingStatus === 'confirmed' }"
-                            @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'confirmed'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'confirmed' }); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'confirmed' } }))">
-                            Confirmed Bookings <span class="booking-status-count"
-                                x-text="`(${bookingCounts.confirmed})`">({{ $confirmedCount }})</span>
-                        </button>
-                    </li>
-                    <li class="booking-status-item">
-                        <span class="booking-status-dot completed"></span>
-                        <button type="button" class="booking-status-trigger completed"
-                            :class="{ 'is-active': activeBookingStatus === 'completed' }"
-                            @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'completed'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'completed' }); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'completed' } }))">
-                            Completed Bookings <span class="booking-status-count"
-                                x-text="`(${bookingCounts.completed})`">({{ $completedCount }})</span>
-                        </button>
-                    </li>
-                    <li class="booking-status-item">
-                        <span class="booking-status-dot cancelled"></span>
-                        <button type="button" class="booking-status-trigger cancelled"
-                            :class="{ 'is-active': activeBookingStatus === 'cancelled' }"
-                            @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'cancelled'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'cancelled' }); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'cancelled' } }))">
-                            Cancelled Bookings <span class="booking-status-count"
-                                x-text="`(${bookingCounts.cancelled})`">({{ $cancelledCount }})</span>
-                        </button>
-                    </li>
-                </ul>
+                <div class="nav-submenu" :class="{ 'is-open': bookingsOpen }">
+                    <div class="nav-submenu-inner">
+                        <ul class="booking-status-list">
+                            <li class="booking-status-item">
+                                <span class="booking-status-dot pending"></span>
+                                <button type="button" class="booking-status-trigger pending"
+                                    :class="{ 'is-active': activeBookingStatus === 'pending' }"
+                                    @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'pending'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'pending' }); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'pending' } }))">
+                                    Pending Requests <span class="booking-status-count"
+                                        x-text="`(${bookingCounts.pending})`">({{ $pendingCount }})</span>
+                                </button>
+                            </li>
+                            <li class="booking-status-item">
+                                <span class="booking-status-dot confirmed"></span>
+                                <button type="button" class="booking-status-trigger confirmed"
+                                    :class="{ 'is-active': activeBookingStatus === 'confirmed' }"
+                                    @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'confirmed'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'confirmed' }); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'confirmed' } }))">
+                                    Confirmed Bookings <span class="booking-status-count"
+                                        x-text="`(${bookingCounts.confirmed})`">({{ $confirmedCount }})</span>
+                                </button>
+                            </li>
+                            <li class="booking-status-item">
+                                <span class="booking-status-dot completed"></span>
+                                <button type="button" class="booking-status-trigger completed"
+                                    :class="{ 'is-active': activeBookingStatus === 'completed' }"
+                                    @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'completed'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'completed' }); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'completed' } }))">
+                                    Completed Bookings <span class="booking-status-count"
+                                        x-text="`(${bookingCounts.completed})`">({{ $completedCount }})</span>
+                                </button>
+                            </li>
+                            <li class="booking-status-item">
+                                <span class="booking-status-dot cancelled"></span>
+                                <button type="button" class="booking-status-trigger cancelled"
+                                    :class="{ 'is-active': activeBookingStatus === 'cancelled' }"
+                                    @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'cancelled'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'cancelled' }); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'cancelled' } }))">
+                                    Cancelled Bookings <span class="booking-status-count"
+                                        x-text="`(${bookingCounts.cancelled})`">({{ $cancelledCount }})</span>
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </li>
 
             <!-- Availability -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'availability'; bookingsOpen = false; availabilityOpen = !availabilityOpen"
+                    @click.prevent="if (shouldNavigate('availability', activeSection)) { startNavLoading(); activeSection = 'availability' }"
                     :class="{ 'active': activeSection === 'availability' || activeSection === 'manage-availability' }"
                     class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 14 13" fill="none">
@@ -196,27 +217,26 @@
                     </svg>
                     <span class="nav-text">Availability</span>
                 </a>
-                <ul x-cloak x-show="availabilityOpen" x-transition:enter="bookings-transition-enter"
-                    x-transition:enter-start="bookings-transition-enter-start"
-                    x-transition:enter-end="bookings-transition-enter-end"
-                    x-transition:leave="bookings-transition-leave"
-                    x-transition:leave-start="bookings-transition-leave-start"
-                    x-transition:leave-end="bookings-transition-leave-end" class="booking-status-list">
-                    <li class="booking-status-item">
-                        <span class="availability-status-dot"></span>
-                        <button type="button" class="booking-status-trigger availability-manage-trigger"
-                            :class="{ 'is-active': activeSection === 'manage-availability' }"
-                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'manage-availability'; availabilityOpen = true;">
-                            Manage Availability
-                        </button>
-                    </li>
-                </ul>
+                <div class="nav-submenu" :class="{ 'is-open': availabilityOpen }">
+                    <div class="nav-submenu-inner">
+                        <ul class="booking-status-list">
+                            <li class="booking-status-item">
+                                <span class="availability-status-dot"></span>
+                                <button type="button" class="booking-status-trigger availability-manage-trigger"
+                                    :class="{ 'is-active': activeSection === 'manage-availability' }"
+                                    @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'manage-availability'; availabilityOpen = true;">
+                                    Manage Availability
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </li>
 
             <!-- Services -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; bookingsOpen = false; availabilityOpen = false; servicesOpen = true; activeServiceMenu = 'services'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'services' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'services', active_service_menu: 'services' } }))"
+                    @click.prevent="if (shouldNavigate('services', activeSection)) { startNavLoading(); activeSection = 'services'; activeServiceMenu = 'services'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'services' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'services', active_service_menu: 'services' } })) }"
                     :class="{ 'active': activeSection === 'services' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14" fill="none">
                         <path
@@ -228,46 +248,44 @@
                     </svg>
                     <span class="nav-text">Services</span>
                 </a>
-                <ul x-cloak x-show="servicesOpen && activeSection === 'services'"
-                    x-transition:enter="bookings-transition-enter"
-                    x-transition:enter-start="bookings-transition-enter-start"
-                    x-transition:enter-end="bookings-transition-enter-end"
-                    x-transition:leave="bookings-transition-leave"
-                    x-transition:leave-start="bookings-transition-leave-start"
-                    x-transition:leave-end="bookings-transition-leave-end" class="booking-status-list">
-                    <li class="booking-status-item">
-                        <span class="services-status-dot add-ons"></span>
-                        <button type="button" class="booking-status-trigger"
-                            :class="{ 'is-active': activeServiceMenu === 'add-ons' }"
-                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'add-ons'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'add-ons' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'services', active_service_menu: 'add-ons' } }))">
-                            Add-ons
-                        </button>
-                    </li>
-                    <li class="booking-status-item">
-                        <span class="services-status-dot pet-preferences"></span>
-                        <button type="button" class="booking-status-trigger"
-                            :class="{ 'is-active': activeServiceMenu === 'pet-preferences' }"
-                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'pet-preferences'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'pet-preferences' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'services', active_service_menu: 'pet-preferences' } }))">
-                            Pet Preferences
-                        </button>
-                    </li>
-                    @unless ($isSpaceUser)
-                        <li class="booking-status-item">
-                            <span class="services-status-dot service-area"></span>
-                            <button type="button" class="booking-status-trigger"
-                                :class="{ 'is-active': activeServiceMenu === 'service-area' }"
-                                @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'service-area'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'service-area' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'services', active_service_menu: 'service-area' } }))">
-                                Service Area
-                            </button>
-                        </li>
-                    @endunless
-                </ul>
+                <div class="nav-submenu" :class="{ 'is-open': servicesOpen }">
+                    <div class="nav-submenu-inner">
+                        <ul class="booking-status-list">
+                            <li class="booking-status-item">
+                                <span class="services-status-dot add-ons"></span>
+                                <button type="button" class="booking-status-trigger"
+                                    :class="{ 'is-active': activeServiceMenu === 'add-ons' }"
+                                    @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'add-ons'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'add-ons' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'services', active_service_menu: 'add-ons' } }))">
+                                    Add-ons
+                                </button>
+                            </li>
+                            <li class="booking-status-item">
+                                <span class="services-status-dot pet-preferences"></span>
+                                <button type="button" class="booking-status-trigger"
+                                    :class="{ 'is-active': activeServiceMenu === 'pet-preferences' }"
+                                    @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'pet-preferences'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'pet-preferences' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'services', active_service_menu: 'pet-preferences' } }))">
+                                    Pet Preferences
+                                </button>
+                            </li>
+                            @unless ($isSpaceUser)
+                                <li class="booking-status-item">
+                                    <span class="services-status-dot service-area"></span>
+                                    <button type="button" class="booking-status-trigger"
+                                        :class="{ 'is-active': activeServiceMenu === 'service-area' }"
+                                        @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'services'; servicesOpen = true; activeServiceMenu = 'service-area'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'service-area' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'services', active_service_menu: 'service-area' } }))">
+                                        Service Area
+                                    </button>
+                                </li>
+                            @endunless
+                        </ul>
+                    </div>
+                </div>
             </li>
 
             <!-- Clients -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'clients'; bookingsOpen = false; availabilityOpen = false; servicesOpen = false"
+                    @click.prevent="if (activeSection !== 'clients') startNavLoading(); closeMenus(); activeSection = 'clients'"
                     :class="{ 'active': activeSection === 'clients' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="10" viewBox="0 0 14 10" fill="none">
                         <path
@@ -292,7 +310,7 @@
             <!-- Earnings -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'earnings'; bookingsOpen = false; availabilityOpen = false; servicesOpen = false; earningsOpen = true; activeEarningsMenu = 'overview'; window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: 'overview' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: 'overview' } }))"
+                    @click.prevent="if (shouldNavigate('earnings', activeSection)) { startNavLoading(); activeSection = 'earnings'; activeEarningsMenu = 'overview'; window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: 'overview' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: 'overview' } })) }"
                     :class="{ 'active': activeSection === 'earnings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="12" viewBox="0 0 14 12" fill="none">
                         <path
@@ -306,38 +324,36 @@
                     </svg>
                     <span class="nav-text">Earnings</span>
                 </a>
-                <ul x-cloak x-show="earningsOpen && activeSection === 'earnings'"
-                    x-transition:enter="bookings-transition-enter"
-                    x-transition:enter-start="bookings-transition-enter-start"
-                    x-transition:enter-end="bookings-transition-enter-end"
-                    x-transition:leave="bookings-transition-leave"
-                    x-transition:leave-start="bookings-transition-leave-start"
-                    x-transition:leave-end="bookings-transition-leave-end" class="booking-status-list">
-                    <li class="booking-status-item">
-                        <span class="services-status-dot transactions"></span>
-                        <button type="button" class="booking-status-trigger"
-                            :class="{ 'is-active': activeEarningsMenu === 'transactions' }"
-                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'earnings'; earningsOpen = true; activeEarningsMenu = 'transactions'; window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: 'transactions' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: 'transactions' } }))">
-                            Transactions
-                        </button>
-                    </li>
-                    <li class="booking-status-item">
-                        <span class="services-status-dot pay-outs"></span>
-                        <button type="button" class="booking-status-trigger"
-                            :class="{ 'is-active': activeEarningsMenu === 'pay-outs' }"
-                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'earnings'; earningsOpen = true; activeEarningsMenu = 'pay-outs'; window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: 'pay-outs' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: 'pay-outs' } }))">
-                            Pay-outs
-                        </button>
-                    </li>
-                    <li class="booking-status-item">
-                        <span class="services-status-dot invoices"></span>
-                        <button type="button" class="booking-status-trigger"
-                            :class="{ 'is-active': activeEarningsMenu === 'invoices' }"
-                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'earnings'; earningsOpen = true; activeEarningsMenu = 'invoices'; window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: 'invoices' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: 'invoices' } }))">
-                            Invoices
-                        </button>
-                    </li>
-                </ul>
+                <div class="nav-submenu" :class="{ 'is-open': earningsOpen }">
+                    <div class="nav-submenu-inner">
+                        <ul class="booking-status-list">
+                            <li class="booking-status-item">
+                                <span class="services-status-dot transactions"></span>
+                                <button type="button" class="booking-status-trigger"
+                                    :class="{ 'is-active': activeEarningsMenu === 'transactions' }"
+                                    @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'earnings'; earningsOpen = true; activeEarningsMenu = 'transactions'; window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: 'transactions' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: 'transactions' } }))">
+                                    Transactions
+                                </button>
+                            </li>
+                            <li class="booking-status-item">
+                                <span class="services-status-dot pay-outs"></span>
+                                <button type="button" class="booking-status-trigger"
+                                    :class="{ 'is-active': activeEarningsMenu === 'pay-outs' }"
+                                    @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'earnings'; earningsOpen = true; activeEarningsMenu = 'pay-outs'; window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: 'pay-outs' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: 'pay-outs' } }))">
+                                    Pay-outs
+                                </button>
+                            </li>
+                            <li class="booking-status-item">
+                                <span class="services-status-dot invoices"></span>
+                                <button type="button" class="booking-status-trigger"
+                                    :class="{ 'is-active': activeEarningsMenu === 'invoices' }"
+                                    @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'earnings'; earningsOpen = true; activeEarningsMenu = 'invoices'; window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: 'invoices' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: 'invoices' } }))">
+                                    Invoices
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </li>
 
             <li class="nav-section-label" aria-hidden="true">Account</li>
@@ -345,7 +361,7 @@
             <!-- Settings -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'settings'; bookingsOpen = false; availabilityOpen = false; servicesOpen = false; earningsOpen = false; settingsOpen = true; activeSettingsMenu = 'general'; window.dispatchEvent(new CustomEvent('settings-menu-selected', { detail: { menu: 'general' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'settings', active_settings_menu: 'general' } }))"
+                    @click.prevent="if (shouldNavigate('settings', activeSection)) { startNavLoading(); activeSection = 'settings'; activeSettingsMenu = 'general'; window.dispatchEvent(new CustomEvent('settings-menu-selected', { detail: { menu: 'general' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'settings', active_settings_menu: 'general' } })) }"
                     :class="{ 'active': activeSection === 'settings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
                         <path
@@ -357,30 +373,28 @@
                     </svg>
                     <span class="nav-text">Settings</span>
                 </a>
-                <ul x-cloak x-show="settingsOpen && activeSection === 'settings'"
-                    x-transition:enter="bookings-transition-enter"
-                    x-transition:enter-start="bookings-transition-enter-start"
-                    x-transition:enter-end="bookings-transition-enter-end"
-                    x-transition:leave="bookings-transition-leave"
-                    x-transition:leave-start="bookings-transition-leave-start"
-                    x-transition:leave-end="bookings-transition-leave-end" class="booking-status-list">
-                    <li class="booking-status-item">
-                        <span class="settings-status-dot business-details"></span>
-                        <button type="button" class="booking-status-trigger"
-                            :class="{ 'is-active': activeSettingsMenu === 'business-details' }"
-                            @click="activeSection = 'settings'; settingsOpen = true; activeSettingsMenu = 'business-details'; window.dispatchEvent(new CustomEvent('settings-menu-selected', { detail: { menu: 'business-details' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'settings', active_settings_menu: 'business-details' } }))">
-                            Business Details
-                        </button>
-                    </li>
-                    <li class="booking-status-item">
-                        <span class="settings-status-dot service-policies"></span>
-                        <button type="button" class="booking-status-trigger"
-                            :class="{ 'is-active': activeSettingsMenu === 'service-policies' }"
-                            @click="activeSection = 'settings'; settingsOpen = true; activeSettingsMenu = 'service-policies'; window.dispatchEvent(new CustomEvent('settings-menu-selected', { detail: { menu: 'service-policies' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'settings', active_settings_menu: 'service-policies' } }))">
-                            Service Policies
-                        </button>
-                    </li>
-                </ul>
+                <div class="nav-submenu" :class="{ 'is-open': settingsOpen }">
+                    <div class="nav-submenu-inner">
+                        <ul class="booking-status-list">
+                            <li class="booking-status-item">
+                                <span class="settings-status-dot business-details"></span>
+                                <button type="button" class="booking-status-trigger"
+                                    :class="{ 'is-active': activeSettingsMenu === 'business-details' }"
+                                    @click="activeSection = 'settings'; settingsOpen = true; activeSettingsMenu = 'business-details'; window.dispatchEvent(new CustomEvent('settings-menu-selected', { detail: { menu: 'business-details' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'settings', active_settings_menu: 'business-details' } }))">
+                                    Business Details
+                                </button>
+                            </li>
+                            <li class="booking-status-item">
+                                <span class="settings-status-dot service-policies"></span>
+                                <button type="button" class="booking-status-trigger"
+                                    :class="{ 'is-active': activeSettingsMenu === 'service-policies' }"
+                                    @click="activeSection = 'settings'; settingsOpen = true; activeSettingsMenu = 'service-policies'; window.dispatchEvent(new CustomEvent('settings-menu-selected', { detail: { menu: 'service-policies' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'settings', active_settings_menu: 'service-policies' } }))">
+                                    Service Policies
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </li>
         </ul>
     </aside>
@@ -535,34 +549,25 @@
             gap: 1rem;
         }
 
-        .bookings-transition-enter {
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            transform-origin: top;
+        .nav-submenu {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.38s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        .bookings-transition-enter-start {
-            opacity: 0;
-            transform: translateY(-4px) scaleY(0.95);
+        .nav-submenu.is-open {
+            grid-template-rows: 1fr;
         }
 
-        .bookings-transition-enter-end {
-            opacity: 1;
-            transform: translateY(0) scaleY(1);
+        .nav-submenu-inner {
+            overflow: hidden;
+            min-height: 0;
         }
 
-        .bookings-transition-leave {
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            transform-origin: top;
-        }
-
-        .bookings-transition-leave-start {
-            opacity: 1;
-            transform: translateY(0) scaleY(1);
-        }
-
-        .bookings-transition-leave-end {
-            opacity: 0;
-            transform: translateY(-4px) scaleY(0.95);
+        @media (prefers-reduced-motion: reduce) {
+            .nav-submenu {
+                transition: none;
+            }
         }
 
         .booking-status-item {
@@ -702,7 +707,7 @@
             padding: 0.8125rem 1rem;
             min-height: 48px;
             border-radius: 96px;
-            transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+            transition: background-color 0.28s ease, color 0.28s ease, box-shadow 0.28s ease, font-weight 0.28s ease;
             text-decoration: none;
             box-sizing: border-box;
             width: 100%;
