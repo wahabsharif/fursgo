@@ -197,7 +197,7 @@ Route::post('marketing-hub/nav', function (Request $request) {
     return response()->noContent();
 })->middleware([EnsureGroomerSpacerAuthenticated::class])->name('marketing-hub.nav');
 
-Route::get('business-hub/bookings/{booking}/invoice.pdf', BookingInvoicePdfController::class)
+Route::get('business-hub/bookings/{booking}/invoice.pdf', [BookingInvoicePdfController::class, '__invoke'])
     ->middleware([EnsureGroomerSpacerAuthenticated::class])
     ->name('business-hub.bookings.invoice-pdf');
 

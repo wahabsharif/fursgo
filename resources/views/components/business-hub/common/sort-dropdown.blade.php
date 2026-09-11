@@ -27,15 +27,13 @@
                 <span>New to Old</span>
                 <span class="sort-indicator"></span>
             </button>
-            <button type="button" class="sort-options"
-                :class="{ 'is-active': @js($pendingSort) === 'amount_low' }"
+            <button type="button" class="sort-options" :class="{ 'is-active': @js($pendingSort) === 'amount_low' }"
                 wire:click="setPendingSort('amount_low')"
                 @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); open = false">
                 <span>Old to New</span>
                 <span class="sort-indicator"></span>
             </button>
-            <button type="button" class="sort-options"
-                :class="{ 'is-active': @js($pendingSort) === 'amount_high' }"
+            <button type="button" class="sort-options" :class="{ 'is-active': @js($pendingSort) === 'amount_high' }"
                 wire:click="setPendingSort('amount_high')"
                 @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); open = false">
                 <span>Price Descending</span>
@@ -57,11 +55,11 @@
     }
 
     .sort-trigger {
-        width: 69px;
+        width: 59px;
         height: 32px;
         border-radius: 100px;
-        border: 1px solid #A8A8A8;
-        background: transparent;
+        border: none;
+        background: #FFF;
         color: #A8A8A8;
         text-align: center;
         font-family: Lato;
@@ -73,7 +71,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.6rem;
+        gap: 0.35rem;
+        box-shadow: 0px 1px 6.7px 0px rgba(59, 55, 49, 0.12);
     }
 
     .sort-menu {
