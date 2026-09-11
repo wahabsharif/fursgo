@@ -1316,14 +1316,24 @@
                 border-radius: 10px;
                 border: 1px solid #f0ead9;
                 background: #fff;
-                display: none;
+                display: block;
                 overflow: hidden;
                 box-sizing: border-box;
                 padding: 1rem 1.5rem 0.5rem;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transform: translateY(-8px) scale(0.98);
+                transform-origin: top right;
+                transition: opacity 0.22s ease, transform 0.22s ease, visibility 0s linear 0.22s;
             }
 
             .dashboard-header .user-profile-options.is-open {
-                display: block;
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+                transform: translateY(0) scale(1);
+                transition: opacity 0.22s ease, transform 0.22s ease, visibility 0s linear 0s;
             }
 
             .dashboard-header .user-profile-options .user-profile-image {
@@ -1847,6 +1857,8 @@
                 .header-icon-btn,
                 .header-user-chip,
                 .profile-business-item,
+                .dashboard-header .user-profile-options,
+                .dashboard-header .user-profile-options.is-open,
                 .dashboard-header .user-profile-options .profile-item,
                 .dashboard-vq-links a {
                     transition: none;
