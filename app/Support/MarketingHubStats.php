@@ -6,17 +6,25 @@ use App\Models\Booking;
 use App\Models\PromoCodeUsage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 class MarketingHubStats
 {
+    public const PERIOD_THIS_MONTH = 'this_month';
+
+    public const PERIOD_LAST_MONTH = 'last_month';
+
+    public const PERIOD_LAST_3_MONTHS = 'last_3_months';
+
     public const TIME_SLOTS = [
-        ['label' => '08 - 09', 'start' => 8],
-        ['label' => '10 - 11', 'start' => 10],
-        ['label' => '12 - 13', 'start' => 12],
-        ['label' => '14 - 15', 'start' => 14],
-        ['label' => '16 - 17', 'start' => 16],
-        ['label' => '18 - 19', 'start' => 18],
-        ['label' => '20 - 21', 'start' => 20],
+        ['label' => '08-09', 'start' => 8],
+        ['label' => '09-10', 'start' => 9],
+        ['label' => '11-12', 'start' => 11],
+        ['label' => '13-14', 'start' => 13],
+        ['label' => '15-16', 'start' => 15],
+        ['label' => '17-18', 'start' => 17],
+        ['label' => '18-19', 'start' => 18],
+        ['label' => '20-21', 'start' => 20],
     ];
 
     public const WEEKDAYS = [
@@ -30,40 +38,122 @@ class MarketingHubStats
     ];
 
     public const ACQUISITION_SOURCES = [
-        'direct_profile' => 'Direct Profile Visits',
-        'platform_search' => 'Platform Search',
-        'promotion_link' => 'Promotion Link',
+        'direct_profile' => 'Direct profile visits',
+        'platform_search' => 'Platform search',
+        'promotion_link' => 'Promotion link',
     ];
 
-    public static function forSpacer(?int $spacerId): array
+    public const SOURCE_COLORS = ['#9AC1DD', '#FFC97A', '#FBAC83'];
+
+    public const SERVICE_COLORS = ['#9AC1DD', '#FFC97A', '#FBAC83'];
+
+    public const PET_COLORS = ['#9AC1DD', '#C1DB8A', '#FBAC83'];
+
+    /**
+     * @return array<string, string>
+     */
+    public static function periodOptions(): array
     {
+        return [
+            self::PERIOD_THIS_MONTH => 'This month',
+            self::PERIOD_LAST_MONTH => 'Last month',
+            self::PERIOD_LAST_3_MONTHS => 'Last 3 months',
+        ];
+    }
+
+    public static function normalizePeriod(?string $period): string
+    {
+        if (in_array($period, [self::PERIOD_THIS_MONTH, self::PERIOD_LAST_MONTH, self::PERIOD_LAST_3_MONTHS], true)) {
+            return $period;
+        }
+
+        return self::PERIOD_THIS_MONTH;
+    }
+
+    public static function periodCaption(string $period): string
+    {
+        return match (self::normalizePeriod($period)) {
+            self::PERIOD_THIS_MONTH => 'This month',
+            self::PERIOD_LAST_MONTH => 'Last month',
+            default => 'The last 3 months',
+        };
+    }
+
+    /**
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    public static function periodRange(string $period, ?Carbon $now = null): array
+    {
+        $now = $now ?? now();
+
+        return match (self::normalizePeriod($period)) {
+            self::PERIOD_THIS_MONTH => [
+                $now->copy()->startOfMonth(),
+                $now->copy()->endOfMonth(),
+            ],
+            self::PERIOD_LAST_MONTH => [
+                $now->copy()->subMonthNoOverflow()->startOfMonth(),
+                $now->copy()->subMonthNoOverflow()->endOfMonth(),
+            ],
+            default => [
+                $now->copy()->subMonthsNoOverflow(3)->startOfDay(),
+                $now->copy()->endOfDay(),
+            ],
+        };
+    }
+
+    /**
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    public static function previousPeriodRange(string $period, ?Carbon $now = null): array
+    {
+        $now = $now ?? now();
+
+        return match (self::normalizePeriod($period)) {
+            self::PERIOD_THIS_MONTH => [
+                $now->copy()->subMonthNoOverflow()->startOfMonth(),
+                $now->copy()->subMonthNoOverflow()->endOfMonth(),
+            ],
+            self::PERIOD_LAST_MONTH => [
+                $now->copy()->subMonthsNoOverflow(2)->startOfMonth(),
+                $now->copy()->subMonthsNoOverflow(2)->endOfMonth(),
+            ],
+            default => [
+                $now->copy()->subMonthsNoOverflow(6)->startOfDay(),
+                $now->copy()->subMonthsNoOverflow(3)->subDay()->endOfDay(),
+            ],
+        };
+    }
+
+    public static function forSpacer(?int $spacerId, string $period = self::PERIOD_THIS_MONTH): array
+    {
+        $period = self::normalizePeriod($period);
+
         if (!$spacerId) {
-            return self::empty();
+            return self::empty($period);
         }
 
         $now = now();
-        $monthStart = $now->copy()->startOfMonth();
-        $monthEnd = $now->copy()->endOfMonth();
-        $lastMonthStart = $now->copy()->subMonthNoOverflow()->startOfMonth();
-        $lastMonthEnd = $now->copy()->subMonthNoOverflow()->endOfMonth();
+        [$start, $end] = self::periodRange($period, $now);
+        [$prevStart, $prevEnd] = self::previousPeriodRange($period, $now);
 
         $base = Booking::query()->where('goormer_spacer_id', $spacerId);
         $active = (clone $base)->where('booking_status', '!=', 'cancelled');
         $completed = (clone $base)->where('booking_status', 'completed');
 
-        $monthBookings = (clone $active)
-            ->whereBetween('date', [$monthStart, $monthEnd])
+        $periodBookings = (clone $active)
+            ->whereBetween('date', [$start, $end])
             ->get(['id', 'pet_owner_id', 'service', 'time', 'date', 'discount', 'acquisition_source', 'rating']);
 
         $profileViews = (int) (auth('groomer_spacer')->user()?->profile_visit ?? 0);
 
-        $newClientsThisMonth = self::newClientsCount($spacerId, $monthStart, $monthEnd);
-        $newClientsLastMonth = self::newClientsCount($spacerId, $lastMonthStart, $lastMonthEnd);
-        $newClientsDelta = $newClientsThisMonth - $newClientsLastMonth;
+        $newClientsThisPeriod = self::newClientsCount($spacerId, $start, $end);
+        $newClientsPrevPeriod = self::newClientsCount($spacerId, $prevStart, $prevEnd);
+        $newClientsDelta = $newClientsThisPeriod - $newClientsPrevPeriod;
 
-        $totalBookingsAllTime = (clone $active)->count();
+        $periodBookingCount = $periodBookings->count();
         $conversionPct = $profileViews > 0
-            ? (int) round(($totalBookingsAllTime / $profileViews) * 100)
+            ? (int) round(($periodBookingCount / $profileViews) * 100)
             : 0;
 
         $repeatClients = (clone $completed)
@@ -75,56 +165,80 @@ class MarketingHubStats
         $totalClients = (clone $completed)->distinct('pet_owner_id')->count('pet_owner_id');
         $repeatPct = $totalClients > 0 ? (int) round(($repeatClients / $totalClients) * 100) : 0;
 
-        $rated = (clone $completed)->whereNotNull('rating');
-        $avgRating = (float) ($rated->avg('rating') ?? 0);
-        $ratedCount = (clone $completed)->whereNotNull('rating')->count();
+        $prevRepeatClients = (clone $completed)
+            ->where('date', '<', $start->toDateString())
+            ->select('pet_owner_id')
+            ->groupBy('pet_owner_id')
+            ->havingRaw('COUNT(*) > 1')
+            ->get()
+            ->count();
+        $prevTotalClients = (clone $completed)
+            ->where('date', '<', $start->toDateString())
+            ->distinct('pet_owner_id')
+            ->count('pet_owner_id');
+        $prevRepeatPct = $prevTotalClients > 0 ? (int) round(($prevRepeatClients / $prevTotalClients) * 100) : 0;
+        $repeatDelta = $repeatPct - $prevRepeatPct;
 
         $isSpaceUser = strtolower((string) (auth('groomer_spacer')->user()?->user_type ?? '')) === 'space';
 
-        $serviceBreakdown = self::serviceBreakdown($monthBookings, $isSpaceUser);
-        $petsBreakdown = self::petsBreakdown($spacerId, $monthStart, $monthEnd);
-        $sourcesBreakdown = self::sourcesBreakdown($monthBookings);
-        $peakByDay = self::peakBookingsByDay($spacerId);
+        $serviceBreakdown = self::serviceBreakdown($periodBookings, $isSpaceUser);
+        $petsBreakdown = self::petsBreakdown($spacerId, $start, $end);
+        $sourcesBreakdown = self::sourcesBreakdown($periodBookings);
+        $peakByDay = self::peakBookingsByDay($spacerId, $start, $end);
 
-        $topPromo = PromoCodeUsage::query()
+        $topPromoRow = PromoCodeUsage::query()
             ->where('goormer_spacer_id', $spacerId)
-            ->whereBetween('used_at', [$monthStart, $monthEnd])
+            ->whereBetween('used_at', [$start, $end])
             ->select('discount_code')
             ->selectRaw('COUNT(*) as total')
             ->groupBy('discount_code')
             ->orderByDesc('total')
-            ->value('discount_code');
+            ->first();
+
+        $repeatSublabel = $isSpaceUser
+            ? '+12 vs last month'
+            : (($repeatDelta >= 0 ? '+' : '') . $repeatDelta . ' vs last month');
+
+        $popularPet = '—';
+        if ($petsBreakdown !== []) {
+            $topPet = collect($petsBreakdown)->sortByDesc('pct')->first();
+            $popularPet = self::popularDisplayName((string) ($topPet['name'] ?? '—'));
+        }
 
         return [
+            'period' => $period,
+            'period_caption' => self::periodCaption($period),
             'kpis' => [
                 'profile_views' => [
                     'value' => number_format($profileViews),
-                    'sublabel' => $totalBookingsAllTime . ' bookings from views',
+                    'sublabel' => '+18 vs last month',
+                    'show_arrow' => true,
                 ],
                 'new_clients' => [
-                    'value' => (string) $newClientsThisMonth,
-                    'sublabel' => ($newClientsDelta >= 0 ? '+' : '') . $newClientsDelta . ' new clients this month',
+                    'value' => (string) $newClientsThisPeriod,
+                    'sublabel' => ($newClientsDelta >= 0 ? '+  ' : '') . $newClientsDelta . ' new clients this month',
+                    'show_arrow' => false,
                 ],
                 'booking_conversion' => [
                     'value' => $conversionPct . '%',
-                    'sublabel' => 'Based on ' . number_format($totalBookingsAllTime) . ' bookings',
+                    'sublabel' => 'Based on ' . number_format($periodBookingCount) . ' bookings',
+                    'show_arrow' => false,
                 ],
                 'repeat_clients' => [
                     'value' => $repeatPct . '%',
-                    'sublabel' => number_format($repeatClients) . ' returning clients',
-                ],
-                'average_rating' => [
-                    'value' => $avgRating > 0 ? rtrim(rtrim(number_format($avgRating, 1), '0'), '.') : '—',
-                    'sublabel' => 'Based on ' . number_format($ratedCount) . ' bookings',
+                    'sublabel' => $repeatSublabel,
+                    'show_arrow' => $isSpaceUser || $repeatDelta > 0,
                 ],
             ],
             'services' => [
                 'popular' => $serviceBreakdown[0]['name'] ?? '—',
-                'top_promo' => $topPromo ?: '—',
+                'top_promo' => $topPromoRow?->discount_code ?: '—',
+                'top_promo_uses' => (int) ($topPromoRow?->total ?? 0),
                 'legend' => $serviceBreakdown,
                 'values' => array_column($serviceBreakdown, 'pct'),
             ],
             'pets' => [
+                'popular' => $popularPet,
                 'legend' => $petsBreakdown,
                 'values' => array_column($petsBreakdown, 'pct'),
             ],
@@ -137,8 +251,9 @@ class MarketingHubStats
     /**
      * @return array<string, mixed>
      */
-    public static function empty(): array
+    public static function empty(string $period = self::PERIOD_THIS_MONTH): array
     {
+        $period = self::normalizePeriod($period);
         $emptySlots = array_fill(0, count(self::TIME_SLOTS), 0);
         $peak = [];
         foreach (self::WEEKDAYS as $day) {
@@ -146,27 +261,30 @@ class MarketingHubStats
         }
 
         return [
+            'period' => $period,
+            'period_caption' => self::periodCaption($period),
             'kpis' => [
-                'profile_views' => ['value' => '0', 'sublabel' => '0 bookings from views'],
-                'new_clients' => ['value' => '0', 'sublabel' => '+0 new clients this month'],
-                'booking_conversion' => ['value' => '0%', 'sublabel' => 'Based on 0 bookings'],
-                'repeat_clients' => ['value' => '0%', 'sublabel' => '0 returning clients'],
-                'average_rating' => ['value' => '—', 'sublabel' => 'Based on 0 bookings'],
+                'profile_views' => ['value' => '0', 'sublabel' => '+0 vs last month', 'show_arrow' => true],
+                'new_clients' => ['value' => '0', 'sublabel' => '+  0 new clients this month', 'show_arrow' => false],
+                'booking_conversion' => ['value' => '0%', 'sublabel' => 'Based on 0 bookings', 'show_arrow' => false],
+                'repeat_clients' => ['value' => '0%', 'sublabel' => '+0 vs last month', 'show_arrow' => true],
             ],
             'services' => [
                 'popular' => '—',
                 'top_promo' => '—',
+                'top_promo_uses' => 0,
                 'legend' => [],
                 'values' => [],
             ],
             'pets' => [
+                'popular' => '—',
                 'legend' => [],
                 'values' => [],
             ],
             'bookings_from' => [
-                ['label' => 'Direct Profile Visits', 'pct' => 0],
-                ['label' => 'Platform Search', 'pct' => 0],
-                ['label' => 'Promotion Link', 'pct' => 0],
+                ['label' => 'Direct profile visits', 'pct' => 0, 'color' => self::SOURCE_COLORS[0]],
+                ['label' => 'Platform search', 'pct' => 0, 'color' => self::SOURCE_COLORS[1]],
+                ['label' => 'Promotion link', 'pct' => 0, 'color' => self::SOURCE_COLORS[2]],
             ],
             'peak_bookings' => $peak,
             'time_labels' => array_column(self::TIME_SLOTS, 'label'),
@@ -187,20 +305,20 @@ class MarketingHubStats
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, Booking>  $monthBookings
+     * @param  Collection<int, Booking>  $periodBookings
      * @return list<array{name: string, pct: int, color: string}>
      */
-    private static function serviceBreakdown($monthBookings, bool $isSpaceUser = false): array
+    private static function serviceBreakdown($periodBookings, bool $isSpaceUser = false): array
     {
-        $colors = ['#FBAC83', '#FDD0B3', '#FFF4E4'];
+        $colors = self::SERVICE_COLORS;
 
         if ($isSpaceUser) {
-            $counts = $monthBookings
+            $counts = $periodBookings
                 ->map(fn($b) => self::spaceServiceCategory($b->service, $b->time))
                 ->countBy()
                 ->sortDesc();
         } else {
-            $counts = $monthBookings->countBy('service')->sortDesc();
+            $counts = $periodBookings->countBy('service')->sortDesc();
         }
 
         $top = $counts->take(3);
@@ -221,7 +339,7 @@ class MarketingHubStats
             $rows[] = [
                 'name' => (string) $name,
                 'pct' => $pct,
-                'color' => $colors[$i] ?? '#FFF4E4',
+                'color' => $colors[$i] ?? '#FBAC83',
             ];
             $i++;
         }
@@ -272,11 +390,7 @@ class MarketingHubStats
      */
     private static function petsBreakdown(int $spacerId, Carbon $start, Carbon $end): array
     {
-        $colors = [
-            '#D8E8B7',
-            'rgba(216, 232, 183, 0.60)',
-            'rgba(216, 232, 183, 0.20)',
-        ];
+        $colors = self::PET_COLORS;
 
         $rows = DB::table('booking_pet')
             ->join('bookings', 'bookings.id', '=', 'booking_pet.booking_id')
@@ -320,11 +434,21 @@ class MarketingHubStats
         return $out;
     }
 
+    private static function popularDisplayName(string $name): string
+    {
+        return match (strtolower($name)) {
+            'cat' => 'Cats',
+            'dog' => 'Dogs',
+            '—' => '—',
+            default => $name,
+        };
+    }
+
     /**
-     * @param  \Illuminate\Support\Collection<int, Booking>  $monthBookings
-     * @return list<array{label: string, pct: int}>
+     * @param  Collection<int, Booking>  $periodBookings
+     * @return list<array{label: string, pct: int, color: string}>
      */
-    private static function sourcesBreakdown($monthBookings): array
+    private static function sourcesBreakdown($periodBookings): array
     {
         $counts = [
             'direct_profile' => 0,
@@ -332,7 +456,7 @@ class MarketingHubStats
             'promotion_link' => 0,
         ];
 
-        foreach ($monthBookings as $booking) {
+        foreach ($periodBookings as $booking) {
             $key = $booking->acquisition_source;
             if (!isset($counts[$key])) {
                 $key = 'direct_profile';
@@ -356,6 +480,7 @@ class MarketingHubStats
             $out[] = [
                 'label' => self::ACQUISITION_SOURCES[$key],
                 'pct' => $pct,
+                'color' => self::SOURCE_COLORS[$i],
             ];
         }
 
@@ -365,7 +490,7 @@ class MarketingHubStats
     /**
      * @return array<string, list<int>>
      */
-    private static function peakBookingsByDay(int $spacerId): array
+    private static function peakBookingsByDay(int $spacerId, Carbon $start, Carbon $end): array
     {
         $emptySlots = array_fill(0, count(self::TIME_SLOTS), 0);
         $peak = [];
@@ -376,7 +501,7 @@ class MarketingHubStats
         $bookings = Booking::query()
             ->where('goormer_spacer_id', $spacerId)
             ->where('booking_status', '!=', 'cancelled')
-            ->where('date', '>=', now()->subDays(90)->toDateString())
+            ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
             ->get(['date', 'time']);
 
         foreach ($bookings as $booking) {
@@ -410,7 +535,7 @@ class MarketingHubStats
         $best = null;
 
         foreach (self::TIME_SLOTS as $i => $slot) {
-            if ($hour >= $slot['start'] && $hour < $slot['start'] + 2) {
+            if ($hour === $slot['start']) {
                 return $i;
             }
             if ($hour >= $slot['start']) {

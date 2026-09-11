@@ -5,13 +5,17 @@
     $mh = $mh ?? \App\Support\MarketingHubStats::empty();
     $mhPromos = $mhPromos ?? \App\Support\MarketingHubPromos::empty();
     $isSpaceUser = strtolower((string) (auth('groomer_spacer')->user()?->user_type ?? '')) === 'space';
-    $serviceColors = ['#FBAC83', '#FDD0B3', '#FFF4E4'];
-    $petColors = ['#D8E8B7', 'rgba(216, 232, 183, 0.60)', 'rgba(216, 232, 183, 0.20)'];
+    $statsPeriod = $statsPeriod ?? ($mh['period'] ?? 'this_month');
+    $statsPeriodOptions = $statsPeriodOptions ?? \App\Support\MarketingHubStats::periodOptions();
+    $serviceColors = \App\Support\MarketingHubStats::SERVICE_COLORS;
+    $petColors = \App\Support\MarketingHubStats::PET_COLORS;
     $mhChartData = [
         'peakBookings' => $mh['peak_bookings'],
         'timeLabels' => $mh['time_labels'],
         'services' => $mh['services']['values'],
         'pets' => $isSpaceUser ? [] : $mh['pets']['values'],
+        'serviceColors' => $serviceColors,
+        'petColors' => $petColors,
     ];
     $showPromoForm = $showPromoForm ?? false;
     $promoServiceOptions = $promoServiceOptions ?? [];
@@ -24,8 +28,21 @@
         x-on:nav-list-loading-start.window="navLoading = true; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; } if (!$event.detail?.persistent) { navLoadingTimeout = setTimeout(() => { navLoading = false; navLoadingTimeout = null; }, 350); }"
         x-on:nav-list-loading-end.window="navLoading = false; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; }">
         <template x-if="activeSection === 'marketing-hub'">
-            <div>
-                <h2>Marketing Hub</h2>
+            <div class="mh-overview-header">
+                <div>
+                    <h2>Marketing Hub</h2>
+                    <p class="mh-overview-subtitle">How clients find you, and how well your promotions are working.</p>
+                </div>
+                <button type="button" class="mh-create-promo-btn"
+                    @click="
+                        window.dispatchEvent(new CustomEvent('nav-list-loading-start', { detail: { persistent: true } }));
+                        activeSection = 'promo-creation';
+                        window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'promo-creation' } }));
+                    "
+                    wire:click="openCreatePromo" wire:loading.attr="disabled" wire:target="openCreatePromo">
+                    <img src="{{ asset('images/marketing-hub/icon-plus.svg') }}" alt="" width="12.25" height="12.25">
+                    Create promotion
+                </button>
             </div>
         </template>
 
@@ -50,7 +67,7 @@
         </template>
 
         <div class="active-section-loading-bar" x-cloak x-show="navLoading" wire:loading.class="is-loading"
-            wire:target="openCreatePromo,openEditPromo,cancelPromoForm,savePromo" aria-hidden="true">
+            wire:target="openCreatePromo,openEditPromo,cancelPromoForm,savePromo,setStatsPeriod" aria-hidden="true">
             <span class="active-section-loading-bar__sweep"></span>
         </div>
     </div>
@@ -59,9 +76,13 @@
         <div x-show="activeSection === 'marketing-hub'" x-cloak x-transition:enter="mh-panel-enter"
             x-transition:enter-start="mh-panel-enter-start" x-transition:enter-end="mh-panel-enter-end"
             x-transition:leave="mh-panel-leave" x-transition:leave-start="mh-panel-leave-start"
-            x-transition:leave-end="mh-panel-leave-end" x-data="{ ready: false }"
+            x-transition:leave-end="mh-panel-leave-end"             x-data="{ ready: false, tipOpen: true, insightOpen: true, lastSection: null }"
             x-effect="
                 if (activeSection === 'marketing-hub') {
+                    if (lastSection && lastSection !== 'marketing-hub') {
+                        $wire.setStatsPeriod('this_month');
+                    }
+                    lastSection = 'marketing-hub';
                     ready = false;
                     $nextTick(() => {
                         requestAnimationFrame(() => {
@@ -70,178 +91,111 @@
                         });
                     });
                 } else {
+                    lastSection = activeSection;
                     ready = false;
                 }
             ">
             <script>
                 window.__mhChartData = @json($mhChartData);
             </script>
-            <div class="mh-dashboard" :class="{ 'is-ready': ready }">
-                {{-- Performance Snapshot --}}
-                <div class="mh-section">
-                    <h3 class="mh-section-title mh-anim-item" style="--i: 0">Performance Snapshot</h3>
-                    <div class="mh-kpi-row">
-                        <article class="mh-kpi-card mh-anim-item" style="--i: 0">
-                            <p class="mh-kpi-label">Profile Views</p>
-                            <p class="mh-kpi-value">{{ $mh['kpis']['profile_views']['value'] }}</p>
-                            <span class="mh-kpi-pill mh-kpi-pill--yellow">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="6" height="9" viewBox="0 0 6 9"
-                                    fill="none" aria-hidden="true">
-                                    <path
-                                        d="M2.91 0L5.8 2.895L5.415 3.265C5.33833 3.34167 5.26167 3.37333 5.185 3.36C5.105 3.34333 5.02833 3.3 4.955 3.23L3.74 2.005C3.65333 1.91833 3.575 1.835 3.505 1.755C3.43167 1.675 3.36667 1.59833 3.31 1.525C3.33333 1.72167 3.35333 1.92833 3.37 2.145C3.38333 2.35833 3.39 2.575 3.39 2.795L3.39 8.93H2.415L2.415 2.795C2.415 2.575 2.42333 2.35667 2.44 2.14C2.45333 1.92333 2.47333 1.71667 2.5 1.52C2.44333 1.59667 2.38 1.675 2.31 1.755C2.23667 1.835 2.15667 1.91833 2.07 2.005L0.845 3.24C0.775 3.31 0.7 3.35333 0.62 3.37C0.54 3.38333 0.461667 3.35167 0.385 3.275L0 2.905L2.91 0Z"
-                                        fill="currentColor" />
-                                </svg>
-                                {{ $isSpaceUser ? '+18 vs last month' : $mh['kpis']['profile_views']['sublabel'] }}
-                            </span>
-                        </article>
-                        <article class="mh-kpi-card mh-anim-item" style="--i: 1">
-                            <p class="mh-kpi-label">New Clients</p>
-                            <p class="mh-kpi-value">{{ $mh['kpis']['new_clients']['value'] }}</p>
-                            <span
-                                class="mh-kpi-pill mh-kpi-pill--peach">{{ $mh['kpis']['new_clients']['sublabel'] }}</span>
-                        </article>
-                        <article class="mh-kpi-card mh-anim-item" style="--i: 2">
-                            <p class="mh-kpi-label">Booking Conversion</p>
-                            <p class="mh-kpi-value">{{ $mh['kpis']['booking_conversion']['value'] }}</p>
-                            <span
-                                class="mh-kpi-pill mh-kpi-pill--pink">{{ $mh['kpis']['booking_conversion']['sublabel'] }}</span>
-                        </article>
-                        <article class="mh-kpi-card mh-anim-item" style="--i: 3">
-                            <p class="mh-kpi-label">Repeat Clients</p>
-                            <p class="mh-kpi-value">{{ $mh['kpis']['repeat_clients']['value'] }}</p>
-                            <span class="mh-kpi-pill mh-kpi-pill--blue">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="6" height="9" viewBox="0 0 6 9"
-                                    fill="none" aria-hidden="true">
-                                    <path
-                                        d="M2.91 0L5.8 2.895L5.415 3.265C5.33833 3.34167 5.26167 3.37333 5.185 3.36C5.105 3.34333 5.02833 3.3 4.955 3.23L3.74 2.005C3.65333 1.91833 3.575 1.835 3.505 1.755C3.43167 1.675 3.36667 1.59833 3.31 1.525C3.33333 1.72167 3.35333 1.92833 3.37 2.145C3.38333 2.35833 3.39 2.575 3.39 2.795L3.39 8.93H2.415L2.415 2.795C2.415 2.575 2.42333 2.35667 2.44 2.14C2.45333 1.92333 2.47333 1.71667 2.5 1.52C2.44333 1.59667 2.38 1.675 2.31 1.755C2.23667 1.835 2.15667 1.91833 2.07 2.005L0.845 3.24C0.775 3.31 0.7 3.35333 0.62 3.37C0.54 3.38333 0.461667 3.35167 0.385 3.275L0 2.905L2.91 0Z"
-                                        fill="currentColor" />
-                                </svg>
-                                {{ $isSpaceUser ? '+12 vs last month' : $mh['kpis']['repeat_clients']['sublabel'] }}
-                            </span>
-                        </article>
-                        <article class="mh-kpi-card mh-anim-item" style="--i: 4">
-                            <p class="mh-kpi-label">Average Rating</p>
-                            <p class="mh-kpi-value mh-kpi-value--rating">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                    viewBox="0 0 20 20" fill="none">
-                                    <path
-                                        d="M8.75651 0.943537C9.14791 -0.314515 10.8521 -0.314511 11.2435 0.943541L12.7078 5.65027C12.8829 6.21288 13.3849 6.5938 13.9513 6.5938H18.69C19.9566 6.5938 20.4832 8.2865 19.4585 9.06402L15.6249 11.9729C15.1666 12.3207 14.9748 12.937 15.1499 13.4996L16.6142 18.2063C17.0056 19.4644 15.6269 20.5105 14.6022 19.733L10.7685 16.8241C10.3103 16.4764 9.68974 16.4764 9.23148 16.8241L5.3978 19.733C4.37311 20.5105 2.99439 19.4644 3.38579 18.2063L4.85012 13.4996C5.02516 12.937 4.83341 12.3207 4.37515 11.9729L0.541471 9.06402C-0.483225 8.2865 0.0434023 6.5938 1.31 6.5938H6.04868C6.61512 6.5938 7.11714 6.21288 7.29217 5.65027L8.75651 0.943537Z"
-                                        fill="#FFC97A" />
-                                </svg>
-                                {{ $mh['kpis']['average_rating']['value'] }}
-                            </p>
-                            <span
-                                class="mh-kpi-pill mh-kpi-pill--green">{{ $mh['kpis']['average_rating']['sublabel'] }}</span>
-                        </article>
-                    </div>
-
-                    <div class="mh-tips-banner mh-anim-item" style="--i: 5" role="note">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="20" viewBox="0 0 14 20"
-                            fill="none">
-                            <path
-                                d="M3.625 6.625C3.625 5.82935 3.94107 5.06629 4.50368 4.50368C5.06629 3.94107 5.82935 3.625 6.625 3.625M4.625 18.625H8.625M8.625 15.625C8.625 11.525 12.625 10.725 12.625 6.625C12.625 5.0337 11.9929 3.50758 10.8676 2.38236C9.74242 1.25714 8.2163 0.625 6.625 0.625C5.0337 0.625 3.50758 1.25714 2.38236 2.38236C1.25714 3.50758 0.625 5.0337 0.625 6.625C0.625 10.625 4.625 11.625 4.625 15.625H8.625Z"
-                                stroke="#FFC979" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        <p>
-                            <strong>Tips to Grow Faster:</strong>
-                            Try offering a limited-time discount to attract new clients.
-                        </p>
-                    </div>
+            <div class="mh-dashboard" :class="{ 'is-ready': ready }" data-mh-chart='@json($mhChartData)'
+                wire:key="mh-dash-{{ $statsPeriod }}">
+                <div class="mh-period-tabs mh-anim-item" style="--i: 0" role="tablist" aria-label="Stats period">
+                    @foreach ($statsPeriodOptions as $periodKey => $periodLabel)
+                        <button type="button" role="tab"
+                            @class(['mh-period-tab', 'is-active' => $statsPeriod === $periodKey])
+                            aria-selected="{{ $statsPeriod === $periodKey ? 'true' : 'false' }}"
+                            wire:click="setStatsPeriod('{{ $periodKey }}')" wire:loading.attr="disabled"
+                            wire:target="setStatsPeriod">
+                            {{ $periodLabel }}
+                        </button>
+                    @endforeach
                 </div>
 
-                <div class="mh-grid mh-grid--mid">
-                    <article class="mh-card mh-card--chart mh-anim-item" style="--i: 6">
-                        <div class="mh-card-header">
-                            <h3 class="mh-card-title">Peak Bookings Times per Day</h3>
+                <div class="mh-kpi-row">
+                    <article class="mh-kpi-card mh-kpi-card--featured mh-anim-item" style="--i: 0">
+                        <p class="mh-kpi-label">Profile Views</p>
+                        <p class="mh-kpi-value">{{ $mh['kpis']['profile_views']['value'] }}</p>
+                        <span class="mh-kpi-pill mh-kpi-pill--yellow">
+                            @if ($mh['kpis']['profile_views']['show_arrow'] ?? true)
+                                <img src="{{ asset('images/marketing-hub/icon-trend-up-yellow.svg') }}" alt=""
+                                    width="5.8" height="8.93">
+                            @endif
+                            {{ $mh['kpis']['profile_views']['sublabel'] }}
+                        </span>
+                    </article>
+                    <article class="mh-kpi-card mh-anim-item" style="--i: 1">
+                        <p class="mh-kpi-label">New Clients</p>
+                        <p class="mh-kpi-value">{{ $mh['kpis']['new_clients']['value'] }}</p>
+                        <span class="mh-kpi-pill mh-kpi-pill--peach">{{ $mh['kpis']['new_clients']['sublabel'] }}</span>
+                    </article>
+                    <article class="mh-kpi-card mh-anim-item" style="--i: 2">
+                        <p class="mh-kpi-label">Booking Conversion</p>
+                        <p class="mh-kpi-value">{{ $mh['kpis']['booking_conversion']['value'] }}</p>
+                        <span
+                            class="mh-kpi-pill mh-kpi-pill--pink">{{ $mh['kpis']['booking_conversion']['sublabel'] }}</span>
+                    </article>
+                    <article class="mh-kpi-card mh-anim-item" style="--i: 3">
+                        <p class="mh-kpi-label">Repeat Clients</p>
+                        <p class="mh-kpi-value">{{ $mh['kpis']['repeat_clients']['value'] }}</p>
+                        <span class="mh-kpi-pill mh-kpi-pill--blue">
+                            @if ($mh['kpis']['repeat_clients']['show_arrow'] ?? true)
+                                <img src="{{ asset('images/marketing-hub/icon-trend-up-blue.svg') }}" alt=""
+                                    width="5.8" height="8.93">
+                            @endif
+                            {{ $mh['kpis']['repeat_clients']['sublabel'] }}
+                        </span>
+                    </article>
+                </div>
+
+                <div class="mh-tips-banner mh-anim-item" style="--i: 4" role="note" x-show="tipOpen" x-cloak>
+                    <img src="{{ asset('images/marketing-hub/icon-tip-pin.svg') }}" alt="" width="11.25"
+                        height="16.25">
+                    <p>Tip to grow faster: a limited-time discount converts about 22% better than an always-on one. Try
+                        a short promo to bring in new clients.</p>
+                    <button type="button" class="mh-banner-dismiss" @click="tipOpen = false"
+                        aria-label="Dismiss tip">
+                        <img src="{{ asset('images/marketing-hub/icon-close-tip.svg') }}" alt="" width="12.5"
+                            height="12.5">
+                    </button>
+                </div>
+
+                <div class="mh-grid mh-grid--main {{ $isSpaceUser ? 'mh-grid--main-space' : '' }}">
+                    <article class="mh-panel-card mh-panel-card--peak mh-anim-item" style="--i: 5">
+                        <div class="mh-peak-header">
+                            <h3 class="mh-panel-title">Peak booking times</h3>
                             <div class="mh-day-switcher" aria-label="Select day">
                                 <button type="button" id="mhPeakDayPrev" class="mh-day-btn"
                                     aria-label="Previous day">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34"
-                                        viewBox="0 0 34 34" fill="none">
-                                        <g filter="url(#filter0_d_3_384)">
-                                            <circle cx="17" cy="13" r="13" fill="white" />
-                                            <circle cx="17" cy="13" r="12.5" stroke="#F5F5F5" />
-                                        </g>
-                                        <path d="M18.625 17.0625L14.5347 12.9722L18.5563 8.9505" stroke="#3B3731"
-                                            stroke-linecap="round" stroke-linejoin="round" />
-                                        <defs>
-                                            <filter id="filter0_d_3_384" x="0" y="0" width="34" height="34"
-                                                filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                                                <feFlood flood-opacity="0" result="BackgroundImageFix" />
-                                                <feColorMatrix in="SourceAlpha" type="matrix"
-                                                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                                                    result="hardAlpha" />
-                                                <feOffset dy="4" />
-                                                <feGaussianBlur stdDeviation="2" />
-                                                <feComposite in2="hardAlpha" operator="out" />
-                                                <feColorMatrix type="matrix"
-                                                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.03 0" />
-                                                <feBlend mode="normal" in2="BackgroundImageFix"
-                                                    result="effect1_dropShadow_3_384" />
-                                                <feBlend mode="normal" in="SourceGraphic"
-                                                    in2="effect1_dropShadow_3_384" result="shape" />
-                                            </filter>
-                                        </defs>
-                                    </svg>
+                                    <img src="{{ asset('images/marketing-hub/icon-day-prev.svg') }}" alt=""
+                                        width="34" height="34">
                                 </button>
                                 <span id="mhPeakDayLabel" class="mh-day-label">Monday</span>
                                 <button type="button" id="mhPeakDayNext" class="mh-day-btn" aria-label="Next day">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34"
-                                        viewBox="0 0 34 34" fill="none">
-                                        <g filter="url(#filter0_d_3_387)">
-                                            <circle cx="13" cy="13" r="13"
-                                                transform="matrix(-1 0 0 1 30 0)" fill="white" />
-                                            <circle cx="13" cy="13" r="12.5"
-                                                transform="matrix(-1 0 0 1 30 0)" stroke="#F5F5F5" />
-                                        </g>
-                                        <path d="M15.375 17.0625L19.4653 12.9722L15.4437 8.9505" stroke="#3B3731"
-                                            stroke-linecap="round" stroke-linejoin="round" />
-                                        <defs>
-                                            <filter id="filter0_d_3_387" x="0" y="0" width="34" height="34"
-                                                filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                                                <feFlood flood-opacity="0" result="BackgroundImageFix" />
-                                                <feColorMatrix in="SourceAlpha" type="matrix"
-                                                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                                                    result="hardAlpha" />
-                                                <feOffset dy="4" />
-                                                <feGaussianBlur stdDeviation="2" />
-                                                <feComposite in2="hardAlpha" operator="out" />
-                                                <feColorMatrix type="matrix"
-                                                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.03 0" />
-                                                <feBlend mode="normal" in2="BackgroundImageFix"
-                                                    result="effect1_dropShadow_3_387" />
-                                                <feBlend mode="normal" in="SourceGraphic"
-                                                    in2="effect1_dropShadow_3_387" result="shape" />
-                                            </filter>
-                                        </defs>
-                                    </svg>
+                                    <img src="{{ asset('images/marketing-hub/icon-day-next.svg') }}" alt=""
+                                        width="34" height="34">
                                 </button>
                             </div>
                         </div>
+                        <p id="mhPeakTotal" class="mh-peak-total">0 Bookings</p>
                         <div class="mh-chart-wrap mh-chart-wrap--peak">
                             <canvas id="mhPeakBookingsChart" aria-label="Peak bookings times chart"></canvas>
                         </div>
+                        <div class="mh-peak-insight" x-show="insightOpen" x-cloak>
+                            <p id="mhPeakInsightText">Not enough booking data yet to spot peak times.</p>
+                            <button type="button" class="mh-banner-dismiss" @click="insightOpen = false"
+                                aria-label="Dismiss insight">
+                                <img src="{{ asset('images/marketing-hub/icon-close-insight.svg') }}" alt=""
+                                    width="12.5" height="12.5">
+                            </button>
+                        </div>
                     </article>
 
-                    <article class="mh-card mh-anim-item" style="--i: 7">
-                        <div class="mh-card-header">
-                            <h3 class="mh-card-title">Services</h3>
-                        </div>
-                        <div class="mh-services-stats">
-                            <div class="mh-services-stat">
-                                <p class="mh-stat-label">Popular Service</p>
-                                <p class="mh-stat-value">{{ $mh['services']['popular'] }}</p>
-                            </div>
-                            <div class="mh-services-divider" aria-hidden="true"></div>
-                            <div class="mh-services-stat">
-                                <p class="mh-stat-label">Top Promo Code</p>
-                                <p class="mh-stat-value">{{ $mh['services']['top_promo'] }}</p>
-                            </div>
-                        </div>
-                        <div class="mh-donut-block">
-                            <div>
-                                <h4 class="mh-donut-title">Most Popular Services</h4>
-                                <p class="mh-donut-sub">Based on this months bookings</p>
+                    <div class="mh-side-stack">
+                        <article class="mh-panel-card mh-panel-card--donut mh-anim-item" style="--i: 6">
+                            <div class="mh-panel-card-head">
+                                <h3 class="mh-panel-title">Most popular services</h3>
+                                <p class="mh-panel-highlight">{{ $mh['services']['popular'] }}</p>
                             </div>
                             <div class="mh-donut-row">
                                 <div class="mh-chart-wrap mh-chart-wrap--donut">
@@ -252,7 +206,7 @@
                                     @forelse ($mh['services']['legend'] as $i => $item)
                                         <li>
                                             <span class="mh-legend-dot"
-                                                style="background:{{ $item['color'] ?? ($serviceColors[$i] ?? '#FBAC83') }}"></span>
+                                                style="background:{{ $item['color'] ?? ($serviceColors[$i] ?? '#9AC1DD') }}"></span>
                                             <span class="mh-legend-name">{{ $item['name'] }}</span>
                                             <span class="mh-legend-pct">{{ $item['pct'] }}%</span>
                                         </li>
@@ -263,17 +217,13 @@
                                     @endforelse
                                 </ul>
                             </div>
-                        </div>
-                    </article>
-                </div>
+                        </article>
 
-                <div class="mh-grid mh-grid--bottom {{ $isSpaceUser ? 'mh-grid--bottom-space' : '' }}">
-                    @unless ($isSpaceUser)
-                        <article class="mh-card mh-anim-item" style="--i: 8">
-                            <div class="mh-donut-block">
-                                <div>
-                                    <h3 class="mh-card-title">Most Popular Pets</h3>
-                                    <p class="mh-donut-sub">Based on this months bookings</p>
+                        @unless ($isSpaceUser)
+                            <article class="mh-panel-card mh-panel-card--donut mh-anim-item" style="--i: 7">
+                                <div class="mh-panel-card-head">
+                                    <h3 class="mh-panel-title">Most popular pets</h3>
+                                    <p class="mh-panel-highlight">{{ $mh['pets']['popular'] ?? '—' }}</p>
                                 </div>
                                 <div class="mh-donut-row">
                                     <div class="mh-chart-wrap mh-chart-wrap--donut">
@@ -284,7 +234,7 @@
                                         @forelse ($mh['pets']['legend'] as $i => $item)
                                             <li>
                                                 <span class="mh-legend-dot"
-                                                    style="background:{{ $item['color'] ?? ($petColors[$i] ?? '#D8E8B7') }}"></span>
+                                                    style="background:{{ $item['color'] ?? ($petColors[$i] ?? '#9AC1DD') }}"></span>
                                                 <span class="mh-legend-name">{{ $item['name'] }}</span>
                                                 <span class="mh-legend-pct">{{ $item['pct'] }}%</span>
                                             </li>
@@ -295,31 +245,58 @@
                                         @endforelse
                                     </ul>
                                 </div>
+                            </article>
+                        @endunless
+
+                        <article class="mh-panel-card mh-panel-card--promo mh-anim-item"
+                            style="--i: {{ $isSpaceUser ? 7 : 8 }}">
+                            <h3 class="mh-panel-title">Top promo code</h3>
+                            <div class="mh-top-promo-row">
+                                <div class="mh-top-promo-code">{{ $mh['services']['top_promo'] }}</div>
+                                <div class="mh-top-promo-used">
+                                    <span class="mh-legend-dot" style="background:#FFC97A"></span>
+                                    <span class="mh-legend-name">Used</span>
+                                    <span class="mh-legend-pct">{{ (int) ($mh['services']['top_promo_uses'] ?? 0) }}
+                                        times</span>
+                                </div>
                             </div>
                         </article>
-                    @endunless
-
-                    <article class="mh-card mh-anim-item" style="--i: {{ $isSpaceUser ? 8 : 9 }}">
-                        <div class="mh-card-header mh-card-header--divider">
-                            <h3 class="mh-card-title">Bookings From</h3>
-                        </div>
-                        <div class="mh-bookings-from">
-                            @foreach ($mh['bookings_from'] as $i => $source)
-                                @if ($i > 0)
-                                    <div class="mh-bookings-from-divider" aria-hidden="true"></div>
-                                @endif
-                                <div class="mh-source">
-                                    <p class="mh-stat-label">{{ $source['label'] }}</p>
-                                    <p class="mh-stat-value">{{ $source['pct'] }}%</p>
-                                </div>
-                            @endforeach
-                        </div>
-                    </article>
+                    </div>
                 </div>
+
+                <article class="mh-panel-card mh-panel-card--sources mh-anim-item"
+                    style="--i: {{ $isSpaceUser ? 8 : 9 }}">
+                    <div class="mh-panel-card-head">
+                        <h3 class="mh-panel-title">Most popular services</h3>
+                        <p class="mh-panel-caption">{{ $mh['period_caption'] ?? 'The last 3 months' }}</p>
+                    </div>
+                    <div class="mh-source-track" @if (collect($mh['bookings_from'])->sum('pct') === 0) data-empty="1" @endif>
+                        @forelse ($mh['bookings_from'] as $source)
+                            @if ((int) $source['pct'] > 0)
+                                <div class="mh-source-seg"
+                                    style="width: {{ (int) $source['pct'] }}%; background: {{ $source['color'] ?? '#9AC1DD' }}">
+                                    {{ $source['pct'] }}%</div>
+                            @endif
+                        @empty
+                        @endforelse
+                    </div>
+                    <ul class="mh-source-legend">
+                        @foreach ($mh['bookings_from'] as $source)
+                            <li>
+                                <span class="mh-legend-dot"
+                                    style="background:{{ $source['color'] ?? '#9AC1DD' }}"></span>
+                                <span>
+                                    <strong>{{ $source['pct'] }}%</strong>
+                                    {{ $source['label'] }}
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </article>
             </div>
         </div>
 
-        <div x-show="activeSection === 'promo-creation'" x-cloak x-transition:enter="mh-panel-enter"
+                <div x-show="activeSection === 'promo-creation'" x-cloak x-transition:enter="mh-panel-enter"
             x-transition:enter-start="mh-panel-enter-start" x-transition:enter-end="mh-panel-enter-end"
             x-transition:leave="mh-panel-leave" x-transition:leave-start="mh-panel-leave-start"
             x-transition:leave-end="mh-panel-leave-end">
@@ -613,10 +590,67 @@
         margin-top: 1.5rem;
     }
 
+    .mh-overview-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        width: 100%;
+    }
+
+    .mh-overview-header h2 {
+        margin: 0;
+        text-transform: none;
+    }
+
+    .mh-overview-subtitle {
+        margin: 0.45rem 0 0;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 20px;
+    }
+
+    .mh-create-promo-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 186px;
+        height: 48px;
+        padding: 0 1.25rem;
+        border: 0;
+        border-radius: 100px;
+        background: #3B3731;
+        color: #FFF;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 500;
+        line-height: normal;
+        cursor: pointer;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .mh-create-promo-btn img {
+        width: 12.25px;
+        height: 12.25px;
+        display: block;
+        flex-shrink: 0;
+    }
+
+    .mh-create-promo-btn:disabled {
+        opacity: 0.75;
+        cursor: wait;
+    }
+
     .mh-dashboard {
         display: flex;
         flex-direction: column;
-        gap: 1.75rem;
+        gap: 20px;
     }
 
     .mh-section-title {
@@ -632,29 +666,72 @@
         margin-bottom: 1.15rem;
     }
 
+    .mh-period-tabs {
+        display: inline-flex;
+        align-items: center;
+        height: 42px;
+        padding: 3px;
+        border-radius: 100px;
+        background: #F9FAFC;
+        width: fit-content;
+        gap: 0;
+    }
+
+    .mh-period-tab {
+        height: 36px;
+        padding: 0 18px;
+        border: 0;
+        background: transparent;
+        border-radius: 100px;
+        color: #888;
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .mh-period-tab.is-active {
+        background: #fff;
+        color: #3B3731;
+        font-weight: 600;
+        box-shadow: 0px 2px 4px 0px rgba(59, 55, 49, 0.1);
+    }
+
     .mh-kpi-row {
         display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        gap: 2.5rem;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 20px;
     }
 
     .mh-kpi-card {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.55rem;
+        justify-content: flex-start;
         background: #fff;
-        border: 1px solid #ECECEC;
-        border-radius: 12px;
-        padding: 1rem 1.1rem 1.15rem;
+        border: 1px solid #E2E2E2;
+        border-radius: 10px;
+        box-shadow: 0px 4px 15px 5px rgba(0, 0, 0, 0.02);
+        padding: 18px 20px 16px;
         min-width: 0;
+        min-height: 140px;
+        box-sizing: border-box;
+    }
+
+    .mh-kpi-card--featured {
+        border-color: #FFD88C;
+        box-shadow: none;
+        background-image: linear-gradient(-44.19deg, #FFFDF9 16.58%, #FFF8EA 89.9%);
     }
 
     .mh-kpi-label {
-        margin: 0 0 0.55rem;
-        color: #3B3731;
+        margin: 0;
+        color: #565149;
         font-family: Lato;
-        font-size: 18px;
+        font-size: 14px;
         font-style: normal;
         font-weight: 600;
         line-height: normal;
@@ -663,39 +740,39 @@
     .mh-kpi-value {
         display: block;
         width: 100%;
-        margin: 0 0 0.55rem;
+        margin: 10px 0 0;
         color: #3B3731;
-        font-family: Lato;
-        font-size: 24px;
+        font-family: "Playfair Display";
+        font-size: 30px;
         font-style: normal;
-        font-weight: 800;
+        font-weight: 600;
         line-height: normal;
-    }
-
-    .mh-kpi-value--rating {
-        display: flex;
-        align-items: center;
-        gap: 0.35rem;
     }
 
     .mh-kpi-pill {
         display: inline-flex;
         align-items: center;
-        gap: 0.35rem;
+        gap: 6px;
         max-width: 100%;
-        margin-top: 0;
-        padding: 0.3rem 1rem;
-        border-radius: 9999px;
+        margin-top: auto;
+        padding: 0 10px;
+        height: 28px;
+        border-radius: 74px;
         font-family: Lato;
-        font-size: 10px;
+        font-size: 12px;
         font-style: normal;
         font-weight: 600;
         line-height: normal;
-        letter-spacing: 0.1px;
+        letter-spacing: 0.12px;
+        box-sizing: border-box;
     }
 
+    .mh-kpi-pill img,
     .mh-kpi-pill svg {
+        width: 5.8px;
+        height: 8.93px;
         flex-shrink: 0;
+        display: block;
     }
 
     .mh-kpi-pill--yellow {
@@ -724,22 +801,37 @@
     }
 
     .mh-tips-banner {
-        width: fit-content;
+        width: 100%;
         display: flex;
         align-items: center;
-        justify-content: center;
-        gap: 0.65rem;
-        margin: 2rem auto 0;
-        padding: 0.85rem 1.1rem;
-        border-radius: 100px;
-        background: rgba(255, 216, 140, 0.10);
-        text-align: center;
+        gap: 12px;
+        margin: 0;
+        padding: 12px 16px 12px 20px;
+        min-height: 50px;
+        border-radius: 10px;
+        border: 1px solid #A1BF63;
+        background: rgba(216, 232, 183, 0.2);
+        text-align: left;
+        box-sizing: border-box;
+    }
+
+    .mh-tips-banner img {
+        flex-shrink: 0;
+        display: block;
+    }
+
+    .mh-tips-banner > img:first-child {
+        width: 11.25px;
+        height: 16.25px;
     }
 
     .mh-tips-banner p {
-        color: #FFC979;
+        margin: 0;
+        flex: 1;
+        min-width: 0;
+        color: #A1BF63;
         font-family: Lato;
-        font-size: 18px;
+        font-size: 16px;
         font-style: normal;
         font-weight: 400;
         line-height: normal;
@@ -749,56 +841,133 @@
         font-weight: 600;
     }
 
+    .mh-banner-dismiss {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 12.5px;
+        height: 12.5px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        flex-shrink: 0;
+        line-height: 0;
+    }
+
+    .mh-banner-dismiss img {
+        width: 12.5px;
+        height: 12.5px;
+        display: block;
+    }
+
     .mh-grid {
         display: grid;
-        column-gap: 3rem;
-        row-gap: 2.5rem;
+        column-gap: 20px;
+        row-gap: 20px;
     }
 
-    .mh-grid--mid {
-        grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    .mh-grid--main {
+        grid-template-columns: minmax(0, 1.525fr) minmax(0, 1fr);
+        align-items: stretch;
     }
 
-    .mh-grid--bottom {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 4fr);
-        align-items: center;
+    .mh-grid--main-space {
+        grid-template-columns: minmax(0, 1.525fr) minmax(0, 1fr);
     }
 
-    .mh-grid--bottom-space {
-        grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
-        align-items: start;
-        margin-top: 5rem;
-    }
-
-    .mh-card {
-        background: transparent;
-        padding: 0;
+    .mh-side-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
         min-width: 0;
-        border: none;
-        outline: none;
     }
 
-    .mh-card-header {
+    .mh-panel-card {
+        background: #fff;
+        border: 1px solid #E2E2E2;
+        border-radius: 10px;
+        box-shadow: 0px 4px 15px 5px rgba(0, 0, 0, 0.02);
+        padding: 20px;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .mh-panel-card--peak {
+        display: flex;
+        flex-direction: column;
+        min-height: 542px;
+    }
+
+    .mh-panel-card--donut {
+        min-height: 182px;
+        padding: 20px;
+    }
+
+    .mh-panel-card--promo {
+        min-height: 138px;
+    }
+
+    .mh-panel-card--sources {
+        padding: 20px;
+    }
+
+    .mh-panel-title {
+        margin: 0;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .mh-panel-card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 16px;
+    }
+
+    .mh-panel-highlight {
+        margin: 0;
+        color: #3B3731;
+        font-family: "Playfair Display";
+        font-size: 20px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .mh-panel-caption {
+        margin: 0;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .mh-peak-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 1rem;
-        margin-bottom: 1rem;
-        border-bottom: 1px solid #D4D4D4;
-        padding-bottom: 1rem;
+        margin-bottom: 8px;
     }
 
-    .mh-card-header--divider {
-        padding-bottom: 0.85rem;
-        border-bottom: 1px solid #D4D4D4;
-        margin-bottom: 1.15rem;
-    }
-
-    .mh-card-title {
-        margin: 0;
+    .mh-peak-total {
+        margin: 0 0 8px;
         color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
+        font-family: "Playfair Display";
+        font-size: 30px;
+        font-style: normal;
         font-weight: 600;
         line-height: normal;
     }
@@ -806,24 +975,34 @@
     .mh-day-switcher {
         display: inline-flex;
         align-items: center;
-        gap: 0.35rem;
+        gap: 0.15rem;
         flex-shrink: 0;
     }
 
     .mh-day-btn {
-        margin-top: 8px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        width: 28px;
-        height: 28px;
+        width: 34px;
+        height: 34px;
         padding: 0;
         border: none;
-        border-radius: 6px;
+        border-radius: 50%;
         background: transparent;
         cursor: pointer;
         outline: none;
+        overflow: visible;
+    }
+
+    .mh-day-btn img {
+        width: 34px;
+        height: 34px;
+        display: block;
+    }
+
+    #mhPeakDayNext img {
+        transform: scaleX(-1);
     }
 
     .mh-day-btn:focus {
@@ -831,28 +1010,22 @@
     }
 
     .mh-day-label {
-        flex: 0 0 7.25rem;
-        width: 7.25rem;
+        flex: 0 0 auto;
+        min-width: 5.5rem;
         color: #3B3731;
         text-align: center;
         font-family: Lato;
-        font-size: 18px;
+        font-size: 14px;
         font-style: normal;
         font-weight: 600;
         line-height: normal;
         white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .mh-card--chart {
-        width: 100%;
-        min-width: 0;
     }
 
     .mh-chart-wrap--peak {
         position: relative;
-        height: 360px;
+        flex: 1 1 auto;
+        min-height: 220px;
         width: 100%;
         min-width: 0;
     }
@@ -863,81 +1036,41 @@
         height: 100% !important;
     }
 
-    .mh-chart-wrap--donut {
-        position: relative;
-        width: 180px;
-        height: 180px;
-        flex-shrink: 0;
-    }
-
-    .mh-services-stats {
+    .mh-peak-insight {
         display: flex;
-        justify-content: space-between;
-        margin-bottom: 1.35rem;
+        align-items: flex-start;
+        gap: 12px;
+        margin-top: 16px;
+        padding: 16px 18px;
+        border-radius: 10px;
+        border: 1px solid #9AC1DD;
+        background: #F2F7FA;
+        box-sizing: border-box;
     }
 
-    .mh-services-divider {
-        width: 1px;
-        background: #D4D4D4;
-        align-self: stretch;
-    }
-
-    .mh-services-stat {
-        min-width: 0;
-    }
-
-    .mh-stat-label {
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: 18px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: 40px;
-        /* 222.222% */
-    }
-
-    .mh-stat-value {
+    .mh-peak-insight p {
         margin: 0;
-        color: #3B3731;
+        flex: 1;
+        min-width: 0;
+        color: #9AC1DD;
         font-family: Lato;
-        font-size: 24px;
+        font-size: 16px;
         font-style: normal;
-        font-weight: 600;
-        line-height: 40px;
-    }
-
-    .mh-stat-value--muted {
-        color: #6B7280;
-    }
-
-    .mh-donut-block {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .mh-donut-title {
-        margin: 0 0 0.2rem;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 18px;
-        font-weight: 600;
+        font-weight: 400;
         line-height: normal;
     }
 
-    .mh-donut-sub {
-        margin: 0;
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: 14px;
-        font-weight: 400;
-        line-height: 20px;
+    .mh-chart-wrap--donut {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        flex-shrink: 0;
     }
 
     .mh-donut-row {
         display: flex;
         align-items: center;
-        gap: 1.5rem;
+        gap: 20px;
     }
 
     .mh-legend {
@@ -946,27 +1079,26 @@
         padding: 0;
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 14px;
         flex: 1;
         min-width: 0;
     }
 
-    .mh-legend li {
+    .mh-legend li,
+    .mh-top-promo-used {
         display: grid;
-        grid-template-columns: 10px 1fr;
-        column-gap: 0.55rem;
-        row-gap: 0.15rem;
+        grid-template-columns: 10px 1fr auto;
+        column-gap: 8px;
         align-items: center;
     }
 
     .mh-legend-name {
-        grid-column: 2;
-        grid-row: 1;
         color: #9D9B98;
         font-family: Lato;
-        font-size: 18px;
-        font-weight: 600;
+        font-size: 16px;
+        font-weight: 400;
         line-height: normal;
+        min-width: 0;
     }
 
     .mh-legend-dot {
@@ -974,95 +1106,175 @@
         height: 10px;
         border-radius: 50%;
         flex-shrink: 0;
-        grid-column: 1;
-        grid-row: 2;
+        display: inline-block;
     }
 
     .mh-legend-pct {
-        grid-column: 2;
-        grid-row: 2;
         color: #3B3731;
         font-family: Lato;
-        font-size: 18px;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: normal;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .mh-top-promo-row {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-top: 18px;
+    }
+
+    .mh-top-promo-code {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 151px;
+        height: 60px;
+        padding: 0 16px;
+        border: 1px dashed #FFD88C;
+        border-radius: 10px;
+        background: #FFFDF9;
+        box-shadow: 0px 4px 15px 5px rgba(0, 0, 0, 0.02);
+        color: #FFC97A;
+        font-family: Lato;
+        font-size: 20px;
+        font-style: normal;
         font-weight: 700;
+        line-height: normal;
+        box-sizing: border-box;
+    }
+
+    .mh-top-promo-used {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .mh-source-track {
+        display: flex;
+        width: 100%;
+        height: 50px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .mh-source-track[data-empty="1"] {
+        background: #F6F6F6;
+        border-radius: 5px;
+    }
+
+    .mh-source-seg {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #fff;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: normal;
+        min-width: 0;
+    }
+
+    .mh-source-seg:first-child {
+        border-radius: 5px 0 0 5px;
+    }
+
+    .mh-source-seg:last-child {
+        border-radius: 0 10px 10px 0;
+    }
+
+    .mh-source-seg:only-child {
+        border-radius: 5px 10px 10px 5px;
+    }
+
+    .mh-source-legend {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 32px;
+    }
+
+    .mh-source-legend li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
         line-height: normal;
     }
 
-    .mh-bookings-from {
-        display: flex;
-        align-items: stretch;
-        justify-content: space-between;
-        gap: 1rem;
-        padding: 1.25rem 2rem;
-        border-radius: 10px;
-        background: #F6F6F6;
-    }
-
-    .mh-bookings-from-divider {
-        width: 1px;
-        background: #D4D4D4;
-        align-self: stretch;
-        flex-shrink: 0;
-    }
-
-    .mh-source {
-        text-align: start;
-        min-width: 0;
-        flex: 1;
+    .mh-source-legend strong {
+        color: #3B3731;
+        font-weight: 600;
     }
 
     @media (max-width: 1200px) {
         .mh-kpi-row {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        .mh-grid--mid,
-        .mh-grid--bottom {
+        .mh-grid--main,
+        .mh-grid--main-space {
             grid-template-columns: 1fr;
+        }
+
+        .mh-panel-card--peak {
+            min-height: 480px;
         }
     }
 
     @media (max-width: 768px) {
-        .mh-kpi-row {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+        .mh-overview-header {
+            flex-direction: column;
+            align-items: stretch;
         }
 
-        .mh-kpi-value {
+        .mh-create-promo-btn {
+            width: 100%;
+        }
+
+        .mh-kpi-row {
+            grid-template-columns: 1fr;
+        }
+
+        .mh-kpi-value,
+        .mh-peak-total {
             font-size: 26px;
         }
 
-        .mh-bookings-from {
-            flex-direction: column;
-            text-align: left;
-        }
-
-        .mh-bookings-from-divider {
+        .mh-period-tabs {
             width: 100%;
-            height: 1px;
         }
 
-        .mh-source {
-            text-align: left;
+        .mh-period-tab {
+            flex: 1;
+            padding: 0 8px;
         }
 
         .mh-donut-row {
             flex-wrap: wrap;
+        }
+
+        .mh-source-legend {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .mh-top-promo-row {
+            flex-direction: column;
+            align-items: stretch;
         }
     }
 
     @media (max-width: 520px) {
         .mh-kpi-row {
             grid-template-columns: 1fr;
-        }
-
-        .mh-services-stats {
-            grid-template-columns: 1fr;
-            row-gap: 1rem;
-        }
-
-        .mh-services-divider {
-            width: 100%;
-            height: 1px;
         }
     }
 
@@ -1133,9 +1345,12 @@
     }
 
     .mh-tips-banner--promo {
+        width: fit-content;
+        border: none;
         border-radius: 10px;
         background: rgba(201, 221, 160, 0.20);
         margin: 0 auto 1.5rem;
+        justify-content: center;
     }
 
     .mh-tips-banner--promo p {
@@ -1406,6 +1621,20 @@
     .mh-kpi-row--promo .mh-kpi-card {
         border: none;
         border-radius: 10px;
+        min-height: 0;
+        box-shadow: none;
+    }
+
+    .mh-kpi-row--promo .mh-kpi-label {
+        color: #3B3731;
+        font-size: 18px;
+    }
+
+    .mh-kpi-row--promo .mh-kpi-value {
+        font-family: Lato;
+        font-size: 24px;
+        font-weight: 800;
+        margin: 0 0 0.55rem;
     }
 
     .mh-kpi-card--promo-views {

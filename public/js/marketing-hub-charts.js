@@ -13,26 +13,43 @@
     ];
 
     const FALLBACK_PEAK = {
-        Monday: [0, 0, 0, 0, 0, 0, 0],
-        Tuesday: [0, 0, 0, 0, 0, 0, 0],
-        Wednesday: [0, 0, 0, 0, 0, 0, 0],
-        Thursday: [0, 0, 0, 0, 0, 0, 0],
-        Friday: [0, 0, 0, 0, 0, 0, 0],
-        Saturday: [0, 0, 0, 0, 0, 0, 0],
-        Sunday: [0, 0, 0, 0, 0, 0, 0],
+        Monday: [0, 0, 0, 0, 0, 0, 0, 0],
+        Tuesday: [0, 0, 0, 0, 0, 0, 0, 0],
+        Wednesday: [0, 0, 0, 0, 0, 0, 0, 0],
+        Thursday: [0, 0, 0, 0, 0, 0, 0, 0],
+        Friday: [0, 0, 0, 0, 0, 0, 0, 0],
+        Saturday: [0, 0, 0, 0, 0, 0, 0, 0],
+        Sunday: [0, 0, 0, 0, 0, 0, 0, 0],
     };
 
     const FALLBACK_TIME_LABELS = [
-        "08 - 09",
-        "10 - 11",
-        "12 - 13",
-        "14 - 15",
-        "16 - 17",
-        "18 - 19",
-        "20 - 21",
+        "08-09",
+        "09-10",
+        "11-12",
+        "13-14",
+        "15-16",
+        "17-18",
+        "18-19",
+        "20-21",
     ];
 
+    const SERVICE_COLORS = ["#9AC1DD", "#FFC97A", "#FBAC83"];
+    const PET_COLORS = ["#9AC1DD", "#C1DB8A", "#FBAC83"];
+    const BAR_COLOR = "rgba(229, 238, 244, 0.5)";
+    const BAR_COLOR_ACTIVE = "#9AC1DD";
+
     function chartData() {
+        const el = document.querySelector("[data-mh-chart]");
+        if (el) {
+            const raw = el.getAttribute("data-mh-chart");
+            if (raw) {
+                try {
+                    return JSON.parse(raw);
+                } catch (e) {
+                    /* fall through */
+                }
+            }
+        }
         return window.__mhChartData || {};
     }
 
@@ -49,83 +66,6 @@
     }
 
     let peakDayIndex = (new Date().getDay() + 6) % 7; // Mon=0 … Sun=6
-
-    const BAR_COLOR = "rgba(203, 220, 232, 0.5)";
-    const BAR_COLOR_ACTIVE = "#CBDCE8";
-
-    const POINT_RADIUS = 5;
-    // Gap from dot center so segments stay clear of each point
-    const LINE_GAP_FROM_CENTER = POINT_RADIUS + 14;
-
-    const gappedLinePlugin = {
-        id: "mhGappedLine",
-        afterDatasetsDraw(chart) {
-            if (chart.canvas?.id !== "mhPeakBookingsChart") return;
-
-            const meta = chart.getDatasetMeta(1);
-            if (!meta?.data?.length) return;
-
-            const ctx = chart.ctx;
-            const gap = LINE_GAP_FROM_CENTER;
-
-            ctx.save();
-            ctx.strokeStyle = "#D8E8B7";
-            ctx.lineWidth = 2;
-            ctx.lineCap = "round";
-
-            for (let i = 0; i < meta.data.length - 1; i++) {
-                const p0 = meta.data[i];
-                const p1 = meta.data[i + 1];
-                if (!p0 || !p1 || p0.skip || p1.skip) continue;
-
-                const dx = p1.x - p0.x;
-                const dy = p1.y - p0.y;
-                const dist = Math.hypot(dx, dy);
-                if (dist <= gap * 2) continue;
-
-                const ux = dx / dist;
-                const uy = dy / dist;
-
-                ctx.beginPath();
-                ctx.moveTo(p0.x + ux * gap, p0.y + uy * gap);
-                ctx.lineTo(p1.x - ux * gap, p1.y - uy * gap);
-                ctx.stroke();
-            }
-
-            ctx.restore();
-        },
-    };
-
-    function registerGappedLinePlugin() {
-        if (
-            typeof Chart === "undefined" ||
-            window.__mhGappedLinePluginRegistered
-        ) {
-            return;
-        }
-        Chart.register(gappedLinePlugin);
-        window.__mhGappedLinePluginRegistered = true;
-    }
-
-    function registerPeakTooltipPositioner() {
-        if (
-            typeof Chart === "undefined" ||
-            window.__mhPeakTooltipPositionerRegistered
-        ) {
-            return;
-        }
-        Chart.Tooltip.positioners.mhPeakDot = function (items) {
-            // Anchor to the line point (dot), not the bar
-            const dot =
-                items.find((item) => item.datasetIndex === 1) || items[0];
-            if (!dot?.element) return false;
-            return {
-                x: dot.element.x - 6,
-                y: dot.element.y - 2,
-            };
-        };
-        window.__mhPeakTooltipPositionerRegistered = true;
-    }
 
     function loadChartJs() {
         if (typeof Chart !== "undefined") {
@@ -157,10 +97,16 @@
         }
     }
 
-    function getCurrentTimeSlotIndex() {
+    function slotStartsFromLabels(labels) {
+        return labels.map((label) => {
+            const match = String(label).match(/^(\d{1,2})/);
+            return match ? parseInt(match[1], 10) : 0;
+        });
+    }
+
+    function getCurrentTimeSlotIndex(labels) {
         const hour = new Date().getHours();
-        // Labels: 08-09, 10-11, 12-13, 14-15, 16-17, 18-19, 20-21
-        const starts = [8, 10, 12, 14, 16, 18, 20];
+        const starts = slotStartsFromLabels(labels);
         let best = 0;
         for (let i = 0; i < starts.length; i++) {
             if (hour >= starts[i]) best = i;
@@ -168,29 +114,68 @@
         return best;
     }
 
+    function formatSlotForCopy(label) {
+        return String(label).replace(/\s+/g, "");
+    }
+
+    function updatePeakMeta(day, values, labels) {
+        const total = values.reduce(
+            (sum, value) => sum + (Number(value) || 0),
+            0,
+        );
+        const totalEl = document.getElementById("mhPeakTotal");
+        if (totalEl) {
+            totalEl.textContent =
+                total + (total === 1 ? " Booking" : " Bookings");
+        }
+
+        const insightEl = document.getElementById("mhPeakInsightText");
+        if (!insightEl) return;
+
+        if (total <= 0) {
+            insightEl.textContent =
+                "Not enough booking data yet to spot peak times.";
+            return;
+        }
+
+        let busyIndex = 0;
+        let quietIndex = 0;
+        values.forEach((value, index) => {
+            if (value > values[busyIndex]) busyIndex = index;
+            if (value < values[quietIndex]) quietIndex = index;
+        });
+
+        const busySlot = formatSlotForCopy(labels[busyIndex] || "");
+        const quietSlot = formatSlotForCopy(labels[quietIndex] || "");
+        insightEl.textContent =
+            "Busiest on " +
+            day +
+            " at " +
+            busySlot +
+            " — consider opening more evening slots. Quietest at " +
+            quietSlot +
+            ", a good window for a timed promo.";
+    }
+
     function createPeakBookingsChart(canvas) {
         if (!canvas || typeof Chart === "undefined") return;
 
         destroyChart("__mhPeakBookingsChart");
-        registerGappedLinePlugin();
-        registerPeakTooltipPositioner();
 
         const day = DAYS[peakDayIndex];
         const byDay = peakBookingsByDay();
         const values = byDay[day] || FALLBACK_PEAK.Monday;
         const labels = timeLabels();
         const maxValue = Math.max(...values, 0);
-        // Small lift above bar tops (~10% of scale), not a fixed booking count
-        const pointOffset =
-            maxValue > 0 ? Math.max(0.25, maxValue * 0.1) : 0.35;
-        const lineValues = values.map((v) => v + pointOffset);
         const dayLabel = document.getElementById("mhPeakDayLabel");
         if (dayLabel) dayLabel.textContent = day;
+
+        updatePeakMeta(day, values, labels);
 
         const todayIndex = (new Date().getDay() + 6) % 7;
         const activeBarIndex =
             peakDayIndex === todayIndex
-                ? getCurrentTimeSlotIndex()
+                ? getCurrentTimeSlotIndex(labels)
                 : values.indexOf(maxValue);
 
         const barColors = values.map((_, i) =>
@@ -203,31 +188,18 @@
                 labels: labels,
                 datasets: [
                     {
-                        type: "bar",
                         data: values,
                         backgroundColor: barColors,
                         hoverBackgroundColor: barColors,
-                        borderRadius: 10,
+                        borderRadius: {
+                            topLeft: 10,
+                            topRight: 10,
+                            bottomLeft: 5,
+                            bottomRight: 5,
+                        },
                         borderSkipped: false,
-                        barPercentage: 0.55,
-                        categoryPercentage: 0.7,
-                        order: 2,
-                    },
-                    {
-                        type: "line",
-                        data: lineValues,
-                        borderColor: "#D8E8B7",
-                        borderWidth: 0,
-                        showLine: false,
-                        pointBackgroundColor: "#509DD4",
-                        pointBorderColor: "#509DD4",
-                        pointBorderWidth: 0,
-                        pointRadius: POINT_RADIUS,
-                        pointHoverRadius: POINT_RADIUS + 2,
-                        pointHitRadius: 14,
-                        tension: 0,
-                        fill: false,
-                        order: 1,
+                        barPercentage: 0.72,
+                        categoryPercentage: 0.78,
                     },
                 ],
             },
@@ -236,15 +208,11 @@
                 maintainAspectRatio: false,
                 layout: {
                     padding: {
-                        top: 12,
+                        top: 8,
                         right: 0,
                         bottom: 0,
                         left: 0,
                     },
-                },
-                interaction: {
-                    mode: "index",
-                    intersect: false,
                 },
                 plugins: {
                     legend: { display: false },
@@ -258,10 +226,6 @@
                         cornerRadius: 8,
                         caretSize: 6,
                         caretPadding: 8,
-                        position: "mhPeakDot",
-                        xAlign: "right",
-                        yAlign: "center",
-                        filter: (item) => item.datasetIndex === 1,
                         bodyFont: {
                             family: "Lato",
                             size: 14,
@@ -292,7 +256,7 @@
                                     : "#9D9B98",
                             font: {
                                 family: "Lato",
-                                size: 18,
+                                size: 14,
                                 style: "normal",
                                 weight: "600",
                                 lineHeight: "normal",
@@ -301,18 +265,14 @@
                     },
                     y: {
                         beginAtZero: true,
-                        suggestedMax: maxValue + pointOffset * 2,
                         display: false,
-                        grid: {
-                            display: false,
-                        },
+                        grid: { display: false },
                         border: { display: false },
                     },
                 },
             },
         });
 
-        // Re-measure after layout (x-show / grid can leave canvas narrow on first paint)
         requestAnimationFrame(() => {
             window.__mhPeakBookingsChart?.resize();
         });
@@ -346,16 +306,16 @@
                         hoverBackgroundColor: colors,
                         borderWidth: 0,
                         hoverBorderWidth: 0,
-                        hoverOffset: 4,
+                        hoverOffset: 2,
                     },
                 ],
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: "68%",
+                cutout: "62%",
                 layout: {
-                    padding: 8,
+                    padding: 0,
                 },
                 plugins: {
                     legend: { display: false },
@@ -384,21 +344,24 @@
 
         if (!peakCanvas && !servicesCanvas && !petsCanvas) return;
 
-        createPeakBookingsChart(peakCanvas);
         const data = chartData();
+        window.__mhChartData = data;
+
+        createPeakBookingsChart(peakCanvas);
+        bindDaySwitcher();
         createDonutChart(
             servicesCanvas,
-            ["#FBAC83", "#FDD0B3", "#FFF4E4"],
+            Array.isArray(data.serviceColors) && data.serviceColors.length
+                ? data.serviceColors
+                : SERVICE_COLORS,
             "__mhServicesChart",
             data.services,
         );
         createDonutChart(
             petsCanvas,
-            [
-                "#D8E8B7",
-                "rgba(216, 232, 183, 0.60)",
-                "rgba(216, 232, 183, 0.20)",
-            ],
+            Array.isArray(data.petColors) && data.petColors.length
+                ? data.petColors
+                : PET_COLORS,
             "__mhPetsChart",
             data.pets,
         );
@@ -436,7 +399,6 @@
             return;
         }
 
-        // Alpine may hide the panel initially; retry once visible
         const tryInit = () => {
             if (panel.offsetParent === null && panel.style.display === "none") {
                 return false;
@@ -466,13 +428,11 @@
                 bindDaySwitcher();
                 refreshWhenVisible();
 
-                // Re-init after Livewire navigations
                 document.addEventListener("livewire:navigated", () => {
                     bindDaySwitcher();
                     setTimeout(refreshWhenVisible, 50);
                 });
 
-                // Re-draw when returning to marketing-hub section
                 window.addEventListener("dashboard-nav-changed", (event) => {
                     const section = event.detail?.section;
                     if (section === "marketing-hub") {
