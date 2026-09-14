@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿    <div class="container mb-5 mt-5">
         <div class="row">
             <div class="col-lg-1"></div>
@@ -409,10 +410,28 @@
             removeBtn.onclick = () => {
                 fileInput.value = '';
                 if (fileItem) fileItem.style.display = 'none';
-            };
-        }
-    }
+=======
+<section class="container mb-5 mt-5">
+    <livewire:help.centre />
+</section>
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/company_information.css') }}">
+    <script>
+        (function () {
+            if ('scrollRestoration' in history) {
+                history.scrollRestoration = 'manual';
+            }
+
+            const toTop = function () {
+                const root = document.scrollingElement || document.documentElement;
+                root.scrollTop = 0;
+                document.body.scrollTop = 0;
+                window.scrollTo(0, 0);
+>>>>>>> 3686cf2a86831824005858d1e89dafed90b1bdcd
+            };
+
+<<<<<<< HEAD
     function initHelpCentreScripts(root = document) {
         initHelpCentrePanel(root);
         initHelpCentreFileUpload(root);
@@ -498,3 +517,11 @@
 </script>
 @endpush
 
+=======
+            toTop();
+            window.addEventListener('pageshow', toTop);
+            window.addEventListener('load', toTop);
+        })();
+    </script>
+@endpush
+>>>>>>> 3686cf2a86831824005858d1e89dafed90b1bdcd

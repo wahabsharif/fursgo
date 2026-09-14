@@ -1,12 +1,12 @@
 @props([
-    'rowId',
+    'rowId' => null,
     'menuWidth' => 210,
     'loadingEvent' => 'bookings-tabs-loading-start',
     'rescheduleMethod' => 'openRescheduleModal',
 ])
 
-<div class="more-action-wrapper" x-data="{
-    rowId: @js($rowId),
+<div class="more-action-wrapper" :class="{ 'is-menu-open': openMore }" x-data="{
+    rowId: {{ $rowId === null ? 'row.id' : (int) $rowId }},
     openMore: false,
     menuLeft: 8,
     menuTop: 8,
@@ -23,27 +23,30 @@
         }
         this.openMore = !this.openMore;
     }
-}"
-    @more-action-opened.window="if (($event.detail?.id ?? null) !== rowId) { openMore = false }"
+}" @more-action-opened.window="if (($event.detail?.id ?? null) !== rowId) { openMore = false }"
     @keydown.escape.window="openMore = false" @resize.window="if (openMore) repositionMore()"
     @scroll.window="if (openMore) repositionMore()"
     @click.window="if (openMore && !$refs.moreBtn.contains($event.target) && (!$refs.moreMenu || !$refs.moreMenu.contains($event.target))) { openMore = false }">
     <button type="button" class="more-action-trigger" aria-label="More actions" x-ref="moreBtn"
         @click.stop="toggleMore()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="5" viewBox="0 0 25 5" fill="none">
-            <circle cx="2.5" cy="2.5" r="2.5" fill="#3B3731" />
-            <circle cx="12.5" cy="2.5" r="2.5" fill="#3B3731" />
-            <circle cx="22.5" cy="2.5" r="2.5" fill="#3B3731" />
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none"
+            aria-hidden="true">
+            <circle cx="18" cy="18" r="17.5" fill="white" stroke="#E2E2E2" />
+            <ellipse cx="10.8" cy="17.8" rx="1.8" ry="1.8" fill="#3B3731" />
+            <ellipse cx="18" cy="17.8" rx="1.8" ry="1.8" fill="#3B3731" />
+            <ellipse cx="25.2" cy="17.8" rx="1.8" ry="1.8" fill="#3B3731" />
         </svg>
     </button>
+    <span class="more-action-tooltip" aria-hidden="true">
+        <span class="more-action-tooltip-inner">Message client</span>
+    </span>
 
     <template x-teleport="body">
         <div class="more-action-menu" x-cloak x-show="openMore" x-ref="moreMenu" x-transition.opacity.duration.120ms
             :style="`position: fixed; left: ${menuLeft}px; top: ${menuTop}px; z-index: 99999;`">
             <button type="button" class="more-action-menu-item">
                 <span>Message</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="14" viewBox="0 0 15 14"
-                    fill="none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="14" viewBox="0 0 15 14" fill="none">
                     <path
                         d="M7.5 0.75C11.3248 0.75 14.25 3.44368 14.25 6.56348C14.25 9.58586 11.5045 12.2084 7.85547 12.3691L7.5 12.377H7.49805C6.82132 12.3784 6.14689 12.2902 5.49316 12.1152L5.2168 12.041L4.96094 12.1709C4.55369 12.3769 3.6394 12.7709 2.12793 13.0908C2.34446 12.4211 2.52462 11.6686 2.59375 10.9482L2.62695 10.5967L2.37793 10.3467C1.35243 9.3185 0.750021 7.99417 0.75 6.56348C0.75 3.44368 3.67522 0.75 7.5 0.75Z"
                         stroke="#CBDCE8" stroke-width="1.5" />
@@ -52,8 +55,7 @@
             <button type="button" class="more-action-menu-item"
                 @click.stop="window.dispatchEvent(new CustomEvent(@js($loadingEvent))); $wire.{{ $rescheduleMethod }}(rowId); openMore = false;">
                 <span>Reschedule</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
-                    fill="none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <path d="M2.36584 14.7456V12.0549H5.05648" stroke="#FFC97A" stroke-width="1.5"
                         stroke-linecap="round" stroke-linejoin="round" />
                     <path
@@ -68,77 +70,136 @@
     </template>
 </div>
 
-<style>
-    .more-action-trigger,
-    .booking-message-btn {
-        width: 26px;
-        height: 26px;
-        border-radius: 999px;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        color: #3B3731;
-        font-weight: 700;
-    }
+@once
+    <style>
+        .more-action-trigger,
+        .booking-message-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 999px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            color: #3B3731;
+            font-weight: 700;
+        }
 
-    .more-action-trigger {
-        font-size: 18px;
-        line-height: 1;
-    }
+        .more-action-trigger {
+            font-size: 18px;
+            line-height: 1;
+            position: relative;
+        }
 
-    .more-action-wrapper {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        overflow: visible;
-    }
+        .more-action-trigger img,
+        .more-action-trigger svg {
+            display: block;
+            width: 36px;
+            height: 36px;
+        }
 
-    .more-action-menu {
-        position: absolute;
-        top: calc(100% + 0.45rem);
-        left: 0;
-        min-width: 205px;
-        width: max-content;
-        max-width: min(260px, calc(100vw - 24px));
-        background: #F8F8F8;
-        border: 1px solid #D9D9D9;
-        border-radius: 8px;
-        overflow: hidden;
-        z-index: 9999;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    }
+        .more-action-tooltip {
+            position: absolute;
+            right: calc(100% - 8px);
+            top: calc(100% + 5px);
+            z-index: 30;
+            display: none;
+            align-items: center;
+            width: 130px;
+            height: 36px;
+            padding: 4px;
+            border-radius: 5px;
+            border: 1px solid #D9D9D9;
+            background: #FFF;
+            box-sizing: border-box;
+            pointer-events: none;
+        }
 
-    .more-action-menu-item {
-        width: 100%;
-        border: 0;
-        border-bottom: 1px solid #D6D6D6;
-        background: transparent;
-        padding: 0.65rem 0.8rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        font-family: Lato;
-        color: #3B3731;
-        cursor: pointer;
-    }
+        .more-action-tooltip-inner {
+            display: flex;
+            align-items: center;
+            width: 122px;
+            height: 28px;
+            padding: 0 6px;
+            border-radius: 5px;
+            background: #FAF8F4;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+            white-space: nowrap;
+        }
 
-    .more-action-menu-item:last-child {
-        border-bottom: 0;
-    }
+        .more-action-wrapper:hover .more-action-tooltip,
+        .more-action-trigger:focus-visible+.more-action-tooltip {
+            display: flex;
+        }
 
-    .more-action-menu-item span {
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-    }
+        .more-action-wrapper.is-menu-open .more-action-tooltip {
+            display: none !important;
+        }
 
-    .more-action-menu-item:hover {
-        background: #ECECEC;
-    }
-</style>
+        .more-action-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            overflow: visible;
+            z-index: 1;
+        }
+
+        .more-action-wrapper:hover,
+        .more-action-wrapper.is-menu-open {
+            z-index: 20;
+        }
+
+        .more-action-menu {
+            position: absolute;
+            top: calc(100% + 0.45rem);
+            left: 0;
+            min-width: 205px;
+            width: max-content;
+            max-width: min(260px, calc(100vw - 24px));
+            background: #F8F8F8;
+            border: 1px solid #D9D9D9;
+            border-radius: 8px;
+            overflow: hidden;
+            z-index: 9999;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .more-action-menu-item {
+            width: 100%;
+            border: 0;
+            border-bottom: 1px solid #D6D6D6;
+            background: transparent;
+            padding: 0.65rem 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: Lato;
+            color: #3B3731;
+            cursor: pointer;
+        }
+
+        .more-action-menu-item:last-child {
+            border-bottom: 0;
+        }
+
+        .more-action-menu-item span {
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+        }
+
+        .more-action-menu-item:hover {
+            background: #ECECEC;
+        }
+    </style>
+@endonce

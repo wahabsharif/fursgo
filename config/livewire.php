@@ -120,7 +120,7 @@ return [
      */
     'temporary_file_upload' => [
         'disk' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK'),  // Example: 'local', 's3'             | Default: 'default'
-        'rules' => ['file', 'mimes:pdf,jpg,jpeg,png,gif,webp', 'max:51200'],  // 50 MB — matches verify-qualify + doc-upload UI
+        'rules' => ['file', 'mimes:pdf,jpg,jpeg,png,gif,webp', 'max:51200'],  // 50 MB — matches business-verification + doc-upload UI
         'directory' => null,  // Example: 'tmp'                     | Default: 'livewire-tmp'
         'middleware' => null,  // Example: 'throttle:5,1'            | Default: 'throttle:60,1'
         'preview_mimes' => [  // Supported file types for temporary pre-signed file URLs...

@@ -51,9 +51,9 @@ class GroomerSpacerProfile extends Authenticatable
     ];
 
     /**
-     * Whether the verify-qualify personal / payout step is satisfied (no DB flag; inferred from stored JSON).
+     * Whether the business-verification personal / payout step is satisfied (no DB flag; inferred from stored JSON).
      */
-    public function hasCompletedVerifyQualifyPersonalStep(): bool
+    public function hasCompletedBusinessVerificationPersonalStep(): bool
     {
         if (trim((string) ($this->full_name ?? '')) === '') {
             return false;

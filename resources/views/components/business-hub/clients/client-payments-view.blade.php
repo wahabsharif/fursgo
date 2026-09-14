@@ -89,10 +89,9 @@
                             <div class="client-payments-view-col-inner">
                                 @if ($booking)
                                     <button type="button" class="client-payments-icon-btn"
-                                        wire:click="openCompletedBookingModal({{ $booking->id }})"
-                                        aria-label="View booking">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="19" height="13"
-                                            viewBox="0 0 19 13" fill="none">
+                                        wire:click="openCompletedBookingModal({{ $booking->id }})" aria-label="View booking">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="19" height="13" viewBox="0 0 19 13"
+                                            fill="none">
                                             <path
                                                 d="M9.49609 12C11.4291 12 12.9961 10.433 12.9961 8.5C12.9961 6.567 11.4291 5 9.49609 5C7.5631 5 5.99609 6.567 5.99609 8.5C5.99609 10.433 7.5631 12 9.49609 12Z"
                                                 stroke="black" />
@@ -111,8 +110,8 @@
                                         data-invoice-url="{{ route('business-hub.bookings.invoice-pdf', $booking) }}"
                                         onclick="window.downloadBookingInvoicePdf(this.dataset.invoiceUrl)"
                                         aria-label="Download invoice">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
-                                            viewBox="0 0 16 19" fill="none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19"
+                                            fill="none">
                                             <path
                                                 d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
                                                 stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
@@ -142,7 +141,7 @@
 @once
     <script>
         if (!window.downloadBookingInvoicePdf) {
-            window.downloadBookingInvoicePdf = async function(invoiceUrl) {
+            window.downloadBookingInvoicePdf = async function (invoiceUrl) {
                 if (!invoiceUrl) {
                     return;
                 }
@@ -247,7 +246,7 @@
 
     .client-payments-pet-type {
         color: #9D9B98;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 400;
         line-height: normal;

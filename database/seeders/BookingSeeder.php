@@ -15,10 +15,10 @@ class BookingSeeder extends Seeder
 {
     public function run(): void
     {
-        $groomerSpacer = GroomerSpacerProfile::where('email', 'dev@dev.com')->first();
+        $groomerSpacer = GroomerSpacerProfile::where('email', 'groomer@dev.com')->first();
 
         if (!$groomerSpacer) {
-            $this->command?->warn('BookingSeeder skipped: dev@dev.com not found in goormer_spacer_profiles.');
+            $this->command?->warn('BookingSeeder skipped: groomer@dev.com not found in goormer_spacer_profiles.');
             return;
         }
 
@@ -203,6 +203,8 @@ class BookingSeeder extends Seeder
             }
         }
 
+        $this->seedBusinessHubOverview($spacerId, isSpace: false);
+
         $this->seedMarketingVolume(
             spacerId: $spacerId,
             serviceAddOns: $serviceAddOns,
@@ -218,6 +220,96 @@ class BookingSeeder extends Seeder
             refundStatuses: $refundStatuses,
             discountSamples: $discountSamples,
         );
+    }
+
+    /**
+     * Stable Overview demo rows whose dates refresh to today / this week on every seed.
+     */
+    private function seedBusinessHubOverview(int $spacerId, bool $isSpace): void
+    {
+        $ownerEmail = $isSpace ? 'mh.space.owner1@example.com' : 'petowner@example.com';
+        $ownerName = $isSpace ? 'Mia Space' : 'Jane Smith';
+        $petDefinitions = $isSpace
+            ? [['name' => 'Pepper', 'pet_type' => 'Dog', 'breed' => 'Poodle', 'sex' => 'female', 'birthday' => '2020-04-12', 'weight' => 8.5, 'photo' => null, 'notes' => null]]
+            : [
+                ['name' => 'Buddy', 'pet_type' => 'Dog', 'breed' => 'Labrador Retriever', 'sex' => 'male', 'birthday' => '2020-03-15', 'weight' => 28.5, 'photo' => 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=crop&w=600&q=80', 'notes' => 'Friendly and energetic.'],
+                ['name' => 'Luna', 'pet_type' => 'Rabbit', 'breed' => 'Holland Lop', 'sex' => 'female', 'birthday' => '2022-06-10', 'weight' => 1.8, 'photo' => 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&w=600&q=80', 'notes' => 'Very calm, loves cuddles.'],
+            ];
+
+        $owner = User::firstOrCreate(
+            ['email' => $ownerEmail],
+            [
+                'name' => $ownerName,
+                'password' => bcrypt('password'),
+                'user_type' => 'pet_owner',
+                'user_status' => 'active',
+            ]
+        );
+        $pets = $this->ensurePets($owner, $petDefinitions);
+
+        $visitType = $isSpace ? 'Garden / Shed' : 'salon';
+        $services = $isSpace
+            ? [
+                ['service' => 'Hourly', 'amount' => 28.0],
+                ['service' => 'Half-Day', 'amount' => 80.0],
+                ['service' => 'Full-Day', 'amount' => 120.0],
+            ]
+            : [
+                ['service' => 'Full Groom', 'amount' => 65.0],
+                ['service' => 'Bath & Brush', 'amount' => 45.0],
+                ['service' => 'Nail Trim', 'amount' => 25.0],
+            ];
+
+        $startOfWeek = today()->copy()->startOfWeek();
+        $lastWeek = today()->copy()->subWeek()->startOfWeek();
+        $lastMonth = today()->copy()->subMonth()->startOfMonth()->addDays(9);
+        $thisMonthEarlier = today()->copy()->startOfMonth();
+        if ($thisMonthEarlier->greaterThanOrEqualTo(today())) {
+            $thisMonthEarlier = today()->copy()->subDays(2);
+        }
+
+        $slots = [
+            ['time' => '08:15 - 09:15', 'date' => today()->toDateString(), 'booking_status' => 'confirmed', 'service' => $services[0]['service'], 'amount' => $services[0]['amount'], 'pet_indices' => [0]],
+            ['time' => '13:15 - 14:15', 'date' => today()->toDateString(), 'booking_status' => 'confirmed', 'service' => $services[1]['service'], 'amount' => $services[1]['amount'], 'pet_indices' => [0]],
+            ['time' => '16:15 - 17:15', 'date' => today()->toDateString(), 'booking_status' => 'pending', 'service' => $services[2]['service'], 'amount' => $services[2]['amount'], 'pet_indices' => [0]],
+            ['time' => '10:15 - 11:15', 'date' => today()->addDays(2)->toDateString(), 'booking_status' => 'pending', 'service' => $services[0]['service'], 'amount' => $services[0]['amount'], 'pet_indices' => [0]],
+            ['time' => '11:15 - 12:15', 'date' => today()->addDays(4)->toDateString(), 'booking_status' => 'confirmed', 'service' => $services[1]['service'], 'amount' => $services[1]['amount'], 'pet_indices' => [0]],
+            ['time' => '09:15 - 10:15', 'date' => $startOfWeek->toDateString(), 'booking_status' => 'completed', 'service' => $services[0]['service'], 'amount' => $services[0]['amount'], 'pet_indices' => [0], 'created_days_ago' => max(1, (int) today()->diffInDays($startOfWeek))],
+            ['time' => '12:15 - 13:15', 'date' => $lastWeek->toDateString(), 'booking_status' => 'completed', 'service' => $services[1]['service'], 'amount' => $services[1]['amount'], 'pet_indices' => [0], 'created_days_ago' => max(1, (int) today()->diffInDays($lastWeek))],
+            ['time' => '15:15 - 16:15', 'date' => $lastMonth->toDateString(), 'booking_status' => 'completed', 'service' => $services[2]['service'], 'amount' => $services[2]['amount'], 'pet_indices' => [0], 'created_days_ago' => max(1, (int) today()->diffInDays($lastMonth))],
+            ['time' => '18:15 - 19:15', 'date' => $thisMonthEarlier->toDateString(), 'booking_status' => 'completed', 'service' => $services[0]['service'], 'amount' => $services[0]['amount'], 'pet_indices' => [0], 'created_days_ago' => max(1, (int) today()->diffInDays($thisMonthEarlier))],
+        ];
+
+        $serviceAddOns = $isSpace
+            ? [
+                'Hourly' => [['label' => 'Storage Locker', 'amount' => 8.0]],
+                'Half-Day' => [['label' => 'Deep Clean', 'amount' => 20.0]],
+                'Full-Day' => [['label' => 'After-Hours Access', 'amount' => 10.0]],
+            ]
+            : [
+                'Full Groom' => [['label' => 'Fast-Dry Service', 'amount' => 8.0]],
+                'Bath & Brush' => [['label' => 'De-shedding Booster', 'amount' => 12.0]],
+                'Nail Trim' => [['label' => 'Paw Balm Treatment', 'amount' => 6.0]],
+            ];
+
+        foreach ($slots as $slot) {
+            $this->seedBooking(
+                ownerId: $owner->id,
+                spacerId: $spacerId,
+                pets: $pets,
+                bookingData: [
+                    ...$slot,
+                    'visit_type' => $visitType,
+                    'hub_slot' => true,
+                    'acquisition_source' => 'hub_overview',
+                ],
+                serviceAddOns: $serviceAddOns,
+                staffRoster: ['Emma Wilson', 'Oliver Brown'],
+                completedRatings: [4.5, 4.8, 5.0],
+                refundStatuses: ['Processed'],
+                discountSamples: [0.0],
+            );
+        }
     }
 
     /**
@@ -442,6 +534,7 @@ class BookingSeeder extends Seeder
         }
 
         $this->seedPromoCatalog($spaceSpacer->id);
+        $this->seedBusinessHubOverview($spaceSpacer->id, isSpace: true);
 
         $serviceAddOns = [
             'Hourly' => [
@@ -601,16 +694,20 @@ class BookingSeeder extends Seeder
         $acquisitionSource = $bookingData['acquisition_source'] ?? null;
         $promoCode = $bookingData['promo_code'] ?? null;
         $explicitDiscount = array_key_exists('discount', $bookingData) ? $bookingData['discount'] : null;
+        $hubSlot = (bool) ($bookingData['hub_slot'] ?? false);
         unset(
             $bookingData['pet_indices'],
             $bookingData['created_days_ago'],
             $bookingData['acquisition_source'],
             $bookingData['promo_code'],
             $bookingData['discount'],
+            $bookingData['hub_slot'],
         );
 
         $sources = ['direct_profile', 'platform_search', 'promotion_link'];
-        if ($acquisitionSource === null) {
+        if ($hubSlot) {
+            $acquisitionSource = 'hub_overview';
+        } elseif ($acquisitionSource === null) {
             $acquisitionSource = $sources[array_rand($sources)];
         }
 
@@ -639,28 +736,53 @@ class BookingSeeder extends Seeder
             $promoCode = ['NWYEAR26', 'SPRING15', 'WELCOME10'][array_rand(['NWYEAR26', 'SPRING15', 'WELCOME10'])];
         }
 
-        $booking = Booking::updateOrCreate(
-            [
-                'pet_owner_id' => $bookingData['pet_owner_id'],
-                'goormer_spacer_id' => $bookingData['goormer_spacer_id'],
-                'date' => $bookingData['date'],
-                'time' => $bookingData['time'],
-                'service' => $bookingData['service'],
-            ],
-            [
-                'amount' => $bookingData['amount'],
-                'refund_amount' => $bookingData['refund_amount'],
-                'discount' => $bookingData['discount'],
-                'extra_add_ons' => $bookingData['extra_add_ons'],
-                'staff' => $bookingData['staff'],
-                'rating' => $bookingData['rating'],
-                'visit_type' => $bookingData['visit_type'],
-                'acquisition_source' => $bookingData['acquisition_source'],
-                'booking_status' => $bookingData['booking_status'],
-                'cancelled_by' => $bookingData['cancelled_by'],
-                'refund_status' => $bookingData['refund_status'],
-            ]
-        );
+        if ($hubSlot) {
+            $booking = Booking::updateOrCreate(
+                [
+                    'pet_owner_id' => $bookingData['pet_owner_id'],
+                    'goormer_spacer_id' => $bookingData['goormer_spacer_id'],
+                    'time' => $bookingData['time'],
+                    'service' => $bookingData['service'],
+                    'acquisition_source' => 'hub_overview',
+                ],
+                [
+                    'date' => $bookingData['date'],
+                    'amount' => $bookingData['amount'],
+                    'refund_amount' => $bookingData['refund_amount'],
+                    'discount' => $bookingData['discount'],
+                    'extra_add_ons' => $bookingData['extra_add_ons'],
+                    'staff' => $bookingData['staff'],
+                    'rating' => $bookingData['rating'],
+                    'visit_type' => $bookingData['visit_type'],
+                    'booking_status' => $bookingData['booking_status'],
+                    'cancelled_by' => $bookingData['cancelled_by'],
+                    'refund_status' => $bookingData['refund_status'],
+                ]
+            );
+        } else {
+            $booking = Booking::updateOrCreate(
+                [
+                    'pet_owner_id' => $bookingData['pet_owner_id'],
+                    'goormer_spacer_id' => $bookingData['goormer_spacer_id'],
+                    'date' => $bookingData['date'],
+                    'time' => $bookingData['time'],
+                    'service' => $bookingData['service'],
+                ],
+                [
+                    'amount' => $bookingData['amount'],
+                    'refund_amount' => $bookingData['refund_amount'],
+                    'discount' => $bookingData['discount'],
+                    'extra_add_ons' => $bookingData['extra_add_ons'],
+                    'staff' => $bookingData['staff'],
+                    'rating' => $bookingData['rating'],
+                    'visit_type' => $bookingData['visit_type'],
+                    'acquisition_source' => $bookingData['acquisition_source'],
+                    'booking_status' => $bookingData['booking_status'],
+                    'cancelled_by' => $bookingData['cancelled_by'],
+                    'refund_status' => $bookingData['refund_status'],
+                ]
+            );
+        }
 
         if ($createdDaysAgo !== null) {
             $timestamp = now()->subDays($createdDaysAgo);

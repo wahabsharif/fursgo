@@ -20,7 +20,7 @@
             request()->routeIs('business-homepage-groomer-space-owner') => 'for-groomers-hosts',
             request()->routeIs('help-and-support') => 'help-centre',
             request()->routeIs('account-settings') => 'account-settings',
-            request()->routeIs('verify-qualify', 'verify-qualify.*') => 'verify-qualify',
+            request()->routeIs('business-verification', 'business-verification.*') => 'business-verification',
             default => 'hub',
         };
 
@@ -31,22 +31,41 @@
 
     <title>@yield('title', $pageTitle)</title>
 
-    @include('partials.head')
+    <x-partials.head />
     @if (request()->routeIs('account-settings'))
         <link rel="stylesheet" href="{{ asset('css/account-settings.css') }}">
     @endif
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    @if ($isDashboardHub)
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    @endif
+    @if ($dashboardNavView === 'business-verification')
+        <link rel="preload" as="image" href="{{ asset('images/logo/logo.svg') }}">
+        <style>
+            .dashboard-header {
+                position: sticky;
+                top: 0;
+                z-index: 1020;
+                width: 100%;
+                background: #fff;
+            }
+
+            .dashboard-header.dashboard-header--business-verification .dashboard-navbar {
+                min-height: 0;
+                padding: 50px 0 40px !important;
+            }
+        </style>
+    @endif
     @yield('styles')
     @stack('styles')
 
-    @if ($isDashboardHub)
+    @if ($isDashboardHub || $dashboardNavView === 'help-centre')
         <script>
-            (function() {
+            (function () {
                 if ('scrollRestoration' in history) {
                     history.scrollRestoration = 'manual';
                 }
 
-                window.__scrollDashboardToTop = function() {
+                window.__scrollDashboardToTop = function () {
                     const root = document.scrollingElement || document.documentElement;
                     root.scrollTop = 0;
                     document.body.scrollTop = 0;
@@ -107,7 +126,6 @@ window.addEventListener('load', () => scrollDashboardToTop(false));
 window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNav(event.detail ?? {}));">
 
     <x-common.header variant="dashboard" :dashboard-nav-view="$dashboardNavView" />
-    <x-common.dev-mode-float />
 
     @if ($isDashboardHub)
         <div class="dashboard-wrapper">
@@ -131,7 +149,9 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
         </main>
     @endif
 
-    <x-common.footer variant="dashboard" />
+    @unless ($isDashboardHub)
+        <x-common.footer variant="dashboard" />
+    @endunless
 
     <style>
         [x-cloak] {
@@ -150,13 +170,25 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
             position: relative;
             z-index: 2;
             width: 100%;
-            max-width: min(100%, max(110rem, 92vw), 2450px);
+            max-width: 1440px;
             margin-left: auto;
             margin-right: auto;
-            padding-left: clamp(0.75rem, 4vw, 2rem);
-            padding-right: clamp(0.75rem, 4vw, 2rem);
-            padding-bottom: 2rem;
+            padding: 0 50px 2rem;
             box-sizing: border-box;
+        }
+
+        @media (max-width: 1199.98px) {
+            .dashboard-info-main {
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .dashboard-info-main {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
         }
 
         .dashboard-shell--for-groomers-hosts .dashboard-info-main .container,
@@ -165,19 +197,23 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
             margin-right: auto;
         }
 
-        /* Verify & Qualify: content width matches header (Bootstrap .container only) */
-        .dashboard-shell--verify-qualify {
-            --dashboard-sticky-header-offset: 9.5rem;
+        .dashboard-shell--help-centre {
+            --help-tabs-sticky-top: 5.5rem;
         }
 
-        .dashboard-shell--verify-qualify .dashboard-info-main {
+        /* Verify & Qualify: content width matches header (Bootstrap .container only) */
+        .dashboard-shell--business-verification {
+            --dashboard-sticky-header-offset: 8.125rem;
+        }
+
+        .dashboard-shell--business-verification .dashboard-info-main {
             max-width: 100%;
             width: 100%;
             padding-left: 0;
             padding-right: 0;
         }
 
-        .dashboard-shell--verify-qualify .dashboard-info-main>.container {
+        .dashboard-shell--business-verification .dashboard-info-main>.container {
             margin-left: auto;
             margin-right: auto;
         }
@@ -186,10 +222,12 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
     <script src="{{ asset('js/custom-dropdown.js') }}" defer></script>
     <script src="{{ asset('js/custom.js') }}" defer></script>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
-    <script src="{{ asset('js/weekly-revenue-chart.js') }}"></script>
-    <script src="{{ asset('js/earnings-charts.js') }}"></script>
+    @if ($isDashboardHub)
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+        <script src="{{ asset('js/weekly-revenue-chart.js') }}"></script>
+        <script src="{{ asset('js/earnings-charts.js') }}"></script>
+    @endif
 
     @fluxScripts
 

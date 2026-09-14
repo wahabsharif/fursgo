@@ -10,10 +10,10 @@ class StaffSeeder extends Seeder
 {
     public function run(): void
     {
-        $groomerSpacer = GroomerSpacerProfile::where('email', 'dev@dev.com')->first();
+        $groomerSpacer = GroomerSpacerProfile::where('email', 'groomer@dev.com')->first();
 
         if (!$groomerSpacer) {
-            $this->command?->warn('StaffSeeder skipped: dev@dev.com not found in goormer_spacer_profiles.');
+            $this->command?->warn('StaffSeeder skipped: groomer@dev.com not found in goormer_spacer_profiles.');
             return;
         }
 

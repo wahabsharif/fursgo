@@ -4,16 +4,19 @@ use App\Http\Controllers\AccountDataExportController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BookingInvoicePdfController;
 use App\Http\Controllers\PetDetailController;
+use App\Http\Middleware\EnsureGroomerSpacerAuthenticated;
+use App\Http\Middleware\EnsureWebOrGroomerSpacerAuthenticated;
+use App\Http\Middleware\SetBusinessPageBusinessHubShell;
+use App\Http\Middleware\SetBusinessPageWebShell;
 use App\Models\GroomerSpacerProfile;
 use App\Support\BusinessHubNav;
 use App\Support\BusinessPageShell;
 use App\Support\MarketingHubNav;
+use App\Support\VoltPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Livewire\Volt\LivewireManager;
-use Livewire\Volt\Volt;
 
 Route::get('/clear', function () {
     Artisan::call('optimize:clear');
@@ -64,11 +67,13 @@ Route::get('/seed', function () {
 })->name('seed');
 
 // Public pages - converted to Volt (web header shell for shared business/help pages)
-Route::middleware('business.shell.web')->group(function () {
-    Volt::route('/', 'home')->name('home');
-    Route::view('/business-landing-page', 'business-landing-page')->name('business-landing-page');
-    Route::livewire('/support-and-assistance/search', 'help.search')->name('search');
-    Volt::route('/search-results', 'search/results')->name('search-results');
+Route::middleware([SetBusinessPageWebShell::class])->group(function () {
+    Route::get('/', fn() => VoltPage::render('home'))->name('home');
+    Route::get('/business-landing-page', function () {
+        return view()->file(resource_path('views/business-landing-page.blade.php'));
+    })->name('business-landing-page');
+    Route::get('/support-and-assistance/search', fn() => VoltPage::render('help.search'))->name('search');
+    Route::get('/search-results', fn() => VoltPage::render('search.results'))->name('search-results');
 });
 Route::redirect('/business/support-and-assistance/help-and-support', '/support-and-assistance/help-and-support');
 Route::redirect('/business/support-and-assistance/search', '/support-and-assistance/search');
@@ -79,7 +84,7 @@ Route::get('/support-and-assistance/help-and-support', function () {
 
     $component = BusinessPageShell::resolveComponent('help.support-business-hub', 'help.support');
 
-    return app(LivewireManager::class)->new($component)->__invoke();
+    return VoltPage::render($component);
 })->name('help-and-support');
 
 // Business pages
@@ -88,99 +93,128 @@ Route::get('/business-homepage-groomer-space-owner', function () {
 
     $component = BusinessPageShell::resolveComponent('business.homepage-business-hub', 'business.homepage');
 
-    return app(LivewireManager::class)->new($component)->__invoke();
+    return VoltPage::render($component);
 })->name('business-homepage-groomer-space-owner');
 
 // Authenticated pages (web + groomer/spacer guard)
-Volt::route('/booking-groomer', 'booking/groomer')
-    ->middleware(['auth:web,groomer_spacer'])
+Route::get('/booking-groomer', fn() => VoltPage::render('booking.groomer'))
+    ->middleware([EnsureWebOrGroomerSpacerAuthenticated::class])
     ->name('booking-groomer');
 
-Volt::route('/my-account/pet-owner-profile', 'account/profile')
-    ->middleware(['auth:web,groomer_spacer'])
+Route::get('/my-account/pet-owner-profile', fn() => VoltPage::render('account.profile'))
+    ->middleware([EnsureWebOrGroomerSpacerAuthenticated::class])
     ->name('pet-owner-profile');
 
-Volt::route('/account-settings', 'account/settings')
-    ->middleware(['auth:web,groomer_spacer', 'business.shell.business-hub'])
+Route::get('/account-settings', fn() => VoltPage::render('account.settings'))
+    ->middleware([
+        EnsureWebOrGroomerSpacerAuthenticated::class,
+        SetBusinessPageBusinessHubShell::class,
+    ])
     ->name('account-settings');
 
 Route::get('/account-settings/download-data', AccountDataExportController::class)
-    ->middleware(['auth:web,groomer_spacer', 'business.shell.business-hub'])
+    ->middleware([
+        EnsureWebOrGroomerSpacerAuthenticated::class,
+        SetBusinessPageBusinessHubShell::class,
+    ])
     ->name('account-settings.download-data');
 
 Route::redirect('/account-and-setting/settings', '/account-settings')
-    ->middleware(['auth:web,groomer_spacer']);
+    ->middleware([EnsureWebOrGroomerSpacerAuthenticated::class]);
 
-Volt::route('/account_and_setting/settings', 'account_and_setting/settings')
+Route::get('/account_and_setting/settings', fn() => VoltPage::render('account_and_setting.settings'))
     ->name('account_and_setting.settings');
 
-Volt::route('/profile_pets_preferences/about_us', 'profile_pets_preferences/about_us')
+Route::get('/profile_pets_preferences/about_us', fn() => VoltPage::render('profile_pets_preferences.about_us'))
     ->name('profile_pets_preferences.about_us');
 
-Volt::route('/profile_pets_preferences/contact_us', 'profile_pets_preferences/contact_us')
+Route::get('/profile_pets_preferences/contact_us', fn() => VoltPage::render('profile_pets_preferences.contact_us'))
     ->name('profile_pets_preferences.contact_us');
 
-Volt::route('/profile_pets_preferences/company_information', 'profile_pets_preferences/company_information')
+Route::get('/profile_pets_preferences/company_information', fn() => VoltPage::render('profile_pets_preferences.company_information'))
     ->name('profile_pets_preferences.company_information');
 
 // Cookie and overlay components
 Route::get('/cookies-overlay-card', function () {
-    return view('components.ui.cookies-overlay-card');
+    return view()->file(resource_path('views/components/ui/cookies-overlay-card.blade.php'));
 })->name('cookies-overlay-card');
 
 Route::get('/cookies', function () {
-    return view('components.ui.cookies');
+    return view()->file(resource_path('views/components/ui/cookies.blade.php'));
 })->name('cookies');
 
 Route::get('/rating-overlay-card', function () {
-    return view('components.ui.rating-overlay-card');
+    return view()->file(resource_path('views/components/ui/rating-overlay-card.blade.php'));
 })->name('rating-overlay-card');
 
 // Groomer unavailability
-Volt::route('/groomer-unavailability/location-unavailability', 'groomer/unavailability')
+Route::get('/groomer-unavailability/location-unavailability', fn() => VoltPage::render('groomer.unavailability'))
     ->name('groomer-unavailability.location-unavailability');
 
 // ===============================================================
 // Authenticated Routes
 // ===============================================================
-Volt::route('business-hub', 'business-hub')
-    ->middleware(['auth:groomer_spacer', 'verified', 'business.shell.business-hub'])
+Route::get('business-hub', fn() => VoltPage::render('business-hub'))
+    ->middleware([
+        EnsureGroomerSpacerAuthenticated::class,
+        SetBusinessPageBusinessHubShell::class,
+    ])
     ->name('business-hub');
 
 Route::post('business-hub/nav', function (Request $request) {
     BusinessHubNav::persist(BusinessHubNav::mergeFromRequest($request));
 
     return response()->noContent();
-})->middleware(['auth:groomer_spacer'])->name('business-hub.nav');
+})->middleware([EnsureGroomerSpacerAuthenticated::class])->name('business-hub.nav');
 
-Volt::route('marketing-hub', 'marketing-hub')
-    ->middleware(['auth:groomer_spacer', 'verified', 'business.shell.business-hub'])
+Route::post('business-hub/switch', function (Request $request) {
+    $current = Auth::guard('groomer_spacer')->user();
+    $target = GroomerSpacerProfile::query()->find($request->integer('profile_id'));
+
+    if (!$current instanceof GroomerSpacerProfile || !$target instanceof GroomerSpacerProfile) {
+        abort(403);
+    }
+
+    if (strcasecmp((string) $current->email, (string) $target->email) !== 0) {
+        abort(403);
+    }
+
+    Auth::guard('groomer_spacer')->login($target);
+
+    return redirect('/business-hub');
+})->middleware([EnsureGroomerSpacerAuthenticated::class])->name('business-hub.switch');
+
+Route::get('marketing-hub', fn() => VoltPage::render('marketing-hub'))
+    ->middleware([
+        EnsureGroomerSpacerAuthenticated::class,
+        SetBusinessPageBusinessHubShell::class,
+    ])
     ->name('marketing-hub');
 
 Route::post('marketing-hub/nav', function (Request $request) {
     MarketingHubNav::persist(MarketingHubNav::mergeFromRequest($request));
 
     return response()->noContent();
-})->middleware(['auth:groomer_spacer'])->name('marketing-hub.nav');
+})->middleware([EnsureGroomerSpacerAuthenticated::class])->name('marketing-hub.nav');
 
-Route::get('business-hub/bookings/{booking}/invoice.pdf', BookingInvoicePdfController::class)
-    ->middleware(['auth:groomer_spacer', 'verified'])
+Route::get('business-hub/bookings/{booking}/invoice.pdf', [BookingInvoicePdfController::class, '__invoke'])
+    ->middleware([EnsureGroomerSpacerAuthenticated::class])
     ->name('business-hub.bookings.invoice-pdf');
 
 /** Same invoice as HTML for DevTools (local env only). */
 Route::get('business-hub/bookings/{booking}/invoice.html', [BookingInvoicePdfController::class, 'previewHtml'])
-    ->middleware(['auth:groomer_spacer', 'verified'])
+    ->middleware([EnsureGroomerSpacerAuthenticated::class])
     ->name('business-hub.bookings.invoice-html');
 
-Route::middleware(['auth:web,groomer_spacer'])->group(function () {
+Route::middleware([EnsureWebOrGroomerSpacerAuthenticated::class])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
-    Volt::route('settings/profile', 'account/profile')->name('settings.profile');
+    Route::get('settings/profile', fn() => VoltPage::render('account.profile'))->name('settings.profile');
     Route::redirect('settings/password', '/account-settings?tab=login_and_security');
-    Volt::route('settings/appearance', 'settings/appearance')->name('settings.appearance');
+    Route::redirect('settings/appearance', '/account-settings')->name('settings.appearance');
 
     // Pet Details - handled by LiveWire Volt component
-    Volt::route('/pet-details', 'pet-details/manager')->name('pet-details.show');
+    Route::get('/pet-details', fn() => VoltPage::render('pet-details.manager'))->name('pet-details.show');
 
     // Pet Details form submission (traditional POST for booking-groomer page)
     Route::post('/pet-details', [PetDetailController::class, 'store'])->name('pet-details.store');
@@ -193,62 +227,6 @@ Route::middleware(['auth:web,groomer_spacer'])->group(function () {
     Route::delete('/bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
     Route::patch('/bookings/{booking}/accept', [BookingController::class, 'accept'])->name('bookings.accept');
     Route::patch('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
-
-    Route::post('/dev-mode/update-meta', function (Request $request) {
-        $request->validate([
-            'user_type' => 'nullable|in:groomer,space',
-            'account_type' => 'nullable|in:freelance,registered_business',
-        ]);
-
-        $guard = Auth::guard('groomer_spacer')->check()
-            ? 'groomer_spacer'
-            : (Auth::guard('web')->check() ? 'web' : null);
-
-        abort_unless((bool) $guard, 403);
-
-        $user = Auth::guard($guard)->user();
-        abort_unless((bool) $user, 403);
-
-        $requestedUserType = $request->input('user_type');
-        $requestedAccountType = $request->input('account_type');
-
-        if ($requestedUserType !== null && $requestedUserType !== '') {
-            $user->user_type = $requestedUserType;
-            $user->save();
-        }
-
-        // If the authenticated model is a groomer/spacer profile, persist account_type directly there.
-        if ($user instanceof GroomerSpacerProfile) {
-            if ($requestedAccountType !== null && $requestedAccountType !== '') {
-                $user->account_type = $requestedAccountType;
-                $user->save();
-            }
-        }
-
-        // When logged in via web guard, keep the linked groomer/spacer profile in sync too.
-        if ($guard === 'web' && method_exists($user, 'groomerSpacerProfile')) {
-            $profile = $user->groomerSpacerProfile;
-            if ($profile instanceof GroomerSpacerProfile) {
-                if ($requestedUserType !== null && $requestedUserType !== '') {
-                    $profile->user_type = $requestedUserType;
-                }
-                if ($requestedAccountType !== null && $requestedAccountType !== '') {
-                    $profile->account_type = $requestedAccountType;
-                }
-                $profile->save();
-            }
-        }
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'ok' => true,
-                'guard' => $guard,
-                'user_id' => $user->id ?? null,
-            ]);
-        }
-
-        return redirect()->back();
-    })->name('dev-mode.update-meta');
 });
 
 require __DIR__ . '/auth.php';

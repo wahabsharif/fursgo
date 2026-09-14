@@ -852,7 +852,8 @@ new class extends Component {
             'business-details-grid',
             'business-details-grid--three',
             'business-details-card--editing' => $editingSection === 'personal',
-        ]) :class="{ 'business-details-card--editing': editingSection === 'personal' }">
+        ])
+            :class="{ 'business-details-card--editing': editingSection === 'personal' }">
             <div class="business-details-toggle-panel" x-cloak x-show="editingSection === 'personal'">
                 <div class="business-details-edit-grid business-details-edit-grid--three">
                     <label class="business-details-input-field">
@@ -871,12 +872,12 @@ new class extends Component {
             </div>
             <div class="business-details-toggle-panel" x-show="editingSection !== 'personal'">
                 <div class="business-details-edit-grid business-details-edit-grid--three">
-                    <x-business-hub.settings.business-details.field label="Full Name (must match ID)" :value="$profile?->full_name"
-                        placeholder="Not provided" />
+                    <x-business-hub.settings.business-details.field label="Full Name (must match ID)"
+                        :value="$profile?->full_name" placeholder="Not provided" />
                     <x-business-hub.settings.business-details.field label="Email Address" :value="$profile?->email"
                         placeholder="Not provided" />
-                    <x-business-hub.settings.business-details.field label="Phone Number" :value="$businessDetails['business_phone'] ?? null"
-                        placeholder="Not provided" />
+                    <x-business-hub.settings.business-details.field label="Phone Number"
+                        :value="$businessDetails['business_phone'] ?? null" placeholder="Not provided" />
                 </div>
             </div>
         </div>
@@ -889,20 +890,20 @@ new class extends Component {
             'business-details-card',
             'business-details-profile',
             'business-details-card--editing' => $editingSection === 'business',
-        ]) :class="{ 'business-details-card--editing': editingSection === 'business' }">
+        ])
+            :class="{ 'business-details-card--editing': editingSection === 'business' }">
             <div>
                 <span class="business-details-label">Business Profile Image</span>
                 <div class="business-details-avatar" x-show="editingSection !== 'business'">
                     @if ($profileImage && $profileImage['is_image'])
-                        <img src="{{ $profileImage['url'] }}"
-                            data-fallback-src="{{ $profileImage['fallback_url'] ?? '' }}" alt="Business profile image"
+                        <img src="{{ $profileImage['url'] }}" data-fallback-src="{{ $profileImage['fallback_url'] ?? '' }}"
+                            alt="Business profile image"
                             onerror="if (this.dataset.fallbackSrc && this.src !== this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; this.removeAttribute('data-fallback-src'); }">
                     @else
                         <span class="business-details-paw" aria-hidden="true">paw</span>
                     @endif
                 </div>
-                <div class="business-details-avatar-upload" wire:key="business-profile-image-uploader"
-                    x-data="{
+                <div class="business-details-avatar-upload" wire:key="business-profile-image-uploader" x-data="{
                         uploading: false,
                         progress: 0,
                         targetProgress: 0,
@@ -966,16 +967,14 @@ new class extends Component {
                             this.progress = 0;
                             this.targetProgress = 0;
                         },
-                    }" x-cloak x-show="editingSection === 'business'"
-                    x-on:livewire-upload-start="startProgress()" x-on:livewire-upload-finish="setProgress(100)"
-                    x-on:livewire-upload-error="resetProgress()"
+                    }" x-cloak x-show="editingSection === 'business'" x-on:livewire-upload-start="startProgress()"
+                    x-on:livewire-upload-finish="setProgress(100)" x-on:livewire-upload-error="resetProgress()"
                     x-on:livewire-upload-progress="setProgress($event.detail.progress)">
                     <div class="business-details-avatar-upload__icon" aria-hidden="true">
                         <img x-cloak x-show="previewUrl" :src="previewUrl" alt="Selected business profile image">
                         @if ($profileImage && $profileImage['is_image'])
                             <img x-show="!previewUrl" src="{{ $profileImage['url'] }}"
-                                data-fallback-src="{{ $profileImage['fallback_url'] ?? '' }}"
-                                alt="Business profile image"
+                                data-fallback-src="{{ $profileImage['fallback_url'] ?? '' }}" alt="Business profile image"
                                 onerror="if (this.dataset.fallbackSrc && this.src !== this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; this.removeAttribute('data-fallback-src'); }">
                         @else
                             <svg x-show="!previewUrl" xmlns="http://www.w3.org/2000/svg" width="88" height="88"
@@ -999,9 +998,9 @@ new class extends Component {
                         @change="previewUrl && URL.revokeObjectURL(previewUrl); previewUrl = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null">
                     <button type="button" class="business-details-avatar-upload__button"
                         @click="$refs.profilePhotoInput.click()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
-                            stroke-linejoin="round" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">
                             <path d="M12 16V4" />
                             <path d="m7 9 5-5 5 5" />
                             <path d="M20 16v4H4v-4" />
@@ -1044,14 +1043,15 @@ new class extends Component {
                 </div>
                 <div class="business-details-toggle-panel" x-show="editingSection !== 'business'">
                     <div class="business-details-edit-stack">
-                        <x-business-hub.settings.business-details.field label="Business Name" :value="$businessDetails['business_name'] ?? ($businessBasics['display_name'] ?? null)"
+                        <x-business-hub.settings.business-details.field label="Business Name"
+                            :value="$businessDetails['business_name'] ?? ($businessBasics['display_name'] ?? null)"
                             placeholder="Not provided" />
                         <x-business-hub.settings.business-details.field label="Business Registration Number"
-                            :value="$businessDetails['business_registration_number'] ?? null" placeholder="Not provided" />
-                        <x-business-hub.settings.business-details.field label="Tagline" :value="$businessBasics['tagline'] ?? null"
+                            :value="$businessDetails['business_registration_number'] ?? null"
                             placeholder="Not provided" />
-                        <x-business-hub.settings.business-details.field label="Bio" :value="$businessBasics['bio'] ?? null"
-                            placeholder="Not provided" />
+                        <x-business-hub.settings.business-details.field label="Tagline"
+                            :value="$businessBasics['tagline'] ?? null" placeholder="Not provided" />
+                        <x-business-hub.settings.business-details.field label="Bio" :value="$businessBasics['bio'] ?? null" placeholder="Not provided" />
                     </div>
                 </div>
             </div>
@@ -1062,8 +1062,8 @@ new class extends Component {
         @php
             $isSpaceGallery = strtolower((string) ($profile?->user_type ?? '')) === 'space';
         @endphp
-        <x-business-hub.settings.business-details.section-title title="Photo Gallery" section="gallery" :is-editing="$editingSection === 'gallery'"
-            save-action="saveGalleryDetails" />
+        <x-business-hub.settings.business-details.section-title title="Photo Gallery" section="gallery"
+            :is-editing="$editingSection === 'gallery'" save-action="saveGalleryDetails" />
         <div class="business-details-fade-panel" x-cloak x-show="editingSection === 'gallery'">
             <div class="business-details-gallery business-details-gallery--editable">
                 @php
@@ -1085,119 +1085,118 @@ new class extends Component {
                         <div class="business-details-gallery__slot"
                             wire:key="business-gallery-edit-slot-{{ $i }}-{{ md5((string) ($image['path'] ?? 'add-slot')) }}"
                             x-data="{
-                                previewUrl: null,
-                                uploading: false,
-                                removing: false,
-                                progress: 0,
-                                targetProgress: 0,
-                                progressFrame: null,
-                                pick() {
-                                    this.progress = 0;
-                                    this.targetProgress = 0;
-                                    $wire.set('galleryReplaceIndex', {{ $hasExistingPath ? $i : 'null' }}, false);
-                                    this.$refs.galleryUploadInput.value = null;
-                                    this.$refs.galleryUploadInput.click();
-                                },
-                                preview(event) {
-                                    if (this.previewUrl) {
-                                        URL.revokeObjectURL(this.previewUrl);
-                                    }
-                                    const file = event.target.files[0] || null;
-                                    this.previewUrl = file ? URL.createObjectURL(file) : null;
-                                },
-                                clearPreview() {
-                                    if (this.uploading) {
-                                        return;
-                                    }
-                                    if (this.previewUrl) {
-                                        URL.revokeObjectURL(this.previewUrl);
-                                    }
-                                    this.previewUrl = null;
-                                    this.$refs.galleryUploadInput.value = null;
-                                    $wire.set('galleryUpload', null, false);
-                                },
-                                startProgress() {
-                                    this.cancelProgressFrame();
-                                    this.uploading = true;
-                                    this.progress = 1;
-                                    this.targetProgress = 1;
-                                },
-                                setProgress(value) {
-                                    const nextTarget = Math.max(this.targetProgress, Math.min(100, Number(value || 0)));
-                                    const startValue = this.progress;
-                                    const delta = nextTarget - startValue;
-                            
-                                    if (delta <= 0) {
-                                        return;
-                                    }
-                            
-                                    this.targetProgress = nextTarget;
-                                    this.cancelProgressFrame();
-                            
-                                    const startedAt = performance.now();
-                                    const duration = Math.min(900, Math.max(260, delta * 14));
-                                    const easeInOut = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-                            
-                                    const step = (now) => {
-                                        const elapsed = Math.min(1, (now - startedAt) / duration);
-                                        this.progress = startValue + delta * easeInOut(elapsed);
-                            
-                                        if (elapsed < 1) {
+                                        previewUrl: null,
+                                        uploading: false,
+                                        removing: false,
+                                        progress: 0,
+                                        targetProgress: 0,
+                                        progressFrame: null,
+                                        pick() {
+                                            this.progress = 0;
+                                            this.targetProgress = 0;
+                                            $wire.set('galleryReplaceIndex', {{ $hasExistingPath ? $i : 'null' }}, false);
+                                            this.$refs.galleryUploadInput.value = null;
+                                            this.$refs.galleryUploadInput.click();
+                                        },
+                                        preview(event) {
+                                            if (this.previewUrl) {
+                                                URL.revokeObjectURL(this.previewUrl);
+                                            }
+                                            const file = event.target.files[0] || null;
+                                            this.previewUrl = file ? URL.createObjectURL(file) : null;
+                                        },
+                                        clearPreview() {
+                                            if (this.uploading) {
+                                                return;
+                                            }
+                                            if (this.previewUrl) {
+                                                URL.revokeObjectURL(this.previewUrl);
+                                            }
+                                            this.previewUrl = null;
+                                            this.$refs.galleryUploadInput.value = null;
+                                            $wire.set('galleryUpload', null, false);
+                                        },
+                                        startProgress() {
+                                            this.cancelProgressFrame();
+                                            this.uploading = true;
+                                            this.progress = 1;
+                                            this.targetProgress = 1;
+                                        },
+                                        setProgress(value) {
+                                            const nextTarget = Math.max(this.targetProgress, Math.min(100, Number(value || 0)));
+                                            const startValue = this.progress;
+                                            const delta = nextTarget - startValue;
+
+                                            if (delta <= 0) {
+                                                return;
+                                            }
+
+                                            this.targetProgress = nextTarget;
+                                            this.cancelProgressFrame();
+
+                                            const startedAt = performance.now();
+                                            const duration = Math.min(900, Math.max(260, delta * 14));
+                                            const easeInOut = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+                                            const step = (now) => {
+                                                const elapsed = Math.min(1, (now - startedAt) / duration);
+                                                this.progress = startValue + delta * easeInOut(elapsed);
+
+                                                if (elapsed < 1) {
+                                                    this.progressFrame = requestAnimationFrame(step);
+                                                    return;
+                                                }
+
+                                                this.progress = nextTarget;
+                                                this.progressFrame = null;
+
+                                                if (this.progress >= 100 && this.targetProgress >= 100) {
+                                                    setTimeout(() => {
+                                                        this.uploading = false;
+                                                        this.progress = 0;
+                                                        this.targetProgress = 0;
+                                                    }, 250);
+                                                }
+                                            };
+
                                             this.progressFrame = requestAnimationFrame(step);
-                                            return;
-                                        }
-                            
-                                        this.progress = nextTarget;
-                                        this.progressFrame = null;
-                            
-                                        if (this.progress >= 100 && this.targetProgress >= 100) {
+                                        },
+                                        finishProgress() {
+                                            this.cancelProgressFrame();
+                                            this.progress = 100;
+                                            this.targetProgress = 100;
                                             setTimeout(() => {
                                                 this.uploading = false;
                                                 this.progress = 0;
                                                 this.targetProgress = 0;
-                                            }, 250);
-                                        }
-                                    };
-                            
-                                    this.progressFrame = requestAnimationFrame(step);
-                                },
-                                finishProgress() {
-                                    this.cancelProgressFrame();
-                                    this.progress = 100;
-                                    this.targetProgress = 100;
-                                    setTimeout(() => {
-                                        this.uploading = false;
-                                        this.progress = 0;
-                                        this.targetProgress = 0;
-                                    }, 80);
-                                },
-                                cancelProgressFrame() {
-                                    if (this.progressFrame) {
-                                        cancelAnimationFrame(this.progressFrame);
-                                        this.progressFrame = null;
-                                    }
-                                },
-                                reset() {
-                                    this.cancelProgressFrame();
-                                    this.uploading = false;
-                                    this.progress = 0;
-                                    this.targetProgress = 0;
-                                },
-                                remove(index) {
-                                    if (this.removing) {
-                                        return;
-                                    }
-                                    this.removing = true;
-                                    setTimeout(() => $wire.removeGalleryImage(index), 240);
-                                },
-                            }" x-on:livewire-upload-start="startProgress()"
+                                            }, 80);
+                                        },
+                                        cancelProgressFrame() {
+                                            if (this.progressFrame) {
+                                                cancelAnimationFrame(this.progressFrame);
+                                                this.progressFrame = null;
+                                            }
+                                        },
+                                        reset() {
+                                            this.cancelProgressFrame();
+                                            this.uploading = false;
+                                            this.progress = 0;
+                                            this.targetProgress = 0;
+                                        },
+                                        remove(index) {
+                                            if (this.removing) {
+                                                return;
+                                            }
+                                            this.removing = true;
+                                            setTimeout(() => $wire.removeGalleryImage(index), 240);
+                                        },
+                                    }" x-on:livewire-upload-start="startProgress()"
                             x-on:livewire-upload-progress="setProgress($event.detail.progress)"
                             x-on:livewire-upload-finish="finishProgress()" x-on:livewire-upload-error="reset()"
                             :class="{ 'business-details-gallery__slot--removing': removing }">
                             <input x-ref="galleryUploadInput" type="file" class="business-details-gallery__input"
                                 wire:model="galleryUpload" accept="image/*" @change="preview($event)">
-                            <button type="button"
-                                class="business-details-gallery__item business-details-gallery__upload-tile"
+                            <button type="button" class="business-details-gallery__item business-details-gallery__upload-tile"
                                 @click="pick()"
                                 aria-label="{{ $hasUsableImage ? 'Replace gallery image ' . ($i + 1) : 'Upload gallery image ' . ($i + 1) }}">
                                 <template x-if="previewUrl">
@@ -1211,25 +1210,23 @@ new class extends Component {
                                 </template>
                                 <span x-show="!previewUrl" class="business-details-gallery__current">
                                     @if ($hasUsableImage)
-                                        <img src="{{ $image['url'] }}"
-                                            data-fallback-src="{{ $image['fallback_url'] ?? '' }}" decoding="async"
-                                            alt="Business gallery image {{ $i + 1 }}"
+                                        <img src="{{ $image['url'] }}" data-fallback-src="{{ $image['fallback_url'] ?? '' }}"
+                                            decoding="async" alt="Business gallery image {{ $i + 1 }}"
                                             onerror="if (this.dataset.fallbackSrc && this.src !== this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; this.removeAttribute('data-fallback-src'); return; } this.hidden = true; this.nextElementSibling.hidden = false;">
                                         <span class="business-details-gallery-add" hidden aria-hidden="true">
                                             @if ($isSpaceGallery)
                                                 <x-business-hub.settings.business-details.space-gallery-placeholder />
                                             @else
-                                                <svg class="business-details-gallery-paw"
-                                                    xmlns="http://www.w3.org/2000/svg" width="61" height="48"
-                                                    viewBox="0 0 61 48" fill="none">
+                                                <svg class="business-details-gallery-paw" xmlns="http://www.w3.org/2000/svg" width="61"
+                                                    height="48" viewBox="0 0 61 48" fill="none">
                                                     <path fill-rule="evenodd" clip-rule="evenodd"
                                                         d="M19.5692 0C17.4166 0 15.7293 1.29255 14.6856 2.84275C13.6289 4.40583 13.0461 6.44557 13.0461 8.58837C13.0461 10.7312 13.6289 12.7709 14.6856 14.334C15.7293 15.8799 17.4166 17.1767 19.5692 17.1767C21.7218 17.1767 23.4091 15.8842 24.4528 14.334C25.5096 12.7709 26.0923 10.7312 26.0923 8.58837C26.0923 6.44557 25.5096 4.40583 24.4528 2.84275C23.4091 1.29684 21.7218 0 19.5692 0ZM41.3128 0C39.1602 0 37.4729 1.29255 36.4292 2.84275C35.3724 4.40583 34.7897 6.44557 34.7897 8.58837C34.7897 10.7312 35.3724 12.7709 36.4292 14.334C37.4729 15.8799 39.1602 17.1767 41.3128 17.1767C43.4654 17.1767 45.1527 15.8842 46.1964 14.334C47.2531 12.7709 47.8359 10.7312 47.8359 8.58837C47.8359 6.44557 47.2531 4.40583 46.1964 2.84275C45.1527 1.29684 43.4654 0 41.3128 0ZM6.52307 19.3238C4.37046 19.3238 2.68316 20.6164 1.63947 22.1666C0.582728 23.7297 0 25.7694 0 27.9122C0 30.055 0.582728 32.0947 1.63947 33.6578C2.68316 35.2037 4.37046 36.5006 6.52307 36.5006C8.67568 36.5006 10.363 35.208 11.4067 33.6578C12.4634 32.0947 13.0461 30.055 13.0461 27.9122C13.0461 25.7694 12.4634 23.7297 11.4067 22.1666C10.363 20.6207 8.67568 19.3238 6.52307 19.3238ZM30.441 19.3238C25.2225 19.3238 21.3565 22.0893 18.8865 25.5203C16.4468 28.8999 15.2205 33.0953 15.2205 36.5006C15.2205 40.4684 17.634 43.2296 20.5955 44.8828C23.5091 46.5146 27.1621 47.236 30.441 47.236C33.7199 47.236 37.3728 46.5189 40.2865 44.8828C43.2436 43.2253 45.6615 40.4684 45.6615 36.5006C45.6615 33.0953 44.4352 28.8999 41.9955 25.5203C39.5298 22.085 35.6638 19.3238 30.441 19.3238ZM54.3589 19.3238C52.2063 19.3238 50.519 20.6164 49.4753 22.1666C48.4186 23.7297 47.8359 25.7694 47.8359 27.9122C47.8359 30.055 48.4186 32.0947 49.4753 33.6578C50.519 35.2037 52.2063 36.5006 54.3589 36.5006C56.5115 36.5006 58.1988 35.208 59.2425 33.6578C60.2993 32.0947 60.882 30.055 60.882 27.9122C60.882 25.7694 60.2993 23.7297 59.2425 22.1666C58.1988 20.6207 56.5115 19.3238 54.3589 19.3238Z"
                                                         fill="#E5E5E5" />
                                                 </svg>
                                             @endif
                                             <span class="business-details-gallery-add__plus">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                                    viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
+                                                    fill="none" aria-hidden="true">
                                                     <path
                                                         d="M9.72378 19.4476C4.36181 19.4476 0 15.0857 0 9.72378C0 4.36181 4.36181 0 9.72378 0C15.0857 0 19.4476 4.36181 19.4476 9.72378C19.4476 15.0857 15.0857 19.4476 9.72378 19.4476Z"
                                                         fill="#9D9B98" />
@@ -1241,17 +1238,16 @@ new class extends Component {
                                             @if ($isSpaceGallery)
                                                 <x-business-hub.settings.business-details.space-gallery-placeholder />
                                             @else
-                                                <svg class="business-details-gallery-paw"
-                                                    xmlns="http://www.w3.org/2000/svg" width="61" height="48"
-                                                    viewBox="0 0 61 48" fill="none">
+                                                <svg class="business-details-gallery-paw" xmlns="http://www.w3.org/2000/svg" width="61"
+                                                    height="48" viewBox="0 0 61 48" fill="none">
                                                     <path fill-rule="evenodd" clip-rule="evenodd"
                                                         d="M19.5692 0C17.4166 0 15.7293 1.29255 14.6856 2.84275C13.6289 4.40583 13.0461 6.44557 13.0461 8.58837C13.0461 10.7312 13.6289 12.7709 14.6856 14.334C15.7293 15.8799 17.4166 17.1767 19.5692 17.1767C21.7218 17.1767 23.4091 15.8842 24.4528 14.334C25.5096 12.7709 26.0923 10.7312 26.0923 8.58837C26.0923 6.44557 25.5096 4.40583 24.4528 2.84275C23.4091 1.29684 21.7218 0 19.5692 0ZM41.3128 0C39.1602 0 37.4729 1.29255 36.4292 2.84275C35.3724 4.40583 34.7897 6.44557 34.7897 8.58837C34.7897 10.7312 35.3724 12.7709 36.4292 14.334C37.4729 15.8799 39.1602 17.1767 41.3128 17.1767C43.4654 17.1767 45.1527 15.8842 46.1964 14.334C47.2531 12.7709 47.8359 10.7312 47.8359 8.58837C47.8359 6.44557 47.2531 4.40583 46.1964 2.84275C45.1527 1.29684 43.4654 0 41.3128 0ZM6.52307 19.3238C4.37046 19.3238 2.68316 20.6164 1.63947 22.1666C0.582728 23.7297 0 25.7694 0 27.9122C0 30.055 0.582728 32.0947 1.63947 33.6578C2.68316 35.2037 4.37046 36.5006 6.52307 36.5006C8.67568 36.5006 10.363 35.208 11.4067 33.6578C12.4634 32.0947 13.0461 30.055 13.0461 27.9122C13.0461 25.7694 12.4634 23.7297 11.4067 22.1666C10.363 20.6207 8.67568 19.3238 6.52307 19.3238ZM30.441 19.3238C25.2225 19.3238 21.3565 22.0893 18.8865 25.5203C16.4468 28.8999 15.2205 33.0953 15.2205 36.5006C15.2205 40.4684 17.634 43.2296 20.5955 44.8828C23.5091 46.5146 27.1621 47.236 30.441 47.236C33.7199 47.236 37.3728 46.5189 40.2865 44.8828C43.2436 43.2253 45.6615 40.4684 45.6615 36.5006C45.6615 33.0953 44.4352 28.8999 41.9955 25.5203C39.5298 22.085 35.6638 19.3238 30.441 19.3238ZM54.3589 19.3238C52.2063 19.3238 50.519 20.6164 49.4753 22.1666C48.4186 23.7297 47.8359 25.7694 47.8359 27.9122C47.8359 30.055 48.4186 32.0947 49.4753 33.6578C50.519 35.2037 52.2063 36.5006 54.3589 36.5006C56.5115 36.5006 58.1988 35.208 59.2425 33.6578C60.2993 32.0947 60.882 30.055 60.882 27.9122C60.882 25.7694 60.2993 23.7297 59.2425 22.1666C58.1988 20.6207 56.5115 19.3238 54.3589 19.3238Z"
                                                         fill="#E5E5E5" />
                                                 </svg>
                                             @endif
                                             <span class="business-details-gallery-add__plus">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                                    viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
+                                                    fill="none" aria-hidden="true">
                                                     <path
                                                         d="M9.72378 19.4476C4.36181 19.4476 0 15.0857 0 9.72378C0 4.36181 4.36181 0 9.72378 0C15.0857 0 19.4476 4.36181 19.4476 9.72378C19.4476 15.0857 15.0857 19.4476 9.72378 19.4476Z"
                                                         fill="#9D9B98" />
@@ -1264,24 +1260,22 @@ new class extends Component {
                             @if ($hasExistingPath)
                                 <span class="business-details-gallery-remove-spinner" x-cloak x-show="removing"
                                     aria-hidden="true"></span>
-                                <button type="button" class="business-details-gallery-remove"
-                                    @click.stop="remove({{ $i }})" :disabled="removing || uploading"
-                                    aria-label="Remove gallery image {{ $i + 1 }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"
-                                        viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                                        <path d="M1.2 1.2L10.8 10.8M10.8 1.2L1.2 10.8" stroke="currentColor"
-                                            stroke-width="1.8" stroke-linecap="round" />
+                                <button type="button" class="business-details-gallery-remove" @click.stop="remove({{ $i }})"
+                                    :disabled="removing || uploading" aria-label="Remove gallery image {{ $i + 1 }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none"
+                                        aria-hidden="true">
+                                        <path d="M1.2 1.2L10.8 10.8M10.8 1.2L1.2 10.8" stroke="currentColor" stroke-width="1.8"
+                                            stroke-linecap="round" />
                                     </svg>
                                 </button>
                             @else
-                                <button type="button" class="business-details-gallery-remove" x-cloak
-                                    x-show="previewUrl" @click.stop="clearPreview()" :disabled="uploading"
-                                    wire:loading.attr="disabled" wire:target="galleryUpload"
-                                    aria-label="Clear selected gallery image">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"
-                                        viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                                        <path d="M1.2 1.2L10.8 10.8M10.8 1.2L1.2 10.8" stroke="currentColor"
-                                            stroke-width="1.8" stroke-linecap="round" />
+                                <button type="button" class="business-details-gallery-remove" x-cloak x-show="previewUrl"
+                                    @click.stop="clearPreview()" :disabled="uploading" wire:loading.attr="disabled"
+                                    wire:target="galleryUpload" aria-label="Clear selected gallery image">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none"
+                                        aria-hidden="true">
+                                        <path d="M1.2 1.2L10.8 10.8M10.8 1.2L1.2 10.8" stroke="currentColor" stroke-width="1.8"
+                                            stroke-linecap="round" />
                                     </svg>
                                 </button>
                             @endif
@@ -1304,15 +1298,15 @@ new class extends Component {
                 @endphp
                 <div class="business-details-gallery__item">
                     @if ($hasUsableImage)
-                        <img src="{{ $image['url'] }}" data-fallback-src="{{ $image['fallback_url'] ?? '' }}"
-                            decoding="async" alt="Business gallery image {{ $i + 1 }}"
+                        <img src="{{ $image['url'] }}" data-fallback-src="{{ $image['fallback_url'] ?? '' }}" decoding="async"
+                            alt="Business gallery image {{ $i + 1 }}"
                             onerror="if (this.dataset.fallbackSrc && this.src !== this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; this.removeAttribute('data-fallback-src'); return; } this.hidden = true; this.nextElementSibling.hidden = false;">
                         <span class="business-details-gallery-add" hidden aria-hidden="true">
                             @if ($isSpaceGallery)
                                 <x-business-hub.settings.business-details.space-gallery-placeholder />
                             @else
-                                <svg class="business-details-gallery-paw" xmlns="http://www.w3.org/2000/svg"
-                                    width="61" height="48" viewBox="0 0 61 48" fill="none">
+                                <svg class="business-details-gallery-paw" xmlns="http://www.w3.org/2000/svg" width="61" height="48"
+                                    viewBox="0 0 61 48" fill="none">
                                     <path fill-rule="evenodd" clip-rule="evenodd"
                                         d="M19.5692 0C17.4166 0 15.7293 1.29255 14.6856 2.84275C13.6289 4.40583 13.0461 6.44557 13.0461 8.58837C13.0461 10.7312 13.6289 12.7709 14.6856 14.334C15.7293 15.8799 17.4166 17.1767 19.5692 17.1767C21.7218 17.1767 23.4091 15.8842 24.4528 14.334C25.5096 12.7709 26.0923 10.7312 26.0923 8.58837C26.0923 6.44557 25.5096 4.40583 24.4528 2.84275C23.4091 1.29684 21.7218 0 19.5692 0ZM41.3128 0C39.1602 0 37.4729 1.29255 36.4292 2.84275C35.3724 4.40583 34.7897 6.44557 34.7897 8.58837C34.7897 10.7312 35.3724 12.7709 36.4292 14.334C37.4729 15.8799 39.1602 17.1767 41.3128 17.1767C43.4654 17.1767 45.1527 15.8842 46.1964 14.334C47.2531 12.7709 47.8359 10.7312 47.8359 8.58837C47.8359 6.44557 47.2531 4.40583 46.1964 2.84275C45.1527 1.29684 43.4654 0 41.3128 0ZM6.52307 19.3238C4.37046 19.3238 2.68316 20.6164 1.63947 22.1666C0.582728 23.7297 0 25.7694 0 27.9122C0 30.055 0.582728 32.0947 1.63947 33.6578C2.68316 35.2037 4.37046 36.5006 6.52307 36.5006C8.67568 36.5006 10.363 35.208 11.4067 33.6578C12.4634 32.0947 13.0461 30.055 13.0461 27.9122C13.0461 25.7694 12.4634 23.7297 11.4067 22.1666C10.363 20.6207 8.67568 19.3238 6.52307 19.3238ZM30.441 19.3238C25.2225 19.3238 21.3565 22.0893 18.8865 25.5203C16.4468 28.8999 15.2205 33.0953 15.2205 36.5006C15.2205 40.4684 17.634 43.2296 20.5955 44.8828C23.5091 46.5146 27.1621 47.236 30.441 47.236C33.7199 47.236 37.3728 46.5189 40.2865 44.8828C43.2436 43.2253 45.6615 40.4684 45.6615 36.5006C45.6615 33.0953 44.4352 28.8999 41.9955 25.5203C39.5298 22.085 35.6638 19.3238 30.441 19.3238ZM54.3589 19.3238C52.2063 19.3238 50.519 20.6164 49.4753 22.1666C48.4186 23.7297 47.8359 25.7694 47.8359 27.9122C47.8359 30.055 48.4186 32.0947 49.4753 33.6578C50.519 35.2037 52.2063 36.5006 54.3589 36.5006C56.5115 36.5006 58.1988 35.208 59.2425 33.6578C60.2993 32.0947 60.882 30.055 60.882 27.9122C60.882 25.7694 60.2993 23.7297 59.2425 22.1666C58.1988 20.6207 56.5115 19.3238 54.3589 19.3238Z"
                                         fill="#E5E5E5" />
@@ -1324,8 +1318,8 @@ new class extends Component {
                             @if ($isSpaceGallery)
                                 <x-business-hub.settings.business-details.space-gallery-placeholder />
                             @else
-                                <svg class="business-details-gallery-paw" xmlns="http://www.w3.org/2000/svg"
-                                    width="61" height="48" viewBox="0 0 61 48" fill="none">
+                                <svg class="business-details-gallery-paw" xmlns="http://www.w3.org/2000/svg" width="61" height="48"
+                                    viewBox="0 0 61 48" fill="none">
                                     <path fill-rule="evenodd" clip-rule="evenodd"
                                         d="M19.5692 0C17.4166 0 15.7293 1.29255 14.6856 2.84275C13.6289 4.40583 13.0461 6.44557 13.0461 8.58837C13.0461 10.7312 13.6289 12.7709 14.6856 14.334C15.7293 15.8799 17.4166 17.1767 19.5692 17.1767C21.7218 17.1767 23.4091 15.8842 24.4528 14.334C25.5096 12.7709 26.0923 10.7312 26.0923 8.58837C26.0923 6.44557 25.5096 4.40583 24.4528 2.84275C23.4091 1.29684 21.7218 0 19.5692 0ZM41.3128 0C39.1602 0 37.4729 1.29255 36.4292 2.84275C35.3724 4.40583 34.7897 6.44557 34.7897 8.58837C34.7897 10.7312 35.3724 12.7709 36.4292 14.334C37.4729 15.8799 39.1602 17.1767 41.3128 17.1767C43.4654 17.1767 45.1527 15.8842 46.1964 14.334C47.2531 12.7709 47.8359 10.7312 47.8359 8.58837C47.8359 6.44557 47.2531 4.40583 46.1964 2.84275C45.1527 1.29684 43.4654 0 41.3128 0ZM6.52307 19.3238C4.37046 19.3238 2.68316 20.6164 1.63947 22.1666C0.582728 23.7297 0 25.7694 0 27.9122C0 30.055 0.582728 32.0947 1.63947 33.6578C2.68316 35.2037 4.37046 36.5006 6.52307 36.5006C8.67568 36.5006 10.363 35.208 11.4067 33.6578C12.4634 32.0947 13.0461 30.055 13.0461 27.9122C13.0461 25.7694 12.4634 23.7297 11.4067 22.1666C10.363 20.6207 8.67568 19.3238 6.52307 19.3238ZM30.441 19.3238C25.2225 19.3238 21.3565 22.0893 18.8865 25.5203C16.4468 28.8999 15.2205 33.0953 15.2205 36.5006C15.2205 40.4684 17.634 43.2296 20.5955 44.8828C23.5091 46.5146 27.1621 47.236 30.441 47.236C33.7199 47.236 37.3728 46.5189 40.2865 44.8828C43.2436 43.2253 45.6615 40.4684 45.6615 36.5006C45.6615 33.0953 44.4352 28.8999 41.9955 25.5203C39.5298 22.085 35.6638 19.3238 30.441 19.3238ZM54.3589 19.3238C52.2063 19.3238 50.519 20.6164 49.4753 22.1666C48.4186 23.7297 47.8359 25.7694 47.8359 27.9122C47.8359 30.055 48.4186 32.0947 49.4753 33.6578C50.519 35.2037 52.2063 36.5006 54.3589 36.5006C56.5115 36.5006 58.1988 35.208 59.2425 33.6578C60.2993 32.0947 60.882 30.055 60.882 27.9122C60.882 25.7694 60.2993 23.7297 59.2425 22.1666C58.1988 20.6207 56.5115 19.3238 54.3589 19.3238Z"
                                         fill="#E5E5E5" />
@@ -1340,12 +1334,11 @@ new class extends Component {
             @forelse ($gallery as $i => $image)
                 <div class="business-details-gallery__item">
                     @if ($image && $image['is_image'])
-                        <img src="{{ $image['url'] }}" data-fallback-src="{{ $image['fallback_url'] ?? '' }}"
-                            decoding="async" alt="Business gallery image {{ $i + 1 }}"
+                        <img src="{{ $image['url'] }}" data-fallback-src="{{ $image['fallback_url'] ?? '' }}" decoding="async"
+                            alt="Business gallery image {{ $i + 1 }}"
                             onerror="if (this.dataset.fallbackSrc && this.src !== this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; this.removeAttribute('data-fallback-src'); return; } this.hidden = true; this.nextElementSibling.hidden = false;">
                         <span class="business-details-gallery-placeholder" hidden aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="61" height="48"
-                                viewBox="0 0 61 48" fill="none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="61" height="48" viewBox="0 0 61 48" fill="none">
                                 <path fill-rule="evenodd" clip-rule="evenodd"
                                     d="M19.5733 0C17.4202 0 15.7326 1.29282 14.6886 2.84334C13.6317 4.40674 13.0488 6.4469 13.0488 8.59015C13.0488 10.7334 13.6317 12.7735 14.6886 14.337C15.7326 15.8832 17.4202 17.1803 19.5733 17.1803C21.7263 17.1803 23.414 15.8875 24.4579 14.337C25.5148 12.7735 26.0977 10.7334 26.0977 8.59015C26.0977 6.4469 25.5148 4.40674 24.4579 2.84334C23.414 1.29711 21.7263 0 19.5733 0ZM41.3213 0C39.1683 0 37.4806 1.29282 36.4367 2.84334C35.3798 4.40674 34.7969 6.4469 34.7969 8.59015C34.7969 10.7334 35.3798 12.7735 36.4367 14.337C37.4806 15.8832 39.1683 17.1803 41.3213 17.1803C43.4744 17.1803 45.162 15.8875 46.2059 14.337C47.2629 12.7735 47.8457 10.7334 47.8457 8.59015C47.8457 6.4469 47.2629 4.40674 46.2059 2.84334C45.162 1.29711 43.4744 0 41.3213 0ZM6.52442 19.3278C4.37136 19.3278 2.68371 20.6206 1.6398 22.1712C0.582848 23.7346 0 25.7747 0 27.918C0 30.0612 0.582848 32.1014 1.6398 33.6648C2.68371 35.211 4.37136 36.5081 6.52442 36.5081C8.67748 36.5081 10.3651 35.2153 11.409 33.6648C12.466 32.1014 13.0488 30.0612 13.0488 27.918C13.0488 25.7747 12.466 23.7346 11.409 22.1712C10.3651 20.6249 8.67748 19.3278 6.52442 19.3278ZM30.4473 19.3278C25.2278 19.3278 21.361 22.0939 18.8904 25.5256C16.4502 28.9058 15.2236 33.1021 15.2236 36.5081C15.2236 40.4768 17.6377 43.2385 20.5998 44.8921C23.514 46.5242 27.1677 47.2458 30.4473 47.2458C33.7269 47.2458 37.3806 46.5285 40.2948 44.8921C43.2526 43.2342 45.6709 40.4768 45.6709 36.5081C45.6709 33.1021 44.4443 28.9058 42.0042 25.5256C39.538 22.0896 35.6712 19.3278 30.4473 19.3278ZM54.3702 19.3278C52.2171 19.3278 50.5295 20.6206 49.4855 22.1712C48.4286 23.7346 47.8457 25.7747 47.8457 27.918C47.8457 30.0612 48.4286 32.1014 49.4855 33.6648C50.5295 35.211 52.2171 36.5081 54.3702 36.5081C56.5232 36.5081 58.2109 35.2153 59.2548 33.6648C60.3117 32.1014 60.8946 30.0612 60.8946 27.918C60.8946 25.7747 60.3117 23.7346 59.2548 22.1712C58.2109 20.6249 56.5232 19.3278 54.3702 19.3278Z"
                                     fill="#E5E5E5" />
@@ -1353,8 +1346,7 @@ new class extends Component {
                         </span>
                     @else
                         <span class="business-details-gallery-placeholder" aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="61" height="48"
-                                viewBox="0 0 61 48" fill="none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="61" height="48" viewBox="0 0 61 48" fill="none">
                                 <path fill-rule="evenodd" clip-rule="evenodd"
                                     d="M19.5733 0C17.4202 0 15.7326 1.29282 14.6886 2.84334C13.6317 4.40674 13.0488 6.4469 13.0488 8.59015C13.0488 10.7334 13.6317 12.7735 14.6886 14.337C15.7326 15.8832 17.4202 17.1803 19.5733 17.1803C21.7263 17.1803 23.414 15.8875 24.4579 14.337C25.5148 12.7735 26.0977 10.7334 26.0977 8.59015C26.0977 6.4469 25.5148 4.40674 24.4579 2.84334C23.414 1.29711 21.7263 0 19.5733 0ZM41.3213 0C39.1683 0 37.4806 1.29282 36.4367 2.84334C35.3798 4.40674 34.7969 6.4469 34.7969 8.59015C34.7969 10.7334 35.3798 12.7735 36.4367 14.337C37.4806 15.8832 39.1683 17.1803 41.3213 17.1803C43.4744 17.1803 45.162 15.8875 46.2059 14.337C47.2629 12.7735 47.8457 10.7334 47.8457 8.59015C47.8457 6.4469 47.2629 4.40674 46.2059 2.84334C45.162 1.29711 43.4744 0 41.3213 0ZM6.52442 19.3278C4.37136 19.3278 2.68371 20.6206 1.6398 22.1712C0.582848 23.7346 0 25.7747 0 27.918C0 30.0612 0.582848 32.1014 1.6398 33.6648C2.68371 35.211 4.37136 36.5081 6.52442 36.5081C8.67748 36.5081 10.3651 35.2153 11.409 33.6648C12.466 32.1014 13.0488 30.0612 13.0488 27.918C13.0488 25.7747 12.466 23.7346 11.409 22.1712C10.3651 20.6249 8.67748 19.3278 6.52442 19.3278ZM30.4473 19.3278C25.2278 19.3278 21.361 22.0939 18.8904 25.5256C16.4502 28.9058 15.2236 33.1021 15.2236 36.5081C15.2236 40.4768 17.6377 43.2385 20.5998 44.8921C23.514 46.5242 27.1677 47.2458 30.4473 47.2458C33.7269 47.2458 37.3806 46.5285 40.2948 44.8921C43.2526 43.2342 45.6709 40.4768 45.6709 36.5081C45.6709 33.1021 44.4443 28.9058 42.0042 25.5256C39.538 22.0896 35.6712 19.3278 30.4473 19.3278ZM54.3702 19.3278C52.2171 19.3278 50.5295 20.6206 49.4855 22.1712C48.4286 23.7346 47.8457 25.7747 47.8457 27.918C47.8457 30.0612 48.4286 32.1014 49.4855 33.6648C50.5295 35.211 52.2171 36.5081 54.3702 36.5081C56.5232 36.5081 58.2109 35.2153 59.2548 33.6648C60.3117 32.1014 60.8946 30.0612 60.8946 27.918C60.8946 25.7747 60.3117 23.7346 59.2548 22.1712C58.2109 20.6249 56.5232 19.3278 54.3702 19.3278Z"
                                     fill="#E5E5E5" />
@@ -1366,8 +1358,7 @@ new class extends Component {
                 @foreach ([] as $i)
                     <div class="business-details-gallery__item">
                         <span class="business-details-gallery-placeholder" aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="61" height="48"
-                                viewBox="0 0 61 48" fill="none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="61" height="48" viewBox="0 0 61 48" fill="none">
                                 <path fill-rule="evenodd" clip-rule="evenodd"
                                     d="M19.5733 0C17.4202 0 15.7326 1.29282 14.6886 2.84334C13.6317 4.40674 13.0488 6.4469 13.0488 8.59015C13.0488 10.7334 13.6317 12.7735 14.6886 14.337C15.7326 15.8832 17.4202 17.1803 19.5733 17.1803C21.7263 17.1803 23.414 15.8875 24.4579 14.337C25.5148 12.7735 26.0977 10.7334 26.0977 8.59015C26.0977 6.4469 25.5148 4.40674 24.4579 2.84334C23.414 1.29711 21.7263 0 19.5733 0ZM41.3213 0C39.1683 0 37.4806 1.29282 36.4367 2.84334C35.3798 4.40674 34.7969 6.4469 34.7969 8.59015C34.7969 10.7334 35.3798 12.7735 36.4367 14.337C37.4806 15.8832 39.1683 17.1803 41.3213 17.1803C43.4744 17.1803 45.162 15.8875 46.2059 14.337C47.2629 12.7735 47.8457 10.7334 47.8457 8.59015C47.8457 6.4469 47.2629 4.40674 46.2059 2.84334C45.162 1.29711 43.4744 0 41.3213 0ZM6.52442 19.3278C4.37136 19.3278 2.68371 20.6206 1.6398 22.1712C0.582848 23.7346 0 25.7747 0 27.918C0 30.0612 0.582848 32.1014 1.6398 33.6648C2.68371 35.211 4.37136 36.5081 6.52442 36.5081C8.67748 36.5081 10.3651 35.2153 11.409 33.6648C12.466 32.1014 13.0488 30.0612 13.0488 27.918C13.0488 25.7747 12.466 23.7346 11.409 22.1712C10.3651 20.6249 8.67748 19.3278 6.52442 19.3278ZM30.4473 19.3278C25.2278 19.3278 21.361 22.0939 18.8904 25.5256C16.4502 28.9058 15.2236 33.1021 15.2236 36.5081C15.2236 40.4768 17.6377 43.2385 20.5998 44.8921C23.514 46.5242 27.1677 47.2458 30.4473 47.2458C33.7269 47.2458 37.3806 46.5285 40.2948 44.8921C43.2526 43.2342 45.6709 40.4768 45.6709 36.5081C45.6709 33.1021 44.4443 28.9058 42.0042 25.5256C39.538 22.0896 35.6712 19.3278 30.4473 19.3278ZM54.3702 19.3278C52.2171 19.3278 50.5295 20.6206 49.4855 22.1712C48.4286 23.7346 47.8457 25.7747 47.8457 27.918C47.8457 30.0612 48.4286 32.1014 49.4855 33.6648C50.5295 35.211 52.2171 36.5081 54.3702 36.5081C56.5232 36.5081 58.2109 35.2153 59.2548 33.6648C60.3117 32.1014 60.8946 30.0612 60.8946 27.918C60.8946 25.7747 60.3117 23.7346 59.2548 22.1712C58.2109 20.6249 56.5232 19.3278 54.3702 19.3278Z"
                                     fill="#E5E5E5" />
@@ -1387,7 +1378,8 @@ new class extends Component {
             'business-details-grid',
             'business-details-grid--four',
             'business-details-card--editing' => $editingSection === 'payout',
-        ]) :class="{ 'business-details-card--editing': editingSection === 'payout' }">
+        ])
+            :class="{ 'business-details-card--editing': editingSection === 'payout' }">
             <div class="business-details-toggle-panel" x-cloak x-show="editingSection === 'payout'">
                 <div class="business-details-edit-grid business-details-edit-grid--two">
                     <label class="business-details-input-field">
@@ -1410,12 +1402,12 @@ new class extends Component {
             </div>
             <div class="business-details-toggle-panel" x-show="editingSection !== 'payout'">
                 <div class="business-details-edit-grid business-details-edit-grid--four">
-                    <x-business-hub.settings.business-details.field label="Account Holder Name" :value="$payoutDetails['account_holder_name'] ?? null"
-                        placeholder="Not provided" />
-                    <x-business-hub.settings.business-details.field label="Account Number" :value="$payoutDetails['account_number'] ?? null"
-                        placeholder="Not provided" />
-                    <x-business-hub.settings.business-details.field label="Sort Code" :value="$payoutDetails['sort_code'] ?? null"
-                        placeholder="Not provided" />
+                    <x-business-hub.settings.business-details.field label="Account Holder Name"
+                        :value="$payoutDetails['account_holder_name'] ?? null" placeholder="Not provided" />
+                    <x-business-hub.settings.business-details.field label="Account Number"
+                        :value="$payoutDetails['account_number'] ?? null" placeholder="Not provided" />
+                    <x-business-hub.settings.business-details.field label="Sort Code"
+                        :value="$payoutDetails['sort_code'] ?? null" placeholder="Not provided" />
                     <x-business-hub.settings.business-details.field label="IBAN" :value="$payoutDetails['iban'] ?? null"
                         placeholder="Not provided" />
                 </div>
@@ -1424,8 +1416,8 @@ new class extends Component {
     </section>
 
     <section class="business-details-block">
-        <x-business-hub.settings.business-details.section-title title="Business ID" :tone="$businessIdHasIssue ? 'warning' : 'success'"
-            section="business-id" :is-editing="$editingSection === 'business-id'" save-action="saveBusinessIdDetails" />
+        <x-business-hub.settings.business-details.section-title title="Business ID" :tone="$businessIdHasIssue ? 'warning' : 'success'" section="business-id" :is-editing="$editingSection === 'business-id'"
+            save-action="saveBusinessIdDetails" />
         <div @class([
             'business-details-card',
             'business-details-files',
@@ -1484,8 +1476,7 @@ new class extends Component {
                             this.progressTimer = null;
                         }
                     },
-                }"
-                    x-on:livewire-upload-start="startUpload()" x-on:livewire-upload-finish="finishUpload()"
+                }" x-on:livewire-upload-start="startUpload()" x-on:livewire-upload-finish="finishUpload()"
                     x-on:livewire-upload-error="resetUpload()"
                     x-on:livewire-upload-progress="setUploadProgress($event.detail.progress)">
                     <textarea class="business-details-sr-field" rows="4" wire:model.defer="businessIdPathsText"
@@ -1497,9 +1488,9 @@ new class extends Component {
                         <div class="business-details-upload-tabs">
                             <button type="button" class="business-details-upload-tab"
                                 @click.stop="$refs.businessIdInput.click()">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                    stroke-linejoin="round" aria-hidden="true">
                                     <path
                                         d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                                 </svg>
@@ -1507,9 +1498,9 @@ new class extends Component {
                             </button>
                             <button type="button" class="business-details-upload-tab"
                                 @click.stop="$refs.businessIdInput.click()">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                    stroke-linejoin="round" aria-hidden="true">
                                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                                     <circle cx="9" cy="9" r="2" />
                                     <path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21" />
@@ -1535,25 +1526,22 @@ new class extends Component {
                             <div class="business-details-upload-list__item">
                                 <span class="business-details-upload-list__icon" aria-hidden="true">
                                     @if ($isPdfFile)
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="23" height="27"
-                                            viewBox="0 0 21 25" fill="none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="23" height="27" viewBox="0 0 21 25"
+                                            fill="none">
                                             <path
                                                 d="M5.04074 24.501H15.9593C17.1635 24.501 18.3185 24.0226 19.1701 23.1711C20.0216 22.3195 20.5 21.1646 20.5 19.9603V12.7859C20.5004 11.5818 20.0226 10.4268 19.1715 9.57499L11.4276 1.82979C11.0059 1.40815 10.5053 1.0737 9.95439 0.845536C9.40346 0.61737 8.81297 0.499957 8.21666 0.5H5.04074C3.83646 0.5 2.6815 0.978398 1.82995 1.82995C0.978398 2.6815 0.5 3.83646 0.5 5.04074V19.9603C0.5 21.1646 0.978398 22.3195 1.82995 23.1711C2.6815 24.0226 3.83646 24.501 5.04074 24.501Z"
-                                                stroke="currentColor" stroke-linecap="round"
-                                                stroke-linejoin="round" />
+                                                stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" />
                                             <path
                                                 d="M10.0952 0.966797V8.30982C10.0952 8.99798 10.3686 9.65795 10.8552 10.1446C11.3418 10.6312 12.0018 10.9045 12.6899 10.9045H20.0355"
-                                                stroke="currentColor" stroke-linecap="round"
-                                                stroke-linejoin="round" />
+                                                stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" />
                                             <path
                                                 d="M4.33759 18.3383V17.041M4.33759 17.041V14.4463H5.63494C5.97902 14.4463 6.30901 14.583 6.55231 14.8263C6.79561 15.0696 6.93229 15.3996 6.93229 15.7436C6.93229 16.0877 6.79561 16.4177 6.55231 16.661C6.30901 16.9043 5.97902 17.041 5.63494 17.041H4.33759ZM14.7164 18.3383V16.7167M14.7164 16.7167V14.4463H16.6624M14.7164 16.7167H16.6624M9.527 18.3383V14.4463H10.1757C10.6918 14.4463 11.1868 14.6513 11.5517 15.0163C11.9167 15.3812 12.1217 15.8762 12.1217 16.3923C12.1217 16.9084 11.9167 17.4034 11.5517 17.7684C11.1868 18.1333 10.6918 18.3383 10.1757 18.3383H9.527Z"
-                                                stroke="currentColor" stroke-linecap="round"
-                                                stroke-linejoin="round" />
+                                                stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" />
                                         </svg>
                                     @else
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                            stroke-linejoin="round">
                                             <rect x="3" y="4" width="18" height="16" rx="2" />
                                             <circle cx="8.5" cy="9.5" r="1.5" />
                                             <path d="M21 16l-5-5L5 20" />
@@ -1565,12 +1553,11 @@ new class extends Component {
                                     <small>{{ $file['size'] ?? 'Size unavailable' }}</small>
                                 </span>
                                 <button type="button" class="business-details-upload-list__remove"
-                                    wire:click="removeBusinessIdFile({{ $index }})"
-                                    wire:loading.attr="disabled"
+                                    wire:click="removeBusinessIdFile({{ $index }})" wire:loading.attr="disabled"
                                     wire:target="removeBusinessIdFile({{ $index }})"
                                     aria-label="Remove {{ $file['name'] ?? 'business ID file' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                                        viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
+                                        fill="none" aria-hidden="true">
                                         <path d="M1.4 1.4L12.6 12.6M12.6 1.4L1.4 12.6" stroke="currentColor"
                                             stroke-width="1.8" stroke-linecap="round" />
                                     </svg>
@@ -1606,8 +1593,8 @@ new class extends Component {
     </section>
 
     <section class="business-details-block">
-        <x-business-hub.settings.business-details.section-title title="Insurance Details" :tone="$insuranceHasIssue ? 'warning' : 'success'"
-            section="insurance" :is-editing="$editingSection === 'insurance'" save-action="saveInsuranceDetails" />
+        <x-business-hub.settings.business-details.section-title title="Insurance Details" :tone="$insuranceHasIssue ? 'warning' : 'success'" section="insurance" :is-editing="$editingSection === 'insurance'"
+            save-action="saveInsuranceDetails" />
         <div @class([
             'business-details-card',
             'business-details-files',
@@ -1667,8 +1654,7 @@ new class extends Component {
                             this.progressTimer = null;
                         }
                     },
-                }"
-                    x-on:livewire-upload-start="startUpload()" x-on:livewire-upload-finish="finishUpload()"
+                }" x-on:livewire-upload-start="startUpload()" x-on:livewire-upload-finish="finishUpload()"
                     x-on:livewire-upload-error="resetUpload()"
                     x-on:livewire-upload-progress="setUploadProgress($event.detail.progress)">
                     <textarea class="business-details-sr-field" rows="4" wire:model.defer="insurancePathsText"
@@ -1680,9 +1666,9 @@ new class extends Component {
                         <div class="business-details-upload-tabs">
                             <button type="button" class="business-details-upload-tab"
                                 @click.stop="$refs.insuranceInput.click()">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                    stroke-linejoin="round" aria-hidden="true">
                                     <path
                                         d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                                 </svg>
@@ -1690,9 +1676,9 @@ new class extends Component {
                             </button>
                             <button type="button" class="business-details-upload-tab"
                                 @click.stop="$refs.insuranceInput.click()">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                    stroke-linejoin="round" aria-hidden="true">
                                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                                     <circle cx="9" cy="9" r="2" />
                                     <path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21" />
@@ -1718,25 +1704,22 @@ new class extends Component {
                             <div class="business-details-upload-list__item">
                                 <span class="business-details-upload-list__icon" aria-hidden="true">
                                     @if ($isPdfFile)
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="23" height="27"
-                                            viewBox="0 0 21 25" fill="none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="23" height="27" viewBox="0 0 21 25"
+                                            fill="none">
                                             <path
                                                 d="M5.04074 24.501H15.9593C17.1635 24.501 18.3185 24.0226 19.1701 23.1711C20.0216 22.3195 20.5 21.1646 20.5 19.9603V12.7859C20.5004 11.5818 20.0226 10.4268 19.1715 9.57499L11.4276 1.82979C11.0059 1.40815 10.5053 1.0737 9.95439 0.845536C9.40346 0.61737 8.81297 0.499957 8.21666 0.5H5.04074C3.83646 0.5 2.6815 0.978398 1.82995 1.82995C0.978398 2.6815 0.5 3.83646 0.5 5.04074V19.9603C0.5 21.1646 0.978398 22.3195 1.82995 23.1711C2.6815 24.0226 3.83646 24.501 5.04074 24.501Z"
-                                                stroke="currentColor" stroke-linecap="round"
-                                                stroke-linejoin="round" />
+                                                stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" />
                                             <path
                                                 d="M10.0952 0.966797V8.30982C10.0952 8.99798 10.3686 9.65795 10.8552 10.1446C11.3418 10.6312 12.0018 10.9045 12.6899 10.9045H20.0355"
-                                                stroke="currentColor" stroke-linecap="round"
-                                                stroke-linejoin="round" />
+                                                stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" />
                                             <path
                                                 d="M4.33759 18.3383V17.041M4.33759 17.041V14.4463H5.63494C5.97902 14.4463 6.30901 14.583 6.55231 14.8263C6.79561 15.0696 6.93229 15.3996 6.93229 15.7436C6.93229 16.0877 6.79561 16.4177 6.55231 16.661C6.30901 16.9043 5.97902 17.041 5.63494 17.041H4.33759ZM14.7164 18.3383V16.7167M14.7164 16.7167V14.4463H16.6624M14.7164 16.7167H16.6624M9.527 18.3383V14.4463H10.1757C10.6918 14.4463 11.1868 14.6513 11.5517 15.0163C11.9167 15.3812 12.1217 15.8762 12.1217 16.3923C12.1217 16.9084 11.9167 17.4034 11.5517 17.7684C11.1868 18.1333 10.6918 18.3383 10.1757 18.3383H9.527Z"
-                                                stroke="currentColor" stroke-linecap="round"
-                                                stroke-linejoin="round" />
+                                                stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" />
                                         </svg>
                                     @else
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                            stroke-linejoin="round">
                                             <rect x="3" y="4" width="18" height="16" rx="2" />
                                             <circle cx="8.5" cy="9.5" r="1.5" />
                                             <path d="M21 16l-5-5L5 20" />
@@ -1748,12 +1731,11 @@ new class extends Component {
                                     <small>{{ $file['size'] ?? 'Size unavailable' }}</small>
                                 </span>
                                 <button type="button" class="business-details-upload-list__remove"
-                                    wire:click="removeInsuranceFile({{ $index }})"
-                                    wire:loading.attr="disabled"
+                                    wire:click="removeInsuranceFile({{ $index }})" wire:loading.attr="disabled"
                                     wire:target="removeInsuranceFile({{ $index }})"
                                     aria-label="Remove {{ $file['name'] ?? 'insurance certificate' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                                        viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
+                                        fill="none" aria-hidden="true">
                                         <path d="M1.4 1.4L12.6 12.6M12.6 1.4L1.4 12.6" stroke="currentColor"
                                             stroke-width="1.8" stroke-linecap="round" />
                                     </svg>
@@ -1795,7 +1777,7 @@ new class extends Component {
             width: 100%;
             padding-top: 1.5rem;
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
         }
 
         .business-details-heading {

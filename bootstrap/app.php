@@ -14,9 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo('/');
         $middleware->web(append: [
             \App\Http\Middleware\TrackAccountLoginSession::class,
+            \App\Http\Middleware\ApplyBusinessPageShellFromRequest::class,
         ]);
         $middleware->alias([
             'auth.groomer_spacer' => \App\Http\Middleware\EnsureGroomerSpacerAuthenticated::class,
+            'auth.web_or_groomer_spacer' => \App\Http\Middleware\EnsureWebOrGroomerSpacerAuthenticated::class,
             'business.shell.web' => \App\Http\Middleware\SetBusinessPageWebShell::class,
             'business.shell.business-hub' => \App\Http\Middleware\SetBusinessPageBusinessHubShell::class,
         ]);

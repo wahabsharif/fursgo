@@ -10,7 +10,7 @@ class AddOnSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->seedForEmail('dev@dev.com', $this->groomerCatalog());
+        $this->seedForEmail('groomer@dev.com', $this->groomerCatalog());
         $this->seedForEmail('space@dev.com', $this->spaceCatalog());
     }
 

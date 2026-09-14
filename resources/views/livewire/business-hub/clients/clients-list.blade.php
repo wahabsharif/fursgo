@@ -1367,8 +1367,7 @@ new class extends Component {
                 <label class="clients-search">
                     <input type="search" wire:model.live.debounce.300ms="search" placeholder="Type to search..." />
                     <span class="clients-search-icon" aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
-                            fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                             <path
                                 d="M5.73535 0.5C8.6267 0.500031 10.9707 2.844 10.9707 5.73535C10.9707 7.22006 10.3528 8.55933 9.35938 9.5127C8.41826 10.4158 7.14221 10.9707 5.73535 10.9707C2.844 10.9707 0.500031 8.6267 0.5 5.73535C0.5 2.84398 2.84398 0.5 5.73535 0.5Z"
                                 stroke="#A8A8A8" />
@@ -1395,8 +1394,8 @@ new class extends Component {
                         }
                         this.open = !this.open;
                     }
-                }" @keydown.escape.window="open = false"
-                    @resize.window="if (open) repositionMenu()" @scroll.window="if (open) repositionMenu()"
+                }" @keydown.escape.window="open = false" @resize.window="if (open) repositionMenu()"
+                    @scroll.window="if (open) repositionMenu()"
                     @click.window="if (open && !$refs.sortBtn.contains($event.target) && (!$refs.sortMenu || !$refs.sortMenu.contains($event.target))) { open = false }">
                     <div class="sort-dropdown">
                         <button type="button" class="sort-trigger" x-ref="sortBtn" @click.stop="toggleMenu()"
@@ -1413,14 +1412,14 @@ new class extends Component {
                                 x-transition.opacity.duration.100ms
                                 :style="`position: fixed; left: ${menuLeft}px; top: ${menuTop}px; z-index: 99999;`">
                                 @foreach ([
-        'name_asc' => 'Name (A–Z)',
-        'name_desc' => 'Name (Z–A)',
-        'bookings_desc' => 'Most Bookings',
-        'bookings_asc' => 'Fewest Bookings',
-        'paid_desc' => 'Highest Paid',
-        'paid_asc' => 'Lowest Paid',
-        'upcoming_asc' => 'Upcoming Booking',
-    ] as $sortKey => $sortLabel)
+                                        'name_asc' => 'Name (A–Z)',
+                                        'name_desc' => 'Name (Z–A)',
+                                        'bookings_desc' => 'Most Bookings',
+                                        'bookings_asc' => 'Fewest Bookings',
+                                        'paid_desc' => 'Highest Paid',
+                                        'paid_asc' => 'Lowest Paid',
+                                        'upcoming_asc' => 'Upcoming Booking',
+                                    ] as $sortKey => $sortLabel)
                                     <button type="button" class="sort-options"
                                         :class="{ 'is-active': @js($sort) === '{{ $sortKey }}' }"
                                         wire:click="setSort('{{ $sortKey }}')"
@@ -1460,8 +1459,7 @@ new class extends Component {
                                     </span>
                                     <div class="clients-name-meta">
                                         <span class="clients-name">{{ $client['name'] }}</span>
-                                        <span
-                                            class="clients-badge {{ $client['is_repeat'] ? 'is-repeat' : 'is-new' }}">
+                                        <span class="clients-badge {{ $client['is_repeat'] ? 'is-repeat' : 'is-new' }}">
                                             {{ $client['is_repeat'] ? 'Repeat Client' : 'New Client' }}
                                         </span>
                                     </div>
@@ -1474,8 +1472,7 @@ new class extends Component {
                                     @elseif ($client['pets']->count() === 1)
                                         @php $pet = $client['pets']->first(); @endphp
                                         <div class="clients-pet-cell">
-                                            <span
-                                                class="clients-pet-name">{{ trim((string) ($pet->name ?? '')) ?: '—' }}</span>
+                                            <span class="clients-pet-name">{{ trim((string) ($pet->name ?? '')) ?: '—' }}</span>
                                             @if (trim((string) ($pet->pet_type ?? '')) !== '')
                                                 <span style="color: #9D9B98;font-weight: 400;">{{ $pet->pet_type }}</span>
                                             @endif
@@ -1489,15 +1486,13 @@ new class extends Component {
                             <td>{{ $client['total_bookings'] }}</td>
                             <td>£{{ number_format($client['total_paid'], 2) }}</td>
                             <td class="clients-view-col">
-                                <button type="button" class="clients-view-btn"
-                                    @click="openProfile({{ $client['id'] }})"
+                                <button type="button" class="clients-view-btn" @click="openProfile({{ $client['id'] }})"
                                     aria-label="View {{ $client['name'] }} profile">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                        viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
+                                        fill="none" aria-hidden="true">
                                         <path d="M1 13A9 9 0 0 1 19 13" stroke="black" stroke-width="1"
                                             stroke-linecap="butt" />
-                                        <circle cx="10" cy="13" r="4" stroke="black"
-                                            stroke-width="1" />
+                                        <circle cx="10" cy="13" r="4" stroke="black" stroke-width="1" />
                                     </svg>
                                 </button>
                             </td>
@@ -1528,13 +1523,15 @@ new class extends Component {
 
     <x-business-hub.common.completed-booking-modal :booking="$this->profileCompletedBooking" />
     <x-business-hub.common.decline-modal :decline-booking="$this->profileDeclineBooking" />
-    <x-business-hub.common.reschedule-modal :reschedule-booking="$this->profileRescheduleBooking" :bookings="$rescheduleCalendarBookings ?? collect()" :reschedule-selected-date="$rescheduleSelectedDate" :reschedule-selected-time="$rescheduleSelectedTime"
-        :reschedule-calendar-month="$rescheduleCalendarMonth" :reschedule-duration-minutes="$rescheduleDurationMinutes" />
+    <x-business-hub.common.reschedule-modal :reschedule-booking="$this->profileRescheduleBooking"
+        :bookings="$rescheduleCalendarBookings ?? collect()" :reschedule-selected-date="$rescheduleSelectedDate"
+        :reschedule-selected-time="$rescheduleSelectedTime" :reschedule-calendar-month="$rescheduleCalendarMonth"
+        :reschedule-duration-minutes="$rescheduleDurationMinutes" />
 </div>
 
 <script>
     if (!window.reschedulePicker) {
-        window.reschedulePicker = function(config) {
+        window.reschedulePicker = function (config) {
             const monthNames = [
                 'January', 'February', 'March', 'April', 'May', 'June',
                 'July', 'August', 'September', 'October', 'November', 'December'
@@ -1834,7 +1831,7 @@ new class extends Component {
         padding: 0 35px 0 15px;
         color: #8b8781;
         font-size: 12px;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         outline: none;
     }
 

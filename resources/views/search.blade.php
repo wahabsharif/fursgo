@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿    <div class="container mb-5 mt-5">
         <div class="row">
             <div class="col-lg-1"></div>
@@ -73,6 +74,11 @@
 
         </div>
     </div>
+=======
+<section class="container mb-5 mt-5">
+    <livewire:help.centre />
+</section>
+>>>>>>> 3686cf2a86831824005858d1e89dafed90b1bdcd
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/company_information.css') }}">
@@ -82,6 +88,7 @@
     }
 </style>
 @endpush
+<<<<<<< HEAD
 
 @push('script')
 <script>
@@ -214,3 +221,5 @@
     document.addEventListener('livewire:navigated', initContactSupportRequest);
 </script>
 @endpush
+=======
+>>>>>>> 3686cf2a86831824005858d1e89dafed90b1bdcd

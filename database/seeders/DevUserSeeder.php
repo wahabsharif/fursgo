@@ -10,28 +10,38 @@ use Illuminate\Support\Facades\Hash;
 class DevUserSeeder extends Seeder
 {
     /**
-     * Seed the development user account.
+     * Seed the development groomer and space accounts.
      */
     public function run(): void
     {
         $plainPassword = '@7415369Dev';
+        $groomerEmail = 'groomer@dev.com';
+        $spaceEmail = 'space@dev.com';
 
         User::updateOrCreate(
-            ['email' => 'dev@dev.com'],
+            ['email' => $groomerEmail],
             [
-                'name' => 'Dev',
+                'name' => 'Dev Groomer',
                 'password' => Hash::make($plainPassword),
-                'user_type' => 'dev',
+                'user_type' => 'groomer',
                 'user_status' => 'active',
             ]
         );
 
-        $devEmail = 'dev@dev.com';
+        User::updateOrCreate(
+            ['email' => $spaceEmail],
+            [
+                'name' => 'Dev Space',
+                'password' => Hash::make($plainPassword),
+                'user_type' => 'space',
+                'user_status' => 'active',
+            ]
+        );
 
         GroomerSpacerProfile::updateOrCreate(
-            ['email' => $devEmail],
+            ['email' => $groomerEmail],
             [
-                'full_name' => 'Dev User',
+                'full_name' => 'Dev Groomer',
                 'information_accuracy_confirmed' => true,
                 'password' => Hash::make($plainPassword),
                 'user_type' => 'groomer',
@@ -42,12 +52,12 @@ class DevUserSeeder extends Seeder
                     'business_name' => 'Dev Grooming Ltd',
                     'business_registration_number' => '12345678',
                     'business_phone' => '+441632960000',
-                    'business_email' => $devEmail,
+                    'business_email' => $groomerEmail,
                     'business_owner_id_images' => [],
                 ],
                 'payout_details' => [
                     'bank' => 'Barclays',
-                    'account_holder_name' => 'Dev User',
+                    'account_holder_name' => 'Dev Groomer',
                     'account_number' => '12345678',
                     'sort_code' => '12-34-56',
                     'iban' => 'GB82WEST12345698765432',
@@ -59,7 +69,7 @@ class DevUserSeeder extends Seeder
                 ],
                 'freelance_details' => null,
                 'business_basics' => [
-                    'display_name' => 'Dev Grooming',
+                    'display_name' => 'Dev Groomer Studio',
                     'tagline' => 'Calm, kind grooms for every coat.',
                     'bio' => 'Development seed profile with representative business basics data.',
                     'profile_photo_path' => '',
@@ -100,7 +110,7 @@ class DevUserSeeder extends Seeder
         );
 
         GroomerSpacerProfile::updateOrCreate(
-            ['email' => 'space@dev.com'],
+            ['email' => $spaceEmail],
             [
                 'full_name' => 'Dev Space',
                 'information_accuracy_confirmed' => true,
@@ -113,7 +123,7 @@ class DevUserSeeder extends Seeder
                     'business_name' => 'Dev Space Hire Ltd',
                     'business_registration_number' => '87654321',
                     'business_phone' => '+441632960001',
-                    'business_email' => 'space@dev.com',
+                    'business_email' => $spaceEmail,
                     'business_owner_id_images' => [],
                 ],
                 'payout_details' => [

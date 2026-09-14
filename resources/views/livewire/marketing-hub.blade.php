@@ -9,8 +9,11 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Renderless;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.marketing-hub')] class extends Component {
+new #[Layout('layouts.marketing-hub')]
+    class extends Component {
     public bool $showPromoForm = false;
+
+    public string $statsPeriod = 'this_month';
 
     public ?int $editingPromoId = null;
 
@@ -59,6 +62,18 @@ new #[Layout('layouts.marketing-hub')] class extends Component {
 
         $promo->visibility = !$promo->visibility;
         $promo->save();
+    }
+
+    public function setStatsPeriod(string $period): void
+    {
+        $this->statsPeriod = MarketingHubStats::normalizePeriod($period);
+        $this->js('queueMicrotask(() => {
+            const el = document.querySelector("[data-mh-chart]");
+            if (el) {
+                try { window.__mhChartData = JSON.parse(el.getAttribute("data-mh-chart") || "{}"); } catch (e) {}
+            }
+            window.__initMarketingHubCharts?.();
+        })');
     }
 
     public function openCreatePromo(): void
@@ -269,7 +284,9 @@ new #[Layout('layouts.marketing-hub')] class extends Component {
         $spacerId = auth('groomer_spacer')->id();
 
         return [
-            'mh' => MarketingHubStats::forSpacer($spacerId),
+            'mh' => MarketingHubStats::forSpacer($spacerId, $this->statsPeriod),
+            'statsPeriod' => $this->statsPeriod,
+            'statsPeriodOptions' => MarketingHubStats::periodOptions(),
             'mhPromos' => MarketingHubPromos::forSpacer($spacerId),
             'promoServiceOptions' => $this->serviceOptionsForUser(),
             'promoPetTypeOptions' => ['Cat', 'Dog', 'Other'],

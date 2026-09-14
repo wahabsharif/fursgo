@@ -33,8 +33,7 @@
                         $hasReply = filled($review->reply);
                         $isReplyOpen = (int) $openReplyId === (int) $review->id;
                     @endphp
-                    <tr
-                        wire:key="client-profile-review-{{ $review->id }}-{{ $filledStars }}-{{ $clientFilledStars }}">
+                    <tr wire:key="client-profile-review-{{ $review->id }}-{{ $filledStars }}-{{ $clientFilledStars }}">
                         <td class="client-reviews-main-col">
                             <div class="client-reviews-item">
                                 <div class="client-reviews-meta">
@@ -73,16 +72,17 @@
                                     <div class="client-reviews-reply-compose"
                                         wire:key="client-profile-review-compose-{{ $review->id }}"
                                         @keydown.escape.window="$wire.closeReviewReply()" x-data="{
-                                            hover: 0,
-                                            rating: @entangle('reviewReplyClientRating').live,
-                                            message: @entangle('reviewReplyMessage').live,
-                                        }">
+                                                    hover: 0,
+                                                    rating: @entangle('reviewReplyClientRating').live,
+                                                    message: @entangle('reviewReplyMessage').live,
+                                                }">
                                         <div class="client-reviews-reply-compose__top">
-                                            <textarea x-model="message" rows="3" maxlength="3000" class="client-reviews-reply-textarea"
+                                            <textarea x-model="message" rows="3" maxlength="3000"
+                                                class="client-reviews-reply-textarea"
                                                 placeholder="Write a message ..."></textarea>
                                             <button type="button" class="client-reviews-compose-submit"
-                                                wire:click="submitReviewReply({{ $review->id }})"
-                                                wire:loading.attr="disabled" wire:target="submitReviewReply">
+                                                wire:click="submitReviewReply({{ $review->id }})" wire:loading.attr="disabled"
+                                                wire:target="submitReviewReply">
                                                 <span wire:loading.remove wire:target="submitReviewReply">Reply</span>
                                                 <span wire:loading wire:target="submitReviewReply">Sending...</span>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -95,21 +95,18 @@
                                         </div>
                                         <div class="client-reviews-reply-compose__bottom">
                                             <span class="client-reviews-rate-label">Rate Client</span>
-                                            <div class="client-reviews-rate-stars" role="group"
-                                                aria-label="Rate client">
+                                            <div class="client-reviews-rate-stars" role="group" aria-label="Rate client">
                                                 @for ($star = 1; $star <= 5; $star++)
                                                     <button type="button" class="client-reviews-rate-star-btn"
                                                         @click="rating = {{ $star }}; $wire.set('reviewReplyClientRating', {{ $star }})"
-                                                        @mouseenter="hover = {{ $star }}"
-                                                        @mouseleave="hover = 0"
+                                                        @mouseenter="hover = {{ $star }}" @mouseleave="hover = 0"
                                                         aria-label="{{ $star }} star{{ $star === 1 ? '' : 's' }}">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16"
-                                                            height="16" viewBox="0 0 16 16" aria-hidden="true">
-                                                            <path d="{{ $starPath }}"
-                                                                :class="(hover || rating) >= {{ $star }}
-                                                                    ?
-                                                                    'client-reviews-star--filled' :
-                                                                    'client-reviews-star--empty'" />
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                            viewBox="0 0 16 16" aria-hidden="true">
+                                                            <path d="{{ $starPath }}" :class="(hover || rating) >= {{ $star }}
+                                                                                ?
+                                                                                'client-reviews-star--filled' :
+                                                                                'client-reviews-star--empty'" />
                                                         </svg>
                                                     </button>
                                                 @endfor
@@ -136,8 +133,8 @@
                                         <span class="client-reviews-rated-label">You rated this client:</span>
                                         <span class="client-reviews-rated-stars">
                                             @for ($star = 1; $star <= 5; $star++)
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                    viewBox="0 0 16 16" aria-hidden="true">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
+                                                    aria-hidden="true">
                                                     <path d="{{ $starPath }}"
                                                         class="{{ $star <= $clientFilledStars ? 'client-reviews-star--filled' : 'client-reviews-star--empty' }}" />
                                                 </svg>
@@ -148,11 +145,10 @@
                                     <button type="button" class="client-reviews-reply-btn"
                                         wire:click="toggleReviewReply({{ $review->id }})" aria-label="Reply to review">
                                         <span>Reply</span>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                            <path d="M9.5 17L4.5 12L9.5 7M4.5 12H14.5C16.167 12 19.5 13 19.5 17"
-                                                stroke="black" stroke-width="1.5" stroke-linecap="round"
-                                                stroke-linejoin="round" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                            fill="none" aria-hidden="true">
+                                            <path d="M9.5 17L4.5 12L9.5 7M4.5 12H14.5C16.167 12 19.5 13 19.5 17" stroke="black"
+                                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                                         </svg>
                                     </button>
                                 @endif
@@ -190,7 +186,7 @@
 
     .client-reviews-table th {
         color: #000;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-style: normal;
         font-weight: 600;
@@ -238,7 +234,7 @@
 
     .client-reviews-booking-label {
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-style: normal;
         font-weight: 700;
@@ -249,7 +245,7 @@
     .client-reviews-booking-id,
     .client-reviews-date {
         color: #9D9B98;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-style: normal;
         font-weight: 400;
@@ -282,7 +278,7 @@
     .client-reviews-reply-body {
         margin: 0;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 18px;
         font-style: normal;
         font-weight: 400;
@@ -346,7 +342,7 @@
         min-height: 4.5rem;
         padding: 0;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-style: normal;
         font-weight: 400;
@@ -369,7 +365,7 @@
         padding: 0;
         cursor: pointer;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-style: normal;
         font-weight: 400;
@@ -392,7 +388,7 @@
 
     .client-reviews-rate-label {
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-style: normal;
         font-weight: 400;
@@ -413,7 +409,7 @@
     .client-reviews-char-count {
         margin-left: auto;
         color: #9D9B98;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-style: normal;
         font-weight: 400;
@@ -425,7 +421,7 @@
         margin: 0;
         padding: 0 1.1rem 0.85rem;
         color: #c0392b;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
     }
 
@@ -440,7 +436,7 @@
         margin: 0;
         cursor: pointer;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-style: normal;
         font-weight: 400;
@@ -450,7 +446,7 @@
     .client-reviews-empty {
         text-align: center !important;
         color: #9D9B98 !important;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 400;
         padding: 2rem 0 !important;

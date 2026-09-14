@@ -24,7 +24,8 @@
             justify-content: center;
             text-align: center;
             padding: 20px;
-            border-radius: 10px
+            border-radius: 10px;
+            margin-top: 32px;
         }
 
         .blp-hero-content {
@@ -262,7 +263,7 @@
                     </p>
                     <h1 class="blp-main-title">Step into a new opportunity — built around your love for animals.</h1>
                     <p class="blp-cta-text">Begin your application.</p>
-                    <a href="{{ auth('groomer_spacer')->check() ? route('verify-qualify') : route('login-groomer-space') }}"
+                    <a href="{{ auth('groomer_spacer')->check() ? route('business-verification') : route('login-groomer-space') }}"
                         wire:navigate class="blp-btn">Start your profile</a>
                 </div>
             </div>

@@ -1,13 +1,26 @@
 @php
+    use App\Models\GroomerSpacerProfile;
     use App\Support\BusinessHubNav;
+    use Illuminate\Support\Facades\Auth;
 
     $dashboardNav = BusinessHubNav::fromSession();
     $dashboardActiveSection = $dashboardNav['active_section'];
+
+    $gsp = Auth::guard('groomer_spacer')->user();
+    $welcomeFirstName = 'there';
+    if ($gsp instanceof GroomerSpacerProfile) {
+        $nameParts = preg_split('/\s+/', trim((string) ($gsp->full_name ?: '')), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $welcomeFirstName = $nameParts[0] ?? (trim((string) $gsp->full_name) !== '' ? trim((string) $gsp->full_name) : 'there');
+    }
+    $welcomeBackTitle = 'Welcome back, ' . $welcomeFirstName . ' 👋';
 @endphp
 
 <section class="dashboard-content-wrapper">
-    <div class="active-section-header" x-data="{ tabsLoading: false, navLoading: false, navLoadingTimeout: null, activeBookingFilter: @js($dashboardNav['active_booking_status']), serviceFormOpen: false, activeServiceMenu: @js($dashboardNav['active_service_menu']), activeEarningsMenu: @js($dashboardNav['active_earnings_menu']), clientProfileOpen: false }" x-show="activeSection !== 'clients' || !clientProfileOpen"
-        x-cloak x-on:bookings-tabs-loading-start.window="tabsLoading = true"
+    <div class="active-section-header"
+        x-data="{ tabsLoading: false, navLoading: false, navLoadingTimeout: null, activeBookingFilter: @js($dashboardNav['active_booking_status']), serviceFormOpen: false, activeServiceMenu: @js($dashboardNav['active_service_menu']), activeEarningsMenu: @js($dashboardNav['active_earnings_menu']), clientProfileOpen: false, showWelcome: @js($dashboardActiveSection === 'business-hub') }"
+        x-effect="if (activeSection !== 'business-hub') showWelcome = false"
+        x-show="activeSection !== 'clients' || !clientProfileOpen" x-cloak
+        x-on:bookings-tabs-loading-start.window="tabsLoading = true"
         x-on:bookings-tabs-loading-end.window="tabsLoading = false"
         x-on:booking-status-changed.window="tabsLoading = false; activeBookingFilter = $event.detail.status || ''"
         x-on:nav-list-loading-start.window="navLoading = true; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; } if (!$event.detail?.persistent) { navLoadingTimeout = setTimeout(() => { navLoading = false; navLoadingTimeout = null; }, 350); }"
@@ -18,17 +31,23 @@
         x-on:service-form-closed.window="serviceFormOpen = false"
         x-on:services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'"
         x-on:earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'">
-        <template x-if="activeSection === 'bookings'">
-            <div class="active-section-header">
+        <div class="active-section-header-stack">
+            <div class="active-section-header-pane" x-cloak x-show="activeSection === 'business-hub'"
+                x-transition.opacity.duration.280ms>
+                <h2 class="active-section-header-welcome"
+                    x-text="showWelcome ? @js($welcomeBackTitle) : 'Business Hub'"></h2>
+            </div>
+
+            <div class="active-section-header-pane" x-cloak x-show="activeSection === 'bookings'"
+                x-transition.opacity.duration.280ms>
                 <h2
                     x-text="activeBookingFilter === 'pending' ? 'Pending Bookings' : (activeBookingFilter === 'confirmed' ? 'Confirmed Bookings' : (activeBookingFilter === 'completed' ? 'Completed Bookings' : (activeBookingFilter === 'cancelled' ? 'Cancelled Bookings' : 'All Bookings')))">
                 </h2>
-                <p>Manage your bookings</p>
+                <p>Manage your bookings.</p>
             </div>
-        </template>
 
-        <template x-if="activeSection === 'availability'">
-            <div class="active-section-header active-section-header-availability">
+            <div class="active-section-header-pane active-section-header-availability" x-cloak
+                x-show="activeSection === 'availability'" x-transition.opacity.duration.280ms>
                 <button type="button" class="availability-header-pill"
                     @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'manage-availability'">
                     Manage Availability
@@ -38,15 +57,13 @@
                     <p>View your schedule and manage when you’re available for bookings.</p>
                 </div>
             </div>
-        </template>
 
-        <template x-if="activeSection === 'manage-availability'">
-            <div class="active-section-header active-section-header-manage-availability">
+            <div class="active-section-header-pane active-section-header-manage-availability" x-cloak
+                x-show="activeSection === 'manage-availability'" x-transition.opacity.duration.280ms>
                 <button type="button" class="manage-availability-back-btn"
                     @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'availability'"
                     aria-label="Back to availability">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="11" viewBox="0 0 17 11"
-                        fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="11" viewBox="0 0 17 11" fill="none">
                         <path
                             d="M0 5.202L5.211 0L5.877 0.684C6.015 0.828 6.069 0.972 6.039 1.116C6.015 1.254 5.94 1.386 5.814 1.512L3.609 3.708C3.297 4.02 3.012 4.278 2.754 4.482C3.102 4.434 3.468 4.398 3.852 4.374C4.242 4.344 4.635 4.329 5.031 4.329H16.074V6.084H5.031C4.629 6.084 4.233 6.072 3.843 6.048C3.459 6.024 3.093 5.988 2.745 5.94C2.877 6.042 3.012 6.156 3.15 6.282C3.294 6.408 3.447 6.549 3.609 6.705L5.832 8.919C5.958 9.045 6.033 9.18 6.057 9.324C6.087 9.462 6.033 9.6 5.895 9.738L5.229 10.431L0 5.202Z"
                             fill="black" />
@@ -58,19 +75,17 @@
                     <p>Set your working hours, days off, and staff schedules.</p>
                 </div>
             </div>
-        </template>
 
-        <template x-if="activeSection === 'clients'">
-            <div class="active-section-header">
+            <div class="active-section-header-pane" x-cloak x-show="activeSection === 'clients'"
+                x-transition.opacity.duration.280ms>
                 <div>
                     <h2>Clients</h2>
                     <p>Manage your clients and their pets.</p>
                 </div>
             </div>
-        </template>
 
-        <template x-if="activeSection === 'earnings'">
-            <div class="active-section-header">
+            <div class="active-section-header-pane" x-cloak x-show="activeSection === 'earnings'"
+                x-transition.opacity.duration.280ms>
                 <div>
                     <h2
                         x-text="activeEarningsMenu === 'transactions' ? 'Transactions' : (activeEarningsMenu === 'pay-outs' ? 'Pay-outs' : (activeEarningsMenu === 'invoices' ? 'Invoices' : 'Earnings Overview'))">
@@ -80,23 +95,20 @@
                     </p>
                 </div>
             </div>
-        </template>
 
-        <template x-if="activeSection === 'settings'">
-            <div class="active-section-header">
+            <div class="active-section-header-pane" x-cloak x-show="activeSection === 'settings'"
+                x-transition.opacity.duration.280ms>
                 <div>
                     <h2>Settings</h2>
                     <p>Manage account controls.</p>
                 </div>
             </div>
-        </template>
 
-        <template x-if="activeSection === 'services'">
-            <div class="active-section-header active-section-header-services">
+            <div class="active-section-header-pane active-section-header-services" x-cloak
+                x-show="activeSection === 'services'" x-transition.opacity.duration.280ms>
                 <button type="button" class="service-list-header-btn" x-cloak x-show="serviceFormOpen"
                     @click="window.dispatchEvent(new CustomEvent('service-form-cancel'))">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="11" viewBox="0 0 17 11"
-                        fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="11" viewBox="0 0 17 11" fill="none">
                         <path
                             d="M0 5.202L5.211 0L5.877 0.684C6.015 0.828 6.069 0.972 6.039 1.116C6.015 1.254 5.94 1.386 5.814 1.512L3.609 3.708C3.297 4.02 3.012 4.278 2.754 4.482C3.102 4.434 3.468 4.398 3.852 4.374C4.242 4.344 4.635 4.329 5.031 4.329H16.074V6.084H5.031C4.629 6.084 4.233 6.072 3.843 6.048C3.459 6.024 3.093 5.988 2.745 5.94C2.877 6.042 3.012 6.156 3.15 6.282C3.294 6.408 3.447 6.549 3.609 6.705L5.832 8.919C5.958 9.045 6.033 9.18 6.057 9.324C6.087 9.462 6.033 9.6 5.895 9.738L5.229 10.431L0 5.202Z"
                             fill="black" />
@@ -108,12 +120,7 @@
                     <p>Manage your services, pricing, and add-ons.</p>
                 </div>
             </div>
-        </template>
-
-        <template
-            x-if="activeSection !== 'bookings' && activeSection !== 'availability' && activeSection !== 'manage-availability' && activeSection !== 'services' && activeSection !== 'clients' && activeSection !== 'earnings' && activeSection !== 'settings'">
-            <div x-text="activeSection.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())"></div>
-        </template>
+        </div>
 
         {{-- Progress bar for bookings filtering + sidebar nav switching --}}
         <div class="active-section-loading-bar" x-cloak x-show="tabsLoading || navLoading" aria-hidden="true">
@@ -130,6 +137,23 @@
         if (activeSection === 'earnings') {
             window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: @js($dashboardNav['active_earnings_menu']) } }));
         }
+    };
+    const easeSectionHeight = () => {
+        const el = $el;
+        const from = el.offsetHeight;
+        el.style.minHeight = from + 'px';
+        requestAnimationFrame(() => {
+            const active = el.querySelector('.section-panel.section-active');
+            const to = active ? active.offsetHeight : from;
+            el.style.transition = 'min-height 0.38s cubic-bezier(0.22, 1, 0.36, 1)';
+            el.style.minHeight = to + 'px';
+            const clear = () => {
+                el.style.minHeight = '';
+                el.style.transition = '';
+            };
+            el.addEventListener('transitionend', clear, { once: true });
+            setTimeout(clear, 450);
+        });
     };
     restoreServicesMenu();
     restoreEarningsMenu();
@@ -155,10 +179,12 @@
                 window.scheduleEarningsChartsInit?.();
             });
         }
+        $nextTick(() => {
+            requestAnimationFrame(() => requestAnimationFrame(easeSectionHeight));
+        });
     });">
         <template x-if="mountedSections.includes('business-hub')">
-            <div class="section-panel" :class="{ 'section-active': activeSection === 'business-hub' }"
-                x-init="$nextTick(() => {
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'business-hub' }" x-init="$nextTick(() => {
                     requestAnimationFrame(() => {
                         window.dispatchEvent(new CustomEvent('business-hub-mounted'));
                         window.scheduleWeeklyRevenueChartInit?.();
@@ -193,8 +219,7 @@
             </div>
         </template>
         <template x-if="mountedSections.includes('earnings')">
-            <div class="section-panel" :class="{ 'section-active': activeSection === 'earnings' }"
-                x-init="$nextTick(() => {
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'earnings' }" x-init="$nextTick(() => {
                     requestAnimationFrame(() => {
                         window.dispatchEvent(new CustomEvent('earnings-mounted'));
                         window.scheduleEarningsChartsInit?.();
@@ -224,7 +249,7 @@
 
     .active-section-header {
         color: #3B3731;
-        text-align: right;
+        text-align: left;
         font-family: "Playfair Display";
         font-size: 28px;
         font-weight: 600;
@@ -235,13 +260,17 @@
     .active-section-header h2,
     .active-section-header>div>h2 {
         color: #3B3731;
-        text-align: right;
+        text-align: left;
         font-family: "Playfair Display";
         font-size: 28px;
         font-style: normal;
         font-weight: 600;
         line-height: normal;
         text-transform: capitalize;
+    }
+
+    .active-section-header h2.active-section-header-welcome {
+        text-transform: none;
     }
 
     .active-section-header p,
@@ -394,6 +423,16 @@
         padding: 0;
     }
 
+    .active-section-header-stack {
+        display: grid;
+        min-height: 3.5rem;
+    }
+
+    .active-section-header-pane {
+        grid-area: 1 / 1;
+        width: 100%;
+    }
+
     .section-container {
         position: relative;
         overflow: hidden;
@@ -401,16 +440,15 @@
 
     .section-panel {
         opacity: 0;
-        transform: translateY(10px);
-        transition: opacity 0.3s ease, transform 0.3s ease;
+        transform: translateY(8px);
+        transition: opacity 0.38s cubic-bezier(0.22, 1, 0.36, 1), transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
         pointer-events: none;
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
-        height: 0;
-        overflow: hidden;
         visibility: hidden;
+        z-index: 0;
     }
 
     .section-panel.section-active {
@@ -418,8 +456,14 @@
         transform: translateY(0);
         pointer-events: auto;
         position: relative;
-        height: auto;
-        overflow: visible;
         visibility: visible;
+        z-index: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .section-panel {
+            transition: none;
+            transform: none;
+        }
     }
 </style>

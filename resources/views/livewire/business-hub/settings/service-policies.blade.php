@@ -599,8 +599,8 @@ new class extends Component {
             <span>Clear policies reduce disputes and improve trust.</span>
         </div>
         <button type="button" class="service-policies-alert__close" @click="showServicePoliciesAlert = false"
-            aria-label="Dismiss service policies alert"><svg xmlns="http://www.w3.org/2000/svg" width="24"
-                height="14" viewBox="0 0 24 14" fill="none">
+            aria-label="Dismiss service policies alert"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="14"
+                viewBox="0 0 24 14" fill="none">
                 <path
                     d="M6.65625 13.7071C6.26572 14.0976 5.63256 14.0976 5.24204 13.7071C4.85151 13.3166 4.85151 12.6834 5.24204 12.2929L5.94914 13L6.65625 13.7071ZM11.9999 6.94921L12.707 6.24211C13.0975 6.63263 13.0975 7.2658 12.707 7.65632L11.9999 6.94921ZM5.34361 1.70711C4.95309 1.31658 4.95309 0.683417 5.34361 0.292892C5.73413 -0.0976337 6.3673 -0.0976336 6.75782 0.292892L6.05072 1L5.34361 1.70711ZM5.94914 13L5.24204 12.2929L11.2928 6.24211L11.9999 6.94921L12.707 7.65632L6.65625 13.7071L5.94914 13ZM11.9999 6.94921L11.2928 7.65632L5.34361 1.70711L6.05072 1L6.75782 0.292892L12.707 6.24211L11.9999 6.94921Z"
                     fill="#B4CCDD" />
@@ -682,10 +682,9 @@ new class extends Component {
                             }
                         }" x-init="$nextTick(() => syncWidth())"
                             :class="{ 'service-policies-percent-input--shake': shakePercent }">
-                            <input type="number" min="0" max="100" step="1"
-                                wire:model.defer="cancellationFee" aria-label="Late cancellation fee percentage"
-                                x-ref="input" @input="clampPercent(); syncWidth()"
-                                @change="clampPercent(); syncWidth()"
+                            <input type="number" min="0" max="100" step="1" wire:model.defer="cancellationFee"
+                                aria-label="Late cancellation fee percentage" x-ref="input"
+                                @input="clampPercent(); syncWidth()" @change="clampPercent(); syncWidth()"
                                 @wheel.prevent="
                                     if (!$el.disabled) {
                                         if ($event.deltaY < 0 && Number($el.value || 0) >= Number($el.max || 100)) {
@@ -696,34 +695,31 @@ new class extends Component {
                                             $el.dispatchEvent(new Event('change', { bubbles: true }));
                                         }
                                     }
-                                "
-                                @disabled(!$lateCancellationFeeEnabled)>
+                                " @disabled(!$lateCancellationFeeEnabled)>
                             <span class="service-policies-percent-symbol" aria-hidden="true">%</span>
                             <span class="service-policies-stepper">
-                                <button type="button" aria-label="Increase late cancellation fee"
-                                    @click.prevent="
+                                <button type="button" aria-label="Increase late cancellation fee" @click.prevent="
                                         const input = $el.closest('.service-policies-percent-input').querySelector('input');
                                         if (input.disabled) return;
                                         input.stepUp();
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                     ">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
-                                        viewBox="0 0 11 6" fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 11 6"
+                                        fill="none" aria-hidden="true">
                                         <path d="M10.374 5.479L5.3952 0.500185L0.499963 5.39543" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
                                 </button>
-                                <button type="button" aria-label="Decrease late cancellation fee"
-                                    @click.prevent="
+                                <button type="button" aria-label="Decrease late cancellation fee" @click.prevent="
                                         const input = $el.closest('.service-policies-percent-input').querySelector('input');
                                         if (input.disabled) return;
                                         input.stepDown();
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                     ">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
-                                        viewBox="0 0 11 6" fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 11 6"
+                                        fill="none" aria-hidden="true">
                                         <path d="M10.374 0.5L5.3952 5.47882L0.499963 0.583578" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
@@ -738,8 +734,7 @@ new class extends Component {
                 <div class="service-policies-fee-group">
                     <div class="service-policies-fee-row">
                         <label class="service-policies-fee-dot">
-                            <input type="checkbox" wire:model.live="noShowFeeEnabled"
-                                aria-label="Enable no show fee">
+                            <input type="checkbox" wire:model.live="noShowFeeEnabled" aria-label="Enable no show fee">
                             <span aria-hidden="true"></span>
                         </label>
                         <strong>No Show Fee</strong>
@@ -765,10 +760,9 @@ new class extends Component {
                             }
                         }" x-init="$nextTick(() => syncWidth())"
                             :class="{ 'service-policies-percent-input--shake': shakePercent }">
-                            <input type="number" min="0" max="100" step="1"
-                                wire:model.defer="noShowFee" aria-label="No show fee percentage" x-ref="input"
-                                @input="clampPercent(); syncWidth()" @change="clampPercent(); syncWidth()"
-                                @wheel.prevent="
+                            <input type="number" min="0" max="100" step="1" wire:model.defer="noShowFee"
+                                aria-label="No show fee percentage" x-ref="input" @input="clampPercent(); syncWidth()"
+                                @change="clampPercent(); syncWidth()" @wheel.prevent="
                                     if (!$el.disabled) {
                                         if ($event.deltaY < 0 && Number($el.value || 0) >= Number($el.max || 100)) {
                                             triggerPercentShake();
@@ -778,34 +772,31 @@ new class extends Component {
                                             $el.dispatchEvent(new Event('change', { bubbles: true }));
                                         }
                                     }
-                                "
-                                @disabled(!$noShowFeeEnabled)>
+                                " @disabled(!$noShowFeeEnabled)>
                             <span class="service-policies-percent-symbol" aria-hidden="true">%</span>
                             <span class="service-policies-stepper">
-                                <button type="button" aria-label="Increase no show fee"
-                                    @click.prevent="
+                                <button type="button" aria-label="Increase no show fee" @click.prevent="
                                         const input = $el.closest('.service-policies-percent-input').querySelector('input');
                                         if (input.disabled) return;
                                         input.stepUp();
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                     ">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
-                                        viewBox="0 0 11 6" fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 11 6"
+                                        fill="none" aria-hidden="true">
                                         <path d="M10.374 5.479L5.3952 0.500185L0.499963 5.39543" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
                                 </button>
-                                <button type="button" aria-label="Decrease no show fee"
-                                    @click.prevent="
+                                <button type="button" aria-label="Decrease no show fee" @click.prevent="
                                         const input = $el.closest('.service-policies-percent-input').querySelector('input');
                                         if (input.disabled) return;
                                         input.stepDown();
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                     ">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
-                                        viewBox="0 0 11 6" fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 11 6"
+                                        fill="none" aria-hidden="true">
                                         <path d="M10.374 0.5L5.3952 5.47882L0.499963 0.583578" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
@@ -842,17 +833,17 @@ new class extends Component {
         <div class="service-policies-section-title">
             <h3>Late Arrival Policy</h3>
             <div class="service-policies-title-actions">
-                <button type="button" class="service-policies-save" x-cloak
-                    x-show="editingSection === 'late-arrival'" @click="saveSection('saveLateArrivalPolicy')"
-                    wire:loading.attr="disabled" wire:target="saveLateArrivalPolicy">
+                <button type="button" class="service-policies-save" x-cloak x-show="editingSection === 'late-arrival'"
+                    @click="saveSection('saveLateArrivalPolicy')" wire:loading.attr="disabled"
+                    wire:target="saveLateArrivalPolicy">
                     <span wire:loading.remove wire:target="saveLateArrivalPolicy">Save Details</span>
                     <span class="service-policies-saving" wire:loading.flex wire:target="saveLateArrivalPolicy">
                         <span class="service-policies-spinner" aria-hidden="true"></span>
                         Saving
                     </span>
                 </button>
-                <button type="button" class="service-policies-edit" x-cloak
-                    x-show="editingSection !== 'late-arrival'" @click="editSection('late-arrival')">
+                <button type="button" class="service-policies-edit" x-cloak x-show="editingSection !== 'late-arrival'"
+                    @click="editSection('late-arrival')">
                     <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="15"
                             viewBox="0 0 16 15" fill="none">
                             <path
@@ -878,58 +869,53 @@ new class extends Component {
                             <input type="checkbox" wire:model.live="lateArrivalFeeEnabled"
                                 aria-label="Enable late arrival fee">
                             <span aria-hidden="true">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="11"
-                                    viewBox="0 0 14 11" fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="11" viewBox="0 0 14 11"
+                                    fill="none">
                                     <path d="M1 5.5L5.07143 9.5L13 1" stroke="white" stroke-width="2"
                                         stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </span>
                         </label>
 
-                        <span class="service-policies-number-input service-policies-money-input"
-                            x-data="{
+                        <span class="service-policies-number-input service-policies-money-input" x-data="{
                                 syncWidth() {
                                     const input = this.$refs.input;
                                     input.style.width = '4ch';
                                 }
                             }" x-init="$nextTick(() => syncWidth())">
                             <span aria-hidden="true">£</span>
-                            <input type="number" min="0" max="999" step="1"
-                                wire:model.defer="lateArrivalFeeAmount" aria-label="Late arrival fee amount"
-                                x-ref="input" @input="syncWidth()" @change="syncWidth()"
-                                @wheel.prevent="
+                            <input type="number" min="0" max="999" step="1" wire:model.defer="lateArrivalFeeAmount"
+                                aria-label="Late arrival fee amount" x-ref="input" @input="syncWidth()"
+                                @change="syncWidth()" @wheel.prevent="
                                     if (!$el.disabled) {
                                         $event.deltaY < 0 ? $el.stepUp() : $el.stepDown();
                                         $el.dispatchEvent(new Event('input', { bubbles: true }));
                                         $el.dispatchEvent(new Event('change', { bubbles: true }));
                                     }
-                                "
-                                @disabled(!$lateArrivalFeeEnabled)>
+                                " @disabled(!$lateArrivalFeeEnabled)>
                             <span class="service-policies-stepper">
-                                <button type="button" aria-label="Increase late arrival fee"
-                                    @click.prevent="
+                                <button type="button" aria-label="Increase late arrival fee" @click.prevent="
                                         const input = $el.closest('.service-policies-number-input').querySelector('input');
                                         if (input.disabled) return;
                                         input.stepUp();
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                     ">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
-                                        viewBox="0 0 11 6" fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 11 6"
+                                        fill="none" aria-hidden="true">
                                         <path d="M10.374 5.479L5.3952 0.500185L0.499963 5.39543" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
                                 </button>
-                                <button type="button" aria-label="Decrease late arrival fee"
-                                    @click.prevent="
+                                <button type="button" aria-label="Decrease late arrival fee" @click.prevent="
                                         const input = $el.closest('.service-policies-number-input').querySelector('input');
                                         if (input.disabled) return;
                                         input.stepDown();
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                     ">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
-                                        viewBox="0 0 11 6" fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 11 6"
+                                        fill="none" aria-hidden="true">
                                         <path d="M10.374 0.5L5.3952 5.47882L0.499963 0.583578" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
@@ -939,50 +925,45 @@ new class extends Component {
 
                         <em>after</em>
 
-                        <span class="service-policies-number-input service-policies-minutes-input"
-                            x-data="{
+                        <span class="service-policies-number-input service-policies-minutes-input" x-data="{
                                 syncWidth() {
                                     const input = this.$refs.input;
                                     input.style.width = `${Math.min(Math.max((input.value || '0').length + 0.35, 1.35), 4)}ch`;
                                 }
                             }" x-init="$nextTick(() => syncWidth())">
-                            <input type="number" min="0" max="999" step="1"
-                                wire:model.defer="lateArrivalFeeMinutes" aria-label="Late arrival fee minutes"
-                                x-ref="input" @input="syncWidth()" @change="syncWidth()"
-                                @wheel.prevent="
+                            <input type="number" min="0" max="999" step="1" wire:model.defer="lateArrivalFeeMinutes"
+                                aria-label="Late arrival fee minutes" x-ref="input" @input="syncWidth()"
+                                @change="syncWidth()" @wheel.prevent="
                                     if (!$el.disabled) {
                                         $event.deltaY < 0 ? $el.stepUp() : $el.stepDown();
                                         $el.dispatchEvent(new Event('input', { bubbles: true }));
                                         $el.dispatchEvent(new Event('change', { bubbles: true }));
                                     }
-                                "
-                                @disabled(!$lateArrivalFeeEnabled)>
+                                " @disabled(!$lateArrivalFeeEnabled)>
                             <span aria-hidden="true">mins</span>
                             <span class="service-policies-stepper">
-                                <button type="button" aria-label="Increase late arrival fee minutes"
-                                    @click.prevent="
+                                <button type="button" aria-label="Increase late arrival fee minutes" @click.prevent="
                                         const input = $el.closest('.service-policies-number-input').querySelector('input');
                                         if (input.disabled) return;
                                         input.stepUp();
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                     ">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
-                                        viewBox="0 0 11 6" fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 11 6"
+                                        fill="none" aria-hidden="true">
                                         <path d="M10.374 5.479L5.3952 0.500185L0.499963 5.39543" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
                                 </button>
-                                <button type="button" aria-label="Decrease late arrival fee minutes"
-                                    @click.prevent="
+                                <button type="button" aria-label="Decrease late arrival fee minutes" @click.prevent="
                                         const input = $el.closest('.service-policies-number-input').querySelector('input');
                                         if (input.disabled) return;
                                         input.stepDown();
                                         input.dispatchEvent(new Event('input', { bubbles: true }));
                                         input.dispatchEvent(new Event('change', { bubbles: true }));
                                     ">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6"
-                                        viewBox="0 0 11 6" fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="6" viewBox="0 0 11 6"
+                                        fill="none" aria-hidden="true">
                                         <path d="M10.374 0.5L5.3952 5.47882L0.499963 0.583578" stroke="#3B3731"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
@@ -1062,8 +1043,8 @@ new class extends Component {
                     <div class="service-policies-refund-actions">
                         <button type="button" class="service-policies-refund-download">
                             <span style="color: #3B3731;font-weight: 400;">Download Documents</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21"
-                                viewBox="0 0 18 21" fill="none" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21" viewBox="0 0 18 21"
+                                fill="none" aria-hidden="true">
                                 <path
                                     d="M0.75 16.583V18.1663C0.75 18.5863 0.90165 18.989 1.17159 19.2859C1.44153 19.5829 1.80764 19.7497 2.18939 19.7497H15.1439C15.5257 19.7497 15.8918 19.5829 16.1617 19.2859C16.4317 18.989 16.5833 18.5863 16.5833 18.1663V16.583"
                                     stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
@@ -1077,8 +1058,8 @@ new class extends Component {
                             <button type="button" class="service-policies-refund-decline"
                                 wire:click="declineRefundPolicy" wire:loading.attr="disabled"
                                 wire:target="declineRefundPolicy,acceptRefundPolicy,saveRefundPolicy">Decline</button>
-                            <button type="button" class="service-policies-refund-agree"
-                                wire:click="acceptRefundPolicy" wire:loading.attr="disabled"
+                            <button type="button" class="service-policies-refund-agree" wire:click="acceptRefundPolicy"
+                                wire:loading.attr="disabled"
                                 wire:target="declineRefundPolicy,acceptRefundPolicy,saveRefundPolicy">Agree &amp;
                                 Continue</button>
                         </div>
@@ -1091,8 +1072,7 @@ new class extends Component {
                     platform.</p>
                 <div class="service-policies-document-meta">
                     <span aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                            fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                             <path
                                 d="M12 0C5.4 0 0 5.4 0 12C0 18.6 5.4 24 12 24C18.6 24 24 18.6 24 12C24 5.4 18.6 0 12 0ZM9.6 18L3.6 12L5.292 10.308L9.6 14.604L18.708 5.496L20.4 7.2L9.6 18Z"
                                 fill="#C9DDA0" />
@@ -1104,8 +1084,7 @@ new class extends Component {
                     </div>
                 </div>
                 <button type="button" class="service-policies-download" aria-label="Download refund policy">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21" viewBox="0 0 18 21"
-                        fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21" viewBox="0 0 18 21" fill="none">
                         <path
                             d="M0.75 16.583V18.1663C0.75 18.5863 0.90165 18.989 1.17159 19.2859C1.44153 19.5829 1.80764 19.7497 2.18939 19.7497H15.1439C15.5257 19.7497 15.8918 19.5829 16.1617 19.2859C16.4317 18.989 16.5833 18.5863 16.5833 18.1663V16.583"
                             stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1121,17 +1100,17 @@ new class extends Component {
         <div class="service-policies-section-title">
             <h3>Service Limitations</h3>
             <div class="service-policies-title-actions">
-                <button type="button" class="service-policies-save" x-cloak
-                    x-show="editingSection === 'limitations'" @click="saveSection('saveServiceLimitations')"
-                    wire:loading.attr="disabled" wire:target="saveServiceLimitations">
+                <button type="button" class="service-policies-save" x-cloak x-show="editingSection === 'limitations'"
+                    @click="saveSection('saveServiceLimitations')" wire:loading.attr="disabled"
+                    wire:target="saveServiceLimitations">
                     <span wire:loading.remove wire:target="saveServiceLimitations">Save Details</span>
                     <span class="service-policies-saving" wire:loading.flex wire:target="saveServiceLimitations">
                         <span class="service-policies-spinner" aria-hidden="true"></span>
                         Saving
                     </span>
                 </button>
-                <button type="button" class="service-policies-edit" x-cloak
-                    x-show="editingSection !== 'limitations'" @click="editSection('limitations')">
+                <button type="button" class="service-policies-edit" x-cloak x-show="editingSection !== 'limitations'"
+                    @click="editSection('limitations')">
                     <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="15"
                             viewBox="0 0 16 15" fill="none">
                             <path
@@ -1147,8 +1126,7 @@ new class extends Component {
                     <span>Service Limitations</span>
                     @foreach ($serviceLimitationPresets as $limitation)
                         <label class="service-policies-limitation-option">
-                            <input type="checkbox" wire:model.defer="selectedServiceLimitations"
-                                value="{{ $limitation }}">
+                            <input type="checkbox" wire:model.defer="selectedServiceLimitations" value="{{ $limitation }}">
                             <span aria-hidden="true"></span>
                             <p>{{ $limitation }}</p>
                         </label>
@@ -1162,18 +1140,16 @@ new class extends Component {
                             maxlength="255" wire:keydown.enter.prevent="addCustomServiceLimitation">
                         <button type="button" wire:click="addCustomServiceLimitation"
                             aria-label="Add custom limitation">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M12 5V19M5 12H19" stroke="white" stroke-width="1.5"
-                                    stroke-linecap="round" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" aria-hidden="true">
+                                <path d="M12 5V19M5 12H19" stroke="white" stroke-width="1.5" stroke-linecap="round" />
                             </svg>
                         </button>
                     </div>
                     @if ($customServiceLimitations !== [])
                         <div class="service-policies-limitations-custom-list">
                             @foreach ($customServiceLimitations as $index => $limitation)
-                                <button type="button"
-                                    wire:click="removeCustomServiceLimitation({{ $index }})">
+                                <button type="button" wire:click="removeCustomServiceLimitation({{ $index }})">
                                     <span>{{ $limitation }}</span>
                                     <strong aria-hidden="true">&times;</strong>
                                 </button>
@@ -1199,8 +1175,8 @@ new class extends Component {
         <div class="service-policies-section-title">
             <h3>Animal Welfare Statement</h3>
             <div class="service-policies-title-actions">
-                <button type="button" class="service-policies-edit" x-cloak
-                    x-show="editingSection !== 'animal-welfare'" @click="editSection('animal-welfare')">
+                <button type="button" class="service-policies-edit" x-cloak x-show="editingSection !== 'animal-welfare'"
+                    @click="editSection('animal-welfare')">
                     <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="15"
                             viewBox="0 0 16 15" fill="none">
                             <path
@@ -1244,8 +1220,8 @@ new class extends Component {
                     <div class="service-policies-refund-actions">
                         <button type="button" class="service-policies-refund-download">
                             <span style="color: #3B3731;font-weight: 400;">Download Documents</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21"
-                                viewBox="0 0 18 21" fill="none" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21" viewBox="0 0 18 21"
+                                fill="none" aria-hidden="true">
                                 <path
                                     d="M0.75 16.583V18.1663C0.75 18.5863 0.90165 18.989 1.17159 19.2859C1.44153 19.5829 1.80764 19.7497 2.18939 19.7497H15.1439C15.5257 19.7497 15.8918 19.5829 16.1617 19.2859C16.4317 18.989 16.5833 18.5863 16.5833 18.1663V16.583"
                                     stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
@@ -1273,8 +1249,7 @@ new class extends Component {
                 </p>
                 <div class="service-policies-document-meta">
                     <span aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                            fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                             <path
                                 d="M12 0C5.4 0 0 5.4 0 12C0 18.6 5.4 24 12 24C18.6 24 24 18.6 24 12C24 5.4 18.6 0 12 0ZM9.6 18L3.6 12L5.292 10.308L9.6 14.604L18.708 5.496L20.4 7.2L9.6 18Z"
                                 fill="#C9DDA0" />
@@ -1285,10 +1260,8 @@ new class extends Component {
                         <small>{{ $animalWelfareEnabled ? 'Status: Verified' : 'Status: Not verified' }}</small>
                     </div>
                 </div>
-                <button type="button" class="service-policies-download"
-                    aria-label="Download animal welfare statement">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21" viewBox="0 0 18 21"
-                        fill="none">
+                <button type="button" class="service-policies-download" aria-label="Download animal welfare statement">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21" viewBox="0 0 18 21" fill="none">
                         <path
                             d="M0.75 16.583V18.1663C0.75 18.5863 0.90165 18.989 1.17159 19.2859C1.44153 19.5829 1.80764 19.7497 2.18939 19.7497H15.1439C15.5257 19.7497 15.8918 19.5829 16.1617 19.2859C16.4317 18.989 16.5833 18.5863 16.5833 18.1663V16.583"
                             stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1304,17 +1277,17 @@ new class extends Component {
         <div class="service-policies-section-title">
             <h3>Hygiene &amp; Safety Standards</h3>
             <div class="service-policies-title-actions">
-                <button type="button" class="service-policies-save" x-cloak
-                    x-show="editingSection === 'hygiene-safety'" @click="saveSection('saveHygieneSafetyStandards')"
-                    wire:loading.attr="disabled" wire:target="saveHygieneSafetyStandards">
+                <button type="button" class="service-policies-save" x-cloak x-show="editingSection === 'hygiene-safety'"
+                    @click="saveSection('saveHygieneSafetyStandards')" wire:loading.attr="disabled"
+                    wire:target="saveHygieneSafetyStandards">
                     <span wire:loading.remove wire:target="saveHygieneSafetyStandards">Save Details</span>
                     <span class="service-policies-saving" wire:loading.flex wire:target="saveHygieneSafetyStandards">
                         <span class="service-policies-spinner" aria-hidden="true"></span>
                         Saving
                     </span>
                 </button>
-                <button type="button" class="service-policies-edit" x-cloak
-                    x-show="editingSection !== 'hygiene-safety'" @click="editSection('hygiene-safety')">
+                <button type="button" class="service-policies-edit" x-cloak x-show="editingSection !== 'hygiene-safety'"
+                    @click="editSection('hygiene-safety')">
                     <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="15"
                             viewBox="0 0 16 15" fill="none">
                             <path
@@ -1345,18 +1318,16 @@ new class extends Component {
                             maxlength="255" wire:keydown.enter.prevent="addCustomHygieneSafetyStandard">
                         <button type="button" wire:click="addCustomHygieneSafetyStandard"
                             aria-label="Add custom hygiene and safety standard">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M12 5V19M5 12H19" stroke="white" stroke-width="1.5"
-                                    stroke-linecap="round" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" aria-hidden="true">
+                                <path d="M12 5V19M5 12H19" stroke="white" stroke-width="1.5" stroke-linecap="round" />
                             </svg>
                         </button>
                     </div>
                     @if ($customHygieneSafetyStandards !== [])
                         <div class="service-policies-limitations-custom-list">
                             @foreach ($customHygieneSafetyStandards as $index => $standard)
-                                <button type="button"
-                                    wire:click="removeCustomHygieneSafetyStandard({{ $index }})">
+                                <button type="button" wire:click="removeCustomHygieneSafetyStandard({{ $index }})">
                                     <span>{{ $standard }}</span>
                                     <strong aria-hidden="true">&times;</strong>
                                 </button>
@@ -1419,8 +1390,8 @@ new class extends Component {
                     <div class="service-policies-refund-actions">
                         <button type="button" class="service-policies-refund-download">
                             <span style="color: #3B3731;font-weight: 400;">Download Documents</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21"
-                                viewBox="0 0 18 21" fill="none" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21" viewBox="0 0 18 21"
+                                fill="none" aria-hidden="true">
                                 <path
                                     d="M0.75 16.583V18.1663C0.75 18.5863 0.90165 18.989 1.17159 19.2859C1.44153 19.5829 1.80764 19.7497 2.18939 19.7497H15.1439C15.5257 19.7497 15.8918 19.5829 16.1617 19.2859C16.4317 18.989 16.5833 18.5863 16.5833 18.1663V16.583"
                                     stroke="#3B3731" stroke-width="1.5" stroke-linecap="round"
@@ -1468,8 +1439,7 @@ new class extends Component {
                     on the FursGo platform.</p>
                 <div class="service-policies-document-meta">
                     <span aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                            fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                             <path
                                 d="M12 0C5.4 0 0 5.4 0 12C0 18.6 5.4 24 12 24C18.6 24 24 18.6 24 12C24 5.4 18.6 0 12 0ZM9.6 18L3.6 12L5.292 10.308L9.6 14.604L18.708 5.496L20.4 7.2L9.6 18Z"
                                 fill="#C9DDA0" />
@@ -1481,10 +1451,8 @@ new class extends Component {
                         <small>{{ $complianceDeclarationEnabled ? 'Status: Verified' : 'Status: Not verified' }}</small>
                     </div>
                 </div>
-                <button type="button" class="service-policies-download"
-                    aria-label="Download compliance declaration">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21" viewBox="0 0 18 21"
-                        fill="none">
+                <button type="button" class="service-policies-download" aria-label="Download compliance declaration">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21" viewBox="0 0 18 21" fill="none">
                         <path
                             d="M0.75 16.583V18.1663C0.75 18.5863 0.90165 18.989 1.17159 19.2859C1.44153 19.5829 1.80764 19.7497 2.18939 19.7497H15.1439C15.5257 19.7497 15.8918 19.5829 16.1617 19.2859C16.4317 18.989 16.5833 18.5863 16.5833 18.1663V16.583"
                             stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1503,10 +1471,10 @@ new class extends Component {
             aria-controls="service-policies-compliance-timeline">
             <h3>Compliance Timeline</h3>
             <span class="service-policies-timeline-toggle" :class="{ 'is-collapsed': !timelineOpen }">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8"
-                    fill="none" aria-hidden="true">
-                    <path d="M13.8737 7.24316L7.13022 0.499723L0.499976 7.12996" stroke="#3B3731"
-                        stroke-linecap="round" stroke-linejoin="round" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8" fill="none"
+                    aria-hidden="true">
+                    <path d="M13.8737 7.24316L7.13022 0.499723L0.499976 7.12996" stroke="#3B3731" stroke-linecap="round"
+                        stroke-linejoin="round" />
                 </svg>
             </span>
         </button>
@@ -1515,8 +1483,8 @@ new class extends Component {
             <div class="service-policies-timeline-collapse__inner">
                 <div class="service-policies-card service-policies-timeline">
                     @forelse ($verifyDates as $date)
-                        <p><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24"
-                                    height="24" viewBox="0 0 24 24" fill="none">
+                        <p><span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                    viewBox="0 0 24 24" fill="none">
                                     <path
                                         d="M12 0C5.4 0 0 5.4 0 12C0 18.6 5.4 24 12 24C18.6 24 24 18.6 24 12C24 5.4 18.6 0 12 0ZM9.6 18L3.6 12L5.292 10.308L9.6 14.604L18.708 5.496L20.4 7.2L9.6 18Z"
                                         fill="#C9DDA0" />
@@ -1534,7 +1502,7 @@ new class extends Component {
             width: 100%;
             padding-top: 1.5rem;
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
         }
 
         .service-policies-heading {

@@ -92,7 +92,8 @@ new class extends Component {
         ->all();
 @endphp
 
-<section class="service-area-panel" aria-label="Service area list" wire:ignore.self x-data="serviceAreaMap(@js($mapAreas), @entangle('selectedAreaId').live)"
+<section class="service-area-panel" aria-label="Service area list" wire:ignore.self
+    x-data="serviceAreaMap(@js($mapAreas), @entangle('selectedAreaId').live)"
     x-on:service-area-map-refresh.window="refreshMap()"
     x-on:service-area-data-updated.window="setAreas($event.detail?.areas ?? [])">
     <div class="service-area-layout">
@@ -108,29 +109,28 @@ new class extends Component {
                     </thead>
                     <tbody>
                         @forelse ($this->serviceAreas as $area)
-                            <tr wire:key="service-area-row-{{ $area['id'] }}" @class([
-                                'is-selected' => $selectedAreaId === $area['id'],
-                                'is-newly-added' => $highlightItemId === $area['id'],
-                            ])
-                                @if ($highlightItemId === $area['id']) x-init="setTimeout(() => $wire.clearHighlight(), 2000)" @endif
-                                wire:click="selectArea({{ $area['id'] }})" role="button" tabindex="0"
-                                @keydown.enter.prevent="$wire.selectArea({{ $area['id'] }})">
-                                <td>{{ $area['name'] }}</td>
-                                <td>{{ $this->formatRadius((float) $area['radius']) }}</td>
-                                <td class="service-area-edit-col" wire:click.stop>
-                                    <button type="button" class="icon-btn" aria-label="Edit {{ $area['name'] }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16"
-                                            viewBox="0 0 17 16" fill="none">
-                                            <path
-                                                d="M10.8529 2.51425L13.6765 5.29691M8.97059 15.5H16.5M1.44118 11.7898L0.5 15.5L4.26471 14.5724L15.1692 3.82581C15.5221 3.47793 15.7203 3.00616 15.7203 2.51425C15.7203 2.02234 15.5221 1.55057 15.1692 1.20269L15.0073 1.04315C14.6543 0.695371 14.1756 0.5 13.6765 0.5C13.1773 0.5 12.6986 0.695371 12.3456 1.04315L1.44118 11.7898Z"
-                                                stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" class="icon-btn dots-btn"
-                                        aria-label="Actions for {{ $area['name'] }}">•••
-                                    </button>
-                                </td>
-                            </tr>
+                                                <tr wire:key="service-area-row-{{ $area['id'] }}" @class([
+                                                    'is-selected' => $selectedAreaId === $area['id'],
+                                                    'is-newly-added' => $highlightItemId === $area['id'],
+                                                ]) @if ($highlightItemId === $area['id']) x-init="setTimeout(() => $wire.clearHighlight(), 2000)"
+                            @endif wire:click="selectArea({{ $area['id'] }})" role="button" tabindex="0"
+                                                    @keydown.enter.prevent="$wire.selectArea({{ $area['id'] }})">
+                                                    <td>{{ $area['name'] }}</td>
+                                                    <td>{{ $this->formatRadius((float) $area['radius']) }}</td>
+                                                    <td class="service-area-edit-col" wire:click.stop>
+                                                        <button type="button" class="icon-btn" aria-label="Edit {{ $area['name'] }}">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16"
+                                                                fill="none">
+                                                                <path
+                                                                    d="M10.8529 2.51425L13.6765 5.29691M8.97059 15.5H16.5M1.44118 11.7898L0.5 15.5L4.26471 14.5724L15.1692 3.82581C15.5221 3.47793 15.7203 3.00616 15.7203 2.51425C15.7203 2.02234 15.5221 1.55057 15.1692 1.20269L15.0073 1.04315C14.6543 0.695371 14.1756 0.5 13.6765 0.5C13.1773 0.5 12.6986 0.695371 12.3456 1.04315L1.44118 11.7898Z"
+                                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                            </svg>
+                                                        </button>
+                                                        <button type="button" class="icon-btn dots-btn"
+                                                            aria-label="Actions for {{ $area['name'] }}">•••
+                                                        </button>
+                                                    </td>
+                                                </tr>
                         @empty
                             <tr>
                                 <td colspan="3" class="service-area-empty">No service areas added yet.</td>
@@ -227,16 +227,16 @@ new class extends Component {
 
                         L.tileLayer(
                             'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-                                subdomains: 'abcd',
-                                maxZoom: 20,
-                            }).addTo(this.map);
+                            subdomains: 'abcd',
+                            maxZoom: 20,
+                        }).addTo(this.map);
 
                         L.tileLayer(
                             'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
-                                subdomains: 'abcd',
-                                maxZoom: 20,
-                                pane: 'overlayPane',
-                            }).addTo(this.map);
+                            subdomains: 'abcd',
+                            maxZoom: 20,
+                            pane: 'overlayPane',
+                        }).addTo(this.map);
 
                         this.drawAreas();
                         setTimeout(() => this.map?.invalidateSize(), 120);
@@ -392,7 +392,7 @@ new class extends Component {
 
     .service-area-table td {
         color: #3b3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 400;
         line-height: normal;
@@ -401,7 +401,7 @@ new class extends Component {
 
     .service-area-table th {
         color: #000;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 600;
         line-height: normal;
@@ -478,7 +478,7 @@ new class extends Component {
         width: 100%;
         height: 505px;
         aspect-ratio: 122/101;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
     }
 
     /* Grayscale basemap only; markers, circles, and labels stay in colour */
@@ -527,7 +527,7 @@ new class extends Component {
         box-shadow: 0 4px 14px rgba(59, 55, 49, 0.12);
         padding: 0;
         color: #3b3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
     }
 
     .service-area-leaflet-tooltip::before {

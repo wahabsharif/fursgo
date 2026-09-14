@@ -315,7 +315,7 @@
         width: var(--rdc-width, 100%);
         max-width: 100%;
         color: #3b3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
     }
 
     .rdc-top {
@@ -431,7 +431,7 @@
     .rdc-year-select option {
         color: #3B3731;
         background: #fff;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 13px;
         font-weight: 600;
         padding: 8px 10px;

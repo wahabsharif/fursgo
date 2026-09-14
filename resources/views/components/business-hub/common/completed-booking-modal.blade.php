@@ -274,7 +274,7 @@
             align-items: center;
             gap: 0.75rem;
             color: #9D9B98;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 18px;
             font-weight: 400;
             line-height: normal;
@@ -425,7 +425,7 @@
             justify-content: space-between;
             gap: 1rem;
             color: #9D9B98;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 18px;
             font-weight: 400;
             line-height: 23px;
@@ -435,7 +435,7 @@
         .completed-booking-modal-total-row>span:last-child {
             color: #3B3731;
             text-align: right;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 18px;
             font-weight: 400;
             line-height: 23px;

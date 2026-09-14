@@ -87,8 +87,7 @@ new class extends Component {
                 <div class="ma-modal-header">
                     <h3 id="add-staff-modal-title">Add Team Member</h3>
                     <button type="button" class="ma-modal-close" aria-label="Close" @click="close()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
-                            fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                             <path d="M1 1L15 15M15 1L1 15" stroke="#3B3731" stroke-width="1.6" stroke-linecap="round" />
                         </svg>
                     </button>
@@ -101,8 +100,8 @@ new class extends Component {
                             <input type="text" placeholder="Lorem Ipsum" x-model="name" x-ref="nameInput">
                             <span class="ma-modal-check" aria-hidden="true"
                                 :class="{ 'is-visible': name && name.trim().length > 0 }">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19"
-                                    viewBox="0 0 19 19" fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
+                                    fill="none">
                                     <path
                                         d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
                                         fill="#C9DDA0" />
@@ -120,8 +119,8 @@ new class extends Component {
                             <input type="text" placeholder="Lorem Ipsum" x-model="jobTitle">
                             <span class="ma-modal-check" aria-hidden="true"
                                 :class="{ 'is-visible': jobTitle && jobTitle.trim().length > 0 }">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19"
-                                    viewBox="0 0 19 19" fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19"
+                                    fill="none">
                                     <path
                                         d="M9.5 0C4.275 0 0 4.275 0 9.5C0 14.725 4.275 19 9.5 19C14.725 19 19 14.725 19 9.5C19 4.275 14.725 0 9.5 0ZM7.6 14.25L2.85 9.5L4.1895 8.1605L7.6 11.5615L14.8105 4.351L16.15 5.7L7.6 14.25Z"
                                         fill="#C9DDA0" />
@@ -180,7 +179,7 @@ new class extends Component {
         border-radius: 14px;
         box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
         padding: 1.75rem 1.75rem 1.5rem;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         color: #3B3731;
         transform: translateY(10px) scale(0.97);
         will-change: transform;
@@ -250,7 +249,7 @@ new class extends Component {
         border-radius: 10px;
         background: #fff;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 15px;
         font-weight: 400;
         line-height: normal;
@@ -290,7 +289,7 @@ new class extends Component {
 
     .ma-modal-error {
         color: #d9534f;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 13px;
         font-weight: 600;
     }

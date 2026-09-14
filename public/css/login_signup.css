@@ -1,8 +1,7 @@
 :root {
-    --border: #D4D4D4;
-    ;
-    --error: #FF6E6E;
-    --success: #C9DDA0;
+    --border: #d4d4d4;
+    --error: #ff6e6e;
+    --success: #c9dda0;
 }
 
 .container-fluid {
@@ -17,7 +16,7 @@
 }
 
 body {
-    background: #FDFCF8;
+    background: #fdfcf8;
 }
 
 .login-image-wrapper img {
@@ -65,8 +64,8 @@ label {
     width: 100%;
     padding: 14px 40px 14px 16px;
     border-radius: 10px;
-    border: 1px solid #D4D4D4;
-    background: #FFF;
+    border: 1px solid #d4d4d4;
+    background: #fff;
     transition: border-color 0.3s;
     outline: none;
     color: var(--font-color);
@@ -89,13 +88,55 @@ label {
     font-size: 20px;
 }
 
+.login-form .email-field-status {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.login-form .email-field-status svg {
+    display: block;
+    width: 19px;
+    height: 19px;
+    flex-shrink: 0;
+}
+
+.login-form .email-field-spinner {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    box-sizing: border-box;
+    border: 2px solid rgba(59, 55, 49, 0.2);
+    border-top-color: #ffc97a;
+    border-radius: 50%;
+    animation: login-email-spin 0.7s linear infinite;
+}
+
+@keyframes login-email-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.login-form [x-cloak] {
+    display: none !important;
+}
+
 .login-form .forgot-password {
     text-align: right;
     margin-top: 8px;
 }
 
 .login-form .forgot-password a {
-    color: #9D9B98;
+    color: #9d9b98;
     transition: color 0.3s;
     text-align: right;
     font-family: Lato;
@@ -123,29 +164,37 @@ label {
     font-size: 16px;
     font-weight: 500;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s ease, opacity 0.3s ease;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s,
+        background-color 0.3s ease,
+        opacity 0.3s ease;
 }
 
 .btn-shadow {
-    box-shadow: 0 5px 8px rgba(0, 0, 0, 0.10);
+    box-shadow: 0 5px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Variants */
 .btn-active-bg {
-    background: #FFC97A;
+    background: #ffc97a;
 }
 
 .btn-active-bg:disabled {
     background: #ccc;
     cursor: not-allowed;
     opacity: 0.7;
-    transition: background-color 0.3s ease, opacity 0.3s ease;
+    transition:
+        background-color 0.3s ease,
+        opacity 0.3s ease;
 }
 
 .btn-active-bg:disabled:hover {
     transform: none;
     box-shadow: none;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
 }
 
 .btn-groomer-bg {
@@ -167,7 +216,7 @@ label {
     text-align: center;
     margin: 30px 0;
     position: relative;
-    color: #9D9B98;
+    color: #9d9b98;
     text-align: center;
     font-family: Lato;
     font-size: 16px;
@@ -201,7 +250,7 @@ label {
     justify-content: center;
     transition: all 0.3s;
     border-radius: 5px;
-    border: 1px solid #D4D4D4;
+    border: 1px solid #d4d4d4;
 }
 
 .social-btn:hover {
@@ -216,7 +265,7 @@ label {
 }
 
 .signup-text {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 16px;
     font-style: normal;
@@ -226,7 +275,7 @@ label {
 }
 
 .signup-text a {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 16px;
     font-style: normal;
@@ -250,7 +299,7 @@ label {
 /* signup css starts */
 
 .signup-text {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 16px;
     font-style: normal;
@@ -260,7 +309,7 @@ label {
 }
 
 .signup-text a {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 16px;
     font-style: normal;
@@ -284,10 +333,12 @@ label {
     max-width: 100%;
     padding: 14px 116px;
     border-radius: 5px;
-    background: #FFF;
-    border: 1px solid #3B3731;
+    background: #fff;
+    border: 1px solid #3b3731;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
     margin-top: 10px;
     text-align: right;
     color: var(--font-color);
@@ -298,19 +349,18 @@ label {
     line-height: normal;
 }
 
-
 /* setup owner account css */
 
 .setup-page-wrapper {
     border-radius: 10px;
-    background: #FFF;
+    background: #fff;
     width: 1030px;
     height: 500px;
     gap: 25px;
 }
 
 .skip {
-    color: #3B3731;
+    color: #3b3731;
     text-align: center;
     font-family: Lato;
     font-size: 16px;
@@ -329,7 +379,7 @@ label {
 
 /* setup owner complete  */
 .heading-desc {
-    color: #3B3731;
+    color: #3b3731;
     text-align: center;
     font-family: Lato;
     font-size: 16px;
@@ -339,7 +389,7 @@ label {
 }
 
 .sub-desc {
-    color: #9D9B98;
+    color: #9d9b98;
     font-family: Lato;
     font-size: 16px;
     font-style: normal;
@@ -347,14 +397,12 @@ label {
     line-height: normal;
 }
 
-
 /* sign up form css starts  */
 .form-card {
     width: 100%;
     max-width: 420px;
     padding: 32px;
 }
-
 
 .login-form .form-field {
     margin-bottom: 40px;
@@ -377,7 +425,7 @@ input {
     border-radius: 10px;
     border: 1px solid var(--border);
     outline: none;
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 16px;
     font-style: normal;
@@ -400,7 +448,7 @@ input.success {
 .icon {
     position: absolute;
     right: 12px;
-    top: 50%;
+    top: 1.5rem;
     transform: translateY(-50%);
     font-size: 18px;
     display: none;
@@ -426,7 +474,7 @@ input.success {
 }
 
 .password-rules {
-    color: #9D9B98;
+    color: #9d9b98;
     font-family: Lato;
     font-size: 14px;
     font-style: normal;
@@ -435,7 +483,7 @@ input.success {
 }
 
 .password-rules p {
-    color: #3B3731;
+    color: #3b3731;
 }
 
 .password-rules span {
@@ -443,7 +491,7 @@ input.success {
 }
 
 .password-status {
-    color: #FFC97A;
+    color: #ffc97a;
     text-align: right;
     font-family: Lato;
     font-size: 14px;
@@ -466,7 +514,7 @@ input[type="checkbox"] {
     justify-content: flex-start;
     gap: 8px;
     cursor: pointer;
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 14px;
     font-style: normal;
@@ -481,7 +529,6 @@ input[type="checkbox"] {
     flex-shrink: 0;
 }
 
-
 .signup-divider {
     margin: 28px 0;
     height: 1px;
@@ -489,7 +536,7 @@ input[type="checkbox"] {
 }
 
 .footer-text {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 16px;
     font-style: normal;
@@ -512,7 +559,6 @@ input[type="checkbox"] {
 
 /* === Custom Checkbox === */
 
-
 .custom-check input {
     display: none;
     /* hide default checkbox */
@@ -522,8 +568,8 @@ input[type="checkbox"] {
     width: 20px;
     height: 20px;
     border-radius: 100px;
-    border: 1px solid #FFD88C;
-    background: #FFF;
+    border: 1px solid #ffd88c;
+    background: #fff;
     flex-shrink: 0;
     position: absolute;
     left: 0;
@@ -537,19 +583,19 @@ input[type="checkbox"] {
     width: 13.333px;
     height: 13.333px;
     border-radius: 100px;
-    background: #FFD88C;
+    background: #ffd88c;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     opacity: 0;
 }
 
-.custom-check input:checked+.checkmark::after {
+.custom-check input:checked + .checkmark::after {
     opacity: 1;
 }
 
 .check-text {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 16px;
     font-style: normal;
