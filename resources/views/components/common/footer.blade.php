@@ -111,16 +111,10 @@ style="padding: 6rem;" @endunless>
 
                 <div class="help-center d-flex flex-column">
                     <ul class="footer-list">
-<<<<<<< HEAD
-                        <li><a href="{{ route('help-and-support') }}" wire:navigate><b>Help Center</b></a></li>
-                        <li><a href="{{ route('help-and-support') }}" wire:navigate>Help & Support</a></li>
-                        <li><a href="{{ route('profile_pets_preferences.company_information') }}" wire:navigate>Company Information</a></li>
-=======
                         <li><a href="#"><b>Help Center</b></a></li>
                         <li><a href="{{ route('help-and-support', $helpCentreParams) }}" wire:navigate>Help &
                                 Support</a></li>
                         <li><a href="#">Company Information</a></li>
->>>>>>> 3686cf2a86831824005858d1e89dafed90b1bdcd
                     </ul>
                 </div>
 
