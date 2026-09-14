@@ -62,9 +62,9 @@
 
                 <div class="about-us d-flex flex-column mt-xs-5">
                     <ul class="footer-list">
-                        <li><a href="#"><b>About Us</b></a></li>
-                        <li><a href="#">Our Mission</a></li>
-                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="{{ route('profile_pets_preferences.about_us') }}" wire:navigate><b>About Us</b></a></li>
+                        <li><a href="{{ route('profile_pets_preferences.about_us') }}" wire:navigate>Our Mission</a></li>
+                        <li><a href="{{ route('profile_pets_preferences.contact_us') }}" wire:navigate>Contact Us</a></li>
                     </ul>
                 </div>
 
@@ -75,9 +75,9 @@
 
                 <div class="help-center d-flex flex-column">
                     <ul class="footer-list">
-                        <li><a href="#"><b>Help Center</b></a></li>
+                        <li><a href="{{ route('help-and-support') }}" wire:navigate><b>Help Center</b></a></li>
                         <li><a href="{{ route('help-and-support') }}" wire:navigate>Help & Support</a></li>
-                        <li><a href="#">Company Information</a></li>
+                        <li><a href="{{ route('profile_pets_preferences.company_information') }}" wire:navigate>Company Information</a></li>
                     </ul>
                 </div>
 

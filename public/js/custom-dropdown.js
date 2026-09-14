@@ -575,6 +575,8 @@
     autoInit();
   }
 
+  document.addEventListener("livewire:navigated", autoInit);
+
   /* ─── Export ─────────────────────────────────────────────────────── */
   window.FursDropdown = FursDropdown;
 })();

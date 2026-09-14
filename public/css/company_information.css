@@ -442,7 +442,8 @@ body {
     content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" fill="none"><path d="M13.8737 7.24344L7.13022 0.499998L0.499976 7.13024" stroke="%233B3731" stroke-linecap="round" stroke-linejoin="round"/></svg>');
 }
 
-.panel {
+/* Accordion FAQ panels only — do not target datetime `.panel.calendar` */
+.accordion + .panel {
     /* padding: 50px 0; */
     background-color: white;
     max-height: 0;
@@ -450,7 +451,7 @@ body {
     transition: max-height 0.2s ease-out;
 }
 
-.panel p {
+.accordion + .panel p {
     padding: 30px 0;
 }
 
@@ -526,17 +527,26 @@ a.underline {
     padding: 0 20px 0 0;
 }
 
-.custom-select {
+/* Modal / form selects only — do not override home hero `.custom-select` */
+#request_modal .custom-select,
+.form-field .custom-select,
+.submit-chat-box .custom-select {
     width: 100% !important;
     max-width: 100% !important;
 }
 
-.custom-select .select-trigger.full-width {
+#request_modal .custom-select .select-trigger.full-width,
+.form-field .custom-select .select-trigger.full-width,
+.submit-chat-box .custom-select .select-trigger.full-width {
     width: 100% !important;
 }
 
-.custom-select.open .select-trigger,
-.custom-select.has-value .select-trigger {
+#request_modal .custom-select.open .select-trigger,
+#request_modal .custom-select.has-value .select-trigger,
+.form-field .custom-select.open .select-trigger,
+.form-field .custom-select.has-value .select-trigger,
+.submit-chat-box .custom-select.open .select-trigger,
+.submit-chat-box .custom-select.has-value .select-trigger {
     border-color: var(--border)
 }
 
@@ -709,7 +719,7 @@ img.social-icons {
     gap: 24px;
 }
 
-.label {
+.toggle-wrap .label {
     font-size: 14px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -717,7 +727,7 @@ img.social-icons {
     transition: color 0.5s;
 }
 
-body.dark .label {
+body.dark .toggle-wrap .label {
     color: #9090b0;
 }
 
