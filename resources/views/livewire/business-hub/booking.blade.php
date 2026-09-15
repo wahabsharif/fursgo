@@ -587,7 +587,7 @@ new class extends Component {
                 @foreach ($bookingPills as $pill)
                     <button type="button" wire:click="setActiveStatus('{{ $pill['status'] }}')"
                         @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                        class="booking-pill {{ $activeStatus === $pill['status'] ? 'is-active' : '' }}{{ $pill['status'] === 'cancelled' ? ' is-cancelled' : '' }}">
+                        class="booking-pill {{ $activeStatus === $pill['status'] ? 'is-active' : '' }}{{ $pill['status'] === 'pending' ? ' is-pending' : '' }}{{ $pill['status'] === 'cancelled' ? ' is-cancelled' : '' }}">
                         {{ $pill['label'] }}
                         ({{ $pill['status'] === 'all' ? $allBookingsCount : $statusCounts[$pill['status']] ?? 0 }})
                     </button>
@@ -717,7 +717,7 @@ new class extends Component {
                                     <th>{{ $isSpaceUser ? 'Client' : 'Owner' }}</th>
                                     <th>{{ $isSpaceUser ? 'Space' : 'Pet' }}</th>
                                     <th>Service Type</th>
-                                    <th>Booking Details</th>
+                                    <th class="booking-details-col">Booking Details</th>
                                     <th>Payment</th>
                                     <th class="action-col">Action</th>
                                 </tr>
@@ -866,7 +866,7 @@ new class extends Component {
                                             class="service-type {{ auth()->check() && in_array(strtolower((string) auth()->user()->user_type), ['groomer', 'space'], true) ? 'service-type-groomer' : '' }}">
                                             {!! $this->formatServiceTypeLabel($booking->service) !!}
                                         </td>
-                                        <td>
+                                        <td class="booking-details-col">
                                             <div class="booking-details">
                                                 <div class="details-date">{{ $bookingDetailsDate }}</div>
                                                 <div class="details-time {{ $isSpaceUser ? 'details-time-space' : '' }}">
@@ -1067,24 +1067,24 @@ new class extends Component {
                                         <td class="confirmed-action-col">
                                             <div class="confirmed-action-cell"
                                                 x-data="{
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                rowId: {{ $booking->id }},
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                openMore: false,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                menuLeft: 8,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                menuTop: 8,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                repositionMore() {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    const rect = $refs.moreBtn.getBoundingClientRect();
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    const menuWidth = 210;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    this.menuLeft = Math.min(Math.max(8, rect.left), window.innerWidth - menuWidth - 8);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    this.menuTop = Math.max(8, rect.bottom + 8);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                },
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                toggleMore() {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    if (!this.openMore) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        window.dispatchEvent(new CustomEvent('confirmed-more-opened', { detail: { id: this.rowId } }));
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        this.repositionMore();
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    this.openMore = !this.openMore;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      }"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        rowId: {{ $booking->id }},
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        openMore: false,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        menuLeft: 8,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        menuTop: 8,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        repositionMore() {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            const rect = $refs.moreBtn.getBoundingClientRect();
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            const menuWidth = 210;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            this.menuLeft = Math.min(Math.max(8, rect.left), window.innerWidth - menuWidth - 8);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            this.menuTop = Math.max(8, rect.bottom + 8);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        toggleMore() {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            if (!this.openMore) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                window.dispatchEvent(new CustomEvent('confirmed-more-opened', { detail: { id: this.rowId } }));
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                this.repositionMore();
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            this.openMore = !this.openMore;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              }"
                                                 :class="{ 'is-open': openMore }"
                                                 @confirmed-more-opened.window="if (($event.detail?.id ?? null) !== rowId) { openMore = false }"
                                                 @keydown.escape.window="openMore = false"
@@ -1593,7 +1593,7 @@ new class extends Component {
                             <p class="cancelled-modal-strike">{{ $cancelledService }}</p>
                             <p class="completed-booking-modal-line-sub"
                                 style="color: #9D9B98;text-decoration-line: line-through;
-                                                                                                                                                                                                                        ">
+                                                                                                                                                                                                                                                ">
                                 {{ $isSpaceUser ? $cancelledServiceTimeLabelForSpace : $cancelledPetName }}
                             </p>
                         </div>
@@ -2302,6 +2302,17 @@ new class extends Component {
         color: #F7F7F7;
     }
 
+    .booking-pill.is-pending.is-active {
+        background: #FFFAF2;
+        color: #FEB95C;
+        text-align: center;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 500;
+        line-height: normal;
+    }
+
     .booking-pill.is-cancelled.is-active {
         background: #FEE2E2;
         color: #FD6D70;
@@ -2329,14 +2340,8 @@ new class extends Component {
 
     .bookings-table-scroll {
         width: 100%;
-        overflow-x: auto;
-        -ms-overflow-style: none;
-        scrollbar-width: none;
+        overflow: visible;
         border-radius: 10px;
-    }
-
-    .bookings-table-scroll::-webkit-scrollbar {
-        display: none;
     }
 
     .bookings-board [x-cloak] {
@@ -2349,9 +2354,10 @@ new class extends Component {
 
     .bookings-table {
         width: 100%;
+        max-width: 100%;
         border-collapse: collapse;
         table-layout: fixed;
-        min-width: 980px;
+        min-width: 0;
     }
 
     .bookings-load-more-wrap {
@@ -2418,11 +2424,22 @@ new class extends Component {
     .bookings-table th,
     .bookings-table td {
         border-bottom: 1px solid #F6F5F5;
-        padding: 24px 20px;
+        padding: 16px 8px;
         text-align: left;
-        white-space: nowrap;
-        width: auto;
+        white-space: normal;
+        overflow-wrap: break-word;
+        word-break: break-word;
         vertical-align: middle !important;
+    }
+
+    .bookings-table thead th:first-child,
+    .bookings-table tbody td:first-child {
+        padding-left: 16px;
+    }
+
+    .bookings-table thead th:last-child,
+    .bookings-table tbody td:last-child {
+        padding-right: 16px;
     }
 
     .bookings-table thead {
@@ -2489,7 +2506,7 @@ new class extends Component {
     .pet-name-wrap {
         display: flex;
         align-items: center;
-        gap: 0.25rem;
+        gap: 0.4rem;
     }
 
     .pet-name {
@@ -2543,9 +2560,20 @@ new class extends Component {
         background: rgba(255, 110, 110, 0.20);
     }
 
-    .view-col {
+    .bookings-table .view-col {
         vertical-align: middle;
-        width: 110px;
+        width: 100px;
+        white-space: nowrap;
+        padding-left: 8px;
+        padding-right: 12px;
+    }
+
+    .bookings-table .action-col,
+    .bookings-table .confirmed-action-col {
+        width: 176px;
+        white-space: nowrap;
+        padding-left: 8px;
+        padding-right: 12px;
     }
 
     .service-type {
@@ -2622,11 +2650,6 @@ new class extends Component {
         text-decoration: none;
     }
 
-    .completed-bookings-table th,
-    .completed-bookings-table td {
-        white-space: nowrap;
-    }
-
     .completed-pet-cell {
         flex-direction: column;
         align-items: flex-start;
@@ -2641,11 +2664,6 @@ new class extends Component {
         display: inline-flex;
         align-items: center;
         gap: 0.32rem;
-    }
-
-    .cancelled-bookings-table th,
-    .cancelled-bookings-table td {
-        white-space: nowrap;
     }
 
     .cancelled-bookings-table .bookings-empty-row td.empty-bookings {
@@ -2781,6 +2799,9 @@ new class extends Component {
 
     .confirmed-appointment-cell div:last-child {
         color: #3B3731;
+        white-space: nowrap;
+        overflow-wrap: normal;
+        word-break: normal;
     }
 
     .confirmed-appointment-time-space {
@@ -2824,7 +2845,7 @@ new class extends Component {
         display: flex;
         align-items: center;
         justify-content: start;
-        gap: 0.6rem;
+        gap: 8px;
         position: relative;
         overflow: visible;
     }
@@ -2893,10 +2914,16 @@ new class extends Component {
         padding: 0;
     }
 
+    .bookings-table .booking-details-col {
+        width: 18%;
+        white-space: normal;
+    }
+
     .booking-details {
         display: flex;
         flex-direction: column;
-        gap: 0.15rem;
+        gap: 0.2rem;
+        min-width: 0;
     }
 
     .details-date {
@@ -2915,6 +2942,9 @@ new class extends Component {
         font-style: normal;
         font-weight: 400;
         line-height: normal;
+        white-space: nowrap;
+        overflow-wrap: normal;
+        word-break: normal;
     }
 
     .details-time-space {
