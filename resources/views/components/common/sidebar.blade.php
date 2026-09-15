@@ -418,7 +418,7 @@
             display: grid;
             grid-template-columns: var(--dashboard-sidebar-col) 1px minmax(0, 1fr);
             column-gap: 0;
-            padding: 0 50px;
+            padding: 0 1rem;
             max-width: 1440px;
             width: 100%;
             margin: 0 auto;

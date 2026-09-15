@@ -755,7 +755,7 @@
         gap: 6px;
         max-width: 100%;
         margin-top: auto;
-        padding: 0 10px;
+        padding: 0 1rem;
         height: 28px;
         border-radius: 74px;
         font-family: Lato;
