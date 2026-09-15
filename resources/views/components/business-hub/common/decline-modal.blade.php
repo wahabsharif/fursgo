@@ -82,10 +82,11 @@
             }
         }
 
-        $declineReasonOptions = ['Changes in schedule', 'Can’t accommodate this request', 'Other'];
+        $declineReasonOptions = \App\Support\BookingDeclineReasons::options();
+        $declineReasonDefault = \App\Support\BookingDeclineReasons::default();
     @endphp
     @teleport('body')
-    <div class="decline-modal-overlay" x-data="{ open: false, reason: 'Changes in schedule' }"
+    <div class="decline-modal-overlay" x-data="{ open: false, reason: @js($declineReasonDefault) }"
         @keydown.escape.window="open ? open = false : $wire.closeDeclineModal()">
         <div class="decline-modal-card" role="dialog" aria-modal="true" aria-labelledby="decline-modal-title">
             <button type="button" class="decline-modal-close" wire:click="closeDeclineModal" aria-label="Close modal">
@@ -153,7 +154,7 @@
 
             <div class="decline-modal-actions">
                 <button type="button" class="decline-cancel-btn" wire:click="closeDeclineModal">Keep booking</button>
-                <button type="button" class="decline-confirm-btn" wire:click="confirmDeclineBooking"
+                <button type="button" class="decline-confirm-btn" @click="$wire.confirmDeclineBooking(reason)"
                     wire:loading.attr="disabled" wire:target="confirmDeclineBooking">
                     <span wire:loading.remove wire:target="confirmDeclineBooking">Decline Booking</span>
                     <span class="decline-btn-loading" wire:loading.inline-flex wire:target="confirmDeclineBooking">
