@@ -2,6 +2,14 @@
 
 use Illuminate\Http\Request;
 
+$devToolsPath = urldecode(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/');
+if ($devToolsPath === '/json' || str_starts_with($devToolsPath, '/json/')) {
+    http_response_code(404);
+    header('Content-Type: application/json');
+    echo '{}';
+    exit;
+}
+
 define('LARAVEL_START', microtime(true));
 
 // Determine if the application is in maintenance mode...

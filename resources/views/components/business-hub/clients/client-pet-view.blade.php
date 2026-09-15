@@ -78,9 +78,9 @@
             <div class="client-pet-card__details">
                 <div class="client-pet-card__detail-row">
                     @if ($isMale)
-                        <x-ionicon-male-outline class="client-pet-card__sex-icon" aria-hidden="true" />
+                        @svg('ionicon-male-outline', 'client-pet-card__sex-icon', ['aria-hidden' => 'true'])
                     @elseif ($isFemale)
-                        <x-ionicon-female-outline class="client-pet-card__sex-icon" aria-hidden="true" />
+                        @svg('ionicon-female-outline', 'client-pet-card__sex-icon', ['aria-hidden' => 'true'])
                     @endif
                     <span>{{ $sexLabel }}</span>
                 </div>
