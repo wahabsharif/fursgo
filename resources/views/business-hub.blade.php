@@ -15,22 +15,26 @@
     $welcomeBackTitle = 'Welcome back, ' . $welcomeFirstName . ' 👋';
 @endphp
 
-<section class="dashboard-content-wrapper">
-    <div class="active-section-header"
-        x-data="{ tabsLoading: false, navLoading: false, navLoadingTimeout: null, activeBookingFilter: @js($dashboardNav['active_booking_status']), serviceFormOpen: false, activeServiceMenu: @js($dashboardNav['active_service_menu']), activeEarningsMenu: @js($dashboardNav['active_earnings_menu']), clientProfileOpen: false, showWelcome: @js($dashboardActiveSection === 'business-hub') }"
-        x-effect="if (activeSection !== 'business-hub') showWelcome = false"
-        x-show="activeSection !== 'clients' || !clientProfileOpen" x-cloak
-        x-on:bookings-tabs-loading-start.window="tabsLoading = true"
-        x-on:bookings-tabs-loading-end.window="tabsLoading = false"
-        x-on:booking-status-changed.window="tabsLoading = false; activeBookingFilter = $event.detail.status || ''"
-        x-on:nav-list-loading-start.window="navLoading = true; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; } if (!$event.detail?.persistent) { navLoadingTimeout = setTimeout(() => { navLoading = false; navLoadingTimeout = null; }, 350); }"
-        x-on:nav-list-loading-end.window="navLoading = false; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; }"
-        x-on:client-profile-visible.window="clientProfileOpen = !!$event.detail?.visible"
-        x-on:service-form-opened.window="serviceFormOpen = true"
-        x-on:service-form-cancel.window="serviceFormOpen = false"
-        x-on:service-form-closed.window="serviceFormOpen = false"
-        x-on:services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'"
-        x-on:earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'">
+<section class="dashboard-content-wrapper"
+    x-data="{ tabsLoading: false, navLoading: false, navLoadingTimeout: null, activeBookingFilter: @js($dashboardNav['active_booking_status']), serviceFormOpen: false, activeServiceMenu: @js($dashboardNav['active_service_menu']), activeEarningsMenu: @js($dashboardNav['active_earnings_menu']), clientProfileOpen: false, showWelcome: @js($dashboardActiveSection === 'business-hub') }"
+    x-effect="if (activeSection !== 'business-hub') showWelcome = false"
+    x-on:bookings-tabs-loading-start.window="tabsLoading = true"
+    x-on:bookings-tabs-loading-end.window="tabsLoading = false"
+    x-on:booking-status-changed.window="tabsLoading = false; activeBookingFilter = $event.detail.status || ''"
+    x-on:nav-list-loading-start.window="navLoading = true; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; } if (!$event.detail?.persistent) { navLoadingTimeout = setTimeout(() => { navLoading = false; navLoadingTimeout = null; }, 350); }"
+    x-on:nav-list-loading-end.window="navLoading = false; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; }"
+    x-on:client-profile-visible.window="clientProfileOpen = !!$event.detail?.visible"
+    x-on:service-form-opened.window="serviceFormOpen = true" x-on:service-form-cancel.window="serviceFormOpen = false"
+    x-on:service-form-closed.window="serviceFormOpen = false"
+    x-on:services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'"
+    x-on:earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'">
+    <template x-teleport=".dashboard-wrapper > main">
+        <div class="active-section-loading-bar" x-cloak x-show="tabsLoading || navLoading" aria-hidden="true">
+            <span class="active-section-loading-bar__sweep"></span>
+        </div>
+    </template>
+
+    <div class="active-section-header" x-show="activeSection !== 'clients' || !clientProfileOpen" x-cloak>
         <div class="active-section-header-stack">
             <div class="active-section-header-pane" x-cloak x-show="activeSection === 'business-hub'"
                 x-transition.opacity.duration.280ms>
@@ -120,11 +124,6 @@
                     <p>Manage your services, pricing, and add-ons.</p>
                 </div>
             </div>
-        </div>
-
-        {{-- Progress bar for bookings filtering + sidebar nav switching --}}
-        <div class="active-section-loading-bar" x-cloak x-show="tabsLoading || navLoading" aria-hidden="true">
-            <span class="active-section-loading-bar__sweep"></span>
         </div>
     </div>
 
@@ -241,6 +240,10 @@
         display: none !important;
     }
 
+    .dashboard-wrapper>main {
+        position: relative;
+    }
+
     .dashboard-content-wrapper {
         display: flex;
         flex-direction: column;
@@ -289,10 +292,10 @@
         position: absolute;
         left: 0;
         right: 0;
-        bottom: -6px;
+        top: 0;
         height: 4px;
         overflow: hidden;
-        z-index: 10;
+        z-index: 20;
         pointer-events: none;
         background: rgba(232, 228, 222, 0.85);
         border-radius: 2px;

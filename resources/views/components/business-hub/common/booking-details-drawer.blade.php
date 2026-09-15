@@ -1,222 +1,112 @@
-@props([
-    'booking' => null,
-    'closeMethod' => 'closeBookingDetailsDrawer',
-    'loadingEvent' => 'bookings-tabs-loading-start',
-])
+@teleport('body')
+<div class="booking-details-drawer-layer" x-cloak x-bind:class="{ 'is-open': open }">
+    <button type="button" class="booking-details-drawer-backdrop" @click="closeDrawer()"
+        aria-label="Close booking details"></button>
 
-@if ($booking)
-    @php
-        $bookingIdLabel = 'FG-' . str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT);
-        $status = strtolower((string) ($booking->booking_status ?? ''));
-        $statusLabel = $status !== '' ? ucfirst($status) : 'N/A';
+    <aside class="booking-details-drawer" role="dialog" aria-modal="true" aria-labelledby="booking-details-drawer-title"
+        x-bind:style="{ top: topOffset + 'px' }" @click.stop @wheel.stop.passive @touchmove.stop>
+        <header class="booking-details-drawer-head">
+            <div>
+                <h3 id="booking-details-drawer-title" class="booking-details-drawer-title">Booking details</h3>
+                <p class="booking-details-drawer-id" x-text="details.idLabel"></p>
+            </div>
+            <button type="button" class="booking-details-drawer-close" @click="closeDrawer()" aria-label="Close">
+                <img src="{{ asset('images/booking-details/close.svg') }}" alt="" width="16" height="16">
+            </button>
+        </header>
 
-        $owner = $booking->petOwner;
-        $ownerName = $owner->name ?? 'N/A';
-        $ownerImageRaw = (string) ($owner->profile_image ?? '');
-        $ownerImageUrl = $ownerImageRaw !== ''
-            ? asset('storage/' . ltrim($ownerImageRaw, '/'))
-            : null;
-
-        $pet = $booking->pets->first();
-        $petName = $pet->name ?? 'N/A';
-        $petType = $pet->pet_type ?? '';
-        $petBreed = $pet->breed ?? '';
-        $petSexRaw = strtolower(trim((string) ($pet->sex ?? '')));
-        $petSex = $petSexRaw !== '' ? ucfirst($petSexRaw) : 'N/A';
-        $petWeight = $pet && $pet->weight !== null ? rtrim(rtrim(number_format((float) $pet->weight, 2, '.', ''), '0'), '.') . ' kg' : 'N/A';
-        $petNotes = trim((string) ($pet->notes ?? ''));
-        $petPhotoRaw = (string) ($pet->photo ?? '');
-        $petPhotoUrl = $petPhotoRaw !== ''
-            ? asset('storage/' . ltrim($petPhotoRaw, '/'))
-            : null;
-
-        $petSummaryParts = array_values(array_filter([$petName, $petType, $petBreed !== '' ? $petBreed : null]));
-        $petSummary = $petSummaryParts !== [] ? implode(' · ', $petSummaryParts) : 'N/A';
-        $petTypeBreed = trim(implode(' • ', array_filter([$petType, $petBreed])));
-
-        $serviceLabel = $booking->service ?: 'N/A';
-        $dateLabel = optional($booking->date)->format('l, jS F d/m/Y') ?? 'N/A';
-        $timeRaw = trim((string) ($booking->time ?? ''));
-        $timeLabel = $timeRaw !== '' ? $timeRaw : 'N/A';
-        if (str_contains($timeRaw, '-')) {
-            $parts = preg_split('/\s*-\s*/', $timeRaw, 2);
-            preg_match('/(\d{1,2}:\d{2})/', (string) ($parts[0] ?? ''), $mStart);
-            preg_match('/(\d{1,2}:\d{2})/', (string) ($parts[1] ?? ''), $mEnd);
-            if (!empty($mStart[1]) && !empty($mEnd[1])) {
-                $timeLabel = $mStart[1] . ' - ' . $mEnd[1];
-            }
-        }
-
-        $serviceFee = (float) ($booking->amount ?? 0);
-        $addOns = collect(is_array($booking->extra_add_ons) ? $booking->extra_add_ons : [])
-            ->map(fn($item) => (float) data_get($item, 'amount', 0))
-            ->sum();
-        $discount = (float) ($booking->discount ?? 0);
-        $total = $serviceFee + $addOns - $discount;
-
-        $statusClass = match ($status) {
-            'pending' => 'is-pending',
-            'confirmed' => 'is-confirmed',
-            'completed' => 'is-completed',
-            'cancelled' => 'is-cancelled',
-            default => 'is-default',
-        };
-    @endphp
-
-    @teleport('body')
-        <div class="booking-details-drawer-layer" wire:keydown.escape="{{ $closeMethod }}" x-data="{
-            topOffset: 0,
-            syncTopOffset() {
-                const curve = document.querySelector('.dashboard-header .curve-shape-container');
-                if (!curve) {
-                    this.topOffset = 0;
-                    return;
-                }
-                this.topOffset = Math.max(0, Math.round(curve.getBoundingClientRect().bottom));
-            }
-        }" x-init="
-            if (window.__lockBookingDetailsDrawer) window.__lockBookingDetailsDrawer();
-            syncTopOffset();
-            const onResize = () => syncTopOffset();
-            const blockScroll = (event) => {
-                if (!event.target.closest('.booking-details-drawer')) {
-                    event.preventDefault();
-                }       
-            };
-            window.addEventListener('resize', onResize);
-            document.addEventListener('wheel', blockScroll, { passive: false });
-            document.addEventListener('touchmove', blockScroll, { passive: false });
-            return () => {
-                window.removeEventListener('resize', onResize);
-                document.removeEventListener('wheel', blockScroll);
-                document.removeEventListener('touchmove', blockScroll);
-                if (window.__unlockBookingDetailsDrawer) window.__unlockBookingDetailsDrawer();
-            };
-        ">
-            <button type="button" class="booking-details-drawer-backdrop"
-                @if ($loadingEvent) @click="window.dispatchEvent(new CustomEvent(@js($loadingEvent)))" @endif
-                wire:click="{{ $closeMethod }}" aria-label="Close booking details"></button>
-
-            <aside class="booking-details-drawer" role="dialog" aria-modal="true"
-                aria-labelledby="booking-details-drawer-title" :style="{ top: topOffset + 'px' }"
-                @click.stop
-                @wheel.stop.passive
-                @touchmove.stop>
-                <header class="booking-details-drawer-head">
-                    <div>
-                        <h3 id="booking-details-drawer-title" class="booking-details-drawer-title">Booking details</h3>
-                        <p class="booking-details-drawer-id">{{ $bookingIdLabel }}</p>
+        <div class="booking-details-drawer-card" x-bind:class="details.statusClass">
+            <div class="booking-details-client-row">
+                <div class="booking-details-client">
+                    <div class="booking-details-avatar-wrap">
+                        <img x-show="details.ownerImageUrl" x-bind:src="details.ownerImageUrl" alt=""
+                            class="booking-details-avatar">
+                        <span x-show="!details.ownerImageUrl" class="booking-details-avatar is-fallback"
+                            aria-hidden="true" x-text="details.ownerInitial"></span>
                     </div>
-                    <button type="button" class="booking-details-drawer-close"
-                        @if ($loadingEvent) @click="window.dispatchEvent(new CustomEvent(@js($loadingEvent)))" @endif
-                        wire:click="{{ $closeMethod }}" aria-label="Close">
-                        <img src="{{ asset('images/booking-details/close.svg') }}" alt="" width="16" height="16">
-                    </button>
-                </header>
-
-                <div class="booking-details-drawer-card {{ $statusClass }}">
-                    <div class="booking-details-client-row">
-                        <div class="booking-details-client">
-                            <div class="booking-details-avatar-wrap">
-                                @if ($ownerImageUrl)
-                                    <img src="{{ $ownerImageUrl }}" alt="" class="booking-details-avatar">
-                                @else
-                                    <span class="booking-details-avatar is-fallback"
-                                        aria-hidden="true">{{ strtoupper(substr($ownerName, 0, 1)) }}</span>
-                                @endif
-                            </div>
-                            <div class="booking-details-client-copy">
-                                <div class="booking-details-client-name-row">
-                                    <strong>{{ $ownerName }}</strong>
-                                    <img src="{{ asset('images/booking-details/verified.svg') }}" alt="" width="16"
-                                        height="16" class="booking-details-verified">
-                                </div>
-                                <p>{{ $petSummary }}</p>
-                            </div>
+                    <div class="booking-details-client-copy">
+                        <div class="booking-details-client-name-row">
+                            <strong x-text="details.ownerName"></strong>
+                            <img src="{{ asset('images/booking-details/verified.svg') }}" alt="" width="16" height="16"
+                                class="booking-details-verified">
                         </div>
-                        <span class="booking-details-status {{ $statusClass }}">{{ $statusLabel }}</span>
-                    </div>
-
-                    <div class="booking-details-divider"></div>
-
-                    <section class="booking-details-section">
-                        <h4>Booking</h4>
-                        <div class="booking-details-row">
-                            <span>Service</span>
-                            <strong>{{ $serviceLabel }}</strong>
-                        </div>
-                        <div class="booking-details-row">
-                            <span>Date</span>
-                            <strong>{{ $dateLabel }}</strong>
-                        </div>
-                        <div class="booking-details-row">
-                            <span>Time</span>
-                            <strong>{{ $timeLabel }}</strong>
-                        </div>
-                    </section>
-
-                    <section class="booking-details-section">
-                        <h4>Payment</h4>
-                        <div class="booking-details-row">
-                            <span>Service fee</span>
-                            <strong>£{{ number_format($serviceFee, 2) }}</strong>
-                        </div>
-                        <div class="booking-details-row">
-                            <span>Add-ons</span>
-                            <strong>£{{ number_format($addOns, 2) }}</strong>
-                        </div>
-                        <div class="booking-details-row is-total">
-                            <span>Total</span>
-                            <strong>£{{ number_format($total, 2) }}</strong>
-                        </div>
-                    </section>
-
-                    <div class="booking-details-pet-card">
-                        <div class="booking-details-pet-main">
-                            <div class="booking-details-pet-avatar-wrap">
-                                @if ($petPhotoUrl)
-                                    <img src="{{ $petPhotoUrl }}" alt="" class="booking-details-pet-avatar">
-                                @else
-                                    <span class="booking-details-pet-avatar is-fallback"
-                                        aria-hidden="true">{{ strtoupper(substr($petName, 0, 1)) }}</span>
-                                @endif
-                            </div>
-                            <div>
-                                <div class="booking-details-pet-name-row">
-                                    <img src="{{ asset('images/booking-details/paw.svg') }}" alt="" width="14"
-                                        height="13">
-                                    <strong>{{ $petName }}</strong>
-                                </div>
-                                @if ($petTypeBreed !== '')
-                                    <p class="booking-details-pet-type">{{ $petTypeBreed }}</p>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="booking-details-pet-meta">
-                            <div class="booking-details-pet-meta-row">
-                                <img src="{{ asset('images/booking-details/gender.svg') }}" alt="" width="11"
-                                    height="15">
-                                <span>{{ $petSex }}</span>
-                            </div>
-                            <div class="booking-details-pet-meta-row">
-                                <img src="{{ asset('images/booking-details/weight.svg') }}" alt="" width="14"
-                                    height="14">
-                                <span>{{ $petWeight }}</span>
-                            </div>
-                            @if ($petNotes !== '')
-                                <div class="booking-details-pet-meta-row">
-                                    <img src="{{ asset('images/booking-details/note.svg') }}" alt="" width="14"
-                                        height="14">
-                                    <span>{{ $petNotes }}</span>
-                                </div>
-                            @endif
-                        </div>
+                        <p x-text="details.petSummary"></p>
                     </div>
                 </div>
-            </aside>
+                <span class="booking-details-status" x-bind:class="details.statusClass"
+                    x-text="details.statusLabel"></span>
+            </div>
+
+            <div class="booking-details-divider"></div>
+
+            <section class="booking-details-section">
+                <h4>Booking</h4>
+                <div class="booking-details-row">
+                    <span>Service</span>
+                    <strong x-text="details.serviceLabel"></strong>
+                </div>
+                <div class="booking-details-row">
+                    <span>Date</span>
+                    <strong x-text="details.dateLabel"></strong>
+                </div>
+                <div class="booking-details-row">
+                    <span>Time</span>
+                    <strong x-text="details.timeLabel"></strong>
+                </div>
+            </section>
+
+            <section class="booking-details-section">
+                <h4>Payment</h4>
+                <div class="booking-details-row">
+                    <span>Service fee</span>
+                    <strong x-text="'£' + details.serviceFee"></strong>
+                </div>
+                <div class="booking-details-row">
+                    <span>Add-ons</span>
+                    <strong x-text="'£' + details.addOns"></strong>
+                </div>
+                <div class="booking-details-row is-total">
+                    <span>Total</span>
+                    <strong x-text="'£' + details.total"></strong>
+                </div>
+            </section>
+
+            <div class="booking-details-pet-card">
+                <div class="booking-details-pet-main">
+                    <div class="booking-details-pet-avatar-wrap">
+                        <img x-show="details.petPhotoUrl" x-bind:src="details.petPhotoUrl" alt=""
+                            class="booking-details-pet-avatar">
+                        <span x-show="!details.petPhotoUrl" class="booking-details-pet-avatar is-fallback"
+                            aria-hidden="true" x-text="details.petInitial"></span>
+                    </div>
+                    <div>
+                        <div class="booking-details-pet-name-row">
+                            <img src="{{ asset('images/booking-details/paw.svg') }}" alt="" width="14" height="13">
+                            <strong x-text="details.petName"></strong>
+                        </div>
+                        <p class="booking-details-pet-type" x-show="details.petTypeBreed" x-text="details.petTypeBreed">
+                        </p>
+                    </div>
+                </div>
+                <div class="booking-details-pet-meta">
+                    <div class="booking-details-pet-meta-row">
+                        <img src="{{ asset('images/booking-details/gender.svg') }}" alt="" width="11" height="15">
+                        <span x-text="details.petSex"></span>
+                    </div>
+                    <div class="booking-details-pet-meta-row">
+                        <img src="{{ asset('images/booking-details/weight.svg') }}" alt="" width="14" height="14">
+                        <span x-text="details.petWeight"></span>
+                    </div>
+                    <div class="booking-details-pet-meta-row" x-show="details.petNotes">
+                        <img src="{{ asset('images/booking-details/note.svg') }}" alt="" width="14" height="14">
+                        <span x-text="details.petNotes"></span>
+                    </div>
+                </div>
+            </div>
         </div>
-    @endteleport
-@endif
+    </aside>
+</div>
+@endteleport
 
 <style>
     .booking-details-drawer-layer {
@@ -224,6 +114,16 @@
         inset: 0;
         z-index: 2147483000;
         overscroll-behavior: none;
+        display: none;
+    }
+
+    .booking-details-drawer-layer.is-open,
+    .booking-details-drawer-layer[style*="display: block"] {
+        display: block;
+    }
+
+    .booking-details-drawer-layer[x-cloak] {
+        display: none !important;
     }
 
     .booking-details-drawer-backdrop {
@@ -250,13 +150,16 @@
         overflow: hidden;
         pointer-events: auto;
         touch-action: auto;
-        animation: booking-details-drawer-in 180ms ease-out;
+    }
+
+    .booking-details-drawer-layer.is-open .booking-details-drawer {
+        animation: booking-details-drawer-in 80ms ease-out;
     }
 
     @keyframes booking-details-drawer-in {
         from {
-            transform: translateX(24px);
-            opacity: 0.85;
+            transform: translateX(16px);
+            opacity: 0.92;
         }
 
         to {

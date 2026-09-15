@@ -17,7 +17,7 @@
 
     <title>@yield('title', $pageTitle)</title>
 
-    @include('partials.head')
+    <x-partials.head />
     @yield('styles')
     @stack('styles')
 
@@ -42,10 +42,6 @@
     <script src="{{ asset('js/custom.js') }}" defer></script>
     <!-- <script src="{{ asset('js/customer_journey.js') }}" defer></script> -->
     <!-- <script src="{{ asset('js/profile.js') }}" defer></script> -->
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
-    <script src="{{ asset('js/weekly-revenue-chart.js') }}"></script>
 
     @stack('script')
 

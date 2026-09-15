@@ -7,6 +7,7 @@ use App\Models\Review;
 use App\Models\PetMedicationDetail;
 use App\Models\User;
 use App\Support\AccountBlocks;
+use App\Support\BookingDeclineReasons;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +19,7 @@ use Livewire\Attributes\Renderless;
 use Livewire\Volt\Component;
 
 new class extends Component {
-    private const BOOKING_LIST_COLUMNS = ['id', 'pet_owner_id', 'goormer_spacer_id', 'date', 'time', 'service', 'amount', 'staff', 'rating', 'visit_type', 'booking_status', 'created_at', 'extra_add_ons', 'discount'];
+    private const BOOKING_LIST_COLUMNS = ['id', 'pet_owner_id', 'goormer_spacer_id', 'date', 'time', 'service', 'amount', 'staff', 'rating', 'visit_type', 'booking_status', 'cancelled_by', 'cancellation_reason', 'created_at', 'extra_add_ons', 'discount'];
 
     public ?int $completedBookingId = null;
 
@@ -483,7 +484,7 @@ new class extends Component {
         $this->completedBookingId = null;
     }
 
-    public function cancelBooking(int $bookingId): void
+    public function cancelBooking(int $bookingId, ?string $reason = null): void
     {
         if (!$this->selectedClientId) {
             return;
@@ -495,7 +496,11 @@ new class extends Component {
             return;
         }
 
-        $booking->update(['booking_status' => 'cancelled']);
+        $booking->update([
+            'booking_status' => 'cancelled',
+            'cancelled_by' => $this->declinedByLabel(),
+            'cancellation_reason' => BookingDeclineReasons::normalize($reason),
+        ]);
         $this->refreshAfterBookingChange();
     }
 
@@ -521,15 +526,24 @@ new class extends Component {
         $this->dispatch('decline-modal-closed');
     }
 
-    public function confirmDeclineBooking(): void
+    public function confirmDeclineBooking(?string $reason = null): void
     {
         if ($this->declineBookingId === null) {
             return;
         }
 
-        $this->cancelBooking($this->declineBookingId);
+        $this->cancelBooking($this->declineBookingId, $reason);
         $this->declineBookingId = null;
         $this->dispatch('decline-modal-closed');
+    }
+
+    private function declinedByLabel(): string
+    {
+        $user = Auth::guard('groomer_spacer')->user() ?? Auth::user();
+
+        return strtolower((string) ($user->user_type ?? 'groomer')) === 'space'
+            ? 'Space Host'
+            : 'Groomer';
     }
 
     public function openRescheduleModal(int $bookingId): void
@@ -1334,7 +1348,10 @@ new class extends Component {
             x-transition:enter="client-profile-panel-enter" x-transition:enter-start="client-profile-panel-enter-start"
             x-transition:enter-end="client-profile-panel-enter-end" wire:loading.class="is-profile-loading"
             wire:target="viewProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, closePetDetails">
-            @include('livewire.business-hub.clients.partials.profile-panel')
+            @php
+                $profilePanelView = 'components.business-hub.clients.profile-panel';
+            @endphp
+            @include($profilePanelView)
         </div>
     @endif
 

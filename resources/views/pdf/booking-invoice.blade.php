@@ -508,7 +508,7 @@
         .footer-brand__icons {
             text-align: center;
             width: 30%;
-            padding: 0 10px;
+            padding: 0 1rem;
             box-sizing: border-box;
         }
 
@@ -615,8 +615,8 @@
                                     <p class="block-text muted">{{ $issuerEmail }}</p>
                                 @endif
                                 <p class="verified-row">
-                                    <img src="{{ $verifiedBadgeDataUri }}" alt=""
-                                        class="verified-icon">Verified by FursGo
+                                    <img src="{{ $verifiedBadgeDataUri }}" alt="" class="verified-icon">Verified by
+                                    FursGo
                                 </p>
                             </div>
                         </td>
@@ -722,8 +722,7 @@
                         </td>
                         <td class="footer-brand__wm">
                             @if ($footerWatermarkIconDataUri !== '')
-                                <img src="{{ $footerWatermarkIconDataUri }}" alt="" class="wm__img"
-                                    width="91" height="92">
+                                <img src="{{ $footerWatermarkIconDataUri }}" alt="" class="wm__img" width="91" height="92">
                             @else
                                 <span class="wm--text">fg</span>
                             @endif
@@ -733,8 +732,8 @@
             </table>
         </div>
         <div class="invoice-corner-bl" aria-hidden="true">
-            <img src="{{ $invoiceCornerBottomLeftDataUri }}" alt="" class="invoice-corner-bl__img"
-                width="452" height="438">
+            <img src="{{ $invoiceCornerBottomLeftDataUri }}" alt="" class="invoice-corner-bl__img" width="452"
+                height="438">
         </div>
     </div>
 </body>

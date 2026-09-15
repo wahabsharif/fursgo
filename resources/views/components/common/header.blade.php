@@ -931,7 +931,7 @@
                 width: 100%;
                 max-width: 1440px;
                 margin: 0 auto;
-                padding: 0 50px;
+                padding: 0 1rem;
                 box-sizing: border-box;
                 overflow: visible;
             }
@@ -1427,7 +1427,7 @@
                 gap: 10px;
                 width: 100%;
                 height: 43px;
-                padding: 0 10px;
+                padding: 0 1rem;
                 border: 0;
                 border-radius: 10px;
                 background: transparent;
@@ -1491,7 +1491,7 @@
                 align-items: center;
                 gap: 10px;
                 height: 43px;
-                padding: 0 10px;
+                padding: 0 1rem;
                 color: #ffc46e;
                 font-family: Lato, sans-serif;
                 font-size: 12px;
@@ -1521,7 +1521,7 @@
                 align-items: center;
                 gap: 10px;
                 height: 37px;
-                padding: 0 10px;
+                padding: 0 1rem;
                 border-radius: 10px;
                 color: #3b3731;
                 font-family: Lato, sans-serif;

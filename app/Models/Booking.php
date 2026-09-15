@@ -26,6 +26,7 @@ class Booking extends Model
         'acquisition_source',
         'booking_status',
         'cancelled_by',
+        'cancellation_reason',
         'refund_status',
     ];
 

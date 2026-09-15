@@ -35,6 +35,7 @@
     $confirmedCount = (int) ($bookingCounts['confirmed'] ?? 0);
     $completedCount = (int) ($bookingCounts['completed'] ?? 0);
     $cancelledCount = (int) ($bookingCounts['cancelled'] ?? 0);
+    $businessHubUrl = url('/business-hub');
 @endphp
 
 <div x-data="{
@@ -122,7 +123,7 @@
 
             <!-- Business Hub -->
             <li class="nav-item">
-                <a href="{{ route('business-hub') }}"
+                <a href="{{ $businessHubUrl }}"
                     @click.prevent="if (activeSection !== 'business-hub') startNavLoading(); closeMenus(); activeSection = 'business-hub'"
                     :class="{ 'active': activeSection === 'business-hub' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -417,7 +418,7 @@
             display: grid;
             grid-template-columns: var(--dashboard-sidebar-col) 1px minmax(0, 1fr);
             column-gap: 0;
-            padding: 0 50px;
+            padding: 0 1rem;
             max-width: 1440px;
             width: 100%;
             margin: 0 auto;
@@ -543,7 +544,7 @@
         .booking-status-list {
             list-style: none;
             margin: 1rem 0.5rem;
-            padding: 0 0 0 1rem;
+            padding: 0 0 0 0.4rem;
             display: flex;
             flex-direction: column;
             gap: 1rem;

@@ -22,7 +22,7 @@
 
     <title>@yield('title', $pageTitle)</title>
 
-    @include('partials.head')
+    <x-partials.head />
     @yield('styles')
     @stack('styles')
 

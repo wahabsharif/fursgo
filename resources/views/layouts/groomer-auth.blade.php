@@ -12,7 +12,7 @@
 
     <title>{{ $pageTitle }}</title>
 
-    @include('partials.head')
+    <x-partials.head />
     @stack('styles')
 </head>
 
