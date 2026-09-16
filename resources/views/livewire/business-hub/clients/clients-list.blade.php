@@ -623,7 +623,8 @@ new class extends Component {
             return;
         }
 
-        $start = DateTime::createFromFormat('h:i A', $this->rescheduleSelectedTime);
+        $start = DateTime::createFromFormat('H:i A', $this->rescheduleSelectedTime)
+            ?: DateTime::createFromFormat('h:i A', $this->rescheduleSelectedTime);
         if (!$start) {
             return;
         }
@@ -1324,6 +1325,14 @@ new class extends Component {
             this.profileLoading = false;
         });
     },
+    consumePendingProfile() {
+        const pending = Number(window.__pendingClientProfileId || 0);
+        if (!pending) {
+            return;
+        }
+        window.__pendingClientProfileId = null;
+        this.openProfile(pending);
+    },
     closeProfileView() {
         $wire.set('selectedClientId', null);
         $wire.set('selectedPetId', null);
@@ -1332,7 +1341,12 @@ new class extends Component {
         $wire.set('selectedPetId', null);
         $wire.set('profileActiveTab', 'pets');
     },
-}"
+}" x-init="consumePendingProfile()" @open-client-profile.window="
+        const id = Number($event.detail?.clientId || 0);
+        if (!id) { return; }
+        window.__pendingClientProfileId = null;
+        openProfile(id);
+    "
     x-effect="window.dispatchEvent(new CustomEvent('client-profile-visible', { detail: { visible: !!$wire.selectedClientId } }))">
     <div x-show="profileLoading && !$wire.selectedClientId" x-cloak class="clients-profile-opening" aria-busy="true"
         aria-label="Loading client profile">
@@ -1619,6 +1633,13 @@ new class extends Component {
                 },
                 get selectedTimeLabel() {
                     return this.selectedTime || 'N/A';
+                },
+                get newAppointmentLabel() {
+                    const parsed = parseYmd(this.selectedDate);
+                    if (!parsed || !this.selectedTime) {
+                        return '';
+                    }
+                    return `${parsed.d} ${monthNames[parsed.m - 1]} ${parsed.y} · ${this.selectedTime}`;
                 },
                 prevMonth() {
                     const {
