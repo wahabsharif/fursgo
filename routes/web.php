@@ -80,12 +80,26 @@ Route::redirect('/business/support-and-assistance/search', '/support-and-assista
 Route::redirect('/business/business-homepage-groomer-space-owner', '/business-homepage-groomer-space-owner');
 
 Route::get('/support-and-assistance/help-and-support', function () {
-    BusinessPageShell::applyFromRequest();
+    // Previous Livewire Help Centre (kept intact — switch back by uncommenting below):
+    // BusinessPageShell::applyFromRequest();
+    // $component = BusinessPageShell::resolveComponent('help.support-business-hub', 'help.support');
+    // return VoltPage::render($component);
 
-    $component = BusinessPageShell::resolveComponent('help.support-business-hub', 'help.support');
-
-    return VoltPage::render($component);
+    // Imported static Help & Support from D:\fursgo\support_and_assistance
+    return view('support_and_assistance.help-and-support-legacy');
 })->name('help-and-support');
+
+Route::get('/support-and-assistance/help-search', function () {
+    $search_results = trim((string) request('search_results', ''));
+
+    if ($search_results === '') {
+        return redirect()->route('help-and-support');
+    }
+
+    return view('support_and_assistance.search-legacy', [
+        'search_results' => $search_results,
+    ]);
+})->name('help-and-support-search-legacy');
 
 // Business pages
 Route::get('/business-homepage-groomer-space-owner', function () {

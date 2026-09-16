@@ -19,7 +19,7 @@
     $isBusinessHubRoute = request()->routeIs('business-hub');
     $isMarketingHubRoute = request()->routeIs('marketing-hub', 'marketing-hub.*');
     $isAccountSettingsRoute = request()->routeIs('account-settings');
-    $isHelpCentreRoute = request()->routeIs('help-and-support');
+    $isHelpCentreRoute = request()->routeIs('help-and-support', 'help-and-support-search-legacy');
     $isBusinessVerificationRoute = request()->routeIs('business-verification', 'business-verification.*');
     $isBusinessAuthRoute = request()->routeIs([
         'login-groomer-space',

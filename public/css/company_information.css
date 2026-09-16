@@ -499,9 +499,40 @@ body {
 }
 
 .bg-div {
-    border-radius: 10px;
-    background: rgba(255, 216, 140, 0.2);
     padding: 30px;
+}
+
+.bg-div:hover {
+    border-radius: 10px;
+    background: rgba(255, 216, 140, 0.1);
+}
+
+.result-answer > p {
+    margin: 0;
+}
+
+.result-answer.is-collapsed {
+    max-height: 2.6em;
+    overflow: hidden;
+}
+
+.result-read-more {
+    display: none;
+    margin-top: 12px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-underline-offset: 4px;
+    text-underline-position: from-font;
+}
+
+.result-read-more.is-visible {
+    display: inline-block;
 }
 
 a.underline {
@@ -512,6 +543,15 @@ a.underline {
 }
 
 .no-bg.bg-div {
+    background: none;
+}
+
+.help-result-card.bg-div {
+    border-radius: 10px;
+    background: rgba(255, 216, 140, 0.2);
+}
+
+.help-result-card.bg-div.no-bg {
     background: none;
 }
 
@@ -587,13 +627,18 @@ a.underline {
     border: 1px solid #ddd;
     border-radius: 10px;
     background: #fff;
+    overflow: hidden;
 }
 
 .upload-header {
     display: flex;
     gap: 15px;
     padding: 12px;
-    border-bottom: 1px solid #eee;
+    background: #f8f8f8;
+}
+
+.upload-box.has-file .upload-header {
+    border-bottom: 1px solid #e2e2e2;
 }
 
 .upload-header button {
