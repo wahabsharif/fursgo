@@ -1117,12 +1117,7 @@ new class extends Component {
                                 <th>Service Type</th>
                                 <th>Rating</th>
                                 <th>Earnings</th>
-                                <th class="view-col">
-                                    <span class="view-col-inner">View</span>
-                                </th>
-                                <th class="invoice-col">
-                                    <span class="view-col-inner">Invoice</span>
-                                </th>
+                                <th class="completed-action-col">Actions</th>
                             </tr>
                         </thead>
                         <tbody wire:key="bookings-table-completed" class="bookings-table-body">
@@ -1166,8 +1161,8 @@ new class extends Component {
                                         @if ($isSpaceUser)
                                             <span class="completed-space-label">{{ $completedLocationLabel }}</span>
                                         @else
-                                            <div class="pet-name-wrap completed-pet-cell">
-                                                <span class="pet-name completed-pet-name">{{ $petName }}</span>
+                                            <div class="pet-name-wrap">
+                                                <span class="pet-name">{{ $petName }}</span>
                                                 @if ($petType)
                                                     <span class="pet-type">{{ $petType }}</span>
                                                 @endif
@@ -1177,54 +1172,37 @@ new class extends Component {
                                     <td class="service-type">{!! $this->formatServiceTypeLabel($booking->service) !!}</td>
                                     <td>
                                         <span class="completed-rating">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
-                                                fill="none" aria-hidden="true">
-                                                <path
-                                                    d="M7.00014 1.16699L8.80195 4.81649L12.8335 5.40528L9.91681 8.24742L10.6051 12.2612L7.00014 10.3662L3.39522 12.2612L4.08348 8.24742L1.16681 5.40528L5.19833 4.81649L7.00014 1.16699Z"
-                                                    fill="#FFBA55" />
-                                            </svg>
+                                            <img src="{{ asset('images/business-hub/icon-booking-star.svg') }}" alt=""
+                                                width="16" height="16">
                                             <span>{{ is_numeric($rating) ? number_format((float) $rating, 1) : '-' }}</span>
                                         </span>
                                     </td>
                                     <td>£{{ number_format((float) $booking->amount, 2) }}</td>
-                                    <td class="view-col">
-                                        <div class="view-col-inner">
-                                            <button type="button" class="view-btn"
+                                    <td class="completed-action-col">
+                                        <div class="completed-action-cell">
+                                            <button type="button" class="completed-action-btn is-view"
                                                 @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
                                                 wire:click="openCompletedBookingModal({{ $booking->id }})"
                                                 aria-label="View completed booking">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
-                                                    viewBox="0 0 36 36" fill="none">
-                                                    <circle cx="18" cy="18" r="17.5" fill="white" stroke="#E2E2E2" />
-                                                    <path
-                                                        d="M18 23.5C19.933 23.5 21.5 21.933 21.5 20C21.5 18.067 19.933 16.5 18 16.5C16.067 16.5 14.5 18.067 14.5 20C14.5 21.933 16.067 23.5 18 23.5Z"
-                                                        stroke="#3B3731" />
-                                                    <path d="M27 20C27 20 26 12 18 12C10 12 9 20 9 20" stroke="#3B3731" />
-                                                </svg>
+                                                <img src="{{ asset('images/business-hub/icon-booking-view.svg') }}" alt=""
+                                                    width="36" height="36">
                                             </button>
-                                            <x-business-hub.common.more-action-btn :row-id="$booking->id" />
-                                        </div>
-                                    </td>
-                                    <td class="invoice-col">
-                                        <div class="view-col-inner">
-                                            <button type="button" class="view-btn"
-                                                data-invoice-url="{{ $this->bookingInvoicePdfUrl($booking) }}"
-                                                onclick="window.downloadBookingInvoicePdf(this.dataset.invoiceUrl)"
+                                            <button type="button" class="completed-action-btn is-download"
+                                                @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
+                                                wire:click="openCompletedBookingModal({{ $booking->id }})"
                                                 aria-label="Download invoice">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19"
-                                                    viewBox="0 0 16 19" fill="none">
-                                                    <path
-                                                        d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
-                                                        stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M7.99997 0.5V12.875M12.0909 8.75L7.99997 13.25L3.90906 8.75"
-                                                        stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
+                                                <img src="{{ asset('images/business-hub/icon-booking-download-circle.svg') }}"
+                                                    alt="" width="36" height="36" class="completed-download-ring">
+                                                <img src="{{ asset('images/business-hub/icon-booking-download-arrow.svg') }}"
+                                                    alt="" width="16" height="19" class="completed-download-arrow">
                                             </button>
+                                            <x-business-hub.common.more-action-btn :row-id="$booking->id" message-only />
                                         </div>
                                     </td>
                                 </tr>
                             @endforeach
                             <tr class="bookings-empty-row" @if ($visibleCompletedBookings->isNotEmpty()) hidden @endif>
+                                <td colspan="7" class="empty-bookings">No completed bookings found.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1399,7 +1377,7 @@ new class extends Component {
 
             return Booking::with([
                 'petOwner:id,name,profile_image',
-                'pets:id,name,pet_type,breed,sex,weight,notes,photo',
+                'pets:id,name,pet_type,breed,sex,weight,notes,photo,address',
             ])
                 ->where('goormer_spacer_id', Auth::guard('groomer_spacer')->id() ?? Auth::id())
                 ->where('id', $bookingId)
@@ -1562,7 +1540,7 @@ new class extends Component {
                             <p class="cancelled-modal-strike">{{ $cancelledService }}</p>
                             <p class="completed-booking-modal-line-sub"
                                 style="color: #9D9B98;text-decoration-line: line-through;
-                                                                                                                                                                                                                                                                        ">
+                                                                                                                                                                                                                                                                                    ">
                                 {{ $isSpaceUser ? $cancelledServiceTimeLabelForSpace : $cancelledPetName }}
                             </p>
                         </div>
@@ -2552,7 +2530,8 @@ new class extends Component {
     }
 
     .bookings-table .action-col,
-    .bookings-table .confirmed-action-col {
+    .bookings-table .confirmed-action-col,
+    .bookings-table .completed-action-col {
         width: 176px;
         white-space: nowrap;
         padding-left: 8px;
@@ -2633,20 +2612,22 @@ new class extends Component {
         text-decoration: none;
     }
 
-    .completed-pet-cell {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.15rem;
-    }
-
-    .completed-pet-name {
-        font-weight: 600;
-    }
-
     .completed-rating {
         display: inline-flex;
         align-items: center;
-        gap: 0.32rem;
+        gap: 5px;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: normal;
+    }
+
+    .completed-rating img {
+        display: block;
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
     }
 
     .cancelled-bookings-table .bookings-empty-row td.empty-bookings {
@@ -2820,6 +2801,54 @@ new class extends Component {
         display: block;
         width: 36px;
         height: 36px;
+    }
+
+    .completed-action-cell {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+    }
+
+    .completed-action-btn {
+        position: relative;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 0;
+        background: transparent;
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+    }
+
+    .completed-action-btn img.completed-download-ring,
+    .completed-action-btn.is-view img {
+        display: block;
+        width: 36px;
+        height: 36px;
+    }
+
+    .completed-action-btn .completed-download-arrow {
+        position: absolute;
+        display: block;
+        width: 16px;
+        height: 19px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .completed-bookings-table td:nth-child(3),
+    .completed-bookings-table .pet-name-wrap,
+    .completed-bookings-table .pet-name,
+    .completed-bookings-table .pet-type {
+        flex-wrap: nowrap;
+        white-space: nowrap;
+        overflow-wrap: normal;
+        word-break: normal;
     }
 
     .booking-action-cell {
