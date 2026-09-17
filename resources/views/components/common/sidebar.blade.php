@@ -583,8 +583,8 @@
         }
 
         .booking-status-dot {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 9999px;
             flex-shrink: 0;
         }
@@ -684,7 +684,7 @@
         }
 
         .booking-status-trigger.is-active {
-            color: #000;
+            color: #3B3731;
         }
 
         .availability-manage-trigger.is-active {

@@ -23,6 +23,7 @@ new class extends Component {
 
     public ?int $completedBookingId = null;
 
+
     public ?int $declineBookingId = null;
 
     public $rescheduleCalendarBookings;
@@ -41,7 +42,7 @@ new class extends Component {
 
     private array $declinableStatuses = ['pending', 'confirmed'];
 
-    private const PET_LIST_COLUMNS = ['id', 'user_id', 'name', 'pet_type', 'breed', 'sex', 'birthday', 'weight', 'notes', 'photo'];
+    private const PET_LIST_COLUMNS = ['id', 'user_id', 'name', 'pet_type', 'breed', 'sex', 'birthday', 'weight', 'notes', 'photo', 'address'];
 
     public ?int $selectedClientId = null;
 
@@ -80,6 +81,16 @@ new class extends Component {
         }
 
         return self::$usersHaveProfileImage = Cache::rememberForever('users_has_profile_image', fn() => Schema::hasColumn('users', 'profile_image'));
+    }
+
+    private function profilePetOwnerRelation(): string
+    {
+        $columns = ['id', 'name', 'address'];
+        if ($this->usersHaveProfileImage()) {
+            $columns[] = 'profile_image';
+        }
+
+        return 'petOwner:' . implode(',', $columns);
     }
 
     private function profilePetCount(): int
@@ -221,7 +232,7 @@ new class extends Component {
             ->select(self::BOOKING_LIST_COLUMNS)
             ->where('goormer_spacer_id', $this->spacerId())
             ->where('pet_owner_id', $this->selectedClientId)
-            ->with(['petOwner:id,name', 'pets:' . implode(',', self::PET_LIST_COLUMNS)])
+            ->with([$this->profilePetOwnerRelation(), 'pets:' . implode(',', self::PET_LIST_COLUMNS)])
             ->get();
     }
 

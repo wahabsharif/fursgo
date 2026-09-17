@@ -11,6 +11,7 @@
 @php
     $isConfirmed = $variant === 'confirmed';
     $isCompact = $messageOnly || $isConfirmed;
+    $compactWidth = $messageOnly ? 130 : 148;
 @endphp
 
 <div class="more-action-wrapper"
@@ -20,9 +21,9 @@
     openMore: false,
     menuLeft: 8,
     menuTop: 8,
-    menuWidth: @js($isCompact ? 148 : $menuWidth),
-    alignStart: {{ $messageOnly ? 'true' : 'false' }},
-    alignEnd: {{ $isConfirmed ? 'true' : 'false' }},
+    menuWidth: @js($isCompact ? $compactWidth : $menuWidth),
+    alignStart: false,
+    alignEnd: {{ $isCompact ? 'true' : 'false' }},
     repositionMore() {
         const rect = $refs.moreBtn.getBoundingClientRect();
         this.menuTop = Math.max(8, rect.bottom + 5);
