@@ -60,6 +60,9 @@ $ticketStatusLabels = [
 @endphp
 
 <div class="admin-pet-owners" x-data="{
+    view: 'list',
+    selectedCustomerId: null,
+    detailTab: 'overview',
     section: 'customers',
     statusFilter: 'all',
     search: '',
@@ -67,7 +70,21 @@ $ticketStatusLabels = [
     disputeSearch: '',
     ticketFilter: 'all',
     ticketSearch: '',
+    openCustomer(id) {
+        this.selectedCustomerId = id;
+        this.detailTab = 'overview';
+        this.view = 'detail';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    closeCustomer() {
+        this.view = 'list';
+        this.selectedCustomerId = null;
+        this.detailTab = 'overview';
+    },
 }">
+    @include('admin.tabs.customer-detail')
+
+    <div x-show="view === 'list'">
     {{-- Section tabs: All customers / Disputes / Support tickets --}}
     <div class="admin-po-sections-bar">
         <nav class="admin-po-sections" aria-label="Pet owners sections">
@@ -290,12 +307,18 @@ $ticketStatusLabels = [
                         <tbody>
                             @foreach ($customers as $customer)
                             <tr
+                                class="admin-po-row-clickable"
+                                role="button"
+                                tabindex="0"
+                                @click="openCustomer('{{ $customer['id'] }}')"
+                                @keydown.enter.prevent="openCustomer('{{ $customer['id'] }}')"
+                                @keydown.space.prevent="openCustomer('{{ $customer['id'] }}')"
                                 x-show="(statusFilter === 'all' || statusFilter === '{{ $customer['status'] }}') &&
                                     (search === '' ||
                                      '{{ strtolower($customer['name']) }}'.includes(search.toLowerCase()) ||
                                      '{{ strtolower($customer['email']) }}'.includes(search.toLowerCase()) ||
                                      '{{ strtolower($customer['id']) }}'.includes(search.toLowerCase()))">
-                                <td class="admin-po-check-col">
+                                <td class="admin-po-check-col" @click.stop>
                                     <input type="checkbox" class="admin-po-check" aria-label="Select {{ $customer['name'] }}">
                                 </td>
                                 <td>
@@ -839,4 +862,5 @@ $ticketStatusLabels = [
             </div>
         </div>
     </div>
+    </div>{{-- /list view --}}
 </div>
