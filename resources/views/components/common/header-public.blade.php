@@ -18,8 +18,11 @@
                             wire:navigate>FursGo Business</a>
                     </li>
                     <li>
+                        {{-- Previous Livewire Help Centre link (kept for reference):
                         <a href="{{ $helpCentreBusinessUrl }}" class="{{ $isHelpCentreRoute ? 'active' : '' }}"
                             wire:navigate>Help Centre</a>
+                        --}}
+                        <a href="{{ route('help-and-support') }}" class="{{ $isHelpCentreRoute ? 'active' : '' }}">Help Centre</a>
                     </li>
                     <li class="header-business-public-nav-auth">
                         <div class="login-signup-div">
@@ -356,8 +359,12 @@
                                     Hosts</a>
                             </li>
                             <li>
+                                {{-- Previous Livewire Help Centre link (kept for reference):
                                 <a href="{{ $isBusinessHomepageRoute ? route('help-and-support', ['chrome' => 'business']) : route('help-and-support') }}"
                                     class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
+                                --}}
+                                <a href="{{ route('help-and-support') }}"
+                                    class="{{ $isHelpCentreRoute ? 'active' : '' }}">Help Centre</a>
                             </li>
                         </ul>
                     </div>

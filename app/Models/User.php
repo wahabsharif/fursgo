@@ -51,6 +51,16 @@ class User extends Authenticatable  // implements MustVerifyEmail
         ];
     }
 
+    public function isAdmin(): bool
+    {
+        return strtolower((string) $this->user_type) === 'admin';
+    }
+
+    public function isActive(): bool
+    {
+        return strtolower((string) $this->user_status) === 'active';
+    }
+
     /**
      * Get the user's initials
      */

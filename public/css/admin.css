@@ -981,6 +981,492 @@
     font-size: 16px;
 }
 
+/* ── Pet Owners ─────────────────────────────────────────── */
+
+.admin-pet-owners {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Section switcher: All customers / Disputes / Support tickets */
+.admin-po-sections {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px;
+    width: fit-content;
+    max-width: 100%;
+    flex-wrap: wrap;
+    border-radius: 55px;
+    background: #fdfdfd;
+    box-shadow: 0 2px 10px 0 rgba(59, 55, 49, 0.05);
+}
+
+.admin-po-section {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 55px;
+    background: #fdfdfd;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.admin-po-section svg {
+    flex-shrink: 0;
+    color: inherit;
+}
+
+.admin-po-section.is-active {
+    border-radius: 55px;
+    background: #fbac83;
+    box-shadow: 0 2px 10px 0 rgba(59, 55, 49, 0.05);
+    color: #fdfdfd;
+}
+
+.admin-po-section-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    padding: 3px 8px;
+    border-radius: 55px;
+    background: #ECEBEB;
+    color: #3B3731;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+.admin-po-section.is-active .admin-po-section-count {
+    background: #FFBE9D;
+    color: #FDFDFD;
+}
+
+.admin-po-head {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.admin-po-head .admin-page-title {
+    margin: 0;
+}
+
+.admin-po-customers {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Metric cards */
+.admin-po-metric-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--admin-card-gap);
+    width: 100%;
+}
+
+.admin-po-metric-card {
+    border-radius: 16px;
+    background: #fdfdfd;
+    box-shadow: 0 2px 10px 0 rgba(59, 55, 49, 0.05);
+    border: 1px solid rgba(59, 55, 49, 0.06);
+    height: 130px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.admin-po-metric-card .admin-card-title {
+    margin: 0;
+    font-size: 15px;
+}
+
+.admin-po-metric-card .admin-card-value {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.admin-po-metric-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.admin-po-metric-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.admin-live-dot.is-warn {
+    background: #fbac83;
+}
+
+/* Status filters + tools */
+.admin-po-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.admin-po-filters {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.admin-po-filter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 8px 14px;
+    border-radius: 55px;
+    border: 1px solid transparent;
+    background: #fdfdfd;
+    box-shadow: 0 2px 10px 0 rgba(59, 55, 49, 0.05);
+    font-family: Lato, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.admin-po-filter.is-all {
+    color: #3b3731;
+    border-color: rgba(59, 55, 49, 0.12);
+}
+
+.admin-po-filter.is-all.is-active {
+    background: #3b3731;
+    border-color: #3b3731;
+    color: #fff;
+    box-shadow: 0 2px 10px 0 rgba(59, 55, 49, 0.05);
+}
+
+.admin-po-filter.is-active-status {
+    color: #a7c569;
+    border-color: #d8e8b7;
+    background: #fbfff4;
+}
+
+.admin-po-filter.is-active-status.is-active {
+    background: #a7c569;
+    border-color: #a7c569;
+    color: #fff;
+}
+
+.admin-po-filter.is-suspended {
+    color: #ffbc59;
+    border-color: #ffc97a;
+    background: rgba(255, 201, 122, 0.12);
+}
+
+.admin-po-filter.is-suspended.is-active {
+    background: #ffc97a;
+    border-color: #ffc97a;
+    color: #fff;
+}
+
+.admin-po-filter.is-flagged {
+    color: #fbac83;
+    border-color: #fbac83;
+    background: rgba(251, 172, 131, 0.12);
+}
+
+.admin-po-filter.is-flagged.is-active {
+    background: #fbac83;
+    border-color: #fbac83;
+    color: #fff;
+}
+
+.admin-po-filter.is-deactivated {
+    color: #ff6e6e;
+    border-color: #ff6e6e;
+    background: rgba(255, 110, 110, 0.08);
+}
+
+.admin-po-filter.is-deactivated.is-active {
+    background: #ff6e6e;
+    border-color: #ff6e6e;
+    color: #fff;
+}
+
+.admin-po-filter.is-unverified {
+    color: #9c9a97;
+    border-color: rgba(59, 55, 49, 0.18);
+    background: rgba(59, 55, 49, 0.04);
+}
+
+.admin-po-filter.is-unverified.is-active {
+    background: #9c9a97;
+    border-color: #9c9a97;
+    color: #fff;
+}
+
+.admin-po-tools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.admin-po-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 220px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 55px;
+    border: 1px solid rgba(59, 55, 49, 0.12);
+    background: #fdfdfd;
+    box-shadow: 0 2px 10px 0 rgba(59, 55, 49, 0.05);
+}
+
+.admin-po-search input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 13px;
+}
+
+.admin-po-search input::placeholder {
+    color: #9c9a97;
+}
+
+.admin-po-tool-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 55px;
+    border: 1px solid rgba(59, 55, 49, 0.12);
+    background: #fdfdfd;
+    box-shadow: 0 2px 10px 0 rgba(59, 55, 49, 0.05);
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.admin-po-tool-btn:hover {
+    border-color: rgba(59, 55, 49, 0.2);
+}
+
+/* Customers table */
+.admin-po-table-card {
+    padding: 0;
+    overflow: hidden;
+    border-radius: 16px;
+    background: #fdfdfd;
+    box-shadow: 0 2px 10px 0 rgba(59, 55, 49, 0.05);
+    border: 1px solid rgba(59, 55, 49, 0.06);
+}
+
+.admin-po-table {
+    min-width: 1100px;
+}
+
+.admin-po-check-col {
+    width: 40px;
+    text-align: center;
+}
+
+.admin-po-check {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: #fbac83;
+    cursor: pointer;
+}
+
+.admin-po-name-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.admin-po-flag {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.admin-po-name {
+    font-weight: 600;
+    color: #3b3731;
+}
+
+.admin-po-name-sep {
+    color: rgba(59, 55, 49, 0.35);
+}
+
+.admin-po-user-id {
+    color: #9c9a97;
+    font-weight: 400;
+}
+
+.admin-po-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 55px;
+    border: 1px solid transparent;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.admin-po-status.is-active {
+    color: #a7c569;
+    border-color: #d8e8b7;
+    background: #fbfff4;
+}
+
+.admin-po-status.is-suspended {
+    color: #ffbc59;
+    border-color: #ffc97a;
+    background: rgba(255, 201, 122, 0.12);
+}
+
+.admin-po-status.is-flagged {
+    color: #fbac83;
+    border-color: #fbac83;
+    background: rgba(251, 172, 131, 0.12);
+}
+
+.admin-po-status.is-deactivated {
+    color: #ff6e6e;
+    border-color: #ff6e6e;
+    background: rgba(255, 110, 110, 0.08);
+}
+
+.admin-po-status.is-unverified {
+    color: #9c9a97;
+    border-color: rgba(59, 55, 49, 0.18);
+    background: rgba(59, 55, 49, 0.04);
+}
+
+.admin-po-verified {
+    display: inline-flex;
+    align-items: center;
+    color: #a7c569;
+}
+
+.admin-po-unverified {
+    color: #9c9a97;
+}
+
+.admin-po-table-footer {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    border-top: 1px solid rgba(59, 55, 49, 0.06);
+}
+
+.admin-po-table-footer .admin-table-count {
+    justify-self: start;
+}
+
+.admin-po-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    grid-column: 2;
+    justify-self: center;
+}
+
+.admin-po-page,
+.admin-po-page-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    border: none;
+    background: transparent;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.admin-po-page-arrow {
+    width: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(59, 55, 49, 0.1);
+    background: #fdfdfd;
+    box-shadow: 0 2px 10px 0 rgba(59, 55, 49, 0.05);
+}
+
+.admin-po-page-arrow:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.admin-po-page.is-current {
+    color: #3b3731;
+    font-weight: 600;
+}
+
+.admin-po-page-ellipsis {
+    color: #9c9a97;
+    font-size: 13px;
+    padding: 0 2px;
+}
+
+.admin-po-placeholder {
+    padding: 24px 0;
+}
+
+.admin-po-placeholder p {
+    margin: 8px 0 0;
+    color: rgba(59, 55, 49, 0.55);
+    font-family: Lato, sans-serif;
+    font-size: 16px;
+}
+
 @media (max-width: 1199.98px) {
     .admin-dash-grid {
         grid-template-columns: 1fr 1fr;
@@ -995,6 +1481,10 @@
     }
 
     .admin-metric-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .admin-po-metric-row {
         grid-template-columns: 1fr 1fr;
     }
 
@@ -1077,6 +1567,35 @@
 
     .admin-metric-row {
         grid-template-columns: 1fr;
+    }
+
+    .admin-po-metric-row {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-po-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-po-tools {
+        width: 100%;
+    }
+
+    .admin-po-search {
+        flex: 1;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .admin-po-table-footer {
+        grid-template-columns: 1fr;
+        justify-items: start;
+    }
+
+    .admin-po-pagination {
+        grid-column: 1;
+        justify-self: start;
     }
 
     .admin-card-chart {

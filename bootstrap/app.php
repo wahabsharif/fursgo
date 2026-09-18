@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\ApplyBusinessPageShellFromRequest::class,
         ]);
         $middleware->alias([
+            'auth.admin' => \App\Http\Middleware\EnsureAdminAuthenticated::class,
             'auth.groomer_spacer' => \App\Http\Middleware\EnsureGroomerSpacerAuthenticated::class,
             'auth.web_or_groomer_spacer' => \App\Http\Middleware\EnsureWebOrGroomerSpacerAuthenticated::class,
             'business.shell.web' => \App\Http\Middleware\SetBusinessPageWebShell::class,

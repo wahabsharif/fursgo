@@ -1,5 +1,9 @@
 <?php
 
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
@@ -9,17 +13,52 @@ new #[Layout('layouts.admin-guest')]
 
     public string $password = '';
 
-    /**
-     * UI-only for now. Real admin auth will be wired in a later step.
-     */
+    public bool $loginFailed = false;
+
+    public function mount(): void
+    {
+        $user = Auth::user();
+
+        if ($user && $user->isAdmin() && $user->isActive()) {
+            $this->redirect(route('admin.overview'), navigate: false);
+        }
+    }
+
     public function login(): void
     {
+        $this->loginFailed = false;
+
         $this->validate([
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ], [
             'email.required' => 'Please enter valid email address',
             'email.email' => 'Please enter valid email address',
+        ]);
+
+        $email = strtolower(trim($this->email));
+        $user = User::where('email', $email)->first();
+
+        if (!$user || !Hash::check($this->password, $user->password)) {
+            $this->rejectLogin();
+        }
+
+        if (!$user->isAdmin() || !$user->isActive()) {
+            $this->rejectLogin();
+        }
+
+        Auth::login($user);
+        request()->session()->regenerate();
+
+        $this->redirect(route('admin.overview'), navigate: false);
+    }
+
+    protected function rejectLogin(): void
+    {
+        $this->loginFailed = true;
+
+        throw ValidationException::withMessages([
+            'email' => 'Invalid credentials',
         ]);
     }
 }; ?>
@@ -51,6 +90,7 @@ new #[Layout('layouts.admin-guest')]
                             x-data="{
                                 email: @entangle('email').live,
                                 password: @entangle('password').live,
+                                loginFailed: @entangle('loginFailed'),
                                 emailTouched: false,
                                 emailFocused: false,
                                 emailValid() {
@@ -60,29 +100,44 @@ new #[Layout('layouts.admin-guest')]
                                 emailInvalid() {
                                     return this.emailTouched && !this.emailValid();
                                 },
+                                emailHasError() {
+                                    return this.loginFailed || this.emailInvalid() || {{ $errors->has('email') ? 'true' : 'false' }};
+                                },
+                                emailErrorMessage() {
+                                    if (this.loginFailed) {
+                                        return 'Invalid credentials';
+                                    }
+                                    return 'Please enter valid email address';
+                                },
                                 passwordReady() {
                                     return (this.password || '').trim().length > 0;
                                 },
+                                clearLoginFailed() {
+                                    if (this.loginFailed) {
+                                        this.loginFailed = false;
+                                    }
+                                },
                             }">
                             <div class="form-group {{ $errors->has('email') ? 'has-error' : '' }}"
-                                x-bind:class="{ 'has-error': emailInvalid() || {{ $errors->has('email') ? 'true' : 'false' }} }">
+                                x-bind:class="{ 'has-error': emailHasError() }">
                                 <label for="admin-email">Email Address</label>
                                 <div class="input-wrapper">
                                     <input type="email" id="admin-email" x-model="email"
-                                        x-on:focus="emailFocused = true"
+                                        x-on:focus="emailFocused = true; clearLoginFailed()"
+                                        x-on:input="clearLoginFailed()"
                                         x-on:blur="emailTouched = true; emailFocused = false"
-                                        x-bind:class="{ 'is-invalid': emailInvalid() || {{ $errors->has('email') ? 'true' : 'false' }} }"
-                                        x-bind:placeholder="(emailInvalid() || {{ $errors->has('email') ? 'true' : 'false' }}) && !emailFocused ? '' : 'email@example.com'"
+                                        x-bind:class="{ 'is-invalid': emailHasError() }"
+                                        x-bind:placeholder="emailHasError() && !emailFocused ? '' : 'email@example.com'"
                                         required autofocus autocomplete="email">
 
                                     <span class="field-error-inside"
-                                        x-show="(emailInvalid() || {{ $errors->has('email') ? 'true' : 'false' }}) && !emailFocused"
+                                        x-show="emailHasError() && !emailFocused"
+                                        x-text="emailErrorMessage()"
                                         x-cloak>
-                                        Please enter valid email address
                                     </span>
 
                                     <span class="field-status"
-                                        x-show="emailInvalid() || {{ $errors->has('email') ? 'true' : 'false' }}"
+                                        x-show="emailHasError()"
                                         x-cloak aria-hidden="true">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19"
                                             viewBox="0 0 19 19" fill="none">
@@ -93,7 +148,7 @@ new #[Layout('layouts.admin-guest')]
                                     </span>
 
                                     <span class="field-status"
-                                        x-show="emailValid() && !{{ $errors->has('email') ? 'true' : 'false' }}"
+                                        x-show="emailValid() && !emailHasError()"
                                         x-cloak aria-hidden="true">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19"
                                             viewBox="0 0 19 19" fill="none">
@@ -109,6 +164,7 @@ new #[Layout('layouts.admin-guest')]
                                 <label for="admin-password">Password</label>
                                 <div class="input-wrapper">
                                     <input type="password" id="admin-password" x-model="password"
+                                        x-on:input="clearLoginFailed()"
                                         placeholder="••••••••••••••••••••" required autocomplete="current-password">
 
                                     <span class="field-status" x-show="passwordReady()" x-cloak aria-hidden="true">
@@ -125,8 +181,9 @@ new #[Layout('layouts.admin-guest')]
                                 @enderror
                             </div>
 
-                            <button type="submit" class="admin-login-submit">
-                                Log in
+                            <button type="submit" class="admin-login-submit" wire:loading.attr="disabled">
+                                <span wire:loading.remove wire:target="login">Log in</span>
+                                <span wire:loading wire:target="login">Logging in...</span>
                             </button>
                         </form>
                         </div>
