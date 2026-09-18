@@ -6,7 +6,8 @@
 
 @if ($booking)
     @php
-        $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+        $spacerUser = auth('groomer_spacer')->user() ?? auth()->user();
+        $isSpaceUser = strtolower((string) ($spacerUser?->user_type ?? '')) === 'space';
         $invoiceIdLabel = 'FG-' . str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT);
         $issuedDateLabel = $booking->date?->format('j M Y') ?? now()->format('j M Y');
         $bookingDateLabel = $booking->date?->format('D, j M Y') ?? 'N/A';
@@ -21,11 +22,7 @@
             if ($raw === '') {
                 return null;
             }
-            $isAbsolute =
-                str_starts_with($raw, 'http://') ||
-                str_starts_with($raw, 'https://') ||
-                str_starts_with($raw, 'data:') ||
-                str_starts_with($raw, '/');
+            $isAbsolute = str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://') || str_starts_with($raw, 'data:') || str_starts_with($raw, '/');
 
             return $isAbsolute ? $raw : asset('storage/' . ltrim($raw, '/'));
         };
@@ -41,15 +38,18 @@
             $issuerName = trim((string) data_get($issuer?->business_details ?? [], 'business_name', '')) ?: 'Business';
         }
         $issuerParts = preg_split('/\s+/', $issuerName, -1, PREG_SPLIT_NO_EMPTY) ?: [];
-        $issuerShortName = count($issuerParts) >= 2
-            ? $issuerParts[0] . ' ' . strtoupper(substr((string) end($issuerParts), 0, 1)) . '.'
-            : $issuerName;
+        $issuerShortName = count($issuerParts) >= 2 ? $issuerParts[0] . ' ' . strtoupper(substr((string) end($issuerParts), 0, 1)) . '.' : $issuerName;
         $timeRaw = trim((string) ($booking->time ?? ''));
         $visitRaw = str_replace('_', ' ', strtolower((string) ($booking->visit_type ?? '')));
         $spaceVisitLabel = match (true) {
             $visitRaw === '' => 'Garden / Shed',
-            str_contains((string) ($booking->visit_type ?? ''), '/') || str_contains((string) ($booking->visit_type ?? ''), ' ') => str_replace('Garden/Shed', 'Garden / Shed', (string) $booking->visit_type),
+            str_contains((string) ($booking->visit_type ?? ''), '/') => str_replace('Garden/Shed', 'Garden / Shed', (string) $booking->visit_type),
             $visitRaw === 'garden shed' || $visitRaw === 'garden/shed' => 'Garden / Shed',
+            $visitRaw === 'home' || $visitRaw === 'home visit' => 'Home Visit',
+            $visitRaw === 'salon' || $visitRaw === 'salon visit' => 'Salon',
+            $visitRaw === 'private room' => 'Private room',
+            $visitRaw === 'mobile station' => 'Mobile Station',
+            $visitRaw === 'other' => 'Other',
             default => ucwords($visitRaw),
         };
         $serviceLower = strtolower(trim((string) ($booking->service ?? '')));
@@ -64,7 +64,7 @@
             preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[0] ?? ''), $startMatch);
             preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[1] ?? ''), $endMatch);
             if (!empty($startMatch[1]) && !empty($endMatch[1])) {
-                $diff = (((int) $endMatch[1]) * 60 + (int) $endMatch[2]) - (((int) $startMatch[1]) * 60 + (int) $startMatch[2]);
+                $diff = ((int) $endMatch[1]) * 60 + (int) $endMatch[2] - (((int) $startMatch[1]) * 60 + (int) $startMatch[2]);
                 if ($diff < 0) {
                     $diff += 24 * 60;
                 }
@@ -84,7 +84,17 @@
         if ($spaceLocation === '') {
             $spaceLocation = trim((string) data_get($issuer?->freelance_details ?? [], 'service_home_address_line1', ''));
         }
-        $fallbackAddress = trim((string) ($firstPet?->address ?? $booking->petOwner?->address ?? ''));
+        if ($spaceLocation === '') {
+            $spaceLocation = trim((string) data_get($issuer?->freelance_details ?? [], 'service_home_address_line2', ''));
+        }
+        if ($spaceLocation === '' && $issuer) {
+            $area = \App\Models\ServiceArea::query()->where('groomer_spacer_id', $issuer->id)->first();
+            $spaceLocation = trim((string) ($area?->name ?? ''));
+            if ($spaceLocation === '') {
+                $spaceLocation = trim((string) ($area?->address ?? ''));
+            }
+        }
+        $fallbackAddress = trim((string) ($firstPet?->address ?? ($booking->petOwner?->address ?? '')));
         $locationLabel = match (true) {
             $isSpaceUser => $spaceLocation !== '' ? $spaceLocation : ($fallbackAddress !== '' ? $fallbackAddress : 'N/A'),
             str_contains($visitRaw, 'home') => 'At your home',
@@ -104,142 +114,163 @@
 
         $serviceAmount = (float) $booking->amount;
         $extraAddOns = collect(is_array($booking->extra_add_ons) ? $booking->extra_add_ons : [])
-            ->map(fn($item) => [
-                'label' => trim((string) data_get($item, 'label', '')),
-                'amount' => (float) data_get($item, 'amount', 0),
-            ])
+            ->map(
+                fn($item) => [
+                    'label' => trim((string) data_get($item, 'label', '')),
+                    'amount' => (float) data_get($item, 'amount', 0),
+                ],
+            )
             ->filter(fn($item) => $item['label'] !== '')
             ->values();
         $extrasAmount = (float) $extraAddOns->sum('amount');
         $promoDiscount = (float) ($booking->discount ?? 0);
         $subtotalAmount = $serviceAmount + $extrasAmount;
         $totalPaidAmount = $subtotalAmount - $promoDiscount;
-        $serviceLineLabel = $isSpaceUser
-            ? ($spaceVisitLabel . ' — ' . $durationLabel)
-            : ($booking->service ?: 'Service');
+        $serviceDurationLine = match ($durationLabel) {
+            'Full-Day' => 'Full-day',
+            'Half-Day' => 'Half-day',
+            default => $durationLabel,
+        };
+        $serviceLineLabel = $isSpaceUser ? $spaceVisitLabel . ' — ' . $serviceDurationLine : ($booking->service ?: 'Service');
         $subtotalLabel = $isSpaceUser ? 'Space subtotal' : 'Groomer subtotal';
     @endphp
     @teleport('body')
-    <div class="invoice-preview-overlay" wire:keydown.escape="{{ $closeMethod }}">
-        <div class="invoice-preview-card" role="dialog" aria-modal="true" aria-labelledby="completed-booking-modal-title">
-            <div class="invoice-preview-head">
-                <img src="{{ asset('images/business-hub/icon-invoice-wordmark.svg') }}" alt="fursgo" width="73" height="20"
-                    class="invoice-preview-wordmark">
-                <button type="button" class="invoice-preview-close" @if ($loadingEvent)
-                @click="window.dispatchEvent(new CustomEvent(@js($loadingEvent)))" @endif
-                    wire:click="{{ $closeMethod }}" aria-label="Close modal">
-                    <img src="{{ asset('images/business-hub/icon-invoice-close.svg') }}" alt="" width="20" height="20">
-                </button>
-            </div>
-
-            <div class="invoice-preview-meta">
-                <p class="invoice-preview-id">{{ $invoiceIdLabel }} · Issued {{ $issuedDateLabel }}</p>
-                <p class="invoice-preview-paid">Paid</p>
-            </div>
-
-            <div class="invoice-preview-bill">
-                <div>
-                    <p class="invoice-preview-kicker">Billed to</p>
-                    <p class="invoice-preview-value">{{ $billedToName }}</p>
+        <div class="invoice-preview-overlay{{ $isSpaceUser ? ' is-space' : '' }}" wire:keydown.escape="{{ $closeMethod }}">
+            <div class="invoice-preview-card{{ $isSpaceUser ? ' is-space' : '' }}" role="dialog" aria-modal="true" aria-labelledby="completed-booking-modal-title">
+                <div class="invoice-preview-head">
+                    <img src="{{ asset('images/business-hub/icon-invoice-wordmark.svg') }}" alt="fursgo" width="73" height="20"
+                        class="invoice-preview-wordmark">
+                    <button type="button" class="invoice-preview-close" @if ($loadingEvent) @click="window.dispatchEvent(new CustomEvent(@js($loadingEvent)))" @endif
+                        wire:click="{{ $closeMethod }}" aria-label="Close modal">
+                        <img src="{{ asset('images/business-hub/icon-invoice-close.svg') }}" alt="" width="20" height="20">
+                    </button>
                 </div>
-                <div class="invoice-preview-bill-date">
-                    <p class="invoice-preview-kicker">Booking date</p>
-                    <p class="invoice-preview-value">{{ $bookingDateLabel }}</p>
-                </div>
-            </div>
 
-            <div class="invoice-preview-people">
-                <div class="invoice-preview-person">
-                    <span class="invoice-preview-avatar">
-                        <img src="{{ asset('images/business-hub/icon-invoice-avatar-ring.svg') }}" alt="" width="36"
-                            height="36" class="invoice-preview-avatar-ring">
-                        @if ($ownerPhotoUrl)
-                            <img src="{{ $ownerPhotoUrl }}" alt="" width="32" height="32" class="invoice-preview-avatar-photo">
-                        @else
-                            <span class="invoice-preview-avatar-fallback">{{ $ownerInitial }}</span>
-                        @endif
-                    </span>
-                    <span class="invoice-preview-person-name">{{ $billedToName }}</span>
+                <div class="invoice-preview-meta">
+                    <p class="invoice-preview-id">{{ $invoiceIdLabel }} · Issued {{ $issuedDateLabel }}</p>
+                    <p class="invoice-preview-paid">Paid</p>
                 </div>
-                <div class="invoice-preview-people-end">
-                    @unless ($isSpaceUser)
-                        <span class="invoice-preview-pet-chip">
-                            @if ($petPhotoUrl)
-                                <img src="{{ $petPhotoUrl }}" alt="" width="24" height="24">
+
+                <div class="invoice-preview-bill">
+                    <div>
+                        <p class="invoice-preview-kicker">Billed to</p>
+                        <p class="invoice-preview-value">{{ $billedToName }}</p>
+                    </div>
+                    <div class="invoice-preview-bill-date">
+                        <p class="invoice-preview-kicker">Booking date</p>
+                        <p class="invoice-preview-value">{{ $bookingDateLabel }}</p>
+                    </div>
+                </div>
+
+                <div class="invoice-preview-people">
+                    <div class="invoice-preview-person">
+                        <span class="invoice-preview-avatar">
+                            @if ($isSpaceUser)
+                                <svg class="invoice-preview-avatar-ring" width="36" height="36" viewBox="0 0 36 36" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <circle cx="18" cy="18" r="17.5" fill="white" stroke="#FFA899" />
+                                </svg>
                             @else
-                                <span class="invoice-preview-pet-fallback">{{ $petInitial }}</span>
+                                <img src="{{ asset('images/business-hub/icon-invoice-avatar-ring.svg') }}" alt="" width="36"
+                                    height="36" class="invoice-preview-avatar-ring">
                             @endif
-                            <span>{{ $petName }}</span>
+                            @if ($ownerPhotoUrl)
+                                <img src="{{ $ownerPhotoUrl }}" alt="" width="32" height="32" class="invoice-preview-avatar-photo">
+                            @else
+                                <span class="invoice-preview-avatar-fallback">{{ $ownerInitial }}</span>
+                            @endif
                         </span>
-                    @endunless
-                    <span class="invoice-preview-next" aria-hidden="true">
-                        <img src="{{ asset('images/business-hub/icon-invoice-next.svg') }}" alt="" width="36" height="36">
-                    </span>
+                        <span class="invoice-preview-person-name">{{ $billedToName }}</span>
+                    </div>
+                    <div class="invoice-preview-people-end">
+                        @unless ($isSpaceUser)
+                            <span class="invoice-preview-pet-chip">
+                                @if ($petPhotoUrl)
+                                    <img src="{{ $petPhotoUrl }}" alt="" width="24" height="24">
+                                @else
+                                    <span class="invoice-preview-pet-fallback">{{ $petInitial }}</span>
+                                @endif
+                                <span>{{ $petName }}</span>
+                            </span>
+                        @endunless
+                        <span class="invoice-preview-next" aria-hidden="true">
+                            <img src="{{ asset('images/business-hub/icon-invoice-next.svg') }}" alt="" width="36" height="36">
+                        </span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="invoice-preview-details">
-                <div class="invoice-preview-detail-row">
-                    <span>{{ $isSpaceUser ? 'Space Host' : 'Groomer' }}</span>
-                    <span>{{ $issuerShortName }}</span>
-                </div>
-                <div class="invoice-preview-detail-row">
-                    <span>Service type</span>
-                    <span>{{ $serviceTypeLabel }}</span>
-                </div>
-                <div class="invoice-preview-detail-row">
-                    <span>Time</span>
-                    <span>{{ $timeLabel }}</span>
-                </div>
-                <div class="invoice-preview-detail-row">
-                    <span>Location</span>
-                    <span>{{ $locationLabel }}</span>
-                </div>
-                @unless ($isSpaceUser)
+                <div class="invoice-preview-details">
                     <div class="invoice-preview-detail-row">
-                        <span>Pet</span>
-                        <span>{{ $petLine }}</span>
+                        <span>{{ $isSpaceUser ? 'Space Host' : 'Groomer' }}</span>
+                        <span>{{ $issuerShortName }}</span>
                     </div>
-                @endunless
-            </div>
+                    <div class="invoice-preview-detail-row">
+                        <span>Service type</span>
+                        <span>{{ $serviceTypeLabel }}</span>
+                    </div>
+                    <div class="invoice-preview-detail-row">
+                        <span>Time</span>
+                        <span>{{ $timeLabel }}</span>
+                    </div>
+                    <div class="invoice-preview-detail-row">
+                        <span>Location</span>
+                        <span>{{ $locationLabel }}</span>
+                    </div>
+                    @unless ($isSpaceUser)
+                        <div class="invoice-preview-detail-row">
+                            <span>Pet</span>
+                            <span>{{ $petLine }}</span>
+                        </div>
+                    @endunless
+                </div>
 
-            <div class="invoice-preview-charges">
-                <div class="invoice-preview-charge-block">
-                    <p class="invoice-preview-charge-title">Service</p>
-                    <div class="invoice-preview-charge-row">
-                        <span>{{ $serviceLineLabel }}</span>
-                        <span>£{{ number_format($serviceAmount, 2) }}</span>
+                <div class="invoice-preview-charges">
+                    <div class="invoice-preview-charge-block">
+                        <p class="invoice-preview-charge-title">Service</p>
+                        <div class="invoice-preview-charge-row">
+                            <span>{{ $serviceLineLabel }}</span>
+                            <span>£{{ number_format($serviceAmount, 2) }}</span>
+                        </div>
+                    </div>
+                    <div class="invoice-preview-charge-block">
+                        <p class="invoice-preview-charge-title">Extras &amp; Add-ons</p>
+                        @forelse ($extraAddOns as $addon)
+                            <div class="invoice-preview-charge-row">
+                                <span>{{ $addon['label'] }}</span>
+                                <span>£{{ number_format((float) $addon['amount'], 2) }}</span>
+                            </div>
+                        @empty
+                            <div class="invoice-preview-charge-row">
+                                <span>No add-ons</span>
+                                <span>£0.00</span>
+                            </div>
+                        @endforelse
+                    </div>
+                    @if ($isSpaceUser)
+                        <svg class="invoice-preview-rule is-dashed" viewBox="0 0 360 1" width="360" height="1" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                            <line x1="0.5" y1="0.5" x2="359.5" y2="0.5" stroke="#E2E2E2" stroke-linecap="round" stroke-dasharray="10 10" />
+                        </svg>
+                        <div class="invoice-preview-body-subtotal">
+                            <span>{{ $subtotalLabel }}</span>
+                            <span>£{{ number_format($subtotalAmount, 2) }}</span>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="invoice-preview-footer">
+                    <div class="invoice-preview-footer-row">
+                        <span>{{ $subtotalLabel }}</span>
+                        <span>£{{ number_format($subtotalAmount, 2) }}</span>
+                    </div>
+                    <div class="invoice-preview-rule is-solid" aria-hidden="true"></div>
+                    <div class="invoice-preview-footer-row is-total">
+                        <span>Total paid</span>
+                        <span>£{{ number_format($totalPaidAmount, 2) }}</span>
                     </div>
                 </div>
-                <div class="invoice-preview-charge-block">
-                    <p class="invoice-preview-charge-title">Extras &amp; Add-ons</p>
-                    @forelse ($extraAddOns as $addon)
-                        <div class="invoice-preview-charge-row">
-                            <span>{{ $addon['label'] }}</span>
-                            <span>£{{ number_format((float) $addon['amount'], 2) }}</span>
-                        </div>
-                    @empty
-                        <div class="invoice-preview-charge-row">
-                            <span>No add-ons</span>
-                            <span>£0.00</span>
-                        </div>
-                    @endforelse
-                </div>
+                <h2 class="sr-only" id="completed-booking-modal-title">Invoice {{ $invoiceIdLabel }}</h2>
             </div>
-
-            <div class="invoice-preview-footer">
-                <div class="invoice-preview-footer-row">
-                    <span>{{ $subtotalLabel }}</span>
-                    <span>£{{ number_format($subtotalAmount, 2) }}</span>
-                </div>
-                <div class="invoice-preview-footer-row is-total">
-                    <span>Total paid</span>
-                    <span>£{{ number_format($totalPaidAmount, 2) }}</span>
-                </div>
-            </div>
-            <h2 class="sr-only" id="completed-booking-modal-title">Invoice {{ $invoiceIdLabel }}</h2>
         </div>
-    </div>
     @endteleport
 @endif
 
@@ -534,6 +565,73 @@
             border-radius: 10px;
         }
 
+        .invoice-preview-card.is-space {
+            width: min(400px, 100%);
+            min-height: 648px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .invoice-preview-card.is-space .invoice-preview-head {
+            height: 60px;
+            flex-shrink: 0;
+        }
+
+        .invoice-preview-card.is-space .invoice-preview-meta {
+            margin-top: 19px;
+            margin-bottom: 10px;
+        }
+
+        .invoice-preview-card.is-space .invoice-preview-id,
+        .invoice-preview-card.is-space .invoice-preview-paid,
+        .invoice-preview-card.is-space .invoice-preview-kicker,
+        .invoice-preview-card.is-space .invoice-preview-value {
+            line-height: 17px;
+        }
+
+        .invoice-preview-card.is-space .invoice-preview-bill {
+            margin-bottom: 20px;
+        }
+
+        .invoice-preview-card.is-space .invoice-preview-people {
+            height: 68px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .invoice-preview-card.is-space .invoice-preview-people-end {
+            gap: 0;
+        }
+
+        .invoice-preview-card.is-space .invoice-preview-details {
+            padding-bottom: 20px;
+        }
+
+        .invoice-preview-card.is-space .invoice-preview-detail-row>span:first-child {
+            flex: 0 0 auto;
+            min-width: 0;
+        }
+
+        .invoice-preview-card.is-space .invoice-preview-charges {
+            padding: 20px 0;
+            flex: 1 1 auto;
+        }
+
+        .invoice-preview-card.is-space .invoice-preview-charge-block {
+            margin-bottom: 0;
+        }
+
+        .invoice-preview-card.is-space .invoice-preview-charge-title {
+            margin: 0;
+        }
+
+        .invoice-preview-card.is-space .invoice-preview-footer {
+            margin-top: auto;
+            min-height: 120px;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
         .invoice-preview-head {
             position: relative;
             display: flex;
@@ -755,7 +853,7 @@
             flex-direction: column;
             gap: 0;
             padding-bottom: 20px;
-            border-bottom: 1px solid #E8E8E8;
+            border-bottom: 1px solid #E2E2E2;
         }
 
         .invoice-preview-detail-row {
@@ -784,11 +882,50 @@
             padding: 20px 0;
         }
 
+        .invoice-preview-rule {
+            display: block;
+            width: 100%;
+            height: 1px;
+            flex-shrink: 0;
+            overflow: visible;
+        }
+
+        .invoice-preview-charges>.invoice-preview-rule {
+            margin-top: 20px;
+        }
+
+        .invoice-preview-body-subtotal {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 20px;
+            color: #9D9B98;
+            font-family: Lato, sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 20px;
+        }
+
+        .invoice-preview-body-subtotal>span:last-child {
+            color: #3B3731;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .invoice-preview-footer>.invoice-preview-rule {
+            margin: 20px 0;
+        }
+
+        .invoice-preview-rule.is-solid {
+            background: #F0EAD9;
+        }
+
         .invoice-preview-charge-block {
             margin-bottom: 12px;
         }
 
-        .invoice-preview-charge-block:last-child {
+        .invoice-preview-charge-block:last-of-type {
             margin-bottom: 0;
         }
 
@@ -840,9 +977,9 @@
         }
 
         .invoice-preview-footer-row.is-total {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #E8E8E8;
+            margin-top: 0;
+            padding-top: 0;
+            border-top: 0;
         }
 
         .invoice-preview-footer-row.is-total>span:first-child {

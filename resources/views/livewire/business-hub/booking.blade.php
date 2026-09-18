@@ -68,7 +68,7 @@ new class extends Component {
 
     public function bookingSearchHaystack($booking): string
     {
-        $owner = strtolower((string) ($booking->petOwner->name ?? ''));
+        $owner = strtolower((string) ($booking->petOwner?->name ?? ''));
         $pets = strtolower($booking->pets->pluck('name')->filter()->implode(' '));
         $id = (string) $booking->id;
         $padded = 'fg-' . str_pad($id, 5, '0', STR_PAD_LEFT);
@@ -79,16 +79,18 @@ new class extends Component {
     private function toTableRow($booking): array
     {
         $firstPet = $booking->pets->first();
+        $isSpace = $this->isSpaceUser();
+        $spaceService = $this->formatSpaceServiceLabel($booking->service, $booking->time);
 
         return [
             'id' => (int) $booking->id,
             'idLabel' => 'FG-' . str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT),
-            'owner' => (string) ($booking->petOwner->name ?? 'N/A'),
-            'petName' => (string) ($firstPet->name ?? 'N/A'),
-            'petType' => $firstPet->pet_type,
-            'visitType' => $booking->visit_type ? ucfirst((string) $booking->visit_type) : 'N/A',
-            'serviceHtml' => $this->formatServiceTypeLabel($booking->service),
-            'service' => (string) ($booking->service ?: 'N/A'),
+            'owner' => (string) ($booking->petOwner?->name ?? 'N/A'),
+            'petName' => (string) ($firstPet?->name ?? 'N/A'),
+            'petType' => $firstPet?->pet_type,
+            'visitType' => $isSpace ? $this->formatSpaceVisitLabel($booking->visit_type) : ($booking->visit_type ? ucfirst((string) $booking->visit_type) : 'N/A'),
+            'serviceHtml' => $isSpace ? e($spaceService) : $this->formatServiceTypeLabel($booking->service),
+            'service' => $isSpace ? $spaceService : (string) ($booking->service ?: 'N/A'),
             'date' => optional($booking->date)->format('d/m/y') ?: '',
             'time' => (string) ($booking->time ?? ''),
             'status' => (string) $booking->booking_status,
@@ -111,6 +113,70 @@ new class extends Component {
         }
 
         return e(implode(' ', array_slice($words, 0, 2))) . '<br>' . e(implode(' ', array_slice($words, 2)));
+    }
+
+    private function spacerUserType(): string
+    {
+        $user = Auth::guard('groomer_spacer')->user() ?? Auth::user();
+
+        return strtolower((string) ($user?->user_type ?? ''));
+    }
+
+    private function isSpaceUser(): bool
+    {
+        return $this->spacerUserType() === 'space';
+    }
+
+    public function formatSpaceVisitLabel(?string $visitType): string
+    {
+        $rawVisit = (string) ($visitType ?? '');
+        $label = str_replace('_', ' ', strtolower(trim($rawVisit)));
+
+        return match (true) {
+            $label === '' => 'Garden/Shed',
+            str_contains($rawVisit, '/') => str_replace([' / ', ' /', '/ '], '/', $rawVisit),
+            $label === 'garden shed' || $label === 'garden/shed' => 'Garden/Shed',
+            $label === 'home' || $label === 'home visit' => 'Home Visit',
+            $label === 'salon' || $label === 'salon visit' => 'Salon',
+            $label === 'private room' => 'Private room',
+            $label === 'mobile station' => 'Mobile Station',
+            $label === 'other' => 'Other',
+            default => ucwords($label),
+        };
+    }
+
+    public function formatSpaceServiceLabel(?string $service, mixed $time = null): string
+    {
+        $serviceLower = strtolower(trim((string) $service));
+        $label = match (true) {
+            (bool) preg_match('/full[\s_-]*day|fullday/', $serviceLower) => 'Full-Day',
+            (bool) preg_match('/half[\s_-]*day/', $serviceLower) => 'Half-Day',
+            str_contains($serviceLower, 'hour') => 'Hourly',
+            default => null,
+        };
+
+        $timeRaw = is_object($time) && method_exists($time, 'format') ? $time->format('H:i') : trim((string) ($time ?? ''));
+
+        if ($label === null && str_contains($timeRaw, '-')) {
+            $rangeParts = preg_split('/\s*-\s*/', $timeRaw, 2);
+            preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[0] ?? ''), $startMatch);
+            preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[1] ?? ''), $endMatch);
+            if (!empty($startMatch[1]) && !empty($endMatch[1])) {
+                $diff = ((int) $endMatch[1]) * 60 + (int) $endMatch[2] - (((int) $startMatch[1]) * 60 + (int) $startMatch[2]);
+                if ($diff < 0) {
+                    $diff += 24 * 60;
+                }
+                $label = $diff >= 7 * 60 ? 'Full-Day' : ($diff >= 3 * 60 ? 'Half-Day' : 'Hourly');
+            }
+        }
+
+        if ($label !== null) {
+            return $label;
+        }
+
+        $plain = trim((string) $service);
+
+        return $plain !== '' ? $plain : 'N/A';
     }
 
     public function bookingInvoicePdfUrl($booking): string
@@ -480,8 +546,8 @@ new class extends Component {
     visible: 10,
     matchCount: 0,
     observer: null,
-    isSpace: {{ strtolower((string) (auth()->user()->user_type ?? '')) === 'space' ? 'true' : 'false' }},
-    isGroomerService: {{ in_array(strtolower((string) (auth()->user()->user_type ?? '')), ['groomer', 'space'], true) ? 'true' : 'false' }},
+    isSpace: {{ $this->isSpaceUser() ? 'true' : 'false' }},
+    isGroomerService: {{ in_array($this->spacerUserType(), ['groomer', 'space'], true) ? 'true' : 'false' }},
     rows: [],
     init() {
         this.readRows();
@@ -701,16 +767,16 @@ new class extends Component {
             <div class="bookings-table-scroll">
                 @if ($activeStatus === 'pending')
                     @php
-                        $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+                        $isSpaceUser = $this->isSpaceUser();
                     @endphp
-                    <table class="bookings-table booking-list-table">
+                    <table class="bookings-table booking-list-table{{ $isSpaceUser ? ' is-space' : '' }}">
                         <thead>
                             <tr>
                                 <th>Booking ID</th>
-                                <th>Submitted at</th>
+                                <th>{{ $isSpaceUser ? 'Submitted at' : 'Submitted' }}</th>
                                 <th>{{ $isSpaceUser ? 'Client' : 'Owner' }}</th>
                                 <th>{{ $isSpaceUser ? 'Space' : 'Pet' }}</th>
-                                <th>Service Type</th>
+                                <th>{{ $isSpaceUser ? 'Service type' : 'Service Type' }}</th>
                                 <th class="booking-details-col">Booking Details</th>
                                 <th>Payment</th>
                                 <th class="action-col">Action</th>
@@ -789,7 +855,9 @@ new class extends Component {
                                                     $durationLabel = $hours . 'hr ' . $minutes . 'm';
                                                 }
 
-                                                if ($startMeridiem === $endMeridiem) {
+                                                if ($isSpaceUser) {
+                                                    $bookingDetailsTime = $startHHMM . ' - ' . $endHHMM . ' (' . $durationLabel . ')';
+                                                } elseif ($startMeridiem === $endMeridiem) {
                                                     $bookingDetailsTime = $startHHMM . ' - ' . $endHHMM . ' ' . $startMeridiem . ' (' . $durationLabel . ')';
                                                 } else {
                                                     $bookingDetailsTime = $startDt->format('H:i a') . ' - ' . $endDt->format('H:i a') . ' (' . $durationLabel . ')';
@@ -801,10 +869,6 @@ new class extends Component {
                                         }
                                     }
                                     $bookingDetailsTimeDisplay = $bookingDetailsTime;
-                                    if ($isSpaceUser) {
-                                        $bookingDetailsTimeDisplay = trim((string) preg_replace('/\s*\([^)]*\)\s*$/', '', $bookingDetailsTimeDisplay));
-                                        $bookingDetailsTimeDisplay = trim((string) preg_replace('/\s+(am|pm)$/i', '', $bookingDetailsTimeDisplay));
-                                    }
                                 @endphp
 
                                 <tr wire:key="booking-pending-row-{{ $booking->id }}" class="bookings-data-row"
@@ -812,14 +876,19 @@ new class extends Component {
                                     <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
                                     <td>
                                         <div class="submitted-at">
-                                            <div class="submitted-time">{{ $submittedTime }}</div>
-                                            <div class="submitted-date">{{ $submittedDate }}</div>
+                                            @if ($isSpaceUser)
+                                                <div class="submitted-time">{{ $submittedTime }}</div>
+                                                <div class="submitted-date">{{ $submittedDate }}</div>
+                                            @else
+                                                <div class="submitted-date">{{ $submittedDate }}</div>
+                                                <div class="submitted-time">{{ $submittedTime }}</div>
+                                            @endif
                                         </div>
                                     </td>
                                     <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
-                                    <td>
+                                    <td @if ($isSpaceUser) class="space-visit-cell" @endif>
                                         @if ($isSpaceUser)
-                                            {{ $formatLocationLabel($booking->visit_type ?? null) }}
+                                            {{ $this->formatSpaceVisitLabel($booking->visit_type ?? null) }}
                                         @else
                                             <div class="filtered-pet-cell">
                                                 <span class="booking-pet-name">{{ $petName }}</span>
@@ -834,14 +903,17 @@ new class extends Component {
                                             </div>
                                         @endif
                                     </td>
-                                    <td
-                                        class="service-type {{ auth()->check() && in_array(strtolower((string) auth()->user()->user_type), ['groomer', 'space'], true) ? 'service-type-groomer' : '' }}">
-                                        {!! $this->formatServiceTypeLabel($booking->service) !!}
+                                    <td class="service-type">
+                                        @if ($isSpaceUser)
+                                            {{ $this->formatSpaceServiceLabel($booking->service, $booking->time) }}
+                                        @else
+                                            {!! $this->formatServiceTypeLabel($booking->service) !!}
+                                        @endif
                                     </td>
                                     <td class="booking-details-col">
                                         <div class="booking-details">
                                             <div class="details-date">{{ $bookingDetailsDate }}</div>
-                                            <div class="details-time {{ $isSpaceUser ? 'details-time-space' : '' }}">
+                                            <div class="details-time">
                                                 {{ $bookingDetailsTimeDisplay }}
                                             </div>
                                         </div>
@@ -862,14 +934,9 @@ new class extends Component {
                                             <button type="button" class="booking-decline-btn"
                                                 @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
                                                 wire:click="openDeclineModal({{ $booking->id }})" aria-label="Decline booking">
-                                                <span aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="36"
-                                                        height="36" viewBox="0 0 36 36" fill="none">
-                                                        <rect width="36" height="36" rx="18" fill="#FF6E6E" />
-                                                        <path d="M13 23L23 13M13 13L23 23" stroke="white" stroke-width="1.5"
-                                                            stroke-linecap="round" />
-                                                    </svg></span>
+                                                Decline
                                             </button>
-                                            <x-business-hub.common.more-action-btn :row-id="$booking->id" />
+                                            <x-business-hub.common.more-action-btn variant="pending" :row-id="$booking->id" />
                                         </div>
                                     </td>
                                 </tr>
@@ -883,16 +950,16 @@ new class extends Component {
 
                 @if ($activeStatus === 'confirmed')
                     @php
-                        $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+                        $isSpaceUser = $this->isSpaceUser();
                     @endphp
-                    <table class="bookings-table confirmed-bookings-table">
+                    <table class="bookings-table confirmed-bookings-table{{ $isSpaceUser ? ' is-space' : '' }}">
                         <thead>
                             @if ($isSpaceUser)
                                 <tr>
                                     <th>Booking ID</th>
                                     <th>Client</th>
                                     <th>Service Type</th>
-                                    <th>Space</th>
+                                    <th>Location</th>
                                     <th>Booking Details</th>
                                     <th>Staff</th>
                                     <th class="confirmed-action-col">Action</th>
@@ -952,35 +1019,36 @@ new class extends Component {
                                                 }
                                                 $durationMinutes = (int) max(0, ($endDt->getTimestamp() - $startDt->getTimestamp()) / 60);
                                                 $durationLabel = '(' . (int) floor($durationMinutes / 60) . 'hr' . ($durationMinutes % 60 ? ' ' . $durationMinutes % 60 . 'm' : '') . ')';
-                                                $appointmentTime = $startDt->format('H:i') . ' - ' . $endDt->format('H:i') . ' ' . strtolower($endDt->format('a')) . ' ' . $durationLabel;
+                                                if ($isSpaceUser) {
+                                                    $appointmentTime = $startDt->format('H:i') . ' - ' . $endDt->format('H:i') . ' ' . $durationLabel;
+                                                } else {
+                                                    $appointmentTime = $startDt->format('H:i') . ' - ' . $endDt->format('H:i') . ' ' . strtolower($endDt->format('a')) . ' ' . $durationLabel;
+                                                }
                                             } catch (Throwable $e) {
                                                 $appointmentTime = $appointmentTimeRaw;
                                             }
                                         }
                                     }
                                     $appointmentTimeDisplay = $appointmentTime;
-                                    if ($isSpaceUser) {
-                                        $appointmentTimeDisplay = trim((string) preg_replace('/\s*\([^)]*\)\s*$/', '', $appointmentTimeDisplay));
-                                        $appointmentTimeDisplay = trim((string) preg_replace('/\s+(am|pm)$/i', '', $appointmentTimeDisplay));
-                                    }
 
-                                    $locationLabel = strtolower((string) ($booking->visit_type ?? ''));
-                                    $locationLabel = str_replace('_', ' ', $locationLabel);
-                                    $locationLabel = $locationLabel === 'home' || $locationLabel === 'home visit' ? 'Home Visit' : ($locationLabel === 'salon' || $locationLabel === 'salon visit' ? 'Salon Visit' : ucfirst($locationLabel ?: 'N/A'));
+                                    if ($isSpaceUser) {
+                                        $locationLabel = $this->formatSpaceVisitLabel($booking->visit_type ?? null);
+                                    } else {
+                                        $locationLabel = str_replace('_', ' ', strtolower((string) ($booking->visit_type ?? '')));
+                                        $locationLabel = $locationLabel === 'home' || $locationLabel === 'home visit' ? 'Home Visit' : ($locationLabel === 'salon' || $locationLabel === 'salon visit' ? 'Salon Visit' : ucfirst($locationLabel ?: 'N/A'));
+                                    }
                                 @endphp
                                 <tr wire:key="booking-row-confirmed-{{ $booking->id }}" class="bookings-data-row"
                                     data-search="{{ $this->bookingSearchHaystack($booking) }}" @if ($loop->index >= 10) hidden @endif>
                                     <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
                                     @if ($isSpaceUser)
                                         <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
-                                        <td class="service-type">{!! $this->formatServiceTypeLabel($booking->service) !!}</td>
-                                        <td><span class="confirmed-space-label">{{ $locationLabel }}</span></td>
+                                        <td class="service-type">{{ $this->formatSpaceServiceLabel($booking->service, $booking->time) }}</td>
+                                        <td class="space-visit-cell">{{ $locationLabel }}</td>
                                         <td>
                                             <div class="confirmed-appointment-cell">
                                                 <div>{{ $appointmentDate }}</div>
-                                                <div class="{{ $isSpaceUser ? 'confirmed-appointment-time-space' : '' }}">
-                                                    {{ $appointmentTimeDisplay }}
-                                                </div>
+                                                <div>{{ $appointmentTimeDisplay }}</div>
                                             </div>
                                         </td>
                                         <td>{{ $booking->staff ?: 'N/A' }}</td>
@@ -1037,9 +1105,9 @@ new class extends Component {
 
                 @if ($activeStatus === 'completed')
                     @php
-                        $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+                        $isSpaceUser = $this->isSpaceUser();
                     @endphp
-                    <table class="bookings-table completed-bookings-table">
+                    <table class="bookings-table completed-bookings-table{{ $isSpaceUser ? ' is-space' : '' }}">
                         <thead>
                             <tr>
                                 <th>Booking ID</th>
@@ -1068,8 +1136,8 @@ new class extends Component {
                             @foreach ($visibleCompletedBookings as $booking)
                                 @php
                                     $firstPet = $booking->pets->first();
-                                    $petName = $firstPet->name ?? 'N/A';
-                                    $petType = $firstPet->pet_type ?? null;
+                                    $petName = $firstPet?->name ?? 'N/A';
+                                    $petType = $firstPet?->pet_type ?? null;
                                     $rating = data_get($booking, 'rating');
                                     $completedLocationLabel = strtolower((string) ($booking->visit_type ?? ''));
                                     $completedLocationLabel = str_replace('_', ' ', $completedLocationLabel);
@@ -1132,15 +1200,15 @@ new class extends Component {
 
                 @if ($activeStatus === 'cancelled')
                     @php
-                        $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+                        $isSpaceUser = $this->isSpaceUser();
                     @endphp
-                    <table class="bookings-table cancelled-bookings-table">
+                    <table class="bookings-table cancelled-bookings-table{{ $isSpaceUser ? ' is-space' : '' }}">
                         <thead>
                             <tr>
                                 <th>Booking ID</th>
                                 <th>Date</th>
                                 <th>{{ $isSpaceUser ? 'Client' : 'Pet Owner' }}</th>
-                                <th>{{ $isSpaceUser ? 'Space' : 'Pet' }}</th>
+                                <th>{{ $isSpaceUser ? 'Service' : 'Pet' }}</th>
                                 <th>Cancelled By</th>
                                 <th>Refund Amount</th>
                                 <th>Refund Status</th>
@@ -1164,8 +1232,8 @@ new class extends Component {
                             @foreach ($visibleCancelledBookings as $booking)
                                 @php
                                     $firstPet = $booking->pets->first();
-                                    $petName = $firstPet->name ?? 'N/A';
-                                    $petType = $firstPet->pet_type ?? null;
+                                    $petName = $firstPet?->name ?? 'N/A';
+                                    $petType = $firstPet?->pet_type ?? null;
                                     $cancelledPetLabel = trim($petName . ($petType ? ' ' . $petType : ''));
                                     $cancelledByRaw = strtolower(trim((string) ($booking->cancelled_by ?? '')));
                                     $cancelledByYou = in_array($cancelledByRaw, ['groomer', 'space host', 'you', 'host'], true);
@@ -1186,7 +1254,7 @@ new class extends Component {
                                     <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
                                     <td>
                                         @if ($isSpaceUser)
-                                            {{ $cancelledLocationLabel }}
+                                            {{ $this->formatSpaceServiceLabel($booking->service, $booking->time) }}
                                         @else
                                             {{ $cancelledPetLabel }}
                                         @endif
@@ -1232,9 +1300,9 @@ new class extends Component {
 
                 @if ($activeStatus === 'all')
                     @php
-                        $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+                        $isSpaceUser = $this->isSpaceUser();
                     @endphp
-                    <table class="bookings-table bookings-table-all">
+                    <table class="bookings-table bookings-table-all{{ $isSpaceUser ? ' is-space' : '' }}">
                         <thead>
                             <tr>
                                 <th>Booking ID</th>
@@ -1253,13 +1321,13 @@ new class extends Component {
                                     <td x-text="row.idLabel"></td>
                                     <td x-text="row.owner"></td>
                                     <td>
-                                        <span x-show="isSpace" x-text="row.visitType"></span>
+                                        <span class="space-visit-cell" x-show="isSpace" x-text="row.visitType"></span>
                                         <div class="pet-name-wrap" x-show="!isSpace">
                                             <span class="pet-name" x-text="row.petName"></span>
                                             <span class="pet-type" x-show="row.petType" x-text="row.petType"></span>
                                         </div>
                                     </td>
-                                    <td class="service-type" :class="isGroomerService ? 'service-type-groomer' : ''"
+                                    <td class="service-type" :class="!isSpace && isGroomerService ? 'service-type-groomer' : ''"
                                         x-html="row.serviceHtml"></td>
                                     <td x-text="row.date"></td>
                                     <td>
@@ -1270,16 +1338,12 @@ new class extends Component {
                                         <div class="view-col-inner all-bookings-actions">
                                             <button type="button" class="view-btn" @click="openView(row.id)"
                                                 aria-label="View booking">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
-                                                    viewBox="0 0 36 36" fill="none" aria-hidden="true">
-                                                    <circle cx="18" cy="18" r="17.5" fill="white" stroke="#E2E2E2" />
-                                                    <path
-                                                        d="M18 23.5C19.933 23.5 21.5 21.933 21.5 20C21.5 18.067 19.933 16.5 18 16.5C16.067 16.5 14.5 18.067 14.5 20C14.5 21.933 16.067 23.5 18 23.5Z"
-                                                        stroke="#3B3731" />
-                                                    <path d="M27 20C27 20 26 12 18 12C10 12 9 20 9 20" stroke="#3B3731" />
-                                                </svg>
+                                                <img src="{{ asset('images/business-hub/icon-booking-view.svg') }}" alt=""
+                                                    width="36" height="36">
                                             </button>
-                                            <x-business-hub.common.more-action-btn message-only />
+                                            @unless ($isSpaceUser)
+                                                <x-business-hub.common.more-action-btn message-only />
+                                            @endunless
                                         </div>
                                     </td>
                                 </tr>
@@ -1324,13 +1388,13 @@ new class extends Component {
 
     @if ($cancelledBooking)
         @php
-            $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+            $isSpaceUser = $this->isSpaceUser();
             $cancelledBookingIdLabel = 'FG-' . str_pad((string) $cancelledBooking->id, 5, '0', STR_PAD_LEFT);
             $cancelledDateLabel = optional($cancelledBooking->date)->format('d/m/Y') ?? 'N/A';
-            $cancelledOwnerName = $cancelledBooking->petOwner->name ?? 'N/A';
+            $cancelledOwnerName = $cancelledBooking->petOwner?->name ?? 'N/A';
             $cancelledFirstPet = $cancelledBooking->pets->first();
-            $cancelledPetName = $cancelledFirstPet->name ?? 'N/A';
-            $cancelledPetType = $cancelledFirstPet->pet_type ?? '';
+            $cancelledPetName = $cancelledFirstPet?->name ?? 'N/A';
+            $cancelledPetType = $cancelledFirstPet?->pet_type ?? '';
             $cancelledService = $cancelledBooking->service ?: 'N/A';
             $cancelledTimeRaw = (string) ($cancelledBooking->time ?? '');
             $cancelledTimeLabelForSpace = trim($cancelledTimeRaw) !== '' ? trim($cancelledTimeRaw) : 'N/A';
@@ -2316,7 +2380,7 @@ new class extends Component {
 
     .bookings-board {
         width: 100%;
-        padding: 0.35rem 12px 20px;
+        padding: 0.35rem 0 20px;
         box-sizing: border-box;
     }
 
@@ -2337,6 +2401,7 @@ new class extends Component {
         width: 400px;
         max-width: 100%;
         height: 42px;
+        margin-top: 2rem;
     }
 
     .bookings-search input {
@@ -2427,6 +2492,10 @@ new class extends Component {
     .booking-pill.is-cancelled.is-active {
         background: #FEE2E2;
         color: #FD6D70;
+    }
+
+    .section-container:has(.section-panel.section-active .bookings-board) {
+        overflow: visible;
     }
 
     .bookings-table-wrap {
@@ -2673,6 +2742,14 @@ new class extends Component {
         padding-right: 12px;
     }
 
+    .bookings-table-all th.view-col {
+        text-align: center;
+    }
+
+    .bookings-table-all .view-col-inner {
+        justify-content: center;
+    }
+
     .bookings-table .action-col,
     .bookings-table .confirmed-action-col,
     .bookings-table .completed-action-col,
@@ -2681,6 +2758,68 @@ new class extends Component {
         white-space: nowrap;
         padding-left: 8px;
         padding-right: 12px;
+        vertical-align: middle;
+    }
+
+    .bookings-table td.action-col,
+    .bookings-table td.confirmed-action-col,
+    .bookings-table td.completed-action-col,
+    .bookings-table td.cancelled-action-col {
+        vertical-align: middle;
+    }
+
+    .booking-list-table .action-col {
+        width: 230px;
+        padding-right: 16px;
+    }
+
+    .booking-list-table th.action-col,
+    .confirmed-bookings-table th.confirmed-action-col,
+    .completed-bookings-table th.completed-action-col,
+    .cancelled-bookings-table th.cancelled-action-col {
+        text-align: center;
+    }
+
+    .booking-list-table {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    .booking-list-table th {
+        color: #948F88;
+        font-weight: 600;
+    }
+
+    .booking-list-table td {
+        color: #3B3731;
+        font-weight: 400;
+    }
+
+    .booking-list-table .service-type,
+    .booking-list-table .service-type-groomer {
+        color: #3B3731 !important;
+        font-weight: 400 !important;
+    }
+
+    .booking-list-table .booking-pet-name {
+        color: #3B3731;
+        font-weight: 400;
+    }
+
+    .booking-list-table .booking-pet-type,
+    .booking-list-table .booking-pet-more,
+    .booking-list-table .details-time {
+        color: #9D9B98;
+        font-weight: 400;
+    }
+
+    .booking-list-table .submitted-date,
+    .booking-list-table .details-date {
+        color: #3B3731;
+    }
+
+    .booking-list-table .submitted-time {
+        color: #948F88;
     }
 
     .service-type {
@@ -2708,9 +2847,10 @@ new class extends Component {
         width: 100%;
         display: flex;
         align-items: center;
-        justify-content: flex-start;
+        justify-content: center;
         gap: 10px;
-        text-align: left;
+        text-align: center;
+        min-height: 36px;
     }
 
     .view-btn {
@@ -2739,8 +2879,79 @@ new class extends Component {
     .all-bookings-actions {
         width: 82px;
         min-height: 36px;
-        justify-content: flex-start;
+        justify-content: center;
         gap: 10px;
+    }
+
+    .bookings-table.is-space thead th {
+        white-space: nowrap;
+        overflow-wrap: normal;
+        word-break: normal;
+        color: #948F88;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .booking-list-table.is-space .submitted-time {
+        color: #3B3731;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: normal;
+    }
+
+    .booking-list-table.is-space .submitted-date {
+        color: #9D9B98;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: normal;
+    }
+
+    .booking-list-table.is-space .service-type {
+        font-weight: 400 !important;
+        white-space: nowrap !important;
+    }
+
+    .booking-list-table.is-space .space-visit-cell {
+        white-space: nowrap;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+    }
+
+    .booking-list-table.is-space .details-time {
+        color: #9D9B98;
+        font-size: 16px;
+        font-weight: 400;
+        white-space: nowrap;
+    }
+
+    .bookings-table-all.is-space .space-visit-cell {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .bookings-table-all.is-space .service-type {
+        font-weight: 400 !important;
+        white-space: nowrap !important;
+    }
+
+    .bookings-table-all.is-space .view-col {
+        width: 64px;
+        padding-left: 8px;
+        padding-right: 8px;
+        text-align: center;
+    }
+
+    .bookings-table-all.is-space .all-bookings-actions {
+        width: 100%;
+        justify-content: center;
+        gap: 0;
     }
 
     a.view-btn {
@@ -2885,18 +3096,29 @@ new class extends Component {
     .submitted-at {
         display: flex;
         flex-direction: column;
-        gap: 0.15rem;
-    }
-
-    .submitted-time {
-        font-family: Lato;
-        font-weight: 600;
+        gap: 0;
     }
 
     .submitted-date {
-        color: #9D9B98;
+        color: #3B3731;
         font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
         font-weight: 400;
+        line-height: normal;
+    }
+
+    .submitted-time {
+        color: #948F88;
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+    }
+
+    .booking-list-table .filtered-pet-cell {
+        gap: 0;
     }
 
     .filtered-pet-cell {
@@ -2947,11 +3169,35 @@ new class extends Component {
         font-weight: 600;
     }
 
+    .confirmed-bookings-table.is-space td {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+    }
+
+    .confirmed-bookings-table.is-space .service-type {
+        font-weight: 600 !important;
+        white-space: nowrap !important;
+    }
+
+    .confirmed-bookings-table.is-space .space-visit-cell {
+        white-space: nowrap;
+        font-weight: 400;
+    }
+
+    .confirmed-bookings-table.is-space .confirmed-appointment-cell div:last-child {
+        color: #3B3731;
+        white-space: nowrap;
+    }
+
     .confirmed-action-cell {
         display: flex;
         align-items: center;
-        justify-content: flex-start;
+        justify-content: center;
         gap: 0.55rem;
+        width: 100%;
+        min-height: 36px;
     }
 
     .confirmed-action-btn {
@@ -2977,8 +3223,10 @@ new class extends Component {
     .completed-action-cell {
         display: flex;
         align-items: center;
-        justify-content: flex-start;
+        justify-content: center;
         gap: 10px;
+        width: 100%;
+        min-height: 36px;
     }
 
     .completed-action-btn {
@@ -3025,10 +3273,12 @@ new class extends Component {
     .booking-action-cell {
         display: flex;
         align-items: center;
-        justify-content: start;
-        gap: 8px;
+        justify-content: center;
+        gap: 10px;
         position: relative;
         overflow: visible;
+        width: 100%;
+        min-height: 36px;
     }
 
     .booking-action-cell.is-open {
@@ -3036,23 +3286,31 @@ new class extends Component {
     }
 
     .booking-accept-btn {
+        -webkit-appearance: none;
+        appearance: none;
         border-radius: 100px;
-        background: #C9DDA0;
+        background-color: #C9DDA0;
+        background-image: none;
+        border: 1px solid #AFCD6F;
+        box-sizing: border-box;
         width: 75.939px;
         height: 36px;
-        color: #FFF;
+        color: #FFFFFF;
         text-align: center;
         font-family: Lato;
-        font-size: 16px;
+        font-size: 14px;
         font-style: normal;
         font-weight: 600;
         line-height: normal;
-        border: none;
+        -webkit-font-smoothing: antialiased;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 0.4rem;
+        flex-shrink: 0;
+        padding: 0;
+        box-shadow: none;
     }
 
     .booking-accept-btn[disabled] {
@@ -3082,16 +3340,30 @@ new class extends Component {
     }
 
     .booking-decline-btn {
-        width: 36px;
+        -webkit-appearance: none;
+        appearance: none;
+        width: 75.939px;
         height: 36px;
-        aspect-ratio: 1/1;
-        border: none;
-        background: transparent;
+        border-radius: 100px;
+        border: 1px solid #FF6E6E;
+        background-color: #FFFFFF;
+        background-image: none;
+        color: #FF6E6E;
+        text-align: center;
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        -webkit-font-smoothing: antialiased;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        box-sizing: border-box;
+        flex-shrink: 0;
         padding: 0;
+        box-shadow: none;
     }
 
     .bookings-table .booking-details-col {
