@@ -5,8 +5,8 @@
 @endphp
 
 @if ($selectedPetId && $this->selectedPet)
-    <x-business-hub.clients.client-pet-medication-view :pet="$this->selectedPet" :medication="$this->selectedPetMedication" :vaccination-rows="$this->petVaccinationRows"
-        :overdue-vaccination-count="$this->petOverdueVaccinationCount" />
+    <x-business-hub.clients.client-pet-medication-view :pet="$this->selectedPet" :medication="$this->selectedPetMedication"
+        :vaccination-rows="$this->petVaccinationRows" :overdue-vaccination-count="$this->petOverdueVaccinationCount" />
 @else
     @php
         $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
@@ -53,25 +53,24 @@
         </div>
 
         <article class="client-profile-card" x-ref="profileCard" x-data="{
-            openMenu: false,
-            blocked: @entangle('profileIsBlocked').live,
-            menuStyle: '',
-            repositionMenu() {
-                const card = this.$refs.profileCard.getBoundingClientRect();
-                this.menuStyle = `top:calc(${card.top}px + 3rem);left:calc(${card.right}px + 4.5rem - 130px);`;
-            },
-            toggleMenu() {
-                if (!this.openMenu) {
-                    this.$nextTick(() => this.repositionMenu());
-                }
-                this.openMenu = !this.openMenu;
-            },
-            toggleBlock() {
-                this.blocked = !this.blocked;
-                this.$wire.toggleClientBlock();
-            }
-        }"
-            :class="{ 'is-blocked': blocked }" x-effect="if (openMenu) repositionMenu()"
+                    openMenu: false,
+                    blocked: @entangle('profileIsBlocked').live,
+                    menuStyle: '',
+                    repositionMenu() {
+                        const card = this.$refs.profileCard.getBoundingClientRect();
+                        this.menuStyle = `top:calc(${card.top}px + 3rem);left:calc(${card.right}px + 4.5rem - 130px);`;
+                    },
+                    toggleMenu() {
+                        if (!this.openMenu) {
+                            this.$nextTick(() => this.repositionMenu());
+                        }
+                        this.openMenu = !this.openMenu;
+                    },
+                    toggleBlock() {
+                        this.blocked = !this.blocked;
+                        this.$wire.toggleClientBlock();
+                    }
+                }" :class="{ 'is-blocked': blocked }" x-effect="if (openMenu) repositionMenu()"
             @keydown.escape.window="openMenu = false" @resize.window="if (openMenu) repositionMenu()"
             @scroll.window="if (openMenu) repositionMenu()"
             @click.window="if (openMenu && $refs.moreBtn && !$refs.moreBtn.contains($event.target) && $refs.moreMenu && !$refs.moreMenu.contains($event.target)) { openMenu = false }">
@@ -99,8 +98,8 @@
                                 <button type="button" class="client-profile-more-btn" x-ref="moreBtn"
                                     @click.stop="toggleMenu()" aria-label="More options"
                                     :aria-expanded="openMenu.toString()">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="5"
-                                        viewBox="0 0 25 5" fill="none" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="5" viewBox="0 0 25 5"
+                                        fill="none" aria-hidden="true">
                                         <circle cx="2.5" cy="2.5" r="2.5" fill="#3B3731" />
                                         <circle cx="12.5" cy="2.5" r="2.5" fill="#3B3731" />
                                         <circle cx="22.5" cy="2.5" r="2.5" fill="#3B3731" />
@@ -114,8 +113,8 @@
                                 <div class="client-profile-name-row">
                                     <h3 class="client-profile-name">{{ $meta['name'] }}</h3>
                                     @if ($meta['is_verified'])
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                                            viewBox="0 0 18 18" fill="none" aria-label="Verified">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"
+                                            fill="none" aria-label="Verified">
                                             <circle cx="9" cy="9" r="9" fill="#9FC7E4" />
                                             <path d="M5.5 9.2L7.8 11.5L12.5 6.8" stroke="white" stroke-width="1.5"
                                                 stroke-linecap="round" stroke-linejoin="round" />
@@ -138,8 +137,8 @@
                             </div>
 
                             <button type="button" class="client-profile-message-btn">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="18"
-                                    viewBox="0 0 19 18" fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="18" viewBox="0 0 19 18"
+                                    fill="none">
                                     <path
                                         d="M9.21191 0.75C13.9709 0.750052 17.6738 4.15879 17.6738 8.18262C17.6738 12.2065 13.9709 15.6152 9.21191 15.6152H9.20996C8.36471 15.6171 7.52277 15.5061 6.70605 15.2842L6.42578 15.208L6.16699 15.3408C5.69627 15.5825 4.70064 16.0237 3.09375 16.4053L2.36816 16.5645C2.36428 16.5652 2.36033 16.5656 2.35645 16.5664C2.36139 16.552 2.36717 16.5379 2.37207 16.5234L2.37695 16.5088L2.38086 16.4951L2.38379 16.4824C2.6793 15.6051 2.92377 14.5916 3.01465 13.6309L3.04785 13.2832L2.80371 13.0342C1.51469 11.7224 0.75 10.0242 0.75 8.18262C0.750027 4.15876 4.45291 0.75 9.21191 0.75Z"
                                         stroke="#94BEDB" stroke-width="1.5" />
@@ -176,8 +175,8 @@
                         <span class="client-profile-stat-value">
                             @if ($meta['avg_rating'])
                                 <span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                        viewBox="0 0 20 20" fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
+                                        fill="none">
                                         <path
                                             d="M8.75651 0.943537C9.14791 -0.314515 10.8521 -0.314511 11.2435 0.943541L12.7078 5.65027C12.8829 6.21288 13.3849 6.5938 13.9513 6.5938H18.69C19.9566 6.5938 20.4832 8.2865 19.4585 9.06402L15.6249 11.9729C15.1666 12.3207 14.9748 12.937 15.1499 13.4996L16.6142 18.2063C17.0056 19.4644 15.6269 20.5105 14.6022 19.733L10.7685 16.8241C10.3103 16.4764 9.68974 16.4764 9.23148 16.8241L5.3978 19.733C4.37311 20.5105 2.99439 19.4644 3.38579 18.2063L4.85012 13.4996C5.02516 12.937 4.83341 12.3207 4.37515 11.9729L0.541471 9.06402C-0.483225 8.2865 0.0434023 6.5938 1.31 6.5938H6.04868C6.61512 6.5938 7.11714 6.21288 7.29217 5.65027L8.75651 0.943537Z"
                                             fill="#FFC97A" />
@@ -198,9 +197,9 @@
                 <div class="client-profile-more-menu" x-cloak x-show="openMenu" x-ref="moreMenu"
                     wire:loading.class="is-loading" wire:target="toggleClientBlock" :style="menuStyle"
                     x-transition.opacity.duration.100ms>
-                    <button type="button" class="client-profile-more-item"
-                        :class="blocked ? 'is-activate' : 'is-block'" @click="toggleBlock()"
-                        wire:loading.attr="disabled" wire:loading.class="is-loading" wire:target="toggleClientBlock">
+                    <button type="button" class="client-profile-more-item" :class="blocked ? 'is-activate' : 'is-block'"
+                        @click="toggleBlock()" wire:loading.attr="disabled" wire:loading.class="is-loading"
+                        wire:target="toggleClientBlock">
                         <span wire:loading.remove wire:target="toggleClientBlock"
                             x-text="blocked ? 'Activate' : 'Block'"></span>
                         <span class="client-profile-more-item-loading" wire:loading.inline-flex
@@ -208,19 +207,16 @@
                             <span class="client-profile-load-more-spinner" aria-hidden="true"></span>
                         </span>
                         <template x-if="blocked">
-                            <svg wire:loading.remove wire:target="toggleClientBlock"
-                                xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15"
-                                fill="none" aria-hidden="true">
-                                <circle cx="7.5" cy="7.5" r="7.125" stroke="#3B3731"
-                                    stroke-width="0.75" />
+                            <svg wire:loading.remove wire:target="toggleClientBlock" xmlns="http://www.w3.org/2000/svg"
+                                width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                                <circle cx="7.5" cy="7.5" r="7.125" stroke="#3B3731" stroke-width="0.75" />
                                 <path d="M4.5 7.6L6.7 9.8L10.5 5.5" stroke="#3B3731" stroke-width="0.75"
                                     stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </template>
                         <template x-if="!blocked">
-                            <svg wire:loading.remove wire:target="toggleClientBlock"
-                                xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15"
-                                fill="none" aria-hidden="true">
+                            <svg wire:loading.remove wire:target="toggleClientBlock" xmlns="http://www.w3.org/2000/svg"
+                                width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
                                 <path
                                     d="M7.05664 0.375C7.86761 0.375004 8.63276 0.509461 9.35449 0.777344L9.66113 0.900391C10.4786 1.25264 11.1862 1.72915 11.7871 2.3291C12.3879 2.92892 12.8651 3.63584 13.2178 4.45312C13.5673 5.26324 13.7432 6.12989 13.7432 7.05664C13.7432 7.98354 13.5669 8.85036 13.2178 9.66113C12.8656 10.4789 12.3889 11.1868 11.7881 11.7871C11.187 12.3876 10.4798 12.8646 9.66406 13.2178C8.8559 13.5676 7.98971 13.7437 7.06152 13.7432C6.13461 13.7432 5.26684 13.5669 4.45605 13.2178C3.63899 12.8651 2.93181 12.3883 2.33105 11.7881C1.73017 11.1877 1.25306 10.4812 0.900391 9.66504C0.550891 8.85611 0.375027 7.98939 0.375 7.06152C0.375 6.24972 0.509614 5.4845 0.777344 4.76367L0.900391 4.45703C1.25262 3.63963 1.72876 2.93196 2.32812 2.33105C2.92737 1.73033 3.63433 1.25309 4.45215 0.900391C5.26288 0.550756 6.12982 0.375 7.05664 0.375Z"
                                     stroke="#3B3731" stroke-width="0.75" />
@@ -257,37 +253,34 @@
             <div class="client-profile-sort" x-show="$wire.profileActiveTab === 'pets'" x-cloak
                 x-transition:enter="client-profile-toolbar-enter"
                 x-transition:enter-start="client-profile-toolbar-enter-start"
-                x-transition:enter-end="client-profile-toolbar-enter-end"
-                x-transition:leave="client-profile-toolbar-leave"
+                x-transition:enter-end="client-profile-toolbar-enter-end" x-transition:leave="client-profile-toolbar-leave"
                 x-transition:leave-start="client-profile-toolbar-leave-start"
                 x-transition:leave-end="client-profile-toolbar-leave-end" x-data="{
-                    open: false,
-                    menuRight: 0,
-                    menuTop: 0,
-                    menuWidth: 220,
-                    repositionMenu() {
-                        const rect = $refs.sortBtn.getBoundingClientRect();
-                        this.menuRight = Math.max(8, rect.right - this.menuWidth);
-                        this.menuTop = rect.bottom + 8;
-                    },
-                    toggleMenu() {
-                        if (!this.open) {
-                            this.repositionMenu();
-                        }
-                        this.open = !this.open;
-                    }
-                }"
-                @keydown.escape.window="open = false" @resize.window="if (open) repositionMenu()"
+                            open: false,
+                            menuRight: 0,
+                            menuTop: 0,
+                            menuWidth: 220,
+                            repositionMenu() {
+                                const rect = $refs.sortBtn.getBoundingClientRect();
+                                this.menuRight = Math.max(8, rect.right - this.menuWidth);
+                                this.menuTop = rect.bottom + 8;
+                            },
+                            toggleMenu() {
+                                if (!this.open) {
+                                    this.repositionMenu();
+                                }
+                                this.open = !this.open;
+                            }
+                        }" @keydown.escape.window="open = false" @resize.window="if (open) repositionMenu()"
                 @scroll.window="if (open) repositionMenu()"
                 @click.window="if (open && !$refs.sortBtn.contains($event.target) && (!$refs.sortMenu || !$refs.sortMenu.contains($event.target))) { open = false }">
                 <div class="sort-dropdown">
                     <button type="button" class="sort-trigger" x-ref="sortBtn" @click.stop="toggleMenu()"
                         aria-label="Sort pets" :aria-expanded="open.toString()">
                         <span>Sort</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="7" viewBox="0 0 13 7"
-                            fill="none">
-                            <path d="M11.9103 0.5L6.15684 6.25344L0.499989 0.596581" stroke="#A8A8A8"
-                                stroke-linecap="round" stroke-linejoin="round" />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="7" viewBox="0 0 13 7" fill="none">
+                            <path d="M11.9103 0.5L6.15684 6.25344L0.499989 0.596581" stroke="#A8A8A8" stroke-linecap="round"
+                                stroke-linejoin="round" />
                         </svg>
                     </button>
                     <template x-teleport="body">
@@ -295,13 +288,13 @@
                             x-transition.opacity.duration.100ms
                             :style="`position: fixed; left: ${menuRight}px; top: ${menuTop}px; z-index: 99999;`">
                             @foreach ([
-        'name_asc' => 'Name (A–Z)',
-        'name_desc' => 'Name (Z–A)',
-        'type_asc' => 'Pet Type (A–Z)',
-        'type_desc' => 'Pet Type (Z–A)',
-        'weight_high' => 'Heaviest',
-        'weight_low' => 'Lightest',
-    ] as $profilePetSortKey => $profilePetSortLabel)
+                                    'name_asc' => 'Name (A–Z)',
+                                    'name_desc' => 'Name (Z–A)',
+                                    'type_asc' => 'Pet Type (A–Z)',
+                                    'type_desc' => 'Pet Type (Z–A)',
+                                    'weight_high' => 'Heaviest',
+                                    'weight_low' => 'Lightest',
+                                ] as $profilePetSortKey => $profilePetSortLabel)
                                 <button type="button" class="sort-options"
                                     :class="{ 'is-active': @js($profilePetSort) === '{{ $profilePetSortKey }}' }"
                                     wire:click="setProfilePetSort('{{ $profilePetSortKey }}')" @click="open = false">
@@ -314,41 +307,37 @@
                 </div>
             </div>
 
-            <div class="client-profile-sort"
-                x-show="['upcoming', 'bookings', 'payments'].includes($wire.profileActiveTab)" x-cloak
-                x-transition:enter="client-profile-toolbar-enter"
+            <div class="client-profile-sort" x-show="['upcoming', 'bookings', 'payments'].includes($wire.profileActiveTab)"
+                x-cloak x-transition:enter="client-profile-toolbar-enter"
                 x-transition:enter-start="client-profile-toolbar-enter-start"
-                x-transition:enter-end="client-profile-toolbar-enter-end"
-                x-transition:leave="client-profile-toolbar-leave"
+                x-transition:enter-end="client-profile-toolbar-enter-end" x-transition:leave="client-profile-toolbar-leave"
                 x-transition:leave-start="client-profile-toolbar-leave-start"
                 x-transition:leave-end="client-profile-toolbar-leave-end" x-data="{
-                    open: false,
-                    menuRight: 0,
-                    menuTop: 0,
-                    menuWidth: 220,
-                    repositionMenu() {
-                        const rect = $refs.sortBtn.getBoundingClientRect();
-                        this.menuRight = Math.max(8, rect.right - this.menuWidth);
-                        this.menuTop = rect.bottom + 8;
-                    },
-                    toggleMenu() {
-                        if (!this.open) {
-                            this.repositionMenu();
-                        }
-                        this.open = !this.open;
-                    }
-                }"
-                @keydown.escape.window="open = false" @resize.window="if (open) repositionMenu()"
+                            open: false,
+                            menuRight: 0,
+                            menuTop: 0,
+                            menuWidth: 220,
+                            repositionMenu() {
+                                const rect = $refs.sortBtn.getBoundingClientRect();
+                                this.menuRight = Math.max(8, rect.right - this.menuWidth);
+                                this.menuTop = rect.bottom + 8;
+                            },
+                            toggleMenu() {
+                                if (!this.open) {
+                                    this.repositionMenu();
+                                }
+                                this.open = !this.open;
+                            }
+                        }" @keydown.escape.window="open = false" @resize.window="if (open) repositionMenu()"
                 @scroll.window="if (open) repositionMenu()"
                 @click.window="if (open && !$refs.sortBtn.contains($event.target) && (!$refs.sortMenu || !$refs.sortMenu.contains($event.target))) { open = false }">
                 <div class="sort-dropdown">
                     <button type="button" class="sort-trigger" x-ref="sortBtn" @click.stop="toggleMenu()"
                         aria-label="Sort bookings" :aria-expanded="open.toString()">
                         <span>Sort</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="7" viewBox="0 0 13 7"
-                            fill="none">
-                            <path d="M11.9103 0.5L6.15684 6.25344L0.499989 0.596581" stroke="#A8A8A8"
-                                stroke-linecap="round" stroke-linejoin="round" />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="7" viewBox="0 0 13 7" fill="none">
+                            <path d="M11.9103 0.5L6.15684 6.25344L0.499989 0.596581" stroke="#A8A8A8" stroke-linecap="round"
+                                stroke-linejoin="round" />
                         </svg>
                     </button>
                     <template x-teleport="body">
@@ -356,11 +345,11 @@
                             x-transition.opacity.duration.100ms
                             :style="`position: fixed; left: ${menuRight}px; top: ${menuTop}px; z-index: 99999;`">
                             @foreach ([
-        'date_asc' => 'Date (Earliest)',
-        'date_desc' => 'Date (Latest)',
-        'amount_high' => 'Highest Paid',
-        'amount_low' => 'Lowest Paid',
-    ] as $profileSortKey => $profileSortLabel)
+                                    'date_asc' => 'Date (Earliest)',
+                                    'date_desc' => 'Date (Latest)',
+                                    'amount_high' => 'Highest Paid',
+                                    'amount_low' => 'Lowest Paid',
+                                ] as $profileSortKey => $profileSortLabel)
                                 <button type="button" class="sort-options"
                                     :class="{ 'is-active': @js($profileSort) === '{{ $profileSortKey }}' }"
                                     wire:click="setProfileSort('{{ $profileSortKey }}')" @click="open = false">
@@ -378,45 +367,45 @@
             @if ($profileActiveTab === 'pets')
                 <x-business-hub.clients.client-pet-view :pets="$this->profilePets" />
             @elseif ($profileActiveTab === 'reviews')
-                <x-business-hub.clients.client-reviews-view :reviews="$this->profileVisibleTabReviews" :client-name="$meta['name']" :open-reply-id="$openReviewReplyId" />
+                <x-business-hub.clients.client-reviews-view :reviews="$this->profileVisibleTabReviews"
+                    :client-name="$meta['name']" :open-reply-id="$openReviewReplyId" />
 
                 @if ($this->profileCanLoadMore)
                     <div class="client-profile-load-more-wrap">
                         <button type="button" class="client-profile-load-more-btn" wire:click="loadMoreProfile"
                             wire:loading.attr="disabled" wire:target="loadMoreProfile">
                             <span wire:loading.remove wire:target="loadMoreProfile">Load More</span>
-                            <span class="client-profile-load-more-loading" wire:loading.inline-flex
-                                wire:target="loadMoreProfile">
+                            <span class="client-profile-load-more-loading" wire:loading.inline-flex wire:target="loadMoreProfile">
                                 <span class="client-profile-load-more-spinner" aria-hidden="true"></span>
                             </span>
                         </button>
                     </div>
                 @endif
             @elseif ($profileActiveTab === 'payments')
-                <x-business-hub.clients.client-payments-view :payments="$this->profileVisibleTabPayments" :is-space-user="$isSpaceUser" />
+                <x-business-hub.clients.client-payments-view :payments="$this->profileVisibleTabPayments"
+                    :is-space-user="$isSpaceUser" />
 
                 @if ($this->profileCanLoadMore)
                     <div class="client-profile-load-more-wrap">
                         <button type="button" class="client-profile-load-more-btn" wire:click="loadMoreProfile"
                             wire:loading.attr="disabled" wire:target="loadMoreProfile">
                             <span wire:loading.remove wire:target="loadMoreProfile">Load More</span>
-                            <span class="client-profile-load-more-loading" wire:loading.inline-flex
-                                wire:target="loadMoreProfile">
+                            <span class="client-profile-load-more-loading" wire:loading.inline-flex wire:target="loadMoreProfile">
                                 <span class="client-profile-load-more-spinner" aria-hidden="true"></span>
                             </span>
                         </button>
                     </div>
                 @endif
             @elseif ($profileActiveTab === 'bookings')
-                <x-business-hub.clients.client-bookings-view :bookings="$this->profileVisibleTabBookings" :is-space-user="$isSpaceUser" />
+                <x-business-hub.clients.client-bookings-view :bookings="$this->profileVisibleTabBookings"
+                    :is-space-user="$isSpaceUser" />
 
                 @if ($this->profileCanLoadMore)
                     <div class="client-profile-load-more-wrap">
                         <button type="button" class="client-profile-load-more-btn" wire:click="loadMoreProfile"
                             wire:loading.attr="disabled" wire:target="loadMoreProfile">
                             <span wire:loading.remove wire:target="loadMoreProfile">Load More</span>
-                            <span class="client-profile-load-more-loading" wire:loading.inline-flex
-                                wire:target="loadMoreProfile">
+                            <span class="client-profile-load-more-loading" wire:loading.inline-flex wire:target="loadMoreProfile">
                                 <span class="client-profile-load-more-spinner" aria-hidden="true"></span>
                             </span>
                         </button>
@@ -482,8 +471,7 @@
                                         </td>
                                         <td>
                                             <div class="client-profile-pet-cell">
-                                                <span
-                                                    class="client-profile-pet-name-inline">{{ $petName }}</span>
+                                                <span class="client-profile-pet-name-inline">{{ $petName }}</span>
                                                 @if ($petType)
                                                     <span class="client-profile-pet-type">{{ $petType }}</span>
                                                 @endif
@@ -495,27 +483,22 @@
                                     @endif
                                     <td class="client-profile-action-col">
                                         <div class="client-profile-action-cell">
-                                            <button type="button" class="client-profile-action-btn is-message"
-                                                aria-label="Message">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
-                                                    viewBox="0 0 36 36" fill="none">
-                                                    <rect width="36" height="36" rx="18"
-                                                        fill="#CBDCE8" />
+                                            <button type="button" class="client-profile-action-btn is-message" aria-label="Message">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"
+                                                    fill="none">
+                                                    <rect width="36" height="36" rx="18" fill="#CBDCE8" />
                                                     <path
                                                         d="M18.3955 11.25C22.4278 11.25 25.542 14.1354 25.542 17.5137C25.542 20.892 22.4278 23.7773 18.3955 23.7773H18.3945C17.6796 23.779 16.9672 23.6847 16.2764 23.4971L15.9951 23.4209L15.7373 23.5537C15.3001 23.7782 14.314 24.2099 12.6807 24.5547C12.9199 23.8218 13.1163 22.9878 13.1914 22.1934L13.2236 21.8457L12.9795 21.5967C11.8924 20.4903 11.25 19.0614 11.25 17.5137C11.25 14.1355 14.3634 11.2502 18.3955 11.25Z"
                                                         stroke="white" stroke-width="1.5" />
                                                 </svg>
                                             </button>
                                             <button type="button" class="client-profile-action-btn is-reschedule"
-                                                wire:click="openRescheduleModal({{ $booking->id }})"
-                                                aria-label="Reschedule">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
-                                                    viewBox="0 0 36 36" fill="none">
-                                                    <rect width="36" height="36" rx="18"
-                                                        fill="#FFC97A" />
-                                                    <path d="M12.2312 25.4951V22.6123H15.114" stroke="white"
-                                                        stroke-width="1.5" stroke-linecap="round"
-                                                        stroke-linejoin="round" />
+                                                wire:click="openRescheduleModal({{ $booking->id }})" aria-label="Reschedule">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"
+                                                    fill="none">
+                                                    <rect width="36" height="36" rx="18" fill="#FFC97A" />
+                                                    <path d="M12.2312 25.4951V22.6123H15.114" stroke="white" stroke-width="1.5"
+                                                        stroke-linecap="round" stroke-linejoin="round" />
                                                     <path
                                                         d="M25.3656 16.6225C25.6715 18.2545 25.4269 19.9419 24.6702 21.4199C23.9135 22.8978 22.6875 24.0827 21.1846 24.7887C19.6818 25.4946 17.987 25.6817 16.3664 25.3204C14.7458 24.9592 13.2909 24.0701 12.2301 22.7927M10.6283 19.3775C10.3224 17.7455 10.567 16.0581 11.3237 14.5801C12.0804 13.1022 13.3064 11.9173 14.8093 11.2113C16.3121 10.5054 18.0069 10.3183 19.6275 10.6796C21.2481 11.0408 22.703 11.9299 23.7638 13.2073"
                                                         stroke="white" stroke-width="1.5" stroke-linecap="round"
@@ -527,14 +510,12 @@
                                                 </svg>
                                             </button>
                                             <button type="button" class="client-profile-action-btn is-cancel"
-                                                wire:click="openDeclineModal({{ $booking->id }})"
-                                                aria-label="Cancel">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"
-                                                    viewBox="0 0 36 36" fill="none">
-                                                    <rect width="36" height="36" rx="18"
-                                                        fill="#FF6E6E" />
-                                                    <path d="M13 23L23 13M13 13L23 23" stroke="white"
-                                                        stroke-width="1.5" stroke-linecap="round" />
+                                                wire:click="openDeclineModal({{ $booking->id }})" aria-label="Cancel">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"
+                                                    fill="none">
+                                                    <rect width="36" height="36" rx="18" fill="#FF6E6E" />
+                                                    <path d="M13 23L23 13M13 13L23 23" stroke="white" stroke-width="1.5"
+                                                        stroke-linecap="round" />
                                                 </svg>
                                             </button>
                                         </div>
@@ -556,8 +537,7 @@
                         <button type="button" class="client-profile-load-more-btn" wire:click="loadMoreProfile"
                             wire:loading.attr="disabled" wire:target="loadMoreProfile">
                             <span wire:loading.remove wire:target="loadMoreProfile">Load More</span>
-                            <span class="client-profile-load-more-loading" wire:loading.inline-flex
-                                wire:target="loadMoreProfile">
+                            <span class="client-profile-load-more-loading" wire:loading.inline-flex wire:target="loadMoreProfile">
                                 <span class="client-profile-load-more-spinner" aria-hidden="true"></span>
                             </span>
                         </button>

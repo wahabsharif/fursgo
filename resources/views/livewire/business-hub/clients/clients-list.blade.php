@@ -23,6 +23,7 @@ new class extends Component {
 
     public ?int $completedBookingId = null;
 
+
     public ?int $declineBookingId = null;
 
     public $rescheduleCalendarBookings;
@@ -41,7 +42,7 @@ new class extends Component {
 
     private array $declinableStatuses = ['pending', 'confirmed'];
 
-    private const PET_LIST_COLUMNS = ['id', 'user_id', 'name', 'pet_type', 'breed', 'sex', 'birthday', 'weight', 'notes', 'photo'];
+    private const PET_LIST_COLUMNS = ['id', 'user_id', 'name', 'pet_type', 'breed', 'sex', 'birthday', 'weight', 'notes', 'photo', 'address'];
 
     public ?int $selectedClientId = null;
 
@@ -80,6 +81,16 @@ new class extends Component {
         }
 
         return self::$usersHaveProfileImage = Cache::rememberForever('users_has_profile_image', fn() => Schema::hasColumn('users', 'profile_image'));
+    }
+
+    private function profilePetOwnerRelation(): string
+    {
+        $columns = ['id', 'name', 'address'];
+        if ($this->usersHaveProfileImage()) {
+            $columns[] = 'profile_image';
+        }
+
+        return 'petOwner:' . implode(',', $columns);
     }
 
     private function profilePetCount(): int
@@ -221,7 +232,7 @@ new class extends Component {
             ->select(self::BOOKING_LIST_COLUMNS)
             ->where('goormer_spacer_id', $this->spacerId())
             ->where('pet_owner_id', $this->selectedClientId)
-            ->with(['petOwner:id,name', 'pets:' . implode(',', self::PET_LIST_COLUMNS)])
+            ->with([$this->profilePetOwnerRelation(), 'pets:' . implode(',', self::PET_LIST_COLUMNS)])
             ->get();
     }
 
@@ -623,7 +634,8 @@ new class extends Component {
             return;
         }
 
-        $start = DateTime::createFromFormat('h:i A', $this->rescheduleSelectedTime);
+        $start = DateTime::createFromFormat('H:i A', $this->rescheduleSelectedTime)
+            ?: DateTime::createFromFormat('h:i A', $this->rescheduleSelectedTime);
         if (!$start) {
             return;
         }
@@ -1324,6 +1336,14 @@ new class extends Component {
             this.profileLoading = false;
         });
     },
+    consumePendingProfile() {
+        const pending = Number(window.__pendingClientProfileId || 0);
+        if (!pending) {
+            return;
+        }
+        window.__pendingClientProfileId = null;
+        this.openProfile(pending);
+    },
     closeProfileView() {
         $wire.set('selectedClientId', null);
         $wire.set('selectedPetId', null);
@@ -1332,7 +1352,12 @@ new class extends Component {
         $wire.set('selectedPetId', null);
         $wire.set('profileActiveTab', 'pets');
     },
-}"
+}" x-init="consumePendingProfile()" @open-client-profile.window="
+        const id = Number($event.detail?.clientId || 0);
+        if (!id) { return; }
+        window.__pendingClientProfileId = null;
+        openProfile(id);
+    "
     x-effect="window.dispatchEvent(new CustomEvent('client-profile-visible', { detail: { visible: !!$wire.selectedClientId } }))">
     <div x-show="profileLoading && !$wire.selectedClientId" x-cloak class="clients-profile-opening" aria-busy="true"
         aria-label="Loading client profile">
@@ -1619,6 +1644,13 @@ new class extends Component {
                 },
                 get selectedTimeLabel() {
                     return this.selectedTime || 'N/A';
+                },
+                get newAppointmentLabel() {
+                    const parsed = parseYmd(this.selectedDate);
+                    if (!parsed || !this.selectedTime) {
+                        return '';
+                    }
+                    return `${parsed.d} ${monthNames[parsed.m - 1]} ${parsed.y} · ${this.selectedTime}`;
                 },
                 prevMonth() {
                     const {

@@ -21,25 +21,10 @@
     $isAccountSettingsRoute = request()->routeIs('account-settings');
     $isHelpCentreRoute = request()->routeIs('help-and-support', 'help-and-support-search-legacy');
     $isBusinessVerificationRoute = request()->routeIs('business-verification', 'business-verification.*');
-    $isBusinessAuthRoute = request()->routeIs([
-        'login-groomer-space',
-        'signup-groomer-space',
-        'business-verification',
-        'business-verification.*',
-    ]);
-    $isBusinessSiteRoute = $isBusinessLandingRoute
-        || $isBusinessHomepageRoute
-        || $isBusinessAuthRoute
-        || ($isHelpCentreRoute && (
-            HelpCentre::audience() === HelpCentre::AUDIENCE_BUSINESS
-            || BusinessPageShell::prefersBusinessChrome()
-        ));
+    $isBusinessAuthRoute = request()->routeIs(['login-groomer-space', 'signup-groomer-space', 'business-verification', 'business-verification.*']);
+    $isBusinessSiteRoute = $isBusinessLandingRoute || $isBusinessHomepageRoute || $isBusinessAuthRoute || ($isHelpCentreRoute && (HelpCentre::audience() === HelpCentre::AUDIENCE_BUSINESS || BusinessPageShell::prefersBusinessChrome()));
     $isForGroomersHostsActive = $isBusinessHomepageRoute || $isBusinessLandingRoute;
-    $dashboardLogoHref = $isBusinessVerificationRoute
-        ? route('business-verification')
-        : ($isMarketingHubRoute
-            ? route('marketing-hub')
-            : route('business-hub'));
+    $dashboardLogoHref = $isBusinessVerificationRoute ? route('business-verification') : ($isMarketingHubRoute ? route('marketing-hub') : route('business-hub'));
     $businessHomepageUrl = route('business-homepage-groomer-space-owner');
     $businessHomepageHubUrl = route('business-homepage-groomer-space-owner', ['shell' => 'business-hub']);
     $helpCentreUrl = route('help-and-support');
@@ -102,15 +87,9 @@
         }
     }
 
-    $headerUserType = $isGroomerSpacerSession
-        ? $gsp->user_type ?? 'groomer'
-        : (auth()->check()
-            ? auth()->user()->user_type ?? 'groomer'
-            : 'groomer');
+    $headerUserType = $isGroomerSpacerSession ? $gsp->user_type ?? 'groomer' : (auth()->check() ? auth()->user()->user_type ?? 'groomer' : 'groomer');
 
-    $headerPersonName = $gsp instanceof GroomerSpacerProfile
-        ? ($gsp->full_name ?: $displayName)
-        : $displayName;
+    $headerPersonName = $gsp instanceof GroomerSpacerProfile ? ($gsp->full_name ?: $displayName) : $displayName;
     $headerNameParts = preg_split('/\s+/', trim((string) $headerPersonName), -1, PREG_SPLIT_NO_EMPTY) ?: [];
     $headerShortName = match (true) {
         count($headerNameParts) >= 2 => $headerNameParts[0] . ' ' . mb_strtoupper(mb_substr($headerNameParts[count($headerNameParts) - 1], 0, 1)) . '.',
@@ -118,9 +97,7 @@
         default => $displayName ?: 'Account',
     };
     $headerBusinessLabel = $welcomeBusinessName ?: $displayName;
-    $headerEmail = $gsp instanceof GroomerSpacerProfile
-        ? ($gsp->email ?? null)
-        : (auth()->user()->email ?? $displaySubLabel);
+    $headerEmail = $gsp instanceof GroomerSpacerProfile ? $gsp->email ?? null : auth()->user()->email ?? $displaySubLabel;
 
     $resolveHeaderProfileImage = static function (?GroomerSpacerProfile $profile): string {
         $fallback = asset('images/user-placeholder.png');
@@ -147,11 +124,7 @@
         };
     };
 
-    $headerAvatar = $isHeaderAuthenticated
-        ? (auth()->check() && auth()->user()->profile_image
-            ? asset('storage/' . auth()->user()->profile_image)
-            : $headerProfileImage)
-        : asset('images/user-placeholder.png');
+    $headerAvatar = $isHeaderAuthenticated ? (auth()->check() && auth()->user()->profile_image ? asset('storage/' . auth()->user()->profile_image) : $headerProfileImage) : asset('images/user-placeholder.png');
 
     $headerSwitchBusinesses = [];
     if (!$isBusinessVerificationRoute && $gsp instanceof GroomerSpacerProfile && filled($gsp->email)) {
@@ -162,7 +135,7 @@
             ->map(function (GroomerSpacerProfile $profile) use ($gsp, $resolveHeaderProfileImage) {
                 $bd = is_array($profile->business_details) ? $profile->business_details : [];
                 $bb = is_array($profile->business_basics) ? $profile->business_basics : [];
-                $name = trim((string) ($bb['display_name'] ?? $bd['business_name'] ?? $profile->full_name ?? 'Business'));
+                $name = trim((string) ($bb['display_name'] ?? ($bd['business_name'] ?? ($profile->full_name ?? 'Business'))));
                 $role = strtolower((string) ($profile->user_type ?? 'groomer')) === 'space' ? 'Space Host' : 'Groomer';
                 $area = ServiceArea::query()->where('groomer_spacer_id', $profile->id)->value('name');
                 $area = is_string($area) && trim($area) !== '' ? trim($area) : null;
@@ -876,6 +849,7 @@
                                         <div class="logout-option">
                                             <form method="POST" action="{{ $logoutUrl }}">
                                                 @csrf
+                                                <input type="hidden" name="redirect" value="login-groomer-space">
                                                 <button type="submit" class="profile-item profile-item--logout">
                                                     <span class="profile-item-icon">
                                                         <img src="{{ asset('images/header/icon-log-out-sm.svg') }}" alt=""
@@ -1929,7 +1903,7 @@
 
         if (msgsBtn && !msgsBtn._dropdownAttached) {
             msgsBtn._dropdownAttached = true;
-            msgsBtn.addEventListener('click', function (e) {
+            msgsBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 toggleDropdown('.messages-notifications');
@@ -1938,7 +1912,7 @@
 
         if (notifBtn && !notifBtn._dropdownAttached) {
             notifBtn._dropdownAttached = true;
-            notifBtn.addEventListener('click', function (e) {
+            notifBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 toggleDropdown('.header-notifications');
@@ -1947,7 +1921,7 @@
 
         if (userBtn && !userBtn._dropdownAttached) {
             userBtn._dropdownAttached = true;
-            userBtn.addEventListener('click', function (e) {
+            userBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 toggleDropdown('.user-profile-options');
@@ -1956,7 +1930,7 @@
     }
 
     // Close on outside click
-    document.addEventListener('click', function (e) {
+    document.addEventListener('click', function(e) {
         const target = e.target;
         const isButton = target.closest('.messages-btn') || target.closest('.notification-btn') || target
             .closest('.user-btn');
@@ -2002,12 +1976,12 @@
     }
 
     // Re-initialize after Livewire
-    document.addEventListener('livewire:navigated', function () {
+    document.addEventListener('livewire:navigated', function() {
         setTimeout(initHeaderDropdowns, 100);
     });
 </script>
 <script>
-    (function () {
+    (function() {
         if (window.__fursgoDashboardContentLoading) {
             return;
         }
@@ -2058,12 +2032,16 @@
             const images = roots.flatMap((root) =>
                 Array.from(root.querySelectorAll('img')).filter((img) => !img.complete)
             );
-            const imageWait = images.length
-                ? Promise.all(images.map((img) => new Promise((resolve) => {
-                    img.addEventListener('load', resolve, { once: true });
-                    img.addEventListener('error', resolve, { once: true });
-                })))
-                : Promise.resolve();
+            const imageWait = images.length ?
+                Promise.all(images.map((img) => new Promise((resolve) => {
+                    img.addEventListener('load', resolve, {
+                        once: true
+                    });
+                    img.addEventListener('error', resolve, {
+                        once: true
+                    });
+                }))) :
+                Promise.resolve();
             const fontsWait = document.fonts?.ready ?? Promise.resolve();
             const paintWait = new Promise((resolve) => {
                 requestAnimationFrame(() => requestAnimationFrame(resolve));
