@@ -34,6 +34,16 @@ $janeProfile = [
 ['label' => 'Last Active', 'value' => '2 days ago'],
 ['label' => 'Account Created', 'value' => '02 Feb 2023'],
 ],
+'edit_fields' => [
+'full_name' => 'Jane John Doe',
+'email' => 'jane.doe@gmail.com',
+'phone' => '+44 78562 5458',
+'dob' => '12 Aug 1968',
+'address' => '142 Henderson Drive',
+'city' => 'London',
+'postcode' => 'SE25 63CB',
+'country' => 'United Kingdom',
+],
 'pets' => [
 [
 'name' => 'Leo',
@@ -174,6 +184,16 @@ $customerProfiles[$customer['id']] = array_merge($janeProfile, [
 ['label' => 'Account ID', 'value' => $customer['id']],
 ['label' => 'Last Active', 'value' => $customer['last']],
 ['label' => 'Account Created', 'value' => $customer['joined']],
+],
+'edit_fields' => [
+'full_name' => $customer['name'],
+'email' => $customer['email'],
+'phone' => '+44 7000 0000',
+'dob' => '',
+'address' => $customer['region'],
+'city' => '',
+'postcode' => '',
+'country' => 'United Kingdom',
 ],
 ]);
 }

@@ -804,7 +804,7 @@
 
 .admin-live-table tbody td {
     padding: 14px;
-    border-bottom: 1px solid rgba(59, 55, 49, 0.10);
+    border-bottom: 1px solid rgba(59, 55, 49, 0.1);
     vertical-align: middle;
     color: var(--admin-text);
 }
@@ -2350,6 +2350,104 @@
     font-weight: 500;
 }
 
+.admin-co-panel.is-editing {
+    background: #fff;
+    border: 1px solid rgba(59, 55, 49, 0.1);
+}
+
+.admin-co-edit-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-co-edit-title svg {
+    flex-shrink: 0;
+}
+
+.admin-co-form-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.admin-co-form-btn.is-cancel {
+    background: #F6F6F6;
+    color: #969390;
+}
+
+.admin-co-form-btn.is-save {
+    color: #A1C25D;
+    border: 1px solid #D8E8B7;
+    background: #F4F8EC;
+}
+
+.admin-co-edit-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 24px;
+}
+
+.admin-co-edit-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.admin-co-edit-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.admin-co-edit-field label {
+    margin: 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+.admin-co-edit-hint {
+    color: #ffb13f;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+.admin-co-edit-field input {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 14px;
+    border: 1px solid rgba(59, 55, 49, 0.12);
+    border-radius: 8px;
+    background: #fff;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+    outline: none;
+}
+
+.admin-co-edit-field input:focus {
+    border-color: rgba(59, 55, 49, 0.28);
+}
+
 .admin-co-pets-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2536,6 +2634,118 @@
     font-weight: 400;
 }
 
+.admin-co-verify-pending {
+    color: #ffaf3b;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.admin-co-verify-edit-list {
+    margin-top: 0;
+}
+
+.admin-co-verify-edit-row {
+    position: relative;
+    overflow: visible;
+    z-index: 1;
+}
+
+.admin-co-verify-edit-row.is-open {
+    z-index: 5;
+}
+
+.admin-co-dd {
+    position: relative;
+    min-width: 160px;
+}
+
+.admin-co-dd-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 36px;
+    padding: 8px 12px;
+    border: 1px solid rgba(59, 55, 49, 0.12);
+    border-radius: 8px;
+    background: #fff;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+.admin-co-dd-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-co-dd-x,
+.admin-co-dd-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.admin-co-dd-chevron {
+    flex-shrink: 0;
+}
+
+.admin-co-dd-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    border: 1px solid rgba(59, 55, 49, 0.16);
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(59, 55, 49, 0.08);
+}
+
+.admin-co-dd-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 36px;
+    padding: 8px 12px;
+    border: none;
+    border-bottom: 1px solid rgba(59, 55, 49, 0.08);
+    background: #fff;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.2;
+    text-align: left;
+    cursor: pointer;
+}
+
+.admin-co-dd-option:last-child {
+    border-bottom: none;
+}
+
+.admin-co-dd-option.is-pending {
+    padding-left: 34px;
+}
+
+.admin-co-dd-option:hover,
+.admin-co-dd-option.is-active {
+    background: #f4f4f4;
+}
+
 .admin-co-progress {
     margin-top: 14px;
     padding-top: 12px;
@@ -2627,6 +2837,94 @@
     gap: 12px;
 }
 
+.admin-co-notes-edit {
+    margin-top: 18px;
+}
+
+.admin-co-notes-edit-head {
+    margin-bottom: 18px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(59, 55, 49, 0.1);
+}
+
+.admin-co-note-compose {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-co-note-compose-label {
+    margin: 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+.admin-co-note-textarea {
+    width: 100%;
+    min-height: 97px;
+    padding: 12px 14px;
+    border: 1px solid rgba(59, 55, 49, 0.12);
+    border-radius: 8px;
+    background: #fff;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.45;
+    resize: none;
+    outline: none;
+}
+
+.admin-co-note-textarea::placeholder {
+    color: #9c9a97;
+}
+
+.admin-co-note-textarea:focus {
+    border-color: rgba(59, 55, 49, 0.28);
+}
+
+.admin-co-note-compose-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.admin-co-form-btn.is-add-note {
+    background: #eaf2ff;
+    color: #4a7fd4;
+    border: none;
+}
+
+.admin-co-note-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.admin-co-note-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 6px 12px;
+    border-radius: 5px;
+    border: 1px solid #E7E6E6;
+    background: rgba(255, 255, 255, 0.20);
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.admin-co-note-dot {
+    color: #9c9a97;
+}
+
 .admin-co-session-item {
     display: grid;
     grid-template-columns: 28px minmax(0, 1fr);
@@ -2699,6 +2997,154 @@
     font-size: 12px;
     font-weight: 400;
     line-height: normal;
+}
+
+.admin-co-revoke-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-co-revoke-list.is-confirm {
+    margin-top: 16px;
+}
+
+.admin-co-revoke-head {
+    align-items: flex-start;
+    margin-bottom: 0;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(59, 55, 49, 0.1);
+}
+
+.admin-co-modal-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 999px;
+    background: #f1f0f0;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.admin-co-revoke-foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(59, 55, 49, 0.1);
+}
+
+.admin-co-revoke-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(156, 154, 151, 0.25);
+    background: rgba(156, 154, 151, 0.08);
+    border-radius: 5px;
+    border: 1px solid #cbdce8;
+    background: rgba(203, 220, 232, 0.1);
+}
+
+.admin-co-revoke-note svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.admin-co-revoke-note p {
+    margin: 0;
+    color: #a6bbc9;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+.admin-co-revoke-item.is-confirm {
+    cursor: default;
+}
+
+.admin-co-modal-hint {
+    margin: 16px 0 12px;
+    color: #000;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.admin-co-modal-title-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-co-modal-sub {
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+.admin-co-revoke-item {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    width: 100%;
+    padding: 12px;
+    border-radius: 5px;
+    border: 1px solid rgba(59, 55, 49, 0.12);
+    background: #fff;
+    color: #9c9a97;
+    text-align: left;
+    cursor: pointer;
+}
+
+.admin-co-revoke-item.is-selected {
+    border: 1px solid #ff6e6e;
+    background: rgba(255, 110, 110, 0.05);
+    color: #ff6e6e;
+}
+
+.admin-co-revoke-item-title {
+    margin: 0 0 4px;
+    color: inherit;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.admin-co-revoke-item-meta {
+    margin: 0;
+    color: inherit;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.admin-co-revoke-item .admin-co-session-icon {
+    color: inherit;
+}
+
+.admin-co-form-btn.is-revoke {
+    background: #3b3731;
+    color: #fff;
 }
 
 .admin-co-blocked-item {
@@ -2777,20 +3223,31 @@
     background: rgba(59, 55, 49, 0.05);
 }
 
-.admin-co-note-text{
+.admin-co-note.is-editing-note {
+    border: 1px solid rgba(74, 127, 212, 0.35);
+    background: rgba(234, 242, 255, 0.45);
+}
+
+.admin-co-note-text {
     margin: 0 0 10px;
-    color: #9C9A97;
+    color: #9c9a97;
     font-family: Lato, sans-serif;
     font-size: 14px;
     line-height: 1.45;
 }
 
-.admin-co-note-foot,
-.admin-co-note-tag  {
+.admin-co-note-foot {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 6px;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.admin-co-note-tag {
     color: #3b3731;
     font-family: Lato, sans-serif;
     font-size: 14px;
@@ -2906,6 +3363,10 @@
     .admin-co-details-row {
         grid-template-columns: 1fr;
         gap: 4px;
+    }
+
+    .admin-co-edit-form {
+        grid-template-columns: 1fr;
     }
 
     .admin-co-session-item {
