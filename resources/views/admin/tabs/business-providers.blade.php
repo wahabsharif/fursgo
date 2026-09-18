@@ -86,6 +86,7 @@ $verificationStatusClass = [
     verificationFilter: 'all',
     verificationSearch: '',
 }">
+    <div class="admin-po-list">
     {{-- Section tabs: All providers / Payouts / Verifications --}}
     <div class="admin-po-sections-bar">
         <nav class="admin-po-sections" aria-label="Business providers sections">
@@ -872,5 +873,6 @@ $verificationStatusClass = [
                 </nav>
             </div>
         </div>
+    </div>
     </div>
 </div>

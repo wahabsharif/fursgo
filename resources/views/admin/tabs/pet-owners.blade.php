@@ -84,7 +84,7 @@ $ticketStatusLabels = [
 }">
     @include('admin.tabs.customer-detail')
 
-    <div x-show="view === 'list'">
+    <div class="admin-po-list" x-show="view === 'list'">
     {{-- Section tabs: All customers / Disputes / Support tickets --}}
     <div class="admin-po-sections-bar">
         <nav class="admin-po-sections" aria-label="Pet owners sections">
