@@ -1,12 +1,12 @@
 @php
 $providers = [
-['business' => 'Pawfect Grooming', 'email' => 'lucy@pawfect.com', 'type' => 'groomer', 'owner' => 'Lucy M.', 'region' => 'London SE3', 'status' => 'pending_verification', 'bookings' => 124, 'earnings' => '£6,568', 'rating' => '4.8', 'verified' => true, 'joined' => '03 Mar 2023', 'last' => 'Today'],
-['business' => 'Furs & Co. Studio', 'email' => 'hello@fursco.com', 'type' => 'space', 'owner' => 'Tom Harris', 'region' => 'Manchester', 'status' => 'active', 'bookings' => 86, 'earnings' => '£4,210', 'rating' => '4.6', 'verified' => true, 'joined' => '18 Jan 2024', 'last' => 'Yesterday'],
-['business' => 'Happy Tails Spa', 'email' => 'book@happytails.co.uk', 'type' => 'groomer', 'owner' => 'Sarah Chen', 'region' => 'Bristol', 'status' => 'suspended', 'bookings' => 42, 'earnings' => '£1,890', 'rating' => '4.1', 'verified' => true, 'joined' => '09 Jun 2023', 'last' => '2 weeks ago'],
-['business' => 'Bark Avenue', 'email' => 'stay@barkavenue.com', 'type' => 'space', 'owner' => 'Alex Rivera', 'region' => 'Leeds', 'status' => 'flagged', 'bookings' => 67, 'earnings' => '£3,450', 'rating' => '3.9', 'verified' => true, 'joined' => '22 Nov 2022', 'last' => 'Today'],
-['business' => 'Pawsitive Care', 'email' => 'info@pawsitive.care', 'type' => 'groomer', 'owner' => 'Priya Kapoor', 'region' => 'Birmingham', 'status' => 'deactivated', 'bookings' => 19, 'earnings' => '£780', 'rating' => '4.0', 'verified' => false, 'joined' => '14 Sep 2023', 'last' => '03 Jan 2025'],
-['business' => 'Urban Pup Lounge', 'email' => 'hi@urbanpup.com', 'type' => 'space', 'owner' => 'Nicole S', 'region' => 'Edinburgh', 'status' => 'active', 'bookings' => 155, 'earnings' => '£8,920', 'rating' => '4.9', 'verified' => true, 'joined' => '30 Jul 2024', 'last' => 'Today'],
-['business' => 'Groom & Bloom', 'email' => 'team@groombloom.uk', 'type' => 'groomer', 'owner' => 'James Turner', 'region' => 'Liverpool', 'status' => 'pending_verification', 'bookings' => 8, 'earnings' => '£320', 'rating' => '—', 'verified' => false, 'joined' => '02 Aug 2025', 'last' => 'Yesterday'],
+['id' => 'PRV-001', 'business' => 'Pawfect Grooming', 'email' => 'lucy@pawfect.com', 'type' => 'groomer', 'owner' => 'Lucy M.', 'region' => 'London SE3', 'status' => 'pending_verification', 'bookings' => 124, 'earnings' => '£6,568', 'rating' => '4.8', 'verified' => true, 'joined' => '03 Mar 2023', 'last' => 'Today'],
+['id' => 'PRV-002', 'business' => 'Furs & Co. Studio', 'email' => 'hello@fursco.com', 'type' => 'space', 'owner' => 'Tom Harris', 'region' => 'Manchester', 'status' => 'active', 'bookings' => 86, 'earnings' => '£4,210', 'rating' => '4.6', 'verified' => true, 'joined' => '18 Jan 2024', 'last' => 'Yesterday'],
+['id' => 'PRV-003', 'business' => 'Happy Tails Spa', 'email' => 'book@happytails.co.uk', 'type' => 'groomer', 'owner' => 'Sarah Chen', 'region' => 'Bristol', 'status' => 'suspended', 'bookings' => 42, 'earnings' => '£1,890', 'rating' => '4.1', 'verified' => true, 'joined' => '09 Jun 2023', 'last' => '2 weeks ago'],
+['id' => 'PRV-004', 'business' => 'Bark Avenue', 'email' => 'stay@barkavenue.com', 'type' => 'space', 'owner' => 'Alex Rivera', 'region' => 'Leeds', 'status' => 'flagged', 'bookings' => 67, 'earnings' => '£3,450', 'rating' => '3.9', 'verified' => true, 'joined' => '22 Nov 2022', 'last' => 'Today'],
+['id' => 'PRV-005', 'business' => 'Pawsitive Care', 'email' => 'info@pawsitive.care', 'type' => 'groomer', 'owner' => 'Priya Kapoor', 'region' => 'Birmingham', 'status' => 'deactivated', 'bookings' => 19, 'earnings' => '£780', 'rating' => '4.0', 'verified' => false, 'joined' => '14 Sep 2023', 'last' => '03 Jan 2025'],
+['id' => 'PRV-006', 'business' => 'Urban Pup Lounge', 'email' => 'hi@urbanpup.com', 'type' => 'space', 'owner' => 'Nicole S', 'region' => 'Edinburgh', 'status' => 'active', 'bookings' => 155, 'earnings' => '£8,920', 'rating' => '4.9', 'verified' => true, 'joined' => '30 Jul 2024', 'last' => 'Today'],
+['id' => 'PRV-007', 'business' => 'Groom & Bloom', 'email' => 'team@groombloom.uk', 'type' => 'groomer', 'owner' => 'James Turner', 'region' => 'Liverpool', 'status' => 'pending_verification', 'bookings' => 8, 'earnings' => '£320', 'rating' => '—', 'verified' => false, 'joined' => '02 Aug 2025', 'last' => 'Yesterday'],
 ];
 
 $providerStatusLabels = [
@@ -78,6 +78,9 @@ $verificationStatusClass = [
 @endphp
 
 <div class="admin-pet-owners admin-business-providers" x-data="{
+    view: 'list',
+    selectedProviderId: null,
+    detailTab: 'overview',
     section: 'providers',
     statusFilter: 'all',
     search: '',
@@ -85,7 +88,21 @@ $verificationStatusClass = [
     payoutSearch: '',
     verificationFilter: 'all',
     verificationSearch: '',
+    openProvider(id) {
+        this.selectedProviderId = id;
+        this.detailTab = 'overview';
+        this.view = 'detail';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    closeProvider() {
+        this.view = 'list';
+        this.selectedProviderId = null;
+        this.detailTab = 'overview';
+    },
 }">
+    @include('admin.tabs.provider-detail')
+
+    <div x-show="view === 'list'">
     {{-- Section tabs: All providers / Payouts / Verifications --}}
     <div class="admin-po-sections-bar">
         <nav class="admin-po-sections" aria-label="Business providers sections">
@@ -310,12 +327,19 @@ $verificationStatusClass = [
                         <tbody>
                             @foreach ($providers as $provider)
                             <tr
+                                class="admin-po-row-clickable"
+                                role="button"
+                                tabindex="0"
+                                @click="openProvider('{{ $provider['id'] }}')"
+                                @keydown.enter.prevent="openProvider('{{ $provider['id'] }}')"
+                                @keydown.space.prevent="openProvider('{{ $provider['id'] }}')"
                                 x-show="(statusFilter === 'all' || statusFilter === '{{ $provider['status'] }}') &&
                                     (search === '' ||
                                      '{{ strtolower($provider['business']) }}'.includes(search.toLowerCase()) ||
                                      '{{ strtolower($provider['email']) }}'.includes(search.toLowerCase()) ||
-                                     '{{ strtolower($provider['owner']) }}'.includes(search.toLowerCase()))">
-                                <td class="admin-po-check-col">
+                                     '{{ strtolower($provider['owner']) }}'.includes(search.toLowerCase()) ||
+                                     '{{ strtolower($provider['id']) }}'.includes(search.toLowerCase()))">
+                                <td class="admin-po-check-col" @click.stop>
                                     <input type="checkbox" class="admin-po-check" aria-label="Select {{ $provider['business'] }}">
                                 </td>
                                 <td>
@@ -873,4 +897,5 @@ $verificationStatusClass = [
             </div>
         </div>
     </div>
+    </div>{{-- /list view --}}
 </div>
