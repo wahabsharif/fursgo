@@ -1,6 +1,65 @@
 @props(['profile'])
 
-<aside class="admin-co-sidebar">
+@php
+$firstName = explode(' ', trim($profile['name'] ?? ''))[0] ?: ($profile['name'] ?? 'Customer');
+$customerEmail = $profile['email'] ?? '';
+@endphp
+
+<aside
+    class="admin-co-sidebar"
+    x-data="{
+        verifyEmailOpen: false,
+        resetPasswordOpen: false,
+        suspendOpen: false,
+        suspendReason: '',
+        suspendDuration: 'indefinite',
+        suspendNotes: '',
+        openSuspendReason: false,
+        openSuspendDuration: false,
+        flagOpen: false,
+        flagReason: '',
+        flagNote: '',
+        flagBy: 'Michelle M (me)',
+        openFlagReason: false,
+        openFlagBy: false,
+        deleteOpen: false,
+        deleteReason: '',
+        deleteGdprRef: '',
+        deleteConfirm: '',
+        openDeleteReason: false,
+        deleteReady: false,
+    }"
+    x-init="
+        const syncModalLock = () => {
+            const open = verifyEmailOpen || resetPasswordOpen || suspendOpen || flagOpen || deleteOpen;
+            if (open) {
+                if (!document.body.classList.contains('admin-co-modal-lock')) {
+                    document.body.dataset.adminCoScrollY = String(window.scrollY);
+                    document.body.style.top = '-' + window.scrollY + 'px';
+                    document.body.classList.add('admin-co-modal-lock');
+                }
+            } else if (document.body.classList.contains('admin-co-modal-lock')) {
+                const y = parseInt(document.body.dataset.adminCoScrollY || '0', 10);
+                document.body.classList.remove('admin-co-modal-lock');
+                document.body.style.top = '';
+                delete document.body.dataset.adminCoScrollY;
+                window.scrollTo(0, y);
+            }
+        };
+        const syncDeleteReady = () => {
+            deleteReady = !!deleteReason
+                && deleteGdprRef.trim() !== ''
+                && deleteConfirm.trim() === 'DELETE';
+        };
+        $watch('verifyEmailOpen', () => $nextTick(() => syncModalLock()));
+        $watch('resetPasswordOpen', () => $nextTick(() => syncModalLock()));
+        $watch('suspendOpen', () => $nextTick(() => syncModalLock()));
+        $watch('flagOpen', () => $nextTick(() => syncModalLock()));
+        $watch('deleteOpen', () => $nextTick(() => syncModalLock()));
+        $watch('deleteReason', () => syncDeleteReady());
+        $watch('deleteGdprRef', () => syncDeleteReady());
+        $watch('deleteConfirm', () => syncDeleteReady());
+    ">
     {{-- Profile header (avatar, name, quick links) --}}
     <div class="admin-co-profile-card">
         <div class="admin-co-profile-card-top">
@@ -89,10 +148,561 @@
     {{-- Admin actions --}}
     <div class="admin-co-actions">
         <h3 class="admin-co-actions-title">Admin Actions</h3>
-        <x-admin.customer.action-btn variant="verify" label="Send account verification email" />
-        <x-admin.customer.action-btn variant="password" label="Send password reset email" />
-        <x-admin.customer.action-btn variant="suspend" label="Suspend account" />
-        <x-admin.customer.action-btn variant="flag" label="Flag account for review" />
-        <x-admin.customer.action-btn variant="delete" label="Delete account (GDPR)" />
+        <x-admin.customer.action-btn
+            variant="verify"
+            label="Send account verification email"
+            x-on:click="verifyEmailOpen = true" />
+        <x-admin.customer.action-btn
+            variant="password"
+            label="Send password reset email"
+            x-on:click="resetPasswordOpen = true" />
+        <x-admin.customer.action-btn
+            variant="suspend"
+            label="Suspend account"
+            x-on:click="
+                suspendReason = '';
+                suspendDuration = 'indefinite';
+                suspendNotes = '';
+                openSuspendReason = false;
+                openSuspendDuration = false;
+                suspendOpen = true;
+            " />
+        <x-admin.customer.action-btn
+            variant="flag"
+            label="Flag account for review"
+            x-on:click="
+                flagReason = '';
+                flagNote = '';
+                flagBy = 'Michelle M (me)';
+                openFlagReason = false;
+                openFlagBy = false;
+                flagOpen = true;
+            " />
+        <x-admin.customer.action-btn
+            variant="delete"
+            label="Delete account (GDPR)"
+            x-on:click="
+                deleteReason = '';
+                deleteGdprRef = '';
+                deleteConfirm = '';
+                openDeleteReason = false;
+                deleteOpen = true;
+            " />
     </div>
+
+    {{-- Send verification email modal --}}
+    <template x-teleport="body">
+        <div
+            class="admin-co-modal-backdrop"
+            :class="{ 'is-open': verifyEmailOpen }"
+            @click.self="verifyEmailOpen = false">
+            <div class="admin-co-modal admin-co-verify-email-modal" role="dialog" aria-modal="true" @click.stop>
+                <div class="admin-co-modal-head admin-co-blocked-modal-head">
+                    <div>
+                        <div class="admin-co-modal-title-row">
+                            <span class="admin-co-verify-email-icon" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="16" viewBox="0 0 19 17" fill="none">
+                                    <path d="M18.2742 8.56648C18.2742 8.13321 18.2698 7.25784 18.2601 6.8228C18.2027 4.11817 18.1736 2.76541 17.1756 1.76386C16.1776 0.76142 14.7886 0.727005 12.0099 0.657293C10.3035 0.614236 8.59638 0.614236 6.89004 0.657293C4.11128 0.727005 2.72234 0.76142 1.72432 1.76386C0.726292 2.76541 0.697172 4.11817 0.638932 6.8228C0.620356 7.69101 0.620356 8.55952 0.638932 9.42772C0.697172 12.1324 0.726292 13.4851 1.72432 14.4867C2.72234 15.4891 4.11128 15.5235 6.89004 15.5932C7.59833 15.6109 8.30457 15.6215 9.00874 15.625" stroke="#A1C25D" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M0.625488 2.83063L6.7257 6.29415C8.95471 7.55867 9.94479 7.55867 12.1738 6.29415L18.274 2.83063" stroke="#A1C25D" stroke-width="1.25" stroke-linejoin="round" />
+                                    <path d="M18.2743 12.9785H11.2148M18.2743 12.9785C18.2743 12.3608 16.5147 11.2066 16.0682 10.7725M18.2743 12.9785C18.2743 13.5962 16.5147 14.7513 16.0682 15.1846" stroke="#A1C25D" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="admin-co-modal-title">Send verification email</h3>
+                                <p class="admin-co-modal-sub">This will send a pre-written email</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="admin-co-modal-close" @click="verifyEmailOpen = false" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8"></circle>
+                            <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="admin-co-blocked-modal-body admin-co-verify-email-body">
+                    <div class="admin-co-verify-email-card">
+                        <img src="{{ $profile['avatar'] }}" alt="" class="admin-co-blocked-avatar" width="36" height="36">
+                        <div class="admin-co-blocked-body">
+                            <p class="admin-co-verify-email-name">{{ $profile['name'] }}</p>
+                            <p class="admin-co-verify-email-address">{{ $customerEmail }}</p>
+                        </div>
+                    </div>
+
+                    <p class="admin-co-verify-email-copy">
+                        A verification link will be sent to customer's registered email address. The link expires after 24 hours. You cannot customise the email content.
+                    </p>
+
+                    <div class="admin-co-verify-email-happens">
+                        <h4 class="admin-co-verify-email-happens-title">What happens</h4>
+                        <ul class="admin-co-verify-email-happens-list">
+                            <li>Email will be sent to <span class="admin-co-verify-email-link">{{ $customerEmail }}</span></li>
+                            <li>The link expires after 24 hours</li>
+                            <li>{{ $firstName }}'s verification status updates automatically once clicked</li>
+                            <li>This action is logged in the admin activity log</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="admin-co-blocked-modal-foot is-confirm">
+                    <button type="button" class="admin-co-form-btn is-cancel" @click="verifyEmailOpen = false">Cancel</button>
+                    <button type="button" class="admin-co-form-btn is-send-email" @click="verifyEmailOpen = false">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                            <path d="M12.75 1.25L6.25 7.75M12.75 1.25L8.5 12.75L6.25 7.75M12.75 1.25L1.25 5.5L6.25 7.75" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Send email
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    {{-- Send password reset email modal --}}
+    <template x-teleport="body">
+        <div
+            class="admin-co-modal-backdrop"
+            :class="{ 'is-open': resetPasswordOpen }"
+            @click.self="resetPasswordOpen = false">
+            <div class="admin-co-modal admin-co-verify-email-modal" role="dialog" aria-modal="true" @click.stop>
+                <div class="admin-co-modal-head admin-co-blocked-modal-head">
+                    <div>
+                        <div class="admin-co-modal-title-row">
+                            <span class="admin-co-verify-email-icon is-password" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 17 17" fill="none">
+                                    <path d="M0.625 11.125C0.625 9.004 0.625 7.94275 1.28425 7.28425C1.94275 6.625 3.004 6.625 5.125 6.625H11.125C13.246 6.625 14.3073 6.625 14.9658 7.28425C15.625 7.94275 15.625 9.004 15.625 11.125C15.625 13.246 15.625 14.3073 14.9658 14.9658C14.3073 15.625 13.246 15.625 11.125 15.625H5.125C3.004 15.625 1.94275 15.625 1.28425 14.9658C0.625 14.3073 0.625 13.246 0.625 11.125Z" stroke="#659FC9" stroke-width="1.25" />
+                                    <path d="M3.625 6.625V5.125C3.625 3.93153 4.09911 2.78693 4.94302 1.94302C5.78693 1.09911 6.93153 0.625 8.125 0.625C9.31847 0.625 10.4631 1.09911 11.307 1.94302C12.1509 2.78693 12.625 3.93153 12.625 5.125V6.625" stroke="#659FC9" stroke-width="1.25" stroke-linecap="round" />
+                                    <path d="M5.125 11.125H5.13175M8.11825 11.125H8.125M11.1183 11.125H11.125" stroke="#659FC9" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="admin-co-modal-title">Send password reset email</h3>
+                                <p class="admin-co-modal-sub">This will send a pre-written email</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="admin-co-modal-close" @click="resetPasswordOpen = false" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8"></circle>
+                            <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="admin-co-blocked-modal-body admin-co-verify-email-body">
+                    <div class="admin-co-verify-email-card">
+                        <img src="{{ $profile['avatar'] }}" alt="" class="admin-co-blocked-avatar" width="36" height="36">
+                        <div class="admin-co-blocked-body">
+                            <p class="admin-co-verify-email-name">{{ $profile['name'] }}</p>
+                            <p class="admin-co-verify-email-address">{{ $customerEmail }}</p>
+                        </div>
+                    </div>
+
+                    <p class="admin-co-verify-email-copy">
+                        A password reset link will be sent to customers registered email address. For security reasons, you cannot customise the email content or see the reset link.
+                    </p>
+
+                    <div class="admin-co-verify-email-happens">
+                        <h4 class="admin-co-verify-email-happens-title">What happens</h4>
+                        <ul class="admin-co-verify-email-happens-list">
+                            <li>Reset your password email will be sent to <span class="admin-co-verify-email-link">{{ $customerEmail }}</span></li>
+                            <li>All active sessions are automatically signed out once reset is complete</li>
+                            <li>The reset link expires after 1 hour</li>
+                            <li>This action is logged in the admin activity log</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="admin-co-blocked-modal-foot is-confirm">
+                    <button type="button" class="admin-co-form-btn is-cancel" @click="resetPasswordOpen = false">Cancel</button>
+                    <button type="button" class="admin-co-form-btn is-send-email" @click="resetPasswordOpen = false">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                            <path d="M12.75 1.25L6.25 7.75M12.75 1.25L8.5 12.75L6.25 7.75M12.75 1.25L1.25 5.5L6.25 7.75" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Send reset email
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    {{-- Suspend account modal --}}
+    <template x-teleport="body">
+        <div
+            class="admin-co-modal-backdrop"
+            :class="{ 'is-open': suspendOpen }"
+            @click.self="suspendOpen = false">
+            <div class="admin-co-modal admin-co-verify-email-modal admin-co-suspend-modal" role="dialog" aria-modal="true" @click.stop>
+                <div class="admin-co-modal-head admin-co-blocked-modal-head">
+                    <div>
+                        <div class="admin-co-modal-title-row">
+                            <span class="admin-co-verify-email-icon is-suspend" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 14 17" fill="none">
+                                    <path d="M3.15132 0.625H1.88816C1.55315 0.625 1.23186 0.756696 0.994971 0.991117C0.758083 1.22554 0.625 1.54348 0.625 1.875V14.375C0.625 14.7065 0.758083 15.0245 0.994971 15.2589C1.23186 15.4933 1.55315 15.625 1.88816 15.625H3.15132C3.48633 15.625 3.80761 15.4933 4.0445 15.2589C4.28139 15.0245 4.41447 14.7065 4.41447 14.375V1.875C4.41447 1.54348 4.28139 1.22554 4.0445 0.991117C3.80761 0.756696 3.48633 0.625 3.15132 0.625ZM11.3618 0.625H10.0987C9.76367 0.625 9.44238 0.756696 9.2055 0.991117C8.96861 1.22554 8.83553 1.54348 8.83553 1.875V14.375C8.83553 14.7065 8.96861 15.0245 9.2055 15.2589C9.44238 15.4933 9.76367 15.625 10.0987 15.625H11.3618C11.6969 15.625 12.0181 15.4933 12.255 15.2589C12.4919 15.0245 12.625 14.7065 12.625 14.375V1.875C12.625 1.54348 12.4919 1.22554 12.255 0.991117C12.0181 0.756696 11.6969 0.625 11.3618 0.625Z" stroke="#FFAF3B" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="admin-co-modal-title">Suspend account</h3>
+                                <p class="admin-co-modal-sub">{{ $profile['name'] }} · {{ $profile['id'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="admin-co-modal-close" @click="suspendOpen = false" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8"></circle>
+                            <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="admin-co-blocked-modal-body admin-co-verify-email-body">
+                    <div class="admin-co-suspend-alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="9" viewBox="0 0 10 9" fill="none">
+                            <path d="M5.485 0.308055C5.24845 -0.102644 4.61103 -0.102644 4.37448 0.308055L0.0743152 7.77965L0.0386903 7.85279C-0.0996183 8.19795 0.147844 8.57813 0.542967 8.62728L0.630186 8.63238H9.2293C9.70357 8.63238 10.0075 8.1663 9.78517 7.77965L5.485 0.308055Z" fill="#FFC97A" />
+                            <path d="M4.8365 3.15331L4.9516 5.59952L5.06649 3.15431C5.0672 3.13868 5.06471 3.12306 5.05918 3.10842C5.05365 3.09379 5.0452 3.08043 5.03433 3.06917C5.02347 3.05791 5.01042 3.04898 4.99599 3.04294C4.98155 3.03689 4.96604 3.03385 4.95039 3.034C4.93502 3.03415 4.91983 3.03738 4.90573 3.0435C4.89162 3.04962 4.87888 3.0585 4.86827 3.06962C4.85765 3.08074 4.84937 3.09387 4.84392 3.10825C4.83846 3.12262 4.83594 3.13794 4.8365 3.15331Z" fill="#3B3731" stroke="#3B3731" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M5.00879 6.66028C5.03629 6.67172 5.05962 6.69118 5.07617 6.71594C5.09273 6.74076 5.10156 6.77009 5.10156 6.79993C5.10147 6.83985 5.08586 6.87813 5.05762 6.90637C5.02938 6.93461 4.9911 6.95023 4.95117 6.95032C4.92134 6.95032 4.892 6.94149 4.86719 6.92493C4.84242 6.90838 4.82297 6.88504 4.81152 6.85754C4.80009 6.82995 4.79691 6.79895 4.80273 6.76965C4.80862 6.74053 4.82274 6.71352 4.84375 6.6925C4.86476 6.67149 4.89178 6.65737 4.9209 6.65149C4.95019 6.64566 4.98119 6.64885 5.00879 6.66028Z" fill="#3B3731" stroke="#3B3731" stroke-width="0.5" />
+                        </svg>
+                        <p>Provider will lose access to their account immediately. All upcoming bookings and payouts will be paused and customers will be notified. You can unsuspend at any time. </p>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">
+                            Reason for suspension <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openSuspendReason = false">
+                            <button
+                                type="button"
+                                class="admin-co-dd-trigger"
+                                @click="openSuspendReason = !openSuspendReason; openSuspendDuration = false">
+                                <span
+                                    class="admin-co-dd-value"
+                                    :class="{ 'is-placeholder': !suspendReason }"
+                                    x-text="suspendReason || 'Select a reason ...'"></span>
+                                <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                                    <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <div class="admin-co-dd-menu" x-show="openSuspendReason" x-cloak>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': suspendReason === 'Requested by provider' }" @click="suspendReason = 'Requested by provider'; openSuspendReason = false">Requested by provider</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': suspendReason === 'Suspected fraud or chargeback abuse' }" @click="suspendReason = 'Suspected fraud or chargeback abuse'; openSuspendReason = false">Suspected fraud or chargeback abuse</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': suspendReason === 'Abusive or threatening behaviour' }" @click="suspendReason = 'Abusive or threatening behaviour'; openSuspendReason = false">Abusive or threatening behaviour</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': suspendReason === 'Policy violations' }" @click="suspendReason = 'Policy violations'; openSuspendReason = false">Policy violations</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': suspendReason === 'Suspicious account activity' }" @click="suspendReason = 'Suspicious account activity'; openSuspendReason = false">Suspicious account activity</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': suspendReason === 'Other' }" @click="suspendReason = 'Other'; openSuspendReason = false">Other</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">
+                            Suspension duration <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openSuspendDuration = false">
+                            <button
+                                type="button"
+                                class="admin-co-dd-trigger"
+                                @click="openSuspendDuration = !openSuspendDuration; openSuspendReason = false">
+                                <span
+                                    class="admin-co-dd-value"
+                                    x-text="suspendDuration === 'indefinite' ? 'Indefinite (until manually lifted)' : suspendDuration"></span>
+                                <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                                    <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <div class="admin-co-dd-menu" x-show="openSuspendDuration" x-cloak>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': suspendDuration === '7 days' }" @click="suspendDuration = '7 days'; openSuspendDuration = false">7 days</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': suspendDuration === '14 days' }" @click="suspendDuration = '14 days'; openSuspendDuration = false">14 days</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': suspendDuration === '30 days' }" @click="suspendDuration = '30 days'; openSuspendDuration = false">30 days</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': suspendDuration === 'indefinite' }" @click="suspendDuration = 'indefinite'; openSuspendDuration = false">Indefinite</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">Additional notes (optional)</label>
+                        <textarea
+                            class="admin-co-suspend-notes"
+                            rows="3"
+                            placeholder="Any additional context for the audit log ..."
+                            x-model="suspendNotes"></textarea>
+                    </div>
+
+                    <div class="admin-co-verify-email-happens">
+                        <h4 class="admin-co-verify-email-happens-title">What happens</h4>
+                        <ul class="admin-co-verify-email-happens-list">
+                            <li>Customer will lose access to their account immediately</li>
+                            <li>Upcoming bookings are paused — providers are notified</li>
+                            <li>Customer will receive a suspension notification email</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="admin-co-blocked-modal-foot is-confirm">
+                    <button type="button" class="admin-co-form-btn is-cancel" @click="suspendOpen = false">Cancel</button>
+                    <button
+                        type="button"
+                        class="admin-co-form-btn is-send-email"
+                        :disabled="!suspendReason"
+                        @click="suspendReason && (suspendOpen = false)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 14 17" fill="none" aria-hidden="true">
+                            <path d="M3.15132 0.625H1.88816C1.55315 0.625 1.23186 0.756696 0.994971 0.991117C0.758083 1.22554 0.625 1.54348 0.625 1.875V14.375C0.625 14.7065 0.758083 15.0245 0.994971 15.2589C1.23186 15.4933 1.55315 15.625 1.88816 15.625H3.15132C3.48633 15.625 3.80761 15.4933 4.0445 15.2589C4.28139 15.0245 4.41447 14.7065 4.41447 14.375V1.875C4.41447 1.54348 4.28139 1.22554 4.0445 0.991117C3.80761 0.756696 3.48633 0.625 3.15132 0.625ZM11.3618 0.625H10.0987C9.76367 0.625 9.44238 0.756696 9.2055 0.991117C8.96861 1.22554 8.83553 1.54348 8.83553 1.875V14.375C8.83553 14.7065 8.96861 15.0245 9.2055 15.2589C9.44238 15.4933 9.76367 15.625 10.0987 15.625H11.3618C11.6969 15.625 12.0181 15.4933 12.255 15.2589C12.4919 15.0245 12.625 14.7065 12.625 14.375V1.875C12.625 1.54348 12.4919 1.22554 12.255 0.991117C12.0181 0.756696 11.6969 0.625 11.3618 0.625Z" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Suspend account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    {{-- Flag account for review modal --}}
+    <template x-teleport="body">
+        <div
+            class="admin-co-modal-backdrop"
+            :class="{ 'is-open': flagOpen }"
+            @click.self="flagOpen = false">
+            <div class="admin-co-modal admin-co-verify-email-modal admin-co-suspend-modal" role="dialog" aria-modal="true" @click.stop>
+                <div class="admin-co-modal-head admin-co-blocked-modal-head">
+                    <div>
+                        <div class="admin-co-modal-title-row">
+                            <span class="admin-co-verify-email-icon is-flag" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="15" viewBox="0 0 11 15" fill="none">
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0.532258 0C0.673422 0 0.808804 0.0551286 0.908621 0.153258C1.00844 0.251388 1.06452 0.38448 1.06452 0.523256V1.28023L2.18155 1.06047C3.45422 0.810539 4.77336 0.929799 5.97832 1.40372L6.12239 1.46023C7.1264 1.85496 8.2314 1.92868 9.28045 1.67093C9.48449 1.62078 9.69748 1.617 9.90322 1.6599C10.109 1.70279 10.3021 1.79123 10.4678 1.91848C10.6336 2.04573 10.7677 2.20845 10.8599 2.39429C10.9521 2.58012 11 2.78417 11 2.99093V8.1307C11 8.82 10.5224 9.4214 9.84181 9.58884L9.68993 9.62581C8.32544 9.96102 6.8882 9.86508 5.58232 9.35163C4.56919 8.9534 3.46015 8.85329 2.39019 9.06349L1.06452 9.32442V14.4767C1.06452 14.6155 1.00844 14.7486 0.908621 14.8467C0.808804 14.9449 0.673422 15 0.532258 15C0.391094 15 0.255712 14.9449 0.155895 14.8467C0.056077 14.7486 0 14.6155 0 14.4767V0.523256C0 0.38448 0.056077 0.251388 0.155895 0.153258C0.255712 0.0551286 0.391094 0 0.532258 0ZM1.06452 8.25698L2.18155 8.03721C3.45422 7.78728 4.77336 7.90654 5.97832 8.38046C7.07624 8.81194 8.2845 8.89249 9.43161 8.6107L9.58419 8.57302C9.6845 8.54831 9.77355 8.49136 9.83719 8.41123C9.90083 8.3311 9.93542 8.23236 9.93548 8.1307V2.99093C9.93553 2.9432 9.9245 2.8961 9.90325 2.85319C9.88199 2.81028 9.85106 2.7727 9.81282 2.74331C9.77457 2.71391 9.73001 2.69348 9.68252 2.68356C9.63504 2.67364 9.58588 2.67449 9.53877 2.68605C8.27264 2.99728 6.93894 2.90842 5.7271 2.43209L5.58232 2.37488C4.56919 1.97666 3.46015 1.87655 2.39019 2.08674L1.06452 2.34767V8.25698Z" fill="#FF7F3C" />
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="admin-co-modal-title">Flag account for review</h3>
+                                <p class="admin-co-modal-sub">{{ $profile['name'] }} · {{ $profile['id'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="admin-co-modal-close" @click="flagOpen = false" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8"></circle>
+                            <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="admin-co-blocked-modal-body admin-co-verify-email-body">
+                    <div class="admin-co-suspend-alert is-info">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                            <circle cx="8" cy="8" r="7.25" stroke="#659FC9" stroke-width="1.5" />
+                            <path d="M8 7.25V11.25" stroke="#659FC9" stroke-width="1.5" stroke-linecap="round" />
+                            <circle cx="8" cy="5" r="0.85" fill="#659FC9" />
+                        </svg>
+                        <p>Flagging is internal only — the customer is not notified. A flag marks the account for follow-up review and appears as an amber indicator on the customer's profile.</p>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">
+                            Reason for flagging <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openFlagReason = false">
+                            <button
+                                type="button"
+                                class="admin-co-dd-trigger"
+                                @click="openFlagReason = !openFlagReason; openFlagBy = false">
+                                <span
+                                    class="admin-co-dd-value"
+                                    :class="{ 'is-placeholder': !flagReason }"
+                                    x-text="flagReason || 'Select a reason ...'"></span>
+                                <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                                    <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <div class="admin-co-dd-menu" x-show="openFlagReason" x-cloak>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': flagReason === 'Suspicious booking pattern' }" @click="flagReason = 'Suspicious booking pattern'; openFlagReason = false">Suspicious booking pattern</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': flagReason === 'Duplicate booking abuse' }" @click="flagReason = 'Duplicate booking abuse'; openFlagReason = false">Duplicate booking abuse</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': flagReason === 'Multiple disputes raised' }" @click="flagReason = 'Multiple disputes raised'; openFlagReason = false">Multiple disputes raised</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': flagReason === 'Fraud suspicion' }" @click="flagReason = 'Fraud suspicion'; openFlagReason = false">Fraud suspicion</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': flagReason === 'Unusual account activity' }" @click="flagReason = 'Unusual account activity'; openFlagReason = false">Unusual account activity</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': flagReason === 'Needs compliance review' }" @click="flagReason = 'Needs compliance review'; openFlagReason = false">Needs compliance review</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': flagReason === 'Other' }" @click="flagReason = 'Other'; openFlagReason = false">Other</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">
+                            Flag note <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <textarea
+                            class="admin-co-suspend-notes"
+                            rows="3"
+                            placeholder="Describe why this account needs reviewing ..."
+                            x-model="flagNote"></textarea>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">
+                            Flagged by <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openFlagBy = false">
+                            <button
+                                type="button"
+                                class="admin-co-dd-trigger"
+                                @click="openFlagBy = !openFlagBy; openFlagReason = false">
+                                <span class="admin-co-dd-value" x-text="flagBy"></span>
+                                <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                                    <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <div class="admin-co-dd-menu" x-show="openFlagBy" x-cloak>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': flagBy === 'Unassigned' }" @click="flagBy = 'Unassigned'; openFlagBy = false">Unassigned</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': flagBy === 'Michelle M (me)' }" @click="flagBy = 'Michelle M (me)'; openFlagBy = false">Michelle M (me)</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': flagBy === 'Ben M' }" @click="flagBy = 'Ben M'; openFlagBy = false">Ben M</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-co-blocked-modal-foot is-confirm">
+                    <button type="button" class="admin-co-form-btn is-cancel" @click="flagOpen = false">Cancel</button>
+                    <button
+                        type="button"
+                        class="admin-co-form-btn is-send-email"
+                        :disabled="!flagReason || !flagNote.trim()"
+                        @click="flagReason && flagNote.trim() && (flagOpen = false)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="14" viewBox="0 0 11 15" fill="none" aria-hidden="true">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M0.532258 0C0.673422 0 0.808804 0.0551286 0.908621 0.153258C1.00844 0.251388 1.06452 0.38448 1.06452 0.523256V1.28023L2.18155 1.06047C3.45422 0.810539 4.77336 0.929799 5.97832 1.40372L6.12239 1.46023C7.1264 1.85496 8.2314 1.92868 9.28045 1.67093C9.48449 1.62078 9.69748 1.617 9.90322 1.6599C10.109 1.70279 10.3021 1.79123 10.4678 1.91848C10.6336 2.04573 10.7677 2.20845 10.8599 2.39429C10.9521 2.58012 11 2.78417 11 2.99093V8.1307C11 8.82 10.5224 9.4214 9.84181 9.58884L9.68993 9.62581C8.32544 9.96102 6.8882 9.86508 5.58232 9.35163C4.56919 8.9534 3.46015 8.85329 2.39019 9.06349L1.06452 9.32442V14.4767C1.06452 14.6155 1.00844 14.7486 0.908621 14.8467C0.808804 14.9449 0.673422 15 0.532258 15C0.391094 15 0.255712 14.9449 0.155895 14.8467C0.056077 14.7486 0 14.6155 0 14.4767V0.523256C0 0.38448 0.056077 0.251388 0.155895 0.153258C0.255712 0.0551286 0.391094 0 0.532258 0ZM1.06452 8.25698L2.18155 8.03721C3.45422 7.78728 4.77336 7.90654 5.97832 8.38046C7.07624 8.81194 8.2845 8.89249 9.43161 8.6107L9.58419 8.57302C9.6845 8.54831 9.77355 8.49136 9.83719 8.41123C9.90083 8.3311 9.93542 8.23236 9.93548 8.1307V2.99093C9.93553 2.9432 9.9245 2.8961 9.90325 2.85319C9.88199 2.81028 9.85106 2.7727 9.81282 2.74331C9.77457 2.71391 9.73001 2.69348 9.68252 2.68356C9.63504 2.67364 9.58588 2.67449 9.53877 2.68605C8.27264 2.99728 6.93894 2.90842 5.7271 2.43209L5.58232 2.37488C4.56919 1.97666 3.46015 1.87655 2.39019 2.08674L1.06452 2.34767V8.25698Z" fill="currentColor" />
+                        </svg>
+                        Flag account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    {{-- Delete account (GDPR) modal --}}
+    <template x-teleport="body">
+        <div
+            class="admin-co-modal-backdrop"
+            :class="{ 'is-open': deleteOpen }"
+            @click.self="deleteOpen = false">
+            <div class="admin-co-modal admin-co-verify-email-modal admin-co-suspend-modal" role="dialog" aria-modal="true" @click.stop>
+                <div class="admin-co-modal-head admin-co-blocked-modal-head">
+                    <div>
+                        <div class="admin-co-modal-title-row">
+                            <span class="admin-co-verify-email-icon is-delete" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="15" viewBox="0 0 14 15" fill="none">
+                                    <path d="M7.46337 0C9.97241 0 12.007 1.92447 12.007 4.29894C12.0062 4.92305 11.8632 5.53937 11.5881 6.10429C11.313 6.66922 10.9125 7.16895 10.415 7.56814C10.6275 7.66814 10.8215 7.76864 10.9967 7.86964C11.3737 8.08713 11.7651 8.35688 12.1711 8.67887C12.2258 8.72178 12.2711 8.77481 12.3042 8.83482C12.3373 8.89484 12.3577 8.96064 12.3641 9.02835C12.3704 9.09606 12.3627 9.16432 12.3413 9.2291C12.32 9.29389 12.2854 9.35391 12.2396 9.40561C12.1456 9.51093 12.0126 9.57663 11.869 9.58868C11.7254 9.60073 11.5826 9.55818 11.4712 9.47011C11.1429 9.20532 10.7945 8.96465 10.429 8.75012C10.0723 8.55099 9.70227 8.37485 9.32143 8.22288C8.73571 8.4715 8.10254 8.59924 7.46259 8.59788C6.75749 8.59931 6.06154 8.44405 5.42875 8.14413L5.39608 8.15913C3.85846 8.72612 2.73615 9.56461 2.01283 10.6776C1.28563 11.7943 0.988526 13.0423 1.12152 14.438C1.12747 14.5062 1.11937 14.5747 1.09768 14.6398C1.07599 14.7049 1.04114 14.7652 0.995148 14.8172C0.949155 14.8692 0.892929 14.912 0.829718 14.9429C0.766507 14.9739 0.697563 14.9924 0.626869 14.9975C0.484194 15.0109 0.34182 14.9693 0.230898 14.8817C0.119977 14.7942 0.0495384 14.6678 0.0349947 14.5303C-0.118224 12.9163 0.231768 11.4456 1.08341 10.1369C1.83317 8.98487 2.93448 8.08938 4.37333 7.45114C3.91558 7.05318 3.54958 6.56696 3.29904 6.02395C3.04851 5.48095 2.919 4.89326 2.91892 4.29894C2.91892 1.92447 4.95432 0 7.46337 0ZM13.0811 10.6798C13.1825 10.5838 13.3188 10.5298 13.461 10.5294C13.6031 10.529 13.7398 10.5822 13.8418 10.6776C14.0518 10.8771 14.0518 11.2011 13.8433 11.4013L12.9162 12.2856L13.8433 13.1706C13.8931 13.2178 13.9326 13.2741 13.9595 13.3362C13.9864 13.3984 14.0001 13.465 14 13.5324C13.9999 13.5997 13.9858 13.6663 13.9586 13.7283C13.9314 13.7903 13.8917 13.8465 13.8418 13.8935C13.74 13.9892 13.6034 14.0427 13.4613 14.0425C13.3191 14.0424 13.1827 13.9886 13.0811 13.8928L12.1579 13.0101L11.2347 13.8928C11.144 13.9784 11.025 14.0307 10.8985 14.0407C10.7719 14.0507 10.6457 14.0178 10.5417 13.9475L10.4748 13.8935C10.4249 13.8465 10.3852 13.7903 10.358 13.7283C10.3308 13.6663 10.3168 13.5997 10.3166 13.5324C10.3165 13.465 10.3302 13.3984 10.3571 13.3362C10.3841 13.2741 10.4235 13.2178 10.4733 13.1706L11.3988 12.2856L10.4733 11.4006C10.4235 11.3534 10.3841 11.297 10.3571 11.2349C10.3302 11.1728 10.3165 11.1061 10.3166 11.0388C10.3168 10.9715 10.3308 10.9048 10.358 10.8428C10.3852 10.7808 10.4249 10.7246 10.4748 10.6776C10.5767 10.5823 10.7132 10.5291 10.8551 10.5294C10.997 10.5297 11.1333 10.5834 11.2347 10.6791L12.1579 11.5611L13.0811 10.6798ZM7.46337 1.03124C5.55552 1.03124 4.01012 2.49371 4.01012 4.29819C4.01012 6.10266 5.55552 7.56589 7.46337 7.56589C9.37043 7.56589 10.9166 6.10341 10.9166 4.29819C10.9166 2.49296 9.37043 1.03124 7.46337 1.03124Z" fill="#FE6F56" />
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="admin-co-modal-title">Remove from platform</h3>
+                                <p class="admin-co-modal-sub">This action is permanent and cannot be undone</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="admin-co-modal-close" @click="deleteOpen = false" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8"></circle>
+                            <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="admin-co-blocked-modal-body admin-co-verify-email-body">
+                    <div class="admin-co-suspend-alert is-danger">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none">
+                            <path d="M4.875 9.375C7.36028 9.375 9.375 7.36028 9.375 4.875C9.375 2.38972 7.36028 0.375 4.875 0.375C2.38972 0.375 0.375 2.38972 0.375 4.875C0.375 7.36028 2.38972 9.375 4.875 9.375Z" stroke="#FF6E6E" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M4.875 6.67495V4.87495M4.875 3.07495H4.8795" stroke="#FF6E6E" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <p>This permanently deletes all of {{ $firstName }}'s data — profile, bookings, payment history, pets, messages and reviews. This cannot be reversed. Only proceed if you have a valid GDPR deletion request.</p>
+                    </div>
+
+                    <div class="admin-co-delete-user-card">
+                        <img src="{{ $profile['avatar'] }}" alt="" class="admin-co-blocked-avatar" width="36" height="36">
+                        <div class="admin-co-blocked-body">
+                            <p class="admin-co-delete-user-name">{{ $profile['name'] }}</p>
+                            <p class="admin-co-delete-user-meta">{{ $customerEmail }} · {{ $profile['id'] }} · joined {{ $profile['stats']['member_since'] ?? '' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">
+                            Deletion reason <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openDeleteReason = false">
+                            <button
+                                type="button"
+                                class="admin-co-dd-trigger"
+                                @click="openDeleteReason = !openDeleteReason">
+                                <span
+                                    class="admin-co-dd-value"
+                                    :class="{ 'is-placeholder': !deleteReason }"
+                                    x-text="deleteReason || 'Select a reason ...'"></span>
+                                <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                                    <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <div class="admin-co-dd-menu" x-show="openDeleteReason" x-cloak>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': deleteReason === 'Customer GDPR right to erasure request' }" @click="deleteReason = 'Customer GDPR right to erasure request'; openDeleteReason = false">Customer GDPR right to erasure request</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': deleteReason === 'Provider right to be forgotten' }" @click="deleteReason = 'Provider right to be forgotten'; openDeleteReason = false">Provider right to be forgotten</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': deleteReason === 'Court order or legal requirement' }" @click="deleteReason = 'Court order or legal requirement'; openDeleteReason = false">Court order or legal requirement</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': deleteReason === 'Platform policy enforcement' }" @click="deleteReason = 'Platform policy enforcement'; openDeleteReason = false">Platform policy enforcement</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">
+                            GDPR request reference number <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            class="admin-co-suspend-input"
+                            placeholder="e.g GDPR-2025-0441"
+                            x-model="deleteGdprRef"
+                        >
+                    </div>
+
+                    <div class="admin-co-verify-email-happens">
+                        <h4 class="admin-co-verify-email-happens-title">What will be permanently deleted</h4>
+                        <ul class="admin-co-verify-email-happens-list">
+                            <li>Account profile, photo and all personal details</li>
+                            <li>All booking history and associated messages</li>
+                            <li>Service records</li>
+                            <li>Payment history and saved payment methods</li>
+                            <li>Reviews submitted by this customer</li>
+                            <li>Anonymised transaction records retained for legal compliance</li>
+                        </ul>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">
+                            Type DELETE to confirm <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            class="admin-co-suspend-input"
+                            placeholder="Type DELETE here"
+                            x-model="deleteConfirm"
+                        >
+                    </div>
+                </div>
+
+                <div class="admin-co-blocked-modal-foot is-confirm">
+                    <button type="button" class="admin-co-form-btn is-cancel" @click="deleteOpen = false">Cancel</button>
+                    <button
+                        type="button"
+                        class="admin-co-form-btn is-delete-account"
+                        :class="{ 'is-ready': deleteReady }"
+                        :disabled="!deleteReady"
+                        @click="deleteReady && (deleteOpen = false)"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="15" viewBox="0 0 14 15" fill="none" aria-hidden="true">
+                            <path d="M7.46337 0C9.97241 0 12.007 1.92447 12.007 4.29894C12.0062 4.92305 11.8632 5.53937 11.5881 6.10429C11.313 6.66922 10.9125 7.16895 10.415 7.56814C10.6275 7.66814 10.8215 7.76864 10.9967 7.86964C11.3737 8.08713 11.7651 8.35688 12.1711 8.67887C12.2258 8.72178 12.2711 8.77481 12.3042 8.83482C12.3373 8.89484 12.3577 8.96064 12.3641 9.02835C12.3704 9.09606 12.3627 9.16432 12.3413 9.2291C12.32 9.29389 12.2854 9.35391 12.2396 9.40561C12.1456 9.51093 12.0126 9.57663 11.869 9.58868C11.7254 9.60073 11.5826 9.55818 11.4712 9.47011C11.1429 9.20532 10.7945 8.96465 10.429 8.75012C10.0723 8.55099 9.70227 8.37485 9.32143 8.22288C8.73571 8.4715 8.10254 8.59924 7.46259 8.59788C6.75749 8.59931 6.06154 8.44405 5.42875 8.14413L5.39608 8.15913C3.85846 8.72612 2.73615 9.56461 2.01283 10.6776C1.28563 11.7943 0.988526 13.0423 1.12152 14.438C1.12747 14.5062 1.11937 14.5747 1.09768 14.6398C1.07599 14.7049 1.04114 14.7652 0.995148 14.8172C0.949155 14.8692 0.892929 14.912 0.829718 14.9429C0.766507 14.9739 0.697563 14.9924 0.626869 14.9975C0.484194 15.0109 0.34182 14.9693 0.230898 14.8817C0.119977 14.7942 0.0495384 14.6678 0.0349947 14.5303C-0.118224 12.9163 0.231768 11.4456 1.08341 10.1369C1.83317 8.98487 2.93448 8.08938 4.37333 7.45114C3.91558 7.05318 3.54958 6.56696 3.29904 6.02395C3.04851 5.48095 2.919 4.89326 2.91892 4.29894C2.91892 1.92447 4.95432 0 7.46337 0ZM13.0811 10.6798C13.1825 10.5838 13.3188 10.5298 13.461 10.5294C13.6031 10.529 13.7398 10.5822 13.8418 10.6776C14.0518 10.8771 14.0518 11.2011 13.8433 11.4013L12.9162 12.2856L13.8433 13.1706C13.8931 13.2178 13.9326 13.2741 13.9595 13.3362C13.9864 13.3984 14.0001 13.465 14 13.5324C13.9999 13.5997 13.9858 13.6663 13.9586 13.7283C13.9314 13.7903 13.8917 13.8465 13.8418 13.8935C13.74 13.9892 13.6034 14.0427 13.4613 14.0425C13.3191 14.0424 13.1827 13.9886 13.0811 13.8928L12.1579 13.0101L11.2347 13.8928C11.144 13.9784 11.025 14.0307 10.8985 14.0407C10.7719 14.0507 10.6457 14.0178 10.5417 13.9475L10.4748 13.8935C10.4249 13.8465 10.3852 13.7903 10.358 13.7283C10.3308 13.6663 10.3168 13.5997 10.3166 13.5324C10.3165 13.465 10.3302 13.3984 10.3571 13.3362C10.3841 13.2741 10.4235 13.2178 10.4733 13.1706L11.3988 12.2856L10.4733 11.4006C10.4235 11.3534 10.3841 11.297 10.3571 11.2349C10.3302 11.1728 10.3165 11.1061 10.3166 11.0388C10.3168 10.9715 10.3308 10.9048 10.358 10.8428C10.3852 10.7808 10.4249 10.7246 10.4748 10.6776C10.5767 10.5823 10.7132 10.5291 10.8551 10.5294C10.997 10.5297 11.1333 10.5834 11.2347 10.6791L12.1579 11.5611L13.0811 10.6798ZM7.46337 1.03124C5.55552 1.03124 4.01012 2.49371 4.01012 4.29819C4.01012 6.10266 5.55552 7.56589 7.46337 7.56589C9.37043 7.56589 10.9166 6.10341 10.9166 4.29819C10.9166 2.49296 9.37043 1.03124 7.46337 1.03124Z" fill="currentColor" />
+                        </svg>
+                        Delete account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
 </aside>

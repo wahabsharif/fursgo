@@ -31,6 +31,8 @@
 
 /* Header — same top padding as login so logo/tabs share one line */
 .admin-header {
+    position: relative;
+    z-index: 1;
     padding-top: 20px;
     background: var(--admin-page-bg);
 }
@@ -1955,6 +1957,10 @@
     border-radius: 10px;
     border: 1px solid rgba(59, 55, 49, 0.1);
     background: #fff;
+    /* Keep sticky card painted when modal backdrop opens (Chrome) */
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 .admin-co-profile-card {
@@ -2375,20 +2381,20 @@
     border-radius: 8px;
     font-family: Lato, sans-serif;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 400;
     line-height: 1;
     cursor: pointer;
 }
 
 .admin-co-form-btn.is-cancel {
-    background: #F6F6F6;
+    background: #f6f6f6;
     color: #969390;
 }
 
 .admin-co-form-btn.is-save {
-    color: #A1C25D;
-    border: 1px solid #D8E8B7;
-    background: #F4F8EC;
+    color: #a1c25d;
+    border: 1px solid #d8e8b7;
+    background: #f4f8ec;
 }
 
 .admin-co-edit-form {
@@ -2911,8 +2917,8 @@
     min-height: 32px;
     padding: 6px 12px;
     border-radius: 5px;
-    border: 1px solid #E7E6E6;
-    background: rgba(255, 255, 255, 0.20);
+    border: 1px solid #e7e6e6;
+    background: rgba(255, 255, 255, 0.2);
     color: #3b3731;
     font-family: Lato, sans-serif;
     font-size: 14px;
@@ -3020,16 +3026,8 @@
 }
 
 .admin-co-modal-close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
     border: none;
-    border-radius: 999px;
-    background: #f1f0f0;
-    cursor: pointer;
-    flex-shrink: 0;
+    background: none;
 }
 
 .admin-co-revoke-foot {
@@ -3145,6 +3143,611 @@
 .admin-co-form-btn.is-revoke {
     background: #3b3731;
     color: #fff;
+}
+
+.admin-co-form-btn.is-unblock {
+    color: #3b3731;
+    flex-shrink: 0;
+    margin-left: auto;
+    border-radius: 5px;
+    border: 1px solid #e7e6e6;
+    background: #fff;
+}
+
+.admin-co-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgb(77 75 75 / 45%);
+}
+
+.admin-co-modal-backdrop.is-open {
+    display: flex;
+}
+
+.admin-co-modal-backdrop.is-confirm-layer {
+    z-index: 10060;
+}
+
+body.admin-co-modal-lock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+.admin-co-modal {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    max-height: calc(100vh - 48px);
+    overflow: auto;
+    border: 1px solid rgba(59, 55, 49, 0.1);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 16px 40px rgba(59, 55, 49, 0.12);
+}
+
+.admin-co-blocked-modal {
+    display: flex;
+    flex-direction: column;
+    width: 434px;
+    max-width: calc(100vw - 48px);
+    height: 641px;
+    max-height: calc(100vh - 48px);
+    overflow: hidden;
+    border-radius: 10px;
+    border: 1px solid #e7e6e6;
+    background: #fff;
+}
+
+.admin-co-unblock-modal {
+    display: flex;
+    flex-direction: column;
+    width: 434px;
+    max-width: calc(100vw - 48px);
+    height: auto;
+    max-height: calc(100vh - 48px);
+    overflow: hidden;
+    border-radius: 10px;
+    border: 1px solid #e7e6e6;
+    background: #fff;
+}
+
+.admin-co-verify-email-modal {
+    display: flex;
+    flex-direction: column;
+    width: 434px;
+    max-width: calc(100vw - 48px);
+    max-height: calc(100vh - 48px);
+    overflow: hidden;
+    border-radius: 10px;
+    border: 1px solid #e7e6e6;
+    background: #fff;
+}
+
+.admin-co-verify-email-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background: rgba(161, 194, 93, 0.12);
+}
+
+.admin-co-verify-email-icon.is-password {
+    background: rgba(101, 159, 201, 0.12);
+}
+
+.admin-co-verify-email-icon.is-suspend {
+    background: #FEF0DC;
+}
+
+.admin-co-verify-email-icon.is-flag {
+    background: rgba(255, 127, 60, 0.14);
+}
+
+.admin-co-verify-email-icon.is-delete {
+    background: rgba(254, 111, 86, 0.12);
+}
+
+.admin-co-suspend-modal {
+    overflow: visible;
+}
+
+.admin-co-suspend-modal .admin-co-verify-email-body {
+    overflow: visible;
+}
+
+.admin-co-suspend-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 175, 59, 0.45);
+    background: rgba(255, 175, 59, 0.1);
+}
+
+.admin-co-suspend-alert.is-info {
+    border: 1px solid rgba(101, 159, 201, 0.35);
+    background: rgba(101, 159, 201, 0.1);
+}
+
+.admin-co-suspend-alert.is-danger {
+    border: 1px solid rgba(254, 111, 86, 0.4);
+    background: rgba(254, 111, 86, 0.1);
+}
+
+.admin-co-suspend-alert svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.admin-co-suspend-alert p {
+    margin: 0;
+    color: #FFB13F;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+.admin-co-suspend-alert.is-info p {
+    color: #659fc9;
+}
+
+.admin-co-suspend-alert.is-danger p {
+    color: #FF6E6E;
+}
+
+.admin-co-delete-user-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(254, 111, 86, 0.2);
+    background: rgba(254, 111, 86, 0.06);
+}
+
+.admin-co-delete-user-name {
+    margin: 0 0 2px;
+    color: #FF6E6E;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.admin-co-delete-user-meta {
+    margin: 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.admin-co-suspend-input {
+    display: block;
+    width: 100%;
+    min-height: 40px;
+    padding: 10px 12px;
+    border: 1px solid rgba(59, 55, 49, 0.12);
+    border-radius: 8px;
+    background: #fff;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.2;
+    outline: none;
+}
+
+.admin-co-suspend-input::placeholder {
+    color: #3B3731;
+    font-family: Lato, sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.admin-co-form-btn.is-delete-account {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 5px;
+    border: 1px solid rgba(59, 55, 49, 0.25);
+    background: #fff;
+    color: #9c9a97;
+}
+
+.admin-co-form-btn.is-delete-account:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.admin-co-form-btn.is-delete-account.is-ready,
+.admin-co-form-btn.is-delete-account:not(:disabled) {
+    border-color: #fe6f56;
+    background: #fff;
+    color: #fe6f56;
+    opacity: 1;
+}
+
+.admin-co-form-btn.is-delete-account.is-ready:hover,
+.admin-co-form-btn.is-delete-account:not(:disabled):hover {
+    background: rgba(254, 111, 86, 0.06);
+}
+
+.admin-co-suspend-field {
+    margin-top: 14px;
+}
+
+.admin-co-suspend-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.admin-co-suspend-required {
+    color: #ff6e6e;
+}
+
+.admin-co-suspend-dd {
+    width: 100%;
+    min-width: 0;
+}
+
+.admin-co-suspend-dd .admin-co-dd-trigger {
+    width: 100%;
+}
+
+.admin-co-suspend-dd .admin-co-dd-value.is-placeholder {
+    color: #3B3731;
+}
+
+.admin-co-suspend-dd .admin-co-dd-menu {
+    z-index: 30;
+}
+
+.admin-co-suspend-dd .admin-co-dd-option {
+    padding-left: 12px;
+}
+
+.admin-co-suspend-notes {
+    display: block;
+    width: 100%;
+    min-height: 84px;
+    padding: 10px 12px;
+    border: 1px solid rgba(59, 55, 49, 0.12);
+    border-radius: 8px;
+    background: #fff;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.4;
+    resize: none;
+    outline: none;
+}
+
+.admin-co-suspend-notes::placeholder {
+    color: #b7b7b7;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.admin-co-form-btn.is-send-email:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.admin-co-verify-email-body {
+    overflow: auto;
+}
+
+.admin-co-verify-email-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 5px;
+    border: 1px solid #e7e6e6;
+    background: rgba(59, 55, 49, 0.01);
+}
+
+.admin-co-verify-email-name {
+    margin: 0 0 2px;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.admin-co-verify-email-address {
+    margin: 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.admin-co-verify-email-copy {
+    margin: 14px 0 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+.admin-co-verify-email-happens {
+    margin-top: 16px;
+}
+
+.admin-co-verify-email-happens-title {
+    margin: 0 0 8px;
+    color: rgba(59, 55, 49, 0.50);
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: normal;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.admin-co-verify-email-happens-list {
+    list-style: disc;
+    margin: 0 14px;
+    padding: 0;
+}
+
+.admin-co-verify-email-happens-list li {
+    margin: 0;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(59, 55, 49, 0.08);
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.admin-co-verify-email-happens-list li:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.admin-co-verify-email-link {
+    color: #3b3731;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.admin-co-form-btn.is-send-email {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #3b3731;
+    color: #fff;
+}
+
+.admin-co-form-btn.is-send-email svg {
+    flex-shrink: 0;
+}
+
+.admin-co-modal-title {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.admin-co-blocked-modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-shrink: 0;
+    margin-bottom: 0;
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid #e7e6e6;
+}
+
+.admin-co-blocked-modal-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+}
+
+.admin-co-blocked-modal-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    padding: 16px 20px;
+}
+
+.admin-co-blocked-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    min-height: 30px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(59, 55, 49, 0.1);
+    background: #fff;
+}
+
+.admin-co-blocked-search input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    outline: none;
+}
+
+.admin-co-blocked-search input::placeholder {
+    color: #b7b7b7;
+    leading-trim: both;
+    text-edge: cap;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.admin-co-blocked-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.admin-co-blocked-filter {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: #f1f0f0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.admin-co-blocked-filter.is-all.is-active {
+    background: #3b3731;
+    color: #fff;
+}
+
+.admin-co-blocked-filter.is-groomer {
+    border-color: #ffc97a;
+    background: rgba(255, 201, 122, 0.1);
+    color: #ffc97a;
+}
+
+.admin-co-blocked-filter.is-groomer.is-active {
+    background: rgba(255, 184, 80, 0.12);
+}
+
+.admin-co-blocked-filter.is-space {
+    border-color: #ffa899;
+    background: rgba(255, 168, 153, 0.1);
+    color: #ffa899;
+}
+
+.admin-co-blocked-filter.is-space.is-active {
+    background: rgba(255, 168, 153, 0.12);
+}
+
+.admin-co-blocked-modal-list {
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    gap: 0;
+    overflow: auto;
+}
+
+.admin-co-blocked-modal-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(59, 55, 49, 0.08);
+}
+
+.admin-co-blocked-modal-row:last-child {
+    border-bottom: none;
+}
+
+.admin-co-blocked-modal-row .admin-co-blocked-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.admin-co-blocked-modal-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-shrink: 0;
+    padding: 14px 20px 20px;
+    border-top: 1px solid rgba(59, 55, 49, 0.1);
+}
+
+.admin-co-blocked-modal-foot .admin-co-panel-footnote {
+    margin: 0;
+}
+
+.admin-co-blocked-modal-foot .admin-co-form-btn.is-cancel {
+    margin-left: auto;
+    flex-shrink: 0;
+    background: #fff;
+    color: #3b3731;
+    border-radius: 5px;
+    background: #f6f6f6;
+}
+
+.admin-co-blocked-modal-foot.is-confirm {
+    justify-content: flex-end;
+}
+
+.admin-co-unblock-copy {
+    margin: 0 0 14px;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+.admin-co-unblock-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 5px;
+    border: 1px solid #e7e6e6;
+    background: rgba(59, 55, 49, 0.01);
+}
+
+.admin-co-unblock-note {
+    margin-top: 14px;
 }
 
 .admin-co-blocked-item {

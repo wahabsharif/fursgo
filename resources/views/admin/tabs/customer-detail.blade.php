@@ -129,6 +129,7 @@ $janeProfile = [
 ['name' => 'Furs & Co. Studio', 'role' => 'Space Host', 'subtitle' => 'Hosted by Dev É.', 'avatar' => $providerAvatars[1]],
 ['name' => 'Sarah W.', 'role' => 'Groomer', 'subtitle' => "Sarah's Grooming Studio", 'avatar' => $providerAvatars[2]],
 ['name' => 'Katie Z.', 'role' => 'Groomer', 'subtitle' => 'Includes other accounts ...', 'avatar' => $providerAvatars[3]],
+['name' => 'Pawfect Salon', 'role' => 'Groomer', 'subtitle' => 'Mia R.', 'avatar' => $providerAvatars[0]],
 ],
 'notes' => [
 [

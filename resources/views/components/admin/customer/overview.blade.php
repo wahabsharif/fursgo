@@ -712,34 +712,252 @@ $activity = $profile['activity'];
             </p>
         </section>
 
-        <section class="admin-card admin-co-panel">
-            <x-admin.customer.section-header :title="'Blocked Providers (' . count($blocked) . ' blocked)'">
-                <button type="button" class="admin-co-link-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
-                        <path d="M10.0279 0.00548759L10.0224 6.35299L9.19398 6.33653C9.02574 6.33653 8.90687 6.28715 8.83738 6.1884C8.76789 6.08234 8.73131 5.95067 8.72766 5.7934L8.73863 3.11615C8.73863 2.92596 8.74411 2.74857 8.75509 2.58399C8.7624 2.41575 8.7752 2.2603 8.79349 2.11766C8.6033 2.35906 8.39849 2.60776 8.17904 2.86378C7.95959 3.11249 7.72917 3.35754 7.48778 3.59893L1.29115 9.79556C0.99573 10.091 0.516763 10.091 0.221345 9.79556C-0.0740737 9.50014 -0.0740733 9.02118 0.221345 8.72576L6.41798 2.52913C6.65937 2.28774 6.90808 2.05732 7.1641 1.83787C7.41646 1.61476 7.66517 1.40995 7.91022 1.22342C7.76392 1.24536 7.60848 1.26182 7.44389 1.27279C7.27565 1.28011 7.09643 1.28377 6.90625 1.28377L4.20705 1.29474C4.05344 1.29474 3.9236 1.25999 3.81753 1.1905C3.71512 1.11735 3.66392 0.996656 3.66392 0.828413L3.64746 1.01217e-06L10.0279 0.00548759Z" fill="#3B3731" />
-                    </svg>
-                    View All
-                </button>
-            </x-admin.customer.section-header>
+        <section
+            class="admin-card admin-co-panel"
+            x-data="{
+                blockedOpen: false,
+                unblockOpen: false,
+                blockedFilter: 'all',
+                blockedSearch: '',
+                blockedList: @js($blocked),
+                unblockIndex: -1,
+                unblockName: '',
+                unblockRole: '',
+                unblockSub: '',
+                unblockAvatar: '',
+            }"
+            x-init="
+                const syncModalLock = () => {
+                    const open = blockedOpen || unblockOpen;
+                    if (open) {
+                        if (!document.body.classList.contains('admin-co-modal-lock')) {
+                            document.body.dataset.adminCoScrollY = String(window.scrollY);
+                            document.body.style.top = '-' + window.scrollY + 'px';
+                            document.body.classList.add('admin-co-modal-lock');
+                        }
+                    } else if (document.body.classList.contains('admin-co-modal-lock')) {
+                        const y = parseInt(document.body.dataset.adminCoScrollY || '0', 10);
+                        document.body.classList.remove('admin-co-modal-lock');
+                        document.body.style.top = '';
+                        delete document.body.dataset.adminCoScrollY;
+                        window.scrollTo(0, y);
+                    }
+                };
+                $watch('blockedOpen', () => $nextTick(() => syncModalLock()));
+                $watch('unblockOpen', () => $nextTick(() => syncModalLock()));
+            ">
+            <div class="admin-co-section-head">
+                <h3 class="admin-co-section-title">
+                    Blocked Providers (<span x-text="blockedList.length"></span> blocked)
+                </h3>
+                <div class="admin-co-section-action-wrap">
+                    <button
+                        type="button"
+                        class="admin-co-link-btn"
+                        @click="blockedOpen = true; unblockOpen = false; blockedSearch = ''; blockedFilter = 'all'">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+                            <path d="M10.0279 0.00548759L10.0224 6.35299L9.19398 6.33653C9.02574 6.33653 8.90687 6.28715 8.83738 6.1884C8.76789 6.08234 8.73131 5.95067 8.72766 5.7934L8.73863 3.11615C8.73863 2.92596 8.74411 2.74857 8.75509 2.58399C8.7624 2.41575 8.7752 2.2603 8.79349 2.11766C8.6033 2.35906 8.39849 2.60776 8.17904 2.86378C7.95959 3.11249 7.72917 3.35754 7.48778 3.59893L1.29115 9.79556C0.99573 10.091 0.516763 10.091 0.221345 9.79556C-0.0740737 9.50014 -0.0740733 9.02118 0.221345 8.72576L6.41798 2.52913C6.65937 2.28774 6.90808 2.05732 7.1641 1.83787C7.41646 1.61476 7.66517 1.40995 7.91022 1.22342C7.76392 1.24536 7.60848 1.26182 7.44389 1.27279C7.27565 1.28011 7.09643 1.28377 6.90625 1.28377L4.20705 1.29474C4.05344 1.29474 3.9236 1.25999 3.81753 1.1905C3.71512 1.11735 3.66392 0.996656 3.66392 0.828413L3.64746 1.01217e-06L10.0279 0.00548759Z" fill="#3B3731" />
+                        </svg>
+                        View All
+                    </button>
+                </div>
+            </div>
             <ul class="admin-co-blocked-list">
-                @foreach ($blocked as $provider)
-                @php
-                $roleKey = strtolower(str_replace(' ', '-', $provider['role']));
-                @endphp
-                <li class="admin-co-blocked-item">
-                    <img src="{{ $provider['avatar'] }}" alt="" class="admin-co-blocked-avatar" width="36" height="36">
-                    <div class="admin-co-blocked-body">
-                        <p class="admin-co-blocked-name">
-                            {{ $provider['name'] }}
-                            <span class="admin-co-blocked-sep">·</span>
-                            <span class="admin-co-blocked-role is-{{ $roleKey }}">{{ $provider['role'] }}</span>
-                        </p>
-                        <p class="admin-co-blocked-sub">{{ $provider['subtitle'] ?? '' }}</p>
-                    </div>
-                </li>
-                @endforeach
+                <template x-for="(provider, index) in blockedList.slice(0, 4)" :key="index">
+                    <li class="admin-co-blocked-item">
+                        <img :src="provider.avatar" alt="" class="admin-co-blocked-avatar" width="36" height="36">
+                        <div class="admin-co-blocked-body">
+                            <p class="admin-co-blocked-name">
+                                <span x-text="provider.name"></span>
+                                <span class="admin-co-blocked-sep">·</span>
+                                <span
+                                    class="admin-co-blocked-role"
+                                    :class="'is-' + provider.role.toLowerCase().split(' ').join('-')"
+                                    x-text="provider.role"></span>
+                            </p>
+                            <p class="admin-co-blocked-sub" x-text="provider.subtitle"></p>
+                        </div>
+                    </li>
+                </template>
             </ul>
             <p class="admin-co-panel-footnote">Blocked providers cannot be booked by this customer</p>
+
+            {{-- Blocked providers list modal --}}
+            <template x-teleport="body">
+                <div
+                    class="admin-co-modal-backdrop"
+                    :class="{ 'is-open': blockedOpen && !unblockOpen }"
+                    @click.self="blockedOpen = false">
+                    <div class="admin-co-modal admin-co-blocked-modal" role="dialog" aria-modal="true" @click.stop>
+                        <div class="admin-co-modal-head admin-co-blocked-modal-head">
+                            <div>
+                                <div class="admin-co-modal-title-row">
+                                    <span class="admin-co-blocked-modal-icon" aria-hidden="true">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                            <rect width="24" height="24" rx="5" fill="#FF6E6E" fill-opacity="0.1" />
+                                            <path d="M11.998 5.5C12.9002 5.50005 13.7422 5.67134 14.5293 6.01074H14.5303C15.3264 6.35387 16.0138 6.8175 16.5977 7.40039C17.1815 7.98328 17.6457 8.67057 17.9893 9.4668C18.3287 10.2535 18.5 11.0957 18.5 11.998C18.5 12.9004 18.3293 13.7431 17.9902 14.5303C17.6472 15.3268 17.1834 16.0144 16.5996 16.5977C16.0155 17.1813 15.328 17.6451 14.5332 17.9893C13.7486 18.3289 12.9067 18.5004 12.0029 18.5C11.0986 18.4995 10.2554 18.3287 9.46973 17.9902H9.4707C8.67447 17.6466 7.98631 17.183 7.40234 16.5996C6.81832 16.0161 6.35433 15.3284 6.01074 14.5332C5.67138 13.7477 5.5 12.9055 5.5 12.002C5.50005 11.0986 5.67139 10.2566 6.01074 9.4707V9.46973C6.35393 8.67346 6.81695 7.98527 7.39941 7.40137C7.98166 6.81772 8.66918 6.35431 9.46582 6.01074C10.2531 5.67124 11.0957 5.5 11.998 5.5Z" stroke="#FE6F56" />
+                                            <path d="M17 16L7 8" stroke="#FE6F56" />
+                                        </svg>
+                                    </span>
+                                    <div>
+                                        <h3 class="admin-co-modal-title">Blocked Providers</h3>
+                                        <p class="admin-co-modal-sub">
+                                            {{ $profile['name'] }} · <span x-text="blockedList.length"></span> providers blocked
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="admin-co-modal-close" @click="blockedOpen = false" aria-label="Close">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                                    <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="admin-co-blocked-modal-body">
+                            <div class="admin-co-blocked-search">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none">
+                                    <path d="M10.8761 10.2781L8.23108 7.63361C8.99773 6.7132 9.38002 5.53266 9.29843 4.33757C9.21683 3.14248 8.67764 2.02485 7.79301 1.21718C6.90838 0.409513 5.74642 -0.0260137 4.54886 0.00120289C3.3513 0.0284195 2.21033 0.516284 1.36331 1.36331C0.516284 2.21033 0.0284195 3.3513 0.00120289 4.54886C-0.0260137 5.74642 0.409513 6.90838 1.21718 7.79301C2.02485 8.67764 3.14248 9.21683 4.33757 9.29843C5.53266 9.38002 6.7132 8.99773 7.63361 8.23108L10.2781 10.8761C10.3174 10.9154 10.364 10.9466 10.4153 10.9678C10.4666 10.9891 10.5216 11 10.5771 11C10.6327 11 10.6877 10.9891 10.739 10.9678C10.7903 10.9466 10.8369 10.9154 10.8761 10.8761C10.9154 10.8369 10.9466 10.7903 10.9678 10.739C10.9891 10.6877 11 10.6327 11 10.5771C11 10.5216 10.9891 10.4666 10.9678 10.4153C10.9466 10.364 10.9154 10.3174 10.8761 10.2781ZM0.856914 4.66048C0.856914 3.90821 1.07999 3.17283 1.49793 2.54733C1.91587 1.92184 2.50991 1.43433 3.20492 1.14644C3.89993 0.85856 4.6647 0.783237 5.40252 0.929999C6.14034 1.07676 6.81807 1.43901 7.35001 1.97095C7.88195 2.50289 8.24421 3.18062 8.39097 3.91844C8.53773 4.65626 8.46241 5.42103 8.17452 6.11605C7.88664 6.81106 7.39913 7.40509 6.77363 7.82304C6.14814 8.24098 5.41276 8.46405 4.66048 8.46405C3.65206 8.46293 2.68525 8.06184 1.97219 7.34878C1.25912 6.63571 0.858033 5.66891 0.856914 4.66048Z" fill="#B7B7B7" />
+                                </svg>
+                                <input
+                                    type="text"
+                                    placeholder="Search by providers name..."
+                                    x-model="blockedSearch">
+                            </div>
+
+                            <div class="admin-co-blocked-filters">
+                                <button
+                                    type="button"
+                                    class="admin-co-blocked-filter is-all"
+                                    :class="{ 'is-active': blockedFilter === 'all' }"
+                                    @click="blockedFilter = 'all'">All (<span x-text="blockedList.length"></span>)</button>
+                                <button
+                                    type="button"
+                                    class="admin-co-blocked-filter is-groomer"
+                                    :class="{ 'is-active': blockedFilter === 'groomer' }"
+                                    @click="blockedFilter = 'groomer'">Groomers (<span x-text="blockedList.filter(p => p.role === 'Groomer').length"></span>)</button>
+                                <button
+                                    type="button"
+                                    class="admin-co-blocked-filter is-space"
+                                    :class="{ 'is-active': blockedFilter === 'space' }"
+                                    @click="blockedFilter = 'space'">Space Hosts (<span x-text="blockedList.filter(p => p.role === 'Space Host').length"></span>)</button>
+                            </div>
+
+                            <ul class="admin-co-blocked-modal-list">
+                                <template x-for="(provider, index) in blockedList" :key="index">
+                                    <li
+                                        class="admin-co-blocked-modal-row"
+                                        x-show="
+                                            (blockedFilter === 'all'
+                                                || (blockedFilter === 'groomer' && provider.role === 'Groomer')
+                                                || (blockedFilter === 'space' && provider.role === 'Space Host'))
+                                            && (!blockedSearch
+                                                || provider.name.toLowerCase().includes(blockedSearch.toLowerCase())
+                                                || (provider.subtitle && provider.subtitle.toLowerCase().includes(blockedSearch.toLowerCase())))
+                                        "
+                                        x-cloak>
+                                        <img :src="provider.avatar" alt="" class="admin-co-blocked-avatar" width="36" height="36">
+                                        <div class="admin-co-blocked-body">
+                                            <p class="admin-co-blocked-name">
+                                                <span x-text="provider.name"></span>
+                                                <span class="admin-co-blocked-sep">·</span>
+                                                <span
+                                                    class="admin-co-blocked-role"
+                                                    :class="'is-' + provider.role.toLowerCase().split(' ').join('-')"
+                                                    x-text="provider.role"></span>
+                                            </p>
+                                            <p class="admin-co-blocked-sub" x-text="provider.subtitle"></p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            class="admin-co-form-btn is-unblock"
+                                            @click="
+                                                unblockIndex = index;
+                                                unblockName = provider.name;
+                                                unblockRole = provider.role;
+                                                unblockSub = provider.subtitle;
+                                                unblockAvatar = provider.avatar;
+                                                unblockOpen = true;
+                                            ">Unblock</button>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+
+                        <div class="admin-co-blocked-modal-foot">
+                            <p class="admin-co-panel-footnote mb-0">Blocked providers cannot be booked by this customer</p>
+                            <button type="button" class="admin-co-form-btn is-cancel" @click="blockedOpen = false">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            {{-- Unblock confirmation modal --}}
+            <template x-teleport="body">
+                <div
+                    class="admin-co-modal-backdrop is-confirm-layer"
+                    :class="{ 'is-open': unblockOpen }"
+                    @click.self="unblockOpen = false">
+                    <div class="admin-co-modal admin-co-unblock-modal" role="dialog" aria-modal="true" @click.stop>
+                        <div class="admin-co-modal-head admin-co-blocked-modal-head">
+                            <div>
+                                <h3 class="admin-co-modal-title">Unblock provider</h3>
+                                <p class="admin-co-modal-sub">{{ $profile['name'] }} · {{ $profile['id'] }}</p>
+                            </div>
+                            <button type="button" class="admin-co-modal-close" @click="unblockOpen = false" aria-label="Close">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                                    <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="admin-co-blocked-modal-body">
+                            <p class="admin-co-unblock-copy">
+                                You are about to unblock the following provider for {{ $profile['name'] }}. They will be able to book with this provider again immediately.
+                            </p>
+
+                            <div class="admin-co-unblock-card">
+                                <img :src="unblockAvatar" alt="" class="admin-co-blocked-avatar" width="36" height="36">
+                                <div class="admin-co-blocked-body">
+                                    <p class="admin-co-blocked-name">
+                                        <span x-text="unblockName"></span>
+                                        <span class="admin-co-blocked-sep">·</span>
+                                        <span
+                                            class="admin-co-blocked-role"
+                                            :class="'is-' + unblockRole.toLowerCase().split(' ').join('-')"
+                                            x-text="unblockRole"></span>
+                                    </p>
+                                    <p class="admin-co-blocked-sub" x-text="unblockSub"></p>
+                                </div>
+                            </div>
+
+                            <div class="admin-co-revoke-note admin-co-unblock-note">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                    <path d="M4.875 9.375C7.36028 9.375 9.375 7.36028 9.375 4.875C9.375 2.38972 7.36028 0.375 4.875 0.375C2.38972 0.375 0.375 2.38972 0.375 4.875C0.375 7.36028 2.38972 9.375 4.875 9.375Z" stroke="#A6BBC9" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M4.875 6.67495V4.87495M4.875 3.07495H4.8795" stroke="#A6BBC9" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <p>The customer will be notified that this provider has been unblocked. This action will be logged under your name.</p>
+                            </div>
+                        </div>
+
+                        <div class="admin-co-blocked-modal-foot is-confirm">
+                            <button type="button" class="admin-co-form-btn is-cancel" @click="unblockOpen = false">Cancel - keep blocked</button>
+                            <button
+                                type="button"
+                                class="admin-co-form-btn is-revoke"
+                                @click="
+                                    unblockIndex >= 0 && blockedList.splice(unblockIndex, 1);
+                                    unblockOpen = false;
+                                    unblockIndex = -1;
+                                ">Yes, unblock provider</button>
+                        </div>
+                    </div>
+                </div>
+            </template>
         </section>
     </div>
 
@@ -752,8 +970,7 @@ $activity = $profile['activity'];
             newNote: '',
             editIndex: -1,
             notes: @js($notes),
-        }"
-    >
+        }">
         <div x-show="!editingNotes">
             <x-admin.customer.section-header title="Admin Notes">
                 <button type="button" class="admin-co-link-btn" @click="editingNotes = true; newNote = ''; editIndex = -1">
@@ -796,8 +1013,7 @@ $activity = $profile['activity'];
                     rows="4"
                     placeholder="Write an internal note about this customer - only visible to the admin team members."
                     x-model="newNote"
-                    x-ref="noteInput"
-                ></textarea>
+                    x-ref="noteInput"></textarea>
                 <div class="admin-co-note-compose-actions">
                     <button
                         type="button"
@@ -809,8 +1025,7 @@ $activity = $profile['activity'];
                                     : (notes.unshift({ text: newNote.trim(), author: 'Admin', time: 'Just now', tag: 'Internal only' }), newNote = '')
                             )
                         "
-                        x-text="editIndex >= 0 ? 'Update note' : 'Add note'"
-                    ></button>
+                        x-text="editIndex >= 0 ? 'Update note' : 'Add note'"></button>
                 </div>
             </div>
 
@@ -839,8 +1054,7 @@ $activity = $profile['activity'];
                                     notes.splice(index, 1);
                                     editIndex === index && (editIndex = -1, newNote = '');
                                     editIndex > index && (editIndex = editIndex - 1);
-                                "
-                            >
+                                ">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                                     <path d="M1.75 3.5H12.25" stroke="#3B3731" stroke-width="1.3" stroke-linecap="round" />
                                     <path d="M5.25 3.5V2.45C5.25 1.89772 5.69772 1.45 6.25 1.45H7.75C8.30228 1.45 8.75 1.89772 8.75 2.45V3.5" stroke="#3B3731" stroke-width="1.3" stroke-linecap="round" />
