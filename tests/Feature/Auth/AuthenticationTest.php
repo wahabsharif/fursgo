@@ -27,3 +27,14 @@ test('users can logout', function () {
     $this->assertGuest();
     $response->assertRedirect('/');
 });
+
+test('profile logout redirects to login groomer space', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/logout', [
+        'redirect' => 'login-groomer-space',
+    ]);
+
+    $this->assertGuest();
+    $response->assertRedirect('/login-groomer-space');
+});
