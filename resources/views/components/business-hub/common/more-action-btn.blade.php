@@ -10,58 +10,59 @@
 
 @php
     $isConfirmed = $variant === 'confirmed';
-    $isCompact = $messageOnly || $isConfirmed;
-    $compactWidth = $messageOnly ? 130 : 148;
+    $isPending = $variant === 'pending';
+    $isCompact = $messageOnly || $isConfirmed || $isPending;
+    $compactWidth = 130;
 @endphp
 
 <div class="more-action-wrapper"
     :class="{ 'is-menu-open': openMore, 'is-message-only': {{ $messageOnly ? 'true' : 'false' }} }" x-data="{
-    rowId: {{ $rowId === null ? 'row.id' : (int) $rowId }},
-    ownerId: {{ $ownerId === null || $ownerId === '' ? 'null' : (int) $ownerId }},
-    openMore: false,
-    menuLeft: 8,
-    menuTop: 8,
-    menuWidth: @js($isCompact ? $compactWidth : $menuWidth),
-    alignStart: false,
-    alignEnd: {{ $isCompact ? 'true' : 'false' }},
-    repositionMore() {
-        const rect = $refs.moreBtn.getBoundingClientRect();
-        this.menuTop = Math.max(8, rect.bottom + 5);
-        if (this.alignStart) {
-            this.menuLeft = rect.left;
-        } else if (this.alignEnd) {
-            this.menuLeft = Math.max(8, rect.right - this.menuWidth);
-        } else {
-            this.menuLeft = Math.min(Math.max(8, rect.left), window.innerWidth - this.menuWidth - 8);
+        rowId: {{ $rowId === null ? 'row.id' : (int) $rowId }},
+        ownerId: {{ $ownerId === null || $ownerId === '' ? 'null' : (int) $ownerId }},
+        openMore: false,
+        menuLeft: 8,
+        menuTop: 8,
+        menuWidth: @js($isCompact ? $compactWidth : $menuWidth),
+        alignStart: false,
+        alignEnd: {{ $isCompact ? 'true' : 'false' }},
+        repositionMore() {
+            const rect = $refs.moreBtn.getBoundingClientRect();
+            this.menuTop = Math.max(8, rect.bottom + 5);
+            if (this.alignStart) {
+                this.menuLeft = rect.left;
+            } else if (this.alignEnd) {
+                this.menuLeft = Math.max(8, rect.right - this.menuWidth);
+            } else {
+                this.menuLeft = Math.min(Math.max(8, rect.left), window.innerWidth - this.menuWidth - 8);
+            }
+        },
+        toggleMore() {
+            if (!this.openMore) {
+                window.dispatchEvent(new CustomEvent('more-action-opened', { detail: { id: this.rowId } }));
+                this.repositionMore();
+            }
+            this.openMore = !this.openMore;
+        },
+        openDetails() {
+            this.openMore = false;
+            window.dispatchEvent(new CustomEvent('booking-details-open', { detail: { id: this.rowId } }));
+        },
+        openClientProfile() {
+            const id = Number(this.ownerId || 0);
+            this.openMore = false;
+            if (!id) {
+                return;
+            }
+            window.__pendingClientProfileId = id;
+            window.dispatchEvent(new CustomEvent('nav-list-loading-start'));
+            const bodyData = window.Alpine?.$data(document.body);
+            if (bodyData) {
+                bodyData.activeSection = 'clients';
+            }
+            window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'clients' } }));
+            window.dispatchEvent(new CustomEvent('open-client-profile', { detail: { clientId: id } }));
         }
-    },
-    toggleMore() {
-        if (!this.openMore) {
-            window.dispatchEvent(new CustomEvent('more-action-opened', { detail: { id: this.rowId } }));
-            this.repositionMore();
-        }
-        this.openMore = !this.openMore;
-    },
-    openDetails() {
-        this.openMore = false;
-        window.dispatchEvent(new CustomEvent('booking-details-open', { detail: { id: this.rowId } }));
-    },
-    openClientProfile() {
-        const id = Number(this.ownerId || 0);
-        this.openMore = false;
-        if (!id) {
-            return;
-        }
-        window.__pendingClientProfileId = id;
-        window.dispatchEvent(new CustomEvent('nav-list-loading-start'));
-        const bodyData = window.Alpine?.$data(document.body);
-        if (bodyData) {
-            bodyData.activeSection = 'clients';
-        }
-        window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'clients' } }));
-        window.dispatchEvent(new CustomEvent('open-client-profile', { detail: { clientId: id } }));
-    }
-}" @more-action-opened.window="if (($event.detail?.id ?? null) !== rowId) { openMore = false }"
+    }" @more-action-opened.window="if (($event.detail?.id ?? null) !== rowId) { openMore = false }"
     @keydown.escape.window="openMore = false" @resize.window="if (openMore) repositionMore()"
     @scroll.window="if (openMore) repositionMore()"
     @click.window="if (openMore && !$refs.moreBtn.contains($event.target) && (!$refs.moreMenu || !$refs.moreMenu.contains($event.target))) { openMore = false }">
@@ -80,9 +81,28 @@
         </template>
     @endif
 
+    @if ($isPending)
+        <template x-teleport="body">
+            <div class="more-action-menu is-compact is-pending-menu" x-cloak x-show="openMore" x-ref="moreMenu"
+                x-transition.opacity.duration.120ms
+                :style="`position: fixed; left: ${menuLeft}px; top: ${menuTop}px; z-index: 99999;`">
+                <button type="button" class="more-action-menu-item" @click.stop="openMore = false">
+                    <span>Message client</span>
+                </button>
+                <button type="button" class="more-action-menu-item"
+                    @click.stop="window.dispatchEvent(new CustomEvent(@js($loadingEvent))); $wire.{{ $rescheduleMethod }}(rowId); openMore = false;">
+                    <span>Reschedule</span>
+                </button>
+                <button type="button" class="more-action-menu-item" @click.stop="openDetails()">
+                    <span>View details</span>
+                </button>
+            </div>
+        </template>
+    @endif
+
     @if ($isConfirmed)
         <template x-teleport="body">
-            <div class="more-action-menu is-compact" x-cloak x-show="openMore" x-ref="moreMenu"
+            <div class="more-action-menu is-compact is-confirmed-menu" x-cloak x-show="openMore" x-ref="moreMenu"
                 x-transition.opacity.duration.120ms
                 :style="`position: fixed; left: ${menuLeft}px; top: ${menuTop}px; z-index: 99999;`">
                 <button type="button" class="more-action-menu-item" @click.stop="openDetails()">
@@ -97,7 +117,7 @@
                 </button>
             </div>
         </template>
-    @elseif (!$messageOnly)
+    @elseif (!$messageOnly && !$isPending)
         <template x-teleport="body">
             <div class="more-action-menu" x-cloak x-show="openMore" x-ref="moreMenu" x-transition.opacity.duration.120ms
                 :style="`position: fixed; left: ${menuLeft}px; top: ${menuTop}px; z-index: 99999;`">
@@ -196,6 +216,11 @@
             justify-content: center;
             overflow: visible;
             z-index: 1;
+            width: 36px;
+            height: 36px;
+            flex: 0 0 36px;
+            align-self: center;
+            vertical-align: middle;
         }
 
         .more-action-wrapper:hover,
@@ -286,6 +311,18 @@
 
         .more-action-menu.is-compact .more-action-menu-item.is-danger span {
             color: #FF6E6E;
+        }
+
+        .more-action-menu.is-compact.is-pending-menu,
+        .more-action-menu.is-compact.is-confirmed-menu {
+            min-width: 130px;
+            width: 130px;
+            max-width: 130px;
+        }
+
+        .more-action-menu.is-compact.is-pending-menu .more-action-menu-item span,
+        .more-action-menu.is-compact.is-confirmed-menu .more-action-menu-item span {
+            width: 122px;
         }
     </style>
 @endonce

@@ -1,111 +1,117 @@
 @teleport('body')
-<div class="booking-details-drawer-layer" x-cloak x-bind:class="{ 'is-open': open }">
-    <button type="button" class="booking-details-drawer-backdrop" @click="closeDrawer()"
-        aria-label="Close booking details"></button>
+    <div class="booking-details-drawer-layer" x-cloak x-bind:class="{ 'is-open': open, 'is-space': isSpace }">
+        <button type="button" class="booking-details-drawer-backdrop" @click="closeDrawer()"
+            aria-label="Close booking details"></button>
 
-    <aside class="booking-details-drawer" role="dialog" aria-modal="true" aria-labelledby="booking-details-drawer-title"
-        x-bind:style="{ top: topOffset + 'px' }" @click.stop @wheel.stop.passive @touchmove.stop>
-        <header class="booking-details-drawer-head">
-            <div>
-                <h3 id="booking-details-drawer-title" class="booking-details-drawer-title">Booking details</h3>
-                <p class="booking-details-drawer-id" x-text="details.idLabel"></p>
-            </div>
-            <button type="button" class="booking-details-drawer-close" @click="closeDrawer()" aria-label="Close">
-                <img src="{{ asset('images/booking-details/close.svg') }}" alt="" width="16" height="16">
-            </button>
-        </header>
+        <aside class="booking-details-drawer" role="dialog" aria-modal="true" aria-labelledby="booking-details-drawer-title"
+            x-bind:style="{ top: topOffset + 'px' }" @click.stop @wheel.stop.passive @touchmove.stop>
+            <header class="booking-details-drawer-head">
+                <div>
+                    <h3 id="booking-details-drawer-title" class="booking-details-drawer-title">Booking details</h3>
+                    <p class="booking-details-drawer-id" x-text="details.idLabel"></p>
+                </div>
+                <button type="button" class="booking-details-drawer-close" @click="closeDrawer()" aria-label="Close">
+                    <img src="{{ asset('images/booking-details/close.svg') }}" alt="" width="16.5" height="16.5">
+                </button>
+            </header>
 
-        <div class="booking-details-drawer-card" x-bind:class="details.statusClass">
-            <div class="booking-details-client-row">
-                <div class="booking-details-client">
-                    <div class="booking-details-avatar-wrap">
-                        <img x-show="details.ownerImageUrl" x-bind:src="details.ownerImageUrl" alt=""
-                            class="booking-details-avatar">
-                        <span x-show="!details.ownerImageUrl" class="booking-details-avatar is-fallback"
-                            aria-hidden="true" x-text="details.ownerInitial"></span>
-                    </div>
-                    <div class="booking-details-client-copy">
-                        <div class="booking-details-client-name-row">
-                            <strong x-text="details.ownerName"></strong>
-                            <img src="{{ asset('images/booking-details/verified.svg') }}" alt="" width="16" height="16"
-                                class="booking-details-verified">
+            <div class="booking-details-drawer-card" x-bind:class="details.statusClass">
+                <div class="booking-details-client-row">
+                    <div class="booking-details-client">
+                        <div class="booking-details-avatar-wrap">
+                            <svg x-show="isSpace" class="booking-details-avatar-ring" width="50" height="50"
+                                viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <circle cx="18" cy="18" r="17.5" fill="white" stroke="#FFA899" />
+                            </svg>
+                            <img x-show="details.ownerImageUrl" x-bind:src="details.ownerImageUrl" alt=""
+                                class="booking-details-avatar">
+                            <span x-show="!details.ownerImageUrl" class="booking-details-avatar is-fallback"
+                                aria-hidden="true" x-text="details.ownerInitial"></span>
                         </div>
-                        <p x-text="details.petSummary"></p>
-                    </div>
-                </div>
-                <span class="booking-details-status" x-bind:class="details.statusClass"
-                    x-text="details.statusLabel"></span>
-            </div>
-
-            <div class="booking-details-divider"></div>
-
-            <section class="booking-details-section">
-                <h4>Booking</h4>
-                <div class="booking-details-row">
-                    <span>Service</span>
-                    <strong x-text="details.serviceLabel"></strong>
-                </div>
-                <div class="booking-details-row">
-                    <span>Date</span>
-                    <strong x-text="details.dateLabel"></strong>
-                </div>
-                <div class="booking-details-row">
-                    <span>Time</span>
-                    <strong x-text="details.timeLabel"></strong>
-                </div>
-            </section>
-
-            <section class="booking-details-section">
-                <h4>Payment</h4>
-                <div class="booking-details-row">
-                    <span>Service fee</span>
-                    <strong x-text="'£' + details.serviceFee"></strong>
-                </div>
-                <div class="booking-details-row">
-                    <span>Add-ons</span>
-                    <strong x-text="'£' + details.addOns"></strong>
-                </div>
-                <div class="booking-details-row is-total">
-                    <span>Total</span>
-                    <strong x-text="'£' + details.total"></strong>
-                </div>
-            </section>
-
-            <div class="booking-details-pet-card">
-                <div class="booking-details-pet-main">
-                    <div class="booking-details-pet-avatar-wrap">
-                        <img x-show="details.petPhotoUrl" x-bind:src="details.petPhotoUrl" alt=""
-                            class="booking-details-pet-avatar">
-                        <span x-show="!details.petPhotoUrl" class="booking-details-pet-avatar is-fallback"
-                            aria-hidden="true" x-text="details.petInitial"></span>
-                    </div>
-                    <div>
-                        <div class="booking-details-pet-name-row">
-                            <img src="{{ asset('images/booking-details/paw.svg') }}" alt="" width="14" height="13">
-                            <strong x-text="details.petName"></strong>
+                        <div class="booking-details-client-copy">
+                            <div class="booking-details-client-name-row">
+                                <strong x-text="details.ownerName"></strong>
+                                <img src="{{ asset('images/booking-details/verified.svg') }}" alt="" width="15" height="15"
+                                    class="booking-details-verified">
+                            </div>
+                            <p x-show="isSpace" x-text="details.clientSince ? ('Client since ' + details.clientSince) : ''">
+                            </p>
+                            <p x-show="!isSpace" x-text="details.petSummary"></p>
                         </div>
-                        <p class="booking-details-pet-type" x-show="details.petTypeBreed" x-text="details.petTypeBreed">
-                        </p>
                     </div>
+                    <span class="booking-details-status" x-bind:class="details.statusClass"
+                        x-text="details.statusLabel"></span>
                 </div>
-                <div class="booking-details-pet-meta">
-                    <div class="booking-details-pet-meta-row">
-                        <img src="{{ asset('images/booking-details/gender.svg') }}" alt="" width="11" height="15">
-                        <span x-text="details.petSex"></span>
+
+                <div class="booking-details-divider"></div>
+
+                <section class="booking-details-section">
+                    <h4>Booking</h4>
+                    <div class="booking-details-row">
+                        <span>Service</span>
+                        <strong x-text="details.serviceLabel"></strong>
                     </div>
-                    <div class="booking-details-pet-meta-row">
-                        <img src="{{ asset('images/booking-details/weight.svg') }}" alt="" width="14" height="14">
-                        <span x-text="details.petWeight"></span>
+                    <div class="booking-details-row">
+                        <span>Date</span>
+                        <strong x-text="details.dateLabel"></strong>
                     </div>
-                    <div class="booking-details-pet-meta-row" x-show="details.petNotes">
-                        <img src="{{ asset('images/booking-details/note.svg') }}" alt="" width="14" height="14">
-                        <span x-text="details.petNotes"></span>
+                    <div class="booking-details-row">
+                        <span>Time</span>
+                        <strong x-text="details.timeLabel"></strong>
+                    </div>
+                </section>
+
+                <section class="booking-details-section">
+                    <h4>Payment</h4>
+                    <div class="booking-details-row">
+                        <span>Service fee</span>
+                        <strong x-text="'£' + details.serviceFee"></strong>
+                    </div>
+                    <div class="booking-details-row">
+                        <span>Add-ons</span>
+                        <strong x-text="'£' + details.addOns"></strong>
+                    </div>
+                    <div class="booking-details-row is-total">
+                        <span>Total</span>
+                        <strong x-text="'£' + details.total"></strong>
+                    </div>
+                </section>
+
+                <div class="booking-details-pet-card" x-show="!isSpace">
+                    <div class="booking-details-pet-main">
+                        <div class="booking-details-pet-avatar-wrap">
+                            <img x-show="details.petPhotoUrl" x-bind:src="details.petPhotoUrl" alt=""
+                                class="booking-details-pet-avatar">
+                            <span x-show="!details.petPhotoUrl" class="booking-details-pet-avatar is-fallback"
+                                aria-hidden="true" x-text="details.petInitial"></span>
+                        </div>
+                        <div>
+                            <div class="booking-details-pet-name-row">
+                                <img src="{{ asset('images/booking-details/paw.svg') }}" alt="" width="14" height="13">
+                                <strong x-text="details.petName"></strong>
+                            </div>
+                            <p class="booking-details-pet-type" x-show="details.petTypeBreed" x-text="details.petTypeBreed">
+                            </p>
+                        </div>
+                    </div>
+                    <div class="booking-details-pet-meta">
+                        <div class="booking-details-pet-meta-row">
+                            <img src="{{ asset('images/booking-details/gender.svg') }}" alt="" width="11" height="15">
+                            <span x-text="details.petSex"></span>
+                        </div>
+                        <div class="booking-details-pet-meta-row">
+                            <img src="{{ asset('images/booking-details/weight.svg') }}" alt="" width="14" height="14">
+                            <span x-text="details.petWeight"></span>
+                        </div>
+                        <div class="booking-details-pet-meta-row" x-show="details.petNotes">
+                            <img src="{{ asset('images/booking-details/note.svg') }}" alt="" width="14" height="14">
+                            <span x-text="details.petNotes"></span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </aside>
-</div>
+        </aside>
+    </div>
 @endteleport
 
 <style>
@@ -169,6 +175,8 @@
     }
 
     .booking-details-drawer-head {
+        position: relative;
+        z-index: 2;
         background: #fafafa;
         border-radius: 10px 0 0 0;
         min-height: 120px;
@@ -246,12 +254,30 @@
     }
 
     .booking-details-avatar-wrap {
+        position: relative;
         width: 50px;
         height: 50px;
         flex-shrink: 0;
     }
 
+    .booking-details-avatar-ring {
+        position: absolute;
+        inset: 0;
+        width: 50px;
+        height: 50px;
+        display: block;
+        pointer-events: none;
+        z-index: 0;
+        overflow: visible;
+    }
+
+    .booking-details-drawer-layer.is-space .booking-details-avatar-ring circle {
+        stroke: #FFA899;
+    }
+
     .booking-details-avatar {
+        position: relative;
+        z-index: 1;
         width: 45px;
         height: 45px;
         margin: 2.5px;
@@ -402,6 +428,83 @@
         gap: 1rem;
     }
 
+    .booking-details-drawer-layer.is-space .booking-details-pet-card {
+        display: none;
+    }
+
+    .booking-details-drawer-layer.is-space .booking-details-drawer-head {
+        min-height: 120px;
+        padding: 29px 20px 20px;
+    }
+
+    .booking-details-drawer-layer.is-space .booking-details-drawer-id {
+        margin: 0;
+    }
+
+    .booking-details-drawer-layer.is-space .booking-details-drawer-close {
+        padding: 0;
+        margin-top: 6px;
+    }
+
+    .booking-details-drawer-layer.is-space .booking-details-drawer-close img {
+        width: 16.5px;
+        height: 16.5px;
+        max-width: 16.5px;
+        max-height: 16.5px;
+    }
+
+    .booking-details-drawer-layer.is-space .booking-details-drawer-card {
+        position: relative;
+        z-index: 0;
+        margin: 0 19px 22px;
+        padding: 20px;
+    }
+
+    .booking-details-drawer-layer.is-space .booking-details-client {
+        gap: 20px;
+    }
+
+    .booking-details-drawer-layer.is-space .booking-details-client-name-row {
+        gap: 8px;
+    }
+
+    .booking-details-drawer-layer.is-space .booking-details-client-copy p {
+        margin: 5px 0 0;
+        color: #9C9790;
+        font-size: 16px;
+        font-weight: 400;
+    }
+
+    .booking-details-drawer-layer.is-space .booking-details-status {
+        margin-top: 2px;
+        padding: 4px 12px;
+    }
+
+    .booking-details-drawer-layer.is-space .booking-details-divider {
+        margin: 20px 0 40px;
+    }
+
+    .booking-details-drawer-layer.is-space .booking-details-section {
+        margin-bottom: 39px;
+    }
+
+    .booking-details-drawer-layer.is-space .booking-details-section:last-of-type {
+        margin-bottom: 0;
+    }
+
+    .booking-details-drawer-layer.is-space .booking-details-section h4 {
+        margin: 0 0 23px;
+    }
+
+    .booking-details-drawer-layer.is-space .booking-details-row {
+        padding: 10px 0 12px;
+    }
+
+    .booking-details-drawer-layer.is-space .booking-details-row:last-child,
+    .booking-details-drawer-layer.is-space .booking-details-row.is-total {
+        border-bottom: none;
+    }
+
     .booking-details-pet-main {
         display: flex;
         align-items: flex-start;
@@ -493,6 +596,13 @@
     .booking-details-verified {
         width: 15px;
         height: 15px;
+    }
+
+    .booking-details-avatar-ring {
+        width: 50px;
+        height: 50px;
+        max-width: 50px;
+        max-height: 50px;
     }
 
     .booking-details-pet-name-row img {

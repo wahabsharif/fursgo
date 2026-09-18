@@ -9,13 +9,11 @@
 
     $activeBgColor = '#FFC97A';
     $activeShadow = '0 0 10px 0 rgba(255, 216, 140, 0.70)';
-    $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
-    if (auth()->check()) {
-        $userType = auth()->user()->user_type;
-        if ($userType === 'space') {
-            $activeBgColor = '#FFA899';
-            $activeShadow = '0 0 10px 0 rgba(255, 168, 153, 0.70)';
-        }
+    $spacerUser = auth('groomer_spacer')->user() ?? auth()->user();
+    $isSpaceUser = strtolower((string) ($spacerUser?->user_type ?? '')) === 'space';
+    if ($isSpaceUser) {
+        $activeBgColor = '#FFA899';
+        $activeShadow = '0 0 10px 0 rgba(255, 168, 153, 0.70)';
     }
 
     $spacerId = auth('groomer_spacer')->id();
@@ -63,9 +61,9 @@
         if (except !== 'settings') this.settingsOpen = false;
     },
     shouldNavigate(section, currentSection) {
-        const onSection = section === 'availability'
-            ? currentSection === 'availability' || currentSection === 'manage-availability'
-            : currentSection === section;
+        const onSection = section === 'availability' ?
+            currentSection === 'availability' || currentSection === 'manage-availability' :
+            currentSection === section;
         if (onSection) {
             this[section + 'Open'] = !this[section + 'Open'];
             return false;
@@ -96,11 +94,9 @@
     <style>
         :root {
             --sidebar-active-bg:
-                {{ $activeBgColor }}
-            ;
+                {{ $activeBgColor }};
             --sidebar-active-shadow:
-                {{ $activeShadow }}
-            ;
+                {{ $activeShadow }};
         }
     </style>
 
@@ -117,7 +113,7 @@
     </button>
 
     <!-- Horizontal Navigation (above content) -->
-    <aside class="aside">
+    <aside class="aside{{ $isSpaceUser ? ' is-space' : '' }}">
         <ul class="nav-list">
             <li class="nav-section-label" aria-hidden="true">Overview</li>
 
@@ -501,7 +497,6 @@
             color: #5a3d2b;
         }
 
-
         .nav-list {
             list-style: none;
             margin: 0;
@@ -716,8 +711,8 @@
         }
 
         .nav-link svg {
-            width: 12px;
-            height: 12px;
+            width: 15px;
+            height: 15px;
             flex-shrink: 0;
         }
 
@@ -783,8 +778,9 @@
             color: #FFF;
             font-family: Lato;
             font-size: 14px;
+            font-style: normal;
             font-weight: 600;
-            line-height: 1;
+            line-height: normal;
             flex-shrink: 0;
         }
 
@@ -794,6 +790,22 @@
             color: #FFC97A;
         }
 
+        .aside.is-space .nav-badge {
+            background: #FFA899;
+            color: #FFF;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .aside.is-space .nav-link:hover .nav-badge,
+        .aside.is-space .nav-link.active .nav-badge {
+            background: #FFF;
+            color: #FFA899;
+        }
+
         /* Mobile Overlay */
         .mobile-overlay {
             position: fixed;
@@ -801,7 +813,6 @@
             background: rgba(0, 0, 0, 0.3);
             z-index: 35;
         }
-
 
         /* Scrollbar styling */
         .sidebar::-webkit-scrollbar {

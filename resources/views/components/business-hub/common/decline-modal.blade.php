@@ -4,22 +4,35 @@
 
 @if ($declineBooking)
     @php
-        $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+        $spacerUser = auth('groomer_spacer')->user() ?? auth()->user();
+        $isSpaceUser = strtolower((string) ($spacerUser?->user_type ?? '')) === 'space';
         $declinePetName = $declineBooking->pets->pluck('name')->filter()->first() ?? 'N/A';
-        $declineDateLabel = optional($declineBooking->date)->format('D j F') ?? 'N/A';
+        $declineDateLabel = optional($declineBooking->date)->format($isSpaceUser ? 'D j M' : 'D j F') ?? 'N/A';
         $declineClient = $declineBooking->petOwner->name ?? 'N/A';
-        $declineVisitType = str_replace('_', ' ', strtolower((string) ($declineBooking->visit_type ?? '')));
-        if ($declineVisitType === 'home' || $declineVisitType === 'home visit') {
-            $declineSpaceLabel = 'Home Visit';
-        } elseif ($declineVisitType === 'salon' || $declineVisitType === 'salon visit') {
-            $declineSpaceLabel = 'Salon Visit';
-        } else {
-            $declineSpaceLabel = ucfirst($declineVisitType ?: 'N/A');
-        }
+        $rawVisit = (string) ($declineBooking->visit_type ?? '');
+        $visitLabel = str_replace('_', ' ', strtolower(trim($rawVisit)));
+        $declineSpaceLabel = match (true) {
+            $visitLabel === '' => 'Garden/Shed',
+            str_contains($rawVisit, '/') => str_replace([' / ', ' /', '/ '], '/', $rawVisit),
+            $visitLabel === 'garden shed' || $visitLabel === 'garden/shed' => 'Garden/Shed',
+            $visitLabel === 'home' || $visitLabel === 'home visit' => 'Home Visit',
+            $visitLabel === 'salon' || $visitLabel === 'salon visit' => 'Salon',
+            $visitLabel === 'private room' => 'Private room',
+            $visitLabel === 'mobile station' => 'Mobile Station',
+            $visitLabel === 'other' => 'Other',
+            default => ucwords($visitLabel),
+        };
         $declineBookingIdLabel = 'FG-' . str_pad((string) $declineBooking->id, 5, '0', STR_PAD_LEFT);
         $declineAmountLabel = '£' . number_format((float) $declineBooking->amount, 2);
         $declineTimeRaw = (string) $declineBooking->time;
         $declineTimeLabel = $declineTimeRaw !== '' ? $declineTimeRaw : 'N/A';
+        $serviceLower = strtolower(trim((string) ($declineBooking->service ?? '')));
+        $spaceServiceLabel = match (true) {
+            (bool) preg_match('/full[\s_-]*day|fullday/', $serviceLower) => 'Full-Day',
+            (bool) preg_match('/half[\s_-]*day/', $serviceLower) => 'Half-Day',
+            str_contains($serviceLower, 'hour') => 'Hourly',
+            default => null,
+        };
 
         $formatDurationLabel = static function (int $durationMinutes): string {
             $hours = (int) floor($durationMinutes / 60);
@@ -66,7 +79,24 @@
                 }
             }
         }
-        $declineTimeLabelForSpace = $declineTimeLabel;
+        if ($spaceServiceLabel === null && str_contains($declineTimeRaw, '-')) {
+            $rangeParts = preg_split('/\s*-\s*/', $declineTimeRaw, 2);
+            preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[0] ?? ''), $startMatch);
+            preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[1] ?? ''), $endMatch);
+            if (!empty($startMatch[1]) && !empty($endMatch[1])) {
+                $diff = ((int) $endMatch[1]) * 60 + (int) $endMatch[2] - (((int) $startMatch[1]) * 60 + (int) $startMatch[2]);
+                if ($diff < 0) {
+                    $diff += 24 * 60;
+                }
+                $spaceServiceLabel = $diff >= 7 * 60 ? 'Full-Day' : ($diff >= 3 * 60 ? 'Half-Day' : 'Hourly');
+            }
+        }
+        if ($spaceServiceLabel === null) {
+            $plainService = trim((string) ($declineBooking->service ?? ''));
+            $spaceServiceLabel = $plainService !== '' ? $plainService : 'Hourly';
+        }
+
+        $declineTimeLabelForSpace = $spaceServiceLabel;
         if (str_contains($declineTimeRaw, '-')) {
             $parts = preg_split('/\s*-\s*/', $declineTimeRaw, 2);
             $start = $parts[0] ?? '';
@@ -74,10 +104,9 @@
             if (!empty($mStartOnly[1])) {
                 try {
                     $startDt = new DateTimeImmutable($mStartOnly[1]);
-                    $declineTimeLabelForSpace = 'Hourly (' . strtoupper($startDt->format('h:ia')) . ')';
+                    $declineTimeLabelForSpace = $spaceServiceLabel . ' (' . strtoupper($startDt->format('h:ia')) . ')';
                 } catch (Throwable $e) {
-                    $declineTimeLabelForSpace =
-                        'Hourly (' . strtoupper(str_replace(' ', '', trim((string) $start))) . ')';
+                    $declineTimeLabelForSpace = $spaceServiceLabel . ' (' . strtoupper(str_replace(' ', '', trim((string) $start))) . ')';
                 }
             }
         }
@@ -86,84 +115,84 @@
         $declineReasonDefault = \App\Support\BookingDeclineReasons::default();
     @endphp
     @teleport('body')
-    <div class="decline-modal-overlay" x-data="{ open: false, reason: @js($declineReasonDefault) }"
-        @keydown.escape.window="open ? open = false : $wire.closeDeclineModal()">
-        <div class="decline-modal-card" role="dialog" aria-modal="true" aria-labelledby="decline-modal-title">
-            <button type="button" class="decline-modal-close" wire:click="closeDeclineModal" aria-label="Close modal">
-                <img src="{{ asset('images/business-hub/icon-decline-close.svg') }}" alt="" width="14.5" height="14.5"
-                    class="decline-modal-close-icon">
-            </button>
+        <div class="decline-modal-overlay{{ $isSpaceUser ? ' is-space' : '' }}" x-data="{ open: false, reason: @js($declineReasonDefault) }"
+            @keydown.escape.window="open ? open = false : $wire.closeDeclineModal()">
+            <div class="decline-modal-card" role="dialog" aria-modal="true" aria-labelledby="decline-modal-title">
+                <button type="button" class="decline-modal-close" wire:click="closeDeclineModal" aria-label="Close modal">
+                    <img src="{{ asset('images/business-hub/icon-decline-close.svg') }}" alt="" width="14.5" height="14.5"
+                        class="decline-modal-close-icon">
+                </button>
 
-            <div class="decline-modal-icon" aria-hidden="true">
-                <img src="{{ asset('images/business-hub/icon-decline-calendar.svg') }}" alt="" width="53.496" height="50"
-                    class="decline-modal-icon-img">
-            </div>
-            <h3 class="decline-modal-title" id="decline-modal-title">
-                <span class="decline-modal-title-strong">Decline</span> Booking Request
-            </h3>
-            <p class="decline-modal-subtitle">Are you sure you want to decline this booking request?</p>
+                <div class="decline-modal-icon" aria-hidden="true">
+                    <img src="{{ asset('images/business-hub/icon-decline-calendar.svg') }}" alt="" width="53.496" height="50"
+                        class="decline-modal-icon-img">
+                </div>
+                <h3 class="decline-modal-title" id="decline-modal-title">
+                    <span class="decline-modal-title-strong">Decline</span> Booking Request
+                </h3>
+                <p class="decline-modal-subtitle">Are you sure you want to decline this booking request?</p>
 
-            <div class="decline-reason">
-                <p class="decline-reason-label">Reason (shared with the client)</p>
-                <div class="decline-reason-dropdown" @click.outside="open = false">
-                    <button type="button" class="decline-reason-trigger" @click="open = !open"
-                        :aria-expanded="open.toString()" aria-haspopup="listbox">
-                        <span x-text="reason"></span>
-                        <span class="decline-reason-chevron-wrap" aria-hidden="true">
-                            <img src="{{ asset('images/business-hub/icon-decline-chevron.svg') }}" alt="" width="7.12"
-                                height="7" class="decline-reason-chevron">
+                <div class="decline-reason">
+                    <p class="decline-reason-label">Reason (shared with the client)</p>
+                    <div class="decline-reason-dropdown" @click.outside="open = false">
+                        <button type="button" class="decline-reason-trigger" @click="open = !open"
+                            :aria-expanded="open.toString()" aria-haspopup="listbox">
+                            <span x-text="reason"></span>
+                            <span class="decline-reason-chevron-wrap" aria-hidden="true">
+                                <img src="{{ asset('images/business-hub/icon-decline-chevron.svg') }}" alt="" width="7.12"
+                                    height="7" class="decline-reason-chevron">
+                            </span>
+                        </button>
+                        <div class="decline-reason-menu" x-cloak x-show="open" role="listbox"
+                            x-transition.opacity.duration.100ms>
+                            @foreach ($declineReasonOptions as $option)
+                                <button type="button" class="decline-reason-option" role="option"
+                                    @click="reason = @js($option); open = false">{{ $option }}</button>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                <div class="decline-modal-details">
+                    <div class="decline-modal-detail-row"><span>Booking
+                            ID</span><strong>{{ $declineBookingIdLabel }}</strong></div>
+                    @if ($isSpaceUser)
+                        <div class="decline-modal-detail-row"><span>Client</span><strong>{{ $declineClient }}</strong></div>
+                        <div class="decline-modal-detail-row"><span>Space</span><strong>{{ $declineSpaceLabel }}</strong>
+                        </div>
+                        <div class="decline-modal-detail-row">
+                            <span>Time</span><strong>{{ $declineTimeLabelForSpace }}</strong>
+                        </div>
+                        <div class="decline-modal-detail-row"><span>Date</span><strong>{{ $declineDateLabel }}</strong>
+                        </div>
+                    @else
+                        <div class="decline-modal-detail-row"><span>Pet</span><strong>{{ $declinePetName }}</strong></div>
+                        <div class="decline-modal-detail-row">
+                            <span>Service</span><strong>{{ $declineBooking->service }}</strong>
+                        </div>
+                        <div class="decline-modal-detail-row"><span>Date</span><strong>{{ $declineDateLabel }}</strong>
+                        </div>
+                        <div class="decline-modal-detail-row"><span>Time</span><strong>{{ $declineTimeLabel }}</strong>
+                        </div>
+                        <div class="decline-modal-detail-row"><span>Client</span><strong>{{ $declineClient }}</strong></div>
+                    @endif
+                    <div class="decline-modal-detail-row decline-modal-detail-payment">
+                        <span>Payment</span><strong>{{ $declineAmountLabel }}</strong>
+                    </div>
+                </div>
+
+                <div class="decline-modal-actions">
+                    <button type="button" class="decline-cancel-btn" wire:click="closeDeclineModal">Keep booking</button>
+                    <button type="button" class="decline-confirm-btn" @click="$wire.confirmDeclineBooking(reason)"
+                        wire:loading.attr="disabled" wire:target="confirmDeclineBooking">
+                        <span wire:loading.remove wire:target="confirmDeclineBooking">Decline Booking</span>
+                        <span class="decline-btn-loading" wire:loading.inline-flex wire:target="confirmDeclineBooking">
+                            <span class="decline-btn-spinner" aria-hidden="true"></span>
                         </span>
                     </button>
-                    <div class="decline-reason-menu" x-cloak x-show="open" role="listbox"
-                        x-transition.opacity.duration.100ms>
-                        @foreach ($declineReasonOptions as $option)
-                            <button type="button" class="decline-reason-option" role="option"
-                                @click="reason = @js($option); open = false">{{ $option }}</button>
-                        @endforeach
-                    </div>
                 </div>
-            </div>
-
-            <div class="decline-modal-details">
-                <div class="decline-modal-detail-row"><span>Booking
-                        ID</span><strong>{{ $declineBookingIdLabel }}</strong></div>
-                @if ($isSpaceUser)
-                    <div class="decline-modal-detail-row"><span>Client</span><strong>{{ $declineClient }}</strong></div>
-                    <div class="decline-modal-detail-row"><span>Space</span><strong>{{ $declineSpaceLabel }}</strong>
-                    </div>
-                    <div class="decline-modal-detail-row">
-                        <span>Time</span><strong>{{ $declineTimeLabelForSpace }}</strong>
-                    </div>
-                    <div class="decline-modal-detail-row"><span>Date</span><strong>{{ $declineDateLabel }}</strong>
-                    </div>
-                @else
-                    <div class="decline-modal-detail-row"><span>Pet</span><strong>{{ $declinePetName }}</strong></div>
-                    <div class="decline-modal-detail-row">
-                        <span>Service</span><strong>{{ $declineBooking->service }}</strong>
-                    </div>
-                    <div class="decline-modal-detail-row"><span>Date</span><strong>{{ $declineDateLabel }}</strong>
-                    </div>
-                    <div class="decline-modal-detail-row"><span>Time</span><strong>{{ $declineTimeLabel }}</strong>
-                    </div>
-                    <div class="decline-modal-detail-row"><span>Client</span><strong>{{ $declineClient }}</strong></div>
-                @endif
-                <div class="decline-modal-detail-row decline-modal-detail-payment">
-                    <span>Payment</span><strong>{{ $declineAmountLabel }}</strong>
-                </div>
-            </div>
-
-            <div class="decline-modal-actions">
-                <button type="button" class="decline-cancel-btn" wire:click="closeDeclineModal">Keep booking</button>
-                <button type="button" class="decline-confirm-btn" @click="$wire.confirmDeclineBooking(reason)"
-                    wire:loading.attr="disabled" wire:target="confirmDeclineBooking">
-                    <span wire:loading.remove wire:target="confirmDeclineBooking">Decline Booking</span>
-                    <span class="decline-btn-loading" wire:loading.inline-flex wire:target="confirmDeclineBooking">
-                        <span class="decline-btn-spinner" aria-hidden="true"></span>
-                    </span>
-                </button>
             </div>
         </div>
-    </div>
     @endteleport
 @endif
 
@@ -487,6 +516,14 @@
         to {
             transform: rotate(360deg);
         }
+    }
+
+    .decline-modal-overlay.is-space .decline-modal-detail-payment {
+        margin-top: 32px;
+    }
+
+    .decline-modal-overlay.is-space .decline-modal-detail-payment strong {
+        font-weight: 400;
     }
 
     @media (max-width: 560px) {
