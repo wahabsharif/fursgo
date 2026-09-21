@@ -4107,10 +4107,17 @@ body.admin-co-modal-lock {
     margin-top: 8px;
 }
 
-.admin-bp-insurance.is-active {
+.admin-bp-insurance.is-registered {
+    border-radius: 96px;
+    border: 1px solid #a7c569;
+    background: #fafbf6;
     color: #a7c569;
-    border-color: #a7c569;
-    background: rgba(167, 197, 105, 0.12);
+    text-align: center;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
 }
 
 .admin-bp-insurance.is-freelance {
