@@ -4,61 +4,12 @@
 $firstName = explode(' ', trim($profile['name'] ?? ''))[0] ?: ($profile['name'] ?? 'Provider');
 $providerEmail = $profile['email'] ?? '';
 $memberSince = collect($profile['details'] ?? [])->firstWhere('label', 'Member since')['value'] ?? '';
+$isDual = ! empty($profile['dual']);
+$groomerPack = $profile['groomer'] ?? null;
+$spacePack = $profile['space'] ?? null;
 @endphp
 
-<aside
-    class="admin-co-sidebar"
-    x-data="{
-        resetPasswordOpen: false,
-        suspendOpen: false,
-        suspendReason: '',
-        suspendDuration: 'indefinite',
-        suspendNotes: '',
-        openSuspendReason: false,
-        openSuspendDuration: false,
-        flagOpen: false,
-        flagReason: '',
-        flagNote: '',
-        flagBy: 'Michelle M (me)',
-        openFlagReason: false,
-        openFlagBy: false,
-        deleteOpen: false,
-        deleteReason: '',
-        deleteGdprRef: '',
-        deleteConfirm: '',
-        openDeleteReason: false,
-        deleteReady: false,
-    }"
-    x-init="
-        const syncModalLock = () => {
-            const open = resetPasswordOpen || suspendOpen || flagOpen || deleteOpen;
-            if (open) {
-                if (!document.body.classList.contains('admin-co-modal-lock')) {
-                    document.body.dataset.adminCoScrollY = String(window.scrollY);
-                    document.body.style.top = '-' + window.scrollY + 'px';
-                    document.body.classList.add('admin-co-modal-lock');
-                }
-            } else if (document.body.classList.contains('admin-co-modal-lock')) {
-                const y = parseInt(document.body.dataset.adminCoScrollY || '0', 10);
-                document.body.classList.remove('admin-co-modal-lock');
-                document.body.style.top = '';
-                delete document.body.dataset.adminCoScrollY;
-                window.scrollTo(0, y);
-            }
-        };
-        const syncDeleteReady = () => {
-            deleteReady = !!deleteReason
-                && deleteGdprRef.trim() !== ''
-                && deleteConfirm.trim() === 'DELETE';
-        };
-        $watch('resetPasswordOpen', () => $nextTick(() => syncModalLock()));
-        $watch('suspendOpen', () => $nextTick(() => syncModalLock()));
-        $watch('flagOpen', () => $nextTick(() => syncModalLock()));
-        $watch('deleteOpen', () => $nextTick(() => syncModalLock()));
-        $watch('deleteReason', () => syncDeleteReady());
-        $watch('deleteGdprRef', () => syncDeleteReady());
-        $watch('deleteConfirm', () => syncDeleteReady());
-    ">
+<aside class="admin-co-sidebar">
     <div class="admin-co-profile-card">
         <div class="admin-co-profile-card-top">
             @if (($profile['flagged'] ?? false))
@@ -80,6 +31,35 @@ $memberSince = collect($profile['details'] ?? [])->firstWhere('label', 'Member s
         </div>
 
         <div class="admin-co-profile-identity">
+            @if ($isDual && $groomerPack && $spacePack)
+            <div class="admin-co-avatar-wrap" :class="{ 'is-space': viewAs === 'space' }">
+                <img
+                    class="admin-co-avatar"
+                    width="96"
+                    height="96"
+                    :src="viewAs === 'groomer' ? @js($groomerPack['avatar']) : @js($spacePack['avatar'])"
+                    :alt="viewAs === 'groomer' ? @js($groomerPack['name']) : @js($spacePack['name'])"
+                >
+            </div>
+            <h2
+                class="admin-co-name"
+                x-text="viewAs === 'groomer' ? @js($groomerPack['name']) : @js($spacePack['name'])"
+            ></h2>
+
+            <div class="admin-bp-badge-row">
+                <span class="admin-po-status is-{{ $profile['status_class'] ?? $profile['status'] }}">{{ $profile['status_label'] }}</span>
+                <span
+                    class="admin-po-status admin-bp-type"
+                    :class="viewAs === 'groomer' ? 'is-groomer' : 'is-space'"
+                    x-text="viewAs === 'groomer' ? @js($groomerPack['type_label']) : @js($spacePack['type_label'])"
+                ></span>
+                <span
+                    class="admin-po-status admin-bp-insurance"
+                    :class="viewAs === 'groomer' ? @js('is-' . ($groomerPack['insurance_class'] ?? 'freelance')) : @js('is-' . ($spacePack['insurance_class'] ?? 'registered'))"
+                    x-text="viewAs === 'groomer' ? @js($groomerPack['insurance_badge']) : @js($spacePack['insurance_badge'])"
+                ></span>
+            </div>
+            @else
             <div class="admin-co-avatar-wrap @if (($profile['type'] ?? '') === 'space') is-space @endif">
                 <img src="{{ $profile['avatar'] }}" alt="{{ $profile['name'] }}" class="admin-co-avatar" width="96" height="96">
             </div>
@@ -90,6 +70,7 @@ $memberSince = collect($profile['details'] ?? [])->firstWhere('label', 'Member s
                 <span class="admin-po-status admin-bp-type is-{{ $profile['type'] }}">{{ $profile['type_label'] }}</span>
                 <span class="admin-po-status admin-bp-insurance is-{{ $profile['insurance_class'] ?? 'active' }}">{{ $profile['insurance_badge'] }}</span>
             </div>
+            @endif
 
             <div class="admin-co-quick-actions">
                 <button type="button" class="admin-co-quick-btn">
@@ -124,6 +105,31 @@ $memberSince = collect($profile['details'] ?? [])->firstWhere('label', 'Member s
         </p>
         @endif
     </div>
+
+    @if ($isDual && $groomerPack && $spacePack)
+    <div class="admin-bp-viewing-as">
+        <p class="admin-bp-viewing-label">VIEWING AS</p>
+        <div class="admin-bp-viewing-toggle" role="tablist" aria-label="View as role">
+            <button
+                type="button"
+                class="admin-bp-viewing-btn"
+                role="tab"
+                :class="{ 'is-active': viewAs === 'groomer' }"
+                :aria-selected="viewAs === 'groomer'"
+                @click="viewAs = 'groomer'"
+            >Groomer</button>
+            <button
+                type="button"
+                class="admin-bp-viewing-btn is-space"
+                role="tab"
+                :class="{ 'is-active': viewAs === 'space' }"
+                :aria-selected="viewAs === 'space'"
+                @click="viewAs = 'space'"
+            >Space Host</button>
+        </div>
+        <p class="admin-bp-viewing-caption">Switch between this users Groomer &amp; Space profiles</p>
+    </div>
+    @endif
 
     <div class="admin-co-stats">
         <div class="admin-co-stat">

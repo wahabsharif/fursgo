@@ -92,6 +92,7 @@ $verificationStatusClass = [
         this.selectedProviderId = id;
         this.detailTab = 'overview';
         this.view = 'detail';
+        this.$dispatch('admin-provider-opened', { id });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     closeProvider() {

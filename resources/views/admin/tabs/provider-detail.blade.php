@@ -1,28 +1,83 @@
 @php
-$fallbackAvatar = asset('images/groomer-profile.png');
+$fallbackAvatar = asset('images/profile_image.png');
 $spaceAvatar = asset('images/space-profile.png');
 
+$groomerServices = [
+    ['name' => 'Full Groom', 'meta' => '60 - 90 mins', 'price' => '£45'],
+    ['name' => 'Bath & Tidy', 'meta' => '30 - 60 min', 'price' => '£30'],
+    ['name' => 'Nail Trim', 'meta' => '15 - 20 min', 'price' => '£10'],
+    ['name' => 'Pet Spa', 'meta' => '60 min', 'price' => '£50'],
+    ['name' => 'Mobile Grooming', 'meta' => "At customer's location", 'price' => '£35'],
+];
+
+$spaceServices = [
+    ['name' => 'Hourly', 'price' => '£25 / Hourly'],
+    ['name' => 'Half-day (4 hours)', 'price' => '£80 / Half-day'],
+    ['name' => 'Full day (8 hours)', 'price' => '£150 / Full-day'],
+];
+
+$sharedPetPreferences = [
+    ['label' => 'Pet types accepted', 'value' => 'Cats, Others +'],
+    ['label' => 'Pet size preferences', 'value' => 'Small 0-7 kg, Medium 8-18kg'],
+];
+
+$spaceDefaults = [
+    'location_types' => [],
+    'service_areas' => [
+        [
+            'name' => 'Southwark',
+            'address' => "22 Studio Way, London, SW4 6NR\nUnited Kingdom",
+            'availability' => 'Full Day · Half Day · Hourly',
+            'map' => asset('images/admin/provider/map-southwark.png'),
+            'location' => 'West London',
+            'accessibility' => 'Located near Victoria Embankment, with excellent public transport connections and free on-site parking available.',
+        ],
+        [
+            'name' => 'Camden',
+            'address' => "14 Regent's Canal Walk, London, NW1 8AN\nUnited Kingdom",
+            'availability' => 'Half Day · Hourly',
+            'map' => asset('images/admin/provider/map-southwark.png'),
+            'location' => 'North London',
+            'accessibility' => 'Step-free access from street level. Limited paid parking nearby.',
+        ],
+        [
+            'name' => 'Hackney',
+            'address' => "8 Mare Street Yard, London, E8 3RH\nUnited Kingdom",
+            'availability' => 'Full Day · Half Day',
+            'map' => asset('images/admin/provider/map-southwark.png'),
+            'location' => 'East London',
+            'accessibility' => 'Ground-floor space with wide doorway. Street parking only.',
+        ],
+    ],
+    'services' => $spaceServices,
+    'pet_preferences' => $sharedPetPreferences,
+];
+
+// Dual-role demo: Pawfect has both Groomer + Space Host profiles
 $pawfectProfile = [
     'id' => 'PRV-001',
-    'name' => 'Pawfect Grooming',
+    'dual' => true,
+    'default_view' => 'groomer',
+    'roles' => ['groomer', 'space'],
     'owner' => 'Sarah Smith',
     'status' => 'active',
     'status_class' => 'active',
     'status_label' => 'Active',
-    'type' => 'groomer',
-    'type_label' => 'Groomer',
-    'insurance_badge' => 'Freelance',
-    'insurance_class' => 'freelance',
     'flagged' => false,
     'verified' => true,
     'email' => 'contact@pawfectgrooming.co.uk',
     'phone' => '+44 7700 900456',
+    'type' => 'groomer',
+    'type_label' => 'Groomer',
+    'insurance_badge' => 'Freelance',
+    'insurance_class' => 'freelance',
     'avatar' => $fallbackAvatar,
+    'name' => 'Pawfect Grooming',
     'stats' => [
         'earned' => '£4,820',
         'bookings' => '248',
         'rating' => '4.3',
-        'reviews' => '20',
+        'reviews' => '94',
     ],
     'snapshot' => [
         ['title' => 'Total bookings', 'value' => '248', 'badge' => '+18', 'badge_class' => 'up', 'note' => 'more vs last month'],
@@ -41,17 +96,8 @@ $pawfectProfile = [
         ['label' => 'Last active', 'value' => 'Today'],
     ],
     'location_types' => ['Home studio', 'Salon', 'Home visits'],
-    'services' => [
-        ['name' => 'Full Groom', 'meta' => '60 - 90 mins', 'price' => '£45'],
-        ['name' => 'Bath & Tidy', 'meta' => '30 - 60 min', 'price' => '£30'],
-        ['name' => 'Nail Trim', 'meta' => '15 - 20 min', 'price' => '£10'],
-        ['name' => 'Pet Spa', 'meta' => '60 min', 'price' => '£50'],
-        ['name' => 'Mobile Grooming', 'meta' => "At customer's location", 'price' => '£35'],
-    ],
-    'pet_preferences' => [
-        ['label' => 'Pet types accepted', 'value' => 'Cats, Others +'],
-        ['label' => 'Pet size preferences', 'value' => 'Small 0-7 kg, Medium 8-18kg'],
-    ],
+    'services' => $groomerServices,
+    'pet_preferences' => $sharedPetPreferences,
     'bookings' => [
         ['id' => 'GS-0563-B12', 'service' => 'Full Groom', 'customer' => 'Jane Doe', 'user_no' => 'USR-01452', 'date' => '12 Aug 2025', 'amount' => '£55.00', 'status' => 'completed', 'status_label' => 'Completed'],
         ['id' => 'GS-0499-B03', 'service' => 'Nail Trim', 'customer' => 'Tom Harris', 'user_no' => 'USR-01488', 'date' => '28 Jul 2025', 'amount' => '£25.00', 'status' => 'disputed', 'status_label' => 'Disputed'],
@@ -84,45 +130,26 @@ $pawfectProfile = [
         ['type' => 'dispute', 'title' => 'Dispute raised on GS-0499-B03', 'time' => '28 Jul 2025 · 14:20'],
         ['type' => 'flag', 'title' => 'Profile updated — new service added', 'time' => '15 Jul 2025 · 16:45'],
     ],
-];
-
-$spaceDefaults = [
-    'location_types' => [],
-    'service_areas' => [
-        [
-            'name' => 'Southwark',
-            'address' => "22 Studio Way, London, SW4 6NR\nUnited Kingdom",
-            'availability' => 'Full Day · Half Day · Hourly',
-            'map' => asset('images/admin/provider/map-southwark.png'),
-            'location' => 'West London',
-            'accessibility' => 'Located near Victoria Embankment, with excellent public transport connections and free on-site parking available.',
-        ],
-        [
-            'name' => 'Camden',
-            'address' => "14 Regent's Canal Walk, London, NW1 8AN\nUnited Kingdom",
-            'availability' => 'Half Day · Hourly',
-            'map' => asset('images/admin/provider/map-southwark.png'),
-            'location' => 'North London',
-            'accessibility' => 'Step-free access from street level. Limited paid parking nearby.',
-        ],
-        [
-            'name' => 'Hackney',
-            'address' => "8 Mare Street Yard, London, E8 3RH\nUnited Kingdom",
-            'availability' => 'Full Day · Half Day',
-            'map' => asset('images/admin/provider/map-southwark.png'),
-            'location' => 'East London',
-            'accessibility' => 'Ground-floor space with wide doorway. Street parking only.',
-        ],
+    'groomer' => [
+        'name' => 'Pawfect Grooming',
+        'type' => 'groomer',
+        'type_label' => 'Groomer',
+        'avatar' => $fallbackAvatar,
+        'insurance_badge' => 'Freelance',
+        'insurance_class' => 'freelance',
+        'location_types' => ['Home studio', 'Salon', 'Home visits'],
+        'service_areas' => [],
+        'services' => $groomerServices,
+        'pet_preferences' => $sharedPetPreferences,
     ],
-    'services' => [
-        ['name' => 'Hourly', 'price' => '£25 / Hourly'],
-        ['name' => 'Half-day (4 hours)', 'price' => '£80 / Half-day'],
-        ['name' => 'Full day (8 hours)', 'price' => '£150 / Full-day'],
-    ],
-    'pet_preferences' => [
-        ['label' => 'Pet types accepted', 'value' => 'Cats, Others +'],
-        ['label' => 'Pet size preferences', 'value' => 'Small 0-7 kg, Medium 8-18kg'],
-    ],
+    'space' => array_merge($spaceDefaults, [
+        'name' => 'The Garden Grooming Spot',
+        'type' => 'space',
+        'type_label' => 'Space Host',
+        'avatar' => $spaceAvatar,
+        'insurance_badge' => 'Registered',
+        'insurance_class' => 'registered',
+    ]),
 ];
 
 $providerProfiles = [];
@@ -133,6 +160,11 @@ foreach ($providers as $provider) {
     }
 
     $merged = array_merge($pawfectProfile, [
+        'dual' => false,
+        'default_view' => $provider['type'],
+        'roles' => [$provider['type']],
+        'groomer' => null,
+        'space' => null,
         'id' => $provider['id'],
         'name' => $provider['business'],
         'owner' => $provider['owner'],
@@ -162,6 +194,9 @@ foreach ($providers as $provider) {
             ['label' => 'Business reg. number', 'value' => '—'],
             ['label' => 'Last active', 'value' => $provider['last']],
         ],
+        'location_types' => $provider['type'] === 'groomer' ? ['Home studio', 'Salon', 'Home visits'] : [],
+        'services' => $provider['type'] === 'space' ? $spaceServices : $groomerServices,
+        'pet_preferences' => $sharedPetPreferences,
     ]);
 
     if ($provider['type'] === 'space') {
@@ -196,7 +231,69 @@ foreach ($providers as $provider) {
     </button>
 
     @foreach ($providerProfiles as $profileId => $profile)
-    <div class="admin-co-layout" x-show="selectedProviderId === '{{ $profileId }}'" x-cloak>
+    @php
+        $isDual = ! empty($profile['dual']);
+        $defaultView = $profile['default_view'] ?? $profile['type'] ?? 'groomer';
+    @endphp
+    <div
+        class="admin-co-layout"
+        x-show="selectedProviderId === '{{ $profileId }}'"
+        x-cloak
+        @admin-provider-opened.window="if ($event.detail && $event.detail.id === '{{ $profileId }}') viewAs = @js($defaultView)"
+        x-data="{
+            viewAs: @js($defaultView),
+            dual: @js($isDual),
+            resetPasswordOpen: false,
+            suspendOpen: false,
+            suspendReason: '',
+            suspendDuration: 'indefinite',
+            suspendNotes: '',
+            openSuspendReason: false,
+            openSuspendDuration: false,
+            flagOpen: false,
+            flagReason: '',
+            flagNote: '',
+            flagBy: 'Michelle M (me)',
+            openFlagReason: false,
+            openFlagBy: false,
+            deleteOpen: false,
+            deleteReason: '',
+            deleteGdprRef: '',
+            deleteConfirm: '',
+            openDeleteReason: false,
+            deleteReady: false,
+        }"
+        x-init="
+            const syncModalLock = () => {
+                const open = resetPasswordOpen || suspendOpen || flagOpen || deleteOpen;
+                if (open) {
+                    if (!document.body.classList.contains('admin-co-modal-lock')) {
+                        document.body.dataset.adminCoScrollY = String(window.scrollY);
+                        document.body.style.top = '-' + window.scrollY + 'px';
+                        document.body.classList.add('admin-co-modal-lock');
+                    }
+                } else if (document.body.classList.contains('admin-co-modal-lock')) {
+                    const y = parseInt(document.body.dataset.adminCoScrollY || '0', 10);
+                    document.body.classList.remove('admin-co-modal-lock');
+                    document.body.style.top = '';
+                    delete document.body.dataset.adminCoScrollY;
+                    window.scrollTo(0, y);
+                }
+            };
+            const syncDeleteReady = () => {
+                deleteReady = !!deleteReason
+                    && deleteGdprRef.trim() !== ''
+                    && deleteConfirm.trim() === 'DELETE';
+            };
+            $watch('resetPasswordOpen', () => $nextTick(() => syncModalLock()));
+            $watch('suspendOpen', () => $nextTick(() => syncModalLock()));
+            $watch('flagOpen', () => $nextTick(() => syncModalLock()));
+            $watch('deleteOpen', () => $nextTick(() => syncModalLock()));
+            $watch('deleteReason', () => syncDeleteReady());
+            $watch('deleteGdprRef', () => syncDeleteReady());
+            $watch('deleteConfirm', () => syncDeleteReady());
+        "
+    >
         <x-admin.provider.profile-sidebar :profile="$profile" />
 
         <div class="admin-co-main">
