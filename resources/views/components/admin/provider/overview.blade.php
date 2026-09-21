@@ -1,15 +1,18 @@
 @props(['profile'])
 
 @php
+$isSpace = ($profile['type'] ?? '') === 'space';
 $snapshot = $profile['snapshot'] ?? [];
 $details = $profile['details'] ?? [];
 $locationTypes = $profile['location_types'] ?? [];
+$serviceAreas = $profile['service_areas'] ?? [];
 $services = $profile['services'] ?? [];
 $petPreferences = $profile['pet_preferences'] ?? [];
 $bookings = $profile['bookings'] ?? [];
 $payout = $profile['payout'] ?? [];
 $notes = $profile['notes'] ?? [];
 $activity = $profile['activity'] ?? [];
+$areaCount = count($serviceAreas);
 @endphp
 
 <div class="admin-co-overview">
@@ -75,7 +78,92 @@ $activity = $profile['activity'] ?? [];
         </dl>
     </section>
 
-    {{-- Location Types · Services · Pet preferences (one panel) --}}
+    @if ($isSpace)
+    {{-- Space: Location & Service Areas --}}
+    <section class="admin-card admin-co-panel">
+        <x-admin.customer.section-header title="Location & Service Areas ({{ $areaCount }} {{ Str::plural('area', $areaCount) }})">
+            <button type="button" class="admin-co-link-btn" @click="detailTab = 'profile'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+                    <path d="M10.0284 0.00548691L10.0229 6.35299L9.19447 6.33653C9.02623 6.33653 8.90736 6.28715 8.83787 6.1884C8.76838 6.08234 8.7318 5.95067 8.72814 5.7934L8.73912 3.11615C8.73912 2.92596 8.7446 2.74857 8.75558 2.58399C8.76289 2.41575 8.77569 2.2603 8.79398 2.11766C8.60379 2.35906 8.39897 2.60776 8.17953 2.86378C7.96008 3.11249 7.72966 3.35754 7.48827 3.59893L1.29164 9.79556C0.996218 10.091 0.517251 10.091 0.221833 9.79556C-0.073585 9.50015 -0.0735852 9.02118 0.221833 8.72576L6.41847 2.52913C6.65986 2.28774 6.90856 2.05732 7.16459 1.83787C7.41695 1.61476 7.66566 1.40995 7.9107 1.22342C7.76441 1.24536 7.60896 1.26182 7.44438 1.27279C7.27614 1.28011 7.09692 1.28377 6.90673 1.28376L4.20754 1.29474C4.05393 1.29474 3.92409 1.25999 3.81802 1.1905C3.71561 1.11735 3.66441 0.996656 3.66441 0.828412L3.64795 3.3782e-07L10.0284 0.00548691Z" fill="#3B3731" />
+                </svg>
+                View on Map
+            </button>
+        </x-admin.customer.section-header>
+
+        <div class="admin-bp-areas-list">
+            @foreach ($serviceAreas as $area)
+            <div class="admin-bp-area-block">
+                <div class="admin-bp-area-card">
+                    <div class="admin-bp-area-info">
+                        <p class="admin-bp-area-name">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="15" viewBox="0 0 11 15" fill="none">
+                                <path d="M5.5 7.125C4.97904 7.125 4.47942 6.92746 4.11104 6.57583C3.74267 6.22419 3.53571 5.74728 3.53571 5.25C3.53571 4.75272 3.74267 4.27581 4.11104 3.92417C4.47942 3.57254 4.97904 3.375 5.5 3.375C6.02096 3.375 6.52058 3.57254 6.88896 3.92417C7.25733 4.27581 7.46429 4.75272 7.46429 5.25C7.46429 5.49623 7.41348 5.74005 7.31476 5.96753C7.21605 6.19502 7.07136 6.40172 6.88896 6.57583C6.70656 6.74994 6.49002 6.88805 6.2517 6.98227C6.01338 7.0765 5.75795 7.125 5.5 7.125ZM5.5 0C4.04131 0 2.64236 0.553123 1.61091 1.53769C0.579463 2.52226 0 3.85761 0 5.25C0 9.1875 5.5 15 5.5 15C5.5 15 11 9.1875 11 5.25C11 3.85761 10.4205 2.52226 9.38909 1.53769C8.35764 0.553123 6.95869 0 5.5 0Z" fill="#FFC97A" />
+                            </svg>
+                            {{ $area['name'] }}
+                        </p>
+                        <p class="admin-bp-area-address">{!! nl2br(e($area['address'])) !!}</p>
+                        @if (! empty($area['availability']))
+                        <p class="admin-bp-area-availability">{{ $area['availability'] }}</p>
+                        @endif
+                    </div>
+                    <div class="admin-bp-area-map" aria-hidden="true">
+                        <img src="{{ $area['map'] ?? asset('images/admin/provider/map-southwark.png') }}" alt="">
+                    </div>
+                </div>
+                <dl class="admin-co-details admin-bp-area-details">
+                    @if (! empty($area['location']))
+                    <div class="admin-co-details-row">
+                        <dt>Location</dt>
+                        <dd>{{ $area['location'] }}</dd>
+                    </div>
+                    @endif
+                    @if (! empty($area['accessibility']))
+                    <div class="admin-co-details-row">
+                        <dt>Accessibility</dt>
+                        <dd>{{ $area['accessibility'] }}</dd>
+                    </div>
+                    @endif
+                </dl>
+            </div>
+            @endforeach
+        </div>
+    </section>
+
+    {{-- Space: Services Offered + Pet preferences --}}
+    <section class="admin-card admin-co-panel admin-bp-offerings-panel">
+        <div class="admin-bp-offerings-block">
+            <x-admin.customer.section-header title="Services Offered">
+                <button type="button" class="admin-co-link-btn" @click="detailTab = 'profile'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+                        <path d="M10.0284 0.00548691L10.0229 6.35299L9.19447 6.33653C9.02623 6.33653 8.90736 6.28715 8.83787 6.1884C8.76838 6.08234 8.7318 5.95067 8.72814 5.7934L8.73912 3.11615C8.73912 2.92596 8.7446 2.74857 8.75558 2.58399C8.76289 2.41575 8.77569 2.2603 8.79398 2.11766C8.60379 2.35906 8.39897 2.60776 8.17953 2.86378C7.96008 3.11249 7.72966 3.35754 7.48827 3.59893L1.29164 9.79556C0.996218 10.091 0.517251 10.091 0.221833 9.79556C-0.073585 9.50015 -0.0735852 9.02118 0.221833 8.72576L6.41847 2.52913C6.65986 2.28774 6.90856 2.05732 7.16459 1.83787C7.41695 1.61476 7.66566 1.40995 7.9107 1.22342C7.76441 1.24536 7.60896 1.26182 7.44438 1.27279C7.27614 1.28011 7.09692 1.28377 6.90673 1.28376L4.20754 1.29474C4.05393 1.29474 3.92409 1.25999 3.81802 1.1905C3.71561 1.11735 3.66441 0.996656 3.66441 0.828412L3.64795 3.3782e-07L10.0284 0.00548691Z" fill="#3B3731" />
+                    </svg>
+                    View
+                </button>
+            </x-admin.customer.section-header>
+            <ul class="admin-co-status-list">
+                @foreach ($services as $service)
+                <li class="admin-co-status-row">
+                    <span class="admin-bp-service-label">{{ $service['name'] }}</span>
+                    <span class="admin-bp-service-price">{{ $service['price'] }}</span>
+                </li>
+                @endforeach
+            </ul>
+        </div>
+
+        <div class="admin-bp-offerings-block">
+            <x-admin.customer.section-header title="Pet preferences" />
+            <dl class="admin-co-details">
+                @foreach ($petPreferences as $row)
+                <div class="admin-co-details-row">
+                    <dt>{{ $row['label'] }}</dt>
+                    <dd>{{ $row['value'] }}</dd>
+                </div>
+                @endforeach
+            </dl>
+        </div>
+    </section>
+    @else
+    {{-- Groomer: Location Types · Services · Pet preferences --}}
     <section class="admin-card admin-co-panel admin-bp-offerings-panel">
         <div class="admin-bp-offerings-block">
             <x-admin.customer.section-header title="Location Types">
@@ -123,6 +211,7 @@ $activity = $profile['activity'] ?? [];
             </dl>
         </div>
     </section>
+    @endif
 
     {{-- Recent Bookings --}}
     <section class="admin-card admin-co-panel">
@@ -184,9 +273,9 @@ $activity = $profile['activity'] ?? [];
             @foreach ($payout as $row)
             <div class="admin-co-details-row">
                 <dt>{{ $row['label'] }}</dt>
-                <dd>
+                <dd @class(['is-muted' => ! empty($row['muted'])])>
                     @if (! empty($row['status']))
-                    <span class="admin-po-status is-{{ $row['status'] }}">{{ $row['value'] }}</span>
+                    <span class="admin-po-status is-{{ $row['status'] }} has-dot">{{ $row['value'] }}</span>
                     @else
                     {{ $row['value'] }}
                     @endif
@@ -205,8 +294,7 @@ $activity = $profile['activity'] ?? [];
             newNote: '',
             editIndex: -1,
             notes: @js($notes),
-        }"
-    >
+        }">
         <div x-show="!editingNotes">
             <x-admin.customer.section-header title="Admin Notes">
                 <button type="button" class="admin-co-link-btn" @click="editingNotes = true; newNote = ''; editIndex = -1">
@@ -249,8 +337,7 @@ $activity = $profile['activity'] ?? [];
                     rows="4"
                     placeholder="Write an internal note about this provider - only visible to the admin team members."
                     x-model="newNote"
-                    x-ref="noteInput"
-                ></textarea>
+                    x-ref="noteInput"></textarea>
                 <div class="admin-co-note-compose-actions">
                     <button
                         type="button"
@@ -262,8 +349,7 @@ $activity = $profile['activity'] ?? [];
                                     : (notes.unshift({ text: newNote.trim(), author: 'Admin', time: 'Just now', tag: 'Internal only' }), newNote = '')
                             )
                         "
-                        x-text="editIndex >= 0 ? 'Update note' : 'Add note'"
-                    ></button>
+                        x-text="editIndex >= 0 ? 'Update note' : 'Add note'"></button>
                 </div>
             </div>
         </div>

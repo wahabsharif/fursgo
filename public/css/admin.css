@@ -1528,6 +1528,21 @@
     background: #fbfff4;
 }
 
+.admin-po-status.has-dot::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+
+.admin-co-details-row dd.is-muted {
+    color: #9c9a97;
+}
+
 .admin-po-status.is-suspended {
     color: #ffb13f;
     border-color: #ffb13f;
@@ -2020,6 +2035,10 @@
     flex-shrink: 0;
 }
 
+.admin-co-avatar-wrap.is-space {
+    border: 3px solid #8cbcdd;
+}
+
 .admin-co-avatar {
     width: 100%;
     height: 100%;
@@ -2382,7 +2401,7 @@
     color: #3b3731;
     font-family: Lato, sans-serif;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 400;
 }
 
 .admin-co-panel.is-editing {
@@ -4161,6 +4180,116 @@ body.admin-co-modal-lock {
     color: #3b3731;
     font-size: 14px;
     white-space: nowrap;
+}
+
+/* Space host — Location & Service Areas */
+.admin-bp-areas-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.admin-bp-area-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.admin-bp-area-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 60%);
+    gap: 0;
+    align-items: stretch;
+    min-height: 140px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.admin-bp-area-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 16px 18px;
+}
+
+.admin-bp-area-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.admin-bp-area-name svg {
+    flex-shrink: 0;
+    color: #ff7f3c;
+}
+
+.admin-bp-area-address {
+    margin: 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+.admin-bp-area-availability {
+    margin: 4px 0 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.admin-bp-area-map {
+    position: relative;
+    min-height: 140px;
+    height: 100%;
+    background: #f0efed;
+    overflow: hidden;
+}
+
+.admin-bp-area-map img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    filter: grayscale(1) contrast(0.92) brightness(1.06);
+}
+
+.admin-bp-area-details {
+    margin: 0;
+}
+
+.admin-bp-area-details .admin-co-details-row {
+    border-bottom-color: rgba(59, 55, 49, 0.08);
+}
+
+.admin-bp-area-details .admin-co-details-row:first-child {
+    padding-top: 14px;
+}
+
+@media (max-width: 767.98px) {
+    .admin-bp-area-card {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-bp-area-map {
+        min-height: 140px;
+        height: 140px;
+    }
 }
 
 @media (max-width: 1199.98px) {

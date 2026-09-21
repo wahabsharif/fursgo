@@ -80,7 +80,7 @@ $memberSince = collect($profile['details'] ?? [])->firstWhere('label', 'Member s
         </div>
 
         <div class="admin-co-profile-identity">
-            <div class="admin-co-avatar-wrap">
+            <div class="admin-co-avatar-wrap @if (($profile['type'] ?? '') === 'space') is-space @endif">
                 <img src="{{ $profile['avatar'] }}" alt="{{ $profile['name'] }}" class="admin-co-avatar" width="96" height="96">
             </div>
             <h2 class="admin-co-name">{{ $profile['name'] }}</h2>

@@ -1,5 +1,6 @@
 @php
 $fallbackAvatar = asset('images/groomer-profile.png');
+$spaceAvatar = asset('images/space-profile.png');
 
 $pawfectProfile = [
     'id' => 'PRV-001',
@@ -58,10 +59,10 @@ $pawfectProfile = [
         ['id' => 'GS-0388-B21', 'service' => 'Puppy Intro', 'customer' => 'Mia Brooks', 'user_no' => 'USR-01622', 'date' => '02 Jul 2025', 'amount' => '£40.00', 'status' => 'refunded', 'status_label' => 'Refunded'],
     ],
     'payout' => [
-        ['label' => 'Last payout', 'value' => '£580.00 · 03 Mar 2025'],
+        ['label' => 'Last payout', 'value' => '03 Jun 2025 · £890'],
         ['label' => 'Payout status', 'value' => 'Active', 'status' => 'active'],
-        ['label' => 'Payout hold', 'value' => 'None'],
-        ['label' => 'Bank account', 'value' => '•••• 4521'],
+        ['label' => 'Payout hold', 'value' => 'None', 'muted' => true],
+        ['label' => 'Bank account', 'value' => '**** **** **** 4821'],
     ],
     'notes' => [
         [
@@ -85,6 +86,45 @@ $pawfectProfile = [
     ],
 ];
 
+$spaceDefaults = [
+    'location_types' => [],
+    'service_areas' => [
+        [
+            'name' => 'Southwark',
+            'address' => "22 Studio Way, London, SW4 6NR\nUnited Kingdom",
+            'availability' => 'Full Day · Half Day · Hourly',
+            'map' => asset('images/admin/provider/map-southwark.png'),
+            'location' => 'West London',
+            'accessibility' => 'Located near Victoria Embankment, with excellent public transport connections and free on-site parking available.',
+        ],
+        [
+            'name' => 'Camden',
+            'address' => "14 Regent's Canal Walk, London, NW1 8AN\nUnited Kingdom",
+            'availability' => 'Half Day · Hourly',
+            'map' => asset('images/admin/provider/map-southwark.png'),
+            'location' => 'North London',
+            'accessibility' => 'Step-free access from street level. Limited paid parking nearby.',
+        ],
+        [
+            'name' => 'Hackney',
+            'address' => "8 Mare Street Yard, London, E8 3RH\nUnited Kingdom",
+            'availability' => 'Full Day · Half Day',
+            'map' => asset('images/admin/provider/map-southwark.png'),
+            'location' => 'East London',
+            'accessibility' => 'Ground-floor space with wide doorway. Street parking only.',
+        ],
+    ],
+    'services' => [
+        ['name' => 'Hourly', 'price' => '£25 / Hourly'],
+        ['name' => 'Half-day (4 hours)', 'price' => '£80 / Half-day'],
+        ['name' => 'Full day (8 hours)', 'price' => '£150 / Full-day'],
+    ],
+    'pet_preferences' => [
+        ['label' => 'Pet types accepted', 'value' => 'Cats, Others +'],
+        ['label' => 'Pet size preferences', 'value' => 'Small 0-7 kg, Medium 8-18kg'],
+    ],
+];
+
 $providerProfiles = [];
 foreach ($providers as $provider) {
     if ($provider['id'] === 'PRV-001') {
@@ -92,7 +132,7 @@ foreach ($providers as $provider) {
         continue;
     }
 
-    $providerProfiles[$provider['id']] = array_merge($pawfectProfile, [
+    $merged = array_merge($pawfectProfile, [
         'id' => $provider['id'],
         'name' => $provider['business'],
         'owner' => $provider['owner'],
@@ -107,7 +147,7 @@ foreach ($providers as $provider) {
         'verified' => $provider['verified'],
         'email' => $provider['email'],
         'phone' => '+44 7000 000000',
-        'avatar' => $fallbackAvatar,
+        'avatar' => $provider['type'] === 'space' ? $spaceAvatar : $fallbackAvatar,
         'stats' => [
             'earned' => $provider['earnings'],
             'bookings' => (string) $provider['bookings'],
@@ -123,6 +163,12 @@ foreach ($providers as $provider) {
             ['label' => 'Last active', 'value' => $provider['last']],
         ],
     ]);
+
+    if ($provider['type'] === 'space') {
+        $merged = array_merge($merged, $spaceDefaults);
+    }
+
+    $providerProfiles[$provider['id']] = $merged;
 }
 @endphp
 
