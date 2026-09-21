@@ -374,6 +374,46 @@ $showSpaceOfferings = $isDual || $isSpace;
                         x-text="editIndex >= 0 ? 'Update note' : 'Add note'"></button>
                 </div>
             </div>
+
+            <div class="admin-co-notes admin-co-notes-edit">
+                <template x-for="(note, index) in notes" :key="index">
+                    <article class="admin-co-note" :class="{ 'is-editing-note': editIndex === index }">
+                        <p class="admin-co-note-text" x-text="note.text"></p>
+                        <div class="admin-co-note-foot">
+                            <span x-text="note.author"></span>
+                            <span class="admin-co-note-dot">·</span>
+                            <span x-text="note.time"></span>
+                            <span class="admin-co-note-dot" x-show="note.tag" x-cloak>·</span>
+                            <span class="admin-co-note-tag" x-show="note.tag" x-cloak x-text="note.tag"></span>
+                        </div>
+                        <div class="admin-co-note-actions">
+                            <button type="button" class="admin-co-note-action" @click="newNote = note.text; editIndex = index; $refs.noteInput.focus()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 15" fill="none" aria-hidden="true">
+                                    <path d="M9.80882 2.49568L12.2794 4.90732M8.16176 13.75H14.75M1.57353 10.5345L0.75 13.75L4.04412 12.9461L13.5855 3.63237C13.8943 3.33087 14.0678 2.922 14.0678 2.49568C14.0678 2.06936 13.8943 1.6605 13.5855 1.359L13.4439 1.22073C13.135 0.919322 12.7162 0.75 12.2794 0.75C11.8427 0.75 11.4238 0.919322 11.1149 1.22073L1.57353 10.5345Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                Edit
+                            </button>
+                            <button
+                                type="button"
+                                class="admin-co-note-action"
+                                @click="
+                                    notes.splice(index, 1);
+                                    editIndex === index && (editIndex = -1, newNote = '');
+                                    editIndex > index && (editIndex = editIndex - 1);
+                                ">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                    <path d="M1.75 3.5H12.25" stroke="#3B3731" stroke-width="1.3" stroke-linecap="round" />
+                                    <path d="M5.25 3.5V2.45C5.25 1.89772 5.69772 1.45 6.25 1.45H7.75C8.30228 1.45 8.75 1.89772 8.75 2.45V3.5" stroke="#3B3731" stroke-width="1.3" stroke-linecap="round" />
+                                    <path d="M11.0833 3.5V11.55C11.0833 12.1023 10.6356 12.55 10.0833 12.55H3.91667C3.36438 12.55 2.91667 12.1023 2.91667 11.55V3.5" stroke="#3B3731" stroke-width="1.3" stroke-linecap="round" />
+                                    <path d="M5.83301 6.125V9.625" stroke="#3B3731" stroke-width="1.3" stroke-linecap="round" />
+                                    <path d="M8.16699 6.125V9.625" stroke="#3B3731" stroke-width="1.3" stroke-linecap="round" />
+                                </svg>
+                                Delete
+                            </button>
+                        </div>
+                    </article>
+                </template>
+            </div>
         </div>
     </section>
 
