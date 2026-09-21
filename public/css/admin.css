@@ -2150,7 +2150,7 @@
     color: #3b3731;
     font-family: Lato, sans-serif;
     font-size: 14px;
-    font-weight: 400;
+    font-weight: 600;
     line-height: 1.2;
 }
 
@@ -2286,10 +2286,23 @@
     flex-wrap: wrap;
 }
 
-.admin-co-panel {
-    padding: 16px 18px;
+.admin-card.admin-co-panel {
     border: none;
+    padding: 16px 18px;
     background: #fafafa;
+}
+
+/* First overview panel sits after the head — no card chrome */
+.admin-co-overview-head + .admin-card.admin-co-panel {
+    border: none;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+}
+
+.admin-card.admin-co-panel.admin-co-activity-panel {
+    padding: 0;
+    background: none;
 }
 
 .admin-co-section-head {
@@ -4081,6 +4094,13 @@ body.admin-co-modal-lock {
     background: rgba(167, 197, 105, 0.12);
 }
 
+.admin-bp-insurance.is-freelance {
+    border-radius: 96px;
+    border: 1px solid #97bdd8;
+    background: #f8fafb;
+    color: #97bdd8;
+}
+
 .admin-bp-insurance.is-suspended {
     color: #787775;
     border-color: #d4d2cf;
@@ -4099,10 +4119,42 @@ body.admin-co-modal-lock {
     padding: 6px 12px;
     border-radius: 999px;
     border: 1px solid #e8e6e3;
-    background: #fdfdfd;
-    color: #3b3731;
+    background: #f3f3f3;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
     font-size: 14px;
     line-height: 1.2;
+}
+
+.admin-bp-offerings-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.admin-bp-offerings-block .admin-co-section-head {
+    margin-bottom: 14px;
+}
+
+.admin-bp-offerings-block .admin-co-status-list {
+    margin-top: 0;
+}
+
+.admin-bp-service-label {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+    color: #9c9a97;
+}
+
+.admin-bp-service-sep {
+    color: #9c9a97;
+}
+
+.admin-bp-service-meta {
+    color: #9c9a97;
 }
 
 .admin-bp-service-price {

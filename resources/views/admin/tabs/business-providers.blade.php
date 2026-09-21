@@ -194,7 +194,7 @@ $verificationStatusClass = [
                     </span>
                 </div>
                 <p class="admin-card-value">52</p>
-                <p class="admin-card-meta muted mb-0">
+                <p class="admin-card-meta mb-0">
                     <span class="admin-live-dot is-warn"></span>38 suspended · 14 flagged
                 </p>
             </div>
@@ -202,7 +202,7 @@ $verificationStatusClass = [
             <div class="admin-card admin-po-metric-card">
                 <p class="admin-card-title">Pending verification</p>
                 <p class="admin-card-value">9</p>
-                <p class="admin-card-meta muted mb-0">
+                <p class="admin-card-meta mb-0">
                     <span class="admin-live-dot is-danger"></span>action needed
                 </p>
             </div>
