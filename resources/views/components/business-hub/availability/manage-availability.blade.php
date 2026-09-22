@@ -1,17 +1,15 @@
 @php
-    $gsp = null;
-    if (auth()->check()) {
-        $gsp = \App\Models\GroomerSpacerProfile::where('email', auth()->user()->email)->first();
+    use App\Models\GroomerSpacerProfile;
+    use App\Models\Staff;
+
+    $gsp = auth('groomer_spacer')->user();
+    if (!$gsp instanceof GroomerSpacerProfile && auth()->check()) {
+        $gsp = GroomerSpacerProfile::where('email', auth()->user()->email)->first();
     }
 
-    $maAccentColor =
-        strtolower((string) ($gsp?->user_type ?? (auth()->user()?->user_type ?? ''))) === 'space'
-        ? '#FFA899'
-        : '#FFC97A';
+    $maAccentColor = strtolower((string) ($gsp?->user_type ?? (auth()->user()?->user_type ?? ''))) === 'space' ? '#FFA899' : '#FFC97A';
 
-    $staffMembers = $gsp
-        ? \App\Models\Staff::where('goormer_spacer_profile_id', $gsp->id)->orderBy('id')->get()
-        : collect();
+    $staffMembers = $gsp instanceof GroomerSpacerProfile ? Staff::listedForProfile($gsp) : collect();
 
     $activeStaff = $staffMembers->first();
 
@@ -69,6 +67,7 @@
     $activePauseBooking = $activePayload['pauseBooking'];
 
     $maTodayIso = now()->toDateString();
+    $maTodayDisplay = now()->format('d/m/Y');
 
     $maFormatTime = static function (string $time): string {
         if ($time === '') {
@@ -79,6 +78,23 @@
         $minute = $parts[1] ?? '00';
         $suffix = $hour < 12 ? 'AM' : 'PM';
         return sprintf('%02d:%s %s', $hour, $minute, $suffix);
+    };
+
+    $maHoursLabel = static function (string $start, string $end, bool $status): string {
+        if (!$status) {
+            return '';
+        }
+        $startParts = explode(':', $start);
+        $endParts = explode(':', $end);
+        $startMinutes = (int) ($startParts[0] ?? 0) * 60 + (int) ($startParts[1] ?? 0);
+        $endMinutes = (int) ($endParts[0] ?? 0) * 60 + (int) ($endParts[1] ?? 0);
+        $diff = $endMinutes - $startMinutes;
+        if ($diff <= 0) {
+            return '0h';
+        }
+        $hours = $diff / 60;
+
+        return fmod($hours, 1.0) === 0.0 ? ((int) $hours) . 'h' : rtrim(rtrim(number_format($hours, 1, '.', ''), '0'), '.') . 'h';
     };
 
     $maDayLabels = [
@@ -117,9 +133,7 @@
                         $rawImage = trim((string) ($staff->image ?? ''));
                         $imageUrl = null;
                         if ($rawImage !== '') {
-                            $imageUrl = preg_match('#^https?://#i', $rawImage)
-                                ? $rawImage
-                                : asset('storage/' . ltrim($rawImage, '/'));
+                            $imageUrl = preg_match('#^https?://#i', $rawImage) ? $rawImage : asset('storage/' . ltrim($rawImage, '/'));
                         }
                     @endphp
                     <button type="button" class="ma-staff-pill {{ $loop->first ? 'ma-staff-pill--active' : '' }}"
@@ -133,7 +147,7 @@
                                 {{ $initial }}
                             @endif
                         </span>
-                        <span>
+                        <span class="ma-staff-pill__meta">
                             <strong>{{ $staff->name }}</strong>
                             <small>{{ $staff->job_title }}</small>
                         </span>
@@ -152,7 +166,7 @@
                                 <span x-text="staff.initial"></span>
                             </template>
                         </span>
-                        <span>
+                        <span class="ma-staff-pill__meta">
                             <strong x-text="staff.name"></strong>
                             <small x-text="staff.job_title"></small>
                         </span>
@@ -161,10 +175,10 @@
 
                 <button type="button" class="ma-staff-add" aria-label="Add staff"
                     @click="$dispatch('open-add-staff-modal')">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14" fill="none">
-                        <path
-                            d="M13 7.12813C13 7.68041 12.5523 8.12813 12 8.12813H7.66288V13C7.66288 13.5523 7.21516 14 6.66288 14H6.31024C5.75795 14 5.31024 13.5523 5.31024 13V8.12813H0.999999C0.447714 8.12813 0 7.68041 0 7.12813V6.85786C0 6.30557 0.447715 5.85786 1 5.85786H5.31024V0.999999C5.31024 0.447714 5.75795 0 6.31024 0H6.66288C7.21516 0 7.66288 0.447715 7.66288 1V5.85786H12C12.5523 5.85786 13 6.30557 13 6.85786V7.12813Z"
-                            fill="#3B3731" />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none">
+                        <circle cx="18" cy="18" r="17.5" fill="white" stroke="#E2E2E2" />
+                        <path d="M18.4942 11V26" stroke="#3B3731" stroke-linecap="round" />
+                        <path d="M26 18.4941L11 18.4941" stroke="#3B3731" stroke-linecap="round" />
                     </svg>
                 </button>
             </div>
@@ -173,20 +187,23 @@
         <livewire:business-hub.availability.add-staff-modal />
         <livewire:business-hub.availability.staff-actions />
 
-
-        <div class="ma-section">
+        <div class="ma-section ma-card" style="padding-bottom: 0 !important;">
             <div class="ma-title-row">
-                <h3 style="border: none;width: fit-content; padding: 0;">Work Week Hours</h3>
-                <div class="ma-staff-name">
-                    <strong data-staff-name-target>{{ $activeStaff?->name }}</strong>
-                    <small data-staff-job-title-target>{{ $activeStaff?->job_title }}</small>
-                </div>
+                <h3>Work Week Hours</h3>
+                <p class="ma-editing-label">Editing schedule for <span class="ma-editing-label__name"
+                        data-staff-name-target>{{ $activeStaff?->name }}</span><span class="ma-editing-label__job"
+                        data-staff-job-wrap @if (!$activeStaff?->job_title) style="display: none" @endif> (<span
+                            data-staff-job-title-target>{{ $activeStaff?->job_title }}</span>)</span>
+                </p>
             </div>
 
             <div class="ma-week-grid">
-                <div class="ma-week-grid__head">Working Week</div>
-                <div class="ma-week-grid__head">Start Time — End Time</div>
-                <div class="ma-week-grid__head">Edit</div>
+                <div class="ma-week-row ma-week-row--head">
+                    <div class="ma-week-grid__head ma-week-col ma-week-col--day">Working week</div>
+                    <div class="ma-week-grid__head ma-week-col ma-week-col--time">Start — end time</div>
+                    <div class="ma-week-grid__head ma-week-col ma-week-col--hours">Hours</div>
+                    <div class="ma-week-grid__head ma-week-col ma-week-col--edit">Edit</div>
+                </div>
 
                 @foreach ($maDayLabels as $dayKey => $dayLabel)
                     @php
@@ -195,78 +212,71 @@
                         $dayStart = $entry['start'];
                         $dayEnd = $entry['end'];
                     @endphp
-                    <div class="ma-cell is-disabled" data-day="{{ $dayKey }}" data-day-cell="name"
-                        style="padding-left: 0 !important;">
-                        <div class="ma-day-name">
-                            <span>{{ $dayLabel }}</span>
-                            <label class="ma-switch" style="height: 24px;">
-                                <input type="checkbox" data-day-status {{ $dayStatus ? 'checked' : '' }}>
-                                <span class="ma-switch-slider"></span>
-                                <span class="ma-switch-check-icon" aria-hidden="true">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
-                                        fill="none">
-                                        <path
-                                            d="M9.99391 0C4.49726 0 0 4.49726 0 9.99391C0 15.4906 4.49726 19.9878 9.99391 19.9878C15.4906 19.9878 19.9878 15.4906 19.9878 9.99391C19.9878 4.49726 15.4906 0 9.99391 0ZM8.41154 14.5744C8.18156 14.8044 7.80869 14.8044 7.57871 14.5744L3.70323 10.699C3.31384 10.3096 3.31384 9.67824 3.70323 9.28885C4.09225 8.89984 4.72282 8.8994 5.11237 9.28786L7.99513 12.1626L14.8709 5.28678C15.2624 4.8953 15.8975 4.89642 16.2876 5.28928C16.6757 5.68019 16.6746 6.31139 16.2851 6.70092L8.41154 14.5744Z"
-                                            fill="white" />
-                                    </svg>
-                                </span>
-                            </label>
+                    <div class="ma-week-row">
+                        <div class="ma-cell ma-week-col ma-week-col--day {{ $dayStatus ? '' : 'is-disabled' }}"
+                            data-day="{{ $dayKey }}" data-day-cell="name">
+                            <div class="ma-day-name">
+                                <span>{{ $dayLabel }}</span>
+                                <label class="ma-switch" style="height: 24px;">
+                                    <input type="checkbox" data-day-status {{ $dayStatus ? 'checked' : '' }}>
+                                    <span class="ma-switch-slider"></span>
+                                    <span class="ma-switch-check-icon" aria-hidden="true">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                            viewBox="0 0 20 20" fill="none">
+                                            <path
+                                                d="M9.99391 0C4.49726 0 0 4.49726 0 9.99391C0 15.4906 4.49726 19.9878 9.99391 19.9878C15.4906 19.9878 19.9878 15.4906 19.9878 9.99391C19.9878 4.49726 15.4906 0 9.99391 0ZM8.41154 14.5744C8.18156 14.8044 7.80869 14.8044 7.57871 14.5744L3.70323 10.699C3.31384 10.3096 3.31384 9.67824 3.70323 9.28885C4.09225 8.89984 4.72282 8.8994 5.11237 9.28786L7.99513 12.1626L14.8709 5.28678C15.2624 4.8953 15.8975 4.89642 16.2876 5.28928C16.6757 5.68019 16.6746 6.31139 16.2851 6.70092L8.41154 14.5744Z"
+                                                fill="white" />
+                                        </svg>
+                                    </span>
+                                </label>
+                            </div>
                         </div>
-                    </div>
-                    <div class="ma-cell ma-time-range is-disabled" data-day="{{ $dayKey }}" data-day-cell="time">
-                        <span class="ma-time-chip" data-time-type="start" data-time-value="{{ $dayStart }}" role="button"
-                            tabindex="0">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1.5" />
-                                <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
-                            </svg>
-                            <span data-time-start>{{ $maFormatTime($dayStart) }}</span>
-                        </span>
-                        <span class="ma-time-separator"></span>
-                        <span class="ma-time-chip" data-time-type="end" data-time-value="{{ $dayEnd }}" role="button"
-                            tabindex="0">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1.5" />
-                                <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
-                            </svg>
-                            <span data-time-end>{{ $maFormatTime($dayEnd) }}</span>
-                        </span>
-                        <div class="ma-time-disabled">
-                            <span class="ma-time-disabled-chip">
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <div class="ma-cell ma-time-range ma-week-col ma-week-col--time {{ $dayStatus ? '' : 'is-unavailable is-disabled' }}"
+                            data-day="{{ $dayKey }}" data-day-cell="time">
+                            <span class="ma-time-chip" data-time-type="start" data-time-value="{{ $dayStart }}"
+                                role="button" tabindex="0">
+                                <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
                                     <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1.5" />
-                                    <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
+                                    <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5"
+                                        stroke-linecap="round" />
                                 </svg>
-                                <span data-time-start-readonly>{{ $maFormatTime($dayStart) }}</span>
+                                <span data-time-start>{{ $maFormatTime($dayStart) }}</span>
                             </span>
-                            <span class="ma-time-disabled-separator"></span>
-                            <span class="ma-time-disabled-chip">
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <span class="ma-time-separator" aria-hidden="true">—</span>
+                            <span class="ma-time-chip" data-time-type="end" data-time-value="{{ $dayEnd }}" role="button"
+                                tabindex="0">
+                                <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
                                     <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1.5" />
-                                    <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
+                                    <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5"
+                                        stroke-linecap="round" />
                                 </svg>
-                                <span data-time-end-readonly>{{ $maFormatTime($dayEnd) }}</span>
+                                <span data-time-end>{{ $maFormatTime($dayEnd) }}</span>
                             </span>
+                            <span class="ma-time-unavailable">Unavailable - not bookable</span>
                         </div>
-                    </div>
-                    <div class="ma-cell ma-edit-cell is-disabled" data-day="{{ $dayKey }}" data-day-cell="edit">
-                        <button type="button" class="ma-save-mini" data-day-action="save">
-                            <span class="ma-save-mini__label" data-save-label>Save</span>
-                            <span class="ma-save-spinner" data-save-spinner aria-hidden="true"></span>
-                        </button>
-                        <button type="button" class="ma-row-action" data-day-action="edit" aria-label="Edit day slot">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16" fill="none">
-                                <path
-                                    d="M10.8529 2.51425L13.6765 5.29691M8.97059 15.5H16.5M1.44118 11.7898L0.5 15.5L4.26471 14.5724L15.1692 3.82581C15.5221 3.47793 15.7203 3.00616 15.7203 2.51425C15.7203 2.02234 15.5221 1.55057 15.1692 1.20269L15.0073 1.04315C14.6543 0.695371 14.1756 0.5 13.6765 0.5C13.1773 0.5 12.6986 0.695371 12.3456 1.04315L1.44118 11.7898Z"
-                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </button>
+                        <div class="ma-cell ma-hours-cell ma-week-col ma-week-col--hours {{ $dayStatus ? '' : 'is-disabled' }}"
+                            data-day="{{ $dayKey }}" data-day-cell="hours">
+                            <span data-day-hours>{{ $maHoursLabel($dayStart, $dayEnd, $dayStatus) }}</span>
+                        </div>
+                        <div class="ma-cell ma-edit-cell ma-week-col ma-week-col--edit {{ $dayStatus ? '' : 'is-disabled' }}"
+                            data-day="{{ $dayKey }}" data-day-cell="edit">
+                            <button type="button" class="ma-save-mini" data-day-action="save">
+                                <span class="ma-save-mini__label" data-save-label>Save</span>
+                                <span class="ma-save-spinner" data-save-spinner aria-hidden="true"></span>
+                            </button>
+                            <button type="button" class="ma-row-action" data-day-action="edit" aria-label="Edit day slot">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none">
+                                    <circle cx="18" cy="18" r="17.5" fill="white" stroke="#E2E2E2" />
+                                    <path d="M20.0588 13.7457L22.5294 16.1573M18.4118 25H25M11.8235 21.7845L11 25L14.2941 24.1961L23.8355 14.8824C24.1443 14.5809 24.3178 14.172 24.3178 13.7457C24.3178 13.3194 24.1443 12.9105 23.8355 12.609L23.6939 12.4707C23.385 12.1693 22.9662 12 22.5294 12C22.0927 12 21.6738 12.1693 21.3649 12.4707L11.8235 21.7845Z" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 @endforeach
             </div>
         </div>
 
-        <div class="ma-section">
+        <div class="ma-section ma-card" style="padding-bottom: 5px !important;">
             <h3>Holiday / Time Off</h3>
             <div class="ma-holiday-grid">
                 <div class="ma-holiday-form">
@@ -274,49 +284,29 @@
                         <label class="ma-field" data-date-trigger="from">
                             <span>Date From</span>
                             <span class="ma-field-value">
+                                <span id="manage-availability-date-from">{{ $maTodayDisplay }}</span>
                                 <span class="ma-field-value__icon" aria-hidden="true">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="14" viewBox="0 0 15 14"
-                                        fill="none">
-                                        <path
-                                            d="M0.5 6.83383C0.5 4.32006 0.5 3.06284 1.3162 2.28224C2.13239 1.50164 3.44513 1.50098 6.0713 1.50098H8.85695C11.4831 1.50098 12.7966 1.50098 13.612 2.28224C14.4275 3.0635 14.4282 4.32006 14.4282 6.83383V8.16705C14.4282 10.6808 14.4282 11.938 13.612 12.7186C12.7959 13.4992 11.4831 13.4999 8.85695 13.4999H6.0713C3.44513 13.4999 2.13169 13.4999 1.3162 12.7186C0.500696 11.9374 0.5 10.6808 0.5 8.16705V6.83383Z"
-                                            stroke="#3B3731" />
-                                        <path d="M3.98212 1.49991V0.5M10.9462 1.49991V0.5M0.848267 4.83295H14.0801"
-                                            stroke="#3B3731" stroke-linecap="round" />
-                                        <path
-                                            d="M11.643 10.166C11.643 10.3428 11.5696 10.5124 11.439 10.6374C11.3084 10.7624 11.1312 10.8327 10.9465 10.8327C10.7618 10.8327 10.5847 10.7624 10.4541 10.6374C10.3235 10.5124 10.2501 10.3428 10.2501 10.166C10.2501 9.98925 10.3235 9.81969 10.4541 9.69468C10.5847 9.56967 10.7618 9.49944 10.9465 9.49944C11.1312 9.49944 11.3084 9.56967 11.439 9.69468C11.5696 9.81969 11.643 9.98925 11.643 10.166ZM11.643 7.49961C11.643 7.67641 11.5696 7.84596 11.439 7.97098C11.3084 8.09599 11.1312 8.16622 10.9465 8.16622C10.7618 8.16622 10.5847 8.09599 10.4541 7.97098C10.3235 7.84596 10.2501 7.67641 10.2501 7.49961C10.2501 7.32282 10.3235 7.15327 10.4541 7.02825C10.5847 6.90324 10.7618 6.83301 10.9465 6.83301C11.1312 6.83301 11.3084 6.90324 11.439 7.02825C11.5696 7.15327 11.643 7.32282 11.643 7.49961ZM8.1609 10.166C8.1609 10.3428 8.08752 10.5124 7.95692 10.6374C7.82632 10.7624 7.64918 10.8327 7.46448 10.8327C7.27978 10.8327 7.10265 10.7624 6.97205 10.6374C6.84144 10.5124 6.76807 10.3428 6.76807 10.166C6.76807 9.98925 6.84144 9.81969 6.97205 9.69468C7.10265 9.56967 7.27978 9.49944 7.46448 9.49944C7.64918 9.49944 7.82632 9.56967 7.95692 9.69468C8.08752 9.81969 8.1609 9.98925 8.1609 10.166ZM8.1609 7.49961C8.1609 7.67641 8.08752 7.84596 7.95692 7.97098C7.82632 8.09599 7.64918 8.16622 7.46448 8.16622C7.27978 8.16622 7.10265 8.09599 6.97205 7.97098C6.84144 7.84596 6.76807 7.67641 6.76807 7.49961C6.76807 7.32282 6.84144 7.15327 6.97205 7.02825C7.10265 6.90324 7.27978 6.83301 7.46448 6.83301C7.64918 6.83301 7.82632 6.90324 7.95692 7.02825C8.08752 7.15327 8.1609 7.32282 8.1609 7.49961ZM4.67884 10.166C4.67884 10.3428 4.60546 10.5124 4.47486 10.6374C4.34426 10.7624 4.16712 10.8327 3.98242 10.8327C3.79772 10.8327 3.62059 10.7624 3.48999 10.6374C3.35938 10.5124 3.28601 10.3428 3.28601 10.166C3.28601 9.98925 3.35938 9.81969 3.48999 9.69468C3.62059 9.56967 3.79772 9.49944 3.98242 9.49944C4.16712 9.49944 4.34426 9.56967 4.47486 9.69468C4.60546 9.81969 4.67884 9.98925 4.67884 10.166ZM4.67884 7.49961C4.67884 7.67641 4.60546 7.84596 4.47486 7.97098C4.34426 8.09599 4.16712 8.16622 3.98242 8.16622C3.79772 8.16622 3.62059 8.09599 3.48999 7.97098C3.35938 7.84596 3.28601 7.67641 3.28601 7.49961C3.28601 7.32282 3.35938 7.15327 3.48999 7.02825C3.62059 6.90324 3.79772 6.83301 3.98242 6.83301C4.16712 6.83301 4.34426 6.90324 4.47486 7.02825C4.60546 7.15327 4.67884 7.32282 4.67884 7.49961Z"
-                                            fill="#3B3731" />
-                                    </svg>
+                                    <img src="{{ asset('images/business-hub/icon-holiday-calendar.svg') }}" alt="">
                                 </span>
-                                <span id="manage-availability-date-from"></span>
                             </span>
                         </label>
                         <label class="ma-field" data-date-trigger="to">
                             <span>Date To</span>
-                            <span class="ma-field-value" style="background: #F7F7F7;">
+                            <span class="ma-field-value">
+                                <span id="manage-availability-date-to">{{ $maTodayDisplay }}</span>
                                 <span class="ma-field-value__icon" aria-hidden="true">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="14" viewBox="0 0 15 14"
-                                        fill="none">
-                                        <path
-                                            d="M0.5 6.83383C0.5 4.32006 0.5 3.06284 1.3162 2.28224C2.13239 1.50164 3.44513 1.50098 6.0713 1.50098H8.85695C11.4831 1.50098 12.7966 1.50098 13.612 2.28224C14.4275 3.0635 14.4282 4.32006 14.4282 6.83383V8.16705C14.4282 10.6808 14.4282 11.938 13.612 12.7186C12.7959 13.4992 11.4831 13.4999 8.85695 13.4999H6.0713C3.44513 13.4999 2.13169 13.4999 1.3162 12.7186C0.500696 11.9374 0.5 10.6808 0.5 8.16705V6.83383Z"
-                                            stroke="#3B3731" />
-                                        <path d="M3.98212 1.49991V0.5M10.9462 1.49991V0.5M0.848267 4.83295H14.0801"
-                                            stroke="#3B3731" stroke-linecap="round" />
-                                        <path
-                                            d="M11.643 10.166C11.643 10.3428 11.5696 10.5124 11.439 10.6374C11.3084 10.7624 11.1312 10.8327 10.9465 10.8327C10.7618 10.8327 10.5847 10.7624 10.4541 10.6374C10.3235 10.5124 10.2501 10.3428 10.2501 10.166C10.2501 9.98925 10.3235 9.81969 10.4541 9.69468C10.5847 9.56967 10.7618 9.49944 10.9465 9.49944C11.1312 9.49944 11.3084 9.56967 11.439 9.69468C11.5696 9.81969 11.643 9.98925 11.643 10.166ZM11.643 7.49961C11.643 7.67641 11.5696 7.84596 11.439 7.97098C11.3084 8.09599 11.1312 8.16622 10.9465 8.16622C10.7618 8.16622 10.5847 8.09599 10.4541 7.97098C10.3235 7.84596 10.2501 7.67641 10.2501 7.49961C10.2501 7.32282 10.3235 7.15327 10.4541 7.02825C10.5847 6.90324 10.7618 6.83301 10.9465 6.83301C11.1312 6.83301 11.3084 6.90324 11.439 7.02825C11.5696 7.15327 11.643 7.32282 11.643 7.49961ZM8.1609 10.166C8.1609 10.3428 8.08752 10.5124 7.95692 10.6374C7.82632 10.7624 7.64918 10.8327 7.46448 10.8327C7.27978 10.8327 7.10265 10.7624 6.97205 10.6374C6.84144 10.5124 6.76807 10.3428 6.76807 10.166C6.76807 9.98925 6.84144 9.81969 6.97205 9.69468C7.10265 9.56967 7.27978 9.49944 7.46448 9.49944C7.64918 9.49944 7.82632 9.56967 7.95692 9.69468C8.08752 9.81969 8.1609 9.98925 8.1609 10.166ZM8.1609 7.49961C8.1609 7.67641 8.08752 7.84596 7.95692 7.97098C7.82632 8.09599 7.64918 8.16622 7.46448 8.16622C7.27978 8.16622 7.10265 8.09599 6.97205 7.97098C6.84144 7.84596 6.76807 7.67641 6.76807 7.49961C6.76807 7.32282 6.84144 7.15327 6.97205 7.02825C7.10265 6.90324 7.27978 6.83301 7.46448 6.83301C7.64918 6.83301 7.82632 6.90324 7.95692 7.02825C8.08752 7.15327 8.1609 7.32282 8.1609 7.49961ZM4.67884 10.166C4.67884 10.3428 4.60546 10.5124 4.47486 10.6374C4.34426 10.7624 4.16712 10.8327 3.98242 10.8327C3.79772 10.8327 3.62059 10.7624 3.48999 10.6374C3.35938 10.5124 3.28601 10.3428 3.28601 10.166C3.28601 9.98925 3.35938 9.81969 3.48999 9.69468C3.62059 9.56967 3.79772 9.49944 3.98242 9.49944C4.16712 9.49944 4.34426 9.56967 4.47486 9.69468C4.60546 9.81969 4.67884 9.98925 4.67884 10.166ZM4.67884 7.49961C4.67884 7.67641 4.60546 7.84596 4.47486 7.97098C4.34426 8.09599 4.16712 8.16622 3.98242 8.16622C3.79772 8.16622 3.62059 8.09599 3.48999 7.97098C3.35938 7.84596 3.28601 7.67641 3.28601 7.49961C3.28601 7.32282 3.35938 7.15327 3.48999 7.02825C3.62059 6.90324 3.79772 6.83301 3.98242 6.83301C4.16712 6.83301 4.34426 6.90324 4.47486 7.02825C4.60546 7.15327 4.67884 7.32282 4.67884 7.49961Z"
-                                            fill="#3B3731" />
-                                    </svg>
+                                    <img src="{{ asset('images/business-hub/icon-holiday-calendar.svg') }}" alt="">
                                 </span>
-                                <span id="manage-availability-date-to"></span>
                             </span>
                         </label>
                     </div>
                     <label class="ma-field">
-                        <span style="margin-top: 1.5rem;">Reason<span style="font-weight: 400;">(optional)</span></span>
-                        <textarea rows="3" data-holiday-reason></textarea>
+                        <span>Reason <span class="ma-field__optional">(optional)</span></span>
+                        <textarea rows="3" data-holiday-reason placeholder=""></textarea>
                     </label>
                     <div class="ma-form-actions">
-                        <button type="button" class="ma-save-mini" data-holiday-action="save">
-                            <span class="ma-save-mini__label" data-save-label>Save</span>
+                        <button type="button" class="ma-add-time-off" data-holiday-action="save">
+                            <span class="ma-save-mini__label" data-save-label>+ Add Time Off</span>
                             <span class="ma-save-spinner" data-save-spinner aria-hidden="true"></span>
                         </button>
                     </div>
@@ -332,10 +322,25 @@
 
         </div>
 
-        <div class="ma-section">
+        <div class="ma-section ma-card ma-card--pause">
             <h3>Pause Bookings</h3>
-            <div class="ma-pause-row">
-                <span>Pause New Bookings <small>(effective today)</small></span>
+            <div class="ma-pause-row{{ $activePauseBooking ? ' is-paused' : '' }}" data-pause-row>
+                <div class="ma-pause-copy">
+                    <strong data-pause-title>
+                        @if ($activePauseBooking)
+                            New bookings paused
+                        @else
+                            Pause new bookings <small>(effective today)</small>
+                        @endif
+                    </strong>
+                    <p data-pause-copy>
+                        @if ($activePauseBooking)
+                            Clients can still see your profile, but can't request new appointments. Existing bookings are unaffected.
+                        @else
+                            Clients are currently able to request appointments in your open slots.
+                        @endif
+                    </p>
+                </div>
                 <label class="ma-switch">
                     <input type="checkbox" data-pause-booking {{ $activePauseBooking ? 'checked' : '' }}>
                     <span class="ma-switch-slider"></span>
@@ -350,48 +355,97 @@
             </div>
         </div>
 
-        <div class="ma-footer-actions">
-            <button type="button" class="ma-btn ma-btn-light">Cancel</button>
-            <button type="button" class="ma-btn ma-btn-primary">Save Changes</button>
+        <div class="ma-save-bar" data-save-bar>
+            <p class="ma-save-bar__status" data-save-status>All changes saved <span>· just now</span></p>
+            <div class="ma-footer-actions">
+                <button type="button" class="ma-btn ma-btn-light" data-ma-cancel disabled>Cancel</button>
+                <button type="button" class="ma-btn ma-btn-primary" data-ma-save-changes disabled>Save Changes</button>
+            </div>
         </div>
     </section>
 </div>
 
 <style>
     .ma-board {
-        margin-top: 2rem;
+        margin-top: 1.25rem;
         width: 100%;
         color: #3B3731;
         font-family: Lato;
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .ma-board>div:not([class]) {
+        height: 0;
+        margin-bottom: -40px;
+        overflow: visible;
+        pointer-events: none;
+    }
+
+    .ma-board>div:not([class])>* {
+        pointer-events: auto;
+    }
+
+    .ma-card {
+        background: #FDFDFD;
+        border: 1px solid #F6F5F5;
+        border-radius: 10px;
+        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.10);
+        padding: 25px;
+        margin-bottom: 0;
     }
 
     .ma-holiday-form {
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
-        height: 100%;
+        gap: 20px;
+        justify-content: flex-start;
+        height: auto;
     }
 
     .ma-staff-strip {
-        border-bottom: 1px solid #d8d1c7;
-        margin-bottom: 1.25rem;
+        background: #FDFDFD;
+        border: 1px solid #F6F5F5;
+        border-radius: 10px;
+        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.10);
+        padding: 10px;
+        min-height: 68px;
+        display: flex;
+        align-items: center;
+        margin-bottom: 0;
     }
 
     .ma-staff-list {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
+        gap: 20px;
+        width: 100%;
     }
 
     .ma-staff-pill {
-        border: 0;
+        border: 1px solid transparent;
         background: transparent;
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 10px;
         cursor: pointer;
-        padding: 0.25rem 1rem 1rem;
+        padding: 6px;
+        padding-right: 30px;
+        min-height: 48px;
+        border-radius: 100px;
         position: relative;
+        transition: background-color 0.12s ease, border-color 0.12s ease;
+    }
+
+    .ma-staff-pill:hover {
+        background: #F7F7F7;
+    }
+
+    .ma-staff-pill--active {
+        background: #FFF4E4;
+        border-color: var(--ma-accent, #FFC97A);
     }
 
     .ma-staff-pill:last-child {
@@ -399,29 +453,13 @@
     }
 
     .ma-staff-pill::after {
-        content: "";
-        position: absolute;
-        left: 50%;
-        bottom: 0;
-        width: 100%;
-        height: 1px;
-        background: #3B3731;
-        transform: translateX(-50%) scaleX(0);
-        transform-origin: center;
-        opacity: 0;
-        transition: transform 0.2s ease, opacity 0.2s ease;
-    }
-
-    .ma-staff-pill--active::after {
-        transform: translateX(-50%) scaleX(1);
-        opacity: 1;
+        display: none;
     }
 
     .ma-staff-avatar {
-        width: 43px;
-        height: 43px;
-        aspect-ratio: 42.50/42.75;
-        border-radius: 999px;
+        width: 36px;
+        height: 36px;
+        border-radius: 100px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -443,9 +481,9 @@
 
     .ma-staff-pill strong {
         display: block;
-        color: #000;
+        color: #3B3731;
         font-family: Lato;
-        font-size: 16px;
+        font-size: 14px;
         font-style: normal;
         font-weight: 600;
         line-height: normal;
@@ -456,7 +494,7 @@
         display: block;
         color: #9D9B98;
         font-family: Lato;
-        font-size: 16px;
+        font-size: 12px;
         font-style: normal;
         font-weight: 400;
         line-height: normal;
@@ -467,18 +505,20 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-left: 2.5rem;
-        border: 0;
-        background: transparent;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid #F5F5F5;
+        background: #FFF;
+        box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.03);
         color: #3B3731;
-        font-size: 28px;
-        line-height: 1;
         cursor: pointer;
-        padding: 0.2rem 0.5rem;
+        padding: 0;
+        flex-shrink: 0;
     }
 
     .ma-section {
-        margin-bottom: 2rem;
+        margin-bottom: 0;
     }
 
     .ma-section h3 {
@@ -488,20 +528,45 @@
         font-style: normal;
         font-weight: 600;
         line-height: normal;
-        width: 100%;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid #D4D4D4;
-        margin-bottom: 0.8rem;
+        width: fit-content;
+        padding-bottom: 0;
+        border-bottom: 0;
+        margin: 0 0 18px;
     }
 
     .ma-title-row {
         display: flex;
-        align-items: start;
+        align-items: center;
         justify-content: space-between;
         gap: 1rem;
-        padding-bottom: 0.8rem;
-        border-bottom: 1px solid #d8d1c7;
-        margin-bottom: 0.8rem;
+        padding-bottom: 0;
+        border-bottom: 0;
+        margin-bottom: 20px;
+    }
+
+    .ma-title-row h3 {
+        margin-bottom: 0;
+    }
+
+    .ma-editing-label {
+        margin: 0;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 19px;
+        text-align: right;
+    }
+
+    .ma-editing-label__name {
+        font-weight: 600;
+        padding-bottom: 1px;
+    }
+
+    .ma-editing-label__job,
+    .ma-editing-label__job span {
+        color: #9D9B98;
+        font-weight: 400;
     }
 
     .ma-staff-name {
@@ -529,56 +594,90 @@
     }
 
     .ma-week-grid {
-        display: grid;
-        margin-top: 1.5rem;
-        grid-template-columns: 1.2fr 1.9fr 0.8fr;
-        border-bottom: 1px solid #dfd8ce;
+        display: flex;
+        flex-direction: column;
+        margin-top: 0;
+    }
+
+    .ma-week-row {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        gap: 2rem;
+        border-bottom: 1px solid #D4D4D4;
+        box-sizing: border-box;
+    }
+
+    .ma-week-row:last-child {
+        border-bottom: 0;
+    }
+
+    .ma-week-row--head {
+        align-items: flex-end;
+        padding: 0 0 20px;
+        min-height: 0;
+    }
+
+    .ma-week-col--day {
+        flex: 0 1 275px;
+        width: 275px;
+        min-width: 0;
+    }
+
+    .ma-week-col--time {
+        flex: 0 1 400px;
+        width: 400px;
+        min-width: 0;
+        margin-right: auto;
+    }
+
+    .ma-week-col--hours {
+        flex: 0 1 147px;
+        width: 147px;
+        min-width: 48px;
+    }
+
+    .ma-week-col--edit {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 74px;
+        width: 74px;
     }
 
     .ma-week-grid__head {
-        padding: 1rem 1.5rem;
-        color: #3B3731;
+        padding: 0;
+        color: #9D9B98;
         font-family: Lato;
-        font-size: 18px;
+        font-size: 16px;
         font-style: normal;
         font-weight: 600;
-        line-height: normal;
-        border-right: 1px solid #dfd8ce;
-    }
-
-    .ma-week-grid__head:first-child {
-        padding-left: 0;
-    }
-
-    .ma-week-grid>.ma-week-grid__head:nth-child(3) {
-        border-right: 0 !important;
-        padding-left: 4.5rem;
+        line-height: 19px;
+        text-transform: uppercase;
+        border: 0;
+        box-sizing: border-box;
     }
 
     .ma-cell {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        padding: 1rem 1.5rem;
-        border-top: 1px solid #ece7df;
-        border-right: 1px solid #dfd8ce;
-    }
-
-    .ma-cell:nth-child(3n) {
-        justify-content: start;
-        border-right: 0 !important;
-        padding-left: 4.5rem;
+        padding: 20px 0;
+        border: 0;
+        box-sizing: border-box;
+        min-width: 0;
     }
 
     .ma-day-name {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        width: 100%;
-        padding: 0.5rem 1rem;
-        background: #F9FAFC;
+        width: 275px;
+        max-width: 100%;
+        min-height: 48px;
+        padding: 0 20px;
         border-radius: 10px;
         background: #F7F7F7;
+        box-sizing: border-box;
     }
 
     .ma-day-name span {
@@ -587,40 +686,43 @@
         font-size: 18px;
         font-style: normal;
         font-weight: 400;
-        line-height: 25px;
-        /* 138.889% */
+        line-height: 22px;
     }
 
     .ma-time-range {
         display: flex;
         align-items: center;
-        gap: 0.45rem;
+        justify-content: flex-start;
+        width: 400px;
+        max-width: 100%;
+        gap: 0;
     }
 
     .ma-time-chip {
-        width: 100%;
+        width: 190px;
+        flex: 1 1 190px;
+        max-width: 190px;
+        height: 48px;
         display: inline-flex;
         align-items: center;
-        gap: 0.45rem;
-        padding: 0.45rem 0.9rem;
-        border: 1px solid #d5cfc6;
-        border-radius: 999px;
+        justify-content: center;
+        gap: 15px;
+        padding: 0 20px;
+        border: 1px solid #D4D4D4;
+        border-radius: 10px;
+        background: #fff;
         color: #3B3731;
         font-family: Lato;
         font-size: 18px;
         font-style: normal;
         font-weight: 400;
         line-height: 25px;
-        min-width: 135px;
-        justify-content: center;
+        min-width: 0;
+        white-space: nowrap;
         cursor: pointer;
         user-select: none;
+        box-sizing: border-box;
         transition: border-color 0.12s ease, background-color 0.12s ease;
-    }
-
-    .ma-time-chip:hover {
-        border-color: var(--ma-accent, #ffc97a);
-        background: color-mix(in srgb, var(--ma-accent, #ffc97a) 14%, #fff);
     }
 
     .ma-time-chip.ma-time-chip--open {
@@ -678,61 +780,62 @@
     }
 
     .ma-time-separator {
-        background: #D4D4D4;
-        width: 1px;
-        height: 25px;
+        color: #9D9B98;
+        flex: 0 0 20px;
+        width: 20px;
+        height: auto;
+        background: none;
+        font-size: 16px;
+        line-height: 1;
+        text-align: center;
     }
 
-    .ma-time-disabled {
-        height: 42px;
-        width: 100%;
-        border-radius: 10px;
-        background: #F7F7F7;
+    .ma-time-unavailable {
         display: none;
-        align-items: center;
-        justify-content: center;
-        gap: 7.5rem;
-        padding: 0 0.75rem;
-    }
-
-    .ma-time-disabled-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        color: #3B3731;
+        color: #9D9B98;
         font-family: Lato;
         font-size: 18px;
-        font-style: normal;
+        font-style: italic;
         font-weight: 400;
-        line-height: 25px;
-        /* 138.889% */
+        line-height: normal;
     }
 
-    .ma-time-disabled-separator {
-        width: 1px;
-        height: 18px;
-        background: #D4D4D4;
-    }
-
-    .ma-time-range.is-disabled .ma-time-chip,
-    .ma-time-range.is-disabled .ma-time-separator {
+    .ma-time-range.is-unavailable .ma-time-chip,
+    .ma-time-range.is-unavailable .ma-time-separator {
         display: none;
     }
 
-    .ma-time-range.is-disabled .ma-time-disabled {
+    .ma-time-range.is-unavailable .ma-time-unavailable {
         display: flex;
     }
 
-    .ma-cell[data-day-cell="name"].is-disabled .ma-switch {
-        cursor: not-allowed;
+    .ma-time-range.is-disabled {
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 18px;
+        font-style: italic;
+        font-weight: 400;
+        line-height: normal;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
-    .ma-cell[data-day-cell="name"].is-disabled .ma-switch input,
-    .ma-cell[data-day-cell="name"].is-disabled .ma-switch-slider {
+    .ma-time-range.is-disabled .ma-time-chip {
         pointer-events: none;
-        cursor: not-allowed;
     }
 
+    .ma-hours-cell {
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 18px;
+        font-weight: 400;
+        justify-content: flex-start;
+    }
+
+    .ma-cell[data-day-cell="name"] .ma-switch {
+        cursor: pointer;
+    }
 
     .ma-edit-cell {
         display: flex;
@@ -814,28 +917,38 @@
         }
     }
 
+    .ma-section.ma-card:has(.ma-holiday-grid) {
+        padding: 20px;
+    }
+
+    .ma-section.ma-card:has(.ma-holiday-grid)>h3 {
+        margin-bottom: 40px;
+    }
+
     .ma-holiday-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 3rem;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 20px;
         align-items: start;
-        margin-top: 2.5rem;
+        margin-top: 0;
     }
 
     .ma-inline-fields {
-        margin-top: 1.2rem;
+        margin-top: 0;
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 0.7rem;
+        gap: 20px;
     }
 
     .ma-field {
         display: block;
     }
 
-    .ma-field span {
+    .ma-field>span:first-child {
         display: flex;
+        align-items: baseline;
         gap: 5px;
+        margin-bottom: 10px;
         color: #3B3731;
         font-family: Lato;
         font-size: 18px;
@@ -844,16 +957,17 @@
         line-height: normal;
     }
 
-    .ma-field>span:first-child {
-        margin-bottom: 1.5rem;
+    .ma-field__optional {
+        color: #9C9790;
+        font-weight: 400;
     }
 
     .ma-field input,
     .ma-field .ma-field-value,
     .ma-field textarea {
         width: 100%;
-        border: 1px solid #ddd;
-        border-radius: 6px;
+        border: 1px solid #DDD;
+        border-radius: 5px;
         background: #fff;
         color: #3B3731;
         font-family: Lato;
@@ -861,16 +975,20 @@
         font-style: normal;
         font-weight: 400;
         line-height: 25px;
-        /* 138.889% */
-        padding: 0.6rem 0.75rem;
+        padding: 8px 12px;
+        box-sizing: border-box;
     }
 
     .ma-field .ma-field-value {
         display: flex;
         align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        min-height: 57px;
+        justify-content: space-between;
+        gap: 8px;
+        height: 42px;
+        min-height: 42px;
+        padding: 0 20px 0 10px;
+        text-align: left;
+        font-weight: 400;
     }
 
     .ma-field .ma-field-value__icon {
@@ -878,29 +996,103 @@
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
+        width: 15px;
+        height: 14px;
+        overflow: hidden;
+        margin-left: auto;
+    }
+
+    .ma-field .ma-field-value__icon img {
+        display: block;
     }
 
     .ma-field textarea {
-        min-height: 96px;
-        resize: vertical;
+        min-height: 87px;
+        height: 87px;
+        resize: none;
+        padding: 10px 12px;
     }
 
     .ma-form-actions {
         display: flex;
-        justify-content: flex-end;
-        margin-top: 0.7rem;
+        justify-content: flex-start;
+        margin-top: 0;
+    }
+
+    .ma-add-time-off {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 148px;
+        min-width: 148px;
+        height: 42px;
+        padding: 0;
+        border: 0;
+        border-radius: 100px;
+        background: #BACF8E;
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.10);
+        color: #FFF;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .ma-add-time-off.is-saving .ma-save-mini__label {
+        display: none;
+    }
+
+    .ma-add-time-off .ma-save-spinner {
+        display: none;
+    }
+
+    .ma-add-time-off.is-saving .ma-save-spinner {
+        display: inline-block;
     }
 
     .ma-holiday-calendar {
         border-radius: 10px;
+        min-width: 0;
+    }
+
+    .ma-holiday-calendar .rdc-top {
+        margin-bottom: 10px;
+    }
+
+    .ma-holiday-calendar .rdc-nav-circle>svg,
+    .ma-holiday-calendar .rdc-nav-inline>svg {
+        margin-top: 0;
+    }
+
+    .ma-holiday-calendar .rdc-panel {
+        border: 1px solid #D4D4D4;
+        border-radius: 10px;
+        padding: 13px;
+        gap: 20px;
+    }
+
+    .ma-holiday-calendar .rdc-month-header {
+        margin-bottom: 12px;
+    }
+
+    .ma-holiday-calendar .rdc-day {
+        height: 30px;
+    }
+
+    .ma-holiday-calendar .rdc-range-title {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-weight: 600;
     }
 
     .ma-holiday-list {
-        margin-top: 1.75rem;
-        padding: 20px;
-        border-radius: 10px;
-        background: #F7F7F7;
-        overflow: hidden;
+        margin-top: 40px;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        overflow: visible;
         font-family: Lato;
         color: #3B3731;
     }
@@ -908,106 +1100,112 @@
     .ma-holiday-list__header,
     .ma-holiday-list__row {
         display: grid;
-        grid-template-columns: 2fr 2fr 90px;
-        align-items: stretch;
-        padding-left: 0;
+        grid-template-columns: minmax(220px, 380px) minmax(0, 1fr) 82px;
+        align-items: center;
+        column-gap: 0;
+        padding: 0 20px;
+        box-sizing: border-box;
+    }
+
+    .ma-holiday-list__header {
+        height: 50px;
+        background: #F6F5F5;
+        border-radius: 10px 10px 0 0;
+        color: #948F88;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
     }
 
     .ma-holiday-list__header>div,
     .ma-holiday-list__row>div {
-        padding: 1rem 1.5rem;
+        padding: 0;
         display: flex;
         align-items: center;
+        border-right: 0;
+        min-width: 0;
     }
 
-    .ma-holiday-list__header>div:not(:last-child),
-    .ma-holiday-list__row>div:not(:last-child) {
-        border-right: 1px solid #D4D4D4;
-    }
-
-    .ma-holiday-list__header>div {
-        padding-top: 0;
-    }
-
-    .ma-holiday-list__header>div:first-child {
-        padding-left: 0;
-    }
-
-    .ma-holiday-list__row:last-child>div {
-        padding-bottom: 0;
-    }
-
-    .ma-holiday-list__range {
-        padding-left: 0 !important;
-    }
-
-    .ma-holiday-list__row:last-child>div:last-child {
-        padding-left: 0;
-    }
-
-    .ma-holiday-list__header {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 18px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .ma-holiday-list__edit-col {
+    .ma-holiday-list__col--edit {
         justify-content: center;
     }
 
     .ma-holiday-list__row {
+        min-height: 56px;
         color: #3B3731;
         font-family: Lato;
-        font-size: 18px;
+        font-size: 16px;
         font-style: normal;
-        font-weight: 600;
+        font-weight: 400;
         line-height: normal;
-        border-top: 1px solid #D4D4D4;
+        border-top: 0;
+        border-bottom: 1px solid #D4D4D4;
+    }
+
+    .ma-holiday-list__row:last-child {
+        border-bottom: 0;
+    }
+
+    .ma-holiday-list__range {
+        font-weight: 600;
+        gap: 0;
+        white-space: nowrap;
     }
 
     .ma-holiday-list__dates {
         font-weight: 600;
+        color: #3B3731;
     }
 
     .ma-holiday-list__days {
-        margin-left: 0.35rem;
-        color: #3B3731;
+        margin-left: 4px;
+        color: #9C9790;
         font-family: Lato;
-        font-size: 18px;
+        font-size: 16px;
         font-style: normal;
         font-weight: 400;
         line-height: normal;
     }
 
     .ma-holiday-list__reason {
-        color: #3B3731;
+        color: #9C9790;
+        font-weight: 400;
+        padding-right: 16px;
     }
 
     .ma-holiday-list__actions {
-        padding-left: 0 !important;
         display: flex;
-        justify-content: center;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
     }
 
+    .ma-holiday-list__edit,
     .ma-holiday-list__delete {
         border: 0;
         background: transparent;
         cursor: pointer;
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
+        width: 36px;
+        height: 36px;
+        padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         color: #3B3731;
-        transition: background-color 0.12s ease, transform 0.12s ease;
+        transition: opacity 0.12s ease;
     }
 
+    .ma-holiday-list__edit img,
+    .ma-holiday-list__delete img {
+        display: block;
+    }
+
+    .ma-holiday-list__edit:hover,
     .ma-holiday-list__delete:hover {
-        background: rgba(0, 0, 0, 0.06);
+        opacity: 0.8;
+        background: transparent;
     }
 
     .ma-holiday-list__delete.is-deleting,
@@ -1032,10 +1230,11 @@
     }
 
     .ma-holiday-list__empty {
-        padding: 1.25rem 1.5rem;
+        padding: 20px;
         text-align: center;
         color: #9C9790;
         font-size: 14px;
+        border-top: 1px solid #D4D4D4;
     }
 
     .ma-field[data-date-trigger] .ma-field-value {
@@ -1186,17 +1385,40 @@
         box-shadow: 0 2px 8px rgba(255, 201, 122, 0.35);
     }
 
-    .ma-pause-row {
-        width: fit-content;
-        display: flex;
-        align-items: center;
-        justify-content: start;
-        gap: 1rem;
-        border-bottom: 1px solid #dfd8ce;
-        padding: 0.75rem 0;
+    .ma-card--pause {
+        padding: 20px;
     }
 
-    .ma-pause-row span {
+    .ma-card--pause>h3 {
+        margin-bottom: 20px;
+    }
+
+    .ma-pause-row {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        border: 1px solid #EDEDED;
+        border-radius: 10px;
+        background: #F5F5F5;
+        padding: 20px;
+        min-height: 84px;
+        box-sizing: border-box;
+    }
+
+    .ma-pause-row.is-paused {
+        background: #FEE;
+        border-color: #EDEDED;
+    }
+
+    .ma-pause-copy {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .ma-pause-copy strong {
+        display: block;
         color: #3B3731;
         font-family: Lato;
         font-size: 18px;
@@ -1205,15 +1427,26 @@
         line-height: normal;
     }
 
-    .ma-pause-row small {
+    .ma-pause-copy small {
+        color: #9D9B98;
+        font-weight: 400;
+    }
+
+    .ma-pause-copy p {
+        margin: 4px 0 0;
         color: #9C9790;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 22px;
     }
 
     .ma-switch {
         position: relative;
         display: inline-block;
-        width: 42px;
-        /* height: 24px; */
+        width: 44px;
+        height: 24px;
+        flex-shrink: 0;
     }
 
     .ma-switch input {
@@ -1273,10 +1506,74 @@
         transform: translateX(20px);
     }
 
+    .ma-save-bar {
+        position: sticky;
+        bottom: 0;
+        z-index: 8;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-height: 80px;
+        margin: 0;
+        padding: 19px 20px;
+        background: rgba(186, 207, 142, 0.2);
+        border-top: 1px solid #B5DB65;
+        backdrop-filter: blur(10px);
+        box-sizing: border-box;
+    }
+
+    .ma-save-bar.is-dirty {
+        background: #FFFCF6;
+        border-top-color: #FFAE37;
+    }
+
+    .ma-save-bar__status {
+        margin: 0;
+        color: #AFCD6F;
+        font-family: Lato;
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 22px;
+    }
+
+    .ma-save-bar__status span {
+        color: #9C9790;
+        font-weight: 600;
+    }
+
+    .ma-save-bar.is-dirty .ma-save-bar__status {
+        color: #FFAE37;
+    }
+
     .ma-footer-actions {
         display: flex;
         justify-content: flex-end;
-        gap: 0.7rem;
+        gap: 20px;
+        margin: 0;
+    }
+
+    .ma-btn:disabled {
+        opacity: 0.5;
+        cursor: default;
+        pointer-events: none;
+    }
+
+    .ma-btn-light {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 100px;
+        border: 1px solid #D9D9D9;
+        background: #fff;
+        color: #9D9B98;
+        text-align: center;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        box-shadow: none;
     }
 
     .ma-btn {
@@ -1296,30 +1593,14 @@
         cursor: pointer;
     }
 
-    .ma-btn-light {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 75px;
-        border: 1px solid #3B3731;
-        background: transparent;
-        color: #3B3731;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
     .ma-btn-primary {
         display: flex;
         align-items: center;
         justify-content: center;
         border: none;
-        border-radius: 96px;
+        border-radius: 100px;
         background: #BACF8E;
-        box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.10);
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.10);
         color: #FFF;
         text-align: center;
         font-family: Lato;
@@ -1334,14 +1615,71 @@
     (() => {
         const setupManageAvailability = () => {
             const root = document.querySelector('.ma-board');
-            if (!root || root.dataset.rangeSyncBound === '1') {
+            if (!root) {
                 return;
             }
+            if (root.dataset.maSetupBound === '1') {
+                return;
+            }
+            root.dataset.maSetupBound = '1';
             const staffList = root.querySelector('.ma-staff-list');
             const staffNameTarget = root.querySelector('[data-staff-name-target]');
             const staffJobTitleTarget = root.querySelector('[data-staff-job-title-target]');
+            const staffJobWrap = root.querySelector('[data-staff-job-wrap]');
             const reasonField = root.querySelector('[data-holiday-reason]');
             const pauseField = root.querySelector('[data-pause-booking]');
+            const pauseCopy = root.querySelector('[data-pause-copy]');
+            const pauseTitle = root.querySelector('[data-pause-title]');
+            const pauseRow = root.querySelector('[data-pause-row]');
+            const saveBar = root.querySelector('[data-save-bar]');
+            const saveStatus = root.querySelector('[data-save-status]');
+            const cancelBtn = root.querySelector('[data-ma-cancel]');
+            const saveChangesBtn = root.querySelector('[data-ma-save-changes]');
+            const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            let pauseBaseline = !!pauseField?.checked;
+            const dirtySources = new Set();
+
+            const markDirty = (source = 'change') => {
+                if (!saveBar) return;
+                dirtySources.add(source);
+                const count = dirtySources.size;
+                saveBar.classList.add('is-dirty');
+                if (saveStatus) {
+                    saveStatus.textContent = count === 1 ?
+                        '1 unsaved changes' :
+                        `${count} unsaved changes`;
+                }
+                if (cancelBtn) cancelBtn.disabled = false;
+                if (saveChangesBtn) saveChangesBtn.disabled = false;
+            };
+
+            const markSaved = () => {
+                if (!saveBar) return;
+                dirtySources.clear();
+                saveBar.classList.remove('is-dirty');
+                if (saveStatus) saveStatus.innerHTML = 'All changes saved <span>· just now</span>';
+                if (cancelBtn) cancelBtn.disabled = true;
+                if (saveChangesBtn) {
+                    saveChangesBtn.disabled = true;
+                    saveChangesBtn.classList.remove('is-saving');
+                }
+                pauseBaseline = !!pauseField?.checked;
+            };
+
+            const syncPauseCopy = () => {
+                const paused = !!pauseField?.checked;
+                pauseRow?.classList.toggle('is-paused', paused);
+                if (pauseTitle) {
+                    pauseTitle.innerHTML = paused ?
+                        'New bookings paused' :
+                        'Pause new bookings <small>(effective today)</small>';
+                }
+                if (pauseCopy) {
+                    pauseCopy.textContent = paused ?
+                        "Clients can still see your profile, but can't request new appointments. Existing bookings are unaffected." :
+                        'Clients are currently able to request appointments in your open slots.';
+                }
+            };
 
             const formatTime = (raw) => {
                 if (!raw) return '';
@@ -1350,6 +1688,70 @@
                 if (Number.isNaN(hour)) return raw;
                 const suffix = hour < 12 ? 'AM' : 'PM';
                 return `${String(hour).padStart(2, '0')}:${mStr} ${suffix}`;
+            };
+
+            const hoursLabel = (start, end, status) => {
+                if (!status) return '';
+                const [sh = 0, sm = 0] = String(start || '0:0').split(':').map((n) => parseInt(n, 10) || 0);
+                const [eh = 0, em = 0] = String(end || '0:0').split(':').map((n) => parseInt(n, 10) || 0);
+                const diff = (eh * 60 + em) - (sh * 60 + sm);
+                if (diff <= 0) return '0h';
+                const hours = diff / 60;
+                return Number.isInteger(hours) ? `${hours}h` : `${hours.toFixed(1).replace(/\.0$/, '')}h`;
+            };
+
+            const updateHoursForDay = (day) => {
+                const timeRow = root.querySelector(`[data-day="${day}"][data-day-cell="time"]`);
+                const hoursEl = root.querySelector(`[data-day="${day}"][data-day-cell="hours"] [data-day-hours]`);
+                const checkbox = root.querySelector(`[data-day="${day}"][data-day-cell="name"] input[data-day-status]`);
+                if (!hoursEl) return;
+                const start = timeRow?.querySelector('[data-time-type="start"]')?.dataset.timeValue || '10:00';
+                const end = timeRow?.querySelector('[data-time-type="end"]')?.dataset.timeValue || '18:00';
+                hoursEl.textContent = hoursLabel(start, end, !!(checkbox && checkbox.checked));
+            };
+
+            const collectWorkingHours = () => {
+                const hours = {};
+                dayKeys.forEach((day) => {
+                    const checkbox = root.querySelector(`[data-day="${day}"][data-day-cell="name"] input[data-day-status]`);
+                    const timeRow = root.querySelector(`[data-day="${day}"][data-day-cell="time"]`);
+                    hours[day] = {
+                        status: !!(checkbox && checkbox.checked),
+                        start: timeRow?.querySelector('[data-time-type="start"]')?.dataset.timeValue || '10:00',
+                        end: timeRow?.querySelector('[data-time-type="end"]')?.dataset.timeValue || '18:00',
+                    };
+                });
+                return hours;
+            };
+
+            const activeStaffId = () => {
+                const pill = root.querySelector('.ma-staff-pill.ma-staff-pill--active');
+                return parseInt(pill?.dataset.staffId || '0', 10) || null;
+            };
+
+            const persistActivePayload = (patch) => {
+                const pill = root.querySelector('.ma-staff-pill.ma-staff-pill--active');
+                if (!pill?.dataset.staffPayload) return;
+                try {
+                    const parsed = JSON.parse(pill.dataset.staffPayload);
+                    Object.assign(parsed, patch);
+                    pill.dataset.staffPayload = JSON.stringify(parsed);
+                } catch (err) {}
+            };
+
+            const setDayAvailability = (day, isOn) => {
+                const nameRow = root.querySelector(`[data-day="${day}"][data-day-cell="name"]`);
+                const timeRow = root.querySelector(`[data-day="${day}"][data-day-cell="time"]`);
+                const hoursRow = root.querySelector(`[data-day="${day}"][data-day-cell="hours"]`);
+                const editRow = root.querySelector(`[data-day="${day}"][data-day-cell="edit"]`);
+                if (nameRow) nameRow.classList.toggle('is-disabled', !isOn);
+                if (timeRow) {
+                    timeRow.classList.toggle('is-unavailable', !isOn);
+                    timeRow.classList.toggle('is-disabled', !isOn);
+                }
+                if (hoursRow) hoursRow.classList.toggle('is-disabled', !isOn);
+                if (editRow) editRow.classList.toggle('is-disabled', !isOn);
+                updateHoursForDay(day);
             };
 
             const applyWorkingHours = (workingHours) => {
@@ -1368,23 +1770,15 @@
                     const endChip = timeRow.querySelector('[data-time-type="end"]');
                     const startEl = timeRow.querySelector('[data-time-start]');
                     const endEl = timeRow.querySelector('[data-time-end]');
-                    const startReadOnlyEl = timeRow.querySelector(
-                        '[data-time-start-readonly]');
-                    const endReadOnlyEl = timeRow.querySelector(
-                        '[data-time-end-readonly]');
                     const startLabel = formatTime(data.start);
                     const endLabel = formatTime(data.end);
                     if (startChip) startChip.dataset.timeValue = data.start || '';
                     if (endChip) endChip.dataset.timeValue = data.end || '';
                     if (startEl) startEl.textContent = startLabel;
                     if (endEl) endEl.textContent = endLabel;
-                    if (startReadOnlyEl) startReadOnlyEl.textContent = startLabel;
-                    if (endReadOnlyEl) endReadOnlyEl.textContent = endLabel;
-                    nameRow.classList.add('is-disabled');
-                    timeRow.classList.add('is-disabled');
-                    editRow.classList.add('is-disabled');
                     const saveBtn = editRow.querySelector('[data-day-action="save"]');
                     if (saveBtn) saveBtn.classList.remove('is-saving');
+                    setDayAvailability(day, !!data.status);
                 });
             };
 
@@ -1413,6 +1807,7 @@
 
             const applyPauseBooking = (paused) => {
                 if (pauseField) pauseField.checked = !!paused;
+                syncPauseCopy();
             };
 
             const applyStaffPayload = (pill) => {
@@ -1432,13 +1827,20 @@
 
             const syncActiveStaff = (pill) => {
                 if (!pill) return;
+                const name = pill.dataset.staffName || '';
+                const job = pill.dataset.staffJobTitle || '';
                 if (staffNameTarget) {
-                    staffNameTarget.textContent = pill.dataset.staffName || '';
+                    staffNameTarget.textContent = name;
                 }
                 if (staffJobTitleTarget) {
-                    staffJobTitleTarget.textContent = pill.dataset.staffJobTitle || '';
+                    staffJobTitleTarget.textContent = job;
+                }
+                if (staffJobWrap) {
+                    staffJobWrap.style.display = job ? '' : 'none';
                 }
                 applyStaffPayload(pill);
+                pauseBaseline = !!pauseField?.checked;
+                markSaved();
             };
 
             syncActiveStaff(root.querySelector('.ma-staff-pill.ma-staff-pill--active'));
@@ -1467,15 +1869,18 @@
             }
 
             const setRowEditing = (day, editing) => {
-                const nameRow = root.querySelector(
-                    `[data-day="${day}"][data-day-cell="name"]`);
-                const timeRow = root.querySelector(
-                    `[data-day="${day}"][data-day-cell="time"]`);
-                const editRow = root.querySelector(
-                    `[data-day="${day}"][data-day-cell="edit"]`);
-                if (nameRow) nameRow.classList.toggle('is-disabled', !editing);
-                if (timeRow) timeRow.classList.toggle('is-disabled', !editing);
-                if (editRow) editRow.classList.toggle('is-disabled', !editing);
+                const checkbox = root.querySelector(
+                    `[data-day="${day}"][data-day-cell="name"] input[data-day-status]`);
+                if (editing && checkbox && !checkbox.checked) {
+                    checkbox.checked = true;
+                }
+                setDayAvailability(day, editing || !!(checkbox && checkbox.checked));
+                if (editing) {
+                    const timeRow = root.querySelector(`[data-day="${day}"][data-day-cell="time"]`);
+                    const editRow = root.querySelector(`[data-day="${day}"][data-day-cell="edit"]`);
+                    if (timeRow) timeRow.classList.remove('is-disabled', 'is-unavailable');
+                    if (editRow) editRow.classList.remove('is-disabled');
+                }
             };
 
             const buildTimeOptions = () => {
@@ -1538,6 +1943,9 @@
                     const span = activeTimeChip.querySelector(
                         '[data-time-start], [data-time-end]');
                     if (span) span.textContent = label;
+                    const day = activeTimeChip.closest('[data-day]')?.dataset.day;
+                    if (day) updateHoursForDay(day);
+                    markDirty(`day-${day || 'time'}`);
                     closeTimeDropdown();
                 });
                 document.body.appendChild(el);
@@ -1597,6 +2005,22 @@
 
                     const editBtn = event.target.closest('[data-day-action="edit"]');
                     const saveBtn = event.target.closest('[data-day-action="save"]');
+                    const holidayEditBtn = event.target.closest('[data-holiday-edit]');
+
+                    if (holidayEditBtn) {
+                        event.preventDefault();
+                        const from = holidayEditBtn.dataset.from || todayIso;
+                        const to = holidayEditBtn.dataset.to || from;
+                        if (reasonField) reasonField.value = holidayEditBtn.dataset.reason || '';
+                        window.dispatchEvent(new CustomEvent('range-calendar-set', {
+                            detail: {
+                                componentId: 'dashboard-manage-availability-range',
+                                start: from,
+                                end: to,
+                            },
+                        }));
+                        return;
+                    }
 
                     if (editBtn) {
                         const cell = editBtn.closest('.ma-cell');
@@ -1643,7 +2067,7 @@
                                 };
                                 activePill.dataset.staffPayload = JSON.stringify(
                                     parsed);
-                            } catch (err) { }
+                            } catch (err) {}
                         }
 
                         saveBtn.classList.add('is-saving');
@@ -1678,9 +2102,53 @@
                     setRowEditing(day, false);
                 });
 
+                window.addEventListener('staff-schedule-saved', () => {
+                    markSaved();
+                });
+
+                root.addEventListener('change', (event) => {
+                    const dayCheckbox = event.target.closest('input[data-day-status]');
+                    if (dayCheckbox) {
+                        const day = dayCheckbox.closest('[data-day]')?.dataset.day;
+                        if (day) setDayAvailability(day, dayCheckbox.checked);
+                        markDirty(`day-${day || 'status'}`);
+                        return;
+                    }
+                    if (event.target === pauseField) {
+                        syncPauseCopy();
+                        markDirty('pause');
+                    }
+                });
+
+                reasonField?.addEventListener('input', () => markDirty('reason'));
+
+                cancelBtn?.addEventListener('click', () => {
+                    const pill = root.querySelector('.ma-staff-pill.ma-staff-pill--active');
+                    if (pill) applyStaffPayload(pill);
+                    markSaved();
+                });
+
+                saveChangesBtn?.addEventListener('click', () => {
+                    if (saveChangesBtn.disabled || saveChangesBtn.classList.contains('is-saving')) return;
+                    const staffId = activeStaffId();
+                    if (!staffId || !window.Livewire) return;
+                    const workingHours = collectWorkingHours();
+                    const paused = !!pauseField?.checked;
+                    persistActivePayload({
+                        workingHours,
+                        pauseBooking: paused
+                    });
+                    saveChangesBtn.classList.add('is-saving');
+                    window.Livewire.dispatch('save-staff-schedule', {
+                        staffId,
+                        workingHours,
+                        paused,
+                    });
+                });
+
                 document.addEventListener('click', (event) => {
                     if (!timeDropdownEl || !timeDropdownEl.classList.contains(
-                        'is-open')) return;
+                            'is-open')) return;
                     if (event.target.closest('.ma-time-dropdown')) return;
                     if (event.target.closest('.ma-time-chip')) return;
                     closeTimeDropdown();
@@ -2028,18 +2496,31 @@
 
                 return date.toLocaleDateString('en-GB', {
                     day: '2-digit',
-                    month: 'long',
+                    month: '2-digit',
                     year: 'numeric',
                 });
             };
 
+            const liveDateFrom = () => document.getElementById('manage-availability-date-from');
+            const liveDateTo = () => document.getElementById('manage-availability-date-to');
+            const liveStartInput = () => document.querySelector(
+                '#dashboard-manage-availability-range input[name="manage_availability_start_date"]');
+            const liveEndInput = () => document.querySelector(
+                '#dashboard-manage-availability-range input[name="manage_availability_end_date"]');
+
             const syncRangeFields = () => {
-                dateFromInput.textContent = formatDate(startHiddenInput.value);
-                dateToInput.textContent = formatDate(endHiddenInput.value);
+                const fromEl = liveDateFrom();
+                const toEl = liveDateTo();
+                if (fromEl) fromEl.textContent = formatDate(liveStartInput()?.value);
+                if (toEl) toEl.textContent = formatDate(liveEndInput()?.value);
             };
 
             syncRangeFields();
             setTimeout(syncRangeFields, 0);
+            setTimeout(syncRangeFields, 120);
+            document.addEventListener('alpine:initialized', syncRangeFields, {
+                once: true
+            });
 
             window.addEventListener('range-calendar-changed', (event) => {
                 const detail = event?.detail || {};
@@ -2048,8 +2529,10 @@
                     return;
                 }
 
-                dateFromInput.textContent = formatDate(detail.start ?? startHiddenInput.value);
-                dateToInput.textContent = formatDate(detail.end ?? endHiddenInput.value);
+                const fromEl = liveDateFrom();
+                const toEl = liveDateTo();
+                if (fromEl) fromEl.textContent = formatDate(detail.start ?? liveStartInput()?.value);
+                if (toEl) toEl.textContent = formatDate(detail.end ?? liveEndInput()?.value);
             });
         };
 
@@ -2060,5 +2543,6 @@
         }
 
         document.addEventListener('livewire:navigated', setupManageAvailability);
+        window.addEventListener('manage-availability-mounted', setupManageAvailability);
     })();
 </script>

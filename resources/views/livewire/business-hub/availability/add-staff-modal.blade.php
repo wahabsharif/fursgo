@@ -15,23 +15,18 @@ new class extends Component {
             'jobTitle' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $email = (string) data_get(auth()->user(), 'email', '');
-        $profile = GroomerSpacerProfile::where('email', $email)->first();
+        $profile = auth('groomer_spacer')->user();
+        if (!$profile instanceof GroomerSpacerProfile) {
+            $email = (string) data_get(auth()->user(), 'email', '');
+            $profile = $email !== '' ? GroomerSpacerProfile::whereRaw('LOWER(email) = ?', [mb_strtolower($email)])->first() : null;
+        }
 
-        if (!$profile) {
+        if (!$profile instanceof GroomerSpacerProfile) {
             $this->addError('name', 'Groomer/Spacer profile not found for current user.');
             return;
         }
 
-        $defaultWorkingHours = [
-            'monday' => ['status' => true, 'start' => '10:00', 'end' => '18:00'],
-            'tuesday' => ['status' => true, 'start' => '10:00', 'end' => '18:00'],
-            'wednesday' => ['status' => true, 'start' => '10:00', 'end' => '18:00'],
-            'thursday' => ['status' => true, 'start' => '10:00', 'end' => '18:00'],
-            'friday' => ['status' => true, 'start' => '10:00', 'end' => '18:00'],
-            'saturday' => ['status' => false, 'start' => '10:00', 'end' => '18:00'],
-            'sunday' => ['status' => false, 'start' => '10:00', 'end' => '18:00'],
-        ];
+        $defaultWorkingHours = Staff::defaultWorkingHours();
 
         $staff = Staff::create([
             'goormer_spacer_profile_id' => $profile->id,
@@ -85,7 +80,7 @@ new class extends Component {
             role="dialog" aria-modal="true" aria-labelledby="add-staff-modal-title" @click.self="close()">
             <div class="ma-modal-card" @click.stop>
                 <div class="ma-modal-header">
-                    <h3 id="add-staff-modal-title">Add Team Member</h3>
+                    <h3 id="add-staff-modal-title"><span style="font-weight: 900;">Add</span> Team Member</h3>
                     <button type="button" class="ma-modal-close" aria-label="Close" @click="close()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                             <path d="M1 1L15 15M15 1L1 15" stroke="#3B3731" stroke-width="1.6" stroke-linecap="round" />
@@ -136,7 +131,7 @@ new class extends Component {
                         <button type="button" class="ma-btn ma-btn-light" @click="close()">Cancel</button>
                         <button type="submit" class="ma-btn ma-btn-primary" wire:loading.attr="disabled"
                             wire:target="save">
-                            <span wire:loading.remove wire:target="save">Add Member</span>
+                            <span wire:loading.remove wire:target="save">+ Add Member</span>
                             <span wire:loading wire:target="save">Saving…</span>
                         </button>
                     </div>
@@ -174,11 +169,11 @@ new class extends Component {
 
     .ma-modal-card {
         width: 100%;
-        max-width: 520px;
+        max-width: 545px;
         background: #fff;
         border-radius: 14px;
         box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
-        padding: 1.75rem 1.75rem 1.5rem;
+        padding: 20px;
         font-family: Lato;
         color: #3B3731;
         transform: translateY(10px) scale(0.97);
@@ -200,7 +195,7 @@ new class extends Component {
     .ma-modal-header h3 {
         margin: 0;
         color: #3B3731;
-        font-family: Lato;
+        font-family: "Playfair Display";
         font-size: 20px;
         font-style: normal;
         font-weight: 600;
@@ -245,6 +240,7 @@ new class extends Component {
 
     .ma-modal-input input {
         width: 100%;
+        height: 48px;
         border: 1px solid #d8d1c7;
         border-radius: 10px;
         background: #fff;
@@ -253,7 +249,7 @@ new class extends Component {
         font-size: 15px;
         font-weight: 400;
         line-height: normal;
-        padding: 0.85rem 2.5rem 0.85rem 1rem;
+        padding: 0 2.5rem 0 1rem;
         outline: none;
         transition: border-color 0.15s ease;
     }
@@ -296,9 +292,21 @@ new class extends Component {
 
     .ma-modal-actions {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-end;
         align-items: center;
         gap: 0.75rem;
         margin-top: 0.75rem;
+    }
+
+    .ma-modal-actions .ma-btn-light {
+        width: 88px;
+        min-width: 88px;
+        height: 42px;
+    }
+
+    .ma-modal-actions .ma-btn-primary {
+        width: 150px;
+        min-width: 150px;
+        height: 42px;
     }
 </style>

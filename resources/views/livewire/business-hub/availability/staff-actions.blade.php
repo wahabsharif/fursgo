@@ -8,6 +8,29 @@ use Livewire\Volt\Component;
 new class extends Component {
     private const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
+    private function authorizedStaff(int $staffId): ?Staff
+    {
+        if (!$staffId) {
+            return null;
+        }
+
+        $staff = Staff::find($staffId);
+        if (!$staff) {
+            return null;
+        }
+
+        $profile = auth('groomer_spacer')->user();
+        if (!$profile instanceof GroomerSpacerProfile) {
+            $email = (string) data_get(auth()->user(), 'email', '');
+            $profile = $email !== '' ? GroomerSpacerProfile::where('email', $email)->first() : null;
+        }
+        if (!$profile || (int) $staff->goormer_spacer_profile_id !== (int) $profile->id) {
+            return null;
+        }
+
+        return $staff;
+    }
+
     #[On('save-staff-day')]
     public function saveDay($staffId = null, $day = null, $status = null, $start = null, $end = null): void
     {
@@ -21,14 +44,8 @@ new class extends Component {
             return;
         }
 
-        $staff = Staff::find($staffId);
+        $staff = $this->authorizedStaff($staffId);
         if (!$staff) {
-            return;
-        }
-
-        $email = (string) data_get(auth()->user(), 'email', '');
-        $profile = GroomerSpacerProfile::where('email', $email)->first();
-        if (!$profile || (int) $staff->goormer_spacer_profile_id !== (int) $profile->id) {
             return;
         }
 
@@ -45,22 +62,69 @@ new class extends Component {
         $this->dispatch('staff-day-saved', staffId: $staffId, day: $day, status: $status, start: $start, end: $end);
     }
 
-    #[On('save-staff-holiday')]
-    public function saveHoliday($staffId = null, $from = null, $to = null, $reason = null): void
+    #[On('save-staff-pause')]
+    public function savePause($staffId = null, $paused = null): void
     {
         $staffId = (int) $staffId;
         if (!$staffId) {
             return;
         }
 
-        $staff = Staff::find($staffId);
+        $staff = $this->authorizedStaff($staffId);
         if (!$staff) {
             return;
         }
 
-        $email = (string) data_get(auth()->user(), 'email', '');
-        $profile = GroomerSpacerProfile::where('email', $email)->first();
-        if (!$profile || (int) $staff->goormer_spacer_profile_id !== (int) $profile->id) {
+        $staff->pause_booking = (bool) $paused;
+        $staff->save();
+
+        $this->dispatch('staff-pause-saved', staffId: $staffId, paused: (bool) $staff->pause_booking);
+    }
+
+    #[On('save-staff-schedule')]
+    public function saveSchedule($staffId = null, $workingHours = null, $paused = null): void
+    {
+        $staffId = (int) $staffId;
+        if (!$staffId) {
+            return;
+        }
+
+        $staff = $this->authorizedStaff($staffId);
+        if (!$staff) {
+            return;
+        }
+
+        if (is_array($workingHours)) {
+            $normalized = is_array($staff->working_hours) ? $staff->working_hours : [];
+            foreach (self::DAYS as $day) {
+                $entry = $workingHours[$day] ?? null;
+                if (!is_array($entry)) {
+                    continue;
+                }
+                $normalized[$day] = [
+                    'status' => (bool) ($entry['status'] ?? false),
+                    'start' => (string) ($entry['start'] ?? '10:00'),
+                    'end' => (string) ($entry['end'] ?? '18:00'),
+                ];
+            }
+            $staff->working_hours = $normalized;
+        }
+
+        if ($paused !== null) {
+            $staff->pause_booking = (bool) $paused;
+        }
+
+        $staff->save();
+
+        $this->dispatch('staff-schedule-saved', staffId: $staffId, paused: (bool) $staff->pause_booking);
+    }
+
+    #[On('save-staff-holiday')]
+    public function saveHoliday($staffId = null, $from = null, $to = null, $reason = null): void
+    {
+        $staffId = (int) $staffId;
+        $staff = $this->authorizedStaff($staffId);
+        if (!$staff) {
             return;
         }
 
@@ -91,18 +155,12 @@ new class extends Component {
     {
         $staffId = (int) $staffId;
         $index = is_numeric($index) ? (int) $index : -1;
-        if (!$staffId || $index < 0) {
+        if ($index < 0) {
             return;
         }
 
-        $staff = Staff::find($staffId);
+        $staff = $this->authorizedStaff($staffId);
         if (!$staff) {
-            return;
-        }
-
-        $email = (string) data_get(auth()->user(), 'email', '');
-        $profile = GroomerSpacerProfile::where('email', $email)->first();
-        if (!$profile || (int) $staff->goormer_spacer_profile_id !== (int) $profile->id) {
             return;
         }
 

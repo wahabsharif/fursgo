@@ -47,6 +47,16 @@ class StaffSeeder extends Seeder
 
         $rows = [
             [
+                'name' => $groomerSpacer->full_name ?: 'Dev Groomer',
+                'phone' => $groomerSpacer->business_details['business_phone'] ?? null,
+                'email' => $groomerSpacer->email,
+                'job_title' => strtolower((string) $groomerSpacer->user_type) === 'space' ? 'Space Owner' : 'Groomer',
+                'image' => $groomerSpacer->business_basics['profile_photo_path'] ?? null,
+                'working_hours' => $defaultWorkingHours,
+                'holiday_time_off' => $defaultHolidayTimeOff,
+                'pause_booking' => false,
+            ],
+            [
                 'name' => 'Liam Anderson',
                 'phone' => '+16175550124',
                 'email' => 'liam.anderson@dev.com',
