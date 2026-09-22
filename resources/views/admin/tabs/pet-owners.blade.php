@@ -63,6 +63,7 @@ $ticketStatusLabels = [
     view: 'list',
     selectedCustomerId: null,
     detailTab: 'overview',
+    selectedPetId: null,
     section: 'customers',
     statusFilter: 'all',
     search: '',
@@ -73,6 +74,7 @@ $ticketStatusLabels = [
     openCustomer(id) {
         this.selectedCustomerId = id;
         this.detailTab = 'overview';
+        this.selectedPetId = null;
         this.view = 'detail';
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
@@ -80,8 +82,10 @@ $ticketStatusLabels = [
         this.view = 'list';
         this.selectedCustomerId = null;
         this.detailTab = 'overview';
+        this.selectedPetId = null;
     },
-}">
+}"
+@admin-pet-selected.window="selectedPetId = $event.detail.id">
     @include('admin.tabs.customer-detail')
 
     <div class="admin-po-list" x-show="view === 'list'">

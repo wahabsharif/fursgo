@@ -168,6 +168,15 @@
     line-height: normal;
 }
 
+.admin-page-title span.page-title-count {
+    color: #3b3731;
+    font-family: Lato;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
 .admin-page-toolbar {
     display: flex;
     align-items: center;
@@ -1525,7 +1534,7 @@
 .admin-po-status.is-active {
     color: #a7c569;
     border-color: #d8e8b7;
-    background: #fbfff4;
+    background: #fff;
 }
 
 .admin-po-status.has-dot::before {
@@ -2217,7 +2226,8 @@
     color: #a1c25d;
 }
 
-.admin-co-action.is-password {
+.admin-co-action.is-password,
+.admin-co-action.is-archive {
     background: #f1f5f8;
     color: #659fc9;
 }
@@ -2232,10 +2242,22 @@
     color: #ff7f3c;
 }
 
-.admin-co-action.is-delete {
+.admin-co-action.is-delete,
+.admin-co-action.is-delete-pet {
     background: #fee8e4;
     color: #fe6f56;
     box-shadow: 0 4px 10px 0 rgba(59, 55, 49, 0.3);
+}
+
+.admin-co-action.is-transfer {
+    background: #f4f8ec;
+    color: #a1c25d;
+}
+
+.admin-co-actions > div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .admin-co-main {
@@ -2256,7 +2278,7 @@
     width: fit-content;
     max-width: 100%;
     margin: 0;
-    padding: 8px 0;
+    padding: 0;
     background: var(--admin-page-bg);
 }
 
@@ -2404,9 +2426,112 @@
     font-weight: 400;
 }
 
+.admin-co-panel.grooming-preferences .admin-co-details-row dd {
+    justify-self: start;
+    text-align: left;
+}
+
+.admin-co-grooming-edit {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-co-grooming-edit-row {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr);
+    gap: 16px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(59, 55, 49, 0.08);
+    position: relative;
+    z-index: 1;
+}
+
+.admin-co-grooming-edit-row:first-child {
+    padding-top: 0;
+}
+
+.admin-co-grooming-edit-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.admin-co-grooming-edit-row.is-open {
+    z-index: 5;
+}
+
+.admin-co-grooming-edit-row.is-notes {
+    align-items: flex-start;
+}
+
+.admin-co-grooming-edit-label {
+    margin: 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.admin-co-grooming-edit-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.admin-co-grooming-edit-input,
+.admin-co-grooming-edit-textarea {
+    width: 100%;
+    min-width: 0;
+    padding: 10px 14px;
+    border: 1px solid rgba(59, 55, 49, 0.12);
+    border-radius: 8px;
+    background: #fff;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.4;
+    outline: none;
+}
+
+.admin-co-grooming-edit-input {
+    min-height: 42px;
+}
+
+.admin-co-grooming-edit-textarea {
+    min-height: 88px;
+    resize: vertical;
+}
+
+.admin-co-grooming-edit-input:focus,
+.admin-co-grooming-edit-textarea:focus {
+    border-color: rgba(59, 55, 49, 0.28);
+}
+
+.admin-co-dd--yesno {
+    flex: 0 0 88px;
+    min-width: 88px;
+}
+
+@media (max-width: 575.98px) {
+    .admin-co-grooming-edit-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        align-items: stretch;
+    }
+}
+
 .admin-co-panel.is-editing {
     background: #fff;
     border: 1px solid rgba(59, 55, 49, 0.1);
+}
+
+.admin-co-panel.is-editing .admin-co-section-head {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(59, 55, 49, 0.08);
 }
 
 .admin-co-edit-title {
@@ -2571,7 +2696,41 @@
     color: #3b3731;
     font-family: Lato, sans-serif;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.admin-co-pet-type-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 0;
+}
+
+.admin-co-pet-type-icon svg {
+    display: block;
+    width: auto;
+    height: 16px;
+}
+
+.admin-co-pet-hero-name {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.2;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-co-pet-hero-name .admin-co-pet-type-icon svg {
+    height: 20px;
 }
 
 .admin-co-pet-card-details {
@@ -2584,7 +2743,7 @@
 
 .admin-co-pet-meta {
     margin: 0;
-    color: #9c9a97;
+    color: #3b3731;
     font-family: Lato, sans-serif;
     font-size: 14px;
     font-weight: 400;
@@ -2615,7 +2774,7 @@
 }
 
 .admin-co-pet-sessions {
-    color: #9c9a97;
+    color: #3b3731;
 }
 
 .admin-co-split {
@@ -3296,7 +3455,7 @@ body.admin-co-modal-lock {
 }
 
 .admin-co-verify-email-icon.is-suspend {
-    background: #FEF0DC;
+    background: #fef0dc;
 }
 
 .admin-co-verify-email-icon.is-flag {
@@ -3305,6 +3464,225 @@ body.admin-co-modal-lock {
 
 .admin-co-verify-email-icon.is-delete {
     background: rgba(254, 111, 86, 0.12);
+}
+
+.admin-co-verify-email-icon.is-transfer {
+    background: rgba(167, 197, 105, 0.16);
+}
+
+.admin-co-verify-email-icon.is-archive {
+    background: rgba(100, 159, 201, 0.14);
+}
+
+.admin-co-transfer-modal,
+.admin-co-archive-modal {
+    width: 460px;
+}
+
+.admin-co-delete-pet-modal {
+    width: 460px;
+}
+
+.admin-co-delete-pet-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(254, 111, 86, 0.2);
+    background: rgba(254, 111, 86, 0.06);
+}
+
+.admin-co-delete-pet-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 2px;
+    color: #ff6e6e;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.admin-co-delete-pet-name .admin-co-pet-type-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-co-delete-pet-meta {
+    margin: 0;
+    color: #ff6e6e;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.admin-co-transfer-pet-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #e7e6e6;
+    background: #fff;
+}
+
+.admin-co-transfer-pet-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.admin-co-transfer-pet-body {
+    min-width: 0;
+}
+
+.admin-co-transfer-pet-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 2px;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.admin-co-transfer-pet-name .admin-co-pet-type-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+}
+
+.admin-co-transfer-pet-name .admin-co-pet-type-icon svg {
+    width: 14px;
+    height: 14px;
+}
+
+.admin-co-transfer-pet-meta {
+    margin: 0;
+    color: #3B3731;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.admin-co-transfer-search {
+    margin-top: 16px;
+}
+
+.admin-co-transfer-search-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 8px;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: normal;
+}
+
+.admin-co-transfer-results {
+    margin-top: 14px;
+}
+
+.admin-co-transfer-results-title {
+    margin: 0 0 8px;
+    color: rgba(59, 55, 49, 0.5);
+    font-family: Lato, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: normal;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.admin-co-transfer-account-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-co-transfer-account {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #e7e6e6;
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.admin-co-transfer-account:hover {
+    border-color: rgba(255, 175, 59, 0.55);
+}
+
+.admin-co-transfer-account.is-selected {
+    border-color: #ffaf3b;
+    background: rgba(255, 175, 59, 0.06);
+}
+
+.admin-co-transfer-account-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.admin-co-transfer-account-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.admin-co-transfer-account-name {
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.admin-co-transfer-account-email {
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.admin-co-transfer-radio {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 1.5px solid #d4d3d1;
+    background: #fff;
+    box-shadow: inset 0 0 0 3px #fff;
+}
+
+.admin-co-transfer-account.is-selected .admin-co-transfer-radio {
+    border-color: #ffaf3b;
+    background: #ffaf3b;
 }
 
 .admin-co-suspend-modal {
@@ -3342,7 +3720,7 @@ body.admin-co-modal-lock {
 
 .admin-co-suspend-alert p {
     margin: 0;
-    color: #FFB13F;
+    color: #ffb13f;
     font-family: Lato, sans-serif;
     font-size: 12px;
     font-weight: 400;
@@ -3354,7 +3732,7 @@ body.admin-co-modal-lock {
 }
 
 .admin-co-suspend-alert.is-danger p {
-    color: #FF6E6E;
+    color: #ff6e6e;
 }
 
 .admin-co-delete-user-card {
@@ -3370,7 +3748,7 @@ body.admin-co-modal-lock {
 
 .admin-co-delete-user-name {
     margin: 0 0 2px;
-    color: #FF6E6E;
+    color: #ff6e6e;
     font-family: Lato, sans-serif;
     font-size: 14px;
     font-weight: 400;
@@ -3403,7 +3781,7 @@ body.admin-co-modal-lock {
 }
 
 .admin-co-suspend-input::placeholder {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato, sans-serif;
     font-size: 16px;
     font-style: normal;
@@ -3467,7 +3845,7 @@ body.admin-co-modal-lock {
 }
 
 .admin-co-suspend-dd .admin-co-dd-value.is-placeholder {
-    color: #3B3731;
+    color: #3b3731;
 }
 
 .admin-co-suspend-dd .admin-co-dd-menu {
@@ -3556,7 +3934,7 @@ body.admin-co-modal-lock {
 
 .admin-co-verify-email-happens-title {
     margin: 0 0 8px;
-    color: rgba(59, 55, 49, 0.50);
+    color: rgba(59, 55, 49, 0.5);
     font-family: Lato, sans-serif;
     font-size: 12px;
     font-weight: 600;
@@ -4164,7 +4542,10 @@ body.admin-co-modal-lock {
     line-height: 37px;
     white-space: nowrap;
     text-align: center;
-    transition: background 0.15s ease, color 0.15s ease, filter 0.15s ease;
+    transition:
+        background 0.15s ease,
+        color 0.15s ease,
+        filter 0.15s ease;
 }
 
 .admin-bp-viewing-btn.is-active {
@@ -4389,5 +4770,627 @@ body.admin-co-modal-lock {
 @media (max-width: 767.98px) {
     .admin-bp-snapshot-row {
         grid-template-columns: 1fr;
+    }
+}
+
+/* Customer Pets tab */
+.admin-co-pets-tab {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.admin-co-pets-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.admin-co-btn-light {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(59, 55, 49, 0.12);
+    background: #fff;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.admin-co-btn-light:hover {
+    background: #fafafa;
+}
+
+.admin-co-pets-picker-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.admin-co-pets-scroller {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 2px;
+}
+
+.admin-co-pets-scroller::-webkit-scrollbar {
+    display: none;
+}
+
+.admin-co-pet-pick {
+    flex: 0 0 min(393px, 78vw);
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: rgba(59, 55, 49, 0.03);
+    text-align: left;
+    cursor: pointer;
+    appearance: none;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.admin-co-pet-pick.is-selected {
+    border-radius: 10px;
+    border: 1px solid #d8e8b7;
+    background: #f4f8ec;
+    box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.05);
+}
+
+.admin-co-pet-pick-body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.admin-co-pet-pick-name-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+}
+
+.admin-co-pet-pick .admin-co-pet-meta,
+.admin-co-pet-pick .admin-co-pet-sessions {
+    margin: 0;
+}
+
+.admin-co-pet-avatar--pick {
+    width: 62px;
+    height: 62px;
+    background: #fff;
+    border: 1px solid rgba(59, 55, 49, 0.06);
+}
+
+.admin-co-pets-nav {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.admin-co-pets-progress {
+    position: relative;
+    flex: 1;
+    height: 4px;
+    border-radius: 4px;
+    background: #e8e6e3;
+    overflow: hidden;
+}
+
+.admin-co-pets-progress-thumb {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 60%;
+    height: 100%;
+    border-radius: 4px;
+    background: #ffc97a;
+    transition: left 0.15s ease;
+}
+
+.admin-co-pets-arrows {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-co-pets-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 50%;
+    border: none;
+    background: none;
+    color: #f3f3f3;
+    cursor: pointer;
+    transition:
+        color 0.2s ease,
+        box-shadow 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.admin-co-pets-arrow:disabled,
+.admin-co-pets-arrow[aria-disabled="true"] {
+    cursor: default;
+    opacity: 1;
+}
+
+.admin-co-pets-arrow.is-active {
+    color: #fff;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.03);
+}
+
+.admin-co-pets-arrow.is-active:hover {
+    background: #fafafa;
+}
+
+.admin-co-pets-arrow svg {
+    display: block;
+}
+
+.admin-co-pet-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.admin-co-pet-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.admin-co-pet-hero-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    flex: 1 1 280px;
+}
+
+.admin-co-pet-avatar--hero {
+    width: 72px;
+    height: 72px;
+    background: #fff;
+    border: 1px solid rgba(59, 55, 49, 0.06);
+}
+
+.admin-co-pet-hero-name-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.admin-co-pet-hero .admin-co-pet-vaccinated {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    border: 1px solid #cbdce8;
+    background: #fff;
+    color: #a6c4d9;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+.admin-co-pet-hero-meta {
+    margin: 6px 0 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.admin-co-pet-hero-added {
+    margin: 2px 0 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.admin-co-pet-hero-stats {
+    display: flex;
+    align-items: stretch;
+    flex: 0 1 auto;
+    min-width: 0;
+    border-top: 1px solid rgba(59, 55, 49, 0.1);
+    border-bottom: 1px solid rgba(59, 55, 49, 0.1);
+}
+
+.admin-co-pet-hero-stat {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px 20px;
+    border-left: 1px solid rgba(59, 55, 49, 0.1);
+}
+
+.admin-co-pet-hero-stat:first-child {
+    border-left: none;
+    padding-left: 0;
+}
+
+.admin-co-pet-hero-stat-label {
+    margin: 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.admin-co-pet-hero-stat-value {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.admin-co-pet-hero > .admin-co-more-btn {
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.admin-co-pet-details-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.admin-co-pet-details-form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.admin-co-pet-details-form .admin-co-edit-field {
+    position: relative;
+    z-index: 1;
+}
+
+.admin-co-pet-details-form .admin-co-edit-field.is-open {
+    z-index: 5;
+}
+
+.admin-co-pet-details-form .admin-co-dd {
+    min-width: 0;
+    width: 100%;
+}
+
+.admin-co-pet-details-form .admin-co-dd-menu {
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.admin-co-weight-field {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.admin-co-weight-num {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.admin-co-weight-num input {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 36px 10px 14px;
+    border: 1px solid rgba(59, 55, 49, 0.12);
+    border-radius: 8px;
+    background: #fff;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+    outline: none;
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.admin-co-weight-num input::-webkit-outer-spin-button,
+.admin-co-weight-num input::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+}
+
+.admin-co-weight-num input:focus {
+    border-color: rgba(59, 55, 49, 0.28);
+}
+
+.admin-co-weight-spinners {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transform: translateY(-50%);
+}
+
+.admin-co-weight-spin {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 12px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.admin-co-dd--unit {
+    flex: 0 0 84px;
+    min-width: 84px;
+}
+
+.admin-co-field-hint {
+    margin: 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.admin-co-pet-health-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0 0 18px;
+    padding: 12px 14px;
+    border-radius: 5px;
+    border: 1px solid #cbdce8;
+    background: rgba(203, 220, 232, 0.1);
+}
+
+.admin-co-pet-health-notice svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.admin-co-pet-health-notice p {
+    margin: 0;
+    color: #A6BBC9;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+.admin-co-pet-health-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.admin-co-pet-health-grid .admin-co-edit-field {
+    min-width: 0;
+}
+
+@media (max-width: 575.98px) {
+    .admin-co-pet-details-form-row,
+    .admin-co-pet-health-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.admin-co-pet-health-ok {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #a7c569;
+}
+
+.admin-co-pet-flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.admin-co-pet-flags.is-editing {
+    margin: 0 0 20px;
+}
+
+.admin-co-pet-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 96px;
+    border: 1px solid transparent;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.admin-co-pet-flag.is-ok {
+    color: #a7c569;
+    border-color: #d8e8b7;
+    background: #fbfff4;
+}
+
+.admin-co-pet-flag.is-info {
+    color: #9c9a97;
+    border-color: #d9d7d4;
+    background: #f6f6f6;
+}
+
+.admin-co-pet-flag.is-warn {
+    color: #ffab30;
+    border-color: #ffab30;
+    background: #fdf8f0;
+}
+
+.admin-co-pet-flag.is-danger {
+    color: #ff6e6e;
+    border-color: #ff6e6e;
+    background: #fff6f6;
+}
+
+.admin-co-pet-flag.is-removable {
+    padding-right: 8px;
+}
+
+.admin-co-pet-flag-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.admin-co-pet-flag-remove:hover {
+    opacity: 1;
+}
+
+.admin-co-pet-flag-add {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(59, 55, 49, 0.08);
+}
+
+.admin-co-pet-flag-add-title {
+    margin: 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+.admin-co-pet-flag-add-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.admin-co-pet-flag-input {
+    flex: 1 1 260px;
+    min-width: 0;
+    min-height: 42px;
+    padding: 10px 14px;
+    border: 1px solid rgba(59, 55, 49, 0.12);
+    border-radius: 8px;
+    background: #fff;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+    outline: none;
+}
+
+.admin-co-pet-flag-input::placeholder {
+    color: #3B3731;
+}
+
+.admin-co-pet-flag-input:focus {
+    border-color: rgba(59, 55, 49, 0.28);
+}
+
+.admin-co-dd--flag-tone {
+    flex: 0 0 160px;
+    min-width: 160px;
+}
+
+.admin-co-form-btn.is-add-flag {
+    flex-shrink: 0;
+    color: #6a9bb8;
+    border: 1px solid #cfe3f0;
+    background: #f3f8fb;
+}
+
+.admin-co-form-btn.is-add-flag:hover {
+    background: #e8f2f8;
+}
+
+@media (max-width: 767.98px) {
+    .admin-co-dd--flag-tone {
+        flex: 1 1 140px;
+    }
+
+    .admin-co-form-btn.is-add-flag {
+        width: 100%;
+    }
+}
+
+.admin-co-pet-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+@media (max-width: 991.98px) {
+    .admin-co-pet-hero {
+        align-items: flex-start;
+    }
+
+    .admin-co-pet-hero-stats {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .admin-co-pet-hero-stat {
+        flex: 1 1 auto;
+        padding: 10px 12px;
+    }
+
+    .admin-co-pet-hero-stat:first-child {
+        padding-left: 0;
     }
 }
