@@ -52,14 +52,15 @@
 
             <div class="active-section-header-pane active-section-header-availability" x-cloak
                 x-show="activeSection === 'availability'" x-transition.opacity.duration.280ms>
-                <button type="button" class="availability-header-pill"
-                    @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'manage-availability'">
-                    Manage Availability
-                </button>
                 <div>
                     <h2>Availability</h2>
                     <p>View your schedule and manage when you’re available for bookings.</p>
                 </div>
+                <button type="button" class="availability-header-pill"
+                    @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'manage-availability'">
+                    <img src="{{ asset('images/business-hub/icon-manage-availability.svg') }}" alt="" />
+                    Manage Availability
+                </button>
             </div>
 
             <div class="active-section-header-pane active-section-header-manage-availability" x-cloak
@@ -70,7 +71,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="17" height="11" viewBox="0 0 17 11" fill="none">
                         <path
                             d="M0 5.202L5.211 0L5.877 0.684C6.015 0.828 6.069 0.972 6.039 1.116C6.015 1.254 5.94 1.386 5.814 1.512L3.609 3.708C3.297 4.02 3.012 4.278 2.754 4.482C3.102 4.434 3.468 4.398 3.852 4.374C4.242 4.344 4.635 4.329 5.031 4.329H16.074V6.084H5.031C4.629 6.084 4.233 6.072 3.843 6.048C3.459 6.024 3.093 5.988 2.745 5.94C2.877 6.042 3.012 6.156 3.15 6.282C3.294 6.408 3.447 6.549 3.609 6.705L5.832 8.919C5.958 9.045 6.033 9.18 6.057 9.324C6.087 9.462 6.033 9.6 5.895 9.738L5.229 10.431L0 5.202Z"
-                            fill="black" />
+                            fill="#3B3731" />
                     </svg>
                     Availability
                 </button>
@@ -184,11 +185,11 @@
     });">
         <template x-if="mountedSections.includes('business-hub')">
             <div class="section-panel" :class="{ 'section-active': activeSection === 'business-hub' }" x-init="$nextTick(() => {
-                    requestAnimationFrame(() => {
-                        window.dispatchEvent(new CustomEvent('business-hub-mounted'));
-                        window.scheduleWeeklyRevenueChartInit?.();
-                    });
-                })">
+                requestAnimationFrame(() => {
+                    window.dispatchEvent(new CustomEvent('business-hub-mounted'));
+                    window.scheduleWeeklyRevenueChartInit?.();
+                });
+            })">
                 <x-business-hub.business-hub />
             </div>
         </template>
@@ -203,7 +204,8 @@
             </div>
         </template>
         <template x-if="mountedSections.includes('manage-availability')">
-            <div class="section-panel" :class="{ 'section-active': activeSection === 'manage-availability' }">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'manage-availability' }"
+                x-init="$nextTick(() => window.dispatchEvent(new CustomEvent('manage-availability-mounted')))">
                 <x-business-hub.availability.manage-availability />
             </div>
         </template>
@@ -219,11 +221,11 @@
         </template>
         <template x-if="mountedSections.includes('earnings')">
             <div class="section-panel" :class="{ 'section-active': activeSection === 'earnings' }" x-init="$nextTick(() => {
-                    requestAnimationFrame(() => {
-                        window.dispatchEvent(new CustomEvent('earnings-mounted'));
-                        window.scheduleEarningsChartsInit?.();
-                    });
-                })">
+                requestAnimationFrame(() => {
+                    window.dispatchEvent(new CustomEvent('earnings-mounted'));
+                    window.scheduleEarningsChartsInit?.();
+                });
+            })">
                 <x-business-hub.earnings />
             </div>
         </template>
@@ -333,26 +335,34 @@
         }
     }
 
-
     .availability-header-pill {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 178px;
-        height: 42px;
+        gap: 5px;
+        width: 201px;
+        height: 48px;
+        overflow: hidden;
         border-radius: 100px;
-        background: #C9DDA0;
-        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.10);
+        background: #3B3731;
         color: #FFF;
         text-align: center;
         font-family: Lato;
         font-size: 16px;
         font-style: normal;
-        font-weight: 600;
+        font-weight: 500;
         line-height: normal;
         border: 0;
         cursor: pointer;
         transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .availability-header-pill img {
+        display: block;
+        flex-shrink: 0;
+        width: 12px;
+        height: 12px;
+        object-fit: contain;
     }
 
     .availability-header-pill:hover {
@@ -374,9 +384,13 @@
     .active-section-header-manage-availability {
         width: 100%;
         display: flex;
-        align-items: center;
-        justify-content: space-between;
+        flex-direction: column;
+        align-items: flex-start;
         gap: 1rem;
+    }
+
+    .active-section-header-manage-availability .manage-availability-back-btn {
+        margin-bottom: 0;
     }
 
     .active-section-header-services {
@@ -439,6 +453,10 @@
     .section-container {
         position: relative;
         overflow: hidden;
+    }
+
+    .section-container:has(.section-panel.section-active .ma-board) {
+        overflow: visible;
     }
 
     .section-panel {

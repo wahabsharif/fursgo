@@ -13,6 +13,56 @@
     $loggedUserType = (string) (auth('groomer_spacer')->user()?->user_type ?? (auth()->user()?->user_type ?? ''));
     $isSpaceAccount = strtolower($loggedUserType) === 'space';
 
+    $availabilityDayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    $availabilityDefaultWorkingHours = collect($availabilityDayKeys)
+        ->mapWithKeys(
+            fn($d) => [
+                $d => [
+                    'status' => !in_array($d, ['saturday', 'sunday'], true),
+                    'start' => '10:00',
+                    'end' => '18:00',
+                ],
+            ],
+        )
+        ->all();
+
+    $gspUser = auth('groomer_spacer')->user();
+    if (!$gspUser instanceof \App\Models\GroomerSpacerProfile && auth()->check()) {
+        $gspUser = \App\Models\GroomerSpacerProfile::where('email', auth()->user()->email)->first();
+    }
+
+    $staffMembers = $gspUser instanceof \App\Models\GroomerSpacerProfile ? \App\Models\Staff::listedForProfile($gspUser) : ($profileId ? \App\Models\Staff::query()->where('goormer_spacer_profile_id', $profileId)->orderBy('id')->get() : collect());
+
+    $availabilityStaff = $staffMembers->first(fn($s) => !$s->pause_booking) ?? $staffMembers->first();
+    $availabilityWorkingHours = $availabilityDefaultWorkingHours;
+    if ($availabilityStaff && is_array($availabilityStaff->working_hours)) {
+        $rawHours = $availabilityStaff->working_hours;
+        foreach ($availabilityDayKeys as $dayKey) {
+            $entry = $rawHours[$dayKey] ?? $availabilityDefaultWorkingHours[$dayKey];
+            $availabilityWorkingHours[$dayKey] = [
+                'status' => (bool) ($entry['status'] ?? false),
+                'start' => (string) ($entry['start'] ?? '10:00'),
+                'end' => (string) ($entry['end'] ?? '18:00'),
+            ];
+        }
+    }
+
+    $availabilityHolidayRanges = [];
+    foreach ($staffMembers as $staff) {
+        $rawHolidays = is_array($staff->holiday_time_off) ? $staff->holiday_time_off : [];
+        foreach ($rawHolidays as $entry) {
+            $from = trim((string) ($entry['from'] ?? ''));
+            $to = trim((string) ($entry['to'] ?? ''));
+            if ($from === '') {
+                continue;
+            }
+            $availabilityHolidayRanges[] = [
+                'from' => $from,
+                'to' => $to !== '' ? $to : $from,
+            ];
+        }
+    }
+
     $availabilitySpaceDurationKind = static function (?string $service): string {
         $s = strtolower(trim((string) $service));
         if ($s === '') {
@@ -79,121 +129,138 @@
         return $s;
     };
 
-    $availabilitySpaceDurationLine = static function ($booking) use ($availabilitySpaceDurationKind, $availabilityNormalizedBookingTime, ): string {
+    $availabilitySpaceDurationLine = static function ($booking) use ($availabilitySpaceDurationKind, $availabilityNormalizedBookingTime): string {
         $kind = $availabilitySpaceDurationKind($booking->service ?? null);
         $timeRaw = $availabilityNormalizedBookingTime($booking);
 
         // Derive kind from the time range duration when service doesn't explicitly say so.
-        if (
-            $kind === '' &&
-            $timeRaw !== '' &&
-            preg_match('/^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$/', $timeRaw, $r)
-        ) {
-            $startMinutes = ((int) $r[1]) * 60 + (int) $r[2];
-            $endMinutes = ((int) $r[3]) * 60 + (int) $r[4];
-            $diff = $endMinutes - $startMinutes;
-            if ($diff < 0) {
-                $diff += 24 * 60; // wraps past midnight
-            }
-            if ($diff >= 7 * 60) {
-                $kind = 'Full day';
-            } elseif ($diff >= 3 * 60) {
-                $kind = 'Half-Day';
-            } else {
-                $kind = 'Hourly';
-            }
-        } elseif ($kind === '' && $timeRaw !== '') {
+    if ($kind === '' && $timeRaw !== '' && preg_match('/^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$/', $timeRaw, $r)) {
+        $startMinutes = ((int) $r[1]) * 60 + (int) $r[2];
+        $endMinutes = ((int) $r[3]) * 60 + (int) $r[4];
+        $diff = $endMinutes - $startMinutes;
+        if ($diff < 0) {
+            $diff += 24 * 60; // wraps past midnight
+        }
+        if ($diff >= 7 * 60) {
+            $kind = 'Full day';
+        } elseif ($diff >= 3 * 60) {
+            $kind = 'Half-Day';
+        } else {
             $kind = 'Hourly';
         }
-
-        if ($kind !== '' && $timeRaw !== '') {
-            return $kind . ' (' . $timeRaw . ')';
-        }
-
-        if ($kind !== '') {
-            return $kind;
-        }
-
-        return $timeRaw !== '' ? $timeRaw : 'Time not set';
-    };
-
-    $previewPet = $userBookings->first()?->pets?->first();
-    $previewPetSizeLabel = null;
-    if ($isSpaceAccount) {
-        $previewPetWeight = (float) ($previewPet?->weight ?? 0);
-        if ($previewPetWeight > 0) {
-            $previewPetSizeLabel = $previewPetWeight <= 7 ? 'Small' : ($previewPetWeight <= 18 ? 'Medium' : 'Large');
-        }
+    } elseif ($kind === '' && $timeRaw !== '') {
+        $kind = 'Hourly';
     }
 
-    $calendarBookingsByDate = [];
-    $calendarBookingsById = [];
-    foreach ($userBookings as $booking) {
+    if ($kind !== '' && $timeRaw !== '') {
+        return $kind . ' (' . $timeRaw . ')';
+    }
+
+    if ($kind !== '') {
+        return $kind;
+    }
+
+    return $timeRaw !== '' ? $timeRaw : 'Time not set';
+};
+
+$upcomingBookings = $userBookings
+    ->filter(function ($booking) {
+        $status = strtolower((string) ($booking->booking_status ?? ''));
+        if ($status === 'cancelled') {
+            return false;
+        }
         if (!$booking->date) {
-            continue;
+            return false;
         }
-        $dateKey = $booking->date->format('Y-m-d');
-        $bookingStatus = strtolower((string) ($booking->booking_status ?? ''));
-        $statusBadgeClass = match ($bookingStatus) {
-            'confirmed' => 'is-confirmed',
-            'pending' => 'is-pending',
-            'cancelled' => 'is-cancelled',
-            default => 'is-default',
-        };
-        $slotType = match ($bookingStatus) {
-            'confirmed' => 'green',
-            'pending' => 'orange',
-            'cancelled' => 'red',
-            default => 'blue',
-        };
-        $normalizedTime = $availabilityNormalizedBookingTime($booking);
-        $pillTime = $normalizedTime;
-        if ($pillTime !== '' && str_contains($pillTime, ' - ')) {
-            $pillTime = trim(explode(' - ', $pillTime, 2)[0]);
-        }
-        $timeLabel = $pillTime !== '' ? $pillTime : '—';
-        $firstPet = $booking->pets->first();
-        $petPhoto = trim((string) ($firstPet?->photo ?? ''));
-        $petPhotoUrl = $petPhoto !== '' ? $petPhoto : asset('images/ellipse-65.svg');
-        $petSizeLabel = null;
-        if ($isSpaceAccount) {
-            $w = (float) ($firstPet?->weight ?? 0);
-            if ($w > 0) {
-                $petSizeLabel = $w <= 7 ? 'Small' : ($w <= 18 ? 'Medium' : 'Large');
-            }
-        }
-        $clientSinceDate = $booking->petOwner?->created_at ?? $booking->created_at;
-        $calendarBookingsByDate[$dateKey][] = [
-            'bookingId' => $booking->id,
-            'label' => $timeLabel,
-            'type' => $slotType,
-        ];
-        $calendarBookingsById[(string) $booking->id] = [
-            'id' => $booking->id,
-            'statusBadgeClass' => $statusBadgeClass,
-            'client' => $booking->petOwner?->name ?? (auth()->user()?->name ?? 'Client'),
-            'clientSince' => $clientSinceDate ? $clientSinceDate->format('M d, Y') : 'N/A',
-            'status' => ucfirst((string) ($booking->booking_status ?: 'unknown')),
-            'date' => $booking->date->format('l, jS F d/m/Y'),
-            'time' => $normalizedTime !== '' ? $normalizedTime : 'Time not set',
-            'service' => (string) ($booking->service ?? ''),
-            'petName' => $firstPet?->name ?? 'Pet',
-            'petType' => $firstPet?->pet_type ?? 'Pet type',
-            'petBreed' => (string) ($firstPet?->breed ?? ''),
-            'petSizeLabel' => $petSizeLabel,
-            'petPhoto' => $petPhotoUrl,
-            'petSex' => $firstPet?->sex ? ucfirst($firstPet->sex) : 'Not provided',
-            'petWeight' => $firstPet?->weight ?: 'Not provided',
-            'petNotes' => $firstPet?->notes ?: 'No notes',
-            'spacePetTitle' => $firstPet?->name ?? 'Pet',
-            'spaceDurationLine' => $availabilitySpaceDurationLine($booking),
-            'spaceServiceLabel' => trim((string) ($booking->service ?? '')) ?: '—',
-            'spacePetType' => $firstPet?->pet_type ?? 'Pet type',
-            'spaceAddOns' => $availabilitySpaceAddOnLabels($booking),
-        ];
+
+        return $booking->date
+            ->copy()
+            ->endOfDay()
+            ->gte(now()->startOfDay());
+    })
+    ->sortBy(fn($booking) => $booking->date->format('Y-m-d') . ' ' . (string) ($booking->time ?? ''))
+    ->values();
+$upcomingCount = $upcomingBookings->count();
+$previewBooking = $upcomingBookings->first();
+$previewPet = $previewBooking?->pets?->first();
+$previewPetSizeLabel = null;
+$previewBookingTime = $previewBooking ? $availabilityNormalizedBookingTime($previewBooking) : '';
+if ($isSpaceAccount) {
+    $previewPetWeight = (float) ($previewPet?->weight ?? 0);
+    if ($previewPetWeight > 0) {
+        $previewPetSizeLabel = $previewPetWeight <= 7 ? 'Small' : ($previewPetWeight <= 18 ? 'Medium' : 'Large');
     }
-    foreach ($calendarBookingsByDate as $dk => $rows) {
-        usort($calendarBookingsByDate[$dk], fn($a, $b) => strcmp((string) $a['label'], (string) $b['label']));
+}
+
+$calendarBookingsByDate = [];
+$calendarBookingsById = [];
+foreach ($userBookings as $booking) {
+    if (!$booking->date) {
+        continue;
+    }
+    $dateKey = $booking->date->format('Y-m-d');
+    $bookingStatus = strtolower((string) ($booking->booking_status ?? ''));
+    $statusBadgeClass = match ($bookingStatus) {
+        'confirmed' => 'is-confirmed',
+        'pending' => 'is-pending',
+        'cancelled' => 'is-cancelled',
+        default => 'is-default',
+    };
+    $slotType = match ($bookingStatus) {
+        'confirmed' => 'green',
+        'pending' => 'orange',
+        'cancelled' => 'red',
+        'completed' => 'blue',
+        default => 'blue',
+    };
+    $normalizedTime = $availabilityNormalizedBookingTime($booking);
+    $pillTime = $normalizedTime;
+    if ($pillTime !== '' && str_contains($pillTime, ' - ')) {
+        $pillTime = trim(explode(' - ', $pillTime, 2)[0]);
+    }
+    $timeLabel = $pillTime !== '' ? $pillTime : '—';
+    $firstPet = $booking->pets->first();
+    $petPhoto = trim((string) ($firstPet?->photo ?? ''));
+    $petPhotoUrl = $petPhoto !== '' ? $petPhoto : asset('images/ellipse-65.svg');
+    $petSizeLabel = null;
+    if ($isSpaceAccount) {
+        $w = (float) ($firstPet?->weight ?? 0);
+        if ($w > 0) {
+            $petSizeLabel = $w <= 7 ? 'Small' : ($w <= 18 ? 'Medium' : 'Large');
+        }
+    }
+    $clientSinceDate = $booking->petOwner?->created_at ?? $booking->created_at;
+    $calendarBookingsByDate[$dateKey][] = [
+        'bookingId' => $booking->id,
+        'label' => $timeLabel,
+        'type' => $slotType,
+    ];
+    $calendarBookingsById[(string) $booking->id] = [
+        'id' => $booking->id,
+        'statusBadgeClass' => $statusBadgeClass,
+        'client' => $booking->petOwner?->name ?? (auth()->user()?->name ?? 'Client'),
+        'clientSince' => $clientSinceDate ? $clientSinceDate->format('d M Y') : 'N/A',
+        'status' => ucfirst((string) ($booking->booking_status ?: 'unknown')),
+        'date' => $booking->date->format('l, jS F d/m/Y'),
+        'time' => $normalizedTime !== '' ? $normalizedTime : 'Time not set',
+        'service' => (string) ($booking->service ?? ''),
+        'petName' => $firstPet?->name ?? 'Pet',
+        'petType' => $firstPet?->pet_type ?? 'Pet type',
+        'petBreed' => (string) ($firstPet?->breed ?? ''),
+        'petSizeLabel' => $petSizeLabel,
+        'petPhoto' => $petPhotoUrl,
+        'petSex' => $firstPet?->sex ? ucfirst($firstPet->sex) : 'Not provided',
+        'petWeight' => $firstPet?->weight ?: 'Not provided',
+        'petNotes' => $firstPet?->notes ?: 'No notes',
+        'spacePetTitle' => $firstPet?->name ?? 'Pet',
+        'spaceDurationLine' => $availabilitySpaceDurationLine($booking),
+        'spaceServiceLabel' => trim((string) ($booking->service ?? '')) ?: '—',
+        'spacePetType' => $firstPet?->pet_type ?? 'Pet type',
+        'spaceAddOns' => $availabilitySpaceAddOnLabels($booking),
+    ];
+}
+foreach ($calendarBookingsByDate as $dk => $rows) {
+    usort($calendarBookingsByDate[$dk], fn($a, $b) => strcmp((string) $a['label'], (string) $b['label']));
     }
 @endphp
 
@@ -202,21 +269,31 @@
         byDate: @json($calendarBookingsByDate),
         byId: @json($calendarBookingsById),
         isSpace: @json($isSpaceAccount),
+        workingHours: @json($availabilityWorkingHours),
+        holidayRanges: @json($availabilityHolidayRanges),
     };
 </script>
 
-<div class="availability-layout" x-data="availabilityCalendarShell()" x-init="init()"
+<div class="availability-layout {{ $isSpaceAccount ? 'is-space' : '' }}" x-data="availabilityCalendarShell()" x-init="init()"
     @keydown.escape.window="handleAvailabilityEscape()"
     @availability-navigate-day="onMiniCalendarDateSelect($event.detail)">
+    <div class="availability-status-banner">
+        <strong>Available for bookings</strong>
+        <p x-text="availabilityStatusMeta"></p>
+    </div>
+
     <div class="availability-header">
         <div class="availability-toolbar">
-            <div class="availability-view-toggle">
-                <button type="button" :class="{ 'is-active': activeView === 'day' }"
-                    @click="activeView = 'day'">Day</button>
-                <button type="button" :class="{ 'is-active': activeView === 'week' }"
-                    @click="activeView = 'week'">Week</button>
-                <button type="button" :class="{ 'is-active': activeView === 'month' }"
-                    @click="activeView = 'month'">Month</button>
+            <div class="availability-toolbar-left">
+                <div class="availability-view-toggle" role="tablist" aria-label="Calendar view">
+                    <button type="button" :class="{ 'is-active': activeView === 'day' }"
+                        @click="activeView = 'day'">Day</button>
+                    <button type="button" :class="{ 'is-active': activeView === 'week' }"
+                        @click="activeView = 'week'">Week</button>
+                    <button type="button" :class="{ 'is-active': activeView === 'month' }"
+                        @click="activeView = 'month'">Month</button>
+                </div>
+                <button type="button" class="availability-today-btn" @click="goToToday()">Today</button>
             </div>
 
             <div class="availability-calendar-title">
@@ -235,7 +312,7 @@
             </div>
 
             <label class="availability-search">
-                <input type="search" placeholder="Type to search ..." />
+                <input type="search" placeholder="Type to search ..." x-model="searchQuery" />
                 <span class="availability-search-icon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path
@@ -247,6 +324,17 @@
                     </svg>
                 </span>
             </label>
+        </div>
+
+        <div class="availability-legend" aria-label="Booking status legend">
+            <span class="availability-legend-item"><i class="is-completed" aria-hidden="true"></i> Completed
+                booking</span>
+            <span class="availability-legend-item"><i class="is-confirmed" aria-hidden="true"></i> Confirmed
+                booking</span>
+            <span class="availability-legend-item"><i class="is-pending" aria-hidden="true"></i> Pending booking</span>
+            <span class="availability-legend-item"><i class="is-cancelled" aria-hidden="true"></i> Cancelled
+                booking</span>
+            <span class="availability-legend-item"><i class="is-holiday" aria-hidden="true"></i> Holiday / time off</span>
         </div>
     </div>
 
@@ -278,7 +366,8 @@
         </div>
 
         <aside class="availability-side-panel">
-            <div class="availability-mini-calendar" x-data="availabilityMiniCalendar()" x-init="init()">
+            <div class="availability-mini-calendar" x-data="availabilityMiniCalendar()" x-init="init()"
+                @availability-sync-date.window="syncFromShell($event.detail)">
                 <div class="availability-mini-header">
                     <h4 x-text="miniMonthYearLabel"></h4>
                     <div>
@@ -308,86 +397,112 @@
             </div>
 
             <div class="availability-booking-card-wrap">
-                <h5>Upcoming Bookings <span>(2)</span></h5>
-                <article class="availability-booking-card {{ $isSpaceAccount ? 'is-space' : '' }}">
-                    <div class="img-circle {{ $isSpaceAccount ? 'is-space' : '' }}">
-                        <div>
-                            <img src="{{ asset('images/ellipse-65.svg') }}" alt="Booking profile image" />
+                <h5>Upcoming Bookings <span>({{ $upcomingCount }})</span></h5>
+                @if ($previewBooking)
+                    <article class="availability-booking-card {{ $isSpaceAccount ? 'is-space' : '' }}">
+                        <div class="img-circle {{ $isSpaceAccount ? 'is-space' : '' }}">
+                            <div>
+                                <img src="{{ $previewPet && trim((string) ($previewPet->photo ?? '')) !== '' ? $previewPet->photo : asset('images/ellipse-65.svg') }}" alt="Booking profile image" />
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        <div class="booking-chip {{ $isSpaceAccount ? 'is-space' : '' }}">Home Visits</div>
-                        <ul>
-                            <li><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 13 13"
-                                    fill="none">
-                                    <path
-                                        d="M0.5 5.95717C0.5 3.79127 0.5 2.70803 1.2032 2.03545C1.9064 1.36288 3.0374 1.3623 5.3 1.3623H7.7C9.9626 1.3623 11.0942 1.3623 11.7968 2.03545C12.4994 2.7086 12.5 3.79127 12.5 5.95717V7.10589C12.5 9.27179 12.5 10.355 11.7968 11.0276C11.0936 11.7002 9.9626 11.7008 7.7 11.7008H5.3C3.0374 11.7008 1.9058 11.7008 1.2032 11.0276C0.5006 10.3545 0.5 9.27179 0.5 7.10589V5.95717Z"
-                                        stroke="#3B3731" />
-                                    <path d="M3.50005 1.36154V0.5M9.50005 1.36154V0.5M0.800049 4.23333H12.2"
-                                        stroke="#3B3731" stroke-linecap="round" />
-                                    <path
-                                        d="M10.0997 8.82785C10.0997 8.98017 10.0364 9.12627 9.92392 9.23398C9.8114 9.34169 9.65879 9.4022 9.49966 9.4022C9.34053 9.4022 9.18792 9.34169 9.07539 9.23398C8.96287 9.12627 8.89966 8.98017 8.89966 8.82785C8.89966 8.67552 8.96287 8.52943 9.07539 8.42171C9.18792 8.314 9.34053 8.25349 9.49966 8.25349C9.65879 8.25349 9.8114 8.314 9.92392 8.42171C10.0364 8.52943 10.0997 8.67552 10.0997 8.82785ZM10.0997 6.53041C10.0997 6.68274 10.0364 6.82883 9.92392 6.93655C9.8114 7.04426 9.65879 7.10477 9.49966 7.10477C9.34053 7.10477 9.18792 7.04426 9.07539 6.93655C8.96287 6.82883 8.89966 6.68274 8.89966 6.53041C8.89966 6.37808 8.96287 6.23199 9.07539 6.12428C9.18792 6.01657 9.34053 5.95605 9.49966 5.95605C9.65879 5.95605 9.8114 6.01657 9.92392 6.12428C10.0364 6.23199 10.0997 6.37808 10.0997 6.53041ZM7.09966 8.82785C7.09966 8.98017 7.03644 9.12627 6.92392 9.23398C6.8114 9.34169 6.65879 9.4022 6.49966 9.4022C6.34053 9.4022 6.18792 9.34169 6.07539 9.23398C5.96287 9.12627 5.89966 8.98017 5.89966 8.82785C5.89966 8.67552 5.96287 8.52943 6.07539 8.42171C6.18792 8.314 6.34053 8.25349 6.49966 8.25349C6.65879 8.25349 6.8114 8.314 6.92392 8.42171C7.03644 8.52943 7.09966 8.67552 7.09966 8.82785ZM7.09966 6.53041C7.09966 6.68274 7.03644 6.82883 6.92392 6.93655C6.8114 7.04426 6.65879 7.10477 6.49966 7.10477C6.34053 7.10477 6.18792 7.04426 6.07539 6.93655C5.96287 6.82883 5.89966 6.68274 5.89966 6.53041C5.89966 6.37808 5.96287 6.23199 6.07539 6.12428C6.18792 6.01657 6.34053 5.95605 6.49966 5.95605C6.65879 5.95605 6.8114 6.01657 6.92392 6.12428C7.03644 6.23199 7.09966 6.37808 7.09966 6.53041ZM4.09966 8.82785C4.09966 8.98017 4.03644 9.12627 3.92392 9.23398C3.8114 9.34169 3.65879 9.4022 3.49966 9.4022C3.34053 9.4022 3.18792 9.34169 3.07539 9.23398C2.96287 9.12627 2.89966 8.98017 2.89966 8.82785C2.89966 8.67552 2.96287 8.52943 3.07539 8.42171C3.18792 8.314 3.34053 8.25349 3.49966 8.25349C3.65879 8.25349 3.8114 8.314 3.92392 8.42171C4.03644 8.52943 4.09966 8.67552 4.09966 8.82785ZM4.09966 6.53041C4.09966 6.68274 4.03644 6.82883 3.92392 6.93655C3.8114 7.04426 3.65879 7.10477 3.49966 7.10477C3.34053 7.10477 3.18792 7.04426 3.07539 6.93655C2.96287 6.82883 2.89966 6.68274 2.89966 6.53041C2.89966 6.37808 2.96287 6.23199 3.07539 6.12428C3.18792 6.01657 3.34053 5.95605 3.49966 5.95605C3.65879 5.95605 3.8114 6.01657 3.92392 6.12428C4.03644 6.23199 4.09966 6.37808 4.09966 6.53041Z"
-                                        fill="#3B3731" />
-                                </svg>
-                                18/12/2025</li>
-                            <li>
-                                @if ($isSpaceAccount)
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="13" viewBox="0 0 15 13"
-                                        fill="none">
-                                        <path
-                                            d="M5.5438 12.2186C2.69175 11.808 0.5 9.35597 0.5 6.39044C0.5 3.13724 3.13744 0.5 6.39088 0.5C9.08249 0.5 11.3519 2.30515 12.0556 4.77069"
-                                            stroke="#3B3731" stroke-linecap="round" />
-                                        <path
-                                            d="M12.5534 9.66857C12.679 9.54095 12.8175 9.43786 12.9687 9.35932C13.1218 9.28079 13.2976 9.24152 13.4959 9.24152C13.6609 9.24152 13.8052 9.269 13.9289 9.32398C14.0546 9.37896 14.1596 9.45652 14.244 9.55665C14.3285 9.65483 14.3923 9.77362 14.4355 9.91303C14.4787 10.0524 14.5003 10.2066 14.5003 10.3754V12.281H13.923V10.3754C13.923 10.1614 13.8739 9.99549 13.7757 9.87768C13.6775 9.75791 13.5273 9.69803 13.3251 9.69803C13.1778 9.69803 13.0394 9.73337 12.9098 9.80405C12.7821 9.87278 12.6633 9.96702 12.5534 10.0868V12.281H11.979V7.93384H12.5534V9.66857Z"
-                                            fill="#3B3731" />
-                                        <path
-                                            d="M11.1689 11.8426V12.2814H8.88325V11.8426H9.77867V9.07116C9.77867 8.9828 9.78161 8.8915 9.7875 8.79725L9.06882 9.40691C9.04133 9.42851 9.01384 9.44225 8.98634 9.44814C8.95885 9.45403 8.93234 9.45502 8.90682 9.45109C8.88325 9.44716 8.86165 9.43931 8.84202 9.42753C8.82435 9.41378 8.80962 9.40004 8.79784 9.38629L8.61816 9.13595L9.8847 8.04327H10.353V11.8426H11.1689Z"
-                                            fill="#3B3731" />
-                                        <path
-                                            d="M6.68523 4.62356C6.68523 4.4609 6.81711 4.32904 6.97978 4.32904C7.14245 4.32904 7.27432 4.4609 7.27432 4.62356V7.27426H5.21251C5.04984 7.27426 4.91797 7.1424 4.91797 6.97974C4.91797 6.81708 5.04984 6.68522 5.21251 6.68522H6.68523V4.62356Z"
-                                            fill="#3B3731" />
-                                    </svg>
-                                @else
-                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                        <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1" />
-                                        <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1"
-                                            stroke-linecap="round" />
-                                    </svg>
-                                @endif
-                                14:30 - 15:30
-                            </li>
-                            @unless ($isSpaceAccount)
-                                <li>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14"
-                                        fill="none">
-                                        <path
-                                            d="M4.09452 9.45989C5.13622 10.5016 7.66978 9.6573 9.75319 7.57355C11.8369 5.49013 12.6812 2.95655 11.6395 1.91484M7.1596 1.20725L7.6311 1.67909M5.50935 2.85785L5.98085 3.32935M4.09418 4.7442L4.56568 5.2157M3.62268 7.10204L4.09418 7.57355M9.75319 0.5L10.2247 0.971503M9.28169 3.32969L10.2247 4.27269M7.63144 4.98028L8.57444 5.92329M5.7451 6.39479L6.6881 7.3378"
-                                            stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                        <path
-                                            d="M4.09395 10.874C4.48462 10.4834 4.48462 9.84998 4.09395 9.45931C3.70329 9.06865 3.0699 9.06865 2.67924 9.45932L0.792951 11.3456C0.402288 11.7363 0.402288 12.3697 0.792951 12.7603C1.18361 13.151 1.817 13.151 2.20767 12.7603L4.09395 10.874Z"
-                                            stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>Full Groom
-                                </li>
-                            @endunless
-                            <li><svg xmlns="http://www.w3.org/2000/svg" width="13" height="12" viewBox="0 0 13 12"
-                                    fill="none">
-                                    <path
-                                        d="M6.5 4.84211C4.69029 4.84211 3.16114 6.44318 2.66743 8.4996C2.45029 9.40392 2.77771 10.3638 3.58143 10.8148C4.21857 11.1723 5.16629 11.5 6.5 11.5C7.83371 11.5 8.78171 11.1723 9.41886 10.8148C10.2226 10.3638 10.5497 9.40392 10.3326 8.4996C9.83886 6.44289 8.30971 4.84211 6.5 4.84211ZM0.5 4.39168C0.5 5.19121 1.01143 6 1.64286 6C2.27429 6 2.78571 5.19121 2.78571 4.39168C2.78571 3.59216 2.27429 3.10526 1.64286 3.10526C1.01143 3.10526 0.5 3.59245 0.5 4.39168ZM12.5 4.39168C12.5 5.19121 11.9886 6 11.3571 6C10.7257 6 10.2143 5.19121 10.2143 4.39168C10.2143 3.59216 10.7257 3.10526 11.3571 3.10526C11.9886 3.10526 12.5 3.59245 12.5 4.39168ZM3.5 1.78642C3.5 2.58595 4.01143 3.39474 4.64286 3.39474C5.27429 3.39474 5.78571 2.58595 5.78571 1.78642C5.78571 0.986895 5.27429 0.5 4.64286 0.5C4.01143 0.5 3.5 0.987184 3.5 1.78642ZM9.5 1.78642C9.5 2.58595 8.98857 3.39474 8.35714 3.39474C7.72571 3.39474 7.21429 2.58595 7.21429 1.78642C7.21429 0.986895 7.72571 0.5 8.35714 0.5C8.98857 0.5 9.5 0.987184 9.5 1.78642Z"
-                                        stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>Bella
-                                <span class="pet-size-inline">
-                                    @if ($isSpaceAccount && $previewPetSizeLabel)
-                                        <span class="black-dot" style="margin: 0 5px;"></span>
-                                        <span
-                                            style="color: #3B3731; font-family: Lato; font-size: 14px; font-style: normal; font-weight: 400; line-height: normal;">{{ $previewPetSizeLabel }}</span>
-                                    @else
-                                        - Rabbit
-                                    @endif
-                                </span>
-                            </li>
-                        </ul>
-                    </div>
-                </article>
+                        <div>
+                            <div class="booking-chip {{ $isSpaceAccount ? 'is-space' : '' }}">{{ $isSpaceAccount ? 'Home Visits' : (trim((string) ($previewBooking->service ?? '')) ?: 'Booking') }}</div>
+                            @if ($isSpaceAccount)
+                                <ul>
+                                    <li>
+                                        <img src="{{ asset('images/business-hub/icon-space-booking-calendar.svg') }}" alt="">
+                                        {{ $previewBooking->date->format('d/m/Y') }}
+                                    </li>
+                                    <li>
+                                        <img src="{{ asset('images/business-hub/icon-space-booking-clock.svg') }}" alt="">
+                                        {{ $previewBookingTime !== '' ? $previewBookingTime : 'Time not set' }}
+                                    </li>
+                                    <li>
+                                        <img src="{{ asset('images/business-hub/icon-space-booking-groom.svg') }}" alt="">
+                                        {{ trim((string) ($previewBooking->service ?? '')) ?: 'Service not set' }}
+                                    </li>
+                                    <li>
+                                        <img src="{{ asset('images/business-hub/icon-space-booking-paw.svg') }}" alt="">
+                                        {{ $previewPet?->name ?: 'Pet' }} -
+                                        <span>{{ $previewPet?->pet_type ?: 'Pet type' }}</span>
+                                    </li>
+                                </ul>
+                            @else
+                                <ul>
+                                    <li><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 13 13"
+                                            fill="none">
+                                            <path
+                                                d="M0.5 5.95717C0.5 3.79127 0.5 2.70803 1.2032 2.03545C1.9064 1.36288 3.0374 1.3623 5.3 1.3623H7.7C9.9626 1.3623 11.0942 1.3623 11.7968 2.03545C12.4994 2.7086 12.5 3.79127 12.5 5.95717V7.10589C12.5 9.27179 12.5 10.355 11.7968 11.0276C11.0936 11.7002 9.9626 11.7008 7.7 11.7008H5.3C3.0374 11.7008 1.9058 11.7008 1.2032 11.0276C0.5006 10.3545 0.5 9.27179 0.5 7.10589V5.95717Z"
+                                                stroke="#3B3731" />
+                                            <path d="M3.50005 1.36154V0.5M9.50005 1.36154V0.5M0.800049 4.23333H12.2"
+                                                stroke="#3B3731" stroke-linecap="round" />
+                                            <path
+                                                d="M10.0997 8.82785C10.0997 8.98017 10.0364 9.12627 9.92392 9.23398C9.8114 9.34169 9.65879 9.4022 9.49966 9.4022C9.34053 9.4022 9.18792 9.34169 9.07539 9.23398C8.96287 9.12627 8.89966 8.98017 8.89966 8.82785C8.89966 8.67552 8.96287 8.52943 9.07539 8.42171C9.18792 8.314 9.34053 8.25349 9.49966 8.25349C9.65879 8.25349 9.8114 8.314 9.92392 8.42171C10.0364 8.52943 10.0997 8.67552 10.0997 8.82785ZM10.0997 6.53041C10.0997 6.68274 10.0364 6.82883 9.92392 6.93655C9.8114 7.04426 9.65879 7.10477 9.49966 7.10477C9.34053 7.10477 9.18792 7.04426 9.07539 6.93655C8.96287 6.82883 8.89966 6.68274 8.89966 6.53041C8.89966 6.37808 8.96287 6.23199 9.07539 6.12428C9.18792 6.01657 9.34053 5.95605 9.49966 5.95605C9.65879 5.95605 9.8114 6.01657 9.92392 6.12428C10.0364 6.23199 10.0997 6.37808 10.0997 6.53041ZM7.09966 8.82785C7.09966 8.98017 7.03644 9.12627 6.92392 9.23398C6.8114 9.34169 6.65879 9.4022 6.49966 9.4022C6.34053 9.4022 6.18792 9.34169 6.07539 9.23398C5.96287 9.12627 5.89966 8.98017 5.89966 8.82785C5.89966 8.67552 5.96287 8.52943 6.07539 8.42171C6.18792 8.314 6.34053 8.25349 6.49966 8.25349C6.65879 8.25349 6.8114 8.314 6.92392 8.42171C7.03644 8.52943 7.09966 8.67552 7.09966 8.82785ZM7.09966 6.53041C7.09966 6.68274 7.03644 6.82883 6.92392 6.93655C6.8114 7.04426 6.65879 7.10477 6.49966 7.10477C6.34053 7.10477 6.18792 7.04426 6.07539 6.93655C5.96287 6.82883 5.89966 6.68274 5.89966 6.53041C5.89966 6.37808 5.96287 6.23199 6.07539 6.12428C6.18792 6.01657 6.34053 5.95605 6.49966 5.95605C6.65879 5.95605 6.8114 6.01657 6.92392 6.12428C7.03644 6.23199 7.09966 6.37808 7.09966 6.53041ZM4.09966 8.82785C4.09966 8.98017 4.03644 9.12627 3.92392 9.23398C3.8114 9.34169 3.65879 9.4022 3.49966 9.4022C3.34053 9.4022 3.18792 9.34169 3.07539 9.23398C2.96287 9.12627 2.89966 8.98017 2.89966 8.82785C2.89966 8.67552 2.96287 8.52943 3.07539 8.42171C3.18792 8.314 3.34053 8.25349 3.49966 8.25349C3.65879 8.25349 3.8114 8.314 3.92392 8.42171C4.03644 8.52943 4.09966 8.67552 4.09966 8.82785ZM4.09966 6.53041C4.09966 6.68274 4.03644 6.82883 3.92392 6.93655C3.8114 7.04426 3.65879 7.10477 3.49966 7.10477C3.34053 7.10477 3.18792 7.04426 3.07539 6.93655C2.96287 6.82883 2.89966 6.68274 2.89966 6.53041C2.89966 6.37808 2.96287 6.23199 3.07539 6.12428C3.18792 6.01657 3.34053 5.95605 3.49966 5.95605C3.65879 5.95605 3.8114 6.01657 3.92392 6.12428C4.03644 6.23199 4.09966 6.37808 4.09966 6.53041Z"
+                                                fill="#3B3731" />
+                                        </svg>
+                                        {{ $previewBooking->date->format('d/m/Y') }}</li>
+                                    <li>
+                                        @if ($isSpaceAccount)
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="13" viewBox="0 0 15 13"
+                                                fill="none">
+                                                <path
+                                                    d="M5.5438 12.2186C2.69175 11.808 0.5 9.35597 0.5 6.39044C0.5 3.13724 3.13744 0.5 6.39088 0.5C9.08249 0.5 11.3519 2.30515 12.0556 4.77069"
+                                                    stroke="#3B3731" stroke-linecap="round" />
+                                                <path
+                                                    d="M12.5534 9.66857C12.679 9.54095 12.8175 9.43786 12.9687 9.35932C13.1218 9.28079 13.2976 9.24152 13.4959 9.24152C13.6609 9.24152 13.8052 9.269 13.9289 9.32398C14.0546 9.37896 14.1596 9.45652 14.244 9.55665C14.3285 9.65483 14.3923 9.77362 14.4355 9.91303C14.4787 10.0524 14.5003 10.2066 14.5003 10.3754V12.281H13.923V10.3754C13.923 10.1614 13.8739 9.99549 13.7757 9.87768C13.6775 9.75791 13.5273 9.69803 13.3251 9.69803C13.1778 9.69803 13.0394 9.73337 12.9098 9.80405C12.7821 9.87278 12.6633 9.96702 12.5534 10.0868V12.281H11.979V7.93384H12.5534V9.66857Z"
+                                                    fill="#3B3731" />
+                                                <path
+                                                    d="M11.1689 11.8426V12.2814H8.88325V11.8426H9.77867V9.07116C9.77867 8.9828 9.78161 8.8915 9.7875 8.79725L9.06882 9.40691C9.04133 9.42851 9.01384 9.44225 8.98634 9.44814C8.95885 9.45403 8.93234 9.45502 8.90682 9.45109C8.88325 9.44716 8.86165 9.43931 8.84202 9.42753C8.82435 9.41378 8.80962 9.40004 8.79784 9.38629L8.61816 9.13595L9.8847 8.04327H10.353V11.8426H11.1689Z"
+                                                    fill="#3B3731" />
+                                                <path
+                                                    d="M6.68523 4.62356C6.68523 4.4609 6.81711 4.32904 6.97978 4.32904C7.14245 4.32904 7.27432 4.4609 7.27432 4.62356V7.27426H5.21251C5.04984 7.27426 4.91797 7.1424 4.91797 6.97974C4.91797 6.81708 5.04984 6.68522 5.21251 6.68522H6.68523V4.62356Z"
+                                                    fill="#3B3731" />
+                                            </svg>
+                                        @else
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                                <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1" />
+                                                <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1"
+                                                    stroke-linecap="round" />
+                                            </svg>
+                                        @endif
+                                        {{ $previewBookingTime !== '' ? $previewBookingTime : 'Time not set' }}
+                                    </li>
+                                    @unless ($isSpaceAccount)
+                                        <li>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14"
+                                                fill="none">
+                                                <path
+                                                    d="M4.09452 9.45989C5.13622 10.5016 7.66978 9.6573 9.75319 7.57355C11.8369 5.49013 12.6812 2.95655 11.6395 1.91484M7.1596 1.20725L7.6311 1.67909M5.50935 2.85785L5.98085 3.32935M4.09418 4.7442L4.56568 5.2157M3.62268 7.10204L4.09418 7.57355M9.75319 0.5L10.2247 0.971503M9.28169 3.32969L10.2247 4.27269M7.63144 4.98028L8.57444 5.92329M5.7451 6.39479L6.6881 7.3378"
+                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path
+                                                    d="M4.09395 10.874C4.48462 10.4834 4.48462 9.84998 4.09395 9.45931C3.70329 9.06865 3.0699 9.06865 2.67924 9.45932L0.792951 11.3456C0.402288 11.7363 0.402288 12.3697 0.792951 12.7603C1.18361 13.151 1.817 13.151 2.20767 12.7603L4.09395 10.874Z"
+                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>{{ trim((string) ($previewBooking->service ?? '')) ?: 'Service not set' }}
+                                        </li>
+                                    @endunless
+                                    <li><svg xmlns="http://www.w3.org/2000/svg" width="13" height="12" viewBox="0 0 13 12"
+                                            fill="none">
+                                            <path
+                                                d="M6.5 4.84211C4.69029 4.84211 3.16114 6.44318 2.66743 8.4996C2.45029 9.40392 2.77771 10.3638 3.58143 10.8148C4.21857 11.1723 5.16629 11.5 6.5 11.5C7.83371 11.5 8.78171 11.1723 9.41886 10.8148C10.2226 10.3638 10.5497 9.40392 10.3326 8.4996C9.83886 6.44289 8.30971 4.84211 6.5 4.84211ZM0.5 4.39168C0.5 5.19121 1.01143 6 1.64286 6C2.27429 6 2.78571 5.19121 2.78571 4.39168C2.78571 3.59216 2.27429 3.10526 1.64286 3.10526C1.01143 3.10526 0.5 3.59245 0.5 4.39168ZM12.5 4.39168C12.5 5.19121 11.9886 6 11.3571 6C10.7257 6 10.2143 5.19121 10.2143 4.39168C10.2143 3.59216 10.7257 3.10526 11.3571 3.10526C11.9886 3.10526 12.5 3.59245 12.5 4.39168ZM3.5 1.78642C3.5 2.58595 4.01143 3.39474 4.64286 3.39474C5.27429 3.39474 5.78571 2.58595 5.78571 1.78642C5.78571 0.986895 5.27429 0.5 4.64286 0.5C4.01143 0.5 3.5 0.987184 3.5 1.78642ZM9.5 1.78642C9.5 2.58595 8.98857 3.39474 8.35714 3.39474C7.72571 3.39474 7.21429 2.58595 7.21429 1.78642C7.21429 0.986895 7.72571 0.5 8.35714 0.5C8.98857 0.5 9.5 0.987184 9.5 1.78642Z"
+                                                stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>{{ $previewPet?->name ?: 'Pet' }}
+                                        <span class="pet-size-inline">
+                                            @if ($isSpaceAccount && $previewPetSizeLabel)
+                                                <span class="black-dot" style="margin: 0 5px;"></span>
+                                                <span
+                                                    style="color: #3B3731; font-family: Lato; font-size: 14px; font-style: normal; font-weight: 400; line-height: normal;">{{ $previewPetSizeLabel }}</span>
+                                            @else
+                                                - {{ $previewPet?->pet_type ?: 'Pet type' }}
+                                            @endif
+                                        </span>
+                                    </li>
+                                </ul>
+                            @endif
+                        </div>
+                    </article>
+                @else
+                    <p class="availability-upcoming-empty">No upcoming bookings.</p>
+                @endif
                 <button type="button" class="availability-view-all" @click="openBookingsDrawer()">View All</button>
             </div>
         </aside>
@@ -438,16 +553,13 @@
                                 };
                                 $bookingStatusLabel = ucfirst((string) ($booking->booking_status ?: 'unknown'));
                                 $clientSinceDate = $booking->petOwner?->created_at ?? $booking->created_at;
-                                $loggedUserType =
-                                    (string) (auth('groomer_spacer')->user()?->user_type ??
-                                        (auth()->user()?->user_type ?? ''));
+                                $loggedUserType = (string) (auth('groomer_spacer')->user()?->user_type ?? (auth()->user()?->user_type ?? ''));
                                 $isSpaceAccount = strtolower($loggedUserType) === 'space';
                                 $petSizeLabel = null;
                                 if ($isSpaceAccount) {
                                     $petWeight = (float) ($firstPet?->weight ?? 0);
                                     if ($petWeight > 0) {
-                                        $petSizeLabel =
-                                            $petWeight <= 7 ? 'Small' : ($petWeight <= 18 ? 'Medium' : 'Large');
+                                        $petSizeLabel = $petWeight <= 7 ? 'Small' : ($petWeight <= 18 ? 'Medium' : 'Large');
                                     }
                                 }
                                 $bookingDateKey = $booking->date?->format('Y-m-d') ?? '';
@@ -461,7 +573,9 @@
                                 x-show="!drawerFilterDateKey || drawerFilterDateKey === @js($bookingDateKey)">
                                 <div class="availability-drawer-booking-top">
                                     <div class="availability-drawer-client">
-                                        <img src="{{ asset('images/ellipse-65.svg') }}" alt="Client image" />
+                                        <span class="availability-drawer-avatar">
+                                            <img src="{{ asset('images/ellipse-65.svg') }}" alt="Client image" />
+                                        </span>
                                         <div style="display: flex;flex-direction: column;gap: 10px;">
                                             <div class="availability-drawer-client-name-row">
                                                 <strong>{{ $booking->petOwner?->name ?? (auth()->user()?->name ?? 'Client') }}</strong>
@@ -477,7 +591,7 @@
                                             <small
                                                 style="color: #9C9790; font-family: Lato; font-size: 16px; font-style: normal; font-weight: 400; line-height: normal;">
                                                 Client since
-                                                {{ $clientSinceDate ? $clientSinceDate->format('M d, Y') : 'N/A' }}
+                                                {{ $clientSinceDate ? $clientSinceDate->format('d M Y') : 'N/A' }}
                                             </small>
                                         </div>
                                     </div>
@@ -677,7 +791,9 @@
                             :class="selectedBooking ? selectedBooking.statusBadgeClass : ''">
                             <div class="availability-drawer-booking-top">
                                 <div class="availability-drawer-client">
-                                    <img src="{{ asset('images/ellipse-65.svg') }}" alt="Client image" />
+                                    <span class="availability-drawer-avatar">
+                                        <img src="{{ asset('images/ellipse-65.svg') }}" alt="Client image" />
+                                    </span>
                                     <div style="display: flex;flex-direction: column;gap: 10px;">
                                         <div class="availability-drawer-client-name-row">
                                             <span class="availability-drawer-space-badge" aria-hidden="true">
@@ -858,7 +974,14 @@
     .availability-layout {
         display: flex;
         flex-direction: column;
-        --availability-aside-width: 250px;
+        --availability-aside-width: 237px;
+        --availability-accent: #FFC97A;
+        --availability-today-bg: #FFFBF4;
+    }
+
+    .availability-layout.is-space {
+        --availability-accent: #FFA899;
+        --availability-today-bg: #FFF7F5;
     }
 
     .availability-content {
@@ -874,16 +997,51 @@
     }
 
     .availability-header {
-        margin: 38px 0;
+        margin: 20px 0;
     }
 
+    .availability-status-banner {
+        border: 1px solid #B5DB65;
+        background: #F4F8EC;
+        border-radius: 10px;
+        min-height: 76px;
+        padding: 19px 20px;
+        margin: 1.5rem 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
 
+    .availability-status-banner strong {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .availability-status-banner p {
+        margin: 0;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+    }
 
     .availability-toolbar {
         display: grid;
-        grid-template-columns: auto 1fr auto;
+        grid-template-columns: auto minmax(0, 1fr) var(--availability-aside-width);
         align-items: center;
         gap: 20px;
+    }
+
+    .availability-toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
     .availability-calendar-title {
@@ -892,34 +1050,101 @@
 
     .availability-view-toggle {
         display: inline-flex;
-        border: 1px solid #D4D4D4;
-        border-radius: 10px;
-        overflow: hidden;
-        background: #fff;
+        align-items: center;
+        width: 243px;
+        height: 42px;
+        padding: 3px;
+        border-radius: 100px;
+        background: #F9FAFC;
+        overflow: visible;
     }
 
     .availability-view-toggle button {
+        flex: 1 1 0;
+        height: 36px;
         border: none;
         background: transparent;
-        padding: 10px 18px;
+        border-radius: 100px;
+        padding: 0;
+        color: #888;
+        text-align: center;
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        cursor: pointer;
+    }
+
+    .availability-view-toggle .is-active {
+        background: #fff;
+        color: #3B3731;
+        box-shadow: 0 2px 4px 0 rgba(59, 55, 49, 0.1);
+    }
+
+    .availability-today-btn {
+        width: 79px;
+        height: 36px;
+        border-radius: 100px;
+        border: 1px solid #F0F0F0;
+        background: #FEFEFE;
         color: #3B3731;
         text-align: center;
         font-family: Lato;
         font-size: 14px;
         font-style: normal;
-        font-weight: 400;
+        font-weight: 600;
         line-height: normal;
         cursor: pointer;
     }
 
-    .availability-view-toggle button:nth-child(2) {
-        border-left: 1px solid #D4D4D4;
-        border-right: 1px solid #D4D4D4;
+    .availability-legend {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 20px;
+        margin-top: 20px;
     }
 
-    .availability-view-toggle .is-active {
-        background: #F9FAFC;
-        color: #3B3731;
+    .availability-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        white-space: nowrap;
+    }
+
+    .availability-legend-item i {
+        width: 10px;
+        height: 10px;
+        border-radius: 100px;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+
+    .availability-legend-item i.is-completed {
+        background: #CBDCE8;
+    }
+
+    .availability-legend-item i.is-confirmed {
+        background: #B5DB65;
+    }
+
+    .availability-legend-item i.is-pending {
+        background: #FFC97A;
+    }
+
+    .availability-legend-item i.is-cancelled {
+        background: #FF6E6E;
+    }
+
+    .availability-legend-item i.is-holiday {
+        background: #D9D9D9;
     }
 
     .availability-search {
@@ -934,13 +1159,18 @@
         width: 100%;
         min-width: 0;
         height: 42px;
-        border: 1px solid #e5e2de;
+        border: 1px solid #D4D4D4;
         border-radius: 10px;
         padding: 0 35px 0 15px;
-        color: #8b8781;
-        font-size: 12px;
+        color: #3B3731;
+        font-size: 16px;
         font-family: Lato;
         outline: none;
+        background: #fff;
+    }
+
+    .availability-search input::placeholder {
+        color: #D4D4D4;
     }
 
     .availability-search-icon {
@@ -950,6 +1180,20 @@
         transform: translateY(-50%);
         pointer-events: none;
         display: inline-flex;
+    }
+
+    @media (max-width: 1100px) {
+        .availability-toolbar {
+            grid-template-columns: 1fr;
+            justify-items: start;
+        }
+
+        .availability-calendar-title,
+        .availability-search {
+            justify-self: start;
+            width: 100%;
+            max-width: 100%;
+        }
     }
 
     .availability-mini-calendar {
@@ -1049,7 +1293,7 @@
     }
 
     .availability-mini-grid .is-selected {
-        background: #FFC97A;
+        background: var(--availability-accent, #FFC97A);
         color: #fff;
     }
 
@@ -1069,6 +1313,15 @@
         padding-bottom: 15px;
         border-bottom: 1px solid #e5ded5;
         margin-bottom: 15px;
+    }
+
+    .availability-upcoming-empty {
+        margin: 0 0 1.5rem;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: normal;
     }
 
     .availability-booking-card-wrap h5 span {
@@ -1091,36 +1344,41 @@
     }
 
     .availability-booking-card.is-space {
-        background: #FFF7F5;
-        display: grid;
-        grid-template-columns: auto 1fr;
-        grid-template-rows: auto auto;
-        column-gap: 12px;
-        row-gap: 14px;
-        align-items: center;
-    }
-
-    .availability-booking-card.is-space>.img-circle {
-        grid-column: 1;
-        grid-row: 1;
+        background: #FFFBF4;
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+        padding: 12px 10px;
+        min-height: 156px;
+        box-sizing: border-box;
     }
 
     .availability-booking-card.is-space>div:last-child {
-        display: contents;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        min-width: 0;
     }
 
     .availability-booking-card.is-space>div:last-child>.booking-chip {
-        grid-column: 2;
-        grid-row: 1;
         margin-bottom: 0;
-        align-self: center;
-        justify-self: start;
+        flex-shrink: 0;
     }
 
-    .availability-booking-card.is-space>div:last-child>ul {
-        grid-column: 1 / -1;
-        grid-row: 2;
-        justify-self: start;
+    .availability-booking-card.is-space>div:last-child>ul>li>img {
+        display: block;
+        flex-shrink: 0;
+        width: auto;
+        height: auto;
+        max-width: none;
+        margin-right: 20px;
+    }
+
+    .availability-booking-card.is-space>div:last-child>ul>li>span {
+        margin-left: 0;
+        color: #9D9B98;
+        font-weight: 400;
     }
 
     .img-circle {
@@ -1135,8 +1393,10 @@
     }
 
     .img-circle.is-space {
-        background: #FFA899;
-        padding: 2px;
+        width: 42.5px;
+        height: 42.5px;
+        background: rgba(255, 168, 153, 0.30);
+        padding: 0;
     }
 
     .img-circle>div {
@@ -1151,11 +1411,10 @@
     }
 
     .img-circle.is-space>div {
-        width: 100%;
-        height: 100%;
-        background: #FFF;
-        border-radius: 50%;
-        padding: 2px;
+        width: 32.5px;
+        height: 32.5px;
+        background: rgba(255, 168, 153, 0.50);
+        padding: 0;
     }
 
     .img-circle>div>img {
@@ -1163,13 +1422,12 @@
         height: 30px;
         aspect-ratio: 1/1;
         border-radius: 86px;
-
     }
 
     .img-circle.is-space>div>img {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
+        width: 22.5px;
+        height: 22.5px;
+        border-radius: 86px;
         object-fit: cover;
         display: block;
     }
@@ -1217,6 +1475,7 @@
 
     .availability-booking-card>div:last-child>ul>li>span {
         color: #9D9B98;
+        margin-left: 4px;
     }
 
     .availability-booking-card>div:last-child>ul>li>svg {
@@ -1267,7 +1526,7 @@
         position: absolute;
         top: 0;
         right: 0;
-        width: min(35rem, 100%);
+        width: min(578px, 100%);
         height: 100%;
         border-radius: 10px 0 0 10px;
         background: #FFF;
@@ -1278,9 +1537,12 @@
     }
 
     .availability-drawer-head {
-        padding: 24px 24px 14px;
+        min-height: 120px;
+        padding: 29px 20px 20px;
+        background: #FAFAFA;
+        border-radius: 10px 0 0 0;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
     }
 
@@ -1303,10 +1565,11 @@
     }
 
     .availability-drawer-body {
-        padding: 0 24px 24px;
+        padding-top: 0 !important;
+        padding: 20px;
         overflow-y: auto;
         display: grid;
-        gap: 18px;
+        gap: 20px;
         -ms-overflow-style: none;
         scrollbar-width: none;
     }
@@ -1321,7 +1584,7 @@
         border: 1px solid #dcd4c8;
         border-radius: 10px;
         background: #fff;
-        padding: 18px;
+        padding: 20px;
     }
 
     .availability-drawer-booking-card.is-confirmed {
@@ -1365,18 +1628,43 @@
         gap: 10px;
     }
 
+    .availability-drawer-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        padding: 2.5px;
+        box-sizing: border-box;
+        flex-shrink: 0;
+        background: #CBDCE8;
+    }
+
+    .availability-drawer-booking-card.is-confirmed .availability-drawer-avatar {
+        background: #B5DB65;
+    }
+
+    .availability-drawer-booking-card.is-pending .availability-drawer-avatar {
+        background: #FFC97A;
+    }
+
+    .availability-drawer-booking-card.is-cancelled .availability-drawer-avatar {
+        background: #FF6E6E;
+    }
+
+    .availability-drawer-avatar img,
     .availability-drawer-client img {
-        width: 54px;
-        height: 54px;
-        border-radius: 999px;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
         object-fit: cover;
+        display: block;
+        background: #fff;
     }
 
     .availability-drawer-client strong {
         display: block;
         color: #3B3731;
         font-family: Lato;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 600;
         line-height: 1.2;
     }
@@ -1589,7 +1877,7 @@
 
     .availability-drawer-pet {
         margin-top: 14px;
-        border: 1px solid #ede7dc;
+        border: 1px solid #EAEAEA;
         border-radius: 5px;
         padding: 14px;
         display: flex;
@@ -1604,8 +1892,8 @@
     }
 
     .availability-drawer-pet img {
-        width: 54px;
-        height: 54px;
+        width: 46px;
+        height: 46px;
         border-radius: 999px;
         object-fit: cover;
     }
@@ -1616,7 +1904,7 @@
         gap: 10px;
         color: #3B3731;
         font-family: Lato;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 600;
         line-height: 1.2;
     }
@@ -1657,7 +1945,6 @@
         font-weight: 400;
         line-height: normal;
     }
-
 
     .availability-drawer-empty {
         border: 1px dashed #ddd5c9;
@@ -1709,9 +1996,7 @@
 </style>
 
 <script>
-    (function () {
-        if (window.availabilityMiniCalendar) return;
-
+    (function() {
         const MONTHS = [
             'January',
             'February',
@@ -1727,7 +2012,7 @@
             'December',
         ];
 
-        window.availabilityMiniCalendar = function () {
+        window.availabilityMiniCalendar = function() {
             return {
                 today: null,
                 selectedDate: null,
@@ -1752,6 +2037,19 @@
                     return dateObj.getFullYear() === this.selectedDate.getFullYear() &&
                         dateObj.getMonth() === this.selectedDate.getMonth() &&
                         dateObj.getDate() === this.selectedDate.getDate();
+                },
+                syncFromShell(detail) {
+                    const now = new Date();
+                    const year = detail?.year ?? now.getFullYear();
+                    const monthIndex = detail?.monthIndex ?? now.getMonth();
+                    const day = detail?.day ?? now.getDate();
+                    const dateObj = new Date(year, monthIndex, day);
+                    if (Number.isNaN(dateObj.getTime())) {
+                        return;
+                    }
+
+                    this.selectedDate = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+                    this.miniMonth = new Date(dateObj.getFullYear(), dateObj.getMonth(), 1);
                 },
                 selectMiniDate(dateObj) {
                     if (!dateObj || dateObj.getMonth() !== this.miniMonth.getMonth() || dateObj

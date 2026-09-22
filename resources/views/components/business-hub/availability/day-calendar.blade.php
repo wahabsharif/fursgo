@@ -15,7 +15,7 @@
                         :class="['is-' + slot.type, slot.bookingId ? 'is-clickable' : '']"
                         @click.stop="onCalendarSlotClick(slot)">
                         <p class="availability-day-slot-time">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                                 <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" />
                                 <path d="M8 4.5V8L10.5 10" stroke="currentColor" stroke-width="1.5"
                                     stroke-linecap="round" />
@@ -25,7 +25,7 @@
 
                         <div class="availability-day-slot-body">
                             <p class="availability-day-slot-pet">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="13"
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="11"
                                     viewBox="0 0 14 13" fill="none" aria-hidden="true">
                                     <path
                                         d="M7 5.23684C5.03948 5.23684 3.38291 6.98347 2.84805 9.22684C2.61281 10.2134 2.96752 11.2605 3.83821 11.7525C4.52845 12.1425 5.55514 12.5 7 12.5C8.44486 12.5 9.47186 12.1425 10.1621 11.7525C11.0328 11.2605 11.3872 10.2134 11.152 9.22684C10.6171 6.98316 8.96052 5.23684 7 5.23684ZM0.5 4.74547C0.5 5.61768 1.05405 6.5 1.7381 6.5C2.42214 6.5 2.97619 5.61768 2.97619 4.74547C2.97619 3.87326 2.42214 3.34211 1.7381 3.34211C1.05405 3.34211 0.5 3.87358 0.5 4.74547ZM13.5 4.74547C13.5 5.61768 12.946 6.5 12.2619 6.5C11.5779 6.5 11.0238 5.61768 11.0238 4.74547C11.0238 3.87326 11.5779 3.34211 12.2619 3.34211C12.946 3.34211 13.5 3.87358 13.5 4.74547ZM3.75 1.90337C3.75 2.77558 4.30405 3.65789 4.9881 3.65789C5.67214 3.65789 6.22619 2.77558 6.22619 1.90337C6.22619 1.03116 5.67214 0.5 4.9881 0.5C4.30405 0.5 3.75 1.03147 3.75 1.90337ZM10.25 1.90337C10.25 2.77558 9.69595 3.65789 9.01191 3.65789C8.32786 3.65789 7.77381 2.77558 7.77381 1.90337C7.77381 1.03116 8.32786 0.5 9.01191 0.5C9.69595 0.5 10.25 1.03147 10.25 1.90337Z"
@@ -38,7 +38,7 @@
                             </p>
 
                             <p class="availability-day-slot-service">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="13"
+                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="12"
                                     viewBox="0 0 12 13" fill="none" aria-hidden="true">
                                     <path
                                         d="M3.82598 8.79084C4.78992 9.75476 7.13435 8.9735 9.06223 7.04535C10.9904 5.11751 11.7717 2.77312 10.8077 1.80919M6.66226 1.15444L7.09856 1.59105M5.1352 2.68178L5.5715 3.11808M3.82568 4.42727L4.26198 4.86357M3.38937 6.60906L3.82568 7.04535M9.06223 0.5L9.49853 0.936295M8.62592 3.11839L9.49853 3.99098M7.09887 4.64573L7.97147 5.51832M5.35335 5.95461L6.22595 6.8272"
@@ -64,15 +64,15 @@
     }
 
     .availability-day-card {
-        border: 1px solid #d9d9d9;
-        border-radius: 12px;
+        border: 1px solid #D9D9D9;
+        border-radius: 10px;
         background: #fff;
         overflow: hidden;
     }
 
     .availability-day-header {
-        background: #f3f4f7;
-        border-bottom: 1px solid #d9d9d9;
+        background: #F9FAFC;
+        border-bottom: 1px solid #D9D9D9;
         color: #3B3731;
         text-align: center;
         font-family: Lato;
@@ -80,20 +80,24 @@
         font-style: normal;
         font-weight: 600;
         line-height: normal;
-        padding: 15px 12px;
+        height: 48px;
+        padding: 0 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .availability-day-timeline {
-        padding: 22px 20px 26px 2px;
+        padding: 18px 16px 22px 8px;
         display: grid;
-        gap: 20px;
+        gap: 16px;
     }
 
     .availability-day-row {
         display: grid;
-        grid-template-columns: 62px minmax(0, 1fr);
+        grid-template-columns: 52px minmax(0, 1fr);
         align-items: start;
-        gap: 12px;
+        gap: 10px;
     }
 
     .availability-day-hour {
@@ -104,12 +108,13 @@
         font-style: normal;
         font-weight: 600;
         line-height: normal;
-        padding-top: 9px;
+        padding-top: 8px;
     }
 
     .availability-day-slot {
-        border-radius: 10px;
+        border-radius: 5px;
         overflow: hidden;
+        width: 100%;
     }
 
     .availability-day-slot.is-clickable {
@@ -129,7 +134,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        text-align: center;
+        text-align: left;
         font-family: Lato;
         font-size: 12px;
         font-style: normal;
@@ -139,13 +144,15 @@
     }
 
     .availability-day-slot-time {
-        padding: 11px 16px;
+        padding: 8px 14px;
+        justify-content: flex-start;
     }
 
     .availability-day-slot-body {
-        padding: 10px 16px 13px;
+        padding: 8px 14px 10px;
         display: grid;
-        gap: 10px;
+        gap: 6px;
+        justify-items: start;
     }
 
     .availability-day-slot-pet-type {
