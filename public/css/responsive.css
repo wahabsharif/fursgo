@@ -1,27 +1,109 @@
 @font-face {
     font-family: "Playfair Display";
-    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-Bold.ttf") format("truetype");
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-Regular.ttf")
+        format("truetype");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Playfair Display";
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-Medium.ttf")
+        format("truetype");
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Playfair Display";
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-SemiBold.ttf")
+        format("truetype");
+    font-style: normal;
     font-weight: 600;
+    font-display: swap;
 }
 
 @font-face {
     font-family: "Playfair Display";
-    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-ExtraBold.ttf") format("truetype");
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-Bold.ttf")
+        format("truetype");
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Playfair Display";
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-ExtraBold.ttf")
+        format("truetype");
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Playfair Display";
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-Black.ttf")
+        format("truetype");
+    font-style: normal;
     font-weight: 900;
+    font-display: swap;
 }
 
 @font-face {
     font-family: "Playfair Display";
-    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-SemiBoldItalic.ttf") format("truetype");
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-Italic.ttf")
+        format("truetype");
+    font-style: italic;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Playfair Display";
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-MediumItalic.ttf")
+        format("truetype");
+    font-style: italic;
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Playfair Display";
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-SemiBoldItalic.ttf")
+        format("truetype");
     font-style: italic;
     font-weight: 600;
+    font-display: swap;
 }
 
 @font-face {
     font-family: "Playfair Display";
-    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-ExtraBoldItalic.ttf") format("truetype");
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-BoldItalic.ttf")
+        format("truetype");
+    font-style: italic;
+    font-weight: 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Playfair Display";
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-ExtraBoldItalic.ttf")
+        format("truetype");
+    font-style: italic;
+    font-weight: 800;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Playfair Display";
+    src: url("../fonts/Playfair_Display/static/PlayfairDisplay-BlackItalic.ttf")
+        format("truetype");
     font-style: italic;
     font-weight: 900;
+    font-display: swap;
 }
 
 /* Normal weight */
@@ -50,21 +132,22 @@
 }
 
 :root {
-    --groomer-color: #FBAC83;
-    --space-color: #FFA899;
-    --font-color: #3B3731;
+    --groomer-color: #fbac83;
+    --space-color: #ffa899;
+    --font-color: #3b3731;
     --border-color: #e5e5e5;
-    --active-bg: #FFC97A;
+    --active-bg: #ffc97a;
     --text-dark: #333;
-    --text-muted: #D4D4D4;
-    --bg: #D4D4D4;
+    --text-muted: #d4d4d4;
+    --bg: #d4d4d4;
     --panel: #ffffff;
     --muted: #bfc1c3;
     --accent: #ffb86b;
     --border: #e7e7e7;
     --radius: 12px;
-    --font: "Playfair Display", "Lato", system-ui, -apple-system,
-        "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font:
+        "Playfair Display", "Lato", system-ui, -apple-system, "Segoe UI",
+        Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 /* Hamburger icon */
@@ -121,7 +204,6 @@ a {
     object-fit: cover;
 }
 
-
 .hero-section {
     position: relative;
 }
@@ -142,7 +224,7 @@ a {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    background: #F0EAD9;
+    background: #f0ead9;
     color: var(--font-color);
 }
 
@@ -155,28 +237,28 @@ a {
 }
 
 .find-groomer-space-text.active {
-    color: #FDFCF8 !important;
-    background: #FBAC83;
-    box-shadow: 0 2px 10px 0 rgba(59, 55, 49, 0.30);
+    color: #fdfcf8 !important;
+    background: #fbac83;
+    box-shadow: 0 2px 10px 0 rgba(59, 55, 49, 0.3);
     border-radius: 10px;
     font-weight: 600;
 }
 
 .find-space .find-groomer-space-text.active {
-    background: #FFA999;
+    background: #ffa999;
 }
 
 .find-groomer-space-text.active svg path[stroke] {
-    stroke: #FDFCF8;
+    stroke: #fdfcf8;
 }
 
 .find-groomer-space-text.active svg path[fill] {
-    fill: #FDFCF8;
+    fill: #fdfcf8;
 }
 
 .find-groomer {
-    color: #FDFCF8;
-    background: #F0EAD9;
+    color: #fdfcf8;
+    background: #f0ead9;
     padding: 5px;
     text-align: center;
     font-family: "Lato";
@@ -193,7 +275,7 @@ a {
     width: 1080px;
     height: 235px;
     border-radius: 0 10px 10px 10px;
-    background: #F7F4EC;
+    background: #f7f4ec;
     box-shadow: 0 5px 55px 0 rgba(0, 0, 0, 0.05);
 }
 
@@ -209,7 +291,7 @@ a {
 }
 
 .pet-option svg path {
-    fill: #D4D4D4;
+    fill: #d4d4d4;
     transition: fill 0.2s ease;
 }
 
@@ -313,14 +395,15 @@ a {
     background: transparent;
     cursor: pointer;
     color: var(--text-muted);
-    transition: background 0.2s ease, color 0.2s ease;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
 
     font-family: "Lato";
     font-size: 18px;
     white-space: nowrap;
     /* prevent wrap */
 }
-
 
 .weight-option:not(:last-child) {
     border-right: 1px solid #e5e5e5;
@@ -342,10 +425,9 @@ a {
     background: rgba(0, 0, 0, 0.03);
 }
 
-
 .find-space {
     color: var(--font-color);
-    background: #F0EAD9;
+    background: #f0ead9;
     padding: 5px;
     text-align: center;
     font-family: "Lato";
@@ -357,12 +439,12 @@ a {
 }
 
 .search-box input:focus {
-    border-color: #FFC97A;
+    border-color: #ffc97a;
     color: var(--font-color);
 }
 
 .search-box input:not(:placeholder-shown) {
-    border-color: #FFC97A;
+    border-color: #ffc97a;
     color: var(--font-color);
     font-family: Lato;
     font-size: 18px;
@@ -377,7 +459,6 @@ a {
     align-items: center;
     gap: 20px;
 }
-
 
 .select-box-second-row {
     padding: 20px 0 0 30px;
@@ -497,7 +578,7 @@ a {
 }
 
 .hero-text {
-    color: #3B3731;
+    color: #3b3731;
     font-family: "Playfair Display";
     font-size: 45px;
     font-style: normal;
@@ -506,7 +587,7 @@ a {
 }
 
 .book-text {
-    color: #3B3731;
+    color: #3b3731;
     font-family: "Playfair Display";
     font-size: 45px;
     font-style: italic;
@@ -529,10 +610,21 @@ a {
     height: 500px;
     overflow: hidden;
     border-radius: var(--r);
-    --_m: /calc(2*var(--r)) calc(2*var(--r)) radial-gradient(#000 70%, #0000 72%);
-    --_g: conic-gradient(from 90deg at calc(100% - var(--r)) calc(100% - var(--r)), #0000 25%, #000 0);
+    --_m: /calc(2 * var(--r)) calc(2 * var(--r))
+        radial-gradient(#000 70%, #0000 72%);
+    --_g: conic-gradient(
+        from 90deg at calc(100% - var(--r)) calc(100% - var(--r)),
+        #0000 25%,
+        #000 0
+    );
     --_d: (var(--s) + var(--r));
-    mask: calc(100% - var(--_d) - var(--x)) 100% var(--_m), 100% calc(100% - var(--_d) - var(--y)) var(--_m), radial-gradient(var(--s) at 100% 100%, #0000 99%, #000 calc(100% + 1px)) calc(-1 * var(--r) - var(--x)) calc(-1 * var(--r) - var(--y)), var(--_g) calc(-1 * var(--_d) - var(--x)) 0, var(--_g) 0 calc(-1 * var(--_d) - var(--y));
+    mask:
+        calc(100% - var(--_d) - var(--x)) 100% var(--_m),
+        100% calc(100% - var(--_d) - var(--y)) var(--_m),
+        radial-gradient(var(--s) at 100% 100%, #0000 99%, #000 calc(100% + 1px))
+            calc(-1 * var(--r) - var(--x)) calc(-1 * var(--r) - var(--y)),
+        var(--_g) calc(-1 * var(--_d) - var(--x)) 0,
+        var(--_g) 0 calc(-1 * var(--_d) - var(--y));
     mask-repeat: no-repeat;
 }
 
@@ -575,27 +667,27 @@ a {
 }
 
 .text-styling .groom {
-    color: #FFA999;
+    color: #ffa999;
 }
 
 .text-styling .book {
-    color: #A3BCCD;
+    color: #a3bccd;
 }
 
 .text-styling .earn {
-    color: #D8E8B7;
+    color: #d8e8b7;
 }
 
 .text-styling .dot1 {
-    color: #FFA999;
+    color: #ffa999;
 }
 
 .text-styling .dot2 {
-    color: #A3BCCD;
+    color: #a3bccd;
 }
 
 .text-styling .dot3 {
-    color: #D8E8B7;
+    color: #d8e8b7;
 }
 
 .point {
@@ -604,7 +696,6 @@ a {
     gap: 14px;
     width: 100%;
 }
-
 
 .point {
     display: flex;
@@ -638,25 +729,25 @@ a {
     /* critical for preventing overflow */
 }
 
-.points>div {
+.points > div {
     display: flex;
     align-items: center;
     gap: clamp(20px, 5vw, 35px);
     padding: 30px 0 0 0;
 }
 
-.points>div h1 {
+.points > div h1 {
     margin-top: 0;
     font-size: clamp(18px, 4vw, 28px);
     line-height: 1.3;
 }
 
-.points>div span {
+.points > div span {
     font-size: 16px;
     line-height: 1.5;
 }
 
-.points>div h1 {
+.points > div h1 {
     margin-top: 20px;
     color: var(--font-color);
     font-family: "Playfair Display";
@@ -666,7 +757,7 @@ a {
     line-height: 40px;
 }
 
-.points>div span {
+.points > div span {
     display: block;
     /* Ensure it’s on a new line if needed */
     color: var(--font-color);
@@ -687,7 +778,7 @@ a {
 }
 
 .how-it-works {
-    background: #FDFCF8;
+    background: #fdfcf8;
     height: 750px;
 }
 
@@ -735,7 +826,6 @@ a {
     z-index: 0;
 }
 
-
 .search-image img,
 .relax-content img {
     position: relative;
@@ -743,7 +833,7 @@ a {
 }
 
 .search-image::before {
-    background: rgba(255, 168, 153, 0.50);
+    background: rgba(255, 168, 153, 0.5);
     /* shadow color */
 }
 
@@ -765,11 +855,11 @@ a {
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 0;
-    background: rgba(203, 220, 232, 0.50);
+    background: rgba(203, 220, 232, 0.5);
 }
 
 .relax-content::before {
-    background: rgba(216, 232, 183, 0.50);
+    background: rgba(216, 232, 183, 0.5);
     /* shadow color */
 }
 
@@ -792,7 +882,7 @@ a {
     /* equal width */
     height: 25px;
     /* equal height */
-    background: #FFD79B;
+    background: #ffd79b;
     border-radius: 50%;
     /* makes it circular */
     color: #fff;
@@ -992,7 +1082,7 @@ section.rating-section.section {
 }
 
 .testimonial-section .left h3.testimonial-sub-heading {
-    color: #3B3731;
+    color: #3b3731;
     font-family: "Lato";
     font-size: 18px;
     font-style: normal;
@@ -1002,7 +1092,7 @@ section.rating-section.section {
 }
 
 .testimonial-section .left p {
-    color: #3B3731;
+    color: #3b3731;
     font-family: "Lato";
     font-size: 16px;
     font-style: normal;
@@ -1024,11 +1114,10 @@ section.rating-section.section {
 .testimonial-section .track {
     display: flex;
     gap: 25px;
-    transition: transform .45s ease;
+    transition: transform 0.45s ease;
     will-change: transform;
     align-items: flex-start;
     padding-bottom: 80px;
-
 }
 
 .testimonial-section .ending-quotes {
@@ -1040,7 +1129,6 @@ section.rating-section.section {
     background: #fff;
 }
 
-
 .testimonial-section #track {
     display: flex;
     gap: 16px;
@@ -1051,19 +1139,16 @@ section.rating-section.section {
     display: block;
     overflow: hidden;
     position: relative;
-
 }
 
-
 .testimonial-section .card svg.card-shape {
-    stroke: #3B3731;
+    stroke: #3b3731;
     max-width: 100%;
 }
 
-
 .testimonial-section .card.active svg.card-shape {
-    fill: #FFF1DD;
-    stroke: #FFC97A;
+    fill: #fff1dd;
+    stroke: #ffc97a;
 }
 
 .testimonial-section .svg-div {
@@ -1082,7 +1167,7 @@ section.rating-section.section {
 }
 
 .testimonial-section .card .text-stars p {
-    color: #3B3731;
+    color: #3b3731;
     font-family: "Lato";
     font-size: 18px;
     font-style: normal;
@@ -1174,9 +1259,8 @@ section.rating-section.section {
 
 /* optional styles for positioning avatar and meta for both active and non-active cards  */
 
-
 .testimonial-section .meta p {
-    color: #3B3731;
+    color: #3b3731;
     font-family: "Lato";
     font-size: 14px;
     font-style: normal;
@@ -1185,7 +1269,7 @@ section.rating-section.section {
 }
 
 .testimonial-section .meta p span {
-    color: #3B3731;
+    color: #3b3731;
     font-family: "Lato";
     font-size: 14px;
     font-style: normal;
@@ -1223,14 +1307,14 @@ section.rating-section.section {
     width: 5px;
     height: 5px;
     border-radius: 5px;
-    background: #D4D4D4;
+    background: #d4d4d4;
 }
 
 .testimonial-section .dot.active {
     background: var(--font-color);
 }
 
-.payments-protected-text{
+.payments-protected-text {
     /* margin-top: 2rem; */
 }
 .protected-text {
@@ -1271,7 +1355,7 @@ section.rating-section.section {
 }
 
 .our-mission {
-    background: #FDFCF8;
+    background: #fdfcf8;
     height: 500px;
     border-radius: 10px;
 }
@@ -1457,7 +1541,7 @@ ul.fursgo-locations li {
 }
 
 .app-coming-soon {
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 16px;
     font-style: normal;
@@ -1473,9 +1557,6 @@ ul.fursgo-locations li {
     font-weight: 400;
     line-height: normal;
 }
-
-
-
 
 /* date time picker */
 
@@ -1527,7 +1608,7 @@ ul.fursgo-locations li {
 .field.date.has-value,
 .field.time.focused,
 .field.time.has-value {
-    border-color: #FFC97A;
+    border-color: #ffc97a;
 }
 
 /* Optional: change input text color when value selected */
@@ -1535,7 +1616,6 @@ ul.fursgo-locations li {
 .field.time.has-value .fake-input {
     color: #333;
 }
-
 
 .field .input-row {
     display: flex;
@@ -1577,7 +1657,7 @@ ul.fursgo-locations li {
     width: 24px;
     height: 24px;
     aspect-ratio: 1 / 1;
-    border: 2px solid #F5F5F5;
+    border: 2px solid #f5f5f5;
     border-radius: 50%;
     background: transparent;
     cursor: pointer;
@@ -1588,14 +1668,13 @@ ul.fursgo-locations li {
 }
 
 #nextMonth {
-    background: #F5F5F5;
+    background: #f5f5f5;
 }
 
 #prevMonth:hover,
 #nextMonth:hover {
     border-color: #444;
 }
-
 
 /* Popover */
 .popover {
@@ -1632,7 +1711,7 @@ ul.fursgo-locations li {
 
 #monthLabel,
 p.time-text {
-    color: #3B3731;
+    color: #3b3731;
     text-align: center;
     font-family: Lato;
     font-size: 14px;
@@ -1673,7 +1752,7 @@ p.time-text {
     justify-content: center;
     border-radius: 15px;
     cursor: pointer;
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato;
     font-size: 14px;
     font-style: normal;
@@ -1716,7 +1795,7 @@ p.time-text {
     justify-content: space-between;
     align-items: center;
     margin-top: 16px;
-    color: #3B3731;
+    color: #3b3731;
     text-align: center;
     font-family: Lato;
     font-size: 14px;
@@ -1740,7 +1819,7 @@ p.time-text {
     cursor: pointer;
     user-select: none;
     background: transparent;
-    color: #D4D4D4;
+    color: #d4d4d4;
     font-family: Lato;
     font-size: 16px;
     font-style: normal;
@@ -1784,7 +1863,7 @@ p.time-text {
 .time-list {
     scrollbar-width: thin;
     scrollbar-color: var(--active-bg) transparent;
-                     /* thumb color  ^   track color ^ */
+    /* thumb color  ^   track color ^ */
 }
 
 /* custom select dropdown styles  */
@@ -1821,14 +1900,13 @@ p.time-text {
 /* Highlight border when open or value selected */
 .custom-select.open .select-trigger,
 .custom-select.has-value .select-trigger {
-    border-color: #FFC97A;
+    border-color: #ffc97a;
 }
 
 /* optional: keep the text dark if selected */
 .custom-select.has-value .selected-text {
     color: #333;
 }
-
 
 .custom-select .select-trigger span {
     color: var(--text-muted);
@@ -1876,8 +1954,8 @@ p.time-text {
 }
 
 .custom-select .select-options li:hover {
-    border: 1px solid #FFC97A;
-    background: #FFF1DD;
+    border: 1px solid #ffc97a;
+    background: #fff1dd;
     color: #000;
 }
 

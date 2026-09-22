@@ -60,12 +60,12 @@
 
     @if ($isDashboardHub || $dashboardNavView === 'help-centre')
         <script>
-            (function () {
+            (function() {
                 if ('scrollRestoration' in history) {
                     history.scrollRestoration = 'manual';
                 }
 
-                window.__scrollDashboardToTop = function () {
+                window.__scrollDashboardToTop = function() {
                     const root = document.scrollingElement || document.documentElement;
                     root.scrollTop = 0;
                     document.body.scrollTop = 0;
@@ -149,9 +149,7 @@ window.addEventListener('dashboard-nav-changed', (event) => persistBusinessHubNa
         </main>
     @endif
 
-    @unless ($isDashboardHub)
-        <x-common.footer variant="dashboard" />
-    @endunless
+    <x-common.footer variant="dashboard" />
 
     <style>
         [x-cloak] {

@@ -2,7 +2,7 @@
     <div class="availability-weekly-card">
         <div class="availability-weekly-head">
             <template x-for="day in weeklyGrid" :key="'head-' + day.key">
-                <div class="availability-weekly-head-cell" :class="{ 'is-today': day.isToday }">
+                <div class="availability-weekly-head-cell" :class="{ 'is-today': day.isSelected }">
                     <span x-text="day.label"></span>
                 </div>
             </template>
@@ -11,7 +11,7 @@
         <div class="availability-weekly-grid">
             <template x-for="day in weeklyGrid" :key="day.key">
                 <article class="availability-weekly-column"
-                    :class="{ 'is-today-column': day.isToday, 'is-muted-column': day.isMuted }">
+                    :class="{ 'is-today-column': day.isSelected, 'is-muted-column': day.isMuted }">
                     <div class="availability-weekly-date" x-text="day.day"></div>
 
                     <div class="availability-weekly-slots">
@@ -20,7 +20,7 @@
                                 :class="['is-' + slot.type, slot.bookingId ? 'is-clickable' : '']"
                                 @click.stop="onCalendarSlotClick(slot)">
                                 <p class="availability-weekly-time">
-                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none"
                                         aria-hidden="true">
                                         <circle cx="8" cy="8" r="6" stroke="currentColor"
                                             stroke-width="1.5" />
@@ -30,7 +30,7 @@
                                     <span x-text="slot.time"></span>
                                 </p>
                                 <p class="availability-weekly-pet">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="13"
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="11"
                                         viewBox="0 0 14 13" fill="none" aria-hidden="true">
                                         <path
                                             d="M7 5.23684C5.03948 5.23684 3.38291 6.98347 2.84805 9.22684C2.61281 10.2134 2.96752 11.2605 3.83821 11.7525C4.52845 12.1425 5.55514 12.5 7 12.5C8.44486 12.5 9.47186 12.1425 10.1621 11.7525C11.0328 11.2605 11.3872 10.2134 11.152 9.22684C10.6171 6.98316 8.96052 5.23684 7 5.23684ZM0.5 4.74547C0.5 5.61768 1.05405 6.5 1.7381 6.5C2.42214 6.5 2.97619 5.61768 2.97619 4.74547C2.97619 3.87326 2.42214 3.34211 1.7381 3.34211C1.05405 3.34211 0.5 3.87358 0.5 4.74547ZM13.5 4.74547C13.5 5.61768 12.946 6.5 12.2619 6.5C11.5779 6.5 11.0238 5.61768 11.0238 4.74547C11.0238 3.87326 11.5779 3.34211 12.2619 3.34211C12.946 3.34211 13.5 3.87358 13.5 4.74547ZM3.75 1.90337C3.75 2.77558 4.30405 3.65789 4.9881 3.65789C5.67214 3.65789 6.22619 2.77558 6.22619 1.90337C6.22619 1.03116 5.67214 0.5 4.9881 0.5C4.30405 0.5 3.75 1.03147 3.75 1.90337ZM10.25 1.90337C10.25 2.77558 9.69595 3.65789 9.01191 3.65789C8.32786 3.65789 7.77381 2.77558 7.77381 1.90337C7.77381 1.03116 8.32786 0.5 9.01191 0.5C9.69595 0.5 10.25 1.03147 10.25 1.90337Z"
@@ -42,7 +42,7 @@
                                         x-text="' - ' + (slot.pet.split(' - ')[1] || '')"></span>
                                 </p>
                                 <p class="availability-weekly-service">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="13"
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="12"
                                         viewBox="0 0 12 13" fill="none" aria-hidden="true">
                                         <path
                                             d="M3.82598 8.79084C4.78992 9.75476 7.13435 8.9735 9.06223 7.04535C10.9904 5.11751 11.7717 2.77312 10.8077 1.80919M6.66226 1.15444L7.09856 1.59105M5.1352 2.68178L5.5715 3.11808M3.82568 4.42727L4.26198 4.86357M3.38937 6.60906L3.82568 7.04535M9.06223 0.5L9.49853 0.936295M8.62592 3.11839L9.49853 3.99098M7.09887 4.64573L7.97147 5.51832M5.35335 5.95461L6.22595 6.8272"
@@ -58,7 +58,7 @@
 
                         <button x-show="day.moreCount > 0" type="button" class="availability-weekly-more"
                             @click.stop="openBookingsDrawerForDate(day.dateKey)"
-                            x-text="'+' + ' ' + day.moreCount"></button>
+                            x-text="'+ ' + day.moreCount"></button>
                     </div>
                 </article>
             </template>
@@ -88,7 +88,11 @@
         border-bottom: 1px solid #D9D9D9;
         background: #F9FAFC;
         text-align: center;
-        padding: 15px 8px;
+        height: 48px;
+        padding: 0 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .availability-weekly-head-cell:last-child {
@@ -96,25 +100,25 @@
     }
 
     .availability-weekly-head-cell span {
-        color: #3B3731;
+        color: #948F88;
         text-align: center;
         font-family: Lato;
         font-size: 14px;
         font-style: normal;
-        font-weight: 400;
+        font-weight: 600;
         line-height: normal;
     }
 
     .availability-weekly-head-cell.is-today span {
-        color: #FFC97A;
+        color: #3B3731;
         font-weight: 900;
     }
 
     .availability-weekly-column {
-        min-height: 640px;
+        min-height: 480px;
         border-right: 1px solid #D9D9D9;
         background: #FFF;
-        padding: 8px 8px 14px;
+        padding: 8px 5px 14px;
         position: relative;
     }
 
@@ -123,7 +127,7 @@
     }
 
     .availability-weekly-column.is-today-column {
-        background: #FFFBF4;
+        background: var(--availability-today-bg, #FFFBF4);
     }
 
     .availability-weekly-column.is-muted-column {
@@ -153,12 +157,12 @@
         font-size: 14px;
         font-style: normal;
         font-weight: 600;
-        margin: 6px 25px 12px;
+        margin: 0 8px 10px;
         line-height: normal;
     }
 
     .availability-weekly-column.is-today-column .availability-weekly-date {
-        color: #FFC97A;
+        color: var(--availability-accent, #FFC97A);
         text-align: right;
         font-family: Lato;
         font-size: 14px;
@@ -170,14 +174,16 @@
     .availability-weekly-slots {
         display: grid;
         gap: 8px;
+        justify-items: center;
     }
 
     .availability-weekly-slot {
-        width: 135px;
+        width: 102px;
         margin: 0 auto;
         border: none;
         border-radius: 5px !important;
         border: 1px solid transparent;
+        overflow: hidden;
     }
 
     .availability-weekly-slot.is-clickable {
@@ -192,7 +198,7 @@
 
     .availability-weekly-slot p {
         margin: 0;
-        text-align: center;
+        text-align: left;
         font-family: Lato;
         font-size: 12px;
         font-style: normal;
@@ -208,17 +214,18 @@
     .availability-weekly-slot .availability-weekly-time {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         gap: 6px;
-        padding: 8px 20px;
+        padding: 5px 8px;
     }
 
     .availability-weekly-slot .availability-weekly-pet {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        justify-content: space-between;
-        padding: 8px 20px;
+        justify-content: flex-start;
+        gap: 6px;
+        padding: 4px 8px 0;
     }
 
     .availability-weekly-pet-type {
@@ -228,9 +235,9 @@
     .availability-weekly-slot .availability-weekly-service {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         gap: 6px;
-        padding: 0 22px 8px;
+        padding: 2px 8px 6px;
     }
 
     .availability-weekly-slot.is-blue {
@@ -308,17 +315,20 @@
     .availability-weekly-more {
         border: none;
         border-radius: 999px;
-        height: 30px;
+        width: 102px;
+        height: 21px;
+        margin: 0 auto;
         background: #EAEAEA;
         color: #888;
         text-align: center;
         font-family: Lato;
-        font-size: 14px;
+        font-size: 12px;
         font-style: normal;
         font-weight: 600;
-        line-height: normal;
-        letter-spacing: 0.14px;
+        line-height: 21px;
+        letter-spacing: 0.12px;
         cursor: pointer;
+        padding: 0;
     }
 
     .availability-weekly-more:hover {
@@ -327,7 +337,7 @@
 
     @media (max-width: 1450px) {
         .availability-weekly-column {
-            min-height: 520px;
+            min-height: 420px;
         }
     }
 </style>
