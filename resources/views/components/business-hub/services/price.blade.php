@@ -42,7 +42,9 @@
         }, @endif
     @endif
 }" {{ $attributes }}>
-    <h4>{{ $title }}</h4>
+    @if (filled($title))
+        <h4>{{ $title }}</h4>
+    @endif
     <div class="service-price-top-row">
         <label class="service-field">
             <span>Base Price</span>

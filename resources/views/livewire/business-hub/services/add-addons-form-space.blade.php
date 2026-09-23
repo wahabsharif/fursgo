@@ -1,9 +1,11 @@
 <?php
 
 use App\Models\AddOn;
+use Livewire\Attributes\On;
 use Livewire\Volt\Component;
 
 new class extends Component {
+    public ?int $editingId = null;
     public string $addOnsName = '';
     public string $description = '';
     public array $otherPets = [];
@@ -15,32 +17,63 @@ new class extends Component {
     public float $overtimeCharge = 10;
     public string $overtimePer = '15 min';
 
-    private function parseMinutes(?string $value): int|string
+    public function mount(?int $editingId = null): void
     {
-        if ($value === null || trim($value) === '') {
-            return '';
-        }
+        $this->editingId = $editingId;
 
-        preg_match('/\d+/', $value, $matches);
-        return isset($matches[0]) ? (int) $matches[0] : '';
+        if ($this->editingId) {
+            $this->loadAddOn($this->editingId);
+        }
     }
 
-    public function save(): void
+    private function profileId(): ?int
     {
-        $this->validate([
-            'addOnsName' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-        ]);
+        $id = auth('groomer_spacer')->id() ?? auth()->id();
 
-        $profileId = auth()->id();
+        return $id ? (int) $id : null;
+    }
 
-        if (!$profileId) {
-            $this->addError('addOnsName', 'Groomer/Spacer profile not found for current user.');
+    #[On('reset-addon-form')]
+    public function resetForm(): void
+    {
+        $this->reset();
+        $this->editingId = null;
+        $this->js('window.dispatchEvent(new CustomEvent("service-form-baseline"))');
+    }
+
+    public function loadAddOn(int $addOnId, bool $silent = false): void
+    {
+        $profileIds = array_values(array_unique(array_filter([auth('groomer_spacer')->id(), auth()->id(), $this->profileId()])));
+
+        $addOn = AddOn::query()
+            ->when($profileIds !== [], fn($query) => $query->whereIn('groomer_spacer_id', $profileIds))
+            ->find($addOnId);
+
+        if (!$addOn) {
             return;
         }
 
-        $addOn = AddOn::create([
-            'groomer_spacer_id' => $profileId,
+        $this->editingId = (int) $addOn->id;
+        $this->addOnsName = (string) $addOn->add_ons_name;
+        $this->description = (string) ($addOn->description ?? '');
+        $compat = (array) $addOn->pet_compatibility;
+        $this->selectedPets = array_values((array) (data_get($compat, 'pet_type') ?: data_get($compat, 'pet_types', [])));
+        $this->otherPets = array_values((array) data_get($compat, 'other_pets', []));
+        $this->selectedSizes = array_values((array) (data_get($compat, 'pet_size') ?: data_get($compat, 'pet_sizes', [])));
+        $pricing = (array) $addOn->pricing;
+        $this->basePrice = (float) data_get($pricing, 'base_price', 25);
+        $this->overtimeCharge = (float) data_get($pricing, 'overtime_charge.price', 10);
+        $this->overtimePer = (string) (data_get($pricing, 'overtime_charge.per') ?: '15 min');
+        $this->visibilityControls = (bool) $addOn->visibility_controls;
+        if ($silent) {
+            $this->skipRender();
+        }
+        $this->js('window.dispatchEvent(new CustomEvent("service-form-baseline"))');
+    }
+
+    private function payload(): array
+    {
+        return [
             'add_ons_name' => $this->addOnsName,
             'description' => $this->description !== '' ? $this->description : '',
             'pet_compatibility' => [
@@ -60,52 +93,112 @@ new class extends Component {
             ],
             'add_ons_compatibility' => false,
             'visibility_controls' => $this->visibilityControls,
+        ];
+    }
+
+    public function save(): void
+    {
+        $this->validate([
+            'addOnsName' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
         ]);
+
+        $profileId = $this->profileId();
+
+        if (!$profileId) {
+            $this->addError('addOnsName', 'Groomer/Spacer profile not found for current user.');
+            return;
+        }
+
+        if ($this->editingId) {
+            $addOn = AddOn::query()->where('groomer_spacer_id', $profileId)->find($this->editingId);
+
+            if (!$addOn) {
+                $this->addError('addOnsName', 'Add-on not found.');
+                return;
+            }
+
+            $addOn->update($this->payload());
+        } else {
+            $addOn = AddOn::create(
+                array_merge($this->payload(), [
+                    'groomer_spacer_id' => $profileId,
+                ]),
+            );
+        }
 
         $this->dispatch('add-on-created', itemId: $addOn->id);
         $this->reset(['addOnsName', 'description', 'otherPets', 'otherPetInput']);
     }
+
+    public function deleteCurrent(): void
+    {
+        $profileId = $this->profileId();
+
+        if (!$profileId || !$this->editingId) {
+            return;
+        }
+
+        $addOn = AddOn::query()->where('groomer_spacer_id', $profileId)->find($this->editingId);
+
+        if ($addOn) {
+            $addOn->delete();
+        }
+
+        $this->dispatch('add-on-deleted');
+        $this->js('window.dispatchEvent(new CustomEvent("nav-list-loading-end")); window.dispatchEvent(new CustomEvent("service-form-cancel"))');
+    }
 }; ?>
 
-<section class="service-form-wrapper" aria-label="Add service form" x-data="{ visibilityControls: $wire.entangle('visibilityControls').live }">
+<section class="service-form-wrapper" aria-label="Add add-on form"
+    x-data="{ visibilityControls: $wire.entangle('visibilityControls').live }"
+    x-on:service-form-delete.window="$wire.deleteCurrent()"
+    x-on:add-on-edit-requested.window="
+        const d = $event.detail || {};
+        const id = Number(d.addOnId || d.add_on_id || d.id || 0);
+        if (d.state) { window.applyServiceFormState($wire, d.state); }
+        if (id) { $wire.loadAddOn(id, !!d.state); }
+    ">
     <form class="service-form" wire:submit.prevent="save">
-        <div class="service-form-grid">
-            <label class="service-field" style="width: 400px;">
-                <span>Add-on Name</span>
-                <input type="text" placeholder="Storage Locker" wire:model="addOnsName" />
-            </label>
+        <div class="service-form-card">
+            <div class="service-form-grid">
+                <label class="service-field">
+                    <span>Add-on Name</span>
+                    <input type="text" placeholder="Storage Locker" wire:model="addOnsName"
+                        @input="window.dispatchEvent(new CustomEvent('service-form-title-changed', { detail: { title: $event.target.value } }))" />
+                </label>
 
-            <label class="service-field" style="width: 505px;">
-                <span style="color: #9D9B98;">Description</span>
-                <input type="text" placeholder="Keep your belongings in one of our on-site lockers."
-                    wire:model="description" />
-            </label>
+                <label class="service-field">
+                    <span>Description</span>
+                    <input type="text" placeholder="Keep your belongings in one of our on-site lockers."
+                        wire:model="description" />
+                </label>
+            </div>
         </div>
 
-        <x-business-hub.services.pet-compatibility other-pets-input-id="addon-other-pet-space" />
+        <h4 class="service-section-title">Pet Compatibility</h4>
+        <div class="service-form-card">
+            <x-business-hub.services.pet-compatibility title="" other-pets-input-id="addon-other-pet-space" />
+        </div>
 
-        <x-business-hub.services.price show-advanced :muted-overtime-label="false" />
+        <h4 class="service-section-title">Price</h4>
+        <div class="service-form-card">
+            <x-business-hub.services.price title="" show-advanced :muted-overtime-label="false" />
+        </div>
 
-        <div class="service-fieldset">
-            <h4>Visibility Controls</h4>
-            <div class="service-toggle-wrap">
-                <p>Active Service</p>
+        <div class="service-form-card service-settings-card">
+            <h4>Setting Options</h4>
+            <div class="service-setting-row" :class="{ 'is-active': visibilityControls }">
+                <div>
+                    <strong>Visibility Controls</strong>
+                    <p>This add-on is active on your profile — clients can book it now</p>
+                </div>
                 <button type="button" class="service-toggle" :class="{ 'is-on': visibilityControls }"
                     @click="visibilityControls = !visibilityControls"></button>
             </div>
         </div>
 
-        <div class="service-form-actions">
-            <button type="button" class="service-form-btn service-form-btn-cancel"
-                @click="$dispatch('service-form-cancel')">Cancel</button>
-            <button type="submit" class="service-form-btn service-form-btn-save" wire:loading.attr="disabled"
-                wire:target="save">
-                <span class="save-btn-text" wire:loading.class="hidden" wire:target="save">Save Changes</span>
-                <span class="save-btn-loading hidden" wire:loading.class.remove="hidden" wire:target="save">
-                    <span class="save-spinner"></span>
-                </span>
-            </button>
-        </div>
+        <x-business-hub.services.form-footer />
     </form>
 </section>
 
@@ -117,14 +210,69 @@ new class extends Component {
     .service-form {
         display: flex;
         flex-direction: column;
-        gap: 2rem;
+        gap: 1.5rem;
+    }
+
+    .service-form-card {
+        background: #fdfdfd;
+        border: 1px solid #f6f5f5;
+        border-radius: 10px;
+        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.1);
+        padding: 1.5rem 1.25rem;
+    }
+
+    .service-settings-card h4 {
+        margin: 0 0 1rem;
+        padding: 0;
+        border: 0;
+        color: #3B3731;
+        font-family: "Playfair Display";
+        font-size: 28px;
+        font-weight: 600;
+    }
+
+    .service-setting-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-height: 84px;
+        padding: 1.15rem 1.25rem;
+        border-radius: 10px;
+        border: 1px solid #ededed;
+        background: #f5f5f5;
+        margin-bottom: 0.65rem;
+    }
+
+    .service-setting-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .service-setting-row.is-active {
+        background: #f1f5e9;
+    }
+
+    .service-setting-row strong {
+        display: block;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .service-setting-row p {
+        margin: 0.2rem 0 0;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 400;
     }
 
     .service-form-grid {
-        display: flex;
-        justify-content: start;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
         align-items: end;
-        gap: 1.5rem;
     }
 
     .service-fieldset h4 {
@@ -297,8 +445,6 @@ new class extends Component {
         line-height: normal;
     }
 
-
-
     .service-toggle-wrap {
         display: flex;
         align-items: center;
@@ -319,7 +465,7 @@ new class extends Component {
         line-height: normal;
     }
 
-    .service-toggle {
+    .service-form-wrapper .service-toggle {
         width: 56px;
         height: 30px;
         border-radius: 999px;
@@ -331,7 +477,7 @@ new class extends Component {
         transition: background-color 0.24s ease;
     }
 
-    .service-toggle::after {
+    .service-form-wrapper .service-toggle::after {
         content: "";
         position: absolute;
         top: 3px;
@@ -340,15 +486,20 @@ new class extends Component {
         height: 24px;
         border-radius: 999px;
         background: #fff;
-        transition: left 0.24s ease;
+        transition: left 0.24s ease, background 0.24s ease;
     }
 
-    .service-toggle.is-on {
+    .service-form-wrapper .service-toggle.is-on {
         background: #c7d59f;
     }
 
-    .service-toggle.is-on::after {
+    .service-form-wrapper .service-toggle.is-on::after {
         left: 28px;
+        background: transparent url('/images/business-hub/icon-toggle-tick.svg') center / 24px 24px no-repeat;
+    }
+
+    .service-form-wrapper .service-toggle.is-on::before {
+        content: none;
     }
 
     .service-form-actions {
@@ -384,8 +535,9 @@ new class extends Component {
     }
 
     .service-form-btn-save {
-        background: #c9dda0;
+        background: #bacf8e;
         color: #fff;
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
     }
 
     .save-btn-loading {

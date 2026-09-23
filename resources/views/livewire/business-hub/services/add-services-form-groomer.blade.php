@@ -1,9 +1,11 @@
 <?php
 
 use App\Models\Service;
+use Livewire\Attributes\On;
 use Livewire\Volt\Component;
 
 new class extends Component {
+    public ?int $editingId = null;
     public string $serviceName = '';
     public string $description = '';
     public array $otherPets = [];
@@ -13,16 +15,32 @@ new class extends Component {
     public bool $addOnsCompatibility = false;
     public bool $visibilityControls = false;
     public string $baseDuration = '90 Minutes';
-    public string $bufferTime = '15 min';
-    public string $durationSmall = '15 min';
-    public string $durationMedium = '30 min';
-    public string $durationLarge = '45 min';
+    public string $bufferTime = '15 Minutes';
+    public string $durationSmall = '90 Minutes';
+    public string $durationMedium = '90 Minutes';
+    public string $durationLarge = '90 Minutes';
     public float $basePrice = 35;
     public float $priceSmall = 35;
     public float $priceMedium = 45;
     public ?float $priceLarge = null;
     public float $overtimeCharge = 10;
-    public string $overtimePer = '15 min';
+    public string $overtimePer = '15 Minutes';
+
+    public function mount(?int $editingId = null): void
+    {
+        $this->editingId = $editingId;
+
+        if ($this->editingId) {
+            $this->loadService($this->editingId);
+        }
+    }
+
+    private function profileId(): ?int
+    {
+        $id = auth('groomer_spacer')->id() ?? auth()->id();
+
+        return $id ? (int) $id : null;
+    }
 
     private function parseMinutes(?string $value): int|string
     {
@@ -31,7 +49,28 @@ new class extends Component {
         }
 
         preg_match('/\d+/', $value, $matches);
+
         return isset($matches[0]) ? (int) $matches[0] : '';
+    }
+
+    private function minutesLabel(mixed $value, string $fallback): string
+    {
+        if (is_string($value) && preg_match('/\d+/', $value, $matches)) {
+            return ((int) $matches[0]) . ' Minutes';
+        }
+
+        $minutes = (int) $value;
+
+        return $minutes > 0 ? $minutes . ' Minutes' : $fallback;
+    }
+
+    private function numericPrice(mixed $value, float $fallback): float
+    {
+        if ($value === null || $value === '') {
+            return $fallback;
+        }
+
+        return (float) $value;
     }
 
     private function hasSize(string $size): bool
@@ -58,22 +97,9 @@ new class extends Component {
         return (float) $this->priceLarge;
     }
 
-    public function save(): void
+    private function payload(): array
     {
-        $this->validate([
-            'serviceName' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-        ]);
-
-        $profileId = auth()->id();
-
-        if (!$profileId) {
-            $this->addError('serviceName', 'Groomer/Spacer profile not found for current user.');
-            return;
-        }
-
-        $service = Service::create([
-            'groomer_spacer_id' => $profileId,
+        return [
             'service_name' => $this->serviceName,
             'description' => $this->description !== '' ? $this->description : '',
             'pet_compatibility' => [
@@ -101,62 +127,172 @@ new class extends Component {
             ],
             'add_ons_compatibility' => $this->addOnsCompatibility,
             'visibility_controls' => $this->visibilityControls,
+        ];
+    }
+
+    #[On('reset-service-form')]
+    public function resetForm(): void
+    {
+        $this->reset();
+        $this->editingId = null;
+        $this->js('window.dispatchEvent(new CustomEvent("service-form-baseline"))');
+    }
+
+    public function loadService(int $serviceId, bool $silent = false): void
+    {
+        $profileIds = array_values(array_unique(array_filter([auth('groomer_spacer')->id(), auth()->id(), $this->profileId()])));
+
+        $service = Service::query()
+            ->when($profileIds !== [], fn($query) => $query->whereIn('groomer_spacer_id', $profileIds))
+            ->find($serviceId);
+
+        if (!$service) {
+            return;
+        }
+
+        $this->editingId = (int) $service->id;
+        $this->serviceName = (string) $service->service_name;
+        $this->description = (string) ($service->description ?? '');
+
+        $compat = (array) $service->pet_compatibility;
+        $this->selectedPets = array_values((array) data_get($compat, 'pet_types', []));
+        $this->otherPets = array_values((array) data_get($compat, 'other_pets', []));
+        $this->selectedSizes = array_values((array) data_get($compat, 'pet_sizes', []));
+
+        $duration = (array) $service->duration;
+        $this->baseDuration = $this->minutesLabel(data_get($duration, 'base_duration'), '90 Minutes');
+        $this->bufferTime = $this->minutesLabel(data_get($duration, 'buffer_time'), '15 Minutes');
+        $this->durationSmall = $this->minutesLabel(data_get($duration, 'duration_by_size.small'), '90 Minutes');
+        $this->durationMedium = $this->minutesLabel(data_get($duration, 'duration_by_size.medium'), '90 Minutes');
+        $this->durationLarge = $this->minutesLabel(data_get($duration, 'duration_by_size.large'), '90 Minutes');
+
+        $pricing = (array) $service->pricing;
+        $this->basePrice = $this->numericPrice(data_get($pricing, 'base_price'), 35);
+        $this->priceSmall = $this->numericPrice(data_get($pricing, 'pricing_by_size.small'), $this->basePrice);
+        $this->priceMedium = $this->numericPrice(data_get($pricing, 'pricing_by_size.medium'), $this->basePrice);
+        $largePrice = data_get($pricing, 'pricing_by_size.large');
+        $this->priceLarge = $largePrice === '' || $largePrice === null ? null : (float) $largePrice;
+        $this->overtimeCharge = $this->numericPrice(data_get($pricing, 'overtime_charge.price'), 10);
+        $this->overtimePer = $this->minutesLabel(data_get($pricing, 'overtime_charge.per'), '15 Minutes');
+        $this->addOnsCompatibility = (bool) $service->add_ons_compatibility;
+        $this->visibilityControls = (bool) $service->visibility_controls;
+        if ($silent) {
+            $this->skipRender();
+        }
+        $this->js('window.dispatchEvent(new CustomEvent("service-form-baseline"))');
+    }
+
+    public function save(): void
+    {
+        $this->validate([
+            'serviceName' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
         ]);
+
+        $profileId = $this->profileId();
+
+        if (!$profileId) {
+            $this->addError('serviceName', 'Groomer/Spacer profile not found for current user.');
+            return;
+        }
+
+        if ($this->editingId) {
+            $service = Service::query()->where('groomer_spacer_id', $profileId)->find($this->editingId);
+
+            if (!$service) {
+                $this->addError('serviceName', 'Service not found.');
+                return;
+            }
+
+            $service->update($this->payload());
+        } else {
+            $service = Service::create(
+                array_merge($this->payload(), [
+                    'groomer_spacer_id' => $profileId,
+                ]),
+            );
+        }
 
         $this->dispatch('service-created', itemId: $service->id);
         $this->reset();
     }
+
+    public function deleteCurrent(): void
+    {
+        $profileId = $this->profileId();
+
+        if (!$profileId || !$this->editingId) {
+            return;
+        }
+
+        $service = Service::query()->where('groomer_spacer_id', $profileId)->find($this->editingId);
+
+        if ($service) {
+            $service->delete();
+        }
+
+        $this->dispatch('service-deleted');
+        $this->js('window.dispatchEvent(new CustomEvent("nav-list-loading-end")); window.dispatchEvent(new CustomEvent("service-form-cancel"))');
+    }
 }; ?>
 
-<section class="service-form-wrapper" aria-label="Add service form" x-data="{ addOnsCompatibility: $wire.entangle('addOnsCompatibility').live, visibilityControls: $wire.entangle('visibilityControls').live }">
+<section class="service-form-wrapper" aria-label="Add service form"
+    x-data="{ addOnsCompatibility: $wire.entangle('addOnsCompatibility').live, visibilityControls: $wire.entangle('visibilityControls').live }"
+    x-on:service-form-delete.window="$wire.deleteCurrent()"
+    x-on:service-edit-requested.window="
+        const d = $event.detail || {};
+        const id = Number(d.serviceId || d.service_id || d.id || 0);
+        if (d.state) { window.applyServiceFormState($wire, d.state); }
+        if (id) { $wire.loadService(id, !!d.state); }
+    ">
     <form class="service-form" wire:submit.prevent="save">
-        <div class="service-form-grid">
-            <label class="service-field" style="width: 400px;">
-                <span>Service Name</span>
-                <input type="text" placeholder="Full Groom" wire:model="serviceName" />
-            </label>
+        <div class="service-form-card">
+            <div class="service-form-grid">
+                <label class="service-field">
+                    <span>Service Name</span>
+                    <input type="text" placeholder="Full Groom" wire:model="serviceName"
+                        @input="window.dispatchEvent(new CustomEvent('service-form-title-changed', { detail: { title: $event.target.value } }))" />
+                </label>
 
-            <label class="service-field" style="width: 505px;">
-                <span style="color: #9D9B98;">Description</span>
-                <input type="text" wire:model="description"
-                    placeholder="Full grooming service including wash, cut, styling, and nail trim." />
-            </label>
+                <label class="service-field">
+                    <span>Description</span>
+                    <input type="text" wire:model="description"
+                        placeholder="Full grooming service including wash, cut, styling, and nail trim." />
+                </label>
+            </div>
         </div>
 
-        <x-business-hub.services.pet-compatibility other-pets-input-id="service-other-pet-groomer" />
+        <h4 class="service-section-title">Pet Compatibility</h4>
+        <div class="service-form-card">
+            <x-business-hub.services.pet-compatibility title="" other-pets-input-id="service-other-pet-groomer" />
+        </div>
 
-        <x-business-hub.services.duration show-by-size show-advanced large-mode="dropdown" />
+        <h4 class="service-section-title">Duration & Price</h4>
+        <div class="service-form-card">
+            <x-business-hub.services.duration-price />
+        </div>
 
-        <x-business-hub.services.price show-by-size show-advanced large-mode="editable" />
-
-        <div class="service-fieldset">
-            <h4>Add-ons Compatibility</h4>
-            <div class="service-toggle-wrap">
-                <p>Allow add-ons with this service</p>
+        <div class="service-form-card service-settings-card">
+            <h4>Setting Options</h4>
+            <div class="service-setting-row">
+                <div>
+                    <strong>Add-ons Compatibility</strong>
+                    <p>Allow add-ons with this service</p>
+                </div>
                 <button type="button" class="service-toggle" :class="{ 'is-on': addOnsCompatibility }"
                     @click="addOnsCompatibility = !addOnsCompatibility"></button>
             </div>
-        </div>
-        <div class="service-fieldset">
-            <h4>Visibility Controls</h4>
-            <div class="service-toggle-wrap">
-                <p>Active Service</p>
+            <div class="service-setting-row" :class="{ 'is-active': visibilityControls }">
+                <div>
+                    <strong>Visibility Controls</strong>
+                    <p>This service is active on your profile — clients can book it now</p>
+                </div>
                 <button type="button" class="service-toggle" :class="{ 'is-on': visibilityControls }"
                     @click="visibilityControls = !visibilityControls"></button>
             </div>
         </div>
 
-        <div class="service-form-actions">
-            <button type="button" class="service-form-btn service-form-btn-cancel"
-                @click="$dispatch('service-form-cancel')">Cancel</button>
-            <button type="submit" class="service-form-btn service-form-btn-save" wire:loading.attr="disabled"
-                wire:target="save">
-                <span class="save-btn-text" wire:loading.class="hidden" wire:target="save">Save Changes</span>
-                <span class="save-btn-loading hidden" wire:loading.class.remove="hidden" wire:target="save">
-                    <span class="save-spinner"></span>
-                </span>
-            </button>
-        </div>
+        <x-business-hub.services.form-footer />
     </form>
 </section>
 
@@ -168,14 +304,69 @@ new class extends Component {
     .service-form {
         display: flex;
         flex-direction: column;
-        gap: 2rem;
+        gap: 1.5rem;
+    }
+
+    .service-form-card {
+        background: #fdfdfd;
+        border: 1px solid #f6f5f5;
+        border-radius: 10px;
+        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.1);
+        padding: 1.5rem 1.25rem;
+    }
+
+    .service-settings-card h4 {
+        margin: 0 0 1rem;
+        padding: 0;
+        border: 0;
+        color: #3B3731;
+        font-family: "Playfair Display";
+        font-size: 28px;
+        font-weight: 600;
+    }
+
+    .service-setting-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-height: 84px;
+        padding: 1.15rem 1.25rem;
+        border-radius: 10px;
+        border: 1px solid #ededed;
+        background: #f5f5f5;
+        margin-bottom: 0.65rem;
+    }
+
+    .service-setting-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .service-setting-row.is-active {
+        background: #f1f5e9;
+    }
+
+    .service-setting-row strong {
+        display: block;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .service-setting-row p {
+        margin: 0.2rem 0 0;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 400;
     }
 
     .service-form-grid {
-        display: flex;
-        justify-content: start;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
         align-items: end;
-        gap: 1.5rem;
     }
 
     .service-fieldset h4 {
@@ -328,7 +519,6 @@ new class extends Component {
         color: #A4C560;
     }
 
-
     .service-input-with-icon {
         display: flex;
         align-items: center;
@@ -349,12 +539,10 @@ new class extends Component {
         line-height: normal;
     }
 
-
     .service-custom-select-duration,
     .service-custom-select-duration .service-custom-trigger {
         width: 165px;
     }
-
 
     .service-toggle-wrap {
         display: flex;
@@ -376,7 +564,7 @@ new class extends Component {
         line-height: normal;
     }
 
-    .service-toggle {
+    .service-form-wrapper .service-toggle {
         width: 56px;
         height: 30px;
         border-radius: 999px;
@@ -388,7 +576,7 @@ new class extends Component {
         transition: background-color 0.24s ease;
     }
 
-    .service-toggle::after {
+    .service-form-wrapper .service-toggle::after {
         content: "";
         position: absolute;
         top: 3px;
@@ -398,57 +586,31 @@ new class extends Component {
         border-radius: 999px;
         background: #fff;
         z-index: 1;
-        transition: left 0.24s ease;
+        transition: left 0.24s ease, background 0.24s ease;
     }
 
-    .service-toggle::before {
+    .service-form-wrapper .service-toggle::before {
         content: none;
-        opacity: 0;
-        transform: scale(0.88);
     }
 
-    .service-toggle.is-on {
+    .service-form-wrapper .service-toggle.is-on {
         background: #c7d59f;
     }
 
-    .service-toggle.is-on::after {
+    .service-form-wrapper .service-toggle.is-on::after {
         left: 28px;
+        background: transparent url('/images/business-hub/icon-toggle-tick.svg') center / 24px 24px no-repeat;
     }
 
-    .service-toggle.is-on::before {
-        content: "";
-        position: absolute;
-        right: 9px;
-        top: 9px;
-        width: 13px;
-        height: 13px;
-        background-repeat: no-repeat;
-        background-position: center;
-        background-size: contain;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='11' viewBox='0 0 13 11' fill='none'%3E%3Cpath d='M1.25 5.8L4.4 8.95L11.75 1.6' stroke='%23C7D59F' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-        z-index: 2;
-        opacity: 1;
-        transform: scale(1);
-        animation: toggle-icon-in 0.16s ease-in 0.24s both;
-    }
-
-    @keyframes toggle-icon-in {
-        from {
-            opacity: 0;
-            transform: scale(0.9);
-        }
-
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
+    .service-form-wrapper .service-toggle.is-on::before {
+        content: none;
     }
 
     .service-form-actions {
         display: flex;
         justify-content: flex-end;
         gap: 0.75rem;
-        margin-top: 0.5rem;
+        margin-top: 0;
     }
 
     .service-form-btn {
@@ -477,8 +639,9 @@ new class extends Component {
     }
 
     .service-form-btn-save {
-        background: #c9dda0;
+        background: #bacf8e;
         color: #fff;
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
     }
 
     .save-btn-loading {

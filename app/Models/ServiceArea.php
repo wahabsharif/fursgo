@@ -21,11 +21,13 @@ class ServiceArea extends Model
         'longitude',
         'address',
         'map_color',
+        'is_paused',
     ];
 
     protected $casts = [
         'radius' => 'float',
         'latitude' => 'float',
         'longitude' => 'float',
+        'is_paused' => 'boolean',
     ];
 }

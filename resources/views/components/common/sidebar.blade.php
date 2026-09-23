@@ -75,7 +75,8 @@
     startNavLoading() {
         window.dispatchEvent(new CustomEvent('nav-list-loading-start'));
     },
-}" @booking-status-changed.window="
+}" @services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'; if (activeSection === 'services') { servicesOpen = true }"
+    @booking-status-changed.window="
         activeBookingStatus = $event.detail.status ?? '';
         if (activeSection === 'bookings') {
             bookingsOpen = true;
@@ -138,7 +139,7 @@
             <!-- Bookings -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="if (shouldNavigate('bookings', activeSection)) { startNavLoading(); activeSection = 'bookings'; activeBookingStatus = ''; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-filter-reset'); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: '' } })) }"
+                    @click.prevent="const onBookings = activeSection === 'bookings'; if (onBookings && activeBookingStatus === '') { bookingsOpen = !bookingsOpen; return; } startNavLoading(); if (!onBookings) { closeMenus('bookings'); activeSection = 'bookings'; } bookingsOpen = true; activeBookingStatus = ''; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-filter-reset'); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: '' } }))"
                     :class="{ 'active': activeSection === 'bookings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14" fill="none">
                         <path
@@ -233,7 +234,7 @@
             <!-- Services -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="if (shouldNavigate('services', activeSection)) { startNavLoading(); activeSection = 'services'; activeServiceMenu = 'services'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'services' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'services', active_service_menu: 'services' } })) }"
+                    @click.prevent="const onServices = activeSection === 'services'; if (onServices && activeServiceMenu === 'services') { servicesOpen = !servicesOpen; return; } startNavLoading(); if (!onServices) { closeMenus('services'); activeSection = 'services'; } servicesOpen = true; activeServiceMenu = 'services'; window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: 'services' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'services', active_service_menu: 'services' } }))"
                     :class="{ 'active': activeSection === 'services' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="14" viewBox="0 0 13 14" fill="none">
                         <path
