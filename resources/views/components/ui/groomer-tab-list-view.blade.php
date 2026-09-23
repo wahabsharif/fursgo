@@ -47,6 +47,23 @@
         {{-- Main content column containing all groomer cards --}}
         <div class="col-lg-10">
             @forelse($groomers as $index => $groomer)
+            @php
+                $groomer = is_array($groomer) ? $groomer : (method_exists($groomer, 'toArray') ? $groomer->toArray() : (array) $groomer);
+                $imagePath = $groomer['image'] ?? $groomer['image_url'] ?? 'images/card1.png';
+                $imageUrl = str_starts_with((string) $imagePath, 'http') || str_starts_with((string) $imagePath, '/')
+                    ? $imagePath
+                    : asset($imagePath);
+                $distance = $groomer['distance'] ?? '2.5';
+                if (is_numeric($distance)) {
+                    $distance = $distance.' mi';
+                }
+                $experienceLong = (string) ($groomer['experience'] ?? '');
+                $experienceShort = (string) ($groomer['experience_text'] ?? '');
+                $experience = strlen($experienceLong) >= strlen($experienceShort)
+                    ? ($experienceLong !== '' ? $experienceLong : $experienceShort)
+                    : ($experienceShort !== '' ? $experienceShort : 'Experienced groomer dedicated to providing quality care for your pets.');
+                $clipId = 'cardClip-list-'.$index;
+            @endphp
             {{-- Individual groomer card --}}
             <div class="card mt-3">
                 {{-- Left column with image and decorative leaf SVG --}}
@@ -62,17 +79,20 @@
                     </div>
 
                     {{-- Groomer image with custom clip path --}}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="270" height="246" viewBox="0 0 170 246">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="170" height="246" viewBox="0 0 170 246">
                         <defs>
                             {{-- Unique clipPath ID for each card --}}
-                            <clipPath id="cardClip-{{ $index }}">
+                            <clipPath id="{{ $clipId }}">
                                 <path
                                     d="M165 0C167.761 2.57702e-06 170 2.23858 170 5V241C170 243.761 167.761 246 165 246H5C2.23858 246 0 243.761 0 241V37C0 34.2386 2.23858 32 5 32H27C29.7614 32 32 29.7614 32 27V5C32 2.23858 34.2386 0 37 0H165Z" />
                             </clipPath>
                         </defs>
-                        <image href="{{ $groomer['image'] ?? asset('assets/images/default-groomer.png') }}"
+                        <image href="{{ $imageUrl }}"
+                            xlink:href="{{ $imageUrl }}"
+                            width="170"
+                            height="246"
                             preserveAspectRatio="xMidYMid slice"
-                            clip-path="url(#cardClip-{{ $index }})" />
+                            clip-path="url(#{{ $clipId }})" />
                     </svg>
                 </div>
 
@@ -135,7 +155,7 @@
                                         d="M5 6.65C4.5264 6.65 4.0722 6.46563 3.73731 6.13744C3.40242 5.80925 3.21429 5.36413 3.21429 4.9C3.21429 4.43587 3.40242 3.99075 3.73731 3.66256C4.0722 3.33437 4.5264 3.15 5 3.15C5.4736 3.15 5.9278 3.33437 6.26269 3.66256C6.59758 3.99075 6.78571 4.43587 6.78571 4.9C6.78571 5.12981 6.73953 5.35738 6.64979 5.5697C6.56004 5.78202 6.42851 5.97493 6.26269 6.13744C6.09687 6.29994 5.90002 6.42884 5.68336 6.51679C5.46671 6.60473 5.2345 6.65 5 6.65ZM5 0C3.67392 0 2.40215 0.516248 1.46447 1.43518C0.526784 2.3541 0 3.60044 0 4.9C0 8.575 5 14 5 14C5 14 10 8.575 10 4.9C10 3.60044 9.47322 2.3541 8.53553 1.43518C7.59785 0.516248 6.32608 0 5 0Z"
                                         fill="var(--active-bg)" />
                                 </svg>
-                                <span>{{ $groomer['distance'] ?? 'N/A' }}</span>
+                                <span>{{ $distance }}</span>
                             </div>
                             <div class="rating" title="Rating">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
@@ -150,7 +170,7 @@
                     </div>
 
                     {{-- Experience / bio text --}}
-                    <p class="experience">{{ $groomer['experience'] ?? 'Experienced groomer dedicated to providing quality care for your pets.' }}</p>
+                    <p class="experience">{{ $experience }}</p>
 
                     {{-- Availability section --}}
                     <div class="availability">

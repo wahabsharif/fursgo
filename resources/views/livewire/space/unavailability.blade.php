@@ -7,15 +7,15 @@ use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 
 /**
- * Groomer unavailability variants (design shell).
+ * Space unavailability variants (design shell).
  * Variant resolved from URL path to keep custom routes intact.
  */
-new #[Layout('layouts.app'), Title('Fursgo - Groomer Unavailability')] class extends Component {
+new #[Layout('layouts.app'), Title('Fursgo - Space Unavailability')] class extends Component {
     #[Url]
     public string $search = '';
 
     #[Url]
-    public string $sort = '';
+    public ?string $venue_type = null;
 
     public string $variant = 'location';
 
@@ -28,13 +28,13 @@ new #[Layout('layouts.app'), Title('Fursgo - Groomer Unavailability')] class ext
         if (str_contains($path, 'time-unavailability')) {
             $this->variant = 'time';
             $this->focusTab = 'calendar';
-        } elseif (str_contains($path, 'specific_groomer_unavailability_list_view')) {
+        } elseif (str_contains($path, 'specific_space_unavailability_list_view')) {
             $this->variant = 'specific';
             $this->focusTab = 'list';
-        } elseif (str_contains($path, 'specific_groomer_unavailability_map_view')) {
+        } elseif (str_contains($path, 'specific_space_unavailability_map_view')) {
             $this->variant = 'specific';
             $this->focusTab = 'map';
-        } elseif (str_contains($path, 'specific_groomer_unavailability_calendar_view')) {
+        } elseif (str_contains($path, 'specific_space_unavailability_calendar_view')) {
             $this->variant = 'specific';
             $this->focusTab = 'calendar';
         } else {
@@ -46,8 +46,8 @@ new #[Layout('layouts.app'), Title('Fursgo - Groomer Unavailability')] class ext
     public function with(): array
     {
         return [
-            'groomers' => SearchResultsData::groomers($this->search, $this->sort),
-            'spaces' => SearchResultsData::spaces($this->search),
+            'groomers' => SearchResultsData::groomers($this->search),
+            'spaces' => SearchResultsData::spaces($this->search, $this->venue_type),
         ];
     }
 }; ?>
@@ -55,9 +55,9 @@ new #[Layout('layouts.app'), Title('Fursgo - Groomer Unavailability')] class ext
 <div>
     @include('partials.customer-journey.results-shell', [
         'variant' => $variant,
-        'entity' => 'groomer',
+        'entity' => 'space',
         'focusTab' => $focusTab,
-        'activeMain' => 'groomer',
+        'activeMain' => 'space',
         'groomers' => $groomers,
         'spaces' => $spaces,
     ])
