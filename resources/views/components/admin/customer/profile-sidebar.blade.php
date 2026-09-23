@@ -3,6 +3,16 @@
 @php
 $firstName = explode(' ', trim($profile['name'] ?? ''))[0] ?: ($profile['name'] ?? 'Customer');
 $customerEmail = $profile['email'] ?? '';
+$profilePets = $profile['pets'] ?? [];
+$defaultTransferPet = $profilePets[0] ?? null;
+$transferAccounts = [
+[
+'id' => 'USR-01901',
+'name' => 'John Doe',
+'email' => 'John.D@gmail.com',
+'avatar' => asset('images/profile_image.png'),
+],
+];
 @endphp
 
 <aside
@@ -28,10 +38,68 @@ $customerEmail = $profile['email'] ?? '';
         deleteConfirm: '',
         openDeleteReason: false,
         deleteReady: false,
+        transferOpen: false,
+        transferSearch: '',
+        transferTargetId: null,
+        selectedPetId: @js($defaultTransferPet['id'] ?? null),
+        pets: @js($profilePets),
+        transferAccounts: @js($transferAccounts),
+        currentPet() {
+            return this.pets.find((p) => p.id === this.selectedPetId) || this.pets[0] || null;
+        },
+        filteredTransferAccounts() {
+            const q = (this.transferSearch || '').trim().toLowerCase();
+            if (!q) return this.transferAccounts;
+            return this.transferAccounts.filter((a) =>
+                a.name.toLowerCase().includes(q)
+                || a.email.toLowerCase().includes(q)
+                || a.id.toLowerCase().includes(q)
+            );
+        },
+        openTransfer() {
+            this.transferSearch = '';
+            this.transferTargetId = this.transferAccounts[0]?.id || null;
+            this.transferOpen = true;
+        },
+        archiveOpen: false,
+        archiveReason: '',
+        archiveNotes: '',
+        openArchiveReason: false,
+        openArchive() {
+            this.archiveReason = '';
+            this.archiveNotes = '';
+            this.openArchiveReason = false;
+            this.archiveOpen = true;
+        },
+        petBreed() {
+            const pet = this.currentPet();
+            if (!pet) return '';
+            const fromDetails = (pet.details || []).find((d) => d.label === 'Breed');
+            if (fromDetails?.value) return fromDetails.value;
+            return (pet.meta || '').split(/\s*[·•]\s*/)[0] || '';
+        },
+        archiveSubtitle() {
+            const pet = this.currentPet();
+            const owner = @js($profile['name'] ?? '');
+            if (!pet) return owner;
+            return [pet.name, this.petBreed(), owner].filter(Boolean).join(' · ');
+        },
+        deletePetOpen: false,
+        deletePetReason: '',
+        deletePetConfirm: '',
+        openDeletePetReason: false,
+        deletePetReady: false,
+        openDeletePet() {
+            this.deletePetReason = '';
+            this.deletePetConfirm = '';
+            this.openDeletePetReason = false;
+            this.deletePetOpen = true;
+        },
     }"
+    @admin-pet-selected.window="selectedPetId = $event.detail.id"
     x-init="
         const syncModalLock = () => {
-            const open = verifyEmailOpen || resetPasswordOpen || suspendOpen || flagOpen || deleteOpen;
+            const open = verifyEmailOpen || resetPasswordOpen || suspendOpen || flagOpen || deleteOpen || transferOpen || archiveOpen || deletePetOpen;
             if (open) {
                 if (!document.body.classList.contains('admin-co-modal-lock')) {
                     document.body.dataset.adminCoScrollY = String(window.scrollY);
@@ -51,14 +119,22 @@ $customerEmail = $profile['email'] ?? '';
                 && deleteGdprRef.trim() !== ''
                 && deleteConfirm.trim() === 'DELETE';
         };
+        const syncDeletePetReady = () => {
+            deletePetReady = !!deletePetReason && deletePetConfirm.trim() === 'DELETE';
+        };
         $watch('verifyEmailOpen', () => $nextTick(() => syncModalLock()));
         $watch('resetPasswordOpen', () => $nextTick(() => syncModalLock()));
         $watch('suspendOpen', () => $nextTick(() => syncModalLock()));
         $watch('flagOpen', () => $nextTick(() => syncModalLock()));
         $watch('deleteOpen', () => $nextTick(() => syncModalLock()));
+        $watch('transferOpen', () => $nextTick(() => syncModalLock()));
+        $watch('archiveOpen', () => $nextTick(() => syncModalLock()));
+        $watch('deletePetOpen', () => $nextTick(() => syncModalLock()));
         $watch('deleteReason', () => syncDeleteReady());
         $watch('deleteGdprRef', () => syncDeleteReady());
         $watch('deleteConfirm', () => syncDeleteReady());
+        $watch('deletePetReason', () => syncDeletePetReady());
+        $watch('deletePetConfirm', () => syncDeletePetReady());
     ">
     {{-- Profile header (avatar, name, quick links) --}}
     <div class="admin-co-profile-card">
@@ -125,8 +201,8 @@ $customerEmail = $profile['email'] ?? '';
         @endif
     </div>
 
-    {{-- Stats strip --}}
-    <div class="admin-co-stats">
+    {{-- Stats strip (changes with detail tab) --}}
+    <div class="admin-co-stats" x-show="detailTab !== 'pets'" x-cloak>
         <div class="admin-co-stat">
             <p class="admin-co-stat-value">{{ $profile['stats']['spend'] }}</p>
             <p class="admin-co-stat-label">Total spend</p>
@@ -145,49 +221,86 @@ $customerEmail = $profile['email'] ?? '';
         </div>
     </div>
 
-    {{-- Admin actions --}}
+    <div class="admin-co-stats" x-show="detailTab === 'pets'" x-cloak>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['pet_stats']['total_pets'] ?? count($profile['pets'] ?? []) }}</p>
+            <p class="admin-co-stat-label">Total pets</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['pet_stats']['vaccinated'] ?? '—' }}</p>
+            <p class="admin-co-stat-label">Vaccinated</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['pet_stats']['sessions'] ?? '—' }}</p>
+            <p class="admin-co-stat-label">Sessions</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['pet_stats']['last_groomed'] ?? '—' }}</p>
+            <p class="admin-co-stat-label">Last groomed</p>
+        </div>
+    </div>
+
+    {{-- Admin actions (changes with detail tab) --}}
     <div class="admin-co-actions">
         <h3 class="admin-co-actions-title">Admin Actions</h3>
-        <x-admin.customer.action-btn
-            variant="verify"
-            label="Send account verification email"
-            x-on:click="verifyEmailOpen = true" />
-        <x-admin.customer.action-btn
-            variant="password"
-            label="Send password reset email"
-            x-on:click="resetPasswordOpen = true" />
-        <x-admin.customer.action-btn
-            variant="suspend"
-            label="Suspend account"
-            x-on:click="
-                suspendReason = '';
-                suspendDuration = 'indefinite';
-                suspendNotes = '';
-                openSuspendReason = false;
-                openSuspendDuration = false;
-                suspendOpen = true;
-            " />
-        <x-admin.customer.action-btn
-            variant="flag"
-            label="Flag account for review"
-            x-on:click="
-                flagReason = '';
-                flagNote = '';
-                flagBy = 'Michelle M (me)'; 
-                openFlagReason = false;
-                openFlagBy = false;
-                flagOpen = true;
-            " />
-        <x-admin.customer.action-btn
-            variant="delete"
-            label="Delete account (GDPR)"
-            x-on:click="
-                deleteReason = '';
-                deleteGdprRef = '';
-                deleteConfirm = '';
-                openDeleteReason = false;
-                deleteOpen = true;
-            " />
+
+        <div x-show="detailTab !== 'pets'" x-cloak>
+            <x-admin.customer.action-btn
+                variant="verify"
+                label="Send account verification email"
+                x-on:click="verifyEmailOpen = true" />
+            <x-admin.customer.action-btn
+                variant="password"
+                label="Send password reset email"
+                x-on:click="resetPasswordOpen = true" />
+            <x-admin.customer.action-btn
+                variant="suspend"
+                label="Suspend account"
+                x-on:click="
+                    suspendReason = '';
+                    suspendDuration = 'indefinite';
+                    suspendNotes = '';
+                    openSuspendReason = false;
+                    openSuspendDuration = false;
+                    suspendOpen = true;
+                " />
+            <x-admin.customer.action-btn
+                variant="flag"
+                label="Flag account for review"
+                x-on:click="
+                    flagReason = '';
+                    flagNote = '';
+                    flagBy = 'Michelle M (me)';
+                    openFlagReason = false;
+                    openFlagBy = false;
+                    flagOpen = true;
+                " />
+            <x-admin.customer.action-btn
+                variant="delete"
+                label="Delete account (GDPR)"
+                x-on:click="
+                    deleteReason = '';
+                    deleteGdprRef = '';
+                    deleteConfirm = '';
+                    openDeleteReason = false;
+                    deleteOpen = true;
+                " />
+        </div>
+
+        <div x-show="detailTab === 'pets'" x-cloak>
+            <x-admin.customer.action-btn
+                variant="transfer"
+                label="Transfer pet profile"
+                x-on:click="openTransfer()" />
+            <x-admin.customer.action-btn
+                variant="archive"
+                label="Archive pet profile"
+                x-on:click="openArchive()" />
+            <x-admin.customer.action-btn
+                variant="delete-pet"
+                label="Delete pet profile"
+                x-on:click="openDeletePet()" />
+        </div>
     </div>
 
     {{-- Send verification email modal --}}
@@ -658,8 +771,7 @@ $customerEmail = $profile['email'] ?? '';
                             type="text"
                             class="admin-co-suspend-input"
                             placeholder="e.g GDPR-2025-0441"
-                            x-model="deleteGdprRef"
-                        >
+                            x-model="deleteGdprRef">
                     </div>
 
                     <div class="admin-co-verify-email-happens">
@@ -682,8 +794,7 @@ $customerEmail = $profile['email'] ?? '';
                             type="text"
                             class="admin-co-suspend-input"
                             placeholder="Type DELETE here"
-                            x-model="deleteConfirm"
-                        >
+                            x-model="deleteConfirm">
                     </div>
                 </div>
 
@@ -694,12 +805,397 @@ $customerEmail = $profile['email'] ?? '';
                         class="admin-co-form-btn is-delete-account"
                         :class="{ 'is-ready': deleteReady }"
                         :disabled="!deleteReady"
-                        @click="deleteReady && (deleteOpen = false)"
-                    >
+                        @click="deleteReady && (deleteOpen = false)">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="15" viewBox="0 0 14 15" fill="none" aria-hidden="true">
                             <path d="M7.46337 0C9.97241 0 12.007 1.92447 12.007 4.29894C12.0062 4.92305 11.8632 5.53937 11.5881 6.10429C11.313 6.66922 10.9125 7.16895 10.415 7.56814C10.6275 7.66814 10.8215 7.76864 10.9967 7.86964C11.3737 8.08713 11.7651 8.35688 12.1711 8.67887C12.2258 8.72178 12.2711 8.77481 12.3042 8.83482C12.3373 8.89484 12.3577 8.96064 12.3641 9.02835C12.3704 9.09606 12.3627 9.16432 12.3413 9.2291C12.32 9.29389 12.2854 9.35391 12.2396 9.40561C12.1456 9.51093 12.0126 9.57663 11.869 9.58868C11.7254 9.60073 11.5826 9.55818 11.4712 9.47011C11.1429 9.20532 10.7945 8.96465 10.429 8.75012C10.0723 8.55099 9.70227 8.37485 9.32143 8.22288C8.73571 8.4715 8.10254 8.59924 7.46259 8.59788C6.75749 8.59931 6.06154 8.44405 5.42875 8.14413L5.39608 8.15913C3.85846 8.72612 2.73615 9.56461 2.01283 10.6776C1.28563 11.7943 0.988526 13.0423 1.12152 14.438C1.12747 14.5062 1.11937 14.5747 1.09768 14.6398C1.07599 14.7049 1.04114 14.7652 0.995148 14.8172C0.949155 14.8692 0.892929 14.912 0.829718 14.9429C0.766507 14.9739 0.697563 14.9924 0.626869 14.9975C0.484194 15.0109 0.34182 14.9693 0.230898 14.8817C0.119977 14.7942 0.0495384 14.6678 0.0349947 14.5303C-0.118224 12.9163 0.231768 11.4456 1.08341 10.1369C1.83317 8.98487 2.93448 8.08938 4.37333 7.45114C3.91558 7.05318 3.54958 6.56696 3.29904 6.02395C3.04851 5.48095 2.919 4.89326 2.91892 4.29894C2.91892 1.92447 4.95432 0 7.46337 0ZM13.0811 10.6798C13.1825 10.5838 13.3188 10.5298 13.461 10.5294C13.6031 10.529 13.7398 10.5822 13.8418 10.6776C14.0518 10.8771 14.0518 11.2011 13.8433 11.4013L12.9162 12.2856L13.8433 13.1706C13.8931 13.2178 13.9326 13.2741 13.9595 13.3362C13.9864 13.3984 14.0001 13.465 14 13.5324C13.9999 13.5997 13.9858 13.6663 13.9586 13.7283C13.9314 13.7903 13.8917 13.8465 13.8418 13.8935C13.74 13.9892 13.6034 14.0427 13.4613 14.0425C13.3191 14.0424 13.1827 13.9886 13.0811 13.8928L12.1579 13.0101L11.2347 13.8928C11.144 13.9784 11.025 14.0307 10.8985 14.0407C10.7719 14.0507 10.6457 14.0178 10.5417 13.9475L10.4748 13.8935C10.4249 13.8465 10.3852 13.7903 10.358 13.7283C10.3308 13.6663 10.3168 13.5997 10.3166 13.5324C10.3165 13.465 10.3302 13.3984 10.3571 13.3362C10.3841 13.2741 10.4235 13.2178 10.4733 13.1706L11.3988 12.2856L10.4733 11.4006C10.4235 11.3534 10.3841 11.297 10.3571 11.2349C10.3302 11.1728 10.3165 11.1061 10.3166 11.0388C10.3168 10.9715 10.3308 10.9048 10.358 10.8428C10.3852 10.7808 10.4249 10.7246 10.4748 10.6776C10.5767 10.5823 10.7132 10.5291 10.8551 10.5294C10.997 10.5297 11.1333 10.5834 11.2347 10.6791L12.1579 11.5611L13.0811 10.6798ZM7.46337 1.03124C5.55552 1.03124 4.01012 2.49371 4.01012 4.29819C4.01012 6.10266 5.55552 7.56589 7.46337 7.56589C9.37043 7.56589 10.9166 6.10341 10.9166 4.29819C10.9166 2.49296 9.37043 1.03124 7.46337 1.03124Z" fill="currentColor" />
                         </svg>
                         Delete account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    {{-- Transfer pet profile modal --}}
+    <template x-teleport="body">
+        <div
+            class="admin-co-modal-backdrop"
+            :class="{ 'is-open': transferOpen }"
+            @click.self="transferOpen = false">
+            <div class="admin-co-modal admin-co-verify-email-modal admin-co-transfer-modal" role="dialog" aria-modal="true" @click.stop>
+                <div class="admin-co-modal-head admin-co-blocked-modal-head">
+                    <div>
+                        <div class="admin-co-modal-title-row">
+                            <span class="admin-co-verify-email-icon is-transfer" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="17" viewBox="0 0 20 17" fill="none">
+                                    <path d="M13.125 13.75H19.375M17.078 15.625L19.375 13.75L17.078 11.875" stroke="#A7C569" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M0.625 5.93184C0.625 7.0221 1.37083 8.125 2.29167 8.125C3.2125 8.125 3.95833 7.0221 3.95833 5.93184C3.95833 4.84158 3.2125 4.17763 2.29167 4.17763C1.37083 4.17763 0.625 4.84197 0.625 5.93184ZM18.125 5.93184C18.125 7.0221 17.3792 8.125 16.4583 8.125C15.5375 8.125 14.7917 7.0221 14.7917 5.93184C14.7917 4.84158 15.5375 4.17763 16.4583 4.17763C17.3792 4.17763 18.125 4.84197 18.125 5.93184ZM5 2.37921C5 3.46947 5.74583 4.57237 6.66667 4.57237C7.5875 4.57237 8.33333 3.46947 8.33333 2.37921C8.33333 1.28895 7.5875 0.625 6.66667 0.625C5.74583 0.625 5 1.28934 5 2.37921ZM13.75 2.37921C13.75 3.46947 13.0042 4.57237 12.0833 4.57237C11.1625 4.57237 10.4167 3.46947 10.4167 2.37921C10.4167 1.28895 11.1625 0.625 12.0833 0.625C13.0042 0.625 13.75 1.28934 13.75 2.37921Z" stroke="#A7C569" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M9.3751 15.625C7.4301 15.625 6.04802 15.1782 5.11885 14.6907C3.94677 14.0757 3.46927 12.7667 3.78594 11.5336C4.50593 8.72937 6.73593 6.54608 9.3751 6.54608C11.2816 6.54608 12.9746 7.68525 14.0391 9.37503" stroke="#A7C569" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="admin-co-modal-title">Transfer pet profile</h3>
+                                <p class="admin-co-modal-sub">
+                                    Move <span x-text="currentPet()?.name || 'pet'"></span> to a different customer account
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="admin-co-modal-close" @click="transferOpen = false" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8"></circle>
+                            <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="admin-co-blocked-modal-body admin-co-verify-email-body">
+                    <div class="admin-co-suspend-alert is-info">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                            <path d="M4.875 9.375C7.36028 9.375 9.375 7.36028 9.375 4.875C9.375 2.38972 7.36028 0.375 4.875 0.375C2.38972 0.375 0.375 2.38972 0.375 4.875C0.375 7.36028 2.38972 9.375 4.875 9.375Z" stroke="#659FC9" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M4.875 6.67495V4.87495M4.875 3.07495H4.8795" stroke="#659FC9" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <p>Use this when a customer's pet needs to be moved to another account — for example, a pet has a new owner. All grooming history and health records will transfer with the pet.</p>
+                    </div>
+
+                    <template x-if="currentPet()">
+                        <div class="admin-co-transfer-pet-card">
+                            <img :src="currentPet().image" :alt="currentPet().name" class="admin-co-transfer-pet-avatar" width="40" height="40">
+                            <div class="admin-co-transfer-pet-body">
+                                <p class="admin-co-transfer-pet-name">
+                                    <span class="admin-co-pet-type-icon" aria-hidden="true">
+                                        <svg x-show="currentPet().type === 'cat'" xmlns="http://www.w3.org/2000/svg" width="14" height="18" viewBox="0 0 16 22" fill="none">
+                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M7.0661 3.58301C7.82655 3.48924 8.87949 3.51286 9.88642 3.85352C10.9998 4.23021 12.075 5.00401 12.6013 6.43945L14.7712 7.47949L14.8181 7.64941C15.1058 8.68692 15.2764 10.2987 14.8308 11.7656C14.6062 12.5047 14.2222 13.2153 13.6101 13.791C12.9963 14.3682 12.1714 14.7931 11.0934 14.9854C7.21531 15.6771 5.01491 18.9931 4.4079 20.5596C4.15869 21.2733 2.6782 21.455 2.32978 20.7842C-2.87181 10.7633 1.80671 2.85095 5.03583 0L7.0661 3.58301ZM9.46845 7.20898C8.8993 7.20899 8.29571 7.49133 8.2956 8.62109C8.2956 9.40106 9.28944 8.62143 9.9372 8.62109C10.585 8.62109 10.6413 9.40123 10.6413 8.62109C10.6412 7.84111 10.1161 7.20898 9.46845 7.20898Z" fill="#FFC97A" />
+                                        </svg>
+                                        <svg x-show="currentPet().type === 'other'" xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 22 20" fill="none">
+                                            <path d="M11 7.89474C7.68219 7.89474 4.87876 10.8058 3.97362 14.5447C3.57552 16.1889 4.17581 17.9342 5.64929 18.7542C6.81738 19.4042 8.55486 20 11 20C13.4451 20 15.1831 19.4042 16.3512 18.7542C17.8247 17.9342 18.4245 16.1889 18.0264 14.5447C17.1212 10.8053 14.3178 7.89474 11 7.89474ZM0 7.07579C0 8.52947 0.937619 10 2.09524 10C3.25286 10 4.19048 8.52947 4.19048 7.07579C4.19048 5.62211 3.25286 4.73684 2.09524 4.73684C0.937619 4.73684 0 5.62263 0 7.07579ZM22 7.07579C22 8.52947 21.0624 10 19.9048 10C18.7471 10 17.8095 8.52947 17.8095 7.07579C17.8095 5.62211 18.7471 4.73684 19.9048 4.73684C21.0624 4.73684 22 5.62263 22 7.07579ZM5.5 2.33895C5.5 3.79263 6.43762 5.26316 7.59524 5.26316C8.75286 5.26316 9.69048 3.79263 9.69048 2.33895C9.69048 0.885263 8.75286 0 7.59524 0C6.43762 0 5.5 0.88579 5.5 2.33895ZM16.5 2.33895C16.5 3.79263 15.5624 5.26316 14.4048 5.26316C13.2471 5.26316 12.3095 3.79263 12.3095 2.33895C12.3095 0.885263 13.2471 0 14.4048 0C15.5624 0 16.5 0.88579 16.5 2.33895Z" fill="#FFC97A" />
+                                        </svg>
+                                        <svg x-show="currentPet().type !== 'cat' && currentPet().type !== 'other'" xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 22 21" fill="none">
+                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.4592 8.68947e-10C12.0763 -1.81862e-05 12.6594 0.285457 13.0383 0.772461L16.2532 4.90625C16.4122 5.11071 16.6452 5.2455 16.9016 5.28223L19.9856 5.72266C20.3435 5.77379 20.646 6.01399 20.759 6.35742C21.0768 7.32445 21.6377 9.33341 21.2551 10.5C20.8003 11.8863 20.0704 12.5797 18.7551 12.9189C16.5021 13.4997 14.639 12.8357 12.4377 14.5137C11.758 15.0319 11.2942 15.7103 10.9895 16.4678C9.95215 19.0461 6.72476 21.706 4.32933 20.2969L1.40648 18.5781L2.88597 12.9932C3.03732 12.9827 3.18549 12.9709 3.3264 12.9531C3.72901 12.9023 4.11587 12.8149 4.36937 12.6543C4.57272 12.5254 4.78068 12.3019 4.97777 12.0498C5.17869 11.7928 5.38391 11.4855 5.57835 11.168C5.96743 10.5326 6.32411 9.84073 6.53441 9.39648C6.59343 9.27173 6.53998 9.12257 6.41527 9.06348C6.29079 9.00495 6.1424 9.05746 6.08324 9.18164C5.87884 9.61348 5.5304 10.2892 5.15257 10.9062C4.96359 11.2149 4.7693 11.5055 4.58421 11.7422C4.39522 11.9839 4.2301 12.1511 4.10179 12.2324C3.94887 12.3293 3.65899 12.4072 3.2639 12.457C2.87954 12.5055 2.43079 12.5234 1.98949 12.5225C1.58427 12.5216 1.18933 12.5013 0.862533 12.4795C0.853021 12.4768 0.842688 12.4744 0.833236 12.4717C0.25988 12.3087 -0.117659 11.685 0.0334314 11.1084C1.50838 5.48351 2.3485 2.92214 3.76585 1.50488C5.2619 0.00933487 8.24416 5.75404e-05 8.28148 8.68947e-10H11.4592ZM11.8508 5.01758C11.2139 5.01758 10.5383 5.33425 10.5383 6.59863C10.5386 7.47081 11.6506 6.59876 12.3752 6.59863C13.0999 6.59863 13.1623 7.47088 13.1623 6.59863C13.1623 5.72589 12.5754 5.0178 11.8508 5.01758Z" fill="#FFC97A" />
+                                        </svg>
+                                    </span>
+                                    <span x-text="currentPet().name"></span>
+                                </p>
+                                <p class="admin-co-transfer-pet-meta" x-text="(currentPet().meta || '').replace(/ · /g, ' • ')"></p>
+                            </div>
+                        </div>
+                    </template>
+
+                    <div class="admin-co-transfer-search">
+                        <label class="admin-co-transfer-search-label" for="admin-co-transfer-search-input">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                                <circle cx="5.25" cy="5.25" r="4.5" stroke="#9C9A97" stroke-width="1.2" />
+                                <path d="M8.5 8.5L11 11" stroke="#9C9A97" stroke-width="1.2" stroke-linecap="round" />
+                            </svg>
+                            Search account to transfer to
+                        </label>
+                        <input
+                            id="admin-co-transfer-search-input"
+                            type="text"
+                            class="admin-co-suspend-input"
+                            placeholder="Search by name, email, account ID ..."
+                            x-model="transferSearch">
+                    </div>
+
+                    <div class="admin-co-transfer-results" x-show="filteredTransferAccounts().length > 0">
+                        <h4 class="admin-co-transfer-results-title">
+                            Results — <span x-text="filteredTransferAccounts().length"></span>
+                            <span x-text="filteredTransferAccounts().length === 1 ? 'account found' : 'accounts found'"></span>
+                        </h4>
+                        <div class="admin-co-transfer-account-list">
+                            <template x-for="account in filteredTransferAccounts()" :key="account.id">
+                                <button
+                                    type="button"
+                                    class="admin-co-transfer-account"
+                                    :class="{ 'is-selected': transferTargetId === account.id }"
+                                    @click="transferTargetId = account.id">
+                                    <img :src="account.avatar" :alt="account.name" class="admin-co-transfer-account-avatar" width="36" height="36">
+                                    <span class="admin-co-transfer-account-body">
+                                        <span class="admin-co-transfer-account-name" x-text="account.name"></span>
+                                        <span class="admin-co-transfer-account-email" x-text="account.email"></span>
+                                    </span>
+                                    <span class="admin-co-transfer-radio" aria-hidden="true"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="admin-co-verify-email-happens">
+                        <h4 class="admin-co-verify-email-happens-title">
+                            What transfers with <span x-text="currentPet()?.name || 'pet'"></span>
+                        </h4>
+                        <ul class="admin-co-verify-email-happens-list">
+                            <li>All pet details, health records and flags</li>
+                            <li>Full grooming session history</li>
+                            <li>Grooming preferences</li>
+                            <li>Booking history stays linked to the original customer's account</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="admin-co-blocked-modal-foot is-confirm">
+                    <button type="button" class="admin-co-form-btn is-cancel" @click="transferOpen = false">Cancel</button>
+                    <button
+                        type="button"
+                        class="admin-co-form-btn is-send-email"
+                        :disabled="!transferTargetId"
+                        @click="transferTargetId && (transferOpen = false)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="15" viewBox="0 0 20 17" fill="none" aria-hidden="true">
+                            <path d="M13.125 13.75H19.375M17.078 15.625L19.375 13.75L17.078 11.875" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M0.625 5.93184C0.625 7.0221 1.37083 8.125 2.29167 8.125C3.2125 8.125 3.95833 7.0221 3.95833 5.93184C3.95833 4.84158 3.2125 4.17763 2.29167 4.17763C1.37083 4.17763 0.625 4.84197 0.625 5.93184ZM18.125 5.93184C18.125 7.0221 17.3792 8.125 16.4583 8.125C15.5375 8.125 14.7917 7.0221 14.7917 5.93184C14.7917 4.84158 15.5375 4.17763 16.4583 4.17763C17.3792 4.17763 18.125 4.84197 18.125 5.93184ZM5 2.37921C5 3.46947 5.74583 4.57237 6.66667 4.57237C7.5875 4.57237 8.33333 3.46947 8.33333 2.37921C8.33333 1.28895 7.5875 0.625 6.66667 0.625C5.74583 0.625 5 1.28934 5 2.37921ZM13.75 2.37921C13.75 3.46947 13.0042 4.57237 12.0833 4.57237C11.1625 4.57237 10.4167 3.46947 10.4167 2.37921C10.4167 1.28895 11.1625 0.625 12.0833 0.625C13.0042 0.625 13.75 1.28934 13.75 2.37921Z" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M9.3751 15.625C7.4301 15.625 6.04802 15.1782 5.11885 14.6907C3.94677 14.0757 3.46927 12.7667 3.78594 11.5336C4.50593 8.72937 6.73593 6.54608 9.3751 6.54608C11.2816 6.54608 12.9746 7.68525 14.0391 9.37503" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Transfer pet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    {{-- Archive pet profile modal --}}
+    <template x-teleport="body">
+        <div
+            class="admin-co-modal-backdrop"
+            :class="{ 'is-open': archiveOpen }"
+            @click.self="archiveOpen = false">
+            <div class="admin-co-modal admin-co-verify-email-modal admin-co-suspend-modal admin-co-archive-modal" role="dialog" aria-modal="true" @click.stop>
+                <div class="admin-co-modal-head admin-co-blocked-modal-head">
+                    <div>
+                        <div class="admin-co-modal-title-row">
+                            <span class="admin-co-verify-email-icon is-archive" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none">
+                                    <path d="M7.16531 6.3C7.07594 6.38938 7.03125 6.50094 7.03125 6.63469V10.5722L5.39437 8.93531C5.30687 8.84781 5.19937 8.80094 5.07187 8.79469C4.94437 8.78844 4.83062 8.83531 4.73062 8.93531C4.63062 9.03531 4.58062 9.14594 4.58062 9.26719C4.58062 9.38844 4.63062 9.49906 4.73062 9.59906L6.97031 11.8378C7.12156 11.9891 7.29812 12.0647 7.5 12.0647C7.70188 12.0647 7.87875 11.9891 8.03063 11.8378L10.2694 9.59906C10.3569 9.51094 10.4037 9.40312 10.41 9.27563C10.4163 9.14813 10.3694 9.03469 10.2694 8.93531C10.1694 8.83594 10.0588 8.78594 9.9375 8.78531C9.81625 8.78469 9.70563 8.83469 9.60563 8.93531L7.96875 10.5722V6.63469C7.96875 6.50156 7.92406 6.39 7.83469 6.3C7.74531 6.21 7.63375 6.16531 7.5 6.16594C7.36625 6.16656 7.25469 6.21125 7.16531 6.3ZM0.9375 3.57V13.4859C0.9375 13.6541 0.991562 13.7922 1.09969 13.9003C1.20781 14.0084 1.34625 14.0625 1.515 14.0625H13.4859C13.6541 14.0625 13.7922 14.0084 13.9003 13.9003C14.0084 13.7922 14.0625 13.6541 14.0625 13.4859V3.57H0.9375ZM1.65937 15C1.23937 15 0.857812 14.8284 0.514687 14.4853C0.171562 14.1422 0 13.7609 0 13.3416V3.26813C0 3.08563 0.0290624 2.91375 0.0871874 2.7525C0.145312 2.59125 0.232813 2.44281 0.349688 2.30719L1.81031 0.554063C1.94594 0.370938 2.11563 0.232813 2.31938 0.139688C2.52312 0.0465627 2.74156 0 2.97469 0H11.9897C12.2222 0 12.4434 0.0465627 12.6534 0.139688C12.8634 0.232813 13.0362 0.370625 13.1719 0.553125L14.6503 2.34375C14.7672 2.47937 14.8547 2.63094 14.9128 2.79844C14.9709 2.96531 15 3.14031 15 3.32344V13.3406C15 13.76 14.8284 14.1413 14.4853 14.4844C14.1422 14.8275 13.7609 14.9991 13.3416 14.9991L1.65937 15ZM1.29375 2.6325H13.6875L12.4406 1.13438C12.38 1.07438 12.3106 1.02656 12.2325 0.990938C12.1544 0.955313 12.0731 0.9375 11.9888 0.9375H2.9925C2.90875 0.9375 2.8275 0.955625 2.74875 0.991875C2.67 1.02813 2.60125 1.07625 2.5425 1.13625L1.29375 2.6325Z" fill="#649FC9" />
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="admin-co-modal-title">Archive pet profile</h3>
+                                <p class="admin-co-modal-sub" x-text="archiveSubtitle()"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="admin-co-modal-close" @click="archiveOpen = false" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8"></circle>
+                            <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="admin-co-blocked-modal-body admin-co-verify-email-body">
+                    <div class="admin-co-suspend-alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="9" viewBox="0 0 10 9" fill="none" aria-hidden="true">
+                            <path d="M5.485 0.308055C5.24845 -0.102644 4.61103 -0.102644 4.37448 0.308055L0.0743152 7.77965L0.0386903 7.85279C-0.0996183 8.19795 0.147844 8.57813 0.542967 8.62728L0.630186 8.63238H9.2293C9.70357 8.63238 10.0075 8.1663 9.78517 7.77965L5.485 0.308055Z" fill="#FFC97A" />
+                            <path d="M4.8365 3.15331L4.9516 5.59952L5.06649 3.15431C5.0672 3.13868 5.06471 3.12306 5.05918 3.10842C5.05365 3.09379 5.0452 3.08043 5.03433 3.06917C5.02347 3.05791 5.01042 3.04898 4.99599 3.04294C4.98155 3.03689 4.96604 3.03385 4.95039 3.034C4.93502 3.03415 4.91983 3.03738 4.90573 3.0435C4.89162 3.04962 4.87888 3.0585 4.86827 3.06962C4.85765 3.08074 4.84937 3.09387 4.84392 3.10825C4.83846 3.12262 4.83594 3.13794 4.8365 3.15331Z" fill="#3B3731" stroke="#3B3731" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M5.00879 6.66028C5.03629 6.67172 5.05962 6.69118 5.07617 6.71594C5.09273 6.74076 5.10156 6.77009 5.10156 6.79993C5.10147 6.83985 5.08586 6.87813 5.05762 6.90637C5.02938 6.93461 4.9911 6.95023 4.95117 6.95032C4.92134 6.95032 4.892 6.94149 4.86719 6.92493C4.84242 6.90838 4.82297 6.88504 4.81152 6.85754C4.80009 6.82995 4.79691 6.79895 4.80273 6.76965C4.80862 6.74053 4.82274 6.71352 4.84375 6.6925C4.86476 6.67149 4.89178 6.65737 4.9209 6.65149C4.95019 6.64566 4.98119 6.64885 5.00879 6.66028Z" fill="#3B3731" stroke="#3B3731" stroke-width="0.5" />
+                        </svg>
+                        <p>
+                            Archiving hides <span x-text="currentPet()?.name || 'this pet'"></span>'s profile from active use — it won't appear in new bookings and is hidden from the customer's view. All data is preserved and the profile can be restored at any time.
+                        </p>
+                    </div>
+
+                    <template x-if="currentPet()">
+                        <div class="admin-co-transfer-pet-card">
+                            <img :src="currentPet().image" :alt="currentPet().name" class="admin-co-transfer-pet-avatar" width="40" height="40">
+                            <div class="admin-co-transfer-pet-body">
+                                <p class="admin-co-transfer-pet-name">
+                                    <span class="admin-co-pet-type-icon" aria-hidden="true">
+                                        <svg x-show="currentPet().type === 'cat'" xmlns="http://www.w3.org/2000/svg" width="14" height="18" viewBox="0 0 16 22" fill="none">
+                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M7.0661 3.58301C7.82655 3.48924 8.87949 3.51286 9.88642 3.85352C10.9998 4.23021 12.075 5.00401 12.6013 6.43945L14.7712 7.47949L14.8181 7.64941C15.1058 8.68692 15.2764 10.2987 14.8308 11.7656C14.6062 12.5047 14.2222 13.2153 13.6101 13.791C12.9963 14.3682 12.1714 14.7931 11.0934 14.9854C7.21531 15.6771 5.01491 18.9931 4.4079 20.5596C4.15869 21.2733 2.6782 21.455 2.32978 20.7842C-2.87181 10.7633 1.80671 2.85095 5.03583 0L7.0661 3.58301ZM9.46845 7.20898C8.8993 7.20899 8.29571 7.49133 8.2956 8.62109C8.2956 9.40106 9.28944 8.62143 9.9372 8.62109C10.585 8.62109 10.6413 9.40123 10.6413 8.62109C10.6412 7.84111 10.1161 7.20898 9.46845 7.20898Z" fill="#FFC97A" />
+                                        </svg>
+                                        <svg x-show="currentPet().type === 'other'" xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 22 20" fill="none">
+                                            <path d="M11 7.89474C7.68219 7.89474 4.87876 10.8058 3.97362 14.5447C3.57552 16.1889 4.17581 17.9342 5.64929 18.7542C6.81738 19.4042 8.55486 20 11 20C13.4451 20 15.1831 19.4042 16.3512 18.7542C17.8247 17.9342 18.4245 16.1889 18.0264 14.5447C17.1212 10.8053 14.3178 7.89474 11 7.89474ZM0 7.07579C0 8.52947 0.937619 10 2.09524 10C3.25286 10 4.19048 8.52947 4.19048 7.07579C4.19048 5.62211 3.25286 4.73684 2.09524 4.73684C0.937619 4.73684 0 5.62263 0 7.07579ZM22 7.07579C22 8.52947 21.0624 10 19.9048 10C18.7471 10 17.8095 8.52947 17.8095 7.07579C17.8095 5.62211 18.7471 4.73684 19.9048 4.73684C21.0624 4.73684 22 5.62263 22 7.07579ZM5.5 2.33895C5.5 3.79263 6.43762 5.26316 7.59524 5.26316C8.75286 5.26316 9.69048 3.79263 9.69048 2.33895C9.69048 0.885263 8.75286 0 7.59524 0C6.43762 0 5.5 0.88579 5.5 2.33895ZM16.5 2.33895C16.5 3.79263 15.5624 5.26316 14.4048 5.26316C13.2471 5.26316 12.3095 3.79263 12.3095 2.33895C12.3095 0.885263 13.2471 0 14.4048 0C15.5624 0 16.5 0.88579 16.5 2.33895Z" fill="#FFC97A" />
+                                        </svg>
+                                        <svg x-show="currentPet().type !== 'cat' && currentPet().type !== 'other'" xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 22 21" fill="none">
+                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.4592 8.68947e-10C12.0763 -1.81862e-05 12.6594 0.285457 13.0383 0.772461L16.2532 4.90625C16.4122 5.11071 16.6452 5.2455 16.9016 5.28223L19.9856 5.72266C20.3435 5.77379 20.646 6.01399 20.759 6.35742C21.0768 7.32445 21.6377 9.33341 21.2551 10.5C20.8003 11.8863 20.0704 12.5797 18.7551 12.9189C16.5021 13.4997 14.639 12.8357 12.4377 14.5137C11.758 15.0319 11.2942 15.7103 10.9895 16.4678C9.95215 19.0461 6.72476 21.706 4.32933 20.2969L1.40648 18.5781L2.88597 12.9932C3.03732 12.9827 3.18549 12.9709 3.3264 12.9531C3.72901 12.9023 4.11587 12.8149 4.36937 12.6543C4.57272 12.5254 4.78068 12.3019 4.97777 12.0498C5.17869 11.7928 5.38391 11.4855 5.57835 11.168C5.96743 10.5326 6.32411 9.84073 6.53441 9.39648C6.59343 9.27173 6.53998 9.12257 6.41527 9.06348C6.29079 9.00495 6.1424 9.05746 6.08324 9.18164C5.87884 9.61348 5.5304 10.2892 5.15257 10.9062C4.96359 11.2149 4.7693 11.5055 4.58421 11.7422C4.39522 11.9839 4.2301 12.1511 4.10179 12.2324C3.94887 12.3293 3.65899 12.4072 3.2639 12.457C2.87954 12.5055 2.43079 12.5234 1.98949 12.5225C1.58427 12.5216 1.18933 12.5013 0.862533 12.4795C0.853021 12.4768 0.842688 12.4744 0.833236 12.4717C0.25988 12.3087 -0.117659 11.685 0.0334314 11.1084C1.50838 5.48351 2.3485 2.92214 3.76585 1.50488C5.2619 0.00933487 8.24416 5.75404e-05 8.28148 8.68947e-10H11.4592ZM11.8508 5.01758C11.2139 5.01758 10.5383 5.33425 10.5383 6.59863C10.5386 7.47081 11.6506 6.59876 12.3752 6.59863C13.0999 6.59863 13.1623 7.47088 13.1623 6.59863C13.1623 5.72589 12.5754 5.0178 11.8508 5.01758Z" fill="#FFC97A" />
+                                        </svg>
+                                    </span>
+                                    <span x-text="currentPet().name"></span>
+                                </p>
+                                <p class="admin-co-transfer-pet-meta" x-text="(currentPet().meta || '').replace(/ · /g, ' • ')"></p>
+                            </div>
+                        </div>
+                    </template>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">
+                            Reason for archiving <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openArchiveReason = false">
+                            <button
+                                type="button"
+                                class="admin-co-dd-trigger"
+                                @click="openArchiveReason = !openArchiveReason">
+                                <span
+                                    class="admin-co-dd-value"
+                                    :class="{ 'is-placeholder': !archiveReason }"
+                                    x-text="archiveReason || 'Select a reason ...'"></span>
+                                <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                                    <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <div class="admin-co-dd-menu" x-show="openArchiveReason" x-cloak>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': archiveReason === 'Pet has passed away' }" @click="archiveReason = 'Pet has passed away'; openArchiveReason = false">Pet has passed away</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': archiveReason === 'Pet rehomed or re-adopted' }" @click="archiveReason = 'Pet rehomed or re-adopted'; openArchiveReason = false">Pet rehomed or re-adopted</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': archiveReason === 'Customer request' }" @click="archiveReason = 'Customer request'; openArchiveReason = false">Customer request</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': archiveReason === 'Duplicate profile' }" @click="archiveReason = 'Duplicate profile'; openArchiveReason = false">Duplicate profile</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': archiveReason === 'Other' }" @click="archiveReason = 'Other'; openArchiveReason = false">Other</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">Additional notes (optional)</label>
+                        <textarea
+                            class="admin-co-suspend-notes"
+                            rows="3"
+                            placeholder="Any additional context for the archive log ..."
+                            x-model="archiveNotes"></textarea>
+                    </div>
+
+                    <div class="admin-co-verify-email-happens">
+                        <h4 class="admin-co-verify-email-happens-title">What archiving does</h4>
+                        <ul class="admin-co-verify-email-happens-list">
+                            <li><span x-text="currentPet()?.name || 'Pet'"></span> disappears from {{ $firstName }}'s active pet list</li>
+                            <li><span x-text="currentPet()?.name || 'Pet'"></span> cannot be added to new bookings</li>
+                            <li>All grooming history and health records are preserved</li>
+                            <li>Admins can still view and restore the profile at any time</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="admin-co-blocked-modal-foot is-confirm">
+                    <button type="button" class="admin-co-form-btn is-cancel" @click="archiveOpen = false">Cancel</button>
+                    <button
+                        type="button"
+                        class="admin-co-form-btn is-send-email"
+                        :disabled="!archiveReason"
+                        @click="archiveReason && (archiveOpen = false)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                            <path d="M7.16531 6.3C7.07594 6.38938 7.03125 6.50094 7.03125 6.63469V10.5722L5.39437 8.93531C5.30687 8.84781 5.19937 8.80094 5.07187 8.79469C4.94437 8.78844 4.83062 8.83531 4.73062 8.93531C4.63062 9.03531 4.58062 9.14594 4.58062 9.26719C4.58062 9.38844 4.63062 9.49906 4.73062 9.59906L6.97031 11.8378C7.12156 11.9891 7.29812 12.0647 7.5 12.0647C7.70188 12.0647 7.87875 11.9891 8.03063 11.8378L10.2694 9.59906C10.3569 9.51094 10.4037 9.40312 10.41 9.27563C10.4163 9.14813 10.3694 9.03469 10.2694 8.93531C10.1694 8.83594 10.0588 8.78594 9.9375 8.78531C9.81625 8.78469 9.70563 8.83469 9.60563 8.93531L7.96875 10.5722V6.63469C7.96875 6.50156 7.92406 6.39 7.83469 6.3C7.74531 6.21 7.63375 6.16531 7.5 6.16594C7.36625 6.16656 7.25469 6.21125 7.16531 6.3ZM0.9375 3.57V13.4859C0.9375 13.6541 0.991562 13.7922 1.09969 13.9003C1.20781 14.0084 1.34625 14.0625 1.515 14.0625H13.4859C13.6541 14.0625 13.7922 14.0084 13.9003 13.9003C14.0084 13.7922 14.0625 13.6541 14.0625 13.4859V3.57H0.9375ZM1.65937 15C1.23937 15 0.857812 14.8284 0.514687 14.4853C0.171562 14.1422 0 13.7609 0 13.3416V3.26813C0 3.08563 0.0290624 2.91375 0.0871874 2.7525C0.145312 2.59125 0.232813 2.44281 0.349688 2.30719L1.81031 0.554063C1.94594 0.370938 2.11563 0.232813 2.31938 0.139688C2.52312 0.0465627 2.74156 0 2.97469 0H11.9897C12.2222 0 12.4434 0.0465627 12.6534 0.139688C12.8634 0.232813 13.0362 0.370625 13.1719 0.553125L14.6503 2.34375C14.7672 2.47937 14.8547 2.63094 14.9128 2.79844C14.9709 2.96531 15 3.14031 15 3.32344V13.3406C15 13.76 14.8284 14.1413 14.4853 14.4844C14.1422 14.8275 13.7609 14.9991 13.3416 14.9991L1.65937 15ZM1.29375 2.6325H13.6875L12.4406 1.13438C12.38 1.07438 12.3106 1.02656 12.2325 0.990938C12.1544 0.955313 12.0731 0.9375 11.9888 0.9375H2.9925C2.90875 0.9375 2.8275 0.955625 2.74875 0.991875C2.67 1.02813 2.60125 1.07625 2.5425 1.13625L1.29375 2.6325Z" fill="currentColor" />
+                        </svg>
+                        Archive pet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    {{-- Delete pet profile modal --}}
+    <template x-teleport="body">
+        <div
+            class="admin-co-modal-backdrop"
+            :class="{ 'is-open': deletePetOpen }"
+            @click.self="deletePetOpen = false">
+            <div class="admin-co-modal admin-co-verify-email-modal admin-co-suspend-modal admin-co-delete-pet-modal" role="dialog" aria-modal="true" @click.stop>
+                <div class="admin-co-modal-head admin-co-blocked-modal-head">
+                    <div>
+                        <div class="admin-co-modal-title-row">
+                            <span class="admin-co-verify-email-icon is-delete" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="17" viewBox="0 0 19 17" fill="none">
+                                    <path d="M0.625 5.93184C0.625 7.0221 1.37083 8.125 2.29167 8.125C3.2125 8.125 3.95833 7.0221 3.95833 5.93184C3.95833 4.84158 3.2125 4.17763 2.29167 4.17763C1.37083 4.17763 0.625 4.84197 0.625 5.93184ZM18.125 5.93184C18.125 7.0221 17.3792 8.125 16.4583 8.125C15.5375 8.125 14.7917 7.0221 14.7917 5.93184C14.7917 4.84158 15.5375 4.17763 16.4583 4.17763C17.3792 4.17763 18.125 4.84197 18.125 5.93184ZM5 2.37921C5 3.46947 5.74583 4.57237 6.66667 4.57237C7.5875 4.57237 8.33333 3.46947 8.33333 2.37921C8.33333 1.28895 7.5875 0.625 6.66667 0.625C5.74583 0.625 5 1.28934 5 2.37921ZM13.75 2.37921C13.75 3.46947 13.0042 4.57237 12.0833 4.57237C11.1625 4.57237 10.4167 3.46947 10.4167 2.37921C10.4167 1.28895 11.1625 0.625 12.0833 0.625C13.0042 0.625 13.75 1.28934 13.75 2.37921Z" stroke="#FE6F56" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M9.3751 15.625C7.4301 15.625 6.04802 15.1782 5.11885 14.6907C3.94677 14.0757 3.46927 12.7667 3.78594 11.5336C4.50593 8.72937 6.73593 6.54608 9.3751 6.54608C11.2816 6.54608 12.9746 7.68525 14.0391 9.37503" stroke="#FE6F56" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M13.625 11.6249L17.4505 15.4503" stroke="#FE6F56" stroke-linecap="round" />
+                                    <path d="M13.6252 15.4504L17.4507 11.625" stroke="#FE6F56" stroke-linecap="round" />
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="admin-co-modal-title">Delete pet profile</h3>
+                                <p class="admin-co-modal-sub">This action is permanent and cannot be undone</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="admin-co-modal-close" @click="deletePetOpen = false" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8"></circle>
+                            <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="admin-co-blocked-modal-body admin-co-verify-email-body">
+                    <div class="admin-co-suspend-alert is-danger">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                            <path d="M4.875 9.375C7.36028 9.375 9.375 7.36028 9.375 4.875C9.375 2.38972 7.36028 0.375 4.875 0.375C2.38972 0.375 0.375 2.38972 0.375 4.875C0.375 7.36028 2.38972 9.375 4.875 9.375Z" stroke="#FF6E6E" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M4.875 6.67495V4.87495M4.875 3.07495H4.8795" stroke="#FF6E6E" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <p>
+                            This permanently deletes <span x-text="currentPet()?.name || 'this pet'"></span>'s profile — all health records, grooming preferences and flags will be lost. This cannot be undone. Consider archiving instead if the data may be needed later.
+                        </p>
+                    </div>
+
+                    <template x-if="currentPet()">
+                        <div class="admin-co-delete-pet-card">
+                            <img :src="currentPet().image" :alt="currentPet().name" class="admin-co-transfer-pet-avatar" width="40" height="40">
+                            <div class="admin-co-transfer-pet-body">
+                                <p class="admin-co-delete-pet-name">
+                                    <span class="admin-co-pet-type-icon" aria-hidden="true">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="8" height="11" viewBox="0 0 8 11" fill="none">
+                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M3.66586 1.8584C4.06028 1.80976 4.60646 1.82242 5.12875 1.99902C5.70639 2.19446 6.26491 2.59608 6.53793 3.34082L7.66293 3.88086L7.68734 3.96875C7.83663 4.50703 7.92539 5.34342 7.69418 6.10449C7.57764 6.48783 7.37884 6.85667 7.06137 7.15527C6.74298 7.45471 6.31493 7.67467 5.7557 7.77441C3.74334 8.13325 2.60176 9.85436 2.28695 10.667C2.15764 11.0372 1.38967 11.1311 1.20883 10.7832C-1.48972 5.58442 0.936835 1.47927 2.61215 0L3.66586 1.8584ZM4.91195 3.74023C4.61673 3.74029 4.30365 3.8867 4.30355 4.47266C4.30355 4.87724 4.81904 4.47298 5.15512 4.47266C5.49118 4.47266 5.52035 4.8774 5.52035 4.47266C5.52023 4.06803 5.24794 3.74023 4.91195 3.74023Z" fill="#FF6E6E" />
+                                        </svg>
+                                    </span>
+                                    <span x-text="currentPet().name"></span>
+                                </p>
+                                <p class="admin-co-delete-pet-meta" x-text="(currentPet().meta || '').replace(/ · /g, ' • ')"></p>
+                            </div>
+                        </div>
+                    </template>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">
+                            Deletion reason <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openDeletePetReason = false">
+                            <button
+                                type="button"
+                                class="admin-co-dd-trigger"
+                                @click="openDeletePetReason = !openDeletePetReason">
+                                <span
+                                    class="admin-co-dd-value"
+                                    :class="{ 'is-placeholder': !deletePetReason }"
+                                    x-text="deletePetReason || 'Select a reason ...'"></span>
+                                <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                                    <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <div class="admin-co-dd-menu" x-show="openDeletePetReason" x-cloak>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': deletePetReason === 'Customer GDPR deletion request' }" @click="deletePetReason = 'Customer GDPR deletion request'; openDeletePetReason = false">Customer GDPR deletion request</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': deletePetReason === 'Duplicate profile - data merged' }" @click="deletePetReason = 'Duplicate profile - data merged'; openDeletePetReason = false">Duplicate profile - data merged</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': deletePetReason === 'Created in error' }" @click="deletePetReason = 'Created in error'; openDeletePetReason = false">Created in error</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': deletePetReason === 'Other' }" @click="deletePetReason = 'Other'; openDeletePetReason = false">Other</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">
+                            Type DELETE to confirm <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            class="admin-co-suspend-input"
+                            placeholder="Type DELETE here"
+                            x-model="deletePetConfirm">
+                    </div>
+                </div>
+
+                <div class="admin-co-blocked-modal-foot is-confirm">
+                    <button type="button" class="admin-co-form-btn is-cancel" @click="deletePetOpen = false">Cancel</button>
+                    <button
+                        type="button"
+                        class="admin-co-form-btn is-delete-account"
+                        :class="{ 'is-ready': deletePetReady }"
+                        :disabled="!deletePetReady"
+                        @click="deletePetReady && (deletePetOpen = false)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="11" viewBox="0 0 10 11" fill="none">
+                            <path d="M4.75586 0.5C5.99858 0.5 7.00585 1.50737 7.00586 2.75C7.00586 3.99264 5.99859 5 4.75586 5C3.51319 4.99993 2.50586 3.99259 2.50586 2.75C2.50587 1.50742 3.5132 0.50007 4.75586 0.5Z" stroke="#FE6F56" />
+                            <path d="M7.7562 6.32743C6.81694 5.3211 5.55915 5.24994 4.75633 5.24994C1.15616 5.24994 0.422789 8.3333 0.506126 9.99998" stroke="#FE6F56" stroke-linecap="round" />
+                            <path d="M7.00586 7.5L9.00595 9.50002" stroke="#FE6F56" stroke-linecap="round" />
+                            <path d="M7.00586 9.50018L9.00595 7.50017" stroke="#FE6F56" stroke-linecap="round" />
+                        </svg>
+                        Delete pet profile
                     </button>
                 </div>
             </div>
