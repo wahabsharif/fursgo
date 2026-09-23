@@ -1,4 +1,4 @@
-﻿    <div class="container mb-5 mt-5">
+    <div class="container mb-5 mt-5">
         <div class="row">
             <div class="col-lg-1"></div>
             <div class="col-lg-10">
