@@ -1,4 +1,4 @@
-    <!-- hero section -->
+<!-- hero section -->
     <section>
         <div class="container">
             <div class="row align-items-center">
@@ -19,7 +19,10 @@
                                     </p>
                                 </div>
                                 <div class="find-groomer-content-area">
-                                    <form action="">
+                                    <form method="GET" action="{{ route('search-results') }}" data-home-search="groomer">
+                                        <input type="hidden" name="mode" value="groomer">
+                                        <input type="hidden" name="pet_type" value="">
+                                        <input type="hidden" name="pet_size" value="">
                                         <div class="select-box-first-row">
                                             <div class="pet-type-wrapper">
                                                 <p class="label">Select Pet Type</p>
@@ -115,7 +118,7 @@
                                             <div class="search-box">
                                                 <p class="label">Search Groomer</p>
 
-                                                <input type="text" id="search-groomer"
+                                                <input type="text" id="search-groomer" name="search"
                                                     placeholder="Search address, postcode, name ...">
                                                 <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16"
                                                     height="16" fill="gray" viewBox="0 0 16 16">
@@ -131,7 +134,7 @@
                                                     <div class="field date" id="dateField">
                                                         <div class="input-row" tabindex="0" role="button"
                                                             aria-haspopup="dialog" aria-expanded="false">
-                                                            <input class="fake-input" id="dateInput" readonly
+                                                            <input class="fake-input" id="dateInput" name="date" readonly
                                                                 placeholder="02 November 2025"
                                                                 aria-label="Date input" />
                                                             <!-- chevron down svg -->
@@ -235,7 +238,10 @@
                                     </p>
                                 </div>
                                 <div class="find-space-content-area">
-                                    <form action="">
+                                    <form method="GET" action="{{ route('search-results') }}" data-home-search="space">
+                                        <input type="hidden" name="mode" value="space">
+                                        <input type="hidden" name="pet_type" value="">
+                                        <input type="hidden" name="pet_size" value="">
                                         <div class="select-box-first-row">
                                             <div class="pet-type-wrapper">
                                                 <p class="label">Select Pet Type</p>
@@ -323,7 +329,7 @@
                                             <div class="search-box">
                                                 <p class="label">Search Space</p>
 
-                                                <input type="text" placeholder="Search address, postcode, name ...">
+                                                <input type="text" name="search" placeholder="Search address, postcode, name ...">
                                                 <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16"
                                                     height="16" fill="gray" viewBox="0 0 16 16">
                                                     <path
@@ -983,7 +989,7 @@
                         opportunities; space owners foster meaningful connections; and Fetchers enable smooth,
                         stress‑free journeys.
                     </p>
-                    <button class="action-button">About Us</button>
+                    <a href="{{ route('profile_pets_preferences.about_us') }}" wire:navigate class="action-button">About Us</a>
                 </div>
             </div>
         </div>
@@ -1022,4 +1028,3 @@
             </div>
         </div>
     </section>
-

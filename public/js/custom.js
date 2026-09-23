@@ -60,7 +60,7 @@
       }
     });
 
-    // Pet type / size toggles
+    // Pet type / size toggles (+ sync hidden fields for search GET)
     document.addEventListener("click", (e) => {
       const petOption = e.target.closest(
         ".find-grommer-content .pet-option, .find-space-content .pet-option",
@@ -73,6 +73,11 @@
           ?.querySelectorAll(".pet-option")
           .forEach((btn) => btn.classList.remove("highlight"));
         petOption.classList.add("highlight");
+        const form = petOption.closest("form[data-home-search]");
+        const petTypeInput = form?.querySelector('input[name="pet_type"]');
+        if (petTypeInput) {
+          petTypeInput.value = petOption.dataset.pet || "";
+        }
         return;
       }
 
@@ -87,6 +92,11 @@
           ?.querySelectorAll(".weight-option")
           .forEach((btn) => btn.classList.remove("active"));
         weightOption.classList.add("active");
+        const form = weightOption.closest("form[data-home-search]");
+        const petSizeInput = form?.querySelector('input[name="pet_size"]');
+        if (petSizeInput) {
+          petSizeInput.value = weightOption.dataset.weight || "";
+        }
       }
     });
 
