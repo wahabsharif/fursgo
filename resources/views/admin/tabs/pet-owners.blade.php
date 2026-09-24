@@ -63,9 +63,19 @@ $ticketStatusLabels = [
     view: 'list',
     selectedCustomerId: null,
     detailTab: 'overview',
+    previousTab: null,
     selectedPetId: null,
     // Remember scroll position per tab (first visit = top)
     tabScroll: {},
+    detailTabLabels: {
+        overview: 'Overview',
+        pets: 'Pets',
+        bookings: 'Bookings',
+        payments: 'Payments',
+        support: 'Support',
+        referrals: 'Referrals',
+        activity: 'Activity',
+    },
     section: 'customers',
     statusFilter: 'all',
     search: '',
@@ -81,6 +91,7 @@ $ticketStatusLabels = [
     openCustomer(id) {
         this.selectedCustomerId = id;
         this.detailTab = 'overview';
+        this.previousTab = null;
         this.selectedPetId = null;
         this.tabScroll = {};
         this.view = 'detail';
@@ -90,18 +101,41 @@ $ticketStatusLabels = [
         this.view = 'list';
         this.selectedCustomerId = null;
         this.detailTab = 'overview';
+        this.previousTab = null;
         this.selectedPetId = null;
         this.tabScroll = {};
     },
     switchDetailTab(tab) {
+        if (tab === this.detailTab) return;
         // Save where we were on the current tab
         this.tabScroll[this.detailTab] = window.scrollY;
+        this.previousTab = this.detailTab;
         this.detailTab = tab;
         // Restore saved position, or start at top if first visit
         const y = this.tabScroll[tab] ?? 0;
         this.$nextTick(() => {
             window.scrollTo({ top: y, behavior: 'auto' });
         });
+    },
+    goBack() {
+        if (this.previousTab) {
+            this.tabScroll[this.detailTab] = window.scrollY;
+            const target = this.previousTab;
+            this.previousTab = null;
+            this.detailTab = target;
+            const y = this.tabScroll[target] ?? 0;
+            this.$nextTick(() => {
+                window.scrollTo({ top: y, behavior: 'auto' });
+            });
+            return;
+        }
+        this.closeCustomer();
+    },
+    get backLabel() {
+        if (this.previousTab && this.detailTabLabels[this.previousTab]) {
+            return this.detailTabLabels[this.previousTab].toUpperCase();
+        }
+        return 'ALL CUSTOMERS';
     },
 
     isSelected(id) {

@@ -477,7 +477,7 @@ $customerProfiles[$customer['id']] = array_merge($janeProfile, [
 @endphp
 
 <div class="admin-customer-detail" x-show="view === 'detail'" x-cloak>
-    <button type="button" class="admin-co-back" @click="closeCustomer()">
+    <button type="button" class="admin-co-back" @click="goBack()">
         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
             <g filter="url(#filter0_d_1_467)">
                 <circle cx="10" cy="10" r="10" transform="matrix(-1 0 0 1 24 0)" fill="white" />
@@ -496,7 +496,7 @@ $customerProfiles[$customer['id']] = array_merge($janeProfile, [
                 </filter>
             </defs>
         </svg>
-        <span>ALL CUSTOMERS</span>
+        <span x-text="backLabel">ALL CUSTOMERS</span>
     </button>
 
     @foreach ($customerProfiles as $profileId => $profile)

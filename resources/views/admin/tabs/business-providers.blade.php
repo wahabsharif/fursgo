@@ -81,6 +81,18 @@ $verificationStatusClass = [
     view: 'list',
     selectedProviderId: null,
     detailTab: 'overview',
+    previousTab: null,
+    tabScroll: {},
+    detailTabLabels: {
+        overview: 'Overview',
+        profile: 'Profile',
+        bookings: 'Bookings',
+        payouts: 'Payouts',
+        compliance: 'Compliance',
+        account: 'Account',
+        support: 'Support',
+        activity: 'Activity',
+    },
     section: 'providers',
     statusFilter: 'all',
     search: '',
@@ -91,6 +103,8 @@ $verificationStatusClass = [
     openProvider(id) {
         this.selectedProviderId = id;
         this.detailTab = 'overview';
+        this.previousTab = null;
+        this.tabScroll = {};
         this.view = 'detail';
         this.$dispatch('admin-provider-opened', { id });
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -99,6 +113,38 @@ $verificationStatusClass = [
         this.view = 'list';
         this.selectedProviderId = null;
         this.detailTab = 'overview';
+        this.previousTab = null;
+        this.tabScroll = {};
+    },
+    switchDetailTab(tab) {
+        if (tab === this.detailTab) return;
+        this.tabScroll[this.detailTab] = window.scrollY;
+        this.previousTab = this.detailTab;
+        this.detailTab = tab;
+        const y = this.tabScroll[tab] ?? 0;
+        this.$nextTick(() => {
+            window.scrollTo({ top: y, behavior: 'auto' });
+        });
+    },
+    goBack() {
+        if (this.previousTab) {
+            this.tabScroll[this.detailTab] = window.scrollY;
+            const target = this.previousTab;
+            this.previousTab = null;
+            this.detailTab = target;
+            const y = this.tabScroll[target] ?? 0;
+            this.$nextTick(() => {
+                window.scrollTo({ top: y, behavior: 'auto' });
+            });
+            return;
+        }
+        this.closeProvider();
+    },
+    get backLabel() {
+        if (this.previousTab && this.detailTabLabels[this.previousTab]) {
+            return this.detailTabLabels[this.previousTab].toUpperCase();
+        }
+        return 'ALL PROVIDERS';
     },
 }">
     @include('admin.tabs.provider-detail')
