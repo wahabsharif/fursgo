@@ -743,7 +743,7 @@
 /* Live bookings + recent activity */
 .admin-lower-grid {
     display: grid;
-    grid-template-columns: 1.6fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: var(--admin-card-gap);
     margin-top: var(--admin-card-gap);
     align-items: stretch;
