@@ -119,6 +119,9 @@ Route::get('/booking-groomer', fn() => VoltPage::render('booking.groomer'))
 Route::get('/checkout_booking_groomer', fn() => VoltPage::render('checkout.booking-groomer'))
     ->name('checkout.booking-groomer');
 
+Route::get('/checkout_booking_space', fn() => VoltPage::render('checkout.booking-space'))
+    ->name('checkout.booking-space');
+
 Route::get('/my-account/pet-owner-profile', fn() => VoltPage::render('account.profile'))
     ->middleware([EnsureWebOrGroomerSpacerAuthenticated::class])
     ->name('pet-owner-profile');
