@@ -41,6 +41,30 @@
 <section class="section">
     <div class="row g-3">
         @forelse($spaces as $index => $space)
+        @php
+            $space = is_array($space) ? $space : (method_exists($space, 'toArray') ? $space->toArray() : (array) $space);
+            $imagePath = $space['image'] ?? $space['image_url'] ?? 'images/space_card1.png';
+            // Path-only hrefs avoid SVG pattern blanks when APP_URL host ≠ page host
+            if (is_string($imagePath) && str_starts_with($imagePath, 'http')) {
+                $imageUrl = parse_url($imagePath, PHP_URL_PATH) ?: $imagePath;
+            } elseif (str_starts_with((string) $imagePath, '/')) {
+                $imageUrl = $imagePath;
+            } else {
+                $absolute = asset(str_replace('assets/', '', (string) $imagePath));
+                $imageUrl = parse_url($absolute, PHP_URL_PATH) ?: $absolute;
+            }
+            // Unique per render — calendar + list both mount this component on the same page
+            $patternId = 'space-card-'.uniqid('', false).'-'.$index;
+            $slots = $space['slots'] ?? ['Mon 1, 08:30 AM', 'Wed 27, 09:15 AM'];
+            if (is_string($slots)) {
+                $decoded = json_decode($slots, true);
+                $slots = is_array($decoded) ? $decoded : explode(',', $slots);
+            }
+            if (! is_array($slots)) {
+                $slots = [];
+            }
+            $slots = array_slice($slots, 0, 2);
+        @endphp
         <div class="col-lg-3">
             <div class="card space-cards flex-column active">
                 {{-- Left column with image and decorative leaf --}}
@@ -60,13 +84,13 @@
                     </div>
 
                     {{-- Image with pattern (unique ID per card) --}}
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 255 130" fill="none">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 255 130" fill="none">
                         <defs>
-                            <pattern id="pattern-card-{{ $index }}" patternUnits="userSpaceOnUse" width="255" height="130">
-                                <image href="{{ $space['image'] ?? asset('assets/images/space_card_default.png') }}" width="255" height="130" preserveAspectRatio="xMidYMid slice" />
+                            <pattern id="{{ $patternId }}" patternUnits="userSpaceOnUse" width="255" height="130">
+                                <image href="{{ $imageUrl }}" xlink:href="{{ $imageUrl }}" width="255" height="130" preserveAspectRatio="xMidYMid slice" />
                             </pattern>
                         </defs>
-                        <path d="M255 124.417C255 127.178 252.761 129.417 250 129.417H5C2.23858 129.417 0 127.178 0 124.417V37C0 34.2386 2.23858 32 5 32H27C29.7614 32 32 29.7614 32 27V5C32 2.23858 34.2386 0 37 0H250C252.761 0 255 2.23858 255 5V124.417Z" fill="url(#pattern-card-{{ $index }})" />
+                        <path d="M255 124.417C255 127.178 252.761 129.417 250 129.417H5C2.23858 129.417 0 127.178 0 124.417V37C0 34.2386 2.23858 32 5 32H27C29.7614 32 32 29.7614 32 27V5C32 2.23858 34.2386 0 37 0H250C252.761 0 255 2.23858 255 5V124.417Z" fill="url(#{{ $patternId }})" />
                     </svg>
                 </div>
 
@@ -136,8 +160,8 @@
 
                     <div class="slots-price d-flex flex-column">
                         <div class="slots d-flex flex-column" aria-label="Available slots">
-                            @forelse($space['slots'] ?? [] as $slotIndex => $slot)
-                            <div class="slot {{ $slotIndex === 0 ? 'highlight' : '' }}">{{ $slot }}</div>
+                            @forelse($slots as $slotIndex => $slot)
+                            <div class="slot {{ $slotIndex === 0 ? 'highlight' : '' }}">{{ is_string($slot) ? trim($slot) : $slot }}</div>
                             @empty
                             <div class="slot">No slots available</div>
                             @endforelse

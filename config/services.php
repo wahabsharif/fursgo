@@ -39,4 +39,8 @@ return [
         'platform_fee_percent' => (float) env('FURSGO_PLATFORM_FEE_PERCENT', 5),
     ],
 
+    'carto' => [
+        'api_key' => env('CARTO_API_KEY', 'cb1_3thf_1_9c6fa439263b43393f09202a'),
+    ],
+
 ];

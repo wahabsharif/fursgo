@@ -1,11 +1,12 @@
 <?php
 
-use App\Models\Groomer;
-use App\Models\Space;
+use App\Support\SearchResultsData;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 
-new class extends Component {
+new #[Layout('layouts.app'), Title('Fursgo - Search Results')] class extends Component {
     #[Url]
     public string $search = '';
 
@@ -18,44 +19,9 @@ new class extends Component {
     public function with(): array
     {
         return [
-            'groomers' => $this->getGroomers(),
-            'spaces' => $this->getSpaces(),
+            'groomers' => SearchResultsData::groomers($this->search, $this->sort),
+            'spaces' => SearchResultsData::spaces($this->search, $this->venue_type),
         ];
-    }
-
-    public function getGroomers()
-    {
-        return Groomer::query()
-            ->when($this->search, function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%')
-                    ->orWhere('studio_name', 'like', '%' . $this->search . '%');
-            })
-            ->when($this->sort, function ($query) {
-                match ($this->sort) {
-                    'distance' => $query->orderBy('distance'),
-                    'lowest_price' => $query->orderBy('price'),
-                    default => $query->latest(),
-                };
-            })
-            ->get();
-    }
-
-    public function getSpaces()
-    {
-        return Space::query()
-            ->when($this->search, function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%')
-                    ->orWhere('description', 'like', '%' . $this->search . '%');
-            })
-            ->when($this->venue_type, function ($query) {
-                $query->where('venue_type', $this->venue_type);
-            })
-            ->get();
-    }
-
-    public function updatedSearch(): void
-    {
-        $this->resetPage();
     }
 
     public function clearFilters(): void

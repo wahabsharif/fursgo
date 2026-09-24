@@ -161,9 +161,35 @@ Route::get('/rating-overlay-card', function () {
     return view()->file(resource_path('views/components/ui/rating-overlay-card.blade.php'));
 })->name('rating-overlay-card');
 
-// Groomer unavailability
+// Groomer unavailability (custom PHP URL parity)
 Route::get('/groomer-unavailability/location-unavailability', fn() => VoltPage::render('groomer.unavailability'))
     ->name('groomer-unavailability.location-unavailability');
+Route::get('/groomer-unavailability/time-unavailability', fn() => VoltPage::render('groomer.unavailability'))
+    ->name('groomer-unavailability.time-unavailability');
+Route::get('/groomer-unavailability/specific_groomer_unavailability_list_view', fn() => VoltPage::render('groomer.unavailability'))
+    ->name('groomer-unavailability.specific-list');
+Route::get('/groomer-unavailability/specific_groomer_unavailability_map_view', fn() => VoltPage::render('groomer.unavailability'))
+    ->name('groomer-unavailability.specific-map');
+Route::get('/groomer-unavailability/specific_groomer_unavailability_calendar_view', fn() => VoltPage::render('groomer.unavailability'))
+    ->name('groomer-unavailability.specific-calendar');
+// Underscore aliases matching custom PHP filenames
+Route::redirect('/groomer-unavailability/location_unavailability', '/groomer-unavailability/location-unavailability');
+Route::redirect('/groomer-unavailability/time_unavailability', '/groomer-unavailability/time-unavailability');
+
+// Space unavailability (custom PHP URL parity)
+Route::get('/space-unavailability/location-unavailability', fn() => VoltPage::render('space.unavailability'))
+    ->name('space-unavailability.location-unavailability');
+Route::get('/space-unavailability/time-unavailability', fn() => VoltPage::render('space.unavailability'))
+    ->name('space-unavailability.time-unavailability');
+Route::get('/space-unavailability/specific_space_unavailability_list_view', fn() => VoltPage::render('space.unavailability'))
+    ->name('space-unavailability.specific-list');
+Route::get('/space-unavailability/specific_space_unavailability_map_view', fn() => VoltPage::render('space.unavailability'))
+    ->name('space-unavailability.specific-map');
+Route::get('/space-unavailability/specific_space_unavailability_calendar_view', fn() => VoltPage::render('space.unavailability'))
+    ->name('space-unavailability.specific-calendar');
+// Underscore aliases matching custom PHP filenames
+Route::redirect('/space-unavailability/location_unavailability', '/space-unavailability/location-unavailability');
+Route::redirect('/space-unavailability/time_unavailability', '/space-unavailability/time-unavailability');
 
 // ===============================================================
 // Authenticated Routes

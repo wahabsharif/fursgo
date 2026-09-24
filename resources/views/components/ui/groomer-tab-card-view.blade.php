@@ -51,8 +51,15 @@
 --}}
 
 @if($groomers->count())
+<section class="section">
 <div class="row g-3">
     @foreach($groomers as $index => $groomer)
+    @php
+        $imagePath = $groomer['image_url'] ?? $groomer['image'] ?? 'images/card1.png';
+        $imageUrl = str_starts_with($imagePath, 'http') || str_starts_with($imagePath, '/')
+            ? $imagePath
+            : asset($imagePath);
+    @endphp
     <div class="col-lg-6">
         {{-- Card with optional "active" class (e.g. first or featured) --}}
         <div class="card {{ $loop->first ? 'active' : '' }}">
@@ -68,11 +75,11 @@
                 {{-- Image with clip-path (unique ID per card) --}}
                 <svg xmlns="http://www.w3.org/2000/svg" width="270" height="246" viewBox="0 0 170 246">
                     <defs>
-                        <clipPath id="cardClip{{ $index }}">
+                        <clipPath id="cardClip-cal-{{ $index }}">
                             <path d="M165 0C167.761 2.57702e-06 170 2.23858 170 5V241C170 243.761 167.761 246 165 246H5C2.23858 246 0 243.761 0 241V37C0 34.2386 2.23858 32 5 32H27C29.7614 32 32 29.7614 32 27V5C32 2.23858 34.2386 0 37 0H165Z" />
                         </clipPath>
                     </defs>
-                    <image href="{{ asset($groomer['image_url']) }}" preserveAspectRatio="xMidYMid slice" clip-path="url(#cardClip{{ $index }})" />
+                    <image href="{{ $imageUrl }}" preserveAspectRatio="xMidYMid slice" clip-path="url(#cardClip-cal-{{ $index }})" />
                 </svg>
             </div>
 
@@ -163,6 +170,7 @@
         <button class="load-more">Load More</button>
     </div>
 </div>
+</section>
 @else
 <div class="alert alert-info">No groomers found.</div>
 @endif

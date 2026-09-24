@@ -13,7 +13,7 @@
                     <div class="outer-tab-div d-flex align-items-center">
                         <div class="heading-count d-flex align-items-center">
                             <h1 class="heading">Groomer Results</h1>
-                            <span class="count">25</span>
+                            <span class="count">{{ $groomers->count() }}</span>
                         </div>
 
                         <div class="groomer-tabs text-center">
@@ -27,17 +27,15 @@
                 <x-ui.groomer-venue-sort-options />
 
                 <div data-tab-content="groomer-calendar-view" class="tabcontent">
-                    <x-ui.calendar-view />
+                    <x-ui.calendar-view id="groomer-calendar" />
 
-                    <div class="container">
-                        <hr style="border-top: 1px solid #DFDFDF;">
-                    </div>
+                    <div class="section-divider" style="background-color: #DFDFDF"></div>
 
                     <x-ui.groomer-tab-card-view :groomers="$groomers" />
                 </div>
 
                 <div data-tab-content="groomer-map-view" class="tabcontent" style="display: none;">
-                    <x-ui.groomer-tab-map-view />
+                    <x-ui.groomer-tab-map-view :groomers="$groomers->take(3)" />
                 </div>
 
                 <div data-tab-content="groomer-list-view" class="tabcontent" style="display: none;">
@@ -57,7 +55,7 @@
                     <div class="outer-tab-div d-flex align-items-center">
                         <div class="heading-count d-flex align-items-center">
                             <h1 class="heading">Space Results</h1>
-                            <span class="count">25</span>
+                            <span class="count">{{ $spaces->count() }}</span>
                         </div>
 
                         <div class="groomer-tabs text-center">
@@ -68,26 +66,11 @@
                     </div>
                 </div>
 
-                <x-ui.space-venue-sort-options :selectedFilters="['Top Rated', 'Garden / Shed']" :venueOptions="[
-                    ['label' => 'Private rooms', 'value' => 'private_rooms'],
-                    ['label' => 'Salon', 'value' => 'salon'],
-                    ['label' => 'Mobile station', 'value' => 'mobile_station'],
-                    ['label' => 'Garden / Shed', 'value' => 'garden_shed'],
-                    ['label' => 'Others', 'value' => 'others'],
-                ]" :sortOptions="[
-                    ['label' => 'Recommended (default)', 'value' => 'recommended'],
-                    ['label' => 'Distance', 'value' => 'distance'],
-                    ['label' => 'Lowest price', 'value' => 'lowest_price'],
-                    ['label' => 'Soonest available', 'value' => 'soonest'],
-                ]"
-                    defaultVenue="private_rooms" defaultSort="recommended" filterIcon="fire.svg"
-                    crossIcon="cross.svg" />
+                <x-ui.space-venue-sort-options />
                 <div data-tab-content="space-calendar-view" class="tabcontent">
-                    <x-ui.calendar-view />
+                    <x-ui.calendar-view id="space-calendar" />
 
-                    <div class="container">
-                        <hr style="border-top: 1px solid #DFDFDF;">
-                    </div>
+                    <div class="section-divider" style="background-color: #DFDFDF"></div>
 
                     <x-ui.space-tab-card-view :spaces="$spaces" :showLoadMore="true" loadMoreText="Show More Spaces"
                         loadMoreUrl="#" />
@@ -111,12 +94,16 @@
     <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
     <link rel="stylesheet" href="{{ asset('css/bootstrap.css') }}">
     <link rel="stylesheet" href="{{ asset('css/media_query.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/customer_journey.css') }}">
     <link rel="stylesheet" href="{{ asset('css/common.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/customer_journey.css') }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 @endpush
 
 @push('script')
+    <script>
+        window.BASE_URL = @json(rtrim(asset(''), '/') . '/');
+        window.CARTO_API_KEY = @json(config('services.carto.api_key'));
+    </script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="{{ asset('js/customer_journey.js') }}"></script>
 

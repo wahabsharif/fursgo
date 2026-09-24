@@ -968,7 +968,7 @@ section.rating-section.section {
     display: grid;
     grid-template-columns: 1fr 150px 1fr 150px 1fr;
     align-items: start;
-    max-width: 1200px;
+    /* max-width: 1200px; */
     margin: 0 auto;
 }
 

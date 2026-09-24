@@ -1,4 +1,4 @@
-﻿@if ($isBusinessSiteRoute && !$isBusinessHomepageRoute)
+@if ($isBusinessSiteRoute && !$isBusinessHomepageRoute)
     <header class="header-business-public">
         <nav class="navbar">
             <div class="header-business-public-inner">
