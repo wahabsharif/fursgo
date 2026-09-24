@@ -35,6 +35,144 @@ $janeProfile = [
 'sessions' => '18',
 'last_groomed' => '09 Jul',
 ],
+'booking_stats' => [
+'total' => '14',
+'completed' => '9',
+'cancelled' => '1',
+'spend' => '£682',
+],
+'booking_summary' => [
+'count' => 14,
+'spend' => '£682',
+'filters' => [
+'all' => 14,
+'completed' => 9,
+'confirmed' => 2,
+'disputed' => 1,
+'cancelled' => 1,
+'refunded' => 1,
+],
+],
+'booking_list' => [
+[
+'id' => 'FG-0563-B12',
+'dispute_id' => 'DS-00063',
+'date' => '09/07/2025',
+'date_label' => '09 Jul 2025',
+'pets' => [
+['name' => 'Biscuit', 'breed' => 'Golden Retriever', 'image' => $petImages['biscuit'], 'type' => 'dog'],
+],
+'service' => 'Full Groom',
+'provider_role' => 'Groomer · Location',
+'provider' => 'Pawfect Salon · London SE2',
+'provider_short' => 'Pawfect Salon',
+'rating' => 1,
+'amount' => '£55.00',
+'status' => 'disputed',
+'status_label' => 'Disputed',
+'detail' => [
+'service' => 'Bath & Brush',
+'addons' => 'Ear cleaning, de-shed treatment',
+'pet' => 'Biscuit (Golden Retriever)',
+'groomer' => 'Pawfect Salon',
+'location_name' => 'Pawfect Salon',
+'location_address' => "14 Coldhabour Lane\nLondon, SE2 9NR",
+'datetime' => '02 Apr 2025 · 10:00 AM',
+'duration' => '60 Minutes',
+'notes' => 'Please be gentle - biscuit is anxious on the grooming table.',
+'price_lines' => [
+['label' => 'Bath & Brush', 'value' => '£40.00'],
+['label' => 'Ear-cleaning (add-on)', 'value' => '£10.00'],
+['label' => 'De-shed treatment (add-on)', 'value' => '£10.00'],
+['label' => 'Discount applied (NEWYR25)', 'value' => '-£5.00'],
+],
+'total_label' => 'Total charged to customer',
+'total' => '£55.00',
+'payment_method' => 'Visa .... 4529',
+'payment_status' => 'Refund in progress - £35.00',
+'groomer_payout' => 'On hold - dispute open',
+'timeline' => [
+['tone' => 'dispute', 'title' => 'Groomer responded to dispute', 'time' => '01 Dec 2024 · 18:55'],
+['tone' => 'info', 'title' => 'Groomer payout placed on hold by admin', 'time' => '18 Apr 2025 · 11:32'],
+['tone' => 'info', 'title' => 'Refund initiated - awaiting processor', 'time' => '05 Mar 2025 · 21:50'],
+['tone' => 'flag', 'title' => 'Dispute raised by customer', 'time' => '01 Dec 2024 · 18:55'],
+['tone' => 'dispute', 'title' => 'Booking marked completed by groomer', 'time' => '18 Apr 2025 · 11:32'],
+['tone' => 'dispute', 'title' => 'Booking confirmed by groomer', 'time' => '05 Mar 2025 · 21:50'],
+['tone' => 'flag', 'title' => 'Service booked by customer', 'time' => '01 Dec 2024 · 18:55'],
+],
+'dispute' => [
+'title' => 'Open dispute — raised by customer',
+'body' => 'Groomer arrived 20 mins late. Nail trim not completed as agreed. Refund of £35 requested.',
+'footer' => 'Groomer has responded — awaiting admin review.',
+],
+],
+],
+[
+'id' => 'FG-0563-B11',
+'date' => '02/08/2025',
+'date_label' => '02 Aug 2025',
+'pets' => [
+['name' => 'Leo', 'image' => $petImages['leo'], 'type' => 'cat'],
+],
+'service' => 'Nail Trim',
+'provider_role' => 'Groomer · Location',
+'provider' => "Katie's Mobile Groom · London N1",
+'provider_short' => "Katie's Mobile Groom",
+'rating' => null,
+'amount' => '£25.00',
+'status' => 'completed',
+'status_label' => 'Completed',
+],
+[
+'id' => 'SS-0412-B08',
+'date' => '28/07/2025',
+'date_label' => '28 Jul 2025',
+'pets' => [
+['name' => 'Biscuit', 'image' => $petImages['biscuit'], 'type' => 'dog'],
+['name' => 'Leo', 'image' => $petImages['leo'], 'type' => 'cat'],
+],
+'service' => 'Half-Day',
+'provider_role' => 'Space Host · Location',
+'provider' => 'Dev É. · Furs & Co. Studio',
+'provider_short' => 'Furs & Co. Studio',
+'rating' => 4,
+'amount' => '£155.00',
+'status' => 'confirmed',
+'status_label' => 'Confirmed',
+],
+[
+'id' => 'GS-0499-B03',
+'date' => '15/07/2025',
+'date_label' => '15 Jul 2025',
+'pets' => [
+['name' => 'Leo', 'image' => $petImages['leo'], 'type' => 'cat'],
+],
+'service' => 'Bath & Tidy',
+'provider_role' => 'Groomer · Location',
+'provider' => 'Pawfect Salon · London SE2',
+'provider_short' => 'Pawfect Salon',
+'rating' => null,
+'amount' => '£30.00',
+'status' => 'cancelled',
+'status_label' => 'Cancelled',
+],
+[
+'id' => 'SS-0388-B21',
+'date' => '01/07/2025',
+'date_label' => '01 Jul 2025',
+'pets' => [
+['name' => 'Surf', 'image' => $petImages['surf'], 'type' => 'other'],
+],
+'service' => 'Overnight Stay',
+'provider_role' => 'Space Host · Location',
+'provider' => 'Garden Paws · Bristol',
+'provider_short' => 'Garden Paws',
+'rating' => 3,
+'amount' => '£120.00',
+'status' => 'refunded',
+'status_label' => 'Refunded',
+],
+],
 'details' => [
 ['label' => 'Full Name', 'value' => 'Jane John Doe'],
 ['label' => 'Email', 'value' => 'jane.doe@gmail.com'],
@@ -136,8 +274,8 @@ $janeProfile = [
 'id' => 'pet-biscuit',
 'name' => 'Biscuit',
 'meta' => 'Golden Retriever · Male · 4yrs · 28kg',
-'status' => 'active',
-'status_label' => 'Active',
+'status' => 'archived',
+'status_label' => 'Archived',
 'vaccinated' => true,
 'sessions' => 2,
 'type' => 'dog',
@@ -382,7 +520,7 @@ $customerProfiles[$customer['id']] = array_merge($janeProfile, [
 @endphp
 
 <div class="admin-customer-detail" x-show="view === 'detail'" x-cloak>
-    <button type="button" class="admin-co-back" @click="closeCustomer()">
+    <button type="button" class="admin-co-back" @click="goBack()">
         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
             <g filter="url(#filter0_d_1_467)">
                 <circle cx="10" cy="10" r="10" transform="matrix(-1 0 0 1 24 0)" fill="white" />
@@ -401,7 +539,7 @@ $customerProfiles[$customer['id']] = array_merge($janeProfile, [
                 </filter>
             </defs>
         </svg>
-        <span>ALL CUSTOMERS</span>
+        <span x-text="backLabel">ALL CUSTOMERS</span>
     </button>
 
     @foreach ($customerProfiles as $profileId => $profile)
@@ -414,7 +552,7 @@ $customerProfiles[$customer['id']] = array_merge($janeProfile, [
                 <button type="button"
                     class="admin-co-tab"
                     :class="{ 'is-active': detailTab === '{{ $tabKey }}' }"
-                    @click="detailTab = '{{ $tabKey }}'">
+                    @click="switchDetailTab('{{ $tabKey }}')">
                     {{ $tabLabel }}
                 </button>
                 @endforeach
@@ -428,7 +566,11 @@ $customerProfiles[$customer['id']] = array_merge($janeProfile, [
                 <x-admin.customer.pets :profile="$profile" />
             </div>
 
-            @foreach (['bookings' => 'Bookings', 'payments' => 'Payments', 'support' => 'Support', 'referrals' => 'Referrals', 'activity' => 'Activity'] as $tabKey => $tabLabel)
+            <div x-show="detailTab === 'bookings'" x-cloak>
+                <x-admin.customer.bookings :profile="$profile" />
+            </div>
+
+            @foreach (['payments' => 'Payments', 'support' => 'Support', 'referrals' => 'Referrals', 'activity' => 'Activity'] as $tabKey => $tabLabel)
             <div class="admin-co-placeholder" x-show="detailTab === '{{ $tabKey }}'" x-cloak>
                 <h2 class="admin-page-title mb-0">{{ $tabLabel }}</h2>
                 <p class="admin-section-label mb-0">This section will be built next.</p>

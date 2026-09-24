@@ -208,7 +208,7 @@ foreach ($providers as $provider) {
 @endphp
 
 <div class="admin-customer-detail" x-show="view === 'detail'" x-cloak>
-    <button type="button" class="admin-co-back" @click="closeProvider()">
+    <button type="button" class="admin-co-back" @click="goBack()">
         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
             <g filter="url(#filter0_d_bp_provider_back)">
                 <circle cx="10" cy="10" r="10" transform="matrix(-1 0 0 1 24 0)" fill="white" />
@@ -227,7 +227,7 @@ foreach ($providers as $provider) {
                 </filter>
             </defs>
         </svg>
-        <span>ALL PROVIDERS</span>
+        <span x-text="backLabel">ALL PROVIDERS</span>
     </button>
 
     @foreach ($providerProfiles as $profileId => $profile)
@@ -302,7 +302,7 @@ foreach ($providers as $provider) {
                 <button type="button"
                     class="admin-co-tab"
                     :class="{ 'is-active': detailTab === '{{ $tabKey }}' }"
-                    @click="detailTab = '{{ $tabKey }}'">
+                    @click="switchDetailTab('{{ $tabKey }}')">
                     {{ $tabLabel }}
                 </button>
                 @endforeach

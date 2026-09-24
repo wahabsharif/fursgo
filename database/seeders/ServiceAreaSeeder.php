@@ -26,21 +26,24 @@ class ServiceAreaSeeder extends Seeder
                 'radius' => 0.5,
                 'latitude' => 51.50198,
                 'longitude' => -0.11714,
-                'address' => 'SE1 8SW',
+                'address' => 'Waterloo Station, London SE1',
+                'is_paused' => false,
             ],
             [
                 'name' => 'Southwark',
-                'radius' => 1.0,
+                'radius' => 1.5,
                 'latitude' => 51.5045,
                 'longitude' => -0.086,
-                'address' => 'SE1 1AA',
+                'address' => 'Borough High St, London SE1',
+                'is_paused' => false,
             ],
             [
-                'name' => 'Cannon St',
-                'radius' => 0.6,
+                'name' => 'Cannon Street',
+                'radius' => 1.0,
                 'latitude' => 51.5113,
                 'longitude' => -0.0904,
-                'address' => 'EC4N 6AP',
+                'address' => 'Cannon St, London EC4',
+                'is_paused' => true,
             ],
         ];
 
@@ -56,6 +59,7 @@ class ServiceAreaSeeder extends Seeder
                     'longitude' => $area['longitude'],
                     'address' => $area['address'],
                     'map_color' => $mapColors[$index % count($mapColors)],
+                    'is_paused' => (bool) ($area['is_paused'] ?? false),
                 ]
             );
         }

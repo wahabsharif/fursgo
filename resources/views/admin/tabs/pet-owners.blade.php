@@ -63,7 +63,20 @@ $ticketStatusLabels = [
     view: 'list',
     selectedCustomerId: null,
     detailTab: 'overview',
+    previousTab: null,
     selectedPetId: null,
+    selectedBookingId: null,
+    // Remember scroll position per tab (first visit = top)
+    tabScroll: {},
+    detailTabLabels: {
+        overview: 'Overview',
+        pets: 'Pets',
+        bookings: 'Bookings',
+        payments: 'Payments',
+        support: 'Support',
+        referrals: 'Referrals',
+        activity: 'Activity',
+    },
     section: 'customers',
     statusFilter: 'all',
     search: '',
@@ -71,10 +84,18 @@ $ticketStatusLabels = [
     disputeSearch: '',
     ticketFilter: 'all',
     ticketSearch: '',
+
+    // Mass-select for export
+    selectedIds: [],
+    allIds: @js(collect($customers)->pluck('id')->values()),
+
     openCustomer(id) {
         this.selectedCustomerId = id;
         this.detailTab = 'overview';
+        this.previousTab = null;
         this.selectedPetId = null;
+        this.selectedBookingId = null;
+        this.tabScroll = {};
         this.view = 'detail';
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
@@ -82,10 +103,74 @@ $ticketStatusLabels = [
         this.view = 'list';
         this.selectedCustomerId = null;
         this.detailTab = 'overview';
+        this.previousTab = null;
         this.selectedPetId = null;
+        this.selectedBookingId = null;
+        this.tabScroll = {};
+    },
+    switchDetailTab(tab) {
+        if (tab === this.detailTab) return;
+        if (this.selectedBookingId) {
+            this.selectedBookingId = null;
+            this.$dispatch('admin-booking-close-request');
+        }
+        // Save where we were on the current tab
+        this.tabScroll[this.detailTab] = window.scrollY;
+        this.previousTab = this.detailTab;
+        this.detailTab = tab;
+        // Restore saved position, or start at top if first visit
+        const y = this.tabScroll[tab] ?? 0;
+        this.$nextTick(() => {
+            window.scrollTo({ top: y, behavior: 'auto' });
+        });
+    },
+    goBack() {
+        if (this.selectedBookingId) {
+            this.selectedBookingId = null;
+            this.$dispatch('admin-booking-close-request');
+            return;
+        }
+        if (this.previousTab) {
+            this.tabScroll[this.detailTab] = window.scrollY;
+            const target = this.previousTab;
+            this.previousTab = null;
+            this.detailTab = target;
+            const y = this.tabScroll[target] ?? 0;
+            this.$nextTick(() => {
+                window.scrollTo({ top: y, behavior: 'auto' });
+            });
+            return;
+        }
+        this.closeCustomer();
+    },
+    get backLabel() {
+        if (this.selectedBookingId) return 'BOOKINGS';
+        if (this.previousTab && this.detailTabLabels[this.previousTab]) {
+            return this.detailTabLabels[this.previousTab].toUpperCase();
+        }
+        return 'ALL CUSTOMERS';
+    },
+
+    isSelected(id) {
+        return this.selectedIds.includes(id);
+    },
+    toggleOne(id) {
+        if (this.isSelected(id)) {
+            this.selectedIds = this.selectedIds.filter(x => x !== id);
+        } else {
+            this.selectedIds.push(id);
+        }
+    },
+    get allSelected() {
+        return this.selectedIds.length === this.allIds.length;
+    },
+    toggleAll() {
+        this.selectedIds = this.allSelected ? [] : [...this.allIds];
     },
 }"
-@admin-pet-selected.window="selectedPetId = $event.detail.id">
+@admin-pet-selected.window="selectedPetId = $event.detail.id"
+@admin-booking-selected.window="selectedBookingId = $event.detail.booking?.id || null"
+@admin-booking-closed.window="selectedBookingId = null">
     @include('admin.tabs.customer-detail')
 
     <div class="admin-po-list" x-show="view === 'list'">
@@ -274,7 +359,12 @@ $ticketStatusLabels = [
                         <thead>
                             <tr>
                                 <th class="admin-po-check-col">
-                                    <input type="checkbox" class="admin-po-check" aria-label="Select all customers">
+                                    <input type="checkbox"
+                                        class="admin-po-check"
+                                        aria-label="Select all customers"
+                                        :checked="allSelected"
+                                        @change="toggleAll()"
+                                        @click.stop>
                                 </th>
                                 <th>Name · User ID <span class="admin-sort" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="7" height="5" viewBox="0 0 7 5" fill="none">
                                             <path d="M6.15674 0.5L3.32831 3.32843L0.499884 0.5" stroke="#9C9A97" stroke-linecap="round" />
@@ -323,7 +413,11 @@ $ticketStatusLabels = [
                                      '{{ strtolower($customer['email']) }}'.includes(search.toLowerCase()) ||
                                      '{{ strtolower($customer['id']) }}'.includes(search.toLowerCase()))">
                                 <td class="admin-po-check-col" @click.stop>
-                                    <input type="checkbox" class="admin-po-check" aria-label="Select {{ $customer['name'] }}">
+                                    <input type="checkbox"
+                                        class="admin-po-check"
+                                        aria-label="Select {{ $customer['name'] }}"
+                                        :checked="isSelected('{{ $customer['id'] }}')"
+                                        @change="toggleOne('{{ $customer['id'] }}')">
                                 </td>
                                 <td>
                                     <span class="admin-po-name-cell">

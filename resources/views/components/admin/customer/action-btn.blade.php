@@ -38,6 +38,18 @@ $icons = [
     <path d="M13.625 11.6249L17.4505 15.4503" stroke="#FE6F56" stroke-linecap="round" />
     <path d="M13.6252 15.4504L17.4507 11.625" stroke="#FE6F56" stroke-linecap="round" />
 </svg>',
+'view-dispute' => '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 18 14" fill="none">
+    <path d="M1.125 7C1.125 7 3.625 1.625 9 1.625C14.375 1.625 16.875 7 16.875 7C16.875 7 14.375 12.375 9 12.375C3.625 12.375 1.125 7 1.125 7Z" stroke="#FFAF3B" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="9" cy="7" r="2.25" stroke="#FFAF3B" stroke-width="1.25" />
+</svg>',
+'assign' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path d="M8 8C9.65685 8 11 6.65685 11 5C11 3.34315 9.65685 2 8 2C6.34315 2 5 3.34315 5 5C5 6.65685 6.34315 8 8 8Z" stroke="#659FC9" stroke-width="1.25" />
+    <path d="M2.5 13.5C2.5 11.2909 4.79086 9.5 8 9.5C11.2091 9.5 13.5 11.2909 13.5 13.5" stroke="#659FC9" stroke-width="1.25" stroke-linecap="round" />
+</svg>',
+'cancel-booking' => '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none">
+    <circle cx="7.5" cy="7.5" r="6.25" stroke="#FE6F56" stroke-width="1.25" />
+    <path d="M4.75 4.75L10.25 10.25M10.25 4.75L4.75 10.25" stroke="#FE6F56" stroke-width="1.25" stroke-linecap="round" />
+</svg>',
 ];
 @endphp
 
