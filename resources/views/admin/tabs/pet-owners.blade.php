@@ -64,6 +64,8 @@ $ticketStatusLabels = [
     selectedCustomerId: null,
     detailTab: 'overview',
     selectedPetId: null,
+    // Remember scroll position per tab (first visit = top)
+    tabScroll: {},
     section: 'customers',
     statusFilter: 'all',
     search: '',
@@ -80,6 +82,7 @@ $ticketStatusLabels = [
         this.selectedCustomerId = id;
         this.detailTab = 'overview';
         this.selectedPetId = null;
+        this.tabScroll = {};
         this.view = 'detail';
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
@@ -88,6 +91,17 @@ $ticketStatusLabels = [
         this.selectedCustomerId = null;
         this.detailTab = 'overview';
         this.selectedPetId = null;
+        this.tabScroll = {};
+    },
+    switchDetailTab(tab) {
+        // Save where we were on the current tab
+        this.tabScroll[this.detailTab] = window.scrollY;
+        this.detailTab = tab;
+        // Restore saved position, or start at top if first visit
+        const y = this.tabScroll[tab] ?? 0;
+        this.$nextTick(() => {
+            window.scrollTo({ top: y, behavior: 'auto' });
+        });
     },
 
     isSelected(id) {

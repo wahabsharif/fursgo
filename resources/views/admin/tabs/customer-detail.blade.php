@@ -414,7 +414,7 @@ $customerProfiles[$customer['id']] = array_merge($janeProfile, [
                 <button type="button"
                     class="admin-co-tab"
                     :class="{ 'is-active': detailTab === '{{ $tabKey }}' }"
-                    @click="detailTab = '{{ $tabKey }}'">
+                    @click="switchDetailTab('{{ $tabKey }}')">
                     {{ $tabLabel }}
                 </button>
                 @endforeach
