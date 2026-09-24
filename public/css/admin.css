@@ -31,8 +31,7 @@
 
 /* Header — same top padding as login so logo/tabs share one line */
 .admin-header {
-    position: sticky;
-    top: 0;
+    position: relative;
     z-index: 50;
     padding-top: 20px;
     padding-bottom: 12px;
@@ -1939,17 +1938,20 @@
 .admin-customer-detail {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 40px;
 }
 
 .admin-co-back {
+    position: sticky;
+    top: 40px;
+    z-index: 45;
     display: flex;
     align-items: center;
     justify-content: flex-start;
     gap: 10px;
     align-self: flex-start;
     border: none;
-    background: transparent;
+    background: var(--admin-page-bg);
     padding: 0;
     color: #3b3731;
     font-family: Lato, sans-serif;
@@ -1989,8 +1991,8 @@
     flex-direction: column;
     gap: 16px;
     position: sticky;
-    top: 180px;
-    max-height: calc(100vh - 112px);
+    top: 100px;
+    max-height: calc(100vh - 180px);
     overflow-y: auto;
     padding: 18px;
     border-radius: 10px;
@@ -2201,6 +2203,7 @@
 
 .admin-co-action:hover {
     opacity: 0.9;
+    box-shadow: 0 4px 10px 0 rgba(59, 55, 49, 0.30);
 }
 
 .admin-co-action-icon {
@@ -2246,7 +2249,6 @@
 .admin-co-action.is-delete-pet {
     background: #fee8e4;
     color: #fe6f56;
-    box-shadow: 0 4px 10px 0 rgba(59, 55, 49, 0.3);
 }
 
 .admin-co-action.is-transfer {
@@ -2269,16 +2271,28 @@
 
 .admin-co-tabs {
     position: sticky;
-    top: 180px;
+    top: 100px;
     z-index: 40;
     display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
-    width: fit-content;
+    width: 100%;
     max-width: 100%;
     margin: 0;
-    padding: 0;
+    padding: 8px 0 18px;
+    background: var(--admin-page-bg);
+    justify-content: unset;
+}
+
+/* Covers the gap above the tabs so scrolled content can’t peek through */
+.admin-co-tabs::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 100px;
     background: var(--admin-page-bg);
 }
 
