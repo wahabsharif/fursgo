@@ -1,8 +1,5 @@
 {{-- Converted from custom checkout_booking_groomer_space/index.php --}}
 <div class="cbg-page" data-base-url="{{ rtrim(asset(''), '/') }}/">
-">
-
-    
 
     <section class="container mt-5">
         <div class="cbg-breadcrumb d-flex align-items-center gap-10">
