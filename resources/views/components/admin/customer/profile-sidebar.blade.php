@@ -26,6 +26,24 @@ $transferAccounts = [
         suspendNotes: '',
         openSuspendReason: false,
         openSuspendDuration: false,
+        pauseBookingsOpen: false,
+        pauseReason: '',
+        pauseDuration: 'indefinite',
+        pauseNotes: '',
+        openPauseReason: false,
+        openPauseDuration: false,
+        openPauseBookings() {
+            this.pauseReason = '';
+            this.pauseDuration = 'indefinite';
+            this.pauseNotes = '';
+            this.openPauseReason = false;
+            this.openPauseDuration = false;
+            this.pauseBookingsOpen = true;
+        },
+        pauseDurationLabel() {
+            if (this.pauseDuration === 'indefinite') return 'Until manually listed';
+            return this.pauseDuration;
+        },
         flagOpen: false,
         flagReason: '',
         flagNote: '',
@@ -42,10 +60,21 @@ $transferAccounts = [
         transferSearch: '',
         transferTargetId: null,
         selectedPetId: @js($defaultTransferPet['id'] ?? null),
+        bookingDetail: null,
         pets: @js($profilePets),
         transferAccounts: @js($transferAccounts),
         currentPet() {
             return this.pets.find((p) => p.id === this.selectedPetId) || this.pets[0] || null;
+        },
+        bookingDispute() {
+            return this.bookingDetail?.detail?.dispute || null;
+        },
+        canCancelBooking() {
+            if (!this.bookingDetail) return false;
+            return !['cancelled', 'refunded'].includes(this.bookingDetail.status);
+        },
+        canAssignBooking() {
+            return !!this.bookingDetail;
         },
         filteredTransferAccounts() {
             const q = (this.transferSearch || '').trim().toLowerCase();
@@ -111,9 +140,11 @@ $transferAccounts = [
         },
     }"
     @admin-pet-selected.window="selectedPetId = $event.detail.id"
+    @admin-booking-selected.window="bookingDetail = $event.detail.booking || null"
+    @admin-booking-closed.window="bookingDetail = null"
     x-init="
         const syncModalLock = () => {
-            const open = verifyEmailOpen || resetPasswordOpen || suspendOpen || flagOpen || deleteOpen || transferOpen || archiveOpen || unarchiveOpen || deletePetOpen;
+            const open = verifyEmailOpen || resetPasswordOpen || suspendOpen || pauseBookingsOpen || flagOpen || deleteOpen || transferOpen || archiveOpen || unarchiveOpen || deletePetOpen;
             if (open) {
                 if (!document.body.classList.contains('admin-co-modal-lock')) {
                     document.body.dataset.adminCoScrollY = String(window.scrollY);
@@ -139,6 +170,7 @@ $transferAccounts = [
         $watch('verifyEmailOpen', () => $nextTick(() => syncModalLock()));
         $watch('resetPasswordOpen', () => $nextTick(() => syncModalLock()));
         $watch('suspendOpen', () => $nextTick(() => syncModalLock()));
+        $watch('pauseBookingsOpen', () => $nextTick(() => syncModalLock()));
         $watch('flagOpen', () => $nextTick(() => syncModalLock()));
         $watch('deleteOpen', () => $nextTick(() => syncModalLock()));
         $watch('transferOpen', () => $nextTick(() => syncModalLock()));
@@ -163,13 +195,6 @@ $transferAccounts = [
             @else
             <span></span>
             @endif
-            <button type="button" class="admin-co-more-btn" aria-label="More actions">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="4" viewBox="0 0 16 4" fill="none" aria-hidden="true">
-                    <circle cx="2" cy="2" r="1.5" fill="#3B3731" />
-                    <circle cx="8" cy="2" r="1.5" fill="#3B3731" />
-                    <circle cx="14" cy="2" r="1.5" fill="#3B3731" />
-                </svg>
-            </button>
         </div>
 
         <div class="admin-co-profile-identity">
@@ -274,6 +299,23 @@ $transferAccounts = [
         </div>
     </div>
 
+    {{-- Open dispute alert (booking detail) --}}
+    <div
+        class="admin-co-bk-dispute-alert"
+        x-show="detailTab === 'bookings' && bookingDispute()"
+        x-cloak>
+        <div class="admin-co-bk-dispute-alert-head">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="11" viewBox="0 0 10 9" fill="none" aria-hidden="true">
+                <path d="M5.485 0.308055C5.24845 -0.102644 4.61103 -0.102644 4.37448 0.308055L0.0743152 7.77965L0.0386903 7.85279C-0.0996183 8.19795 0.147844 8.57813 0.542967 8.62728L0.630186 8.63238H9.2293C9.70357 8.63238 10.0075 8.1663 9.78517 7.77965L5.485 0.308055Z" fill="#FFC97A" />
+                <path d="M4.8365 3.15331L4.9516 5.59952L5.06649 3.15431C5.0672 3.13868 5.06471 3.12306 5.05918 3.10842C5.05365 3.09379 5.0452 3.08043 5.03433 3.06917C5.02347 3.05791 5.01042 3.04898 4.99599 3.04294C4.98155 3.03689 4.96604 3.03385 4.95039 3.034C4.93502 3.03415 4.91983 3.03738 4.90573 3.0435C4.89162 3.04962 4.87888 3.0585 4.86827 3.06962C4.85765 3.08074 4.84937 3.09387 4.84392 3.10825C4.83846 3.12262 4.83594 3.13794 4.8365 3.15331Z" fill="#3B3731" stroke="#3B3731" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M5.00879 6.66028C5.03629 6.67172 5.05962 6.69118 5.07617 6.71594C5.09273 6.74076 5.10156 6.77009 5.10156 6.79993C5.10147 6.83985 5.08586 6.87813 5.05762 6.90637C5.02938 6.93461 4.9911 6.95023 4.95117 6.95032C4.92134 6.95032 4.892 6.94149 4.86719 6.92493C4.84242 6.90838 4.82297 6.88504 4.81152 6.85754C4.80009 6.82995 4.79691 6.79895 4.80273 6.76965C4.80862 6.74053 4.82274 6.71352 4.84375 6.6925C4.86476 6.67149 4.89178 6.65737 4.9209 6.65149C4.95019 6.64566 4.98119 6.64885 5.00879 6.66028Z" fill="#3B3731" stroke="#3B3731" stroke-width="0.5" />
+            </svg>
+            <p class="admin-co-bk-dispute-alert-title" x-text="bookingDispute()?.title"></p>
+        </div>
+        <p class="admin-co-bk-dispute-alert-body" x-text="bookingDispute()?.body"></p>
+        <p class="admin-co-bk-dispute-alert-footer" x-text="bookingDispute()?.footer"></p>
+    </div>
+
     {{-- Admin actions (changes with detail tab) --}}
     <div class="admin-co-actions">
         <h3 class="admin-co-actions-title">Admin Actions</h3>
@@ -349,18 +391,11 @@ $transferAccounts = [
                 x-on:click="openDeletePet()" />
         </div>
 
-        <div x-show="detailTab === 'bookings'" x-cloak>
+        <div x-show="detailTab === 'bookings' && !bookingDetail" x-cloak>
             <x-admin.customer.action-btn
                 variant="suspend"
                 label="Pause all bookings"
-                x-on:click="
-                    suspendReason = '';
-                    suspendDuration = 'indefinite';
-                    suspendNotes = '';
-                    openSuspendReason = false;
-                    openSuspendDuration = false;
-                    suspendOpen = true;
-                " />
+                x-on:click="openPauseBookings()" />
             <x-admin.customer.action-btn
                 variant="flag"
                 label="Flag account for review"
@@ -372,6 +407,27 @@ $transferAccounts = [
                     openFlagBy = false;
                     flagOpen = true;
                 " />
+        </div>
+
+        <div x-show="detailTab === 'bookings' && bookingDetail" x-cloak>
+            <div x-show="bookingDispute()" x-cloak>
+                <x-admin.customer.action-btn
+                    variant="view-dispute"
+                    label="View full dispute"
+                    x-on:click="$dispatch('admin-view-dispute')" />
+            </div>
+            <div x-show="canAssignBooking()" x-cloak>
+                <x-admin.customer.action-btn
+                    variant="assign"
+                    label="Assign to team member"
+                    x-on:click="$dispatch('admin-open-assign-booking')" />
+            </div>
+            <div x-show="canCancelBooking()" x-cloak>
+                <x-admin.customer.action-btn
+                    variant="cancel-booking"
+                    label="Cancel booking"
+                    x-on:click="$dispatch('admin-open-cancel-booking')" />
+            </div>
         </div>
     </div>
 
@@ -636,6 +692,136 @@ $transferAccounts = [
                             <path d="M3.15132 0.625H1.88816C1.55315 0.625 1.23186 0.756696 0.994971 0.991117C0.758083 1.22554 0.625 1.54348 0.625 1.875V14.375C0.625 14.7065 0.758083 15.0245 0.994971 15.2589C1.23186 15.4933 1.55315 15.625 1.88816 15.625H3.15132C3.48633 15.625 3.80761 15.4933 4.0445 15.2589C4.28139 15.0245 4.41447 14.7065 4.41447 14.375V1.875C4.41447 1.54348 4.28139 1.22554 4.0445 0.991117C3.80761 0.756696 3.48633 0.625 3.15132 0.625ZM11.3618 0.625H10.0987C9.76367 0.625 9.44238 0.756696 9.2055 0.991117C8.96861 1.22554 8.83553 1.54348 8.83553 1.875V14.375C8.83553 14.7065 8.96861 15.0245 9.2055 15.2589C9.44238 15.4933 9.76367 15.625 10.0987 15.625H11.3618C11.6969 15.625 12.0181 15.4933 12.255 15.2589C12.4919 15.0245 12.625 14.7065 12.625 14.375V1.875C12.625 1.54348 12.4919 1.22554 12.255 0.991117C12.0181 0.756696 11.6969 0.625 11.3618 0.625Z" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                         Suspend account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    {{-- Pause all bookings modal --}}
+    <template x-teleport="body">
+        <div
+            class="admin-co-modal-backdrop"
+            :class="{ 'is-open': pauseBookingsOpen }"
+            @click.self="pauseBookingsOpen = false">
+            <div class="admin-co-modal admin-co-verify-email-modal admin-co-suspend-modal" role="dialog" aria-modal="true" @click.stop>
+                <div class="admin-co-modal-head admin-co-blocked-modal-head">
+                    <div>
+                        <div class="admin-co-modal-title-row">
+                            <span class="admin-co-verify-email-icon is-suspend" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 14 17" fill="none">
+                                    <path d="M3.15132 0.625H1.88816C1.55315 0.625 1.23186 0.756696 0.994971 0.991117C0.758083 1.22554 0.625 1.54348 0.625 1.875V14.375C0.625 14.7065 0.758083 15.0245 0.994971 15.2589C1.23186 15.4933 1.55315 15.625 1.88816 15.625H3.15132C3.48633 15.625 3.80761 15.4933 4.0445 15.2589C4.28139 15.0245 4.41447 14.7065 4.41447 14.375V1.875C4.41447 1.54348 4.28139 1.22554 4.0445 0.991117C3.80761 0.756696 3.48633 0.625 3.15132 0.625ZM11.3618 0.625H10.0987C9.76367 0.625 9.44238 0.756696 9.2055 0.991117C8.96861 1.22554 8.83553 1.54348 8.83553 1.875V14.375C8.83553 14.7065 8.96861 15.0245 9.2055 15.2589C9.44238 15.4933 9.76367 15.625 10.0987 15.625H11.3618C11.6969 15.625 12.0181 15.4933 12.255 15.2589C12.4919 15.0245 12.625 14.7065 12.625 14.375V1.875C12.625 1.54348 12.4919 1.22554 12.255 0.991117C12.0181 0.756696 11.6969 0.625 11.3618 0.625Z" stroke="#FFAF3B" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="admin-co-modal-title">Pause all bookings</h3>
+                                <p class="admin-co-modal-sub">{{ $profile['name'] }} · {{ $profile['id'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="admin-co-modal-close" @click="pauseBookingsOpen = false" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8"></circle>
+                            <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="admin-co-blocked-modal-body admin-co-verify-email-body">
+                    <div class="admin-co-suspend-alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="9" viewBox="0 0 10 9" fill="none" aria-hidden="true">
+                            <path d="M5.485 0.308055C5.24845 -0.102644 4.61103 -0.102644 4.37448 0.308055L0.0743152 7.77965L0.0386903 7.85279C-0.0996183 8.19795 0.147844 8.57813 0.542967 8.62728L0.630186 8.63238H9.2293C9.70357 8.63238 10.0075 8.1663 9.78517 7.77965L5.485 0.308055Z" fill="#FFC97A" />
+                            <path d="M4.8365 3.15331L4.9516 5.59952L5.06649 3.15431C5.0672 3.13868 5.06471 3.12306 5.05918 3.10842C5.05365 3.09379 5.0452 3.08043 5.03433 3.06917C5.02347 3.05791 5.01042 3.04898 4.99599 3.04294C4.98155 3.03689 4.96604 3.03385 4.95039 3.034C4.93502 3.03415 4.91983 3.03738 4.90573 3.0435C4.89162 3.04962 4.87888 3.0585 4.86827 3.06962C4.85765 3.08074 4.84937 3.09387 4.84392 3.10825C4.83846 3.12262 4.83594 3.13794 4.8365 3.15331Z" fill="#3B3731" stroke="#3B3731" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M5.00879 6.66028C5.03629 6.67172 5.05962 6.69118 5.07617 6.71594C5.09273 6.74076 5.10156 6.77009 5.10156 6.79993C5.10147 6.83985 5.08586 6.87813 5.05762 6.90637C5.02938 6.93461 4.9911 6.95023 4.95117 6.95032C4.92134 6.95032 4.892 6.94149 4.86719 6.92493C4.84242 6.90838 4.82297 6.88504 4.81152 6.85754C4.80009 6.82995 4.79691 6.79895 4.80273 6.76965C4.80862 6.74053 4.82274 6.71352 4.84375 6.6925C4.86476 6.67149 4.89178 6.65737 4.9209 6.65149C4.95019 6.64566 4.98119 6.64885 5.00879 6.66028Z" fill="#3B3731" stroke="#3B3731" stroke-width="0.5" />
+                        </svg>
+                        <p>This will prevent {{ $firstName }} from making any new bookings. Existing upcoming bookings will remain in place unless you cancel them separately.</p>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">
+                            Reason for pausing <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openPauseReason = false">
+                            <button
+                                type="button"
+                                class="admin-co-dd-trigger"
+                                @click="openPauseReason = !openPauseReason; openPauseDuration = false">
+                                <span
+                                    class="admin-co-dd-value"
+                                    :class="{ 'is-placeholder': !pauseReason }"
+                                    x-text="pauseReason || 'Select a reason ...'"></span>
+                                <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                                    <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <div class="admin-co-dd-menu" x-show="openPauseReason" x-cloak>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseReason === 'Open dispute under investigation' }" @click="pauseReason = 'Open dispute under investigation'; openPauseReason = false">Open dispute under investigation</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseReason === 'Suspected fraudulent activity' }" @click="pauseReason = 'Suspected fraudulent activity'; openPauseReason = false">Suspected fraudulent activity</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseReason === 'Payment issues - chargeback raised' }" @click="pauseReason = 'Payment issues - chargeback raised'; openPauseReason = false">Payment issues - chargeback raised</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseReason === 'Account under compliance review' }" @click="pauseReason = 'Account under compliance review'; openPauseReason = false">Account under compliance review</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseReason === 'Customer requested pause' }" @click="pauseReason = 'Customer requested pause'; openPauseReason = false">Customer requested pause</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseReason === 'Other' }" @click="pauseReason = 'Other'; openPauseReason = false">Other</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">
+                            Pause duration <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openPauseDuration = false">
+                            <button
+                                type="button"
+                                class="admin-co-dd-trigger"
+                                @click="openPauseDuration = !openPauseDuration; openPauseReason = false">
+                                <span
+                                    class="admin-co-dd-value"
+                                    x-text="pauseDurationLabel()"></span>
+                                <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                                    <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <div class="admin-co-dd-menu" x-show="openPauseDuration" x-cloak>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseDuration === '7 days' }" @click="pauseDuration = '7 days'; openPauseDuration = false">7 days</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseDuration === '14 days' }" @click="pauseDuration = '14 days'; openPauseDuration = false">14 days</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseDuration === '30 days' }" @click="pauseDuration = '30 days'; openPauseDuration = false">30 days</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseDuration === 'indefinite' }" @click="pauseDuration = 'indefinite'; openPauseDuration = false">Until manually listed</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">Internal notes (optional)</label>
+                        <textarea
+                            class="admin-co-suspend-notes"
+                            rows="3"
+                            placeholder="Context for the audit log ..."
+                            x-model="pauseNotes"></textarea>
+                    </div>
+
+                    <div class="admin-co-verify-email-happens">
+                        <h4 class="admin-co-verify-email-happens-title">What pausing does</h4>
+                        <ul class="admin-co-verify-email-happens-list">
+                            <li>{{ $firstName }} cannot make any new bookings while paused.</li>
+                            <li>Existing upcoming bookings are not automatically affected.</li>
+                            <li>{{ $firstName }} is not notified — pause is internal only.</li>
+                            <li>Logged in activity log with your name and timestamp.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="admin-co-blocked-modal-foot is-confirm">
+                    <button type="button" class="admin-co-form-btn is-cancel" @click="pauseBookingsOpen = false">Cancel</button>
+                    <button
+                        type="button"
+                        class="admin-co-form-btn is-send-email"
+                        :disabled="!pauseReason"
+                        @click="pauseReason && (pauseBookingsOpen = false)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 14 17" fill="none" aria-hidden="true">
+                            <path d="M3.15132 0.625H1.88816C1.55315 0.625 1.23186 0.756696 0.994971 0.991117C0.758083 1.22554 0.625 1.54348 0.625 1.875V14.375C0.625 14.7065 0.758083 15.0245 0.994971 15.2589C1.23186 15.4933 1.55315 15.625 1.88816 15.625H3.15132C3.48633 15.625 3.80761 15.4933 4.0445 15.2589C4.28139 15.0245 4.41447 14.7065 4.41447 14.375V1.875C4.41447 1.54348 4.28139 1.22554 4.0445 0.991117C3.80761 0.756696 3.48633 0.625 3.15132 0.625ZM11.3618 0.625H10.0987C9.76367 0.625 9.44238 0.756696 9.2055 0.991117C8.96861 1.22554 8.83553 1.54348 8.83553 1.875V14.375C8.83553 14.7065 8.96861 15.0245 9.2055 15.2589C9.44238 15.4933 9.76367 15.625 10.0987 15.625H11.3618C11.6969 15.625 12.0181 15.4933 12.255 15.2589C12.4919 15.0245 12.625 14.7065 12.625 14.375V1.875C12.625 1.54348 12.4919 1.22554 12.255 0.991117C12.0181 0.756696 11.6969 0.625 11.3618 0.625Z" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Pause bookings
                     </button>
                 </div>
             </div>

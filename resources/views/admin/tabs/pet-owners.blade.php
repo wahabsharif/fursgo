@@ -65,6 +65,7 @@ $ticketStatusLabels = [
     detailTab: 'overview',
     previousTab: null,
     selectedPetId: null,
+    selectedBookingId: null,
     // Remember scroll position per tab (first visit = top)
     tabScroll: {},
     detailTabLabels: {
@@ -93,6 +94,7 @@ $ticketStatusLabels = [
         this.detailTab = 'overview';
         this.previousTab = null;
         this.selectedPetId = null;
+        this.selectedBookingId = null;
         this.tabScroll = {};
         this.view = 'detail';
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -103,10 +105,15 @@ $ticketStatusLabels = [
         this.detailTab = 'overview';
         this.previousTab = null;
         this.selectedPetId = null;
+        this.selectedBookingId = null;
         this.tabScroll = {};
     },
     switchDetailTab(tab) {
         if (tab === this.detailTab) return;
+        if (this.selectedBookingId) {
+            this.selectedBookingId = null;
+            this.$dispatch('admin-booking-close-request');
+        }
         // Save where we were on the current tab
         this.tabScroll[this.detailTab] = window.scrollY;
         this.previousTab = this.detailTab;
@@ -118,6 +125,11 @@ $ticketStatusLabels = [
         });
     },
     goBack() {
+        if (this.selectedBookingId) {
+            this.selectedBookingId = null;
+            this.$dispatch('admin-booking-close-request');
+            return;
+        }
         if (this.previousTab) {
             this.tabScroll[this.detailTab] = window.scrollY;
             const target = this.previousTab;
@@ -132,6 +144,7 @@ $ticketStatusLabels = [
         this.closeCustomer();
     },
     get backLabel() {
+        if (this.selectedBookingId) return 'BOOKINGS';
         if (this.previousTab && this.detailTabLabels[this.previousTab]) {
             return this.detailTabLabels[this.previousTab].toUpperCase();
         }
@@ -155,7 +168,9 @@ $ticketStatusLabels = [
         this.selectedIds = this.allSelected ? [] : [...this.allIds];
     },
 }"
-@admin-pet-selected.window="selectedPetId = $event.detail.id">
+@admin-pet-selected.window="selectedPetId = $event.detail.id"
+@admin-booking-selected.window="selectedBookingId = $event.detail.booking?.id || null"
+@admin-booking-closed.window="selectedBookingId = null">
     @include('admin.tabs.customer-detail')
 
     <div class="admin-po-list" x-show="view === 'list'">
