@@ -151,7 +151,73 @@ $showSpaceOfferings = $isDual || $isSpace;
 
     @if ($showSpaceOfferings)
     {{-- Space: Location & Service Areas --}}
-    <section class="admin-card admin-co-panel" x-show="!dual || viewAs === 'space'" @if ($isDual) x-cloak @endif>
+    <section
+        class="admin-card admin-co-panel"
+        x-show="!dual || viewAs === 'space'"
+        @if ($isDual) x-cloak @endif
+        x-data="{
+            scrollProgress: 0,
+            canScrollLeft: false,
+            canScrollRight: false,
+            dragging: false,
+            dragReady: false,
+            dragStartX: 0,
+            dragScrollLeft: 0,
+            syncScroll() {
+                const el = this.$refs.areaScroller;
+                if (!el || el.clientWidth === 0) return;
+                const max = Math.max(0, el.scrollWidth - el.clientWidth);
+                this.scrollProgress = max > 0 ? (el.scrollLeft / max) * 100 : 0;
+                this.canScrollLeft = el.scrollLeft > 2;
+                this.canScrollRight = max > 2 && el.scrollLeft < max - 2;
+            },
+            scrollAreas(dir) {
+                const el = this.$refs.areaScroller;
+                if (!el) return;
+                this.syncScroll();
+                if (dir < 0 && !this.canScrollLeft) return;
+                if (dir > 0 && !this.canScrollRight) return;
+                const step = el.clientWidth || 280;
+                el.scrollBy({ left: dir * step, behavior: 'smooth' });
+            },
+            startDrag(e) {
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                const el = this.$refs.areaScroller;
+                if (!el) return;
+                this.dragReady = true;
+                this.dragging = false;
+                this.dragStartX = e.clientX;
+                this.dragScrollLeft = el.scrollLeft;
+            },
+            onDrag(e) {
+                if (!this.dragReady) return;
+                const el = this.$refs.areaScroller;
+                if (!el) return;
+                const dx = e.clientX - this.dragStartX;
+                if (!this.dragging) {
+                    if (Math.abs(dx) < 8) return;
+                    this.dragging = true;
+                    el.setPointerCapture(e.pointerId);
+                }
+                el.scrollLeft = this.dragScrollLeft - dx;
+            },
+            endDrag() {
+                this.dragReady = false;
+                this.dragging = false;
+            },
+        }"
+        x-init="$nextTick(() => {
+            syncScroll();
+            const onResize = () => syncScroll();
+            window.addEventListener('resize', onResize);
+            const el = $refs.areaScroller;
+            if (el && typeof IntersectionObserver !== 'undefined') {
+                const io = new IntersectionObserver((entries) => {
+                    if (entries.some((e) => e.isIntersecting)) syncScroll();
+                });
+                io.observe(el);
+            }
+        })">
         <x-admin.customer.section-header title="Location & Service Areas ({{ $areaCount }} {{ Str::plural('area', $areaCount) }})">
             <button type="button" class="admin-co-link-btn" @click="switchDetailTab('profile')">
                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
@@ -161,7 +227,15 @@ $showSpaceOfferings = $isDual || $isSpace;
             </button>
         </x-admin.customer.section-header>
 
-        <div class="admin-bp-areas-list">
+        <div
+            class="admin-bp-areas-scroller"
+            :class="{ 'is-dragging': dragging }"
+            x-ref="areaScroller"
+            @scroll.passive="syncScroll()"
+            @pointerdown="startDrag($event)"
+            @pointermove="onDrag($event)"
+            @pointerup="endDrag()"
+            @pointercancel="endDrag()">
             @foreach ($serviceAreas as $area)
             <div class="admin-bp-area-block">
                 <div class="admin-bp-area-card">
@@ -198,6 +272,42 @@ $showSpaceOfferings = $isDual || $isSpace;
             </div>
             @endforeach
         </div>
+
+        @if ($areaCount > 1)
+        <div class="admin-co-pets-nav admin-bp-areas-nav">
+            <div class="admin-co-pets-progress" aria-hidden="true">
+                <span
+                    class="admin-co-pets-progress-thumb"
+                    :style="'left: calc((100% - 255px) * ' + (scrollProgress / 100) + ')'"></span>
+            </div>
+            <div class="admin-co-pets-arrows">
+                <button
+                    type="button"
+                    class="admin-co-pets-arrow"
+                    :class="{ 'is-active': canScrollLeft }"
+                    :aria-disabled="!canScrollLeft"
+                    aria-label="Previous area"
+                    @click="scrollAreas(-1)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                        <circle cx="16" cy="16" r="16" fill="currentColor" />
+                        <path d="M18 21L12.9657 15.9657L17.9155 11.016" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+                <button
+                    type="button"
+                    class="admin-co-pets-arrow"
+                    :class="{ 'is-active': canScrollRight }"
+                    :aria-disabled="!canScrollRight"
+                    aria-label="Next area"
+                    @click="scrollAreas(1)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                        <circle cx="16" cy="16" r="16" fill="currentColor" />
+                        <path d="M14 21L19.0343 15.9657L14.0845 11.016" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        @endif
     </section>
 
     {{-- Space: Services Offered + Pet preferences --}}
