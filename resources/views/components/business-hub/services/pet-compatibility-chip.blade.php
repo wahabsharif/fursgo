@@ -1,6 +1,6 @@
 @props(['value', 'label', 'icon' => null, 'type' => 'pet'])
 
-<button type="button" class="service-chip"
+<button type="button" class="service-chip{{ $type === 'size' ? ' service-chip--size' : ' service-chip--type' }}"
     @if ($type === 'pet') :class="{ 'is-active': selectedPets.includes('{{ $value }}') }"
         @click="togglePet('{{ $value }}')"
     @else

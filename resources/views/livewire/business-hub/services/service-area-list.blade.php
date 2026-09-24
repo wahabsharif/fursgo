@@ -11,7 +11,7 @@ new class extends Component {
 
     private function getProfileId(): ?int
     {
-        $id = auth()->id();
+        $id = auth('groomer_spacer')->id() ?? auth()->id();
 
         return $id ? (int) $id : null;
     }
@@ -36,6 +36,8 @@ new class extends Component {
                     'lat' => (float) $area->latitude,
                     'lng' => (float) $area->longitude,
                     'color' => $area->map_color,
+                    'address' => (string) ($area->address ?? ''),
+                    'is_paused' => (bool) $area->is_paused,
                 ],
             )
             ->all();
@@ -48,9 +50,32 @@ new class extends Component {
 
     public function formatRadius(float $radius): string
     {
-        $label = $radius == 1 ? 'mile' : 'miles';
+        return number_format($radius, 1) . ' mi';
+    }
 
-        return rtrim(rtrim(number_format($radius, 1), '0'), '.') . ' ' . $label;
+    public function togglePaused(int $areaId): void
+    {
+        $area = ServiceArea::query()->where('groomer_spacer_id', $this->getProfileId())->find($areaId);
+        if (!$area) {
+            return;
+        }
+
+        $area->update(['is_paused' => !$area->is_paused]);
+        $this->refreshList();
+    }
+
+    public function deleteArea(int $areaId): void
+    {
+        $area = ServiceArea::query()->where('groomer_spacer_id', $this->getProfileId())->find($areaId);
+        if (!$area) {
+            return;
+        }
+
+        $area->delete();
+        if ($this->selectedAreaId === $areaId) {
+            $this->selectedAreaId = null;
+        }
+        $this->refreshList();
     }
 
     #[On('service-area-created')]
@@ -85,6 +110,8 @@ new class extends Component {
                 'lat' => $area['lat'],
                 'lng' => $area['lng'],
                 'color' => $area['color'],
+                'address' => $area['address'] ?? '',
+                'is_paused' => (bool) ($area['is_paused'] ?? false),
                 'radiusLabel' => $this->formatRadius((float) $area['radius']),
             ],
         )
@@ -98,46 +125,66 @@ new class extends Component {
     x-on:service-area-data-updated.window="setAreas($event.detail?.areas ?? [])">
     <div class="service-area-layout">
         <div class="service-area-table-col">
-            <div class="service-area-table-shell">
-                <table class="service-area-table">
-                    <thead>
-                        <tr>
-                            <th>Service Area</th>
-                            <th>Radius</th>
-                            <th class="service-area-edit-col">Edit</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($this->serviceAreas as $area)
-                                                <tr wire:key="service-area-row-{{ $area['id'] }}" @class([
-                                                    'is-selected' => $selectedAreaId === $area['id'],
-                                                    'is-newly-added' => $highlightItemId === $area['id'],
-                                                ]) @if ($highlightItemId === $area['id']) x-init="setTimeout(() => $wire.clearHighlight(), 2000)"
-                            @endif wire:click="selectArea({{ $area['id'] }})" role="button" tabindex="0"
-                                                    @keydown.enter.prevent="$wire.selectArea({{ $area['id'] }})">
-                                                    <td>{{ $area['name'] }}</td>
-                                                    <td>{{ $this->formatRadius((float) $area['radius']) }}</td>
-                                                    <td class="service-area-edit-col" wire:click.stop>
-                                                        <button type="button" class="icon-btn" aria-label="Edit {{ $area['name'] }}">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16"
-                                                                fill="none">
-                                                                <path
-                                                                    d="M10.8529 2.51425L13.6765 5.29691M8.97059 15.5H16.5M1.44118 11.7898L0.5 15.5L4.26471 14.5724L15.1692 3.82581C15.5221 3.47793 15.7203 3.00616 15.7203 2.51425C15.7203 2.02234 15.5221 1.55057 15.1692 1.20269L15.0073 1.04315C14.6543 0.695371 14.1756 0.5 13.6765 0.5C13.1773 0.5 12.6986 0.695371 12.3456 1.04315L1.44118 11.7898Z"
-                                                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                            </svg>
-                                                        </button>
-                                                        <button type="button" class="icon-btn dots-btn"
-                                                            aria-label="Actions for {{ $area['name'] }}">•••
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                        @empty
-                            <tr>
-                                <td colspan="3" class="service-area-empty">No service areas added yet.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            @php
+                $activeCount = collect($this->serviceAreas)->where('is_paused', false)->count();
+                $pausedCount = collect($this->serviceAreas)->where('is_paused', true)->count();
+            @endphp
+            <div class="service-area-card">
+                <div class="service-area-card-head">
+                    <h4>Your Service Areas <span>{{ $activeCount }} active · {{ $pausedCount }} paused</span></h4>
+                </div>
+                <div class="service-area-rows">
+                    @forelse ($this->serviceAreas as $area)
+                        <article wire:key="service-area-row-{{ $area['id'] }}"
+                            @class([
+                                'service-area-row',
+                                'is-selected' => $selectedAreaId === $area['id'],
+                                'is-paused' => $area['is_paused'],
+                                'is-newly-added' => $highlightItemId === $area['id'],
+                            ])
+                            @if ($highlightItemId === $area['id']) x-init="setTimeout(() => $wire.clearHighlight(), 2000)" @endif
+                            wire:click="selectArea({{ $area['id'] }})" role="button" tabindex="0"
+                            @keydown.enter.prevent="$wire.selectArea({{ $area['id'] }})">
+                            <div class="service-area-row-copy">
+                                <div class="service-area-row-title">
+                                    <strong>{{ $area['name'] }}</strong>
+                                    @if ($area['is_paused'])
+                                        <span class="service-area-paused-badge">Paused</span>
+                                    @endif
+                                </div>
+                                <p>{{ $area['address'] !== '' ? $area['address'] : '—' }}</p>
+                            </div>
+                            <span class="service-area-row-radius">{{ $this->formatRadius((float) $area['radius']) }}</span>
+                            <div class="service-action-btns" wire:click.stop>
+                                <button type="button" class="service-action-btn" aria-label="Edit {{ $area['name'] }}"
+                                    @click.stop="window.dispatchEvent(new CustomEvent('service-area-edit-requested', { detail: { areaId: {{ $area['id'] }}, title: @js($area['name']), state: { editingId: {{ $area['id'] }}, name: @js($area['name']), address: @js($area['address']), radius: {{ $area['radius'] }}, latitude: {{ $area['lat'] }}, longitude: {{ $area['lng'] }}, isActive: {{ $area['is_paused'] ? 'false' : 'true' }} } } }))">
+                                    <x-business-hub.common.icon name="edit" />
+                                </button>
+                                <div class="service-area-more" x-data="{ open: false }" @click.outside="open = false"
+                                    @keydown.escape.window="open = false">
+                                    <button type="button" class="service-action-btn" aria-label="Actions for {{ $area['name'] }}"
+                                        @click.stop="open = !open">
+                                        <x-business-hub.common.icon name="more" />
+                                    </button>
+                                    <div class="service-area-more-menu" x-cloak x-show="open" x-transition.opacity.duration.120ms>
+                                        <button type="button"
+                                            wire:click="togglePaused({{ $area['id'] }})"
+                                            @click="open = false">
+                                            <span>{{ $area['is_paused'] ? 'Resume area' : 'Pause area' }}</span>
+                                        </button>
+                                        <button type="button" class="is-danger"
+                                            wire:click="deleteArea({{ $area['id'] }})"
+                                            @click="open = false">
+                                            <span>Delete area</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    @empty
+                        <p class="service-area-empty">No service areas added yet.</p>
+                    @endforelse
+                </div>
             </div>
         </div>
 
@@ -145,6 +192,7 @@ new class extends Component {
             <div class="service-area-map-shell" wire:ignore>
                 <div id="service-area-map" class="service-area-map" role="img" aria-label="Map of service areas">
                 </div>
+                <p class="service-area-zoom-hint">Hold Ctrl to Zoom in &amp; out</p>
             </div>
         </div>
     </div>
@@ -188,7 +236,7 @@ new class extends Component {
                     formatRadius(radius) {
                         const value = Number(radius);
                         const label = value === 1 ? 'mile' : 'miles';
-                        const formatted = String(value).replace(/\.0$/, '');
+                        const formatted = Number.isInteger(value) ? String(value) : value.toFixed(1).replace(/\.0$/, '');
 
                         return `${formatted} ${label}`;
                     },
@@ -220,23 +268,27 @@ new class extends Component {
                         }
 
                         this.map = L.map(mapEl, {
-                            zoomControl: true,
+                            zoomControl: false,
                             attributionControl: false,
                             preferCanvas: true,
                         });
 
-                        L.tileLayer(
-                            'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-                            subdomains: 'abcd',
-                            maxZoom: 20,
+                        L.control.zoom({
+                            position: 'bottomright',
                         }).addTo(this.map);
 
                         L.tileLayer(
+                            'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+                                subdomains: 'abcd',
+                                maxZoom: 20,
+                            }).addTo(this.map);
+
+                        L.tileLayer(
                             'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
-                            subdomains: 'abcd',
-                            maxZoom: 20,
-                            pane: 'overlayPane',
-                        }).addTo(this.map);
+                                subdomains: 'abcd',
+                                maxZoom: 20,
+                                pane: 'overlayPane',
+                            }).addTo(this.map);
 
                         this.drawAreas();
                         setTimeout(() => this.map?.invalidateSize(), 120);
@@ -247,7 +299,9 @@ new class extends Component {
                             marker
                         }) => {
                             this.map.removeLayer(circle);
-                            this.map.removeLayer(marker);
+                            if (marker && this.map.hasLayer(marker)) {
+                                this.map.removeLayer(marker);
+                            }
                         });
                         this.layers = {};
                     },
@@ -264,8 +318,6 @@ new class extends Component {
                         });
 
                         this.areas.forEach((area) => {
-                            const radiusLabel = area.radiusLabel ?? this.formatRadius(area
-                                .radius);
                             const radiusMeters = Number(area.radius) * METERS_PER_STATUTE_MILE;
                             const circle = L.circle([area.lat, area.lng], {
                                 radius: radiusMeters,
@@ -278,16 +330,15 @@ new class extends Component {
 
                             const marker = L.marker([area.lat, area.lng], {
                                 icon: pinIcon,
-                            }).addTo(this.map);
-
-                            const tooltipHtml =
-                                `<div class="service-area-map-tooltip"><strong>${area.name}</strong><span>Radius: ${radiusLabel}</span></div>`;
-                            marker.bindTooltip(tooltipHtml, {
-                                permanent: true,
-                                direction: 'top',
-                                offset: [0, -22],
-                                className: 'service-area-leaflet-tooltip',
                             });
+                            const spokenRadius = this.formatRadius(area.radius);
+                            marker.bindTooltip(
+                                `<div class="service-area-map-tooltip"><strong>${area.name}</strong><span>Radius: ${spokenRadius}</span></div>`, {
+                                    permanent: true,
+                                    direction: 'top',
+                                    offset: [0, -18],
+                                    className: 'service-area-leaflet-tooltip',
+                                });
 
                             this.layers[area.id] = {
                                 circle,
@@ -320,10 +371,22 @@ new class extends Component {
                     highlightSelected() {
                         Object.entries(this.layers).forEach(([id, layer]) => {
                             const isActive = Number(id) === Number(this.selectedAreaId);
+                            const area = this.areas.find((item) => Number(item.id) === Number(id));
+                            const paused = !!area?.is_paused;
                             layer.circle.setStyle({
-                                fillOpacity: isActive ? 0.5 : 0.35,
-                                weight: 3,
+                                fillOpacity: isActive ? 0.45 : (paused ? 0.18 : 0.28),
+                                weight: isActive ? 3 : 2,
+                                opacity: paused ? 0.45 : 0.9,
                             });
+                            if (!layer.marker) {
+                                return;
+                            }
+                            if (isActive) {
+                                layer.marker.addTo(this.map);
+                                layer.marker.openTooltip();
+                            } else if (this.map.hasLayer(layer.marker)) {
+                                this.map.removeLayer(layer.marker);
+                            }
                         });
                     },
                     refreshMap() {
@@ -362,62 +425,86 @@ new class extends Component {
 
     .service-area-layout {
         display: grid;
-        grid-template-columns: minmax(280px, 38%) minmax(0, 1fr);
-        gap: 0;
-        align-items: stretch;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 505px);
+        gap: 20px;
+        align-items: start;
     }
 
     .service-area-table-col {
-        padding-right: 1.5rem;
-        padding-top: 0.25rem;
+        position: relative;
+        z-index: 2;
+        min-width: 0;
     }
 
-    .service-area-table-shell {
-        overflow-x: auto;
+    .service-area-card {
+        background: #fdfdfd;
+        border-radius: 10px;
+        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.1);
+        overflow: visible;
     }
 
-    .service-area-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 320px;
+    .service-area-card-head {
+        display: flex;
+        align-items: center;
+        height: 50px;
+        padding: 0 20px;
+        background: #f6f5f5;
+        border-radius: 10px 10px 0 0;
     }
 
-    .service-area-table th,
-    .service-area-table td {
-        border-bottom: 1px solid #dcdcdc;
-        text-align: left;
-        padding: 1.2rem 0;
-        vertical-align: middle;
-    }
-
-    .service-area-table td {
-        color: #3b3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 400;
-        line-height: normal;
-        text-transform: capitalize;
-    }
-
-    .service-area-table th {
-        color: #000;
+    .service-area-card-head h4 {
+        margin: 0;
+        color: #3B3731;
         font-family: Lato;
         font-size: 16px;
         font-weight: 600;
         line-height: normal;
     }
 
-    .service-area-table tbody tr {
+    .service-area-card-head h4 span {
+        margin-left: 8px;
+        color: #948f88;
+        font-weight: 400;
+    }
+
+    .service-area-rows {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .service-area-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        align-items: center;
+        gap: 16px;
+        min-height: 81px;
+        padding: 12px 20px;
+        border-top: 1px solid #ebebeb;
         cursor: pointer;
+        background: transparent;
         transition: background-color 0.2s ease;
     }
 
-    .service-area-table tbody tr:hover,
-    .service-area-table tbody tr.is-selected {
-        background-color: rgba(216, 232, 183, 0.18);
+    .service-area-row:first-child {
+        border-top: 0;
     }
 
-    .service-area-table tr.is-newly-added td {
+    .service-area-row:hover {
+        background: #fffaf2;
+    }
+
+    .service-area-row.is-selected,
+    .service-area-row.is-selected:hover {
+        background: #fff7e7;
+    }
+
+    .service-area-row.is-paused .service-area-row-copy strong,
+    .service-area-row.is-paused .service-area-row-copy p,
+    .service-area-row.is-paused .service-area-row-radius {
+        opacity: 0.5;
+    }
+
+    .service-area-row.is-newly-added {
         animation: service-area-row-highlight-blink 2s ease-in-out;
     }
 
@@ -430,55 +517,197 @@ new class extends Component {
 
         25%,
         75% {
-            background-color: rgba(216, 232, 183, 0.55);
+            background-color: rgba(255, 201, 122, 0.35);
         }
     }
 
-    .service-area-table .service-area-edit-col {
-        border-left: 1px solid #dcdcdc;
-        text-align: left;
-        padding-left: 2.5rem;
+    .service-area-row-copy {
+        min-width: 0;
+    }
+
+    .service-area-row-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .service-area-row-copy strong {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 25px;
+    }
+
+    .service-area-row-copy p {
+        margin: 0;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 25px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .service-area-paused-badge {
+        display: inline-flex;
+        align-items: center;
+        height: 22px;
+        padding: 0 10px;
+        border-radius: 100px;
+        background: #f2f2f2;
+        color: #948f88;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .service-area-row-radius {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 18px;
+        font-weight: 600;
+        line-height: normal;
         white-space: nowrap;
     }
 
-    .service-area-table th.service-area-edit-col {
-        width: 140px;
-        padding-left: 2.5rem;
+    .service-area-more {
+        position: relative;
+    }
+
+    .service-area-more-menu {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        width: 130px;
+        background: #fff;
+        border: 1px solid #D9D9D9;
+        border-radius: 5px;
+        overflow: hidden;
+        z-index: 40;
+    }
+
+    .service-area-more-menu button {
+        width: 100%;
+        height: 36px;
+        border: 0;
+        border-bottom: 1px solid #D9D9D9;
+        background: #fff;
+        padding: 4px;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 500;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .service-area-more-menu button:last-child {
+        border-bottom: 0;
+    }
+
+    .service-area-more-menu button span {
+        display: flex;
+        align-items: center;
+        height: 28px;
+        padding: 0 6px;
+        border-radius: 5px;
+    }
+
+    .service-area-more-menu button:hover span {
+        background: #FAF8F4;
+    }
+
+    .service-area-more-menu button.is-danger span {
+        background: #FAF8F4;
+        color: #FF6E6E;
     }
 
     .service-area-empty {
         text-align: center;
         color: #9d9b98;
-        padding: 2rem 0 !important;
+        padding: 2rem 1rem;
+        font-family: Lato;
     }
 
     .service-area-map-col {
-        min-height: 420px;
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 505px;
+        justify-self: end;
     }
 
     .service-area-map-shell {
+        position: relative;
         width: 100%;
-        height: 505px;
-        aspect-ratio: 122/101;
+        aspect-ratio: 1;
+        border: 1px solid #e3e3e3;
         border-radius: 10px;
         overflow: hidden;
         background: #f4f4f4;
-        margin-left: auto;
+        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.1);
     }
 
-    .service-area-map {
-        width: 100%;
-        height: 505px;
-        aspect-ratio: 122/101;
-        border-radius: 10px;
-    }
-
+    .service-area-map,
     .service-area-map.leaflet-container,
     .service-area-map .leaflet-container {
         width: 100%;
-        height: 505px;
-        aspect-ratio: 122/101;
+        height: 100%;
+        border-radius: 10px;
         font-family: Lato;
+    }
+
+    .service-area-zoom-hint {
+        position: absolute;
+        left: 15px;
+        bottom: 15px;
+        z-index: 500;
+        display: flex;
+        align-items: center;
+        height: 35px;
+        margin: 0;
+        padding: 0 10px;
+        border: 1px solid #e2e2e2;
+        border-radius: 5px;
+        background: #fff;
+        color: #737373;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: normal;
+        white-space: nowrap;
+        pointer-events: none;
+    }
+
+    .service-area-map .leaflet-bottom.leaflet-right {
+        margin-right: 15px;
+        margin-bottom: 15px;
+    }
+
+    .service-area-map .leaflet-control-zoom {
+        border: 1px solid #e2e2e2;
+        border-radius: 5px;
+        box-shadow: none;
+        overflow: hidden;
+    }
+
+    .service-area-map .leaflet-control-zoom a {
+        width: 33px;
+        height: 33px;
+        line-height: 33px;
+        color: #3b3731;
+        background: #fff;
+        border-bottom-color: #e2e2e2;
+        font-size: 18px;
+    }
+
+    .service-area-map .leaflet-control-zoom a:hover {
+        background: #fafafa;
     }
 
     /* Grayscale basemap only; markers, circles, and labels stay in colour */
@@ -486,20 +715,28 @@ new class extends Component {
         filter: grayscale(1);
     }
 
-    .service-area-panel .icon-btn {
-        border: 0;
-        background: transparent;
-        color: #4a4a4a;
-        cursor: pointer;
-        font-size: 24px;
-        line-height: 1;
-        vertical-align: middle;
+    .service-area-panel .service-action-btns {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
     }
 
-    .service-area-panel .dots-btn {
-        font-size: 22px;
-        letter-spacing: 2px;
-        margin-left: 2.5rem;
+    .service-area-panel .service-action-btn {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .service-area-panel .service-action-btn svg {
+        display: block;
+        width: 36px;
+        height: 36px;
     }
 
     .service-area-pin-wrap {
@@ -522,9 +759,9 @@ new class extends Component {
 
     .service-area-leaflet-tooltip {
         background: #fff;
-        border: 1px solid #e8e8e8;
-        border-radius: 8px;
-        box-shadow: 0 4px 14px rgba(59, 55, 49, 0.12);
+        border: 0;
+        border-radius: 10px;
+        box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
         padding: 0;
         color: #3b3731;
         font-family: Lato;
@@ -537,21 +774,23 @@ new class extends Component {
     .service-area-map-tooltip {
         display: flex;
         flex-direction: column;
-        gap: 0.15rem;
-        padding: 0.45rem 0.65rem;
-        min-width: 120px;
+        gap: 2px;
+        padding: 8px 12px 10px;
+        min-width: 106px;
     }
 
     .service-area-map-tooltip strong {
         font-size: 14px;
         font-weight: 600;
+        line-height: normal;
         color: #3b3731;
     }
 
     .service-area-map-tooltip span {
-        font-size: 12px;
+        font-size: 14px;
         color: #9d9b98;
         font-weight: 400;
+        line-height: normal;
     }
 
     @media (max-width: 992px) {
@@ -563,9 +802,13 @@ new class extends Component {
             padding-right: 0;
         }
 
+        .service-area-map-col {
+            max-width: none;
+            justify-self: stretch;
+        }
+
         .service-area-map-shell {
-            border-radius: 12px;
-            margin-top: 1.5rem;
+            margin-top: 0;
         }
     }
 </style>

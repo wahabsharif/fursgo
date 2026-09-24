@@ -6,117 +6,231 @@ use Livewire\Volt\Component;
 new class extends Component {
     public const MAP_COLORS = ['#B8D4E8', '#FFD4B8', '#C8E8B8'];
 
+    public ?int $editingId = null;
+
     public string $name = '';
+
     public string $address = '';
+
     public float $radius = 1;
+
     public ?float $latitude = 51.5074;
+
     public ?float $longitude = -0.1278;
+
+    public bool $isActive = true;
+
+    private function profileId(): ?int
+    {
+        $id = auth('groomer_spacer')->id() ?? auth()->id();
+
+        return $id ? (int) $id : null;
+    }
+
+    public function loadArea(int $areaId, bool $silent = false): void
+    {
+        $profileId = $this->profileId();
+        $area = ServiceArea::query()->when($profileId, fn($query) => $query->where('groomer_spacer_id', $profileId))->find($areaId);
+
+        if (!$area) {
+            return;
+        }
+
+        $this->editingId = (int) $area->id;
+        $this->name = (string) $area->name;
+        $this->address = (string) ($area->address ?? '');
+        $this->radius = (float) $area->radius;
+        $this->latitude = (float) $area->latitude;
+        $this->longitude = (float) $area->longitude;
+        $this->isActive = !$area->is_paused;
+
+        if ($silent) {
+            $this->skipRender();
+        }
+
+        $this->js('window.dispatchEvent(new CustomEvent("service-form-baseline"))');
+    }
+
+    #[\Livewire\Attributes\On('reset-service-area-form')]
+    public function resetForm(): void
+    {
+        $this->editingId = null;
+        $this->name = '';
+        $this->address = '';
+        $this->radius = 1;
+        $this->latitude = 51.5074;
+        $this->longitude = -0.1278;
+        $this->isActive = true;
+        $this->js('window.dispatchEvent(new CustomEvent("service-form-baseline"))');
+    }
 
     public function save(): void
     {
         $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:500'],
-            'radius' => ['required', 'numeric', 'min:0.1', 'max:50'],
+            'radius' => ['required', 'numeric', 'min:0.2', 'max:10'],
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
         ]);
 
-        $profileId = auth()->id();
+        $profileId = $this->profileId();
 
         if (!$profileId) {
             $this->addError('name', 'Groomer profile not found for current user.');
             return;
         }
 
-        $existingCount = ServiceArea::query()->where('groomer_spacer_id', $profileId)->count();
-
-        $serviceArea = ServiceArea::create([
-            'groomer_spacer_id' => $profileId,
+        $payload = [
             'name' => $this->name,
             'radius' => $this->radius,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
             'address' => $this->address !== '' ? $this->address : null,
-            'map_color' => self::MAP_COLORS[$existingCount % count(self::MAP_COLORS)],
-        ]);
+            'is_paused' => !$this->isActive,
+        ];
+
+        if ($this->editingId) {
+            $serviceArea = ServiceArea::query()->where('groomer_spacer_id', $profileId)->find($this->editingId);
+            if (!$serviceArea) {
+                $this->addError('name', 'Service area not found.');
+                return;
+            }
+            $serviceArea->update($payload);
+        } else {
+            $existingCount = ServiceArea::query()->where('groomer_spacer_id', $profileId)->count();
+            $serviceArea = ServiceArea::create(
+                array_merge($payload, [
+                    'groomer_spacer_id' => $profileId,
+                    'map_color' => self::MAP_COLORS[$existingCount % count(self::MAP_COLORS)],
+                ]),
+            );
+        }
 
         $this->dispatch('service-area-created', itemId: $serviceArea->id);
-        $this->reset(['name', 'address']);
-        $this->radius = 1;
-        $this->latitude = 51.5074;
-        $this->longitude = -0.1278;
+        $this->resetForm();
+    }
+
+    public function deleteCurrent(): void
+    {
+        $profileId = $this->profileId();
+
+        if (!$profileId || !$this->editingId) {
+            return;
+        }
+
+        $area = ServiceArea::query()->where('groomer_spacer_id', $profileId)->find($this->editingId);
+        if ($area) {
+            $area->delete();
+        }
+
+        $this->dispatch('service-area-created');
+        $this->js('window.dispatchEvent(new CustomEvent("nav-list-loading-end")); window.dispatchEvent(new CustomEvent("service-form-cancel"))');
     }
 }; ?>
 
 <section class="service-area-form-panel" aria-label="Add service area form"
-    x-data="serviceAreaFormMap(@entangle('latitude').live, @entangle('longitude').live, @entangle('radius').live, @entangle('address').live)">
+    x-data="serviceAreaFormMap(@entangle('latitude').live, @entangle('longitude').live, @entangle('radius').live, @entangle('address').live, @entangle('isActive').live)"
+    x-on:service-area-form-delete.window="$wire.deleteCurrent()"
+    x-on:service-area-edit-requested.window="
+        const d = $event.detail || {};
+        if (d.state) { window.applyServiceFormState?.($wire, d.state); }
+        const id = Number(d.areaId || 0);
+        if (id) { $wire.loadArea(id, !!d.state); }
+    ">
     <form class="service-area-form" wire:submit.prevent="save">
+        <input type="hidden" data-service-area-map-dirty value="">
         <div class="service-area-form-layout">
             <div class="service-area-form-fields">
-                <label class="service-field">
-                    <span>Service Area Name</span>
-                    <input type="text" placeholder="e.g. Waterloo South Bank" wire:model="name" />
-                </label>
+                <div class="service-form-card service-area-identity-card">
+                    <label class="service-field">
+                        <span>Service Area Name</span>
+                        <input type="text" placeholder="e.g. Waterloo South Bank" wire:model="name"
+                            @input="window.dispatchEvent(new CustomEvent('service-form-title-changed', { detail: { title: $event.target.value } }))" />
+                    </label>
 
-                <label class="service-field service-area-postcode-field" @click.outside="closeSuggestions()">
-                    <span>UK Postcode</span>
-                    <div class="service-area-postcode-wrap">
-                        <input type="text" x-model="address" placeholder="Start typing a UK postcode, e.g. SW1A 1AA"
-                            autocomplete="off" autocapitalize="characters" spellcheck="false" role="combobox"
-                            aria-autocomplete="list" :aria-expanded="showSuggestions && suggestions.length > 0"
-                            aria-controls="service-area-postcode-suggestions" @input.debounce.300ms="searchPostcodes()"
-                            @keydown.arrow-down.prevent="highlightNext()"
-                            @keydown.arrow-up.prevent="highlightPrevious()" @keydown.enter.prevent="selectHighlighted()"
-                            @keydown.escape.prevent="closeSuggestions()" @focus="searchPostcodes()" />
-                        <ul id="service-area-postcode-suggestions" class="service-area-postcode-suggestions"
-                            x-show="showSuggestions && suggestions.length > 0" x-cloak role="listbox">
-                            <template x-for="(item, index) in suggestions" :key="item.postcode">
-                                <li role="option" :aria-selected="highlightedIndex === index">
-                                    <button type="button" class="service-area-postcode-suggestion"
-                                        :class="{ 'is-active': highlightedIndex === index }"
-                                        @click="selectPostcode(item)">
-                                        <span class="service-area-postcode-code" x-text="item.postcode"></span>
-                                        <span class="service-area-postcode-place" x-text="item.label"></span>
-                                    </button>
-                                </li>
-                            </template>
-                        </ul>
-                        <p class="service-area-searching-hint" x-show="isSearching" x-cloak>Searching UK postcodes…</p>
+                    <label class="service-field service-area-postcode-field" @click.outside="closeSuggestions()">
+                        <span>Centre Point</span>
+                        <div class="service-area-postcode-wrap">
+                            <input type="text" x-model="address"
+                                placeholder="Start typing a postcode, street or landmark ..."
+                                autocomplete="off" spellcheck="false" role="combobox"
+                                aria-autocomplete="list" :aria-expanded="showSuggestions && suggestions.length > 0"
+                                aria-controls="service-area-postcode-suggestions" @input.debounce.300ms="searchPostcodes()"
+                                @keydown.arrow-down.prevent="highlightNext()"
+                                @keydown.arrow-up.prevent="highlightPrevious()" @keydown.enter.prevent="selectHighlighted()"
+                                @keydown.escape.prevent="closeSuggestions()" @focus="searchPostcodes()" />
+                            <ul id="service-area-postcode-suggestions" class="service-area-postcode-suggestions"
+                                x-show="showSuggestions && suggestions.length > 0" x-cloak role="listbox">
+                                <template x-for="(item, index) in suggestions" :key="item.postcode">
+                                    <li role="option" :aria-selected="highlightedIndex === index">
+                                        <button type="button" class="service-area-postcode-suggestion"
+                                            :class="{ 'is-active': highlightedIndex === index }"
+                                            @click="selectPostcode(item)">
+                                            <span class="service-area-postcode-code" x-text="item.postcode"></span>
+                                            <span class="service-area-postcode-place" x-text="item.label"></span>
+                                        </button>
+                                    </li>
+                                </template>
+                            </ul>
+                            <p class="service-area-searching-hint" x-show="isSearching" x-cloak>Searching UK postcodes…</p>
+                        </div>
+                        <p class="service-area-field-hint">We will centre the circle to this address.</p>
+                        <p class="service-area-field-hint service-area-field-hint-error" x-show="geocodeError"
+                            x-text="geocodeError" x-cloak></p>
+                    </label>
+                </div>
+
+                <div class="service-form-card service-area-radius-card">
+                    <p class="service-area-radius-label">Service radius</p>
+                    <p class="service-area-radius-readout">
+                        <span x-text="Number(radius || 0).toFixed(1)"></span>
+                        <small>miles</small>
+                    </p>
+                    <div class="service-area-slider">
+                        <input type="range" min="0.2" max="10" step="0.1" wire:model.live="radius"
+                            aria-label="Service radius in miles"
+                            :style="`--p: ${(Number(radius) - 0.2) / 9.8}`" />
+                        <img class="service-area-slider-thumb" src="{{ asset('images/business-hub/icon-radius-thumb.svg') }}"
+                            alt="" width="39" height="39" :style="`--p: ${(Number(radius) - 0.2) / 9.8}`">
+                        <div class="service-area-slider-labels" aria-hidden="true">
+                            <span>0.2 mi</span>
+                            <span>2.5 mi</span>
+                            <span>5 mi</span>
+                            <span>10 mi</span>
+                        </div>
                     </div>
-                    <p class="service-area-field-hint service-area-field-hint-error" x-show="geocodeError"
-                        x-text="geocodeError" x-cloak></p>
-                </label>
-
-                <label class="service-field service-area-radius-field">
-                    <span>Service Radius (miles)</span>
-                    <input type="number" wire:model.live="radius" min="0.1" max="50" step="0.1" inputmode="decimal"
-                        placeholder="e.g. 1" aria-describedby="service-area-radius-hint" />
-                    <p id="service-area-radius-hint" class="service-area-radius-hint">Between 0.1 and 50 miles.</p>
-                </label>
-
-                <p class="service-area-map-hint">Click the map or drag the pin to set your service area centre.</p>
+                    <p class="service-area-coverage">
+                        <img src="{{ asset('images/business-hub/icon-radius-info.svg') }}" alt="" width="13" height="13">
+                        <span x-text="coverageLabel()"></span>
+                    </p>
+                </div>
             </div>
 
             <div class="service-area-form-map-col">
                 <div class="service-area-map-shell" wire:ignore>
                     <div id="service-area-form-map" class="service-area-map" role="img"
                         aria-label="Service area location picker"></div>
+                    <p class="service-area-zoom-hint">Hold Ctrl to Zoom in &amp; out</p>
                 </div>
             </div>
         </div>
 
-        <div class="service-form-actions">
-            <button type="button" class="service-form-btn service-form-btn-cancel"
-                @click="$dispatch('service-form-cancel')">Cancel</button>
-            <button type="submit" class="service-form-btn service-form-btn-save" wire:loading.attr="disabled"
-                wire:target="save">
-                <span class="save-btn-text" wire:loading.class="hidden" wire:target="save">Save Changes</span>
-                <span class="save-btn-loading hidden" wire:loading.class.remove="hidden" wire:target="save">
-                    <span class="save-spinner"></span>
-                </span>
-            </button>
+        <div class="service-form-card service-settings-card">
+            <h4>Setting Options</h4>
+            <div class="service-setting-row" :class="{ 'is-active': isActive }">
+                <div>
+                    <strong>Visibility Controls</strong>
+                    <p x-text="isActive ? 'This is an active area - Clients within this radius can book home visits.' : 'This area is paused - Clients cannot book home visits here.'"></p>
+                </div>
+                <button type="button" class="service-toggle" :class="{ 'is-on': isActive }"
+                    @click="isActive = !isActive"
+                    :aria-pressed="isActive ? 'true' : 'false'"
+                    aria-label="Visibility controls"></button>
+            </div>
         </div>
+
+        <x-business-hub.services.form-footer />
     </form>
 </section>
 
@@ -132,11 +246,12 @@ new class extends Component {
 
                 const METERS_PER_STATUTE_MILE = {{ json_encode(\App\Models\ServiceArea::METERS_PER_STATUTE_MILE) }};
 
-                Alpine.data('serviceAreaFormMap', (latitude, longitude, radius, address) => ({
+                Alpine.data('serviceAreaFormMap', (latitude, longitude, radius, address, isActive) => ({
                     latitude,
                     longitude,
                     radius,
                     address,
+                    isActive,
                     map: null,
                     marker: null,
                     circle: null,
@@ -148,6 +263,26 @@ new class extends Component {
                     searchToken: 0,
                     initMapAttempt: 0,
                     radiusAnimFrameId: null,
+                    coverageLabel() {
+                        const miles = Number(this.radius);
+                        const safe = Number.isFinite(miles) ? miles : 0;
+                        const km = safe * 1.609344;
+                        const area = Math.PI * km * km;
+
+                        return `A ${safe.toFixed(1)} mile radius covers roughly ${area.toFixed(1)} km²`;
+                    },
+                    markMapDirty() {
+                        this.$root.querySelector('[data-service-area-map-dirty]')?.dispatchEvent(new Event('input', {
+                            bubbles: true
+                        }));
+                    },
+                    mapElementVisible(mapEl) {
+                        if (!mapEl) {
+                            return false;
+                        }
+                        const rect = mapEl.getBoundingClientRect();
+                        return rect.width > 0 && rect.height > 0;
+                    },
                     init() {
                         this.$nextTick(() => this.initMap());
                         this.$watch('latitude', () => this.updatePreview());
@@ -249,8 +384,8 @@ new class extends Component {
                                 .map((entry) => ({
                                     postcode: entry.result.postcode,
                                     label: [entry.result.admin_district, entry.result
-                                        .region
-                                    ]
+                                            .region
+                                        ]
                                         .filter(Boolean)
                                         .join(', '),
                                     lat: entry.result.latitude,
@@ -339,6 +474,7 @@ new class extends Component {
                         this.geocodeError = '';
                         this.map?.setView([this.latitude, this.longitude], 14);
                         this.updatePreview();
+                        this.markMapDirty();
                     },
                     async reverseGeocodeFromMap(lat, lng) {
                         try {
@@ -367,6 +503,13 @@ new class extends Component {
                             return;
                         }
 
+                        if (!this.mapElementVisible(mapEl)) {
+                            if (this.initMapAttempt++ < 50) {
+                                setTimeout(() => this.initMap(), 150);
+                            }
+                            return;
+                        }
+
                         this.initMapAttempt = 0;
 
                         if (this.map) {
@@ -375,23 +518,27 @@ new class extends Component {
                         }
 
                         this.map = L.map(mapEl, {
-                            zoomControl: true,
+                            zoomControl: false,
                             attributionControl: false,
                             preferCanvas: true,
                         });
 
-                        L.tileLayer(
-                            'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-                            subdomains: 'abcd',
-                            maxZoom: 20,
+                        L.control.zoom({
+                            position: 'bottomright',
                         }).addTo(this.map);
 
                         L.tileLayer(
+                            'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+                                subdomains: 'abcd',
+                                maxZoom: 20,
+                            }).addTo(this.map);
+
+                        L.tileLayer(
                             'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
-                            subdomains: 'abcd',
-                            maxZoom: 20,
-                            pane: 'overlayPane',
-                        }).addTo(this.map);
+                                subdomains: 'abcd',
+                                maxZoom: 20,
+                                pane: 'overlayPane',
+                            }).addTo(this.map);
 
                         const pinIcon = L.divIcon({
                             className: 'service-area-pin-wrap',
@@ -413,6 +560,7 @@ new class extends Component {
                             this.latitude = lat;
                             this.longitude = lng;
                             this.reverseGeocodeFromMap(lat, lng);
+                            this.markMapDirty();
                         });
 
                         this.circle = L.circle([this.latitude, this.longitude], this.circleOptions())
@@ -424,6 +572,7 @@ new class extends Component {
                             this.latitude = event.latlng.lat;
                             this.longitude = event.latlng.lng;
                             this.reverseGeocodeFromMap(event.latlng.lat, event.latlng.lng);
+                            this.markMapDirty();
                         });
 
                         setTimeout(() => this.refreshMap(), 140);
@@ -431,8 +580,8 @@ new class extends Component {
                     circleOptions() {
                         return {
                             radius: this.radiusMetersFromModel(),
-                            color: '#B8D4E8',
-                            fillColor: '#B8D4E8',
+                            color: '#FFA899',
+                            fillColor: '#FFA899',
                             fillOpacity: 0.35,
                             weight: 3,
                             opacity: 0.9,
@@ -441,7 +590,7 @@ new class extends Component {
                     radiusMetersFromModel() {
                         const r = Number(this.radius);
                         const miles = Number.isFinite(r) && r > 0 ?
-                            Math.min(50, Math.max(0.1, r)) :
+                            Math.min(10, Math.max(0.2, r)) :
                             1;
 
                         return miles * METERS_PER_STATUTE_MILE;
@@ -528,22 +677,44 @@ new class extends Component {
     .service-area-form {
         display: flex;
         flex-direction: column;
-        gap: 2rem;
+        gap: 40px;
     }
 
     .service-area-form-layout {
         display: grid;
-        grid-template-columns: minmax(280px, 38%) minmax(0, 1fr);
-        gap: 0;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 505px);
+        gap: 20px;
         align-items: stretch;
     }
 
     .service-area-form-fields {
+        position: relative;
+        z-index: 2;
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
-        padding-right: 1.5rem;
-        padding-top: 1.5rem;
+        gap: 20px;
+        min-width: 0;
+        height: 100%;
+    }
+
+    .service-area-form-panel .service-form-card {
+        background: #fdfdfd;
+        border: 1px solid #f6f5f5;
+        border-radius: 10px;
+        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.1);
+        padding: 20px;
+    }
+
+    .service-area-identity-card,
+    .service-area-radius-card {
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .service-area-identity-card {
+        gap: 20px;
     }
 
     .service-field {
@@ -552,24 +723,193 @@ new class extends Component {
         gap: 0.5rem;
     }
 
-    .service-field>span {
+    .service-field>span,
+    .service-area-radius-label {
+        margin: 0;
         color: #3b3731;
         font-family: Lato;
         font-size: 16px;
         font-weight: 600;
+        line-height: normal;
     }
 
     .service-field input,
     .service-field select {
         width: 100%;
         height: 48px;
-        border: 1px solid #d9d9d9;
+        border: 1px solid #d4d4d4;
         border-radius: 10px;
         background: #fff;
         color: #3b3731;
         font-family: Lato;
         font-size: 16px;
-        padding: 0.65rem 0.9rem;
+        font-weight: 400;
+        padding: 0 20px;
+    }
+
+    .service-field input::placeholder {
+        color: #9d9b98;
+    }
+
+    .service-area-radius-readout {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        margin: 12px 0 0;
+        color: #3b3731;
+        font-family: Lato;
+    }
+
+    .service-area-radius-readout span {
+        font-size: 28px;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .service-area-radius-readout small {
+        font-size: 16px;
+        font-weight: 400;
+    }
+
+    .service-area-slider {
+        position: relative;
+        margin-top: 18px;
+    }
+
+    .service-area-slider-thumb {
+        position: absolute;
+        top: 0;
+        left: calc((100% - 39px) * var(--p, 0));
+        width: 39px;
+        height: 39px;
+        max-width: none;
+        pointer-events: none;
+    }
+
+    .service-area-slider input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 39px;
+        margin: 0;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    .service-area-slider input[type="range"]::-webkit-slider-runnable-track {
+        height: 5px;
+        background: #ebebeb;
+        border-radius: 50px;
+    }
+
+    .service-area-slider input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        box-sizing: border-box;
+        width: 39px;
+        height: 39px;
+        margin-top: -17px;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .service-area-slider input[type="range"]::-moz-range-track {
+        height: 5px;
+        background: #ebebeb;
+        border: 0;
+        border-radius: 50px;
+    }
+
+    .service-area-slider input[type="range"]::-moz-range-thumb {
+        box-sizing: border-box;
+        width: 39px;
+        height: 39px;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .service-area-slider-labels {
+        position: relative;
+        height: 16px;
+        margin-top: 2px;
+    }
+
+    .service-area-slider-labels span {
+        position: absolute;
+        top: 0;
+        color: #9d9b98;
+        font-family: Lato;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: normal;
+        white-space: nowrap;
+        transform: translateX(-50%);
+    }
+
+    .service-area-slider-labels span:first-child {
+        left: 0;
+        transform: none;
+    }
+
+    .service-area-slider-labels span:nth-child(2) {
+        left: 23.5%;
+    }
+
+    .service-area-slider-labels span:nth-child(3) {
+        left: 49%;
+    }
+
+    .service-area-slider-labels span:last-child {
+        left: 100%;
+        transform: translateX(-100%);
+    }
+
+    .service-area-coverage {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 48px;
+        margin: auto 0 0;
+        padding: 0 16px;
+        border-radius: 10px;
+        background: #f3f7fa;
+        color: #6f93ad;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: normal;
+    }
+
+    .service-area-coverage img {
+        width: 13px;
+        height: 13px;
+        max-width: none;
+        flex: 0 0 13px;
+    }
+
+    .service-area-coverage span {
+        white-space: nowrap;
+    }
+
+    .service-area-form-panel .service-settings-card h4 {
+        margin: 0 0 20px;
+        padding: 0;
+        border: 0;
+        color: #3B3731;
+        font-family: "Playfair Display", serif;
+        font-size: 28px;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .service-area-form-panel .service-setting-row {
+        margin-bottom: 0;
     }
 
     .service-area-postcode-field {
@@ -585,7 +925,7 @@ new class extends Component {
         top: calc(100% + 0.35rem);
         left: 0;
         right: 0;
-        z-index: 30;
+        z-index: 40;
         margin: 0;
         padding: 0.35rem 0;
         list-style: none;
@@ -637,99 +977,98 @@ new class extends Component {
     }
 
     .service-area-field-hint {
-        margin: 0.35rem 0 0;
+        margin: 8px 0 0;
+        color: #9d9b98;
         font-family: Lato;
         font-size: 14px;
+        font-weight: 400;
+        line-height: normal;
     }
 
     .service-area-field-hint-error {
         color: #c45c5c;
     }
 
-    .service-area-radius-hint {
-        margin: 0;
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 13px;
-        font-weight: 400;
-        line-height: 1.35;
-    }
-
-    .service-area-map-hint {
-        margin: 0;
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 14px;
-        line-height: 1.4;
-    }
-
     .service-area-form-map-col {
-        min-height: 420px;
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 505px;
+        justify-self: end;
+        min-height: 0;
     }
 
     .service-area-form-map-col .service-area-map-shell {
+        position: relative;
         width: 100%;
-        height: 505px;
-        aspect-ratio: 122/101;
+        aspect-ratio: 1;
+        border: 1px solid #e3e3e3;
         border-radius: 10px;
         overflow: hidden;
         background: #f4f4f4;
-        margin-left: auto;
+        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.1);
     }
 
-    .service-area-form-map-col .service-area-map {
-        width: 100%;
-        height: 505px;
-        aspect-ratio: 122/101;
-        border-radius: 10px;
-    }
-
+    .service-area-form-map-col .service-area-map,
     .service-area-form-map-col .service-area-map.leaflet-container,
     .service-area-form-map-col .service-area-map .leaflet-container {
         width: 100%;
-        height: 505px;
-        aspect-ratio: 122/101;
+        height: 100%;
+        border-radius: 10px;
+        font-family: Lato;
+    }
+
+    .service-area-form-panel .service-area-zoom-hint {
+        position: absolute;
+        left: 15px;
+        bottom: 15px;
+        z-index: 500;
+        display: flex;
+        align-items: center;
+        height: 35px;
+        margin: 0;
+        padding: 0 10px;
+        border: 1px solid #e2e2e2;
+        border-radius: 5px;
+        background: #fff;
+        color: #737373;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: normal;
+        white-space: nowrap;
+        pointer-events: none;
+    }
+
+    .service-area-form-panel .leaflet-bottom.leaflet-right {
+        margin-right: 15px;
+        margin-bottom: 15px;
+    }
+
+    .service-area-form-panel .leaflet-control-zoom {
+        border: 1px solid #e2e2e2;
+        border-radius: 5px;
+        box-shadow: none;
+        overflow: hidden;
+    }
+
+    .service-area-form-panel .leaflet-control-zoom a {
+        width: 33px;
+        height: 33px;
+        line-height: 33px;
+        color: #3b3731;
+        background: #fff;
+        border-bottom-color: #e2e2e2;
     }
 
     .service-area-form-map-col .service-area-map .leaflet-tile-pane {
         filter: grayscale(1);
     }
 
-    .service-area-form-panel .service-form-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 1rem;
-        padding-top: 0.5rem;
-    }
-
-    .service-area-form-panel .service-form-btn {
-        min-width: 133px;
-        height: 48px;
-        border-radius: 75px;
-        font-family: Lato;
-        font-size: 18px;
-        font-weight: 600;
-        cursor: pointer;
-    }
-
-    .service-area-form-panel .service-form-btn-cancel {
-        border: 1px solid #3b3731;
-        background: transparent;
-        color: #3b3731;
-    }
-
-    .service-area-form-panel .service-form-btn-save {
-        border: none;
-        background: #bacf8e;
-        color: #fff;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
     .service-area-form-panel .save-btn-loading {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 90px;
     }
 
     .service-area-form-panel .save-spinner {
@@ -774,13 +1113,9 @@ new class extends Component {
             grid-template-columns: 1fr;
         }
 
-        .service-area-form-fields {
-            padding-right: 0;
-        }
-
-        .service-area-form-map-col .service-area-map-shell {
-            border-radius: 12px;
-            margin-top: 0.5rem;
+        .service-area-form-map-col {
+            max-width: none;
+            justify-self: stretch;
         }
     }
 </style>

@@ -1,9 +1,11 @@
 <?php
 
 use App\Models\AddOn;
+use Livewire\Attributes\On;
 use Livewire\Volt\Component;
 
 new class extends Component {
+    public ?int $editingId = null;
     public string $addOnsName = '';
     public string $description = '';
     public array $otherPets = [];
@@ -13,34 +15,78 @@ new class extends Component {
     public bool $visibilityControls = true;
     public float $basePrice = 25;
     public float $overtimeCharge = 10;
-    public string $overtimePer = '15 min';
+    public string $overtimePer = '15 Minutes';
 
-    private function parseMinutes(?string $value): int|string
+    public function mount(?int $editingId = null): void
     {
-        if ($value === null || trim($value) === '') {
-            return '';
-        }
+        $this->editingId = $editingId;
 
-        preg_match('/\d+/', $value, $matches);
-        return isset($matches[0]) ? (int) $matches[0] : '';
+        if ($this->editingId) {
+            $this->loadAddOn($this->editingId);
+        }
     }
 
-    public function save(): void
+    private function profileId(): ?int
     {
-        $this->validate([
-            'addOnsName' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-        ]);
+        $id = auth('groomer_spacer')->id() ?? auth()->id();
 
-        $profileId = auth()->id();
+        return $id ? (int) $id : null;
+    }
 
-        if (!$profileId) {
-            $this->addError('addOnsName', 'Groomer/Spacer profile not found for current user.');
+    private function minutesOption(mixed $value, string $fallback): string
+    {
+        if (is_string($value) && preg_match('/(\d+)\s*min/i', $value, $matches)) {
+            return $matches[1] . ' Minutes';
+        }
+
+        if (is_numeric($value) && (int) $value > 0) {
+            return ((int) $value) . ' Minutes';
+        }
+
+        return $fallback;
+    }
+
+    #[On('reset-addon-form')]
+    public function resetForm(): void
+    {
+        $this->reset();
+        $this->editingId = null;
+        $this->js('window.dispatchEvent(new CustomEvent("service-form-baseline"))');
+    }
+
+    public function loadAddOn(int $addOnId, bool $silent = false): void
+    {
+        $profileIds = array_values(array_unique(array_filter([auth('groomer_spacer')->id(), auth()->id(), $this->profileId()])));
+
+        $addOn = AddOn::query()
+            ->when($profileIds !== [], fn($query) => $query->whereIn('groomer_spacer_id', $profileIds))
+            ->find($addOnId);
+
+        if (!$addOn) {
             return;
         }
 
-        $addOn = AddOn::create([
-            'groomer_spacer_id' => $profileId,
+        $this->editingId = (int) $addOn->id;
+        $this->addOnsName = (string) $addOn->add_ons_name;
+        $this->description = (string) ($addOn->description ?? '');
+        $compat = (array) $addOn->pet_compatibility;
+        $this->selectedPets = array_values((array) (data_get($compat, 'pet_type') ?: data_get($compat, 'pet_types', [])));
+        $this->otherPets = array_values((array) data_get($compat, 'other_pets', []));
+        $this->selectedSizes = array_values((array) (data_get($compat, 'pet_size') ?: data_get($compat, 'pet_sizes', [])));
+        $pricing = (array) $addOn->pricing;
+        $this->basePrice = (float) data_get($pricing, 'base_price', 25);
+        $this->overtimeCharge = (float) data_get($pricing, 'overtime_charge.price', 10);
+        $this->overtimePer = $this->minutesOption(data_get($pricing, 'overtime_charge.per'), '15 Minutes');
+        $this->visibilityControls = (bool) $addOn->visibility_controls;
+        if ($silent) {
+            $this->skipRender();
+        }
+        $this->js('window.dispatchEvent(new CustomEvent("service-form-baseline"))');
+    }
+
+    private function payload(): array
+    {
+        return [
             'add_ons_name' => $this->addOnsName,
             'description' => $this->description !== '' ? $this->description : '',
             'pet_compatibility' => [
@@ -60,332 +106,207 @@ new class extends Component {
             ],
             'add_ons_compatibility' => false,
             'visibility_controls' => $this->visibilityControls,
+        ];
+    }
+
+    public function save(): void
+    {
+        $this->validate([
+            'addOnsName' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
         ]);
+
+        $profileId = $this->profileId();
+
+        if (!$profileId) {
+            $this->addError('addOnsName', 'Groomer/Spacer profile not found for current user.');
+            return;
+        }
+
+        if ($this->editingId) {
+            $addOn = AddOn::query()->where('groomer_spacer_id', $profileId)->find($this->editingId);
+
+            if (!$addOn) {
+                $this->addError('addOnsName', 'Add-on not found.');
+                return;
+            }
+
+            $addOn->update($this->payload());
+        } else {
+            $addOn = AddOn::create(
+                array_merge($this->payload(), [
+                    'groomer_spacer_id' => $profileId,
+                ]),
+            );
+        }
 
         $this->dispatch('add-on-created', itemId: $addOn->id);
         $this->reset(['addOnsName', 'description', 'otherPets', 'otherPetInput']);
     }
+
+    public function deleteCurrent(): void
+    {
+        $profileId = $this->profileId();
+
+        if (!$profileId || !$this->editingId) {
+            return;
+        }
+
+        $addOn = AddOn::query()->where('groomer_spacer_id', $profileId)->find($this->editingId);
+
+        if ($addOn) {
+            $addOn->delete();
+        }
+
+        $this->dispatch('add-on-deleted');
+        $this->js('window.dispatchEvent(new CustomEvent("nav-list-loading-end")); window.dispatchEvent(new CustomEvent("service-form-cancel"))');
+    }
 }; ?>
 
-<section class="service-form-wrapper" aria-label="Add service form" x-data="{ visibilityControls: $wire.entangle('visibilityControls').live }">
-    <form class="service-form" wire:submit.prevent="save">
-        <div class="service-form-grid">
-            <label class="service-field" style="width: 400px;">
-                <span>Add-on Name</span>
-                <input type="text" placeholder="Storage Locker" wire:model="addOnsName" />
-            </label>
+<section class="service-form-wrapper" aria-label="Add add-on form"
+    x-data="{ visibilityControls: $wire.entangle('visibilityControls').live }"
+    x-on:service-form-delete.window="$wire.deleteCurrent()"
+    x-on:add-on-edit-requested.window="
+        const d = $event.detail || {};
+        const id = Number(d.addOnId || d.add_on_id || d.id || 0);
+        if (d.state) { window.applyServiceFormState($wire, d.state); }
+        if (id) { $wire.loadAddOn(id, !!d.state); }
+    ">
+    <form class="service-form service-form-space" wire:submit.prevent="save">
+        <div class="service-form-card">
+            <div class="service-form-grid">
+                <label class="service-field">
+                    <span>Add-on Name</span>
+                    <input type="text" placeholder="Storage Locker" wire:model="addOnsName"
+                        @input="window.dispatchEvent(new CustomEvent('service-form-title-changed', { detail: { title: $event.target.value } }))" />
+                </label>
 
-            <label class="service-field" style="width: 505px;">
-                <span style="color: #9D9B98;">Description</span>
-                <input type="text" placeholder="Keep your belongings in one of our on-site lockers."
-                    wire:model="description" />
-            </label>
+                <label class="service-field">
+                    <span>Description</span>
+                    <input type="text" placeholder="Keep your belongings in one of our on-site lockers."
+                        wire:model="description" />
+                </label>
+            </div>
         </div>
 
-        <x-business-hub.services.pet-compatibility other-pets-input-id="addon-other-pet-space" />
+        <div class="service-form-block">
+            <h4 class="service-section-title">Pet Compatibility</h4>
+            <div class="service-form-card">
+                <x-business-hub.services.pet-compatibility title="" other-pets-input-id="addon-other-pet-space" />
+            </div>
+        </div>
 
-        <x-business-hub.services.price show-advanced :muted-overtime-label="false" />
+        <div class="service-form-block">
+            <h4 class="service-section-title">Duration & Price</h4>
+            <div class="service-form-card">
+                <x-business-hub.services.duration-price :show-by-size="false" :show-buffer="false"
+                    :show-base-duration="false" money />
+            </div>
+        </div>
 
-        <div class="service-fieldset">
-            <h4>Visibility Controls</h4>
-            <div class="service-toggle-wrap">
-                <p>Active Service</p>
+        <div class="service-form-card service-settings-card">
+            <h4>Setting Options</h4>
+            <div class="service-setting-row" :class="{ 'is-active': visibilityControls }">
+                <div>
+                    <strong>Visibility Controls</strong>
+                    <p>This add-on is active on your profile — clients can book it now</p>
+                </div>
                 <button type="button" class="service-toggle" :class="{ 'is-on': visibilityControls }"
                     @click="visibilityControls = !visibilityControls"></button>
             </div>
         </div>
 
-        <div class="service-form-actions">
-            <button type="button" class="service-form-btn service-form-btn-cancel"
-                @click="$dispatch('service-form-cancel')">Cancel</button>
-            <button type="submit" class="service-form-btn service-form-btn-save" wire:loading.attr="disabled"
-                wire:target="save">
-                <span class="save-btn-text" wire:loading.class="hidden" wire:target="save">Save Changes</span>
-                <span class="save-btn-loading hidden" wire:loading.class.remove="hidden" wire:target="save">
-                    <span class="save-spinner"></span>
-                </span>
-            </button>
-        </div>
+        <x-business-hub.services.form-footer />
     </form>
 </section>
 
 <style>
-    .service-form-wrapper {
-        margin-top: 0.5rem;
+    .service-form-space {
+        gap: 40px;
     }
 
-    .service-form {
+    .service-form-space .service-form-block {
         display: flex;
         flex-direction: column;
-        gap: 2rem;
+        gap: 20px;
     }
 
-    .service-form-grid {
-        display: flex;
-        justify-content: start;
-        align-items: end;
-        gap: 1.5rem;
+    .service-form-space .service-form-card {
+        overflow: visible;
     }
 
-    .service-fieldset h4 {
-        padding-bottom: 1rem;
-        margin-bottom: 1rem;
-        margin-top: 1.5rem;
-        border-bottom: 1px solid #D4D4D4;
-        color: #3B3731;
-        font-family: "Playfair Display";
-        font-size: 32px;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-    }
-
-    .service-field {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .service-field>span {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
+    .service-form-space .service-setting-row strong {
+        font-size: 18px;
         font-weight: 600;
-        line-height: normal;
     }
 
-    .service-field input,
-    .service-field select {
-        width: 100%;
-        height: 48px;
-        border: 1px solid #d9d9d9;
-        border-radius: 10px;
-        background: #fff;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        padding: 0.65rem 0.9rem;
-    }
-
-    .service-custom-select {
-        position: relative;
-        width: 190px;
-    }
-
-    .service-custom-trigger {
-        width: 190px;
-        height: 48px;
-        border-radius: 10px;
-        border: 1px solid #DDD;
-        background: #fff;
-        color: #3B3731;
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: 25px;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 1rem;
-    }
-
-    .service-custom-select.is-open .service-custom-trigger {
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
-        border-bottom-color: #DDD;
-    }
-
-    .service-custom-menu {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        width: 100%;
-        background: #F8F8F8;
-        border: 1px solid #DDD;
-        border-top: none;
-        border-radius: 0 0 10px 10px;
-        z-index: 20;
-        overflow: hidden;
-    }
-
-    .service-custom-menu-enter {
-        transition: opacity 180ms ease, transform 180ms ease;
-        transform-origin: top;
-    }
-
-    .service-custom-menu-enter-start {
-        opacity: 0;
-        transform: scaleY(0.95);
-    }
-
-    .service-custom-menu-enter-end {
-        opacity: 1;
-        transform: scaleY(1);
-    }
-
-    .service-custom-menu-leave {
-        transition: opacity 140ms ease, transform 140ms ease;
-        transform-origin: top;
-    }
-
-    .service-custom-menu-leave-start {
-        opacity: 1;
-        transform: scaleY(1);
-    }
-
-    .service-custom-menu-leave-end {
-        opacity: 0;
-        transform: scaleY(0.95);
-    }
-
-    .service-custom-option {
-        width: 100%;
-        border: 0;
-        border-bottom: 2px solid #e6e6e5;
-        background: #FFF;
-        padding: 0.9rem 1rem;
-        text-align: left;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .service-custom-option:last-child {
-        border-bottom: none;
-    }
-
-    .service-custom-option:hover {
-        background: #F2F2F2;
-    }
-
-    .service-custom-option.is-active {
-        background: rgba(216, 232, 183, 0.20);
-        color: #A4C560;
-    }
-
-    .service-input-with-icon {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .service-input-with-icon>svg {
-        margin-top: 10px;
-    }
-
-    .service-field input::placeholder,
-    .service-field textarea::placeholder {
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
+    .service-form-space .service-setting-row p {
+        color: #9c9790;
+        font-size: 18px;
         font-weight: 400;
         line-height: normal;
     }
 
-
-
-    .service-toggle-wrap {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        max-width: 360px;
-        border-bottom: 1px solid #E0E0E0;
-        padding-bottom: 1.5rem;
-        margin-top: 1rem;
-    }
-
-    .service-toggle-wrap p {
-        margin: 0;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-    .service-toggle {
-        width: 56px;
-        height: 30px;
-        border-radius: 999px;
-        border: 0;
-        background: #cfcfcf;
-        position: relative;
-        display: inline-block;
-        cursor: pointer;
-        transition: background-color 0.24s ease;
-    }
-
-    .service-toggle::after {
-        content: "";
-        position: absolute;
-        top: 3px;
-        left: 4px;
-        width: 24px;
+    .service-form-space .service-toggle {
+        width: 44px;
         height: 24px;
-        border-radius: 999px;
+        background: #d4d4d4;
+    }
+
+    .service-form-space .service-toggle::after {
+        top: 2px;
+        left: 2px;
+        width: 20px;
+        height: 20px;
         background: #fff;
-        transition: left 0.24s ease;
     }
 
-    .service-toggle.is-on {
-        background: #c7d59f;
+    .service-form-space .service-toggle.is-on {
+        background: #d8e8b7;
     }
 
-    .service-toggle.is-on::after {
-        left: 28px;
+    .service-form-space .service-toggle.is-on::after {
+        left: 22px;
+        background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M9.99391 0C4.49726 0 0 4.49726 0 9.99391C0 15.4906 4.49726 19.9878 9.99391 19.9878C15.4906 19.9878 19.9878 15.4906 19.9878 9.99391C19.9878 4.49726 15.4906 0 9.99391 0ZM8.41154 14.5744C8.18156 14.8044 7.80869 14.8044 7.57871 14.5744L3.70323 10.699C3.31384 10.3096 3.31384 9.67824 3.70323 9.28885C4.09225 8.89984 4.72282 8.8994 5.11237 9.28786L7.99513 12.1626L14.8709 5.28678C15.2624 4.8953 15.8975 4.89642 16.2876 5.28928C16.6757 5.68019 16.6746 6.31139 16.2851 6.70092L8.41154 14.5744Z' fill='white'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
     }
 
-    .service-form-actions {
+    .service-form-space .service-toggle.is-on::before {
+        content: none;
+    }
+
+    .service-form-space .service-field {
         display: flex;
-        justify-content: flex-end;
-        gap: 0.75rem;
-        margin-top: 0.5rem;
+        flex-direction: column;
+        gap: 8px;
     }
 
-    .service-form-btn {
-        width: 138px;
-        height: 42px;
-        border-radius: 75px;
-        border: 1px solid transparent;
-        text-align: center;
+    .service-form-space .service-field>span {
+        color: #3B3731;
         font-family: Lato;
         font-size: 16px;
-        font-style: normal;
         font-weight: 600;
         line-height: normal;
-        cursor: pointer;
-        transition: opacity 0.15s ease;
     }
 
-    .service-form-btn:hover {
-        opacity: 0.92;
+    .service-form-space .service-form-grid .service-field input {
+        width: 100%;
+        height: 48px;
+        border: 1px solid #d4d4d4;
+        border-radius: 10px;
+        background: #fff;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: normal;
+        padding: 0 20px;
     }
 
-    .service-form-btn-cancel {
-        border-color: #D9D9D9;
-        background: transparent;
+    .service-form-space .service-field input::placeholder {
         color: #9D9B98;
-    }
-
-    .service-form-btn-save {
-        background: #c9dda0;
-        color: #fff;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
     }
 
     .save-btn-loading {
