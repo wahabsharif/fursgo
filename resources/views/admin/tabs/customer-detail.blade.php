@@ -35,6 +35,101 @@ $janeProfile = [
 'sessions' => '18',
 'last_groomed' => '09 Jul',
 ],
+'booking_stats' => [
+'total' => '14',
+'completed' => '9',
+'cancelled' => '1',
+'spend' => '£682',
+],
+'booking_summary' => [
+'count' => 14,
+'spend' => '£682',
+'filters' => [
+'all' => 14,
+'completed' => 9,
+'confirmed' => 2,
+'disputed' => 1,
+'cancelled' => 1,
+'refunded' => 1,
+],
+],
+'booking_list' => [
+[
+'id' => 'FG-0563-B12',
+'date' => '10/08/2025',
+'pet_name' => 'Leo',
+'pet_breed' => 'Blue Russian',
+'pet_image' => $petImages['leo'],
+'pet_type' => 'cat',
+'service' => 'Full Groom',
+'provider_role' => 'Groomer · Location',
+'provider' => 'Pawfect Salon · London SE2',
+'rating' => 4,
+'amount' => '£45.00',
+'status' => 'completed',
+'status_label' => 'Completed',
+],
+[
+'id' => 'FG-0563-B11',
+'date' => '02/08/2025',
+'pet_name' => 'Leo',
+'pet_breed' => 'Blue Russian',
+'pet_image' => $petImages['leo'],
+'pet_type' => 'cat',
+'service' => 'Nail Trim',
+'provider_role' => 'Groomer · Location',
+'provider' => "Katie's Mobile Groom · London N1",
+'rating' => null,
+'amount' => '£25.00',
+'status' => 'disputed',
+'status_label' => 'Disputed',
+],
+[
+'id' => 'SS-0412-B08',
+'date' => '28/07/2025',
+'pet_name' => 'Biscuit',
+'pet_breed' => 'Golden Retriever',
+'pet_image' => $petImages['biscuit'],
+'pet_type' => 'dog',
+'service' => 'Day Care',
+'provider_role' => 'Space Host · Location',
+'provider' => 'Furs & Co. Studio · Manchester',
+'rating' => 5,
+'amount' => '£80.00',
+'status' => 'confirmed',
+'status_label' => 'Confirmed',
+],
+[
+'id' => 'GS-0499-B03',
+'date' => '15/07/2025',
+'pet_name' => 'Leo',
+'pet_breed' => 'Blue Russian',
+'pet_image' => $petImages['leo'],
+'pet_type' => 'cat',
+'service' => 'Bath & Tidy',
+'provider_role' => 'Groomer · Location',
+'provider' => 'Pawfect Salon · London SE2',
+'rating' => null,
+'amount' => '£30.00',
+'status' => 'cancelled',
+'status_label' => 'Cancelled',
+],
+[
+'id' => 'SS-0388-B21',
+'date' => '01/07/2025',
+'pet_name' => 'Surf',
+'pet_breed' => "Hermann's Tortoise",
+'pet_image' => $petImages['surf'],
+'pet_type' => 'other',
+'service' => 'Overnight Stay',
+'provider_role' => 'Space Host · Location',
+'provider' => 'Garden Paws · Bristol',
+'rating' => 3,
+'amount' => '£120.00',
+'status' => 'refunded',
+'status_label' => 'Refunded',
+],
+],
 'details' => [
 ['label' => 'Full Name', 'value' => 'Jane John Doe'],
 ['label' => 'Email', 'value' => 'jane.doe@gmail.com'],
@@ -428,7 +523,11 @@ $customerProfiles[$customer['id']] = array_merge($janeProfile, [
                 <x-admin.customer.pets :profile="$profile" />
             </div>
 
-            @foreach (['bookings' => 'Bookings', 'payments' => 'Payments', 'support' => 'Support', 'referrals' => 'Referrals', 'activity' => 'Activity'] as $tabKey => $tabLabel)
+            <div x-show="detailTab === 'bookings'" x-cloak>
+                <x-admin.customer.bookings :profile="$profile" />
+            </div>
+
+            @foreach (['payments' => 'Payments', 'support' => 'Support', 'referrals' => 'Referrals', 'activity' => 'Activity'] as $tabKey => $tabLabel)
             <div class="admin-co-placeholder" x-show="detailTab === '{{ $tabKey }}'" x-cloak>
                 <h2 class="admin-page-title mb-0">{{ $tabLabel }}</h2>
                 <p class="admin-section-label mb-0">This section will be built next.</p>

@@ -217,7 +217,7 @@ $transferAccounts = [
     </div>
 
     {{-- Stats strip (changes with detail tab) --}}
-    <div class="admin-co-stats" x-show="detailTab !== 'pets'" x-cloak>
+    <div class="admin-co-stats" x-show="detailTab !== 'pets' && detailTab !== 'bookings'" x-cloak>
         <div class="admin-co-stat">
             <p class="admin-co-stat-value">{{ $profile['stats']['spend'] }}</p>
             <p class="admin-co-stat-label">Total spend</p>
@@ -255,11 +255,30 @@ $transferAccounts = [
         </div>
     </div>
 
+    <div class="admin-co-stats" x-show="detailTab === 'bookings'" x-cloak>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['booking_stats']['total'] ?? '—' }}</p>
+            <p class="admin-co-stat-label">Bookings</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['booking_stats']['completed'] ?? '—' }}</p>
+            <p class="admin-co-stat-label">Completed</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['booking_stats']['cancelled'] ?? '—' }}</p>
+            <p class="admin-co-stat-label">Cancelled</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['booking_stats']['spend'] ?? '—' }}</p>
+            <p class="admin-co-stat-label">Total spend</p>
+        </div>
+    </div>
+
     {{-- Admin actions (changes with detail tab) --}}
     <div class="admin-co-actions">
         <h3 class="admin-co-actions-title">Admin Actions</h3>
 
-        <div x-show="detailTab !== 'pets'" x-cloak>
+        <div x-show="detailTab !== 'pets' && detailTab !== 'bookings'" x-cloak>
             <x-admin.customer.action-btn
                 variant="verify"
                 label="Send account verification email"
@@ -328,6 +347,31 @@ $transferAccounts = [
                 variant="delete-pet"
                 label="Delete pet profile"
                 x-on:click="openDeletePet()" />
+        </div>
+
+        <div x-show="detailTab === 'bookings'" x-cloak>
+            <x-admin.customer.action-btn
+                variant="suspend"
+                label="Pause all bookings"
+                x-on:click="
+                    suspendReason = '';
+                    suspendDuration = 'indefinite';
+                    suspendNotes = '';
+                    openSuspendReason = false;
+                    openSuspendDuration = false;
+                    suspendOpen = true;
+                " />
+            <x-admin.customer.action-btn
+                variant="flag"
+                label="Flag account for review"
+                x-on:click="
+                    flagReason = '';
+                    flagNote = '';
+                    flagBy = 'Michelle M (me)';
+                    openFlagReason = false;
+                    openFlagBy = false;
+                    flagOpen = true;
+                " />
         </div>
     </div>
 

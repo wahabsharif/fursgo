@@ -12,7 +12,7 @@
     max-width: 1340px;
 }
 
-/* Keep scrollbar space always — stops header/main shifting when Overview height toggles */
+/* Keep scrollbar space always ? stops header/main shifting when Overview height toggles */
 .admin-html {
     scrollbar-gutter: stable;
 }
@@ -29,7 +29,7 @@
     display: none !important;
 }
 
-/* Header — same top padding as login so logo/tabs share one line */
+/* Header ? same top padding as login so logo/tabs share one line */
 .admin-header {
     position: relative;
     z-index: 50;
@@ -80,7 +80,7 @@
     white-space: nowrap;
 }
 
-/* Tabs — simple route links, active state via .is-active */
+/* Tabs ? simple route links, active state via .is-active */
 .admin-tabs {
     display: flex;
     align-items: center;
@@ -439,7 +439,7 @@
     margin-bottom: 0;
 }
 
-/* Cards — one gap token for the whole admin module */
+/* Cards ? one gap token for the whole admin module */
 .admin-card-grid {
     display: grid;
     gap: var(--admin-card-gap);
@@ -1029,7 +1029,7 @@
     font-size: 16px;
 }
 
-/* ── Pet Owners ─────────────────────────────────────────── */
+/* ?? Pet Owners ??????????????????????????????????????????? */
 
 .admin-pet-owners {
     display: flex;
@@ -1037,7 +1037,7 @@
     gap: 0;
 }
 
-/* List stack — owns spacing between section tabs and page head */
+/* List stack ? owns spacing between section tabs and page head */
 .admin-po-list {
     display: flex;
     flex-direction: column;
@@ -1120,7 +1120,7 @@
     color: #fdfdfd;
 }
 
-/* Own head spacing — do not use shared .admin-page-title / .admin-section-label margins */
+/* Own head spacing ? do not use shared .admin-page-title / .admin-section-label margins */
 .admin-po-head {
     display: flex;
     flex-direction: column;
@@ -1932,7 +1932,7 @@
     }
 }
 
-/* ── Customer detail (pet owner overview) ── */
+/* ?? Customer detail (pet owner overview) ?? */
 .admin-po-row-clickable {
     cursor: pointer;
 }
@@ -2291,7 +2291,7 @@
     justify-content: unset;
 }
 
-/* Covers the gap above the tabs so scrolled content can’t peek through */
+/* Covers the gap above the tabs so scrolled content can?t peek through */
 .admin-co-tabs::before {
     content: "";
     position: absolute;
@@ -2354,7 +2354,7 @@
     background: #fafafa;
 }
 
-/* First overview panel sits after the head — no card chrome */
+/* First overview panel sits after the head ? no card chrome */
 .admin-co-overview-head + .admin-card.admin-co-panel {
     border: none;
     padding: 0;
@@ -4437,7 +4437,7 @@ body.admin-co-modal-lock {
     }
 }
 
-/* Business providers — reuse pet-owners patterns */
+/* Business providers ? reuse pet-owners patterns */
 .admin-business-providers .admin-po-customers,
 .admin-business-providers .admin-po-disputes,
 .admin-business-providers .admin-po-tickets {
@@ -4674,7 +4674,7 @@ body.admin-co-modal-lock {
     white-space: nowrap;
 }
 
-/* Space host — Location & Service Areas */
+/* Space host ? Location & Service Areas */
 .admin-bp-areas-list {
     display: flex;
     flex-direction: column;
@@ -5433,5 +5433,289 @@ body.admin-co-modal-lock {
 
     .admin-co-pet-hero-stat:first-child {
         padding-left: 0;
+    }
+}
+
+/* -- Customer Bookings tab -- */
+.admin-co-bookings-tab {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.admin-co-bk-toolbar {
+    margin: 0;
+}
+
+/* Booking status filters - reuse existing palette tokens */
+.admin-po-filter.is-completed {
+    color: #a7c569;
+    border-color: #d8e8b7;
+    background: #fbfff4;
+}
+
+.admin-po-filter.is-completed.is-active {
+    background: #a7c569;
+    border-color: #a7c569;
+    color: #fff;
+}
+
+.admin-po-filter.is-confirmed {
+    color: #a1c25d;
+    border-color: #d8e8b7;
+    background: #f4f8ec;
+}
+
+.admin-po-filter.is-confirmed.is-active {
+    background: #a1c25d;
+    border-color: #a1c25d;
+    color: #fff;
+}
+
+.admin-po-filter.is-disputed {
+    color: #ffb13f;
+    border-color: #ffb13f;
+    background: #fffaf2;
+}
+
+.admin-po-filter.is-disputed.is-active {
+    background: #ffc97a;
+    border-color: #ffc97a;
+    color: #fff;
+}
+
+.admin-po-filter.is-cancelled {
+    color: #ff6e6e;
+    border-color: #ff6e6e;
+    background: rgba(255, 110, 110, 0.1);
+}
+
+.admin-po-filter.is-cancelled.is-active {
+    background: #ff6e6e;
+    border-color: #ff6e6e;
+    color: #fff;
+}
+
+.admin-po-filter.is-refunded {
+    color: #7dafd2;
+    border-color: #cbdce8;
+    background: #f1f5f8;
+}
+
+.admin-po-filter.is-refunded.is-active {
+    background: #a3bccd;
+    border-color: #a3bccd;
+    color: #fff;
+}
+
+.admin-co-bk-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.admin-co-bk-card {
+    border: 1px solid rgba(59, 55, 49, 0.1);
+    border-radius: 12px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.admin-co-bk-card.is-disputed {
+    background: #fffaf2;
+    border-color: #ffc97a;
+}
+
+.admin-co-bk-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(59, 55, 49, 0.08);
+}
+
+.admin-co-bk-card.is-disputed .admin-co-bk-card-head {
+    background: #fef0dc;
+    border-bottom-color: rgba(255, 177, 63, 0.2);
+}
+
+.admin-co-bk-meta {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+.admin-co-bk-meta-label {
+    color: #9c9a97;
+}
+
+.admin-co-bk-meta-value {
+    color: #9c9a97;
+    font-weight: 500;
+}
+
+.admin-co-bk-warn {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.admin-co-bk-card-body {
+    display: grid;
+    grid-template-columns: minmax(160px, 1.4fr) minmax(100px, 0.9fr) minmax(160px, 1.4fr) minmax(80px, 0.7fr) minmax(70px, 0.6fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+}
+
+.admin-co-bk-pet {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.admin-co-bk-pet-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #f3f3f3;
+}
+
+.admin-co-bk-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.admin-co-bk-field-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+.admin-co-bk-field-label .admin-co-pet-type-icon {
+    display: inline-flex;
+    width: 12px;
+    height: 12px;
+}
+
+.admin-co-bk-field-label .admin-co-pet-type-icon svg {
+    width: 12px;
+    height: 12px;
+}
+
+.admin-co-bk-field-value {
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-co-bk-field-value.is-muted {
+    color: #9c9a97;
+    font-weight: 400;
+}
+
+.admin-co-bk-total {
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.admin-co-bk-col--status {
+    justify-self: end;
+}
+
+/* Pill badges on booking cards ? same tokens as filters / po-status */
+.admin-co-booking-status.is-pill {
+    padding: 6px 12px;
+}
+
+.admin-co-booking-status.is-pill.is-completed {
+    color: #a7c569;
+    border-color: #d8e8b7;
+    background: #fbfff4;
+}
+
+.admin-co-booking-status.is-pill.is-confirmed {
+    color: #a1c25d;
+    border-color: #d8e8b7;
+    background: #f4f8ec;
+}
+
+.admin-co-booking-status.is-pill.is-disputed {
+    color: #ffb13f;
+    border-color: #ffb13f;
+    background: #fffaf2;
+}
+
+.admin-co-booking-status.is-pill.is-cancelled {
+    color: #ff6e6e;
+    border-color: #ff6e6e;
+    background: rgba(255, 110, 110, 0.1);
+}
+
+.admin-co-booking-status.is-pill.is-refunded {
+    color: #7dafd2;
+    border-color: #cbdce8;
+    background: #f1f5f8;
+}
+
+.admin-co-booking-status.is-confirmed {
+    color: #a1c25d;
+}
+
+@media (max-width: 1199.98px) {
+    .admin-co-bk-card-body {
+        grid-template-columns: minmax(140px, 1.2fr) minmax(90px, 0.8fr) minmax(140px, 1.2fr) minmax(70px, 0.6fr) minmax(60px, 0.5fr) auto;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .admin-co-bk-card-body {
+        grid-template-columns: 1fr 1fr;
+        gap: 14px 16px;
+    }
+
+    .admin-co-bk-col--pet {
+        grid-column: 1 / -1;
+    }
+
+    .admin-co-bk-col--status {
+        justify-self: start;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .admin-co-bk-card-head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-co-bk-card-body {
+        grid-template-columns: 1fr;
     }
 }
