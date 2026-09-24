@@ -514,7 +514,7 @@
     padding: 8px 8px;
     border-radius: 96px;
     font-family: Lato, sans-serif;
-    font-size: 8px;
+    font-size: 10px;
     font-weight: 400;
     white-space: nowrap;
     border: 1px solid #d8e8b7;
@@ -589,7 +589,7 @@
     gap: 12px;
     margin-top: 10px;
     font-family: Lato, sans-serif;
-    font-size: 8px;
+    font-size: 10px;
     color: rgba(59, 55, 49, 0.65);
 }
 
@@ -716,7 +716,7 @@
     padding: 4px 10px;
     border-radius: 96px;
     font-family: Lato, sans-serif;
-    font-size: 8px;
+    font-size: 10px;
     font-weight: 400;
     white-space: nowrap;
 }
@@ -1536,6 +1536,12 @@
     background: #fff;
 }
 
+.admin-po-status.is-archived {
+    color: #649fc9;
+    border-color: #649fc9;
+    background: #fff;
+}
+
 .admin-po-status.has-dot::before {
     content: "";
     display: inline-block;
@@ -2203,7 +2209,7 @@
 
 .admin-co-action:hover {
     opacity: 0.9;
-    box-shadow: 0 4px 10px 0 rgba(59, 55, 49, 0.30);
+    box-shadow: 0 4px 10px 0 rgba(59, 55, 49, 0.3);
 }
 
 .admin-co-action-icon {
@@ -2287,13 +2293,14 @@
 
 /* Covers the gap above the tabs so scrolled content can’t peek through */
 .admin-co-tabs::before {
-    content: '';
+    content: "";
     position: absolute;
     left: 0;
     right: 0;
     bottom: 100%;
     height: 100px;
     background: var(--admin-page-bg);
+    pointer-events: none;
 }
 
 .admin-co-tab {
@@ -3585,7 +3592,7 @@ body.admin-co-modal-lock {
 
 .admin-co-transfer-pet-meta {
     margin: 0;
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato, sans-serif;
     font-size: 12px;
     font-weight: 400;
@@ -3640,7 +3647,9 @@ body.admin-co-modal-lock {
     background: #fff;
     text-align: left;
     cursor: pointer;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease;
 }
 
 .admin-co-transfer-account:hover {
@@ -4834,6 +4843,18 @@ body.admin-co-modal-lock {
     scrollbar-width: none;
     -ms-overflow-style: none;
     padding-bottom: 2px;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.admin-co-pets-scroller.is-dragging {
+    cursor: grabbing;
+    scroll-snap-type: none;
+}
+
+.admin-co-pets-scroller.is-dragging .admin-co-pet-pick {
+    cursor: grabbing;
 }
 
 .admin-co-pets-scroller::-webkit-scrollbar {
@@ -4887,6 +4908,12 @@ body.admin-co-modal-lock {
 .admin-co-pet-pick .admin-co-pet-meta,
 .admin-co-pet-pick .admin-co-pet-sessions {
     margin: 0;
+    color: #9c9a97;
+}
+
+.admin-co-pet-pick.is-active .admin-co-pet-meta,
+.admin-co-pet-pick.is-active .admin-co-pet-sessions {
+    color: #3b3731;
 }
 
 .admin-co-pet-avatar--pick {
@@ -5202,7 +5229,7 @@ body.admin-co-modal-lock {
 
 .admin-co-pet-health-notice p {
     margin: 0;
-    color: #A6BBC9;
+    color: #a6bbc9;
     font-family: Lato, sans-serif;
     font-size: 12px;
     font-weight: 400;
@@ -5350,7 +5377,7 @@ body.admin-co-modal-lock {
 }
 
 .admin-co-pet-flag-input::placeholder {
-    color: #3B3731;
+    color: #3b3731;
 }
 
 .admin-co-pet-flag-input:focus {
