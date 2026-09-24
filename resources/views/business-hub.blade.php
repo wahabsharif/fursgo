@@ -85,11 +85,11 @@
                 </div>
             </div>
 
-            <div class="active-section-header-pane" x-cloak x-show="activeSection === 'clients'"
-                x-transition.opacity.duration.280ms>
+            <div class="active-section-header-pane active-section-header-clients" x-cloak
+                x-show="activeSection === 'clients'" x-transition.opacity.duration.280ms>
                 <div>
                     <h2>Clients</h2>
-                    <p>Manage your clients and their pets.</p>
+                    <p style="font-weight: 400;">Manage your clients and their pets.</p>
                 </div>
             </div>
 
@@ -158,114 +158,117 @@
                 </button>
             </div>
         </div>
+    </div>
 
-        <div class="section-container" x-data="{ mountedSections: [@js($dashboardActiveSection)] }" x-init="const restoreServicesMenu = () => {
-            if (activeSection === 'services') {
-                window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: @js($dashboardNav['active_service_menu']) } }));
-            }
-        };
-        const restoreEarningsMenu = () => {
-            if (activeSection === 'earnings') {
-                window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: @js($dashboardNav['active_earnings_menu']) } }));
-            }
-        };
-        const easeSectionHeight = () => {
-            const el = $el;
-            const from = el.offsetHeight;
-            el.style.minHeight = from + 'px';
+    <div class="section-container" x-data="{ mountedSections: [@js($dashboardActiveSection)] }" x-init="const restoreServicesMenu = () => {
+        if (activeSection === 'services') {
+            window.dispatchEvent(new CustomEvent('services-menu-selected', { detail: { menu: @js($dashboardNav['active_service_menu']) } }));
+        }
+    };
+    const restoreEarningsMenu = () => {
+        if (activeSection === 'earnings') {
+            window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: @js($dashboardNav['active_earnings_menu']) } }));
+        }
+    };
+    const easeSectionHeight = () => {
+        const el = $el;
+        const from = el.offsetHeight;
+        el.style.minHeight = from + 'px';
+        requestAnimationFrame(() => {
+            const active = el.querySelector('.section-panel.section-active');
+            const to = active ? active.offsetHeight : from;
+            el.style.transition = 'min-height 0.38s cubic-bezier(0.22, 1, 0.36, 1)';
+            el.style.minHeight = to + 'px';
+            const clear = () => {
+                el.style.minHeight = '';
+                el.style.transition = '';
+            };
+            el.addEventListener('transitionend', clear, { once: true });
+            setTimeout(clear, 450);
+        });
+    };
+    restoreServicesMenu();
+    restoreEarningsMenu();
+    $watch('activeSection', (section) => {
+        if (!mountedSections.includes(section)) {
+            mountedSections.push(section);
+        }
+        if (section === 'services') {
+            restoreServicesMenu();
+        }
+        if (section === 'earnings') {
+            restoreEarningsMenu();
+        }
+        if (section === 'business-hub') {
             requestAnimationFrame(() => {
-                const active = el.querySelector('.section-panel.section-active');
-                const to = active ? active.offsetHeight : from;
-                el.style.transition = 'min-height 0.38s cubic-bezier(0.22, 1, 0.36, 1)';
-                el.style.minHeight = to + 'px';
-                const clear = () => {
-                    el.style.minHeight = '';
-                    el.style.transition = '';
-                };
-                el.addEventListener('transitionend', clear, { once: true });
-                setTimeout(clear, 450);
+                window.dispatchEvent(new CustomEvent('business-hub-mounted'));
+                window.scheduleWeeklyRevenueChartInit?.();
             });
-        };
-        restoreServicesMenu();
-        restoreEarningsMenu();
-        $watch('activeSection', (section) => {
-            if (!mountedSections.includes(section)) {
-                mountedSections.push(section);
-            }
-            if (section === 'services') {
-                restoreServicesMenu();
-            }
-            if (section === 'earnings') {
-                restoreEarningsMenu();
-            }
-            if (section === 'business-hub') {
+        }
+        if (section === 'earnings') {
+            requestAnimationFrame(() => {
+                window.dispatchEvent(new CustomEvent('earnings-mounted'));
+                window.scheduleEarningsChartsInit?.();
+            });
+        }
+        $nextTick(() => {
+            requestAnimationFrame(() => requestAnimationFrame(easeSectionHeight));
+        });
+    });">
+        <template x-if="mountedSections.includes('business-hub')">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'business-hub' }" x-init="$nextTick(() => {
                 requestAnimationFrame(() => {
                     window.dispatchEvent(new CustomEvent('business-hub-mounted'));
                     window.scheduleWeeklyRevenueChartInit?.();
                 });
-            }
-            if (section === 'earnings') {
+            })">
+                <x-business-hub.business-hub />
+            </div>
+        </template>
+        <template x-if="mountedSections.includes('bookings')">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'bookings' }">
+                <x-business-hub.bookings />
+            </div>
+        </template>
+        <template x-if="mountedSections.includes('availability')">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'availability' }">
+                <x-business-hub.availability />
+            </div>
+        </template>
+        <template x-if="mountedSections.includes('manage-availability')">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'manage-availability' }"
+                x-init="$nextTick(() => window.dispatchEvent(new CustomEvent('manage-availability-mounted')))">
+                <x-business-hub.availability.manage-availability />
+            </div>
+        </template>
+        <template x-if="mountedSections.includes('services')">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'services' }">
+                <x-business-hub.services />
+            </div>
+        </template>
+        <div @class([
+            'section-panel',
+            'section-active' => $dashboardActiveSection === 'clients',
+        ])
+            :class="{ 'section-active': activeSection === 'clients' }">
+            <x-business-hub.clients />
+        </div>
+        <template x-if="mountedSections.includes('earnings')">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'earnings' }" x-init="$nextTick(() => {
                 requestAnimationFrame(() => {
                     window.dispatchEvent(new CustomEvent('earnings-mounted'));
                     window.scheduleEarningsChartsInit?.();
                 });
-            }
-            $nextTick(() => {
-                requestAnimationFrame(() => requestAnimationFrame(easeSectionHeight));
-            });
-        });">
-            <template x-if="mountedSections.includes('business-hub')">
-                <div class="section-panel" :class="{ 'section-active': activeSection === 'business-hub' }" x-init="$nextTick(() => {
-                    requestAnimationFrame(() => {
-                        window.dispatchEvent(new CustomEvent('business-hub-mounted'));
-                        window.scheduleWeeklyRevenueChartInit?.();
-                    });
-                })">
-                    <x-business-hub.business-hub />
-                </div>
-            </template>
-            <template x-if="mountedSections.includes('bookings')">
-                <div class="section-panel" :class="{ 'section-active': activeSection === 'bookings' }">
-                    <x-business-hub.bookings />
-                </div>
-            </template>
-            <template x-if="mountedSections.includes('availability')">
-                <div class="section-panel" :class="{ 'section-active': activeSection === 'availability' }">
-                    <x-business-hub.availability />
-                </div>
-            </template>
-            <template x-if="mountedSections.includes('manage-availability')">
-                <div class="section-panel" :class="{ 'section-active': activeSection === 'manage-availability' }"
-                    x-init="$nextTick(() => window.dispatchEvent(new CustomEvent('manage-availability-mounted')))">
-                    <x-business-hub.availability.manage-availability />
-                </div>
-            </template>
-            <template x-if="mountedSections.includes('services')">
-                <div class="section-panel" :class="{ 'section-active': activeSection === 'services' }">
-                    <x-business-hub.services />
-                </div>
-            </template>
-            <template x-if="mountedSections.includes('clients')">
-                <div class="section-panel" :class="{ 'section-active': activeSection === 'clients' }">
-                    <x-business-hub.clients />
-                </div>
-            </template>
-            <template x-if="mountedSections.includes('earnings')">
-                <div class="section-panel" :class="{ 'section-active': activeSection === 'earnings' }" x-init="$nextTick(() => {
-                    requestAnimationFrame(() => {
-                        window.dispatchEvent(new CustomEvent('earnings-mounted'));
-                        window.scheduleEarningsChartsInit?.();
-                    });
-                })">
-                    <x-business-hub.earnings />
-                </div>
-            </template>
-            <template x-if="mountedSections.includes('settings')">
-                <div class="section-panel" :class="{ 'section-active': activeSection === 'settings' }">
-                    <x-business-hub.settings />
-                </div>
-            </template>
-        </div>
+            })">
+                <x-business-hub.earnings />
+            </div>
+        </template>
+        <template x-if="mountedSections.includes('settings')">
+            <div class="section-panel" :class="{ 'section-active': activeSection === 'settings' }">
+                <x-business-hub.settings />
+            </div>
+        </template>
+    </div>
 </section>
 
 <style>
@@ -447,7 +450,6 @@
         align-items: center;
         justify-content: space-between;
         gap: 1rem;
-        margin-top: 2.5rem;
         margin-bottom: 2rem;
     }
 
@@ -547,6 +549,11 @@
     .active-section-header-pane {
         grid-area: 1 / 1;
         width: 100%;
+        margin-bottom: 2rem;
+    }
+
+    .active-section-header-clients {
+        margin-bottom: 40px;
     }
 
     .section-container {
@@ -555,7 +562,8 @@
     }
 
     .section-container:has(.section-panel.section-active .ma-board),
-    .section-container:has(.section-panel.section-active .service-form-footer) {
+    .section-container:has(.section-panel.section-active .service-form-footer),
+    .section-container:has(.section-panel.section-active .clients-list-table-shell) {
         overflow: visible;
     }
 

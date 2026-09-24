@@ -1,0 +1,8 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="120" height="149" viewBox="0 0 120 149" fill="none"
+    xmlns="http://www.w3.org/2000/svg">
+    <g id="Group 4843">
+        <path id="Rectangle 295" d="M1 10.0001C1 4.47722 5.47715 5.64013e-05 11 5.36814e-05L120 0V89.5C120 122.361 93.3609 149 60.5 149L9 149C4.58172 149 1 145.418 1 141V10.0001Z" fill="#C9DDA0" fill-opacity="0.2"/>
+        <path id="Rectangle 294" d="M1 10C1 4.47716 5.47715 0 11 0H100V79.5C100 117.884 68.8838 149 30.5 149H9C4.58172 149 1 145.418 1 141V10Z" fill="#C9DDA0" fill-opacity="0.6"/>
+        <path id="Rectangle 293" d="M0 0H80V77.9412C80 117.186 48.1859 149 8.94118 149V149C4.0031 149 0 144.997 0 140.059V0Z" fill="#C9DDA0"/>
+    </g>
+</svg>
