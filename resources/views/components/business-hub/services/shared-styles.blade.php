@@ -509,6 +509,10 @@
             font-weight: 600;
         }
 
+        .service-list-table.is-space tbody td.service-duration-col {
+            font-weight: 400;
+        }
+
         .service-list-table .service-name-col {
             width: 20%;
         }

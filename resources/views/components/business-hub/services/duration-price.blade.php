@@ -1,6 +1,7 @@
 @props([
     'showBySize' => true,
     'showBuffer' => true,
+    'showBaseDuration' => true,
     'largeMode' => 'dropdown',
     'money' => false,
 ])
@@ -12,13 +13,13 @@
 @endphp
 
 <div class="service-dp service-duration-fieldset service-price-fieldset" x-data="{
-    baseDuration: @entangle('baseDuration').live,
+    @if ($showBaseDuration) baseDuration: @entangle('baseDuration').live, @endif
     @if ($showBuffer) bufferTime: @entangle('bufferTime').live, @endif
     basePrice: $wire.entangle('basePrice').live,
-    overtimeCharge: $wire.entangle('overtimeCharge').live,
-    overtimePer: $wire.entangle('overtimePer').live,
-    showAdvancedPrice: true,
-    @if ($showBySize) selectedSizes: $wire.entangle('selectedSizes').live,
+        overtimeCharge: $wire.entangle('overtimeCharge').live,
+        overtimePer: $wire.entangle('overtimePer').live,
+        showAdvancedPrice: true,
+        @if ($showBySize) selectedSizes: $wire.entangle('selectedSizes').live,
         durationSmall: @entangle('durationSmall').live,
         durationMedium: @entangle('durationMedium').live,
         durationLarge: @entangle('durationLarge').live,
@@ -29,10 +30,10 @@
         openDurationSmall: false,
         openDurationMedium: false,
         openDurationLarge: false, @endif
-    openBaseDuration: false,
+    @if ($showBaseDuration) openBaseDuration: false, @endif
     @if ($showBuffer) openBufferTime: false, @endif
     openOvertimePer: false,
-    @if ($showBySize) isDurationEmpty(value) {
+        @if ($showBySize) isDurationEmpty(value) {
             return value === null || value === '';
         },
         isSizeSelected(size) {
@@ -64,7 +65,11 @@
             this.$watch('selectedSizes', syncBySize);
         }, @endif
 }" {{ $attributes }}>
-    <div @class(['service-dp-top', 'is-pair' => !$showBuffer])>
+    <div @class([
+        'service-dp-top',
+        'is-pair' => $showBaseDuration && !$showBuffer,
+        'is-price-only' => !$showBaseDuration,
+    ])>
         <label class="service-field">
             <span>Base Price</span>
             <x-business-hub.services.price-number-input model="basePrice" width="100%"
@@ -72,11 +77,13 @@
                 :decimals="$money ? 2 : 0" />
         </label>
 
-        <label class="service-field">
-            <span>Base Duration</span>
-            <x-business-hub.services.duration-select model="baseDuration" open-key="openBaseDuration"
-                :options="$durationOptions" />
-        </label>
+        @if ($showBaseDuration)
+            <label class="service-field">
+                <span>Base Duration</span>
+                <x-business-hub.services.duration-select model="baseDuration" open-key="openBaseDuration"
+                    :options="$durationOptions" />
+            </label>
+        @endif
 
         @if ($showBuffer)
             <label class="service-field">
@@ -236,6 +243,15 @@
         .service-dp-top.is-pair {
             grid-template-columns: 1fr 1fr;
             gap: 2.5rem;
+        }
+
+        .service-dp-top.is-price-only {
+            display: block;
+        }
+
+        .service-dp-top.is-price-only>.service-field {
+            width: 100%;
+            max-width: 317px;
         }
 
         .service-dp .service-field>span em {
@@ -596,6 +612,10 @@
                 width: 100%;
                 max-width: none;
                 flex-basis: auto;
+            }
+
+            .service-dp-top.is-price-only>.service-field {
+                max-width: none;
             }
 
             .service-dp-overtime-per {

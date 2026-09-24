@@ -37,9 +37,7 @@ new class extends Component {
 
     private function formVariant(): string
     {
-        return strtolower((string) data_get(auth('groomer_spacer')->user() ?? auth()->user(), 'user_type', '')) === 'space'
-            ? 'space'
-            : 'groomer';
+        return strtolower((string) data_get(auth('groomer_spacer')->user() ?? auth()->user(), 'user_type', '')) === 'space' ? 'space' : 'groomer';
     }
 
     private function editState(Service $service): array
@@ -237,7 +235,7 @@ new class extends Component {
 
 <section class="service-list-wrapper" aria-label="Service list">
     <div class="service-list-table-shell">
-        <table class="service-list-table">
+        <table @class(['service-list-table', 'is-space' => $isSpace])>
             <thead>
                 <tr>
                     <th class="service-name-col">Service Name</th>

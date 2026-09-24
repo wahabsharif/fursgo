@@ -62,9 +62,7 @@ class BusinessHubServiceFormState
             'selectedSizes' => array_values((array) (data_get($compat, 'pet_size') ?: data_get($compat, 'pet_sizes', []))),
             'basePrice' => $basePrice,
             'overtimeCharge' => self::numericPrice(data_get($pricing, 'overtime_charge.price'), 10.0),
-            'overtimePer' => $shortMin
-                ? (string) (data_get($pricing, 'overtime_charge.per') ?: '15 min')
-                : self::minutesLabel(data_get($pricing, 'overtime_charge.per'), '15 Minutes'),
+            'overtimePer' => self::minutesLabel(data_get($pricing, 'overtime_charge.per'), '15 Minutes'),
             'visibilityControls' => (bool) $addOn->visibility_controls,
         ];
 
