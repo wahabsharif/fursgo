@@ -6875,6 +6875,7 @@ body.admin-co-modal-lock {
     border: 1.5px solid #d8d6d3;
     border-radius: 50%;
     display: block;
+    box-sizing: border-box;
 }
 
 .admin-co-act-avatar,
@@ -6984,6 +6985,23 @@ body.admin-co-modal-lock {
     border: 1px solid #ACACAC;
 }
 
+/* Provider activity categories — reuse the same palette tokens */
+.admin-co-act-chip.is-profile {
+    background: #F1F5F8;
+    color: #7DAFD2;
+    border: 1px solid #CBDCE8;
+}
+.admin-co-act-chip.is-payouts {
+    background: #FDE9DF;
+    color: #FFA06E;
+    border: 1px solid #FBAC83;
+}
+.admin-co-act-chip.is-compliance {
+    background: #FEF0DC;
+    color: #FFAF3B;
+    border: 1px solid #FFC97A;
+}
+
 .admin-co-act-chip.is-account.is-active {
     background: #7aa3be;
     color: #fff;
@@ -7010,6 +7028,39 @@ body.admin-co-modal-lock {
 }
 .admin-co-act-chip.is-admin.is-active {
     background: #9c9a97;
+    color: #fff;
+}
+
+.admin-co-act-chip.is-profile.is-active {
+    background: #7aa3be;
+    color: #fff;
+}
+.admin-co-act-chip.is-payouts.is-active {
+    background: #ee9a62;
+    color: #fff;
+}
+.admin-co-act-chip.is-compliance.is-active {
+    background: #e0b15c;
+    color: #fff;
+}
+
+/* Provider activity: Bookings uses the green pets palette from the mock */
+.admin-co-activity-tab--provider .admin-co-act-chip.is-bookings {
+    background: #F4F8EC;
+    color: #A7C569;
+    border: 1px solid #D8E8B7;
+}
+.admin-co-activity-tab--provider .admin-co-act-chip.is-bookings.is-active {
+    background: #A7C569;
+    color: #fff;
+}
+.admin-co-activity-tab--provider .admin-co-act-chip.is-account {
+    background: #FDE9DF;
+    color: #FFA06E;
+    border: 1px solid #FBAC83;
+}
+.admin-co-activity-tab--provider .admin-co-act-chip.is-account.is-active {
+    background: #ee9a62;
     color: #fff;
 }
 
@@ -7092,13 +7143,22 @@ body.admin-co-modal-lock {
 .admin-co-act-dot.is-support {
     background: #7DAFD2;
 }
+.admin-co-act-dot.is-profile {
+    background: #7DAFD2;
+}
 .admin-co-act-dot.is-pets {
     background: #A7C569;
 }
 .admin-co-act-dot.is-bookings {
     background: #FFA06E;
 }
+.admin-co-act-dot.is-payouts {
+    background: #FFA06E;
+}
 .admin-co-act-dot.is-payments {
+    background: #FFAF3B;
+}
+.admin-co-act-dot.is-compliance {
     background: #FFAF3B;
 }
 .admin-co-act-dot.is-referrals {
@@ -7176,6 +7236,39 @@ body.admin-co-modal-lock {
     background: #F0F0F0;
     color: #ACACAC;
     border: 1px solid #ACACAC;
+}
+
+.admin-co-act-pill.is-profile {
+    background: #F1F5F8;
+    color: #7DAFD2;
+    border: 1px solid #CBDCE8;
+}
+.admin-co-act-pill.is-payouts {
+    background: #FDE9DF;
+    color: #FFA06E;
+    border: 1px solid #FBAC83;
+}
+.admin-co-act-pill.is-compliance {
+    background: #FEF0DC;
+    color: #FFAF3B;
+    border: 1px solid #FFC97A;
+}
+
+.admin-co-activity-tab--provider .admin-co-act-dot.is-bookings {
+    background: #A7C569;
+}
+.admin-co-activity-tab--provider .admin-co-act-pill.is-bookings {
+    background: #F4F8EC;
+    color: #A7C569;
+    border: 1px solid #D8E8B7;
+}
+.admin-co-activity-tab--provider .admin-co-act-dot.is-account {
+    background: #FFA06E;
+}
+.admin-co-activity-tab--provider .admin-co-act-pill.is-account {
+    background: #FDE9DF;
+    color: #FFA06E;
+    border: 1px solid #FBAC83;
 }
 
 .admin-co-act-ref {

@@ -312,7 +312,11 @@ foreach ($providers as $provider) {
                 <x-admin.provider.overview :profile="$profile" />
             </div>
 
-            @foreach (['profile' => 'Profile', 'bookings' => 'Bookings', 'payouts' => 'Payouts', 'compliance' => 'Compliance', 'account' => 'Account', 'support' => 'Support', 'activity' => 'Activity'] as $tabKey => $tabLabel)
+            <div x-show="detailTab === 'activity'" x-cloak>
+                <x-admin.provider.activity :profile="$profile" />
+            </div>
+
+            @foreach (['profile' => 'Profile', 'bookings' => 'Bookings', 'payouts' => 'Payouts', 'compliance' => 'Compliance', 'account' => 'Account', 'support' => 'Support'] as $tabKey => $tabLabel)
             <div class="admin-co-placeholder" x-show="detailTab === '{{ $tabKey }}'" x-cloak>
                 <h2 class="admin-page-title mb-0">{{ $tabLabel }}</h2>
                 <p class="admin-section-label mb-0">This section will be built next.</p>
