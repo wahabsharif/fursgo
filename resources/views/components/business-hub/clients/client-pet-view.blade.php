@@ -162,7 +162,7 @@
         flex-shrink: 0;
         overflow: hidden;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 18px;
         font-weight: 600;
     }
@@ -186,7 +186,7 @@
         align-items: center;
         gap: 6px;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-style: normal;
         font-weight: 600;
@@ -209,7 +209,7 @@
     .client-pet-card__breed {
         margin: 5px 0 0;
         color: #9D9B98;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 400;
         line-height: 19px;
@@ -231,7 +231,7 @@
         gap: 10px;
         min-width: 0;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-style: normal;
         font-weight: 400;
@@ -272,7 +272,7 @@
         border: 0;
         background: transparent;
         color: #FFAE37;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         font-weight: 600;
         line-height: normal;
@@ -291,7 +291,7 @@
         color: #9D9B98;
         text-align: center;
         padding: 2rem 0;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
     }
 

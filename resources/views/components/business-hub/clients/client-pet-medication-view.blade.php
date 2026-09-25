@@ -960,7 +960,7 @@
             border-radius: 100px;
             background: #F5F5F5;
             color: #9D9B98;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 14px;
             font-weight: 500;
             line-height: normal;
@@ -979,7 +979,7 @@
             align-items: center;
             gap: 8px;
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 16px;
             font-weight: 400;
             line-height: normal;
@@ -1027,7 +1027,7 @@
             background: transparent;
             padding: 0 0 20px;
             color: #9D9B98;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 18px;
             font-weight: 600;
             line-height: normal;
@@ -1101,10 +1101,14 @@
             border-bottom: 0;
         }
 
+        .client-pet-medication-summary__label {
+            color: #9D9B98 !important;
+        }
+
         .client-pet-medication-summary__label,
         .client-pet-medication-summary__value {
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 16px;
             font-weight: 400;
             line-height: normal;
@@ -1140,7 +1144,7 @@
             text-align: left;
             padding: 0 30px;
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 16px;
             font-weight: 400;
             line-height: normal;
@@ -1185,7 +1189,7 @@
             height: 32px;
             padding: 0 10px;
             border-radius: 100px;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 14px;
             font-weight: 500;
             line-height: normal;
@@ -1219,7 +1223,7 @@
             padding-bottom: 12px;
             border-bottom: 1px solid #E2E2E2;
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 16px;
             font-weight: 600;
             line-height: normal;
@@ -1231,7 +1235,7 @@
         .client-pet-medication-info-bullets,
         .client-pet-medication-tolerance-item {
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 16px;
             font-weight: 400;
             line-height: 1.4;
@@ -1397,7 +1401,7 @@
             border-radius: 10px;
             background: #fff;
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 16px;
             font-weight: 400;
             outline: none;
@@ -1438,7 +1442,7 @@
             border: 0;
             border-radius: 100px;
             padding: 8px 16px;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
@@ -1485,7 +1489,7 @@
             gap: 8px;
             margin: 0;
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 16px;
             font-weight: 600;
             line-height: normal;
@@ -1512,7 +1516,7 @@
         .client-pet-medication-note-card__body {
             margin: 0;
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 16px;
             font-weight: 400;
             line-height: normal;
@@ -1547,7 +1551,7 @@
             padding: 10px 14px;
             text-align: left;
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
@@ -1571,10 +1575,12 @@
             border: 1px dashed #E2E2E2;
             border-radius: 10px;
             background: transparent;
-            color: #FFC97A;
-            font-family: Lato, sans-serif;
+            color: #3B3731;
+            font-family: Lato;
             font-size: 16px;
+            font-style: normal;
             font-weight: 600;
+            line-height: normal;
             cursor: pointer;
         }
 
@@ -1689,7 +1695,7 @@
             flex-direction: column;
             align-items: center;
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 12px;
             font-weight: 600;
             line-height: normal;
@@ -1708,7 +1714,7 @@
         .client-pet-medication-gallery__error {
             margin: 12px 0 0;
             color: #C4544A;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 13px;
             font-weight: 600;
         }
@@ -1716,9 +1722,9 @@
         .client-pet-medication-empty,
         .client-pet-medication-empty-cell {
             color: #9D9B98 !important;
-            text-align: center;
+            text-align: center !important;
             padding: 24px 0;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 16px;
         }
 
