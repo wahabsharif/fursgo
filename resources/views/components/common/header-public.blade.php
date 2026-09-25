@@ -377,8 +377,8 @@
                                         <a href="{{ route('signup-groomer-space') }}" class="signup-btn active"
                                             wire:navigate>Sign Up</a>
                                     @else
-                                        <a href="{{ route('login') }}" class="login-btn" wire:navigate>Log in</a>
-                                        <a href="{{ route('signup') }}" class="signup-btn active" wire:navigate>Sign Up</a>
+                                        <a href="{{ route('login-signup.login') }}" class="login-btn">Log in</a>
+                                        <a href="{{ route('login-signup.signup') }}" class="signup-btn active">Sign Up</a>
                                     @endif
                                 </div>
                             </li>

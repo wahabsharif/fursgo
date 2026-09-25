@@ -1999,3 +1999,46 @@ p.time-text {
 .custom-select.open .select-trigger svg {
     transform: rotate(180deg);
 }
+
+/* Header nav stays visible above 991px. Below that, hamburger opens the menu. */
+@media (max-width: 991px) {
+    body.menu-open {
+        overflow: hidden;
+    }
+
+    .menu-toggle {
+        display: block;
+        z-index: 10;
+        margin-bottom: 10px;
+    }
+
+    header .menu-items {
+        flex-direction: column;
+        width: 100%;
+        display: none;
+        position: fixed;
+        top: 80px;
+        left: 0;
+        height: calc(100vh - 80px);
+        background-color: #fff;
+        z-index: 9999;
+        padding-top: 20px;
+        gap: 30px;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    header .menu-items.active {
+        display: flex;
+    }
+
+    header .menu-items li {
+        width: 100%;
+        text-align: center;
+    }
+
+    header .login-btn,
+    header .signup-btn {
+        width: 80%;
+    }
+}

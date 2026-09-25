@@ -1,0 +1,626 @@
+/* Extracted from legacy login-signup/owner_account_setup_form.php */
+
+        :root {
+            --owner-account-inside-padding: 2% 12%;
+            --bg: #fbf7f2;
+            --accent: #f7b86b;
+            /* orange */
+            --muted: #9D9B98;
+            --card-radius: 12px;
+            --shadow: 0 6px 18px rgba(34, 34, 34, 0.06);
+            --soft-shadow: 0 4px 10px rgba(34, 34, 34, 0.04);
+        }
+
+        .form-outer-div {
+            width: 100%;
+            background: #fff;
+            height: auto;
+            border-radius: 10px;
+            position: relative;
+            padding-bottom: 80px;
+            /* space for buttons */
+        }
+
+        .steps-and-btn {
+            position: relative;
+        }
+
+        #goBack {
+            position: absolute;
+            top: 15px;
+        }
+
+        .steps-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: var(--owner-account-inside-padding);
+        }
+
+
+        .sub-heading-div {
+            padding: 15px 20px;
+            border-radius: 10px 10px 0 0;
+            border: 1px solid #F2F2F2;
+            background: #FFF;
+        }
+
+        .sub-heading {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .upload-card::after {
+            content: "";
+            border: 1px solid #F2F2F2;
+            height: 280px;
+            position: absolute;
+            right: 0;
+            bottom: -35px;
+        }
+
+        .upload-card.pet-details::after {
+            right: 0;
+        }
+
+
+
+        .step {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(6px);
+            transition: all 0.35s ease;
+            pointer-events: none;
+            position: absolute;
+            /* optional but improves layout stability */
+            width: 100%;
+            padding: var(--owner-account-inside-padding);
+        }
+
+        .step.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: auto;
+            position: relative;
+        }
+
+        .upload-card {
+            gap: 15px;
+            position: relative;
+        }
+
+        .user-icon-size-details {
+            color: #3B3731;
+            text-align: center;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .upload-btn {
+            display: inline-block;
+            padding: 10px 22px;
+            background: #FFC97A;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            color: #FFF;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .upload-btn:hover {
+            background: #eaa44f;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .custom-select.open .select-trigger,
+        .custom-select.has-value .select-trigger {
+            border-color: var(--border);
+        }
+
+        .input-wrapper textarea {
+            width: 100%;
+            max-width: auto;
+            resize: vertical;
+            /* allow up/down resize only */
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            outline: none;
+            min-height: 96px;
+            resize: none;
+            color: var(--font-color);
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        textarea::placeholder,
+        input::placeholder {
+            color: #D4D4D4;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .icon.success {
+            display: block;
+        }
+
+
+        /* step css  */
+
+        .step-indicator {
+            width: 100%;
+            max-width: 250px;
+        }
+
+        .steps-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
+            color: #FDFCF8;
+            text-align: center;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .step-item.active .step-circle {
+            background-color: #C9DDA0;
+        }
+
+        .step-item.inactive .step-circle {
+            background-color: #e8e8e8;
+            color: #c0c0c0;
+        }
+
+        .step-label {
+            color: #C9DDA0;
+            text-align: center;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .step-item.active .step-label {
+            color: #C9DDA0;
+        }
+
+        .step-item.inactive .step-label {
+            color: #d0d0d0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e8e8e8;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #C9DDA0;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .groomer-service-button {
+            padding: 14px 30px;
+        }
+
+        .groomer-service-button.active {
+            border: 1px solid var(--groomer-color);
+            background-color: var(--groomer-color);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .weight-option {
+            padding: 10px 10px;
+        }
+
+        /* Animation for demo purposes */
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .step-item.active .step-circle {
+            animation: pulse 2s infinite;
+        }
+
+        /* step css  */
+
+
+
+        .custom-select .select-trigger {
+            width: 100%;
+        }
+
+        .custom-wf-btn {
+            border: 1px solid var(--font-color);
+            background: none;
+            padding: 12px 32px 12px 32px;
+            text-align: center;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            cursor: pointer;
+            border-radius: 25px;
+        }
+
+
+        /* pet list details css  */
+
+        .select-default-label {
+            background: #fff;
+            border-radius: 8px;
+            padding: 18px 22px;
+            margin-bottom: 18px;
+            border: 1px solid #f0e7dd;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .pet-list-section {
+            display: none;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+
+
+        .pet-list-section.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .form-outer-div {
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+
+        .form-outer-div.hidden {
+            opacity: 0;
+            transform: translateY(6px);
+            pointer-events: none;
+        }
+
+        .pet-list {
+            gap: 18px;
+        }
+
+        .pet-card.selected {
+            border-color: rgba(247, 184, 107, 0.5);
+            box-shadow: 0 6px 0 rgba(247, 184, 107, 0.12), var(--shadow);
+        }
+
+        .pet-card {
+            gap: 50px;
+            padding: 30px 60px;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: var(--soft-shadow);
+            position: relative;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .avatar {
+            flex: 0 0 88px;
+            height: 88px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: inline-block;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .info {
+            flex: 1;
+        }
+
+        .pet-name {
+            font-weight: 600;
+            gap: 10px;
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .pet-label {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 2rem;
+        }
+
+        .meta {
+            gap: 18px;
+            margin-top: 10px;
+            color: #6b6b6b;
+            font-size: 14px;
+        }
+
+        .meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .meta svg {
+            width: 16px;
+            height: 16px;
+            opacity: 0.7;
+        }
+
+        .actions {
+            gap: 12px;
+            padding: 30px 0 0 0;
+        }
+
+        .btn-edit {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 30px;
+            border: 1px solid #e6e1db;
+            background: #fff;
+            cursor: pointer;
+            box-shadow: var(--soft-shadow);
+            height: 48px;
+        }
+
+        .btn-edit svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn-delete {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: inline-grid;
+            place-items: center;
+            border: 1px solid #d7d3cf;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .btn-delete svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .check {
+            position: absolute;
+            right: 18px;
+            top: 18px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+        }
+
+        .check.hidden {
+            display: none
+        }
+
+        /* layout for the right actions on the card */
+        .card-right {
+            display: flex;
+            align-items: center;
+            gap: 18px
+        }
+
+        /* layout for the right actions on the card */
+        .card-right {
+            display: flex;
+            align-items: center;
+            gap: 18px
+        }
+
+        /* responsive */
+        @media (max-width:720px) {
+            .pet-card {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 26px;
+            }
+
+            .card-right {
+                align-self: stretch;
+                width: 100%;
+                justify-content: space-between
+            }
+
+            .actions {
+                order: 99;
+                padding: 0;
+            }
+        }
+
+        .pet-card.alt {
+            background: #fbf0e4;
+        }
+
+        .pet-card .check {
+            opacity: 0;
+            /* start hidden */
+            pointer-events: none;
+            /* prevent interaction while hidden */
+            transition: opacity 0.3s ease-in-out;
+            /* smooth transition */
+        }
+
+        .pet-card.selected .check {
+            opacity: 1;
+            /* show */
+        }
+
+        /* calendar border set */
+        .bc-trigger {
+            border: 1px solid var(--border) !important;
+        }
+
+        .bc-trigger.bc-open {
+            border-color: var(--border) !important;
+        }
+
+        .bc-trigger:hover {
+            border-color: var(--border) !important;
+        }
+
+        .bc-dropdown {
+            border-color: var(--border) !important;
+        }
+
+        .delete-confirm-bar {
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+            margin: 0;
+        }
+
+        .delete-confirm-bar.show {
+            max-height: 100px;
+            opacity: 1;
+            margin: 6px 0;
+        }
+
+        .delete-confirm-inner {
+            background: rgba(255, 110, 110, 0.10);
+            border: 1px solid #FF6E6E;
+            border-radius: 12px;
+            padding: 25px 60px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .delete-confirm-msg {
+            color: #3B3731;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .btn-cancel-delete {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            border-radius: 96px;
+            padding: 10px 18px;
+            height: 48px;
+            transition: background 0.2s;
+        }
+
+        .btn-cancel-delete:hover {
+            background: #f5f5f5;
+        }
+
+        .btn-confirm-delete {
+            background: #FF6E6E;
+            border: none;
+            padding: 8px 20px;
+            cursor: pointer;
+            color: #fff;
+            transition: background 0.2s;
+            height: 48px;
+            border-radius: 96px;
+        }
+
+        .btn-confirm-delete:hover {
+            background: #c94444;
+        }
+
+        .pet-card.removing {
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
