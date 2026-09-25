@@ -144,7 +144,7 @@ class PetMedicationDetail extends Model
         $activities = [
             'bathing' => 'Bathing',
             'dryer' => 'Dryer',
-            'nail_trim' => 'Nail trim',
+            'nail_trim' => 'Nail Trim',
         ];
 
         return collect($activities)

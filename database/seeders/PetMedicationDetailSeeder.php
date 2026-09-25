@@ -15,7 +15,7 @@ class PetMedicationDetailSeeder extends Seeder
         PetDetail::query()
             ->select(['id', 'user_id', 'name', 'pet_type'])
             ->each(function (PetDetail $pet) use ($samples) {
-                $sample = $samples[$pet->name] ?? $this->defaultSample($pet);
+                $sample = array_merge($this->defaultSample($pet), $samples[$pet->name] ?? []);
 
                 PetMedicationDetail::updateOrCreate(
                     ['pet_detail_id' => $pet->id],
@@ -32,6 +32,12 @@ class PetMedicationDetailSeeder extends Seeder
     private function sampleDefinitions(): array
     {
         return [
+            'Bella' => [
+                'emergency_contact' => [
+                    'veterinary_clinic' => 'Greenwood Veterinary Practice',
+                    'phone' => '+44 01638 555 102',
+                ],
+            ],
             'Buddy' => [
                 'last_verified' => now()->subDays(12),
                 'veterinary_clinic' => 'Manchester Paws Veterinary Clinic',

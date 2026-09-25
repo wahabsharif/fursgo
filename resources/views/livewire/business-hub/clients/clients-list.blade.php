@@ -13,16 +13,19 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Renderless;
 use Livewire\Volt\Component;
+use Livewire\WithFileUploads;
 
 new class extends Component {
+    use WithFileUploads;
     private const BOOKING_LIST_COLUMNS = ['id', 'pet_owner_id', 'goormer_spacer_id', 'date', 'time', 'service', 'amount', 'staff', 'rating', 'visit_type', 'booking_status', 'cancelled_by', 'cancellation_reason', 'created_at', 'extra_add_ons', 'discount'];
 
     public ?int $completedBookingId = null;
-
 
     public ?int $declineBookingId = null;
 
@@ -37,6 +40,8 @@ new class extends Component {
     public ?string $rescheduleSelectedTime = null;
 
     public int $rescheduleDurationMinutes = 60;
+
+    public array $galleryUploads = [];
 
     private array $reschedulableStatuses = ['pending', 'confirmed'];
 
@@ -130,6 +135,13 @@ new class extends Component {
         return (int) (auth('groomer_spacer')->id() ?? 0);
     }
 
+    public function isSpaceProfile(): bool
+    {
+        $user = auth('groomer_spacer')->user() ?? auth()->user();
+
+        return strtolower((string) ($user->user_type ?? '')) === 'space';
+    }
+
     private function scopedClientBookingQuery(int $bookingId)
     {
         return Booking::query()->where('goormer_spacer_id', $this->spacerId())->where('pet_owner_id', $this->selectedClientId)->whereKey($bookingId);
@@ -149,7 +161,58 @@ new class extends Component {
         return Str::upper(Str::substr(Str::of($name)->explode(' ')->map(fn(string $part) => Str::substr($part, 0, 1))->implode(''), 0, 2));
     }
 
-    #[Computed(persist: true)]
+    public function mediaUrl(?string $path): ?string
+    {
+        $raw = trim((string) $path);
+
+        if ($raw === '') {
+            return null;
+        }
+
+        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://') || str_starts_with($raw, 'data:') || str_starts_with($raw, '/')) {
+            return $raw;
+        }
+
+        return asset('storage/' . ltrim($raw, '/'));
+    }
+
+    private function clientTypeFromCompleted(int $completedCount): string
+    {
+        if ($completedCount <= 1) {
+            return 'new';
+        }
+
+        if ($completedCount <= 4) {
+            return 'regular';
+        }
+
+        return 'repeat';
+    }
+
+    public function clientTypeLabel(string $type): string
+    {
+        return match ($type) {
+            'repeat' => 'Repeat Client',
+            'regular' => 'Regular Client',
+            default => 'New Client',
+        };
+    }
+
+    public function petFallbackColor(int $seed): string
+    {
+        $palette = ['#FBAC83', '#FFD88C', '#C9DDA0'];
+
+        return $palette[$seed % count($palette)];
+    }
+
+    public function clientAvatarFallbackColor(int $seed): string
+    {
+        $palette = ['#FFC97A', '#CBDCE8', '#FBAC83'];
+
+        return $palette[$seed % count($palette)];
+    }
+
+    #[Computed]
     public function allClientRows(): Collection
     {
         $spacerId = $this->spacerId();
@@ -190,11 +253,12 @@ new class extends Component {
             ->groupBy('pet_owner_id')
             ->pluck('upcoming_date', 'pet_owner_id');
 
-        $owners = User::query()
-            ->select(['id', 'name'])
-            ->whereIn('id', $ownerIds)
-            ->get()
-            ->keyBy('id');
+        $ownerColumns = ['id', 'name'];
+        if ($this->usersHaveProfileImage()) {
+            $ownerColumns[] = 'profile_image';
+        }
+
+        $owners = User::query()->select($ownerColumns)->whereIn('id', $ownerIds)->get()->keyBy('id');
 
         $petsByUser = PetDetail::query()->select(self::PET_LIST_COLUMNS)->whereIn('user_id', $ownerIds)->get()->groupBy('user_id');
 
@@ -204,12 +268,15 @@ new class extends Component {
                 $owner = $owners->get($ownerId);
                 $lastBookingAt = $stat->last_booking_at ? strtotime((string) $stat->last_booking_at) : 0;
                 $upcomingDate = $upcomingByOwner->get($ownerId);
+                $completedCount = (int) $stat->completed_count;
 
                 return [
                     'id' => $ownerId,
                     'name' => $owner?->name ?? 'Unknown',
                     'initials' => $this->clientInitialsFromName($owner?->name),
-                    'is_repeat' => (int) $stat->completed_count > 1,
+                    'avatar_url' => $this->mediaUrl($owner?->profile_image ?? null),
+                    'client_type' => $this->clientTypeFromCompleted($completedCount),
+                    'is_repeat' => $completedCount > 1,
                     'pets' => $petsByUser->get($ownerId) ?? collect(),
                     'upcoming_date' => $upcomingDate ? Carbon::parse($upcomingDate)->format('d/m/Y') : null,
                     'total_bookings' => (int) $stat->total_bookings,
@@ -258,9 +325,17 @@ new class extends Component {
             return null;
         }
 
-        $profileImage = $client->profile_image ?? null;
+        $profileImage = trim((string) ($client->profile_image ?? ''));
 
-        return filled($profileImage) ? asset('storage/' . ltrim((string) $profileImage, '/')) : null;
+        if ($profileImage === '') {
+            return null;
+        }
+
+        if (str_starts_with($profileImage, 'http://') || str_starts_with($profileImage, 'https://')) {
+            return $profileImage;
+        }
+
+        return asset('storage/' . ltrim($profileImage, '/'));
     }
 
     #[Computed]
@@ -339,6 +414,18 @@ new class extends Component {
     }
 
     public function setActiveFilter(string $filter): void
+    {
+        if (!in_array($filter, ['all', 'repeat', 'recent'], true)) {
+            return;
+        }
+
+        $this->activeFilter = $filter;
+        $this->perPage = 6;
+        $this->js('window.dispatchEvent(new CustomEvent("clients-filter-selected", { detail: { filter: ' . json_encode($filter) . ' } }))');
+    }
+
+    #[On('client-filter-selected')]
+    public function applySidebarFilter(string $filter = 'all'): void
     {
         if (!in_array($filter, ['all', 'repeat', 'recent'], true)) {
             return;
@@ -552,9 +639,7 @@ new class extends Component {
     {
         $user = Auth::guard('groomer_spacer')->user() ?? Auth::user();
 
-        return strtolower((string) ($user->user_type ?? 'groomer')) === 'space'
-            ? 'Space Host'
-            : 'Groomer';
+        return strtolower((string) ($user->user_type ?? 'groomer')) === 'space' ? 'Space Host' : 'Groomer';
     }
 
     public function openRescheduleModal(int $bookingId): void
@@ -634,8 +719,7 @@ new class extends Component {
             return;
         }
 
-        $start = DateTime::createFromFormat('H:i A', $this->rescheduleSelectedTime)
-            ?: DateTime::createFromFormat('h:i A', $this->rescheduleSelectedTime);
+        $start = DateTime::createFromFormat('H:i A', $this->rescheduleSelectedTime) ?: DateTime::createFromFormat('h:i A', $this->rescheduleSelectedTime);
         if (!$start) {
             return;
         }
@@ -707,6 +791,84 @@ new class extends Component {
                 'pet_owner_id' => $this->selectedClientId,
                 'groomer_guidance_notes' => $value,
             ]);
+        }
+
+        unset($this->selectedPet, $this->selectedPetMedication);
+    }
+
+    public function updatedGalleryUploads(): void
+    {
+        if ($this->galleryUploads === [] || !$this->selectedPetId || !$this->selectedClientId) {
+            return;
+        }
+
+        $this->validate([
+            'galleryUploads' => ['array', 'max:10'],
+            'galleryUploads.*' => ['image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120'],
+        ]);
+
+        $pet = PetDetail::query()->where('user_id', $this->selectedClientId)->find($this->selectedPetId);
+
+        if (!$pet) {
+            $this->reset('galleryUploads');
+
+            return;
+        }
+
+        $paths = [];
+
+        foreach ($this->galleryUploads as $file) {
+            $paths[] = $file->store('pet-gallery/' . $pet->id, 'public');
+        }
+
+        $gallery = $pet->medicationDetail?->photo_gallery ?? [];
+
+        if (!is_array($gallery)) {
+            $gallery = [];
+        }
+
+        $gallery = array_values([...$gallery, ...$paths]);
+
+        if ($pet->medicationDetail) {
+            $pet->medicationDetail->update(['photo_gallery' => $gallery]);
+        } else {
+            PetMedicationDetail::create([
+                'pet_detail_id' => $pet->id,
+                'pet_owner_id' => $this->selectedClientId,
+                'photo_gallery' => $gallery,
+            ]);
+        }
+
+        $this->reset('galleryUploads');
+        unset($this->selectedPet, $this->selectedPetMedication);
+    }
+
+    public function removePetGalleryPhoto(int $index): void
+    {
+        if (!$this->selectedPetId || !$this->selectedClientId || $index < 0) {
+            return;
+        }
+
+        $pet = PetDetail::query()->where('user_id', $this->selectedClientId)->find($this->selectedPetId);
+        $medication = $pet?->medicationDetail;
+
+        if (!$medication) {
+            return;
+        }
+
+        $gallery = $medication->photo_gallery ?? [];
+
+        if (!is_array($gallery) || !array_key_exists($index, $gallery)) {
+            return;
+        }
+
+        $path = $gallery[$index];
+        unset($gallery[$index]);
+        $gallery = array_values($gallery);
+        $medication->update(['photo_gallery' => $gallery]);
+
+        if (is_string($path) && $path !== '' && !in_array($path, $gallery, true) && !str_starts_with($path, 'http://') && !str_starts_with($path, 'https://') && !str_starts_with($path, '/') && !str_starts_with($path, 'data:')) {
+            Storage::disk('public')->delete($path);
         }
 
         unset($this->selectedPet, $this->selectedPetMedication);
@@ -934,7 +1096,7 @@ new class extends Component {
     public function setProfileTab(string $tab): void
     {
         $allowed = ['upcoming', 'pets', 'bookings', 'reviews', 'payments'];
-        $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
+        $isSpaceUser = $this->isSpaceProfile();
 
         if (!in_array($tab, $allowed, true)) {
             return;
@@ -1053,7 +1215,7 @@ new class extends Component {
                 'name' => $client?->name ?? 'Unknown',
                 'initials' => $client ? Str::upper(Str::substr($client->initials(), 0, 2)) : '??',
                 'is_verified' => filled($client?->email_verified_at),
-                'location' => trim((string) ($client?->address ?? '')) ?: 'Location not set',
+                'location' => trim((string) ($client?->address ?? '')) ?: 'Not set',
                 'client_since' => $clientSince ?? '—',
                 'pets_label' => $petsLabel,
                 'avatar_url' => $this->clientAvatarUrl($client),
@@ -1160,7 +1322,7 @@ new class extends Component {
         return Payment::query()
             ->where('pet_owner_id', $this->selectedClientId)
             ->whereHas('booking', fn($query) => $query->where('goormer_spacer_id', $this->spacerId()))
-            ->with(['booking:' . implode(',', self::BOOKING_LIST_COLUMNS), 'pet:' . implode(',', self::PET_LIST_COLUMNS)])
+            ->with(['booking:' . implode(',', self::BOOKING_LIST_COLUMNS), 'booking.pets:' . implode(',', self::PET_LIST_COLUMNS), 'pet:' . implode(',', self::PET_LIST_COLUMNS)])
             ->get();
     }
 
@@ -1239,6 +1401,62 @@ new class extends Component {
             ->first();
     }
 
+    public function formatProfileUpcomingWhen(mixed $date, string $raw): string
+    {
+        $dateLabel = '';
+
+        if ($date instanceof \DateTimeInterface) {
+            $dateLabel = $date->format('d/m/y');
+        } elseif (filled($date)) {
+            $dateLabel = (string) $date;
+        }
+
+        $range = $this->formatProfileUpcomingRange($raw);
+
+        if ($dateLabel === '') {
+            return $range;
+        }
+
+        return $range === '' ? $dateLabel : $dateLabel . ' · ' . $range;
+    }
+
+    public function formatProfileUpcomingRange(string $raw): string
+    {
+        if (!str_contains($raw, '-')) {
+            return trim($raw);
+        }
+
+        $parts = preg_split('/\s*-\s*/', $raw, 2);
+        preg_match('/(\d{1,2}:\d{2})/', (string) ($parts[0] ?? ''), $startMatch);
+        preg_match('/(\d{1,2}:\d{2})/', (string) ($parts[1] ?? ''), $endMatch);
+
+        if (empty($startMatch[1]) || empty($endMatch[1])) {
+            return trim($raw);
+        }
+
+        try {
+            $start = new DateTime($startMatch[1]);
+            $end = new DateTime($endMatch[1]);
+
+            if ($end < $start) {
+                $end->modify('+1 day');
+            }
+
+            $diffMinutes = max(0, (int) round(($end->getTimestamp() - $start->getTimestamp()) / 60));
+            $hours = intdiv($diffMinutes, 60);
+            $minutes = $diffMinutes % 60;
+            $durationLabel = match (true) {
+                $hours > 0 && $minutes === 0 => $hours . 'hr',
+                $hours > 0 => $hours . 'hr ' . $minutes . 'm',
+                default => $minutes . 'm',
+            };
+
+            return $start->format('H:i') . ' - ' . $end->format('H:i') . ' (' . $durationLabel . ')';
+        } catch (\Throwable $e) {
+            return trim($raw);
+        }
+    }
+
     public function formatProfileLocationLabel(?string $visitType): string
     {
         $label = str_replace('_', ' ', strtolower((string) $visitType));
@@ -1251,7 +1469,7 @@ new class extends Component {
             return 'Salon Visit';
         }
 
-        return ucfirst($label ?: 'N/A');
+        return $label === '' ? 'N/A' : ucwords($label);
     }
 
     public function formatProfileSpaceLabel(?string $visitType): string
@@ -1323,9 +1541,8 @@ new class extends Component {
 }; ?>
 
 @php
-    $isSpaceUser = auth()->check() && strtolower((string) auth()->user()->user_type) === 'space';
-    $profileWireTargets =
-        'viewProfile, closeProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, closePetDetails, openCompletedBookingModal, closeCompletedBookingModal, openRescheduleModal, closeRescheduleModal, confirmRescheduleBookingFromClient, openDeclineModal, closeDeclineModal, confirmDeclineBooking, updateGroomerGuidanceNotes, addGroomerNote, addOwnerNote, updateGroomerNote, deleteGroomerNote, updateOwnerNote, deleteOwnerNote, toggleReviewReply, closeReviewReply, submitReviewReply';
+    $isSpaceUser = $this->isSpaceProfile();
+    $profileWireTargets = 'viewProfile, closeProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, closePetDetails, openCompletedBookingModal, closeCompletedBookingModal, openRescheduleModal, closeRescheduleModal, confirmRescheduleBookingFromClient, openDeclineModal, closeDeclineModal, confirmDeclineBooking, updateGroomerGuidanceNotes, galleryUploads, removePetGalleryPhoto, addGroomerNote, addOwnerNote, updateGroomerNote, deleteGroomerNote, updateOwnerNote, deleteOwnerNote, toggleReviewReply, closeReviewReply, submitReviewReply';
 @endphp
 
 <div class="clients-section" x-data="{
@@ -1369,9 +1586,7 @@ new class extends Component {
     </div>
 
     @if ($selectedClientId)
-        <div class="clients-profile-host" x-show="$wire.selectedClientId" x-cloak
-            x-transition:enter="client-profile-panel-enter" x-transition:enter-start="client-profile-panel-enter-start"
-            x-transition:enter-end="client-profile-panel-enter-end" wire:loading.class="is-profile-loading"
+        <div class="clients-profile-host" x-show="$wire.selectedClientId" wire:loading.class="is-profile-loading"
             wire:target="viewProfile, setProfileTab, setProfileSort, setProfilePetSort, loadMoreProfile, viewPetDetails, closePetDetails">
             @php
                 $profilePanelView = 'components.business-hub.clients.profile-panel';
@@ -1381,44 +1596,28 @@ new class extends Component {
     @endif
 
     <section class="clients-list-wrapper" wire:key="clients-list-panel" aria-label="Clients list"
-        x-show="!$wire.selectedClientId" x-cloak>
-        <div class="clients-list-toolbar">
-            <div class="clients-pill-row">
-                @php
-                    $clientPills = [
-                        ['filter' => 'all', 'label' => 'All Clients', 'class' => 'all'],
-                        ['filter' => 'repeat', 'label' => 'Repeat Clients', 'class' => 'repeat'],
-                        ['filter' => 'recent', 'label' => 'Recently Booked', 'class' => 'recent'],
-                    ];
-                    if (in_array($activeFilter, ['all', 'repeat', 'recent'], true)) {
-                        usort($clientPills, function ($a, $b) use ($activeFilter) {
-                            return ($b['filter'] === $activeFilter) <=> ($a['filter'] === $activeFilter);
-                        });
-                    }
-                @endphp
-                @foreach ($clientPills as $pill)
-                    <button type="button" wire:click="setActiveFilter('{{ $pill['filter'] }}')"
-                        @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start'))"
-                        class="clients-pill {{ $pill['class'] }} {{ $activeFilter !== $pill['filter'] ? 'is-muted' : '' }}">
-                        {{ $pill['label'] }} ({{ $this->tabCounts[$pill['filter']] ?? 0 }})
-                    </button>
-                @endforeach
-            </div>
+        x-show="!$wire.selectedClientId">
+        <div class="clients-toolbar">
+            <label class="clients-search">
+                <input type="search" wire:model.live.debounce.300ms="search" placeholder="Search service list ..." />
+                <span class="clients-search-icon" aria-hidden="true">
+                    <x-business-hub.common.icon name="search" />
+                </span>
+            </label>
 
-            <div class="clients-list-actions">
-                <label class="clients-search">
-                    <input type="search" wire:model.live.debounce.300ms="search" placeholder="Type to search..." />
-                    <span class="clients-search-icon" aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path
-                                d="M5.73535 0.5C8.6267 0.500031 10.9707 2.844 10.9707 5.73535C10.9707 7.22006 10.3528 8.55933 9.35938 9.5127C8.41826 10.4158 7.14221 10.9707 5.73535 10.9707C2.844 10.9707 0.500031 8.6267 0.5 5.73535C0.5 2.84398 2.84398 0.5 5.73535 0.5Z"
-                                stroke="#A8A8A8" />
-                            <path
-                                d="M14.6466 15.3547C14.8419 15.55 15.1585 15.55 15.3537 15.3547C15.549 15.1594 15.549 14.8429 15.3537 14.6476L15.0002 15.0011L14.6466 15.3547ZM9.70605 9.70703L9.3525 10.0606L14.6466 15.3547L15.0002 15.0011L15.3537 14.6476L10.0596 9.35348L9.70605 9.70703Z"
-                                fill="#A8A8A8" />
-                        </svg>
-                    </span>
-                </label>
+            <div class="clients-toolbar-row">
+                <div class="clients-pill-row" role="tablist" aria-label="Client filters">
+                    @php
+                        $clientPills = [['filter' => 'all', 'label' => 'All Clients', 'class' => 'all'], ['filter' => 'repeat', 'label' => 'Repeat Clients', 'class' => 'repeat'], ['filter' => 'recent', 'label' => 'Recently Booked', 'class' => 'recent']];
+                    @endphp
+                    @foreach ($clientPills as $pill)
+                        <button type="button" wire:click="setActiveFilter('{{ $pill['filter'] }}')"
+                            @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start'))"
+                            class="clients-pill {{ $pill['class'] }} {{ $activeFilter === $pill['filter'] ? 'is-active' : '' }}">
+                            {{ $pill['label'] }} ({{ $this->tabCounts[$pill['filter']] ?? 0 }})
+                        </button>
+                    @endforeach
+                </div>
 
                 <div class="clients-list-sort" x-data="{
                     open: false,
@@ -1454,14 +1653,14 @@ new class extends Component {
                                 x-transition.opacity.duration.100ms
                                 :style="`position: fixed; left: ${menuLeft}px; top: ${menuTop}px; z-index: 99999;`">
                                 @foreach ([
-                                        'name_asc' => 'Name (A–Z)',
-                                        'name_desc' => 'Name (Z–A)',
-                                        'bookings_desc' => 'Most Bookings',
-                                        'bookings_asc' => 'Fewest Bookings',
-                                        'paid_desc' => 'Highest Paid',
-                                        'paid_asc' => 'Lowest Paid',
-                                        'upcoming_asc' => 'Upcoming Booking',
-                                    ] as $sortKey => $sortLabel)
+        'name_asc' => 'Name (A–Z)',
+        'name_desc' => 'Name (Z–A)',
+        'bookings_desc' => 'Most Bookings',
+        'bookings_asc' => 'Fewest Bookings',
+        'paid_desc' => 'Highest Paid',
+        'paid_asc' => 'Lowest Paid',
+        'upcoming_asc' => 'Upcoming Booking',
+    ] as $sortKey => $sortLabel)
                                     <button type="button" class="sort-options"
                                         :class="{ 'is-active': @js($sort) === '{{ $sortKey }}' }"
                                         wire:click="setSort('{{ $sortKey }}')"
@@ -1478,683 +1677,925 @@ new class extends Component {
         </div>
 
         <div class="clients-list-table-shell">
-            <table class="clients-list-table">
+            <table @class(['clients-list-table', 'is-space' => $isSpaceUser])>
+                <colgroup>
+                    <col class="clients-name-col" />
+                    @unless ($isSpaceUser)
+                        <col class="clients-pets-col" />
+                    @endunless
+                    <col class="clients-upcoming-col" />
+                    <col class="clients-bookings-col" />
+                    <col class="clients-paid-col" />
+                    <col class="clients-action-col" />
+                </colgroup>
                 <thead>
                     <tr>
-                        <th style="text-align: center;width: 15rem;">Client Name</th>
+                        <th class="clients-name-col">Client Name</th>
                         @unless ($isSpaceUser)
-                            <th>Pets</th>
+                            <th class="clients-pets-col">Pets</th>
                         @endunless
-                        <th>Upcoming Booking</th>
-                        <th>Total Bookings</th>
-                        <th>Total Paid</th>
-                        <th class="clients-view-col">View Profile</th>
+                        <th class="clients-upcoming-col">Upcoming Booking</th>
+                        <th class="clients-bookings-col">Total Bookings</th>
+                        <th class="clients-paid-col">Total Paid</th>
+                        <th class="clients-action-col">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($this->visibleClients as $client)
-                        <tr wire:key="client-row-{{ $client['id'] }}">
-                            <td>
+                        @php
+                            $clientType = $client['client_type'] ?? ($client['is_repeat'] ? 'repeat' : 'new');
+                            $hasUpcoming = filled($client['upcoming_date'] ?? null);
+                            $avatarUrl = $client['avatar_url'] ?? null;
+                        @endphp
+                        <tr wire:key="client-row-{{ $client['id'] }}" @class(['is-muted' => !$hasUpcoming])>
+                            <td class="clients-name-col">
                                 <div class="clients-name-cell">
-                                    <span class="clients-avatar-wrap" aria-hidden="true">
-                                        <span class="clients-avatar">{{ $client['initials'] }}</span>
-                                    </span>
+                                    @if ($avatarUrl)
+                                        <span class="clients-avatar-wrap has-photo" aria-hidden="true">
+                                            <img class="clients-avatar-img" src="{{ $avatarUrl }}" alt="" />
+                                        </span>
+                                    @else
+                                        <span class="clients-avatar-wrap is-initials" aria-hidden="true"
+                                            style="background: {{ $this->clientAvatarFallbackColor((int) $client['id']) }}">
+                                            <span class="clients-avatar">{{ $client['initials'] }}</span>
+                                        </span>
+                                    @endif
                                     <div class="clients-name-meta">
                                         <span class="clients-name">{{ $client['name'] }}</span>
-                                        <span class="clients-badge {{ $client['is_repeat'] ? 'is-repeat' : 'is-new' }}">
-                                            {{ $client['is_repeat'] ? 'Repeat Client' : 'New Client' }}
+                                        <span class="clients-badge is-{{ $clientType }}">
+                                            {{ $this->clientTypeLabel($clientType) }}
                                         </span>
                                     </div>
                                 </div>
                             </td>
                             @unless ($isSpaceUser)
-                                <td>
+                                <td class="clients-pets-col">
                                     @if ($client['pets']->isEmpty())
-                                        —
-                                    @elseif ($client['pets']->count() === 1)
-                                        @php $pet = $client['pets']->first(); @endphp
-                                        <div class="clients-pet-cell">
-                                            <span class="clients-pet-name">{{ trim((string) ($pet->name ?? '')) ?: '—' }}</span>
-                                            @if (trim((string) ($pet->pet_type ?? '')) !== '')
-                                                <span style="color: #9D9B98;font-weight: 400;">{{ $pet->pet_type }}</span>
-                                            @endif
-                                        </div>
+                                        <span class="clients-empty-value">—</span>
                                     @else
-                                        +{{ $client['pets']->count() }} Pets
+                                        @php
+                                            $firstPet = $client['pets']->first();
+                                            $extraPets = max(0, $client['pets']->count() - 1);
+                                            $petName = trim((string) ($firstPet->name ?? '')) ?: '—';
+                                            $petPhotoUrl = $this->mediaUrl($firstPet->photo ?? null);
+                                            $petInitial = Str::upper(Str::substr($petName, 0, 1)) ?: 'P';
+                                            $petColor = $this->petFallbackColor((int) ($firstPet->id ?? $client['id']));
+                                        @endphp
+                                        <div class="clients-pet-cell">
+                                            <span class="clients-pet-avatar" aria-hidden="true">
+                                                @if ($petPhotoUrl)
+                                                    <img src="{{ $petPhotoUrl }}" alt="" />
+                                                @else
+                                                    <span class="clients-pet-avatar-fallback"
+                                                        style="background: {{ $petColor }}">{{ $petInitial }}</span>
+                                                @endif
+                                            </span>
+                                            <span class="clients-pet-label">
+                                                {{ $petName }}@if ($extraPets > 0)
+                                                    <span class="clients-pet-extra"> +{{ $extraPets }}</span>
+                                                @endif
+                                            </span>
+                                        </div>
                                     @endif
                                 </td>
                             @endunless
-                            <td style="font-weight: 400;">{{ $client['upcoming_date'] ?? '—' }}</td>
-                            <td>{{ $client['total_bookings'] }}</td>
-                            <td>£{{ number_format($client['total_paid'], 2) }}</td>
-                            <td class="clients-view-col">
+                            <td class="clients-upcoming-col">
+                                @if ($hasUpcoming)
+                                    <span class="clients-upcoming-date">{{ $client['upcoming_date'] }}</span>
+                                @else
+                                    <span class="clients-none-booked">None booked</span>
+                                @endif
+                            </td>
+                            <td class="clients-bookings-col">{{ $client['total_bookings'] }}</td>
+                            <td class="clients-paid-col">£{{ number_format($client['total_paid'], 2) }}</td>
+                            <td class="clients-action-col">
                                 <button type="button" class="clients-view-btn" @click="openProfile({{ $client['id'] }})"
                                     aria-label="View {{ $client['name'] }} profile">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
-                                        fill="none" aria-hidden="true">
-                                        <path d="M1 13A9 9 0 0 1 19 13" stroke="black" stroke-width="1"
-                                            stroke-linecap="butt" />
-                                        <circle cx="10" cy="13" r="4" stroke="black" stroke-width="1" />
-                                    </svg>
+                                    <x-business-hub.common.icon name="view" />
                                 </button>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="{{ $isSpaceUser ? 5 : 6 }}" class="clients-empty-cell">No clients found.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        @if ($this->canLoadMore)
-            <div class="clients-load-more-wrap">
-                <button type="button" class="clients-load-more-btn"
-                    x-on:click="window.dispatchEvent(new CustomEvent('nav-list-loading-start'))" wire:click="loadMore"
-                    wire:loading.attr="disabled" wire:target="loadMore">
-                    <span wire:loading.remove wire:target="loadMore">Load More</span>
-                    <span class="clients-load-more-loading" wire:loading.inline-flex wire:target="loadMore">
-                        <span class="clients-load-more-spinner" aria-hidden="true"></span>
-                    </span>
-                </button>
+                        @empty
+                            <tr>
+                                <td colspan="{{ $isSpaceUser ? 5 : 6 }}" class="clients-empty-cell">No clients found.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-        @endif
-    </section>
 
-    <x-business-hub.common.completed-booking-modal :booking="$this->profileCompletedBooking" />
-    <x-business-hub.common.decline-modal :decline-booking="$this->profileDeclineBooking" />
-    <x-business-hub.common.reschedule-modal :reschedule-booking="$this->profileRescheduleBooking"
-        :bookings="$rescheduleCalendarBookings ?? collect()" :reschedule-selected-date="$rescheduleSelectedDate"
-        :reschedule-selected-time="$rescheduleSelectedTime" :reschedule-calendar-month="$rescheduleCalendarMonth"
-        :reschedule-duration-minutes="$rescheduleDurationMinutes" />
-</div>
+            @if ($this->canLoadMore)
+                <div class="clients-load-more-wrap">
+                    <button type="button" class="clients-load-more-btn"
+                        x-on:click="window.dispatchEvent(new CustomEvent('nav-list-loading-start'))" wire:click="loadMore"
+                        wire:loading.attr="disabled" wire:target="loadMore">
+                        <span wire:loading.remove wire:target="loadMore">Load More</span>
+                        <span class="clients-load-more-loading" wire:loading.inline-flex wire:target="loadMore">
+                            <span class="clients-load-more-spinner" aria-hidden="true"></span>
+                        </span>
+                    </button>
+                </div>
+            @endif
+        </section>
 
-<script>
-    if (!window.reschedulePicker) {
-        window.reschedulePicker = function (config) {
-            const monthNames = [
-                'January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'
-            ];
+        <x-business-hub.common.completed-booking-modal :booking="$this->profileCompletedBooking" variant="history" />
+        <x-business-hub.common.decline-modal :decline-booking="$this->profileDeclineBooking" />
+        <x-business-hub.common.reschedule-modal :reschedule-booking="$this->profileRescheduleBooking"
+            :bookings="$rescheduleCalendarBookings ?? collect()" :reschedule-selected-date="$rescheduleSelectedDate"
+            :reschedule-selected-time="$rescheduleSelectedTime" :reschedule-calendar-month="$rescheduleCalendarMonth"
+            :reschedule-duration-minutes="$rescheduleDurationMinutes" />
+    </div>
 
-            const parseYmd = (ymd) => {
-                const [y, m, d] = (ymd || '').split('-').map(Number);
-                if (!y || !m || !d) return null;
-                return {
-                    y,
-                    m,
-                    d
-                };
-            };
+    <script>
+        if (!window.reschedulePicker) {
+            window.reschedulePicker = function(config) {
+                const monthNames = [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ];
 
-            return {
-                selectedDate: config.initialDate,
-                selectedTime: config.initialTime,
-                monthDate: config.initialMonth,
-                bookedDaysByMonth: config.bookedDaysByMonth || {},
-                get monthKey() {
-                    return this.monthDate.slice(0, 7);
-                },
-                get monthMeta() {
-                    const [y, m] = this.monthKey.split('-').map(Number);
+                const parseYmd = (ymd) => {
+                    const [y, m, d] = (ymd || '').split('-').map(Number);
+                    if (!y || !m || !d) return null;
                     return {
                         y,
-                        m
+                        m,
+                        d
                     };
-                },
-                get monthTitle() {
-                    const {
-                        y,
-                        m
-                    } = this.monthMeta;
-                    return `${monthNames[m - 1]} ${y}`;
-                },
-                get daysInMonth() {
-                    const {
-                        y,
-                        m
-                    } = this.monthMeta;
-                    return new Date(y, m, 0).getDate();
-                },
-                get prefixBlank() {
-                    const {
-                        y,
-                        m
-                    } = this.monthMeta;
-                    const mondayFirst = (new Date(y, m - 1, 1).getDay() + 6) % 7;
-                    return Array.from({
-                        length: mondayFirst
-                    }, (_, i) => i);
-                },
-                get selectedDay() {
-                    const parsed = parseYmd(this.selectedDate);
-                    if (!parsed) return 0;
-                    const {
-                        y,
-                        m
-                    } = this.monthMeta;
-                    return parsed.y === y && parsed.m === m ? parsed.d : 0;
-                },
-                get selectedDateLabel() {
-                    const parsed = parseYmd(this.selectedDate);
-                    if (!parsed) return 'N/A';
-                    return `${String(parsed.d).padStart(2, '0')}/${String(parsed.m).padStart(2, '0')}/${parsed.y}`;
-                },
-                get selectedTimeLabel() {
-                    return this.selectedTime || 'N/A';
-                },
-                get newAppointmentLabel() {
-                    const parsed = parseYmd(this.selectedDate);
-                    if (!parsed || !this.selectedTime) {
-                        return '';
+                };
+
+                return {
+                    selectedDate: config.initialDate,
+                    selectedTime: config.initialTime,
+                    monthDate: config.initialMonth,
+                    bookedDaysByMonth: config.bookedDaysByMonth || {},
+                    get monthKey() {
+                        return this.monthDate.slice(0, 7);
+                    },
+                    get monthMeta() {
+                        const [y, m] = this.monthKey.split('-').map(Number);
+                        return {
+                            y,
+                            m
+                        };
+                    },
+                    get monthTitle() {
+                        const {
+                            y,
+                            m
+                        } = this.monthMeta;
+                        return `${monthNames[m - 1]} ${y}`;
+                    },
+                    get daysInMonth() {
+                        const {
+                            y,
+                            m
+                        } = this.monthMeta;
+                        return new Date(y, m, 0).getDate();
+                    },
+                    get prefixBlank() {
+                        const {
+                            y,
+                            m
+                        } = this.monthMeta;
+                        const mondayFirst = (new Date(y, m - 1, 1).getDay() + 6) % 7;
+                        return Array.from({
+                            length: mondayFirst
+                        }, (_, i) => i);
+                    },
+                    get selectedDay() {
+                        const parsed = parseYmd(this.selectedDate);
+                        if (!parsed) return 0;
+                        const {
+                            y,
+                            m
+                        } = this.monthMeta;
+                        return parsed.y === y && parsed.m === m ? parsed.d : 0;
+                    },
+                    get selectedDateLabel() {
+                        const parsed = parseYmd(this.selectedDate);
+                        if (!parsed) return 'N/A';
+                        return `${String(parsed.d).padStart(2, '0')}/${String(parsed.m).padStart(2, '0')}/${parsed.y}`;
+                    },
+                    get selectedTimeLabel() {
+                        return this.selectedTime || 'N/A';
+                    },
+                    get newAppointmentLabel() {
+                        const parsed = parseYmd(this.selectedDate);
+                        if (!parsed || !this.selectedTime) {
+                            return '';
+                        }
+                        return `${parsed.d} ${monthNames[parsed.m - 1]} ${parsed.y} · ${this.selectedTime}`;
+                    },
+                    prevMonth() {
+                        const {
+                            y,
+                            m
+                        } = this.monthMeta;
+                        const d = new Date(y, m - 2, 1);
+                        this.monthDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+                    },
+                    nextMonth() {
+                        const {
+                            y,
+                            m
+                        } = this.monthMeta;
+                        const d = new Date(y, m, 1);
+                        this.monthDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+                    },
+                    selectDay(day) {
+                        const {
+                            y,
+                            m
+                        } = this.monthMeta;
+                        this.selectedDate = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    },
+                    selectTime(slot) {
+                        this.selectedTime = slot;
+                    },
+                    isBooked(day) {
+                        return (this.bookedDaysByMonth[this.monthKey] || []).includes(day);
                     }
-                    return `${parsed.d} ${monthNames[parsed.m - 1]} ${parsed.y} · ${this.selectedTime}`;
-                },
-                prevMonth() {
-                    const {
-                        y,
-                        m
-                    } = this.monthMeta;
-                    const d = new Date(y, m - 2, 1);
-                    this.monthDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
-                },
-                nextMonth() {
-                    const {
-                        y,
-                        m
-                    } = this.monthMeta;
-                    const d = new Date(y, m, 1);
-                    this.monthDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
-                },
-                selectDay(day) {
-                    const {
-                        y,
-                        m
-                    } = this.monthMeta;
-                    this.selectedDate = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                },
-                selectTime(slot) {
-                    this.selectedTime = slot;
-                },
-                isBooked(day) {
-                    return (this.bookedDaysByMonth[this.monthKey] || []).includes(day);
-                }
+                };
             };
-        };
-    }
-
-    if (!window.__declineModalScrollLockBound) {
-        window.__declineModalScrollLockBound = true;
-
-        window.addEventListener('decline-modal-opened', () => {
-            document.body.style.overflow = 'hidden';
-            document.documentElement.style.overflow = 'hidden';
-        });
-
-        window.addEventListener('decline-modal-closed', () => {
-            document.body.style.overflow = '';
-            document.documentElement.style.overflow = '';
-        });
-    }
-
-    if (!window.__rescheduleModalScrollLockBound) {
-        window.__rescheduleModalScrollLockBound = true;
-
-        window.addEventListener('reschedule-modal-opened', () => {
-            document.body.style.overflow = 'hidden';
-            document.documentElement.style.overflow = 'hidden';
-        });
-
-        window.addEventListener('reschedule-modal-closed', () => {
-            document.body.style.overflow = '';
-            document.documentElement.style.overflow = '';
-        });
-    }
-</script>
-
-<style>
-    [x-cloak] {
-        display: none !important;
-    }
-
-    .clients-section {
-        width: 100%;
-    }
-
-    .clients-profile-host {
-        margin-top: 0;
-        position: relative;
-    }
-
-    .clients-profile-host.is-profile-loading {
-        pointer-events: none;
-    }
-
-    .client-profile-back-block {
-        margin-bottom: 4rem;
-    }
-
-    .client-profile-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.65rem;
-        border: 0;
-        background: transparent;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        padding: 0;
-        margin-bottom: 0.75rem;
-    }
-
-    .clients-profile-opening {
-        margin-bottom: 1.5rem;
-    }
-
-    .client-profile-back-loader {
-        display: none;
-        position: relative;
-        height: 4px;
-    }
-
-    .client-profile-back-loader.is-visible {
-        display: block;
-    }
-
-    .client-profile-back-loader .active-section-loading-bar {
-        position: relative;
-        left: 0;
-        right: 0;
-        bottom: auto;
-        height: 4px;
-    }
-
-    .client-profile-panel-enter {
-        transition: opacity 0.4s ease, transform 0.4s ease;
-    }
-
-    .client-profile-panel-enter-start {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    .client-profile-panel-enter-end {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    .client-profile-panel-leave {
-        transition: opacity 0.25s ease, transform 0.25s ease;
-    }
-
-    .client-profile-panel-leave-start {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    .client-profile-panel-leave-end {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-
-    .clients-list-wrapper {
-        margin-top: 4rem;
-    }
-
-    .clients-list-toolbar {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 1.5rem;
-        flex-wrap: wrap;
-        margin-bottom: 2rem;
-    }
-
-    .clients-pill-row {
-        display: flex;
-        gap: 0.9rem;
-        flex-wrap: wrap;
-    }
-
-    .clients-pill {
-        text-align: center;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-        border-radius: 100px;
-        padding: 0.6rem 1.15rem;
-        border: none;
-        cursor: pointer;
-    }
-
-    .clients-pill.all {
-        color: #FFBA55;
-        background: rgba(255, 201, 122, 0.10);
-    }
-
-    .clients-pill.repeat {
-        color: #AFCD6F;
-        background: rgba(175, 205, 111, 0.10);
-    }
-
-    .clients-pill.recent {
-        color: #9FC7E4;
-        background: rgba(159, 199, 228, 0.10);
-    }
-
-    .clients-pill.is-muted {
-        opacity: 0.5;
-        background: #ECEBEB;
-        color: #9D9B98;
-    }
-
-    .clients-list-actions {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 0.5rem;
-        margin-left: auto;
-    }
-
-    .clients-search {
-        position: relative;
-        display: flex;
-        align-items: center;
-        width: 200px;
-        height: 42px;
-        max-width: 100%;
-    }
-
-    .clients-search input {
-        width: 100%;
-        min-width: 0;
-        height: 42px;
-        border-radius: 83px;
-        border: 1px solid #A8A8A8;
-        padding: 0 35px 0 15px;
-        color: #8b8781;
-        font-size: 12px;
-        font-family: Lato;
-        outline: none;
-    }
-
-    .clients-search-icon {
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        pointer-events: none;
-        display: inline-flex;
-    }
-
-    .clients-list-sort .sort-dropdown {
-        position: relative;
-    }
-
-    .clients-list-sort .sort-trigger {
-        width: 69px;
-        height: 32px;
-        border-radius: 100px;
-        border: 1px solid #A8A8A8;
-        background: transparent;
-        color: #A8A8A8;
-        text-align: center;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.6rem;
-    }
-
-    .clients-list-sort-menu {
-        min-width: 220px;
-        width: max-content;
-        background: #F8F8F8;
-        border: 2px solid #e6e6e5;
-        border-radius: 10px 0 10px 10px;
-        overflow: hidden;
-    }
-
-    .clients-list-sort-menu .sort-options {
-        width: 100%;
-        border: 0;
-        border-bottom: 2px solid #e6e6e5;
-        background: #FFF;
-        padding: 1rem;
-        text-align: left;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 14px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .clients-list-sort-menu .sort-options:last-child {
-        border-bottom: none;
-    }
-
-    .clients-list-sort-menu .sort-options:hover {
-        background: #F2F2F2;
-    }
-
-    .clients-list-sort-menu .sort-indicator {
-        width: 26px;
-        height: 26px;
-        border-radius: 999px;
-        border: 2px solid #FFC97A;
-        background: transparent;
-        position: relative;
-        flex-shrink: 0;
-    }
-
-    .clients-list-sort-menu .sort-options.is-active .sort-indicator::after {
-        content: '';
-        position: absolute;
-        inset: 2px;
-        border-radius: 999px;
-        background: #FFC97A;
-    }
-
-    .clients-list-table-shell {
-        overflow-x: auto;
-    }
-
-    .clients-list-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 900px;
-    }
-
-    .clients-list-table th,
-    .clients-list-table td {
-        border-bottom: 1px solid #dcdcdc;
-        text-align: left;
-        padding: 1.2rem 0;
-        vertical-align: middle;
-        width: 10rem;
-    }
-
-    .clients-list-table th {
-        color: #000;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .clients-list-table td {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .clients-list-table .clients-view-col {
-        text-align: center;
-        width: 120px;
-        border-left: 1px solid #E2E2E2;
-    }
-
-    .clients-name-cell {
-        display: flex;
-        align-items: center;
-        gap: 0.85rem;
-    }
-
-    .clients-avatar-wrap {
-        width: 44px;
-        height: 44px;
-        box-sizing: border-box;
-        padding: 2px;
-        border-radius: 999px;
-        overflow: hidden;
-        background: #FFF;
-        border: 1px solid #FFC97A;
-        display: inline-flex;
-        flex-shrink: 0;
-    }
-
-    .clients-avatar {
-        width: 100%;
-        height: 100%;
-        border-radius: 999px;
-        background: #f0ebe4;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 14px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .clients-name-meta {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 0.35rem;
-    }
-
-    .clients-name {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-    .clients-badge {
-        display: inline-flex;
-        align-items: center;
-        width: fit-content;
-        height: 32px;
-        border-radius: 100px;
-        padding: 0.2rem 0.65rem;
-        text-align: center;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-    }
-
-    .clients-badge.is-new {
-        color: #AFCD6F;
-        background: rgba(186, 207, 142, 0.10);
-    }
-
-    .clients-badge.is-repeat {
-        color: #94BEDB;
-        background: rgba(216, 229, 238, 0.20);
-    }
-
-    .clients-pet-cell {
-        display: flex;
-        flex-direction: column;
-        gap: 0.15rem;
-    }
-
-    .clients-view-btn {
-        border: 0;
-        background: transparent;
-        cursor: pointer;
-        padding: 0.25rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .clients-empty-cell {
-        text-align: center !important;
-        color: #9D9B98 !important;
-        padding: 2rem 0 !important;
-    }
-
-    .clients-load-more-wrap {
-        display: flex;
-        justify-content: center;
-        margin-top: 4rem;
-    }
-
-    .clients-load-more-btn {
-        width: 133px;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 75px;
-        border: 1px solid #3B3731;
-        background: transparent;
-        color: #3B3731;
-        text-align: center;
-        font-family: Lato;
-        font-size: 18px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        cursor: pointer;
-    }
-
-    .clients-load-more-btn[disabled] {
-        opacity: 0.9;
-        cursor: wait;
-    }
-
-    .clients-load-more-loading {
-        display: none;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .clients-load-more-spinner {
-        width: 18px;
-        height: 18px;
-        border-radius: 9999px;
-        border: 2px solid #3B3731;
-        border-top-color: transparent;
-        animation: clients-load-more-spin 0.7s linear infinite;
-    }
-
-    @keyframes clients-load-more-spin {
-        to {
-            transform: rotate(360deg);
         }
-    }
-</style>
+
+        if (!window.__declineModalScrollLockBound) {
+            window.__declineModalScrollLockBound = true;
+
+            window.addEventListener('decline-modal-opened', () => {
+                document.body.style.overflow = 'hidden';
+                document.documentElement.style.overflow = 'hidden';
+            });
+
+            window.addEventListener('decline-modal-closed', () => {
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+            });
+        }
+
+        if (!window.__rescheduleModalScrollLockBound) {
+            window.__rescheduleModalScrollLockBound = true;
+
+            window.addEventListener('reschedule-modal-opened', () => {
+                document.body.style.overflow = 'hidden';
+                document.documentElement.style.overflow = 'hidden';
+            });
+
+            window.addEventListener('reschedule-modal-closed', () => {
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+            });
+        }
+    </script>
+
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        .clients-section {
+            width: 100%;
+        }
+
+        .clients-profile-host {
+            margin-top: 0;
+            position: relative;
+        }
+
+        .clients-profile-host.is-profile-loading {
+            pointer-events: none;
+        }
+
+        .client-profile-back-block {
+            margin-bottom: 4rem;
+        }
+
+        .client-profile-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.65rem;
+            border: 0;
+            background: transparent;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            margin-bottom: 0.75rem;
+        }
+
+        .clients-profile-opening {
+            margin-bottom: 1.5rem;
+        }
+
+        .client-profile-back-loader {
+            display: none;
+            position: relative;
+            height: 4px;
+        }
+
+        .client-profile-back-loader.is-visible {
+            display: block;
+        }
+
+        .client-profile-back-loader .active-section-loading-bar {
+            position: relative;
+            left: 0;
+            right: 0;
+            bottom: auto;
+            height: 4px;
+        }
+
+        .client-profile-panel-enter {
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .client-profile-panel-enter-start {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .client-profile-panel-enter-end {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .client-profile-panel-leave {
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        .client-profile-panel-leave-start {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .client-profile-panel-leave-end {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+
+        .clients-list-wrapper {
+            margin-top: 0;
+        }
+
+        .clients-toolbar {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .clients-search {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 400px;
+            max-width: 100%;
+            height: 42px;
+        }
+
+        .clients-search input {
+            width: 100%;
+            height: 42px;
+            border-radius: 10px;
+            border: 1px solid #FFC97A;
+            background: #FFF;
+            padding: 0 42px 0 10px;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 400;
+            outline: none;
+        }
+
+        .clients-search input::placeholder {
+            color: #D4D4D4;
+            font-size: 16px;
+        }
+
+        .clients-search-icon {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            display: inline-flex;
+        }
+
+        .clients-toolbar-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .clients-pill-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .clients-pill {
+            height: 42px;
+            padding: 0 1.25rem;
+            border: 0;
+            border-radius: 100px;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+            cursor: pointer;
+            white-space: nowrap;
+            background: #F6F5F5;
+            color: #9D9B98;
+        }
+
+        .clients-pill.is-active {
+            background: #3B3731;
+            color: #FFF;
+        }
+
+        .clients-pill.repeat.is-active {
+            background: #F5F8FA;
+            color: #94BEDB;
+        }
+
+        .clients-pill.recent.is-active {
+            background: #FBFDF8;
+            color: #BCD782;
+        }
+
+        .clients-list-sort {
+            margin-left: auto;
+        }
+
+        .clients-list-sort .sort-dropdown {
+            position: relative;
+        }
+
+        .clients-list-sort .sort-trigger {
+            width: 59px;
+            height: 32px;
+            border-radius: 100px;
+            border: none;
+            background: #FFF;
+            color: #A8A8A8;
+            font-family: Lato;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            box-shadow: 0px 1px 6.7px 0px rgba(59, 55, 49, 0.12);
+        }
+
+        .clients-list-sort-menu {
+            min-width: 220px;
+            width: max-content;
+            background: #F8F8F8;
+            border: 2px solid #e6e6e5;
+            border-radius: 10px 0 10px 10px;
+            overflow: hidden;
+        }
+
+        .clients-list-sort-menu .sort-options {
+            width: 100%;
+            border: 0;
+            border-bottom: 2px solid #e6e6e5;
+            background: #FFF;
+            padding: 1rem;
+            text-align: left;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .clients-list-sort-menu .sort-options:last-child {
+            border-bottom: none;
+        }
+
+        .clients-list-sort-menu .sort-options:hover {
+            background: #F2F2F2;
+        }
+
+        .clients-list-sort-menu .sort-indicator {
+            width: 26px;
+            height: 26px;
+            border-radius: 999px;
+            border: 2px solid #FFC97A;
+            background: transparent;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .clients-list-sort-menu .sort-options.is-active .sort-indicator::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            border-radius: 999px;
+            background: #FFC97A;
+        }
+
+        .clients-list-table-shell {
+            width: calc(100% - 4px);
+            margin: 2px;
+            overflow: visible;
+            background: #FDFDFD;
+            border: 1px solid #F6F5F5;
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px 2px rgba(59, 55, 49, 0.1);
+        }
+
+        .clients-list-table {
+            width: 100%;
+            max-width: 100%;
+            border-collapse: collapse;
+            border-spacing: 0;
+            table-layout: fixed;
+            min-width: 720px;
+        }
+
+        .clients-list-table.is-space {
+            min-width: 720px;
+        }
+
+        .clients-list-table.is-space .clients-name-col {
+            width: 36%;
+        }
+
+        .clients-list-table.is-space .clients-upcoming-col {
+            width: 22%;
+        }
+
+        .clients-list-table.is-space .clients-bookings-col {
+            width: 16%;
+        }
+
+        .clients-list-table.is-space .clients-paid-col {
+            width: 16%;
+        }
+
+        .clients-list-table thead {
+            background: #F6F5F5;
+        }
+
+        .clients-list-table thead th {
+            background: #F6F5F5;
+            color: #948F88;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            text-align: left;
+            height: 50px;
+            padding: 0 8px;
+            border: 0;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .clients-list-table thead th:first-child,
+        .clients-list-table tbody td:first-child {
+            padding-left: 20px;
+        }
+
+        .clients-list-table thead th:first-child {
+            border-top-left-radius: 10px;
+        }
+
+        .clients-list-table thead th:last-child,
+        .clients-list-table tbody td:last-child {
+            padding-right: 20px;
+        }
+
+        .clients-list-table thead th:last-child {
+            border-top-right-radius: 10px;
+        }
+
+        .clients-list-table tbody tr {
+            background-color: #FDFDFD;
+        }
+
+        .clients-list-table tbody tr:not(:last-child) {
+            background-image: linear-gradient(#E2E2E2, #E2E2E2);
+            background-repeat: no-repeat;
+            background-size: calc(100% - 40px) 1px;
+            background-position: center bottom;
+        }
+
+        .clients-list-table tbody td {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+            text-align: left;
+            height: 56px;
+            padding: 7px 8px;
+            border: 0;
+            background: transparent;
+            vertical-align: middle;
+        }
+
+        .clients-list-table tbody tr.is-muted .clients-name,
+        .clients-list-table tbody tr.is-muted .clients-pet-label,
+        .clients-list-table tbody tr.is-muted .clients-upcoming-col,
+        .clients-list-table tbody tr.is-muted .clients-bookings-col,
+        .clients-list-table tbody tr.is-muted .clients-paid-col {
+            opacity: 0.5;
+        }
+
+        .clients-list-table .clients-name-col {
+            width: 30%;
+        }
+
+        .clients-list-table .clients-pets-col {
+            width: 14%;
+        }
+
+        .clients-list-table .clients-upcoming-col {
+            width: 18%;
+            font-weight: 400;
+        }
+
+        .clients-upcoming-date {
+            font-weight: 600;
+        }
+
+        .clients-list-table .clients-bookings-col {
+            width: 14%;
+        }
+
+        .clients-list-table .clients-paid-col {
+            width: 12%;
+        }
+
+        .clients-list-table .clients-action-col {
+            width: 10%;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .clients-name-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .clients-avatar-wrap {
+            width: 42px;
+            height: 42px;
+            box-sizing: border-box;
+            border-radius: 999px;
+            overflow: hidden;
+            display: inline-flex;
+            flex-shrink: 0;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .clients-avatar-wrap.has-photo {
+            background: #FFF;
+            border: 1px solid #FFC97A;
+            padding: 1px;
+        }
+
+        .clients-avatar-wrap.is-initials {
+            border: 0;
+        }
+
+        .clients-avatar,
+        .clients-avatar-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 999px;
+            object-fit: cover;
+        }
+
+        .clients-avatar {
+            background: transparent;
+            color: #FDFDFD;
+            font-family: Lato;
+            font-size: 20px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 0;
+            line-height: 1;
+        }
+
+        .clients-name-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            flex-wrap: wrap;
+        }
+
+        .clients-name {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+            white-space: nowrap;
+        }
+
+        .clients-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: fit-content;
+            height: 32px;
+            border-radius: 100px;
+            padding: 0 10px;
+            font-family: Lato;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+            white-space: nowrap;
+        }
+
+        .clients-badge.is-new {
+            color: #AFCD6F;
+            background: rgba(186, 207, 142, 0.10);
+        }
+
+        .clients-badge.is-repeat {
+            color: #94BEDB;
+            background: rgba(216, 229, 238, 0.20);
+        }
+
+        .clients-badge.is-regular {
+            color: #F9C45C;
+            background: rgba(255, 201, 122, 0.10);
+        }
+
+        .clients-pet-cell {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .clients-pet-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .clients-pet-avatar img,
+        .clients-pet-avatar-fallback {
+            width: 100%;
+            height: 100%;
+            border-radius: 999px;
+            object-fit: cover;
+        }
+
+        .clients-pet-avatar-fallback {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #FDFDFD;
+            font-family: Lato;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .clients-pet-label {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 400;
+            white-space: nowrap;
+        }
+
+        .clients-pet-extra {
+            font-weight: 400;
+        }
+
+        .clients-none-booked {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        .clients-empty-value {
+            color: #9D9B98;
+        }
+
+        .clients-view-btn {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .clients-view-btn svg {
+            display: block;
+            width: 36px;
+            height: 36px;
+        }
+
+        .clients-empty-cell {
+            text-align: center !important;
+            color: #9D9B98 !important;
+            padding: 2rem 0 !important;
+        }
+
+        .clients-load-more-wrap {
+            display: flex;
+            justify-content: center;
+            margin-top: 2.5rem;
+        }
+
+        .clients-load-more-btn {
+            width: 133px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 75px;
+            border: 1px solid #3B3731;
+            background: transparent;
+            color: #3B3731;
+            text-align: center;
+            font-family: Lato;
+            font-size: 18px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            cursor: pointer;
+        }
+
+        .clients-load-more-btn[disabled] {
+            opacity: 0.9;
+            cursor: wait;
+        }
+
+        .clients-load-more-loading {
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .clients-load-more-spinner {
+            width: 18px;
+            height: 18px;
+            border-radius: 9999px;
+            border: 2px solid #3B3731;
+            border-top-color: transparent;
+            animation: clients-load-more-spin 0.7s linear infinite;
+        }
+
+        @keyframes clients-load-more-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .clients-search {
+                width: 100%;
+            }
+
+            .clients-list-sort {
+                margin-left: 0;
+            }
+
+            .clients-list-table-shell {
+                overflow-x: auto;
+                overflow-y: hidden;
+            }
+        }
+    </style>

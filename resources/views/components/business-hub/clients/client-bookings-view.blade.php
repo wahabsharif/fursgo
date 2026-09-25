@@ -28,28 +28,31 @@
         <table class="client-bookings-table">
             <thead>
                 <tr>
-                    <th>Booking ID</th>
-                    <th>Date</th>
-                    <th>{{ $isSpaceUser ? 'Space' : 'Pet' }}</th>
-                    <th>Service Type</th>
-                    <th>Rating</th>
-                    <th>Earnings</th>
-                    <th class="client-bookings-view-col">
-                        <span class="client-bookings-view-col-inner">View</span>
-                    </th>
-                    <th class="client-bookings-invoice-col">
-                        <span class="client-bookings-view-col-inner">Invoice</span>
-                    </th>
-                    <th class="client-bookings-more-col"></th>
+                    <th class="col-id">Booking ID</th>
+                    <th class="col-date">Date</th>
+                    <th class="col-pet">{{ $isSpaceUser ? 'Space' : 'Pet' }}</th>
+                    <th class="col-service">Service</th>
+                    <th class="col-rating">Rating</th>
+                    <th class="col-earnings">Earnings</th>
+                    <th class="col-action">Action</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse ($bookings as $booking)
                     @php
-                        $firstPet = $booking->pets->first();
-                        $petName = $firstPet->name ?? 'N/A';
-                        $petType = $firstPet->pet_type ?? null;
+                        $pets = $booking->pets;
+                        $firstPet = $pets->first();
+                        $extraPetCount = max($pets->count() - 1, 0);
+                        $petName = $firstPet->name ?? '—';
+                        if ($extraPetCount > 0) {
+                            $petName .= ' +' . $extraPetCount;
+                        }
+                        $petType = strtolower((string) ($firstPet->pet_type ?? ''));
+                        $petIcon = str_contains($petType, 'cat') ? 'images/business-hub/icon-profile-pet-cat.svg' : 'images/business-hub/icon-profile-pet-dog.svg';
+                        $petIconWidth = str_contains($petType, 'cat') ? 21 : 14;
+                        $petIconHeight = str_contains($petType, 'cat') ? 17 : 19.6525;
                         $rating = data_get($booking, 'rating');
+                        $hasRating = is_numeric($rating) && (float) $rating > 0;
                         $spaceLabel = $formatSpaceLabel($booking->visit_type ?? null);
                     @endphp
                     <tr wire:key="client-profile-booking-{{ $booking->id }}">
@@ -59,69 +62,53 @@
                             @if ($isSpaceUser)
                                 <span class="client-bookings-space-label">{{ $spaceLabel }}</span>
                             @else
-                                <div class="client-bookings-pet-cell">
-                                    <span class="client-bookings-pet-name">{{ $petName }}</span>
-                                    @if ($petType)
-                                        <span class="client-bookings-pet-type">{{ $petType }}</span>
+                                <span class="client-bookings-pet">
+                                    @if ($firstPet)
+                                        <img src="{{ asset($petIcon) }}" width="{{ $petIconWidth }}"
+                                            height="{{ $petIconHeight }}" alt="">
                                     @endif
-                                </div>
+                                    <span>{{ $petName }}</span>
+                                </span>
                             @endif
                         </td>
-                        <td class="client-bookings-service-type">{{ $booking->service }}</td>
+                        <td>{{ $booking->service }}</td>
                         <td>
-                            <span class="client-bookings-rating">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
-                                    fill="none">
-                                    <path
-                                        d="M7.00521 0.75483C7.31833 -0.251612 8.68168 -0.251609 8.9948 0.754833L10.1663 4.52021C10.3063 4.97031 10.7079 5.27504 11.1611 5.27504H14.952C15.9653 5.27504 16.3866 6.6292 15.5668 7.25122L12.4999 9.57835C12.1333 9.85652 11.9799 10.3496 12.1199 10.7997L13.2914 14.5651C13.6045 15.5715 12.5015 16.4084 11.6818 15.7864L8.61482 13.4593C8.24821 13.1811 7.75179 13.1811 7.38518 13.4593L4.31824 15.7864C3.49848 16.4084 2.39551 15.5715 2.70863 14.5651L3.8801 10.7997C4.02013 10.3496 3.86673 9.85652 3.50012 9.57835L0.433177 7.25122C-0.38658 6.6292 0.0347219 5.27504 1.048 5.27504H4.83894C5.29209 5.27504 5.69371 4.97031 5.83374 4.52021L7.00521 0.75483Z"
-                                        fill="#FFC97A" />
-                                </svg>
-                                <span>{{ is_numeric($rating) ? number_format((float) $rating, 1) : '-' }}</span>
-                            </span>
+                            @if ($hasRating)
+                                <span class="client-bookings-rating">
+                                    <img src="{{ asset('images/business-hub/icon-booking-star.svg') }}" width="16"
+                                        height="16" alt="">
+                                    <span>{{ number_format((float) $rating, 1) }}</span>
+                                </span>
+                            @else
+                                <span class="client-bookings-unrated">Not rated</span>
+                            @endif
                         </td>
                         <td>£{{ number_format((float) $booking->amount, 2) }}</td>
-                        <td class="client-bookings-view-col">
-                            <div class="client-bookings-view-col-inner">
+                        <td class="col-action">
+                            <div class="client-bookings-actions">
                                 <button type="button" class="client-bookings-icon-btn"
                                     wire:click="openCompletedBookingModal({{ $booking->id }})" aria-label="View booking">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="19" height="13" viewBox="0 0 19 13"
-                                        fill="none">
-                                        <path
-                                            d="M9.49609 12C11.4291 12 12.9961 10.433 12.9961 8.5C12.9961 6.567 11.4291 5 9.49609 5C7.5631 5 5.99609 6.567 5.99609 8.5C5.99609 10.433 7.5631 12 9.49609 12Z"
-                                            stroke="black" />
-                                        <path
-                                            d="M18.4961 8.5C18.4961 8.5 17.4961 0.5 9.49609 0.5C1.49609 0.5 0.496094 8.5 0.496094 8.5"
-                                            stroke="black" />
-                                    </svg>
+                                    <img src="{{ asset('images/business-hub/icon-booking-history-view.svg') }}"
+                                        width="36" height="36" alt="">
                                 </button>
-                            </div>
-                        </td>
-                        <td class="client-bookings-invoice-col">
-                            <div class="client-bookings-view-col-inner">
                                 <button type="button" class="client-bookings-icon-btn"
                                     data-invoice-url="{{ route('business-hub.bookings.invoice-pdf', $booking) }}"
                                     onclick="window.downloadBookingInvoicePdf(this.dataset.invoiceUrl)"
                                     aria-label="Download invoice">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19"
-                                        fill="none">
-                                        <path
-                                            d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
-                                            stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                        <path d="M7.99997 0.5V12.875M12.0909 8.75L7.99997 13.25L3.90906 8.75"
-                                            stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
+                                    <span class="client-bookings-download">
+                                        <img src="{{ asset('images/business-hub/icon-booking-download-circle.svg') }}"
+                                            width="36" height="36" alt="">
+                                        <img class="client-bookings-download-glyph"
+                                            src="{{ asset('images/business-hub/icon-booking-download-arrow.svg') }}"
+                                            width="16" height="19" alt="">
+                                    </span>
                                 </button>
-                            </div>
-                        </td>
-                        <td class="client-bookings-more-col">
-                            <div class="client-bookings-view-col-inner">
-                                <x-business-hub.common.more-action-btn :row-id="$booking->id" />
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="client-bookings-empty">No bookings found.</td>
+                        <td colspan="7" class="client-bookings-empty">No bookings found.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -132,7 +119,7 @@
 @once
     <script>
         if (!window.downloadBookingInvoicePdf) {
-            window.downloadBookingInvoicePdf = async function (invoiceUrl) {
+            window.downloadBookingInvoicePdf = async function(invoiceUrl) {
                 if (!invoiceUrl) {
                     return;
                 }
@@ -189,120 +176,203 @@
 
 <style>
     .client-bookings-table-shell {
+        width: calc(100% - 4px);
+        margin: 2px;
         overflow-x: auto;
+        background: #FDFDFD;
+        border: 1px solid #F6F5F5;
+        border-radius: 10px;
+        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.1);
     }
 
     .client-bookings-table {
         width: 100%;
         border-collapse: collapse;
+        border-spacing: 0;
         table-layout: fixed;
     }
 
     .client-bookings-table th,
     .client-bookings-table td {
-        border-bottom: 1px solid #dcdcdc;
+        border: 0;
         text-align: left;
-        padding: 1.1rem 0.65rem;
         vertical-align: middle;
+        background: transparent;
         color: #3B3731;
         font-family: Lato;
         font-size: 16px;
-        font-style: normal;
         font-weight: 400;
         line-height: normal;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
 
     .client-bookings-table th {
+        height: 50px;
+        padding: 0 8px;
+        color: #948F88;
         font-weight: 600;
-        color: #000;
+        background: #F6F5F5;
+        white-space: nowrap;
     }
 
-    .client-bookings-service-type {
-        font-weight: 600 !important;
+    .client-bookings-table th:first-child {
+        border-top-left-radius: 10px;
+        padding-left: 20px;
     }
 
-    .client-bookings-pet-cell {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.15rem;
+    .client-bookings-table th:last-child {
+        border-top-right-radius: 10px;
+        padding-right: 20px;
     }
 
-    .client-bookings-pet-name {
-        font-weight: 600;
-        color: #3B3731;
+    .client-bookings-table td {
+        height: 76px;
+        padding: 8px;
     }
 
-    .client-bookings-pet-type {
+    .client-bookings-table td:first-child {
+        padding-left: 20px;
+    }
+
+    .client-bookings-table td:last-child {
+        padding-right: 20px;
+    }
+
+    .client-bookings-table tbody tr {
+        background-color: #FDFDFD;
+    }
+
+    .client-bookings-table tbody tr:not(:last-child) {
+        background-image: linear-gradient(#E2E2E2, #E2E2E2);
+        background-repeat: no-repeat;
+        background-size: calc(100% - 40px) 1px;
+        background-position: center bottom;
+    }
+
+    .client-bookings-table .col-id {
+        width: 15%;
+    }
+
+    .client-bookings-table .col-date {
+        width: 14%;
+    }
+
+    .client-bookings-table .col-pet {
+        width: 15%;
+    }
+
+    .client-bookings-table .col-service {
+        width: 16%;
+    }
+
+    .client-bookings-table .col-rating {
+        width: 14%;
+    }
+
+    .client-bookings-table .col-earnings {
+        width: 12%;
+    }
+
+    .client-bookings-table .col-action {
+        width: 14%;
+        text-align: center;
+    }
+
+    .client-bookings-pet,
+    .client-bookings-rating,
+    .client-bookings-actions {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .client-bookings-pet {
+        gap: 10px;
+    }
+
+    .client-bookings-rating {
+        gap: 5px;
+        font-weight: 500;
+    }
+
+    .client-bookings-unrated {
         color: #9D9B98;
         font-family: Lato;
         font-size: 16px;
-        font-weight: 400;
-        line-height: normal;
+        font-style: italic;
+        font-weight: 500;
     }
 
     .client-bookings-space-label {
         color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
+        font-weight: 400;
     }
 
-    .client-bookings-rating {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.32rem;
-    }
-
-    .client-bookings-view-col {
-        vertical-align: middle;
-        border-left: 1px solid #E5E2DF;
-        width: 8rem;
-        text-align: center;
-        padding: 1.1rem 0.35rem;
-    }
-
-    .client-bookings-invoice-col {
-        vertical-align: middle;
-        width: 8rem;
-        text-align: center;
-        padding: 1.1rem 0.35rem;
-    }
-
-    .client-bookings-more-col {
-        vertical-align: middle;
-        width: 4rem;
-        text-align: center;
-        padding: 1.1rem 0.25rem;
-    }
-
-    .client-bookings-view-col-inner {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
+    .client-bookings-actions {
+        gap: 10px;
     }
 
     .client-bookings-icon-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: transparent;
-        border: 0;
+        width: 36px;
+        height: 36px;
         padding: 0;
-        margin: 0 auto;
+        border: 0;
+        background: transparent;
         cursor: pointer;
-        color: inherit;
+    }
+
+    .client-bookings-download {
+        position: relative;
+        display: block;
+        width: 36px;
+        height: 36px;
+    }
+
+    .client-bookings-download-glyph {
+        position: absolute;
+        top: 8.5px;
+        left: 10px;
+    }
+
+    .client-profile-wrapper .client-bookings-view .client-bookings-pet img[width="14"] {
+        width: 14px;
+        height: 19.6525px;
+        max-width: 14px;
+    }
+
+    .client-profile-wrapper .client-bookings-view .client-bookings-pet img[width="21"] {
+        width: 21px;
+        height: 17px;
+        max-width: 21px;
+    }
+
+    .client-profile-wrapper .client-bookings-view .client-bookings-rating img,
+    .client-profile-wrapper .client-bookings-view .client-bookings-icon-btn>img,
+    .client-profile-wrapper .client-bookings-view .client-bookings-download>img:not(.client-bookings-download-glyph) {
+        width: 36px;
+        height: 36px;
+        max-width: 36px;
+        display: block;
+    }
+
+    .client-profile-wrapper .client-bookings-view .client-bookings-rating img {
+        width: 16px;
+        height: 16px;
+        max-width: 16px;
+    }
+
+    .client-profile-wrapper .client-bookings-view .client-bookings-download>.client-bookings-download-glyph {
+        width: 16px;
+        height: 19px;
+        max-width: 16px;
+        display: block;
     }
 
     .client-bookings-empty {
+        height: auto !important;
         text-align: center !important;
-        color: #8f8b86 !important;
+        color: #9D9B98 !important;
         padding: 2rem 0 !important;
     }
 </style>

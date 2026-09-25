@@ -108,7 +108,7 @@
             border-radius: 10px;
             background: #f7f4ec;
             color: #706a62;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 14px;
             font-style: normal;
             font-weight: 600;
@@ -134,7 +134,7 @@
         .header-business-public-nav a {
             position: relative;
             color: #3b3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 18px;
             font-style: normal;
             font-weight: 500;
@@ -191,7 +191,7 @@
             box-sizing: border-box;
             height: 48px;
             padding: 0 22px;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 18px;
             font-style: normal;
             font-weight: 500;
@@ -391,7 +391,7 @@
 @endif
 
 <script>
-    (function () {
+    (function() {
         function onScroll() {
             const header = document.querySelector('header:not(.dashboard-header):not(.header-business-public)');
             if (!header) return;
@@ -413,10 +413,15 @@
             const headerHeight = header ? header.offsetHeight : 0;
             const top = target.getBoundingClientRect().top + window.scrollY - headerHeight - 12;
 
-            window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+            window.scrollTo({
+                top: Math.max(0, top),
+                behavior: 'smooth'
+            });
         }
 
-        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('scroll', onScroll, {
+            passive: true
+        });
         document.addEventListener('livewire:navigated', onScroll);
         document.addEventListener('livewire:navigated', scrollToHashTarget);
         window.addEventListener('hashchange', scrollToHashTarget);

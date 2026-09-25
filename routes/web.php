@@ -115,6 +115,16 @@ Route::get('/booking-groomer', fn() => VoltPage::render('booking.groomer'))
     ->middleware([EnsureWebOrGroomerSpacerAuthenticated::class])
     ->name('booking-groomer');
 
+// Checkout booking (design shell — custom PHP URL parity)
+Route::get('/checkout_booking_groomer', fn() => VoltPage::render('checkout.booking-groomer'))
+    ->name('checkout.booking-groomer');
+
+Route::get('/checkout_booking_space', fn() => VoltPage::render('checkout.booking-space'))
+    ->name('checkout.booking-space');
+
+Route::get('/checkout_booking_groomer_space', fn() => VoltPage::render('checkout.booking-groomer-space'))
+    ->name('checkout.booking-groomer-space');
+
 Route::get('/my-account/pet-owner-profile', fn() => VoltPage::render('account.profile'))
     ->middleware([EnsureWebOrGroomerSpacerAuthenticated::class])
     ->name('pet-owner-profile');

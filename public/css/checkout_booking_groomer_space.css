@@ -1,0 +1,375 @@
+/**
+
+ * checkout_booking_groomer_space — combined groomer + space flow overrides.
+
+ * Shared styles: assets/css/checkout_booking.css
+
+ */
+
+/* --------------------------------------------------------------------------
+
+   Step indicator (4 steps — wider label for "Service & Extra's")
+
+   -------------------------------------------------------------------------- */
+
+.cbgs-steps-container .cbg-step-label {
+  max-width: 110px;
+}
+
+/* --------------------------------------------------------------------------
+
+   Sidebar: dual bookings summary
+
+   -------------------------------------------------------------------------- */
+
+.cbg-page .cbgs-booking-summary {
+  padding: 25px 30px 0;
+  border-color: #eae8e5;
+  box-shadow: 0 2px 12px rgba(59, 55, 49, 0.04);
+  overflow: hidden;
+}
+
+.cbgs-booking-summary h3 {
+  margin-bottom: 16px;
+  color: #3B3731;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cbg-page .cbg-summary-padding.groomer-bg {
+  margin-bottom: 0;
+}
+
+.cbgs-summary-booking {
+  margin-bottom: 12px;
+}
+
+.cbgs-summary-booking--groomer .cbg-summary-studio {
+  padding: 0;
+}
+
+.cbg-page .cbg-summary-studio img {
+  width: 64px;
+  height: 64px;
+}
+
+.cbg-page .cbg-summary-studio .name {
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+.cbg-page .cbg-summary {
+  font-size: 14px;
+}
+
+.cbg-page .cbg-summary-sections {
+  margin-top: 16px;
+}
+
+.cbg-page .cbg-summary-accordion-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0 0 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.cbg-page .cbg-summary-accordion-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: Lato, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #3B3731;
+}
+
+.cbg-page .cbg-summary-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cbg-page .cbg-summary-accordion--groomer .cbg-summary-dot {
+  background: #ffc97a;
+}
+
+.cbg-page .cbg-summary-accordion--space .cbg-summary-dot {
+  background: #ffa899;
+}
+
+.cbg-page .cbg-summary-accordion--groomer .cbg-summary-badge {
+  background: #fff4e4;
+  color: #ffb03d;
+}
+
+.cbg-page .cbg-summary-accordion--space .cbg-summary-badge {
+  background: #FDECE5;
+  color: #FFA899;
+}
+
+.cbg-page .cbg-summary-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  background: #FFF0ED;
+  color: #FFA899;
+}
+
+.cbg-page .cbg-summary-accordion-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cbg-page .cbg-summary-accordion-price {
+  font-family: Lato, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #3b3731;
+}
+
+.cbg-page .cbg-summary-chevron {
+  color: #c8c6c3;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.cbg-page .cbg-summary-accordion.open .cbg-summary-chevron {
+  transform: rotate(180deg);
+}
+
+.cbg-page .cbg-summary-accordion-body {
+  display: none;
+  padding: 0 0 8px 18px;
+}
+
+.cbg-page .cbg-summary-accordion.open .cbg-summary-accordion-body {
+  display: block;
+}
+
+.cbg-page .cbg-summary-item-list {
+  list-style: disc;
+  list-style-position: outside;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.cbg-page .cbg-summary-item-list li {
+  display: list-item;
+  padding: 4px 0;
+  font-family: Lato, sans-serif;
+  font-size: 14px;
+  color: #9d9b98;
+  font-weight: 400;
+}
+
+.cbg-page .cbg-summary-item-list li span:last-child {
+  float: right;
+  color: #b5b3b0;
+  font-weight: 500;
+}
+
+.cbg-page .cbg-summary-divider {
+  margin: 11px 0 0;
+  background: #f0eeeb;
+}
+
+.cbg-page .cbg-summary-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #FFA899;
+  flex-shrink: 0;
+}
+
+.cbg-page .cbg-summary-total.cbgs-summary-total {
+  margin: 16px -30px 0;
+  padding: 16px 30px;
+  border-radius: 0 0 10px 10px;
+  background: #f7f4ec;
+}
+
+.cbg-page .cbg-summary-total p {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3b3731;
+}
+
+.cbg-page .cbg-summary-total span {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.cbg-page .cbg-need-help svg {
+  flex-shrink: 0;
+}
+
+.cbs-booking-details-4 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.cbs-space-extras-title {
+  margin-top: 1.5rem;
+}
+
+.cbs-extras-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 1.5rem;
+}
+
+.cbs-extras-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffc97a;
+  color: #fff;
+  font-family: Lato, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: none;
+  cursor: default;
+}
+
+.cbs-extras-tag-remove {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.9;
+}
+
+.cbs-extras-tag-remove:hover {
+  opacity: 1;
+}
+
+.cbs-extras-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 1.5rem;
+}
+
+.cbs-extra-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 8px;
+  border: none;
+  background: #f8f8f8;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.cbs-extra-option.selected {
+  background: #fff;
+  border-color: #eae8e5;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px 0 rgba(201, 221, 160, 0.1);
+}
+
+.cbs-extra-radio {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #d4d4d4;
+  background: #fff;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cbs-extra-option.selected .cbs-extra-radio {
+  border-color: #ffc97a;
+}
+
+.cbs-extra-radio-inner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffc97a;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.cbs-extra-option.selected .cbs-extra-radio-inner {
+  opacity: 1;
+}
+
+.cbs-extra-name {
+  flex: 1;
+  color: #3b3731;
+  font-family: Lato, sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.cbs-extra-price {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.cbs-extra-amount {
+  color: #3b3731;
+  font-family: Lato, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.cbs-extra-unit {
+  color: #9d9b98;
+  font-family: Lato, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (max-width: 991px) {
+  .cbs-booking-details-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .cbs-booking-details-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cbg-sub-panel.cbgs-service-subpanel.active {
+  border-radius: 0;
+  border: none;
+  background: none;
+  padding: 0;
+}

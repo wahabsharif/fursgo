@@ -41,10 +41,12 @@
     bookingsOpen: @js($dashboardActiveSection === 'bookings'),
     availabilityOpen: @js(in_array($dashboardActiveSection, ['availability', 'manage-availability'], true)),
     servicesOpen: @js($dashboardActiveSection === 'services'),
+    clientsOpen: @js($dashboardActiveSection === 'clients'),
     earningsOpen: @js($dashboardActiveSection === 'earnings'),
     settingsOpen: @js($dashboardActiveSection === 'settings'),
     activeBookingStatus: @js($dashboardNav['active_booking_status']),
     activeServiceMenu: @js($dashboardNav['active_service_menu']),
+    activeClientFilter: 'all',
     activeEarningsMenu: @js($dashboardNav['active_earnings_menu']),
     activeSettingsMenu: @js($dashboardNav['active_settings_menu']),
     bookingCounts: {
@@ -57,6 +59,7 @@
         if (except !== 'bookings') this.bookingsOpen = false;
         if (except !== 'availability') this.availabilityOpen = false;
         if (except !== 'services') this.servicesOpen = false;
+        if (except !== 'clients') this.clientsOpen = false;
         if (except !== 'earnings') this.earningsOpen = false;
         if (except !== 'settings') this.settingsOpen = false;
     },
@@ -76,6 +79,7 @@
         window.dispatchEvent(new CustomEvent('nav-list-loading-start'));
     },
 }" @services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'; if (activeSection === 'services') { servicesOpen = true }"
+    @clients-filter-selected.window="activeClientFilter = $event.detail?.filter || 'all'; if (activeSection === 'clients') { clientsOpen = true }"
     @booking-status-changed.window="
         activeBookingStatus = $event.detail.status ?? '';
         if (activeSection === 'bookings') {
@@ -283,7 +287,7 @@
             <!-- Clients -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="if (activeSection !== 'clients') startNavLoading(); closeMenus(); activeSection = 'clients'"
+                    @click.prevent="const onClients = activeSection === 'clients'; if (onClients && activeClientFilter === 'all') { clientsOpen = !clientsOpen; return; } startNavLoading(); if (!onClients) { closeMenus('clients'); activeSection = 'clients'; } clientsOpen = true; activeClientFilter = 'all'; window.Livewire?.dispatch('client-filter-selected', { filter: 'all' }); window.dispatchEvent(new CustomEvent('clients-filter-selected', { detail: { filter: 'all' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'clients' } }))"
                     :class="{ 'active': activeSection === 'clients' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="10" viewBox="0 0 14 10" fill="none">
                         <path
@@ -301,6 +305,36 @@
                     </svg>
                     <span class="nav-text">Clients</span>
                 </a>
+                <div class="nav-submenu" :class="{ 'is-open': clientsOpen }">
+                    <div class="nav-submenu-inner">
+                        <ul class="booking-status-list">
+                            <li class="booking-status-item">
+                                <span class="clients-status-dot all"></span>
+                                <button type="button" class="booking-status-trigger"
+                                    :class="{ 'is-active': activeClientFilter === 'all' }"
+                                    @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'clients'; clientsOpen = true; activeClientFilter = 'all'; window.Livewire?.dispatch('client-filter-selected', { filter: 'all' }); window.dispatchEvent(new CustomEvent('clients-filter-selected', { detail: { filter: 'all' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'clients' } }))">
+                                    All Clients
+                                </button>
+                            </li>
+                            <li class="booking-status-item">
+                                <span class="clients-status-dot repeat"></span>
+                                <button type="button" class="booking-status-trigger"
+                                    :class="{ 'is-active': activeClientFilter === 'repeat' }"
+                                    @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'clients'; clientsOpen = true; activeClientFilter = 'repeat'; window.Livewire?.dispatch('client-filter-selected', { filter: 'repeat' }); window.dispatchEvent(new CustomEvent('clients-filter-selected', { detail: { filter: 'repeat' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'clients' } }))">
+                                    Repeat Clients
+                                </button>
+                            </li>
+                            <li class="booking-status-item">
+                                <span class="clients-status-dot recent"></span>
+                                <button type="button" class="booking-status-trigger"
+                                    :class="{ 'is-active': activeClientFilter === 'recent' }"
+                                    @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'clients'; clientsOpen = true; activeClientFilter = 'recent'; window.Livewire?.dispatch('client-filter-selected', { filter: 'recent' }); window.dispatchEvent(new CustomEvent('clients-filter-selected', { detail: { filter: 'recent' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'clients' } }))">
+                                    Recently Booked
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </li>
 
             <li class="nav-section-label" aria-hidden="true">Finance</li>
@@ -626,6 +660,25 @@
         }
 
         .services-status-dot.service-area {
+            background: #FFA899;
+        }
+
+        .clients-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 100px;
+            flex-shrink: 0;
+        }
+
+        .clients-status-dot.all {
+            background: #CBDCE8;
+        }
+
+        .clients-status-dot.repeat {
+            background: #FFC97A;
+        }
+
+        .clients-status-dot.recent {
             background: #FFA899;
         }
 
