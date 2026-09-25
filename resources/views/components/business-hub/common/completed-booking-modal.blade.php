@@ -2,6 +2,7 @@
     'booking' => null,
     'closeMethod' => 'closeCompletedBookingModal',
     'loadingEvent' => null,
+    'variant' => null,
 ])
 
 @if ($booking)
@@ -65,10 +66,10 @@
             preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[1] ?? ''), $endMatch);
             if (!empty($startMatch[1]) && !empty($endMatch[1])) {
                 $diff = ((int) $endMatch[1]) * 60 + (int) $endMatch[2] - (((int) $startMatch[1]) * 60 + (int) $startMatch[2]);
-                if ($diff < 0) {
+                if (abs($diff) !== $diff) {
                     $diff += 24 * 60;
                 }
-                $durationLabel = $diff >= 7 * 60 ? 'Full-Day' : ($diff >= 3 * 60 ? 'Half-Day' : 'Hourly');
+                $durationLabel = $diff > 419 ? 'Full-Day' : ($diff > 179 ? 'Half-Day' : 'Hourly');
             }
         }
         $durationLabel = $durationLabel ?: 'Half-Day';
@@ -133,145 +134,261 @@
         };
         $serviceLineLabel = $isSpaceUser ? $spaceVisitLabel . ' — ' . $serviceDurationLine : ($booking->service ?: 'Service');
         $subtotalLabel = $isSpaceUser ? 'Space subtotal' : 'Groomer subtotal';
+        $historyServiceLabel = trim((string) ($booking->service ?: 'Service'));
+        if (!$isSpaceUser && $petName !== '' && $petName !== 'N/A') {
+            $historyServiceLabel .= ' (' . $petName . ')';
+        }
+        $spaceTimeRange = '';
+        if (str_contains($timeRaw, '-')) {
+            $spaceRangeParts = preg_split('/\s*-\s*/', $timeRaw, 2);
+            preg_match('/(\d{1,2}:\d{2})/', (string) ($spaceRangeParts[0] ?? ''), $spaceStartMatch);
+            preg_match('/(\d{1,2}:\d{2})/', (string) ($spaceRangeParts[1] ?? ''), $spaceEndMatch);
+            if (!empty($spaceStartMatch[1]) && !empty($spaceEndMatch[1])) {
+                $spaceTimeRange = $spaceStartMatch[1] . '-' . $spaceEndMatch[1];
+            }
+        } elseif ($timeRaw !== '') {
+            $spaceTimeRange = $timeRaw;
+        }
+        $historySpaceDetail = $serviceDurationLine;
+        if ($spaceTimeRange !== '') {
+            $historySpaceDetail .= ' - ' . $spaceTimeRange;
+        }
+        $historySpaceLabel = str_replace(' / ', '/', $spaceVisitLabel) . ' (' . $historySpaceDetail . ')';
+        $historyDateLabel = $booking->date?->format('d/m/Y') ?? '—';
+        $historyPromoLabel = $promoDiscount > 0 ? '- £' . number_format($promoDiscount, 2) : '£' . number_format($promoDiscount, 2);
     @endphp
-    @teleport('body')
-        <div class="invoice-preview-overlay{{ $isSpaceUser ? ' is-space' : '' }}" wire:keydown.escape="{{ $closeMethod }}">
-            <div class="invoice-preview-card{{ $isSpaceUser ? ' is-space' : '' }}" role="dialog" aria-modal="true" aria-labelledby="completed-booking-modal-title">
-                <div class="invoice-preview-head">
-                    <img src="{{ asset('images/business-hub/icon-invoice-wordmark.svg') }}" alt="fursgo" width="73" height="20"
-                        class="invoice-preview-wordmark">
-                    <button type="button" class="invoice-preview-close" @if ($loadingEvent) @click="window.dispatchEvent(new CustomEvent(@js($loadingEvent)))" @endif
-                        wire:click="{{ $closeMethod }}" aria-label="Close modal">
-                        <img src="{{ asset('images/business-hub/icon-invoice-close.svg') }}" alt="" width="20" height="20">
-                    </button>
-                </div>
-
-                <div class="invoice-preview-meta">
-                    <p class="invoice-preview-id">{{ $invoiceIdLabel }} · Issued {{ $issuedDateLabel }}</p>
-                    <p class="invoice-preview-paid">Paid</p>
-                </div>
-
-                <div class="invoice-preview-bill">
-                    <div>
-                        <p class="invoice-preview-kicker">Billed to</p>
-                        <p class="invoice-preview-value">{{ $billedToName }}</p>
+    @if ($variant === 'history')
+        @teleport('body')
+            <div class="client-history-modal-overlay" wire:keydown.escape="{{ $closeMethod }}">
+                <div class="client-history-modal" role="dialog" aria-modal="true" aria-labelledby="client-history-modal-title">
+                    <div class="client-history-modal__head{{ $isSpaceUser ? ' is-space' : '' }}">
+                        <h2 class="client-history-modal__title" id="client-history-modal-title">Completed <span>Booking</span></h2>
+                        <button type="button" class="client-history-modal__close" wire:click="{{ $closeMethod }}" aria-label="Close modal">
+                            <img src="{{ asset('images/business-hub/icon-booking-modal-close.svg') }}" width="14.5" height="14.5" alt="">
+                        </button>
                     </div>
-                    <div class="invoice-preview-bill-date">
-                        <p class="invoice-preview-kicker">Booking date</p>
-                        <p class="invoice-preview-value">{{ $bookingDateLabel }}</p>
-                    </div>
-                </div>
 
-                <div class="invoice-preview-people">
-                    <div class="invoice-preview-person">
-                        <span class="invoice-preview-avatar">
-                            @if ($isSpaceUser)
-                                <svg class="invoice-preview-avatar-ring" width="36" height="36" viewBox="0 0 36 36" fill="none"
-                                    xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                    <circle cx="18" cy="18" r="17.5" fill="white" stroke="#FFA899" />
-                                </svg>
-                            @else
-                                <img src="{{ asset('images/business-hub/icon-invoice-avatar-ring.svg') }}" alt="" width="36"
-                                    height="36" class="invoice-preview-avatar-ring">
-                            @endif
-                            @if ($ownerPhotoUrl)
-                                <img src="{{ $ownerPhotoUrl }}" alt="" width="32" height="32" class="invoice-preview-avatar-photo">
-                            @else
-                                <span class="invoice-preview-avatar-fallback">{{ $ownerInitial }}</span>
-                            @endif
-                        </span>
-                        <span class="invoice-preview-person-name">{{ $billedToName }}</span>
-                    </div>
-                    <div class="invoice-preview-people-end">
-                        @unless ($isSpaceUser)
-                            <span class="invoice-preview-pet-chip">
-                                @if ($petPhotoUrl)
-                                    <img src="{{ $petPhotoUrl }}" alt="" width="24" height="24">
+                    <div class="client-history-modal__body">
+                        <div class="client-history-modal__id">
+                            <p>Booking ID: {{ $invoiceIdLabel }}</p>
+                            <div class="client-history-modal__id-end">
+                                <span>{{ $historyDateLabel }}</span>
+                                <button type="button" class="client-history-modal__download"
+                                    data-invoice-url="{{ route('business-hub.bookings.invoice-pdf', $booking) }}"
+                                    onclick="window.downloadBookingInvoicePdf?.(this.dataset.invoiceUrl)"
+                                    aria-label="Download invoice">
+                                    <img src="{{ asset('images/business-hub/icon-booking-download-circle.svg') }}" width="36" height="36" alt="">
+                                    <img class="client-history-modal__download-glyph"
+                                        src="{{ asset('images/business-hub/icon-booking-download-arrow.svg') }}" width="16" height="19" alt="">
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="client-history-modal__person">
+                            <span class="client-history-modal__avatar">
+                                @if ($ownerPhotoUrl)
+                                    <img src="{{ $ownerPhotoUrl }}" alt="" width="44" height="44">
                                 @else
-                                    <span class="invoice-preview-pet-fallback">{{ $petInitial }}</span>
+                                    <span>{{ $ownerInitial }}</span>
                                 @endif
-                                <span>{{ $petName }}</span>
                             </span>
-                        @endunless
-                        <span class="invoice-preview-next" aria-hidden="true">
-                            <img src="{{ asset('images/business-hub/icon-invoice-next.svg') }}" alt="" width="36" height="36">
-                        </span>
+                            <span>
+                                <span class="client-history-modal__name">{{ $billedToName }}</span>
+                                @unless ($isSpaceUser)
+                                    <span class="client-history-modal__pet">{{ $petName }}@if ($petType !== '')
+                                            <span>{{ $petType }}</span>
+                                        @endif
+                                    </span>
+                                @endunless
+                            </span>
+                        </div>
+
+                        <div class="client-history-modal__section">
+                            <p class="client-history-modal__section-title">{{ $isSpaceUser ? 'Space' : 'Service' }}</p>
+                            <div class="client-history-modal__line">
+                                <span>{{ $isSpaceUser ? $historySpaceLabel : $historyServiceLabel }}</span>
+                                <span>£{{ number_format($serviceAmount, 2) }}</span>
+                            </div>
+                        </div>
+
+                        <div class="client-history-modal__section">
+                            <p class="client-history-modal__section-title">Extras &amp; Add-ons</p>
+                            @forelse ($extraAddOns as $addon)
+                                <div class="client-history-modal__line">
+                                    <span>{{ $addon['label'] }}</span>
+                                    <span>£{{ number_format((float) $addon['amount'], 2) }}</span>
+                                </div>
+                            @empty
+                                <div class="client-history-modal__line">
+                                    <span>No add-ons</span>
+                                    <span>£0.00</span>
+                                </div>
+                            @endforelse
+                        </div>
+
+                        <div class="client-history-modal__summary">
+                            <div class="client-history-modal__line">
+                                <span>Service:</span>
+                                <span>£{{ number_format($serviceAmount, 2) }}</span>
+                            </div>
+                            <div class="client-history-modal__line">
+                                <span>Extras &amp; Add-ons:</span>
+                                <span>£{{ number_format($extrasAmount, 2) }}</span>
+                            </div>
+                            <div class="client-history-modal__line">
+                                <span>Promo discount:</span>
+                                <span>{{ $historyPromoLabel }}</span>
+                            </div>
+                        </div>
+
+                        <div class="client-history-modal__total">
+                            <span>Total</span>
+                            <span>£{{ number_format($totalPaidAmount, 2) }}</span>
+                        </div>
                     </div>
                 </div>
+            </div>
+        @endteleport
+    @else
+        @teleport('body')
+            <div class="invoice-preview-overlay{{ $isSpaceUser ? ' is-space' : '' }}" wire:keydown.escape="{{ $closeMethod }}">
+                <div class="invoice-preview-card{{ $isSpaceUser ? ' is-space' : '' }}" role="dialog" aria-modal="true" aria-labelledby="completed-booking-modal-title">
+                    <div class="invoice-preview-head">
+                        <img src="{{ asset('images/business-hub/icon-invoice-wordmark.svg') }}" alt="fursgo" width="73" height="20"
+                            class="invoice-preview-wordmark">
+                        <button type="button" class="invoice-preview-close" @if ($loadingEvent) @click="window.dispatchEvent(new CustomEvent(@js($loadingEvent)))" @endif
+                            wire:click="{{ $closeMethod }}" aria-label="Close modal">
+                            <img src="{{ asset('images/business-hub/icon-invoice-close.svg') }}" alt="" width="20" height="20">
+                        </button>
+                    </div>
 
-                <div class="invoice-preview-details">
-                    <div class="invoice-preview-detail-row">
-                        <span>{{ $isSpaceUser ? 'Space Host' : 'Groomer' }}</span>
-                        <span>{{ $issuerShortName }}</span>
+                    <div class="invoice-preview-meta">
+                        <p class="invoice-preview-id">{{ $invoiceIdLabel }} · Issued {{ $issuedDateLabel }}</p>
+                        <p class="invoice-preview-paid">Paid</p>
                     </div>
-                    <div class="invoice-preview-detail-row">
-                        <span>Service type</span>
-                        <span>{{ $serviceTypeLabel }}</span>
+
+                    <div class="invoice-preview-bill">
+                        <div>
+                            <p class="invoice-preview-kicker">Billed to</p>
+                            <p class="invoice-preview-value">{{ $billedToName }}</p>
+                        </div>
+                        <div class="invoice-preview-bill-date">
+                            <p class="invoice-preview-kicker">Booking date</p>
+                            <p class="invoice-preview-value">{{ $bookingDateLabel }}</p>
+                        </div>
                     </div>
-                    <div class="invoice-preview-detail-row">
-                        <span>Time</span>
-                        <span>{{ $timeLabel }}</span>
+
+                    <div class="invoice-preview-people">
+                        <div class="invoice-preview-person">
+                            <span class="invoice-preview-avatar">
+                                @if ($isSpaceUser)
+                                    <svg class="invoice-preview-avatar-ring" width="36" height="36" viewBox="0 0 36 36" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <circle cx="18" cy="18" r="17.5" fill="white" stroke="#FFA899" />
+                                    </svg>
+                                @else
+                                    <img src="{{ asset('images/business-hub/icon-invoice-avatar-ring.svg') }}" alt="" width="36"
+                                        height="36" class="invoice-preview-avatar-ring">
+                                @endif
+                                @if ($ownerPhotoUrl)
+                                    <img src="{{ $ownerPhotoUrl }}" alt="" width="32" height="32" class="invoice-preview-avatar-photo">
+                                @else
+                                    <span class="invoice-preview-avatar-fallback">{{ $ownerInitial }}</span>
+                                @endif
+                            </span>
+                            <span class="invoice-preview-person-name">{{ $billedToName }}</span>
+                        </div>
+                        <div class="invoice-preview-people-end">
+                            @unless ($isSpaceUser)
+                                <span class="invoice-preview-pet-chip">
+                                    @if ($petPhotoUrl)
+                                        <img src="{{ $petPhotoUrl }}" alt="" width="24" height="24">
+                                    @else
+                                        <span class="invoice-preview-pet-fallback">{{ $petInitial }}</span>
+                                    @endif
+                                    <span>{{ $petName }}</span>
+                                </span>
+                            @endunless
+                            <span class="invoice-preview-next" aria-hidden="true">
+                                <img src="{{ asset('images/business-hub/icon-invoice-next.svg') }}" alt="" width="36" height="36">
+                            </span>
+                        </div>
                     </div>
-                    <div class="invoice-preview-detail-row">
-                        <span>Location</span>
-                        <span>{{ $locationLabel }}</span>
-                    </div>
-                    @unless ($isSpaceUser)
+
+                    <div class="invoice-preview-details">
                         <div class="invoice-preview-detail-row">
-                            <span>Pet</span>
-                            <span>{{ $petLine }}</span>
+                            <span>{{ $isSpaceUser ? 'Space Host' : 'Groomer' }}</span>
+                            <span>{{ $issuerShortName }}</span>
                         </div>
-                    @endunless
-                </div>
+                        <div class="invoice-preview-detail-row">
+                            <span>Service type</span>
+                            <span>{{ $serviceTypeLabel }}</span>
+                        </div>
+                        <div class="invoice-preview-detail-row">
+                            <span>Time</span>
+                            <span>{{ $timeLabel }}</span>
+                        </div>
+                        <div class="invoice-preview-detail-row">
+                            <span>Location</span>
+                            <span>{{ $locationLabel }}</span>
+                        </div>
+                        @unless ($isSpaceUser)
+                            <div class="invoice-preview-detail-row">
+                                <span>Pet</span>
+                                <span>{{ $petLine }}</span>
+                            </div>
+                        @endunless
+                    </div>
 
-                <div class="invoice-preview-charges">
-                    <div class="invoice-preview-charge-block">
-                        <p class="invoice-preview-charge-title">Service</p>
-                        <div class="invoice-preview-charge-row">
-                            <span>{{ $serviceLineLabel }}</span>
-                            <span>£{{ number_format($serviceAmount, 2) }}</span>
+                    <div class="invoice-preview-charges">
+                        <div class="invoice-preview-charge-block">
+                            <p class="invoice-preview-charge-title">Service</p>
+                            <div class="invoice-preview-charge-row">
+                                <span>{{ $serviceLineLabel }}</span>
+                                <span>£{{ number_format($serviceAmount, 2) }}</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="invoice-preview-charge-block">
-                        <p class="invoice-preview-charge-title">Extras &amp; Add-ons</p>
-                        @forelse ($extraAddOns as $addon)
-                            <div class="invoice-preview-charge-row">
-                                <span>{{ $addon['label'] }}</span>
-                                <span>£{{ number_format((float) $addon['amount'], 2) }}</span>
+                        <div class="invoice-preview-charge-block">
+                            <p class="invoice-preview-charge-title">Extras &amp; Add-ons</p>
+                            @forelse ($extraAddOns as $addon)
+                                <div class="invoice-preview-charge-row">
+                                    <span>{{ $addon['label'] }}</span>
+                                    <span>£{{ number_format((float) $addon['amount'], 2) }}</span>
+                                </div>
+                            @empty
+                                <div class="invoice-preview-charge-row">
+                                    <span>No add-ons</span>
+                                    <span>£0.00</span>
+                                </div>
+                            @endforelse
+                        </div>
+                        @if ($isSpaceUser)
+                            <svg class="invoice-preview-rule is-dashed" viewBox="0 0 360 1" width="360" height="1" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                                <line x1="0.5" y1="0.5" x2="359.5" y2="0.5" stroke="#E2E2E2" stroke-linecap="round" stroke-dasharray="10 10" />
+                            </svg>
+                            <div class="invoice-preview-body-subtotal">
+                                <span>{{ $subtotalLabel }}</span>
+                                <span>£{{ number_format($subtotalAmount, 2) }}</span>
                             </div>
-                        @empty
-                            <div class="invoice-preview-charge-row">
-                                <span>No add-ons</span>
-                                <span>£0.00</span>
-                            </div>
-                        @endforelse
+                        @endif
                     </div>
-                    @if ($isSpaceUser)
-                        <svg class="invoice-preview-rule is-dashed" viewBox="0 0 360 1" width="360" height="1" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-                            <line x1="0.5" y1="0.5" x2="359.5" y2="0.5" stroke="#E2E2E2" stroke-linecap="round" stroke-dasharray="10 10" />
-                        </svg>
-                        <div class="invoice-preview-body-subtotal">
+
+                    <div class="invoice-preview-footer">
+                        <div class="invoice-preview-footer-row">
                             <span>{{ $subtotalLabel }}</span>
                             <span>£{{ number_format($subtotalAmount, 2) }}</span>
                         </div>
-                    @endif
-                </div>
-
-                <div class="invoice-preview-footer">
-                    <div class="invoice-preview-footer-row">
-                        <span>{{ $subtotalLabel }}</span>
-                        <span>£{{ number_format($subtotalAmount, 2) }}</span>
+                        <div class="invoice-preview-rule is-solid" aria-hidden="true"></div>
+                        <div class="invoice-preview-footer-row is-total">
+                            <span>Total paid</span>
+                            <span>£{{ number_format($totalPaidAmount, 2) }}</span>
+                        </div>
                     </div>
-                    <div class="invoice-preview-rule is-solid" aria-hidden="true"></div>
-                    <div class="invoice-preview-footer-row is-total">
-                        <span>Total paid</span>
-                        <span>£{{ number_format($totalPaidAmount, 2) }}</span>
-                    </div>
+                    <h2 class="sr-only" id="completed-booking-modal-title">Invoice {{ $invoiceIdLabel }}</h2>
                 </div>
-                <h2 class="sr-only" id="completed-booking-modal-title">Invoice {{ $invoiceIdLabel }}</h2>
             </div>
-        </div>
-    @endteleport
+        @endteleport
+    @endif
 @endif
 
 @once
@@ -686,7 +803,7 @@
         .invoice-preview-kicker {
             margin: 0;
             color: #9D9B98;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 14px;
             font-weight: 400;
             line-height: normal;
@@ -695,7 +812,7 @@
         .invoice-preview-paid {
             margin: 0;
             color: #A2C35D;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 14px;
             font-weight: 400;
             line-height: normal;
@@ -727,7 +844,7 @@
         .invoice-preview-value {
             margin: 0;
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 14px;
             font-weight: 400;
             line-height: normal;
@@ -755,7 +872,7 @@
 
         .invoice-preview-person-name {
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 14px;
             font-weight: 600;
             line-height: normal;
@@ -819,7 +936,7 @@
             justify-content: center;
             background: #F2F6F9;
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 12px;
             font-weight: 600;
         }
@@ -833,7 +950,7 @@
             border-radius: 100px;
             background: rgba(255, 201, 122, 0.4);
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 16px;
             font-weight: 400;
             line-height: normal;
@@ -862,7 +979,7 @@
             justify-content: space-between;
             gap: 16px;
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 14px;
             font-weight: 400;
             line-height: 20px;
@@ -901,7 +1018,7 @@
             gap: 16px;
             margin-top: 20px;
             color: #9D9B98;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 14px;
             font-weight: 400;
             line-height: 20px;
@@ -932,7 +1049,7 @@
         .invoice-preview-charge-title {
             margin: 0 0 4px;
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 14px;
             font-weight: 700;
             line-height: 20px;
@@ -944,7 +1061,7 @@
             justify-content: space-between;
             gap: 16px;
             color: #9D9B98;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 14px;
             font-weight: 400;
             line-height: 20px;
@@ -970,7 +1087,7 @@
             justify-content: space-between;
             gap: 16px;
             color: #3B3731;
-            font-family: Lato, sans-serif;
+            font-family: Lato;
             font-size: 14px;
             font-weight: 400;
             line-height: 20px;
@@ -1003,6 +1120,244 @@
             clip: rect(0, 0, 0, 0);
             white-space: nowrap;
             border: 0;
+        }
+
+        .client-history-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(59, 55, 49, 0.35);
+        }
+
+        .client-history-modal {
+            width: 610px;
+            max-width: 100%;
+            max-height: calc(100vh - 48px);
+            overflow: auto;
+            background: #fff;
+            border-radius: 10px;
+        }
+
+        .client-history-modal__head {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 80px;
+            background: rgba(203, 220, 232, 0.2);
+            border-radius: 10px 10px 0 0;
+        }
+
+        .client-history-modal__head.is-space {
+            background: #F5F8FA;
+        }
+
+        .client-history-modal__title {
+            margin: 0;
+            color: #3B3731;
+            font-family: "Playfair Display", serif;
+            font-size: 28px;
+            font-weight: 800;
+            line-height: normal;
+            text-align: center;
+        }
+
+        .client-history-modal__title span {
+            font-weight: 600;
+        }
+
+        .client-history-modal__close {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14.5px;
+            height: 14.5px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .client-history-modal__close img {
+            width: 14.5px;
+            height: 14.5px;
+            max-width: 14.5px;
+            display: block;
+        }
+
+        .client-history-modal__body {
+            padding: 0 25px 32px;
+        }
+
+        .client-history-modal__id,
+        .client-history-modal__line,
+        .client-history-modal__total {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .client-history-modal__id {
+            min-height: 56px;
+            margin: 0;
+            border-bottom: 1px solid #E2E2E2;
+            color: #000;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .client-history-modal__id p {
+            margin: 0;
+        }
+
+        .client-history-modal__id-end {
+            display: inline-flex;
+            align-items: center;
+            gap: 20px;
+            color: #9D9B98;
+        }
+
+        .client-history-modal__download {
+            position: relative;
+            display: inline-flex;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .client-history-modal__download img {
+            width: 36px;
+            height: 36px;
+            max-width: 36px;
+            display: block;
+        }
+
+        .client-history-modal__download-glyph {
+            position: absolute;
+            top: 8px;
+            left: 10px;
+            width: 16px !important;
+            height: 19px !important;
+            max-width: 16px !important;
+        }
+
+        .client-history-modal__person {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 0 0;
+        }
+
+        .client-history-modal__avatar,
+        .client-history-modal__avatar img,
+        .client-history-modal__avatar span {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+        }
+
+        .client-history-modal__avatar {
+            display: inline-flex;
+            flex: 0 0 44px;
+            overflow: hidden;
+            background: #E7EEF3;
+        }
+
+        .client-history-modal__avatar img {
+            max-width: 44px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .client-history-modal__avatar span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .client-history-modal__name,
+        .client-history-modal__pet {
+            display: block;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 18px;
+            line-height: normal;
+        }
+
+        .client-history-modal__name {
+            font-weight: 600;
+        }
+
+        .client-history-modal__pet {
+            font-weight: 400;
+        }
+
+        .client-history-modal__pet span {
+            color: #9D9B98;
+        }
+
+        .client-history-modal__section,
+        .client-history-modal__summary {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #E2E2E2;
+        }
+
+        .client-history-modal__section-title {
+            margin: 0 0 20px;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 18px;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .client-history-modal__line {
+            color: #9D9B98;
+            font-family: Lato;
+            font-size: 18px;
+            font-weight: 400;
+            line-height: 23px;
+        }
+
+        .client-history-modal__line+.client-history-modal__line {
+            margin-top: 10px;
+        }
+
+        .client-history-modal__line span:last-child {
+            color: #3B3731;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .client-history-modal__summary {
+            padding-bottom: 20px;
+            border-bottom: 1px solid #E2E2E2;
+        }
+
+        .client-history-modal__total {
+            padding-top: 20px;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 20px;
+            font-weight: 700;
+            line-height: normal;
         }
     </style>
 @endonce

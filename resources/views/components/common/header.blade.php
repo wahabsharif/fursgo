@@ -1027,7 +1027,7 @@
                 border-radius: 10px;
                 background: #fff;
                 color: #3b3731;
-                font-family: Lato, sans-serif;
+                font-family: Lato;
                 font-size: 14px;
                 font-weight: 400;
                 line-height: 1;
@@ -1066,7 +1066,7 @@
                 border-radius: 10px;
                 background: #fffbf4;
                 color: #ffc97a;
-                font-family: Lato, sans-serif;
+                font-family: Lato;
                 font-size: 14px;
                 font-style: normal;
                 font-weight: 600;
@@ -1176,7 +1176,7 @@
                 border-radius: 50%;
                 background: #fe6f56;
                 color: #fff;
-                font-family: Lato, sans-serif;
+                font-family: Lato;
                 font-size: 10px;
                 font-weight: 600;
                 line-height: 14px;
@@ -1242,7 +1242,7 @@
 
             .header-user-business {
                 color: #9d9b98;
-                font-family: Lato, sans-serif;
+                font-family: Lato;
                 font-size: 16px;
                 font-weight: 400;
                 line-height: 1.2;
@@ -1368,7 +1368,7 @@
 
             .dashboard-header .user-profile-options .user-profile-email {
                 color: #9d9b98;
-                font-family: Lato, sans-serif;
+                font-family: Lato;
                 font-size: 16px;
                 font-weight: 400;
                 overflow: hidden;
@@ -1384,7 +1384,7 @@
             .profile-switch-label {
                 margin: 0 0 12px;
                 color: #9d9b98;
-                font-family: Lato, sans-serif;
+                font-family: Lato;
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 1;
@@ -1435,7 +1435,7 @@
 
             .profile-business-name,
             .profile-business-meta {
-                font-family: Lato, sans-serif;
+                font-family: Lato;
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 1.2;
@@ -1467,7 +1467,7 @@
                 height: 43px;
                 padding: 0 1rem;
                 color: #ffc46e;
-                font-family: Lato, sans-serif;
+                font-family: Lato;
                 font-size: 12px;
                 font-weight: 600;
                 text-decoration: none;
@@ -1498,7 +1498,7 @@
                 padding: 0 1rem;
                 border-radius: 10px;
                 color: #3b3731;
-                font-family: Lato, sans-serif;
+                font-family: Lato;
                 font-size: 14px;
                 font-weight: 400;
                 text-decoration: none;
@@ -1608,7 +1608,7 @@
             .dashboard-vq-links a {
                 color: #3b3731;
                 text-decoration: none;
-                font-family: Lato, sans-serif;
+                font-family: Lato;
                 font-size: 18px;
                 line-height: 22px;
                 font-weight: 500;

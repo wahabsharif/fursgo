@@ -200,7 +200,7 @@
     .booking-details-drawer-id {
         margin: 0.2rem 0 0;
         color: #9D9B98;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 600;
         line-height: normal;
@@ -292,7 +292,7 @@
         justify-content: center;
         background: #F1F1F1;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 600;
     }
@@ -309,7 +309,7 @@
 
     .booking-details-client-name-row strong {
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 600;
         line-height: normal;
@@ -323,7 +323,7 @@
     .booking-details-client-copy p {
         margin: 0.2rem 0 0;
         color: #9C9790;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 400;
         line-height: normal;
@@ -335,7 +335,7 @@
         justify-content: center;
         border-radius: 100px;
         padding: 0.28rem 0.75rem;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 14px;
         font-weight: 500;
         line-height: normal;
@@ -381,7 +381,7 @@
     .booking-details-section h4 {
         margin: 0 0 0.85rem;
         color: #000;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 600;
         line-height: normal;
@@ -398,7 +398,7 @@
 
     .booking-details-row span {
         color: #9D9B98;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 400;
         line-height: normal;
@@ -406,7 +406,7 @@
 
     .booking-details-row strong {
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 600;
         line-height: normal;
@@ -533,7 +533,7 @@
         justify-content: center;
         background: #FFF;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 15px;
         font-weight: 600;
     }
@@ -546,7 +546,7 @@
 
     .booking-details-pet-name-row strong {
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 600;
         line-height: normal;
@@ -555,7 +555,7 @@
     .booking-details-pet-type {
         margin: 0.25rem 0 0;
         color: #9D9B98;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 400;
         line-height: normal;
@@ -623,7 +623,7 @@
 
     .booking-details-pet-meta-row span {
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 400;
         line-height: normal;

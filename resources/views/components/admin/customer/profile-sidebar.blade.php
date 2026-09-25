@@ -61,6 +61,7 @@ $transferAccounts = [
         transferTargetId: null,
         selectedPetId: @js($defaultTransferPet['id'] ?? null),
         bookingDetail: null,
+        disputeOpen: false,
         pets: @js($profilePets),
         transferAccounts: @js($transferAccounts),
         currentPet() {
@@ -75,6 +76,12 @@ $transferAccounts = [
         },
         canAssignBooking() {
             return !!this.bookingDetail;
+        },
+        showBookingActions() {
+            return this.detailTab === 'bookings' && this.bookingDetail && !this.disputeOpen;
+        },
+        showDisputeActions() {
+            return this.detailTab === 'bookings' && this.bookingDetail && this.disputeOpen;
         },
         filteredTransferAccounts() {
             const q = (this.transferSearch || '').trim().toLowerCase();
@@ -140,8 +147,10 @@ $transferAccounts = [
         },
     }"
     @admin-pet-selected.window="selectedPetId = $event.detail.id"
-    @admin-booking-selected.window="bookingDetail = $event.detail.booking || null"
-    @admin-booking-closed.window="bookingDetail = null"
+    @admin-booking-selected.window="bookingDetail = $event.detail.booking || null; disputeOpen = false"
+    @admin-booking-closed.window="bookingDetail = null; disputeOpen = false"
+    @admin-dispute-opened.window="disputeOpen = true"
+    @admin-dispute-closed.window="disputeOpen = false"
     x-init="
         const syncModalLock = () => {
             const open = verifyEmailOpen || resetPasswordOpen || suspendOpen || pauseBookingsOpen || flagOpen || deleteOpen || transferOpen || archiveOpen || unarchiveOpen || deletePetOpen;
@@ -409,13 +418,28 @@ $transferAccounts = [
                 " />
         </div>
 
-        <div x-show="detailTab === 'bookings' && bookingDetail" x-cloak>
+        <div x-show="detailTab === 'bookings' && bookingDetail && !disputeOpen" x-cloak>
             <div x-show="bookingDispute()" x-cloak>
                 <x-admin.customer.action-btn
                     variant="view-dispute"
                     label="View full dispute"
                     x-on:click="$dispatch('admin-view-dispute')" />
             </div>
+            <div x-show="canAssignBooking()" x-cloak>
+                <x-admin.customer.action-btn
+                    variant="assign"
+                    label="Assign to team member"
+                    x-on:click="$dispatch('admin-open-assign-booking')" />
+            </div>
+            <div x-show="canCancelBooking()" x-cloak>
+                <x-admin.customer.action-btn
+                    variant="cancel-booking"
+                    label="Cancel booking"
+                    x-on:click="$dispatch('admin-open-cancel-booking')" />
+            </div>
+        </div>
+
+        <div x-show="detailTab === 'bookings' && bookingDetail && disputeOpen" x-cloak>
             <div x-show="canAssignBooking()" x-cloak>
                 <x-admin.customer.action-btn
                     variant="assign"
