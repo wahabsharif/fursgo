@@ -302,154 +302,154 @@
             <p class="admin-co-dispute-resolve-note">Only available on this page · action is permanent</p>
         </div>
         <div class="admin-co-dispute-resolve-body">
-        <p class="admin-co-dispute-resolve-intro">Review all statements and evidence above before resolving. Select an outcome and confirm your decision.</p>
+            <p class="admin-co-dispute-resolve-intro">Review all statements and evidence above before resolving. Select an outcome and confirm your decision.</p>
 
-        <p class="admin-co-dispute-step">Step 1 — Select outcome</p>
-        <div class="admin-co-dispute-outcomes">
-            <button type="button" class="admin-co-dispute-outcome" :class="{ 'is-selected': resolveOutcome === 'customer' }" @click="selectResolveOutcome('customer')">
-                <span class="admin-co-dispute-outcome-icon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path d="M8 8C9.65685 8 11 6.65685 11 5C11 3.34315 9.65685 2 8 2C6.34315 2 5 3.34315 5 5C5 6.65685 6.34315 8 8 8Z" stroke="currentColor" stroke-width="1.25" />
-                        <path d="M2.5 13.5C2.5 11.2909 4.79086 9.5 8 9.5C11.2091 9.5 13.5 11.2909 13.5 13.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" />
-                    </svg>
-                </span>
-                <span class="admin-co-dispute-outcome-label">Rule for customer</span>
-                <span class="admin-co-dispute-outcome-desc">Issue a refund to the customer / withhold groomer payout accordingly.</span>
-            </button>
-            <button type="button" class="admin-co-dispute-outcome" :class="{ 'is-selected': resolveOutcome === 'groomer' }" @click="selectResolveOutcome('groomer')">
-                <span class="admin-co-dispute-outcome-icon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="16" viewBox="0 0 15 16" fill="none">
-                        <path d="M4.65756 10.8634C5.86245 12.0683 8.79289 11.0917 11.2027 8.68156C13.6128 6.27179 14.5894 3.34135 13.3845 2.13647M8.20279 1.31804L8.74815 1.86379M6.29403 3.22719L6.83939 3.77255M4.65718 5.40901L5.20254 5.95437M4.11182 8.1362L4.65718 8.68156M11.2027 0.5L11.748 1.04536M10.6573 3.77293L11.748 4.86365M8.74854 5.68208L9.83926 6.7728M6.56671 7.31816L7.65743 8.40888" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" />
-                        <path d="M4.65703 12.5004C5.10889 12.0485 5.10889 11.3159 4.65703 10.8641C4.20517 10.4122 3.47256 10.4122 3.0207 10.8641L0.838933 13.0458C0.387073 13.4977 0.387073 14.2303 0.838933 14.6822C1.29079 15.134 2.0234 15.134 2.47526 14.6822L4.65703 12.5004Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </span>
-                <span class="admin-co-dispute-outcome-label">Rule for groomer</span>
-                <span class="admin-co-dispute-outcome-desc">No refund issued / release full groomer payout.</span>
-            </button>
-            <button type="button" class="admin-co-dispute-outcome" :class="{ 'is-selected': resolveOutcome === 'split' }" @click="selectResolveOutcome('split')">
-                <span class="admin-co-dispute-outcome-icon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
-                        <path d="M20.75 6.86111V4.75C20.75 2.86444 20.75 1.92111 20.1644 1.33556C19.5789 0.75 18.6356 0.75 16.75 0.75H14.6389M19.6389 1.86111L13.5278 7.97222M0.75 6.86111V4.75C0.75 2.86444 0.75 1.92111 1.33556 1.33556C1.92111 0.75 2.86444 0.75 4.75 0.75H6.86111M1.86111 1.86111L8.14667 8.14667C9.43111 9.43111 10.0733 10.0733 10.4111 10.8911C10.75 11.7067 10.75 12.6156 10.75 14.4322V20.75" stroke="#787775" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </span>
-                <span class="admin-co-dispute-outcome-label">Split decision</span>
-                <span class="admin-co-dispute-outcome-desc">Partial refund to customer / partial payout to groomer.</span>
-            </button>
-        </div>
-
-        <div class="admin-co-dispute-resolve-sep" aria-hidden="true"></div>
-
-        <p class="admin-co-dispute-step">Step 2 — Confirm financial outcome</p>
-        <div class="admin-co-split admin-co-dispute-finance-fields">
-            <div class="admin-co-suspend-field">
-                <label class="admin-co-suspend-label">Refund to customer <span class="admin-co-suspend-required">*</span></label>
-                <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openResolveRefund = false">
-                    <button type="button" class="admin-co-dd-trigger" @click="openResolveRefund = !openResolveRefund; openResolvePayout = false; openResolveNotify = false">
-                        <span class="admin-co-dd-value" :class="{ 'is-placeholder': !resolveRefund }" x-text="resolveRefund || 'Select refund amount ...'"></span>
-                        <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
-                            <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+            <p class="admin-co-dispute-step">Step 1 — Select outcome</p>
+            <div class="admin-co-dispute-outcomes">
+                <button type="button" class="admin-co-dispute-outcome" :class="{ 'is-selected': resolveOutcome === 'customer' }" @click="selectResolveOutcome('customer')">
+                    <span class="admin-co-dispute-outcome-icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 8C9.65685 8 11 6.65685 11 5C11 3.34315 9.65685 2 8 2C6.34315 2 5 3.34315 5 5C5 6.65685 6.34315 8 8 8Z" stroke="currentColor" stroke-width="1.25" />
+                            <path d="M2.5 13.5C2.5 11.2909 4.79086 9.5 8 9.5C11.2091 9.5 13.5 11.2909 13.5 13.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" />
                         </svg>
-                    </button>
-                    <div class="admin-co-dd-menu" x-show="openResolveRefund" x-cloak>
-                        <button type="button" class="admin-co-dd-option" @click="resolveRefund = 'Full refund - ' + (selectedBooking?.amount || ''); openResolveRefund = false">Full refund - <span x-text="selectedBooking?.amount"></span></button>
-                        <button type="button" class="admin-co-dd-option" @click="resolveRefund = 'No refund'; openResolveRefund = false">No refund</button>
-                        <button type="button" class="admin-co-dd-option" @click="resolveRefund = 'Partial refund - enter amount'; openResolveRefund = false">Partial refund - enter amount</button>
+                    </span>
+                    <span class="admin-co-dispute-outcome-label">Rule for customer</span>
+                    <span class="admin-co-dispute-outcome-desc">Issue a refund to the customer / withhold groomer payout accordingly.</span>
+                </button>
+                <button type="button" class="admin-co-dispute-outcome" :class="{ 'is-selected': resolveOutcome === 'groomer' }" @click="selectResolveOutcome('groomer')">
+                    <span class="admin-co-dispute-outcome-icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="16" viewBox="0 0 15 16" fill="none">
+                            <path d="M4.65756 10.8634C5.86245 12.0683 8.79289 11.0917 11.2027 8.68156C13.6128 6.27179 14.5894 3.34135 13.3845 2.13647M8.20279 1.31804L8.74815 1.86379M6.29403 3.22719L6.83939 3.77255M4.65718 5.40901L5.20254 5.95437M4.11182 8.1362L4.65718 8.68156M11.2027 0.5L11.748 1.04536M10.6573 3.77293L11.748 4.86365M8.74854 5.68208L9.83926 6.7728M6.56671 7.31816L7.65743 8.40888" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M4.65703 12.5004C5.10889 12.0485 5.10889 11.3159 4.65703 10.8641C4.20517 10.4122 3.47256 10.4122 3.0207 10.8641L0.838933 13.0458C0.387073 13.4977 0.387073 14.2303 0.838933 14.6822C1.29079 15.134 2.0234 15.134 2.47526 14.6822L4.65703 12.5004Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </span>
+                    <span class="admin-co-dispute-outcome-label">Rule for groomer</span>
+                    <span class="admin-co-dispute-outcome-desc">No refund issued / release full groomer payout.</span>
+                </button>
+                <button type="button" class="admin-co-dispute-outcome" :class="{ 'is-selected': resolveOutcome === 'split' }" @click="selectResolveOutcome('split')">
+                    <span class="admin-co-dispute-outcome-icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
+                            <path d="M20.75 6.86111V4.75C20.75 2.86444 20.75 1.92111 20.1644 1.33556C19.5789 0.75 18.6356 0.75 16.75 0.75H14.6389M19.6389 1.86111L13.5278 7.97222M0.75 6.86111V4.75C0.75 2.86444 0.75 1.92111 1.33556 1.33556C1.92111 0.75 2.86444 0.75 4.75 0.75H6.86111M1.86111 1.86111L8.14667 8.14667C9.43111 9.43111 10.0733 10.0733 10.4111 10.8911C10.75 11.7067 10.75 12.6156 10.75 14.4322V20.75" stroke="#787775" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </span>
+                    <span class="admin-co-dispute-outcome-label">Split decision</span>
+                    <span class="admin-co-dispute-outcome-desc">Partial refund to customer / partial payout to groomer.</span>
+                </button>
+            </div>
+
+            <div class="admin-co-dispute-resolve-sep" aria-hidden="true"></div>
+
+            <p class="admin-co-dispute-step">Step 2 — Confirm financial outcome</p>
+            <div class="admin-co-split admin-co-dispute-finance-fields">
+                <div class="admin-co-suspend-field">
+                    <label class="admin-co-suspend-label">Refund to customer <span class="admin-co-suspend-required">*</span></label>
+                    <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openResolveRefund = false">
+                        <button type="button" class="admin-co-dd-trigger" @click="openResolveRefund = !openResolveRefund; openResolvePayout = false; openResolveNotify = false">
+                            <span class="admin-co-dd-value" :class="{ 'is-placeholder': !resolveRefund }" x-text="resolveRefund || 'Select refund amount ...'"></span>
+                            <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                                <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <div class="admin-co-dd-menu" x-show="openResolveRefund" x-cloak>
+                            <button type="button" class="admin-co-dd-option" @click="resolveRefund = 'Full refund - ' + (selectedBooking?.amount || ''); openResolveRefund = false">Full refund - <span x-text="selectedBooking?.amount"></span></button>
+                            <button type="button" class="admin-co-dd-option" @click="resolveRefund = 'No refund'; openResolveRefund = false">No refund</button>
+                            <button type="button" class="admin-co-dd-option" @click="resolveRefund = 'Partial refund - enter amount'; openResolveRefund = false">Partial refund - enter amount</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-co-suspend-field">
+                    <label class="admin-co-suspend-label">Groomer payout <span class="admin-co-suspend-required">*</span></label>
+                    <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openResolvePayout = false">
+                        <button type="button" class="admin-co-dd-trigger" @click="openResolvePayout = !openResolvePayout; openResolveRefund = false; openResolveNotify = false">
+                            <span class="admin-co-dd-value" :class="{ 'is-placeholder': !resolvePayout }" x-text="resolvePayout || 'Select payout action ...'"></span>
+                            <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                                <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <div class="admin-co-dd-menu" x-show="openResolvePayout" x-cloak>
+                            <button type="button" class="admin-co-dd-option" @click="resolvePayout = 'Release full payout - ' + (selectedBooking?.amount || ''); openResolvePayout = false">Release full payout - <span x-text="selectedBooking?.amount"></span></button>
+                            <button type="button" class="admin-co-dd-option" @click="resolvePayout = 'Withhold full payout'; openResolvePayout = false">Withhold full payout</button>
+                            <button type="button" class="admin-co-dd-option" @click="resolvePayout = 'Release partial payout - enter amount'; openResolvePayout = false">Release partial payout - enter amount</button>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="admin-co-suspend-field">
-                <label class="admin-co-suspend-label">Groomer payout <span class="admin-co-suspend-required">*</span></label>
-                <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openResolvePayout = false">
-                    <button type="button" class="admin-co-dd-trigger" @click="openResolvePayout = !openResolvePayout; openResolveRefund = false; openResolveNotify = false">
-                        <span class="admin-co-dd-value" :class="{ 'is-placeholder': !resolvePayout }" x-text="resolvePayout || 'Select payout action ...'"></span>
-                        <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
-                            <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </button>
-                    <div class="admin-co-dd-menu" x-show="openResolvePayout" x-cloak>
-                        <button type="button" class="admin-co-dd-option" @click="resolvePayout = 'Release full payout - ' + (selectedBooking?.amount || ''); openResolvePayout = false">Release full payout - <span x-text="selectedBooking?.amount"></span></button>
-                        <button type="button" class="admin-co-dd-option" @click="resolvePayout = 'Withhold full payout'; openResolvePayout = false">Withhold full payout</button>
-                        <button type="button" class="admin-co-dd-option" @click="resolvePayout = 'Release partial payout - enter amount'; openResolvePayout = false">Release partial payout - enter amount</button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <p class="admin-co-dispute-step">Financial breakdown — live preview</p>
-        <div class="admin-co-dispute-preview-box">
-            <dl class="admin-co-details admin-co-dispute-preview">
-                <template x-for="(line, idx) in (selectedBooking?.detail?.price_lines || [])" :key="idx">
+            <p class="admin-co-dispute-step">Financial breakdown — live preview</p>
+            <div class="admin-co-dispute-preview-box">
+                <dl class="admin-co-details admin-co-dispute-preview">
+                    <template x-for="(line, idx) in (selectedBooking?.detail?.price_lines || [])" :key="idx">
+                        <div class="admin-co-details-row">
+                            <dt x-text="line.label"></dt>
+                            <dd :class="{ 'admin-co-bk-detail-warn': String(line.value || '').startsWith('-') }" x-text="line.value"></dd>
+                        </div>
+                    </template>
+                    <div class="admin-co-details-row admin-co-bk-detail-total-row">
+                        <dt>Total originally charged</dt>
+                        <dd x-text="selectedBooking?.detail?.total || selectedBooking?.amount"></dd>
+                    </div>
                     <div class="admin-co-details-row">
-                        <dt x-text="line.label"></dt>
-                        <dd :class="{ 'admin-co-bk-detail-warn': String(line.value || '').startsWith('-') }" x-text="line.value"></dd>
+                        <dt>Refund to customer</dt>
+                        <dd class="admin-co-bk-detail-warn" x-text="resolveRefundPreview()"></dd>
                     </div>
-                </template>
-                <div class="admin-co-details-row admin-co-bk-detail-total-row">
-                    <dt>Total originally charged</dt>
-                    <dd x-text="selectedBooking?.detail?.total || selectedBooking?.amount"></dd>
+                    <div class="admin-co-details-row">
+                        <dt>Groomer payout</dt>
+                        <dd class="admin-co-dispute-payout-ok" x-text="resolvePayoutPreview()"></dd>
+                    </div>
+                </dl>
+                <div class="admin-co-suspend-alert is-danger admin-co-dispute-alloc" x-show="resolveRefund && resolvePayout" x-cloak>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                        <path d="M4.875 9.375C7.36028 9.375 9.375 7.36028 9.375 4.875C9.375 2.38972 7.36028 0.375 4.875 0.375C2.38972 0.375 0.375 2.38972 0.375 4.875C0.375 7.36028 2.38972 9.375 4.875 9.375Z" stroke="#FF6E6E" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M4.875 6.67495V4.87495M4.875 3.07495H4.8795" stroke="#FF6E6E" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <p>Full amount of <span x-text="selectedBooking?.amount"></span> has been allocated between refund and payout.</p>
                 </div>
-                <div class="admin-co-details-row">
-                    <dt>Refund to customer</dt>
-                    <dd class="admin-co-bk-detail-warn" x-text="resolveRefundPreview()"></dd>
-                </div>
-                <div class="admin-co-details-row">
-                    <dt>Groomer payout</dt>
-                    <dd class="admin-co-dispute-payout-ok" x-text="resolvePayoutPreview()"></dd>
-                </div>
-            </dl>
-            <div class="admin-co-suspend-alert is-danger admin-co-dispute-alloc" x-show="resolveRefund && resolvePayout" x-cloak>
-                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-                    <path d="M4.875 9.375C7.36028 9.375 9.375 7.36028 9.375 4.875C9.375 2.38972 7.36028 0.375 4.875 0.375C2.38972 0.375 0.375 2.38972 0.375 4.875C0.375 7.36028 2.38972 9.375 4.875 9.375Z" stroke="#FF6E6E" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
-                    <path d="M4.875 6.67495V4.87495M4.875 3.07495H4.8795" stroke="#FF6E6E" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <p>Full amount of <span x-text="selectedBooking?.amount"></span> has been allocated between refund and payout.</p>
             </div>
-        </div>
 
-        <div class="admin-co-dispute-resolve-sep" aria-hidden="true"></div>
+            <div class="admin-co-dispute-resolve-sep" aria-hidden="true"></div>
 
-        <p class="admin-co-dispute-step">Step 3 — Resolution notes</p>
-        <div class="admin-co-suspend-field admin-co-dispute-notes-field">
-            <label class="admin-co-suspend-label">Resolution notes — sent to both parties <span class="admin-co-suspend-required">*</span></label>
-            <textarea
-                class="admin-co-suspend-notes"
-                rows="4"
-                placeholder="Explain your decision. Both parties will receive this message alongside the financial outcome. Be clear about what evidence you reviewed and why you made this decision ..."
-                x-model="resolveNotes"></textarea>
-        </div>
-        <div class="admin-co-split admin-co-dispute-finance-fields">
-            <div class="admin-co-suspend-field">
-                <label class="admin-co-suspend-label">Internal admin notes (not sent to parties)</label>
-                <input type="text" class="admin-co-dd-trigger admin-co-dispute-input" placeholder="Any context for audit log ..." x-model="resolveInternal">
+            <p class="admin-co-dispute-step">Step 3 — Resolution notes</p>
+            <div class="admin-co-suspend-field admin-co-dispute-notes-field">
+                <label class="admin-co-suspend-label">Resolution notes — sent to both parties <span class="admin-co-suspend-required">*</span></label>
+                <textarea
+                    class="admin-co-suspend-notes"
+                    rows="4"
+                    placeholder="Explain your decision. Both parties will receive this message alongside the financial outcome. Be clear about what evidence you reviewed and why you made this decision ..."
+                    x-model="resolveNotes"></textarea>
             </div>
-            <div class="admin-co-suspend-field">
-                <label class="admin-co-suspend-label">Notification preference</label>
-                <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openResolveNotify = false">
-                    <button type="button" class="admin-co-dd-trigger" @click="openResolveNotify = !openResolveNotify; openResolveRefund = false; openResolvePayout = false">
-                        <span class="admin-co-dd-value" x-text="resolveNotify === 'both' ? 'Notify both parties by email' : (resolveNotify === 'customer' ? 'Notify customer only' : (resolveNotify === 'groomer' ? 'Notify groomer only' : 'Do not notify'))"></span>
-                        <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
-                            <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </button>
-                    <div class="admin-co-dd-menu" x-show="openResolveNotify" x-cloak>
-                        <button type="button" class="admin-co-dd-option" @click="resolveNotify = 'both'; openResolveNotify = false">Notify both parties by email</button>
-                        <button type="button" class="admin-co-dd-option" @click="resolveNotify = 'customer'; openResolveNotify = false">Notify customer only</button>
-                        <button type="button" class="admin-co-dd-option" @click="resolveNotify = 'groomer'; openResolveNotify = false">Notify groomer only</button>
-                        <button type="button" class="admin-co-dd-option" @click="resolveNotify = 'none'; openResolveNotify = false">Do not notify</button>
+            <div class="admin-co-split admin-co-dispute-finance-fields">
+                <div class="admin-co-suspend-field">
+                    <label class="admin-co-suspend-label">Internal admin notes (not sent to parties)</label>
+                    <input type="text" class="admin-co-dd-trigger admin-co-dispute-input" placeholder="Any context for audit log ..." x-model="resolveInternal">
+                </div>
+                <div class="admin-co-suspend-field">
+                    <label class="admin-co-suspend-label">Notification preference</label>
+                    <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openResolveNotify = false">
+                        <button type="button" class="admin-co-dd-trigger" @click="openResolveNotify = !openResolveNotify; openResolveRefund = false; openResolvePayout = false">
+                            <span class="admin-co-dd-value" x-text="resolveNotify === 'both' ? 'Notify both parties by email' : (resolveNotify === 'customer' ? 'Notify customer only' : (resolveNotify === 'groomer' ? 'Notify groomer only' : 'Do not notify'))"></span>
+                            <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                                <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <div class="admin-co-dd-menu" x-show="openResolveNotify" x-cloak>
+                            <button type="button" class="admin-co-dd-option" @click="resolveNotify = 'both'; openResolveNotify = false">Notify both parties by email</button>
+                            <button type="button" class="admin-co-dd-option" @click="resolveNotify = 'customer'; openResolveNotify = false">Notify customer only</button>
+                            <button type="button" class="admin-co-dd-option" @click="resolveNotify = 'groomer'; openResolveNotify = false">Notify groomer only</button>
+                            <button type="button" class="admin-co-dd-option" @click="resolveNotify = 'none'; openResolveNotify = false">Do not notify</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="admin-co-blocked-modal-foot is-confirm admin-co-dispute-resolve-foot">
-            <button type="button" class="admin-co-form-btn is-cancel" @click="closeDispute()">Cancel</button>
-            <button type="button" class="admin-co-form-btn is-send-email" :disabled="!resolveReady()" @click="resolveReady() && closeDispute()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                    <path d="M12.75 1.25L6.25 7.75M12.75 1.25L8.5 12.75L6.25 7.75M12.75 1.25L1.25 5.5L6.25 7.75" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                Confirm resolution
-            </button>
-        </div>
+            <div class="admin-co-blocked-modal-foot is-confirm admin-co-dispute-resolve-foot">
+                <button type="button" class="admin-co-form-btn is-cancel" @click="closeDispute()">Cancel</button>
+                <button type="button" class="admin-co-form-btn is-send-email" :disabled="!resolveReady()" @click="resolveReady() && closeDispute()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <path d="M12.75 1.25L6.25 7.75M12.75 1.25L8.5 12.75L6.25 7.75M12.75 1.25L1.25 5.5L6.25 7.75" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Confirm resolution
+                </button>
+            </div>
         </div>
     </section>
 </div>
