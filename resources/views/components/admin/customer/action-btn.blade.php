@@ -42,13 +42,14 @@ $icons = [
     <path d="M1.125 7C1.125 7 3.625 1.625 9 1.625C14.375 1.625 16.875 7 16.875 7C16.875 7 14.375 12.375 9 12.375C3.625 12.375 1.125 7 1.125 7Z" stroke="#FFAF3B" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
     <circle cx="9" cy="7" r="2.25" stroke="#FFAF3B" stroke-width="1.25" />
 </svg>',
-'assign' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <path d="M8 8C9.65685 8 11 6.65685 11 5C11 3.34315 9.65685 2 8 2C6.34315 2 5 3.34315 5 5C5 6.65685 6.34315 8 8 8Z" stroke="#659FC9" stroke-width="1.25" />
-    <path d="M2.5 13.5C2.5 11.2909 4.79086 9.5 8 9.5C11.2091 9.5 13.5 11.2909 13.5 13.5" stroke="#659FC9" stroke-width="1.25" stroke-linecap="round" />
+'assign' => '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="15" viewBox="0 0 14 15" fill="none">
+    <path d="M6.51172 0.5C8.38117 0.5 9.89641 2.01541 9.89648 3.88477C9.89648 5.75418 8.38121 7.26953 6.51172 7.26953C4.64233 7.26941 3.12695 5.75411 3.12695 3.88477C3.12703 2.01549 4.64238 0.500124 6.51172 0.5Z" stroke="#649FC9" />
+    <path d="M10.7505 8.93865C9.42368 7.51703 7.64686 7.4165 6.51274 7.4165C1.42693 7.4165 0.390927 11.7723 0.508654 14.1268" stroke="#649FC9" stroke-linecap="round" />
+    <path d="M13.3097 11L10.3431 14.2784C10.2784 14.3497 10.2029 14.3853 10.1167 14.3853C10.0305 14.3853 9.95504 14.3497 9.89037 14.2784L8.5 12.7461" stroke="#649FC9" stroke-linecap="round" />
 </svg>',
-'cancel-booking' => '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none">
-    <circle cx="7.5" cy="7.5" r="6.25" stroke="#FE6F56" stroke-width="1.25" />
-    <path d="M4.75 4.75L10.25 10.25M10.25 4.75L4.75 10.25" stroke="#FE6F56" stroke-width="1.25" stroke-linecap="round" />
+'cancel-booking' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path d="M8 15.5C12.1421 15.5 15.5 12.1421 15.5 8C15.5 3.85786 12.1421 0.5 8 0.5C3.85786 0.5 0.5 3.85786 0.5 8C0.5 12.1421 3.85786 15.5 8 15.5Z" stroke="#FE6F56" />
+    <path d="M13 13L3 3" stroke="#FE6F56" />
 </svg>',
 ];
 @endphp
