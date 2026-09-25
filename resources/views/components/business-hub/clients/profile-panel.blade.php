@@ -831,6 +831,17 @@
             font-weight: 600;
             line-height: normal;
             cursor: pointer;
+            outline: none;
+            box-shadow: none;
+        }
+
+        .client-profile-tab:hover,
+        .client-profile-tab:focus,
+        .client-profile-tab:focus-visible,
+        .client-profile-tab:active {
+            outline: none;
+            box-shadow: none;
+            border: 0;
         }
 
         .client-profile-tab.is-active {
@@ -1123,7 +1134,7 @@
         .client-profile-empty,
         .client-profile-empty-cell {
             color: #9D9B98 !important;
-            text-align: center;
+            text-align: center !important;
             padding: 2rem 0;
             font-family: Lato;
             font-size: 16px;
