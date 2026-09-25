@@ -130,6 +130,87 @@ $pawfectProfile = [
         ['type' => 'dispute', 'title' => 'Dispute raised on GS-0499-B03', 'time' => '28 Jul 2025 · 14:20'],
         ['type' => 'flag', 'title' => 'Profile updated — new service added', 'time' => '15 Jul 2025 · 16:45'],
     ],
+    'sessions' => [
+        [
+            'device' => 'laptop',
+            'title' => 'MacBook Pro · Chrome 124',
+            'location' => 'London, UK',
+            'ip' => '82.34.120.45',
+            'time' => 'Last active 4 mins ago · signed in 18 Apr 2025',
+            'warning' => false,
+        ],
+        [
+            'device' => 'phone',
+            'title' => 'iPhone 15 · Safari 17',
+            'location' => 'Manchester, UK',
+            'ip' => '86.22.110.19',
+            'time' => 'Last active 3 days ago · signed in 02 Mar 2025',
+            'warning' => false,
+        ],
+        [
+            'device' => 'desktop',
+            'title' => 'Windows PC · Chrome 122',
+            'location' => 'London, UK',
+            'ip' => '82.14.201.44',
+            'time' => 'Last active 12 days ago · signed in 12 Jan 2025',
+            'warning' => true,
+        ],
+    ],
+    'blocked_customers' => [
+        ['name' => 'Sam P', 'user_id' => 'USR-01452', 'email' => 'sam.p@gmail.com', 'avatar' => $fallbackAvatar],
+        ['name' => 'Rikki Q', 'user_id' => 'USR-01453', 'email' => 'rikki.q@gmail.com', 'avatar' => $fallbackAvatar],
+        ['name' => 'Luke B', 'user_id' => 'USR-01455', 'email' => 'luke.b@gmail.com', 'avatar' => $fallbackAvatar],
+        ['name' => 'Jade W', 'user_id' => 'USR-01468', 'email' => 'janed@gmail.com', 'avatar' => $fallbackAvatar],
+        ['name' => 'Mia Brooks', 'user_id' => 'USR-01690', 'email' => 'mia.brooks@gmail.com', 'avatar' => $fallbackAvatar],
+    ],
+    'marketing' => [
+        ['label' => 'Email Marketing', 'enabled' => true],
+        ['label' => 'SMS Notifications', 'enabled' => false],
+        ['label' => 'Push Notification', 'enabled' => true],
+        ['label' => 'Third Party sharing', 'enabled' => true],
+    ],
+    'verification' => [
+        'profile_complete' => 70,
+        'items' => [
+            ['label' => 'Email Verified', 'ok' => true],
+            ['label' => 'Phone Verified', 'ok' => true],
+            ['label' => '2FA Enabled', 'ok' => false],
+            ['label' => 'Connected Login', 'type' => 'text', 'value' => 'Google'],
+            ['label' => 'Profile Complete', 'type' => 'progress', 'value' => '70% Completion'],
+        ],
+    ],
+    'connected_accounts' => [
+        [
+            'name' => 'Facebook',
+            'detail' => 'sarah.w@pawfect.co.uk',
+            'connected_at' => 'Connected 12 Jan 2024',
+            'status' => 'connected',
+            'icon' => 'facebook',
+        ],
+    ],
+    'connected_apps' => [
+        [
+            'name' => 'Google Calendar',
+            'detail' => 'Booking sync',
+            'connected_at' => 'Connected 14 Jan 2023',
+            'status' => 'disconnected',
+            'icon' => 'calendar',
+        ],
+        [
+            'name' => 'Quickbooks',
+            'detail' => 'Earnings & invoicing',
+            'connected_at' => 'Connected 02 Mar 2023',
+            'status' => 'connected',
+            'icon' => 'quickbooks',
+        ],
+        [
+            'name' => 'Zapier',
+            'detail' => 'Automation workflows',
+            'connected_at' => 'Connected 15 Apr 2023',
+            'status' => 'connected',
+            'icon' => 'zapier',
+        ],
+    ],
     'groomer' => [
         'name' => 'Pawfect Grooming',
         'type' => 'groomer',
@@ -316,7 +397,11 @@ foreach ($providers as $provider) {
                 <x-admin.provider.activity :profile="$profile" />
             </div>
 
-            @foreach (['profile' => 'Profile', 'bookings' => 'Bookings', 'payouts' => 'Payouts', 'compliance' => 'Compliance', 'account' => 'Account', 'support' => 'Support'] as $tabKey => $tabLabel)
+            <div x-show="detailTab === 'account'" x-cloak>
+                <x-admin.provider.account :profile="$profile" />
+            </div>
+
+            @foreach (['profile' => 'Profile', 'bookings' => 'Bookings', 'payouts' => 'Payouts', 'compliance' => 'Compliance', 'support' => 'Support'] as $tabKey => $tabLabel)
             <div class="admin-co-placeholder" x-show="detailTab === '{{ $tabKey }}'" x-cloak>
                 <h2 class="admin-page-title mb-0">{{ $tabLabel }}</h2>
                 <p class="admin-section-label mb-0">This section will be built next.</p>

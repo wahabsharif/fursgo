@@ -2406,11 +2406,6 @@
     font-weight: 600;
     cursor: pointer;
 }
-
-.admin-co-link-btn:hover {
-    color: #e8884f;
-}
-
 .admin-co-details {
     margin: 0;
 }
@@ -7347,4 +7342,139 @@ body.admin-co-modal-lock {
         min-width: 0;
         flex: 1 1 100%;
     }
+}
+
+/* Provider Account — Connected Accounts & Apps */
+.admin-bp-blocked-id {
+    color: #ffb850;
+    font-weight: 500;
+}
+
+.admin-bp-connected-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.admin-bp-connected-label {
+    margin: 18px 0 0;
+    color: #3B3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.admin-bp-connected-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-bp-connected-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(59, 55, 49, 0.08);
+}
+
+.admin-bp-connected-item:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.admin-bp-connected-list:has(+ .admin-bp-connected-label) .admin-bp-connected-item:last-child {
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(59, 55, 49, 0.08);
+}
+
+.admin-bp-connected-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid rgba(59, 55, 49, 0.08);
+    overflow: hidden;
+}
+
+.admin-bp-connected-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.admin-bp-connected-icon.is-calendar,
+.admin-bp-connected-icon.is-quickbooks,
+.admin-bp-connected-icon.is-zapier {
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+}
+
+.admin-bp-connected-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.admin-bp-connected-name {
+    color: #9C9A97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.admin-bp-connected-meta,
+.admin-bp-connected-date {
+    margin: 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.admin-bp-connected-date {
+    margin-top: 2px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid transparent;
+}
+
+.admin-bp-connected-sep {
+    margin: 0 4px;
+    color: #c4c2bf;
+}
+
+.admin-bp-connected-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.admin-bp-connected-status.is-connected {
+    color: #a7c569;
+}
+
+.admin-bp-connected-status.is-disconnected {
+    color: #9c9a97;
+}
+
+.admin-bp-connected-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #a7c569;
+    flex-shrink: 0;
 }
