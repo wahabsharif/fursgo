@@ -81,7 +81,7 @@ $showSpaceOfferings = $isDual || $isSpace;
     {{-- Business Details --}}
     <section class="admin-card admin-co-panel">
         <x-admin.customer.section-header title="Business Details">
-            <button type="button" class="admin-co-link-btn" @click="detailTab = 'profile'">
+            <button type="button" class="admin-co-link-btn" @click="switchDetailTab('profile')">
                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
                     <path d="M10.0284 0.00548691L10.0229 6.35299L9.19447 6.33653C9.02623 6.33653 8.90736 6.28715 8.83787 6.1884C8.76838 6.08234 8.7318 5.95067 8.72814 5.7934L8.73912 3.11615C8.73912 2.92596 8.7446 2.74857 8.75558 2.58399C8.76289 2.41575 8.77569 2.2603 8.79398 2.11766C8.60379 2.35906 8.39897 2.60776 8.17953 2.86378C7.96008 3.11249 7.72966 3.35754 7.48827 3.59893L1.29164 9.79556C0.996218 10.091 0.517251 10.091 0.221833 9.79556C-0.073585 9.50015 -0.0735852 9.02118 0.221833 8.72576L6.41847 2.52913C6.65986 2.28774 6.90856 2.05732 7.16459 1.83787C7.41695 1.61476 7.66566 1.40995 7.9107 1.22342C7.76441 1.24536 7.60896 1.26182 7.44438 1.27279C7.27614 1.28011 7.09692 1.28377 6.90673 1.28376L4.20754 1.29474C4.05393 1.29474 3.92409 1.25999 3.81802 1.1905C3.71561 1.11735 3.66441 0.996656 3.66441 0.828412L3.64795 3.3782e-07L10.0284 0.00548691Z" fill="#3B3731" />
                 </svg>
@@ -103,7 +103,7 @@ $showSpaceOfferings = $isDual || $isSpace;
     <section class="admin-card admin-co-panel admin-bp-offerings-panel" x-show="!dual || viewAs === 'groomer'" @if ($isDual) x-cloak @endif>
         <div class="admin-bp-offerings-block">
             <x-admin.customer.section-header title="Location Types">
-                <button type="button" class="admin-co-link-btn" @click="detailTab = 'profile'">
+                <button type="button" class="admin-co-link-btn" @click="switchDetailTab('profile')">
                     <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
                         <path d="M10.0284 0.00548691L10.0229 6.35299L9.19447 6.33653C9.02623 6.33653 8.90736 6.28715 8.83787 6.1884C8.76838 6.08234 8.7318 5.95067 8.72814 5.7934L8.73912 3.11615C8.73912 2.92596 8.7446 2.74857 8.75558 2.58399C8.76289 2.41575 8.77569 2.2603 8.79398 2.11766C8.60379 2.35906 8.39897 2.60776 8.17953 2.86378C7.96008 3.11249 7.72966 3.35754 7.48827 3.59893L1.29164 9.79556C0.996218 10.091 0.517251 10.091 0.221833 9.79556C-0.073585 9.50015 -0.0735852 9.02118 0.221833 8.72576L6.41847 2.52913C6.65986 2.28774 6.90856 2.05732 7.16459 1.83787C7.41695 1.61476 7.66566 1.40995 7.9107 1.22342C7.76441 1.24536 7.60896 1.26182 7.44438 1.27279C7.27614 1.28011 7.09692 1.28377 6.90673 1.28376L4.20754 1.29474C4.05393 1.29474 3.92409 1.25999 3.81802 1.1905C3.71561 1.11735 3.66441 0.996656 3.66441 0.828412L3.64795 3.3782e-07L10.0284 0.00548691Z" fill="#3B3731" />
                     </svg>
@@ -151,9 +151,75 @@ $showSpaceOfferings = $isDual || $isSpace;
 
     @if ($showSpaceOfferings)
     {{-- Space: Location & Service Areas --}}
-    <section class="admin-card admin-co-panel" x-show="!dual || viewAs === 'space'" @if ($isDual) x-cloak @endif>
+    <section
+        class="admin-card admin-co-panel"
+        x-show="!dual || viewAs === 'space'"
+        @if ($isDual) x-cloak @endif
+        x-data="{
+            scrollProgress: 0,
+            canScrollLeft: false,
+            canScrollRight: false,
+            dragging: false,
+            dragReady: false,
+            dragStartX: 0,
+            dragScrollLeft: 0,
+            syncScroll() {
+                const el = this.$refs.areaScroller;
+                if (!el || el.clientWidth === 0) return;
+                const max = Math.max(0, el.scrollWidth - el.clientWidth);
+                this.scrollProgress = max > 0 ? (el.scrollLeft / max) * 100 : 0;
+                this.canScrollLeft = el.scrollLeft > 2;
+                this.canScrollRight = max > 2 && el.scrollLeft < max - 2;
+            },
+            scrollAreas(dir) {
+                const el = this.$refs.areaScroller;
+                if (!el) return;
+                this.syncScroll();
+                if (dir < 0 && !this.canScrollLeft) return;
+                if (dir > 0 && !this.canScrollRight) return;
+                const step = el.clientWidth || 280;
+                el.scrollBy({ left: dir * step, behavior: 'smooth' });
+            },
+            startDrag(e) {
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                const el = this.$refs.areaScroller;
+                if (!el) return;
+                this.dragReady = true;
+                this.dragging = false;
+                this.dragStartX = e.clientX;
+                this.dragScrollLeft = el.scrollLeft;
+            },
+            onDrag(e) {
+                if (!this.dragReady) return;
+                const el = this.$refs.areaScroller;
+                if (!el) return;
+                const dx = e.clientX - this.dragStartX;
+                if (!this.dragging) {
+                    if (Math.abs(dx) < 8) return;
+                    this.dragging = true;
+                    el.setPointerCapture(e.pointerId);
+                }
+                el.scrollLeft = this.dragScrollLeft - dx;
+            },
+            endDrag() {
+                this.dragReady = false;
+                this.dragging = false;
+            },
+        }"
+        x-init="$nextTick(() => {
+            syncScroll();
+            const onResize = () => syncScroll();
+            window.addEventListener('resize', onResize);
+            const el = $refs.areaScroller;
+            if (el && typeof IntersectionObserver !== 'undefined') {
+                const io = new IntersectionObserver((entries) => {
+                    if (entries.some((e) => e.isIntersecting)) syncScroll();
+                });
+                io.observe(el);
+            }
+        })">
         <x-admin.customer.section-header title="Location & Service Areas ({{ $areaCount }} {{ Str::plural('area', $areaCount) }})">
-            <button type="button" class="admin-co-link-btn" @click="detailTab = 'profile'">
+            <button type="button" class="admin-co-link-btn" @click="switchDetailTab('profile')">
                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
                     <path d="M10.0284 0.00548691L10.0229 6.35299L9.19447 6.33653C9.02623 6.33653 8.90736 6.28715 8.83787 6.1884C8.76838 6.08234 8.7318 5.95067 8.72814 5.7934L8.73912 3.11615C8.73912 2.92596 8.7446 2.74857 8.75558 2.58399C8.76289 2.41575 8.77569 2.2603 8.79398 2.11766C8.60379 2.35906 8.39897 2.60776 8.17953 2.86378C7.96008 3.11249 7.72966 3.35754 7.48827 3.59893L1.29164 9.79556C0.996218 10.091 0.517251 10.091 0.221833 9.79556C-0.073585 9.50015 -0.0735852 9.02118 0.221833 8.72576L6.41847 2.52913C6.65986 2.28774 6.90856 2.05732 7.16459 1.83787C7.41695 1.61476 7.66566 1.40995 7.9107 1.22342C7.76441 1.24536 7.60896 1.26182 7.44438 1.27279C7.27614 1.28011 7.09692 1.28377 6.90673 1.28376L4.20754 1.29474C4.05393 1.29474 3.92409 1.25999 3.81802 1.1905C3.71561 1.11735 3.66441 0.996656 3.66441 0.828412L3.64795 3.3782e-07L10.0284 0.00548691Z" fill="#3B3731" />
                 </svg>
@@ -161,7 +227,15 @@ $showSpaceOfferings = $isDual || $isSpace;
             </button>
         </x-admin.customer.section-header>
 
-        <div class="admin-bp-areas-list">
+        <div
+            class="admin-bp-areas-scroller"
+            :class="{ 'is-dragging': dragging }"
+            x-ref="areaScroller"
+            @scroll.passive="syncScroll()"
+            @pointerdown="startDrag($event)"
+            @pointermove="onDrag($event)"
+            @pointerup="endDrag()"
+            @pointercancel="endDrag()">
             @foreach ($serviceAreas as $area)
             <div class="admin-bp-area-block">
                 <div class="admin-bp-area-card">
@@ -198,13 +272,49 @@ $showSpaceOfferings = $isDual || $isSpace;
             </div>
             @endforeach
         </div>
+
+        @if ($areaCount > 1)
+        <div class="admin-co-pets-nav admin-bp-areas-nav">
+            <div class="admin-co-pets-progress" aria-hidden="true">
+                <span
+                    class="admin-co-pets-progress-thumb"
+                    :style="'left: calc((100% - 255px) * ' + (scrollProgress / 100) + ')'"></span>
+            </div>
+            <div class="admin-co-pets-arrows">
+                <button
+                    type="button"
+                    class="admin-co-pets-arrow"
+                    :class="{ 'is-active': canScrollLeft }"
+                    :aria-disabled="!canScrollLeft"
+                    aria-label="Previous area"
+                    @click="scrollAreas(-1)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                        <circle cx="16" cy="16" r="16" fill="currentColor" />
+                        <path d="M18 21L12.9657 15.9657L17.9155 11.016" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+                <button
+                    type="button"
+                    class="admin-co-pets-arrow"
+                    :class="{ 'is-active': canScrollRight }"
+                    :aria-disabled="!canScrollRight"
+                    aria-label="Next area"
+                    @click="scrollAreas(1)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                        <circle cx="16" cy="16" r="16" fill="currentColor" />
+                        <path d="M14 21L19.0343 15.9657L14.0845 11.016" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        @endif
     </section>
 
     {{-- Space: Services Offered + Pet preferences --}}
     <section class="admin-card admin-co-panel admin-bp-offerings-panel" x-show="!dual || viewAs === 'space'" @if ($isDual) x-cloak @endif>
         <div class="admin-bp-offerings-block">
             <x-admin.customer.section-header title="Services Offered">
-                <button type="button" class="admin-co-link-btn" @click="detailTab = 'profile'">
+                <button type="button" class="admin-co-link-btn" @click="switchDetailTab('profile')">
                     <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
                         <path d="M10.0284 0.00548691L10.0229 6.35299L9.19447 6.33653C9.02623 6.33653 8.90736 6.28715 8.83787 6.1884C8.76838 6.08234 8.7318 5.95067 8.72814 5.7934L8.73912 3.11615C8.73912 2.92596 8.7446 2.74857 8.75558 2.58399C8.76289 2.41575 8.77569 2.2603 8.79398 2.11766C8.60379 2.35906 8.39897 2.60776 8.17953 2.86378C7.96008 3.11249 7.72966 3.35754 7.48827 3.59893L1.29164 9.79556C0.996218 10.091 0.517251 10.091 0.221833 9.79556C-0.073585 9.50015 -0.0735852 9.02118 0.221833 8.72576L6.41847 2.52913C6.65986 2.28774 6.90856 2.05732 7.16459 1.83787C7.41695 1.61476 7.66566 1.40995 7.9107 1.22342C7.76441 1.24536 7.60896 1.26182 7.44438 1.27279C7.27614 1.28011 7.09692 1.28377 6.90673 1.28376L4.20754 1.29474C4.05393 1.29474 3.92409 1.25999 3.81802 1.1905C3.71561 1.11735 3.66441 0.996656 3.66441 0.828412L3.64795 3.3782e-07L10.0284 0.00548691Z" fill="#3B3731" />
                     </svg>
@@ -238,7 +348,7 @@ $showSpaceOfferings = $isDual || $isSpace;
     {{-- Recent Bookings --}}
     <section class="admin-card admin-co-panel">
         <x-admin.customer.section-header title="Recent Bookings">
-            <button type="button" class="admin-co-link-btn" @click="detailTab = 'bookings'">
+            <button type="button" class="admin-co-link-btn" @click="switchDetailTab('bookings')">
                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
                     <path d="M10.0279 0.00548759L10.0224 6.35299L9.19398 6.33653C9.02574 6.33653 8.90687 6.28715 8.83738 6.1884C8.76789 6.08234 8.73131 5.95067 8.72766 5.7934L8.73863 3.11615C8.73863 2.92596 8.74411 2.74857 8.75509 2.58399C8.7624 2.41575 8.7752 2.2603 8.79349 2.11766C8.6033 2.35906 8.39849 2.60776 8.17904 2.86378C7.95959 3.11249 7.72917 3.35754 7.48778 3.59893L1.29115 9.79556C0.99573 10.091 0.516763 10.091 0.221345 9.79556C-0.0740737 9.50014 -0.0740733 9.02118 0.221345 8.72576L6.41798 2.52913C6.65937 2.28774 6.90808 2.05732 7.1641 1.83787C7.41646 1.61476 7.66517 1.40995 7.91022 1.22342C7.76392 1.24536 7.60848 1.26182 7.44389 1.27279C7.27565 1.28011 7.09643 1.28377 6.90625 1.28377L4.20705 1.29474C4.05344 1.29474 3.9236 1.25999 3.81753 1.1905C3.71512 1.11735 3.66392 0.996656 3.66392 0.828413L3.64746 1.01217e-06L10.0279 0.00548759Z" fill="#3B3731" />
                 </svg>
@@ -284,7 +394,7 @@ $showSpaceOfferings = $isDual || $isSpace;
     {{-- Payout Summary --}}
     <section class="admin-card admin-co-panel">
         <x-admin.customer.section-header title="Payout Summary">
-            <button type="button" class="admin-co-link-btn" @click="detailTab = 'payouts'">
+            <button type="button" class="admin-co-link-btn" @click="switchDetailTab('payouts')">
                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
                     <path d="M10.0284 0.00548691L10.0229 6.35299L9.19447 6.33653C9.02623 6.33653 8.90736 6.28715 8.83787 6.1884C8.76838 6.08234 8.7318 5.95067 8.72814 5.7934L8.73912 3.11615C8.73912 2.92596 8.7446 2.74857 8.75558 2.58399C8.76289 2.41575 8.77569 2.2603 8.79398 2.11766C8.60379 2.35906 8.39897 2.60776 8.17953 2.86378C7.96008 3.11249 7.72966 3.35754 7.48827 3.59893L1.29164 9.79556C0.996218 10.091 0.517251 10.091 0.221833 9.79556C-0.073585 9.50015 -0.0735852 9.02118 0.221833 8.72576L6.41847 2.52913C6.65986 2.28774 6.90856 2.05732 7.16459 1.83787C7.41695 1.61476 7.66566 1.40995 7.9107 1.22342C7.76441 1.24536 7.60896 1.26182 7.44438 1.27279C7.27614 1.28011 7.09692 1.28377 6.90673 1.28376L4.20754 1.29474C4.05393 1.29474 3.92409 1.25999 3.81802 1.1905C3.71561 1.11735 3.66441 0.996656 3.66441 0.828412L3.64795 3.3782e-07L10.0284 0.00548691Z" fill="#3B3731" />
                 </svg>
@@ -420,7 +530,7 @@ $showSpaceOfferings = $isDual || $isSpace;
     {{-- Recent Activity --}}
     <section class="admin-card admin-co-panel admin-co-activity-panel">
         <x-admin.customer.section-header title="Recent Activity">
-            <button type="button" class="admin-co-link-btn" @click="detailTab = 'activity'">
+            <button type="button" class="admin-co-link-btn" @click="switchDetailTab('activity')">
                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
                     <path d="M10.0279 0.00548759L10.0224 6.35299L9.19398 6.33653C9.02574 6.33653 8.90687 6.28715 8.83738 6.1884C8.76789 6.08234 8.73131 5.95067 8.72766 5.7934L8.73863 3.11615C8.73863 2.92596 8.74411 2.74857 8.75509 2.58399C8.7624 2.41575 8.7752 2.2603 8.79349 2.11766C8.6033 2.35906 8.39849 2.60776 8.17904 2.86378C7.95959 3.11249 7.72917 3.35754 7.48778 3.59893L1.29115 9.79556C0.99573 10.091 0.516763 10.091 0.221345 9.79556C-0.0740737 9.50014 -0.0740733 9.02118 0.221345 8.72576L6.41798 2.52913C6.65937 2.28774 6.90808 2.05732 7.1641 1.83787C7.41646 1.61476 7.66517 1.40995 7.91022 1.22342C7.76392 1.24536 7.60848 1.26182 7.44389 1.27279C7.27565 1.28011 7.09643 1.28377 6.90625 1.28377L4.20705 1.29474C4.05344 1.29474 3.9236 1.25999 3.81753 1.1905C3.71512 1.11735 3.66392 0.996656 3.66392 0.828413L3.64746 1.01217e-06L10.0279 0.00548759Z" fill="#3B3731" />
                 </svg>

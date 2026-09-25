@@ -1,0 +1,258 @@
+{
+  "petTypes": [
+    {
+      "id": 1,
+      "name": "Dog",
+      "breeds": [
+        "Labrador Retriever",
+        "German Shepherd",
+        "Golden Retriever",
+        "Bulldog",
+        "Poodle",
+        "Beagle",
+        "Dachshund",
+        "Husky",
+        "Chihuahua",
+        "Rotweiler",
+        "Boxer",
+        "Cocker Spaniel",
+        "Shih Tzu",
+        "Maltese",
+        "Pug",
+        "Schnauzer",
+        "Great Dane",
+        "Doberman",
+        "Samoyed",
+        "Border Collie",
+        "Yorkshite Terrier",
+        "Pitbull",
+        "Shiba Inu",
+        "Corgi",
+        "Pomeranian",
+        "Mixed Breed",
+        "Other"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Cat",
+      "breeds": [
+        "Persian",
+        "British Shorthair",
+        "Siamese",
+        "Maine Coon",
+        "Bengal",
+        "Ragdoll",
+        "Sphynx",
+        "Scottish Fold",
+        "Burmese",
+        "Abyssinian",
+        "Russian Blue",
+        "Cornish Rex",
+        "Devon Rex",
+        "Tabby",
+        "Calico",
+        "Tortoiseshell",
+        "Orange",
+        "Black",
+        "White",
+        "Mixed Breed",
+        "Other"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Rabbit",
+      "breeds": [
+        "Holland Lop",
+        "Dwarf Hotot",
+        "Lionhead",
+        "Angora",
+        "Flemish Giant",
+        "Rex",
+        "Satin",
+        "French Lop",
+        "English Lop",
+        "Himalayan",
+        "Tan",
+        "Dutch",
+        "Checkered Giant",
+        "Palomino",
+        "Californian",
+        "New Zealand",
+        "Champagne d'Argent",
+        "Mixed Breed",
+        "Other"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Pig",
+      "breeds": [
+        "Kunekune",
+        "Juliana",
+        "Potbelly",
+        "Miniature Pig",
+        "Micro Pig",
+        "Vietnamese Pot-bellied",
+        "Yucatan",
+        "Mulefoot",
+        "Gloucestershire Old Spots",
+        "Large Black",
+        "Tamworth",
+        "Duroc",
+        "Yorkshire",
+        "Berkshire",
+        "Hampshire",
+        "Landrace",
+        "Pietrain",
+        "Mixed Breed",
+        "Other"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Guinea Pig",
+      "breeds": [
+        "American",
+        "English",
+        "Abyssinian",
+        "Peruvian",
+        "Texel",
+        "Silkie",
+        "Coronet",
+        "Merino",
+        "White Crested",
+        "Dutch",
+        "Himalayan",
+        "Tortoiseshell",
+        "Dalmatian",
+        "Tan",
+        "Agouti",
+        "Mixed Breed",
+        "Other"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Hamster",
+      "breeds": [
+        "Syrian Hamster",
+        "Dwarf Winter White",
+        "Dwarf Campbell",
+        "Dwarf Roborovski",
+        "Chinese Hamster",
+        "Long-haired Syrian",
+        "Teddy Bear",
+        "Fancy",
+        "Other"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Gerbil",
+      "breeds": [
+        "Mongolian",
+        "Fat-tailed Dunnart",
+        "Jirds",
+        "Bushy-tailed Jird",
+        "Mixed Breed",
+        "Other"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Bird",
+      "breeds": [
+        "Parakeet",
+        "Cockatiel",
+        "Amazon Parrot",
+        "African Grey",
+        "Macaw",
+        "Canary",
+        "Finch",
+        "Lovebird",
+        "Cockatoo",
+        "Conure",
+        "Budgie",
+        "Sun Conure",
+        "Eclectus",
+        "Quaker Parrot",
+        "Lorikeet",
+        "Other"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Fish",
+      "breeds": [
+        "Goldfish",
+        "Betta",
+        "Guppy",
+        "Tetra",
+        "Pleco",
+        "Catfish",
+        "Molly",
+        "Swordtail",
+        "Angelfish",
+        "Corydoras",
+        "Discount",
+        "Koi",
+        "Oscar",
+        "Cichlid",
+        "Other"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Horse",
+      "breeds": [
+        "Arabian",
+        "Thoroughbred",
+        "Quarter Horse",
+        "Mustang",
+        "Pony",
+        "Shire",
+        "Percheron",
+        "Appaloosa",
+        "Paint",
+        "Friesian",
+        "Warmblood",
+        "Tennessee Walker",
+        "Standardbred",
+        "Hackney",
+        "Morgan",
+        "Welsh Cob",
+        "Miniature Horse",
+        "Mixed Breed",
+        "Other"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Reptile",
+      "breeds": [
+        "Bearded Dragon",
+        "Leopard Gecko",
+        "Corn Snake",
+        "Ball Python",
+        "Iguana",
+        "Crested Gecko",
+        "Chameleon",
+        "Monitor Lizard",
+        "Tortoise",
+        "Turtle",
+        "Green Tree Python",
+        "Boa Constrictor",
+        "Milk Snake",
+        "King Snake",
+        "Other"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "Other",
+      "breeds": ["Not Specified", "Other"]
+    }
+  ]
+}

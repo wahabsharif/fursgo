@@ -13,6 +13,14 @@ $defaultPetId = $pets[0]['id'] ?? null;
         scrollProgress: 0,
         canScrollLeft: false,
         canScrollRight: false,
+
+        // Drag-to-scroll (only after the pointer actually moves)
+        dragging: false,
+        dragReady: false,
+        didDrag: false,
+        dragStartX: 0,
+        dragScrollLeft: 0,
+
         syncScroll() {
             const el = this.$refs.petScroller;
             if (!el || el.clientWidth === 0) return;
@@ -29,7 +37,43 @@ $defaultPetId = $pets[0]['id'] ?? null;
             if (dir > 0 && !this.canScrollRight) return;
             el.scrollBy({ left: dir * 280, behavior: 'smooth' });
         },
+        startDrag(e) {
+            // Left mouse button only (touches/pens always ok)
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            const el = this.$refs.petScroller;
+            if (!el) return;
+            this.dragReady = true;
+            this.dragging = false;
+            this.didDrag = false;
+            this.dragStartX = e.clientX;
+            this.dragScrollLeft = el.scrollLeft;
+        },
+        onDrag(e) {
+            if (!this.dragReady) return;
+            const el = this.$refs.petScroller;
+            if (!el) return;
+            const dx = e.clientX - this.dragStartX;
+
+            // Wait until a real drag — so a normal click still selects the card
+            if (!this.dragging) {
+                if (Math.abs(dx) < 8) return;
+                this.dragging = true;
+                this.didDrag = true;
+                el.setPointerCapture(e.pointerId);
+            }
+
+            el.scrollLeft = this.dragScrollLeft - dx;
+        },
+        endDrag() {
+            this.dragReady = false;
+            this.dragging = false;
+        },
         selectPet(id) {
+            // Ignore click that was really a drag
+            if (this.didDrag) {
+                this.didDrag = false;
+                return;
+            }
             this.selectedPetId = id;
             this.$dispatch('admin-pet-selected', { id });
         },
@@ -70,14 +114,20 @@ $defaultPetId = $pets[0]['id'] ?? null;
     <section class="admin-card admin-co-panel admin-co-pets-picker-panel">
         <div
             class="admin-co-pets-scroller"
+            :class="{ 'is-dragging': dragging }"
             x-ref="petScroller"
-            @scroll.passive="syncScroll()">
+            @scroll.passive="syncScroll()"
+            @pointerdown="startDrag($event)"
+            @pointermove="onDrag($event)"
+            @pointerup="endDrag()"
+            @pointercancel="endDrag()">
             @foreach ($pets as $pet)
             <button
                 type="button"
-                class="admin-co-pet-pick"
+                class="admin-co-pet-pick is-{{ $pet['status'] }}"
                 :class="{ 'is-selected': selectedPetId === @js($pet['id']) }"
-                @click="selectPet(@js($pet['id']))">
+                @click="selectPet(@js($pet['id']))"
+                @dragstart.prevent>
                 <div class="admin-co-pet-avatar admin-co-pet-avatar--pick" aria-hidden="true">
                     @if (! empty($pet['image']))
                     <img src="{{ $pet['image'] }}" alt="" width="44" height="44">
@@ -90,11 +140,11 @@ $defaultPetId = $pets[0]['id'] ?? null;
                         <span class="admin-co-pet-name">
                             <span class="admin-co-pet-type-icon" aria-hidden="true">
                                 @if (($pet['type'] ?? '') === 'cat')
-                                <svg xmlns="http://www.w3.org/2000/svg" width="8" height="11" viewBox="0 0 8 11" fill="none">
-                                    <path d="M3.66567 1.8584C4.06021 1.80973 4.60705 1.82226 5.12954 1.99902C5.70711 2.19447 6.26474 2.59619 6.53774 3.34082L7.66372 3.88086L7.68813 3.96875C7.83741 4.50703 7.92617 5.34345 7.69497 6.10449C7.57843 6.48791 7.37872 6.85661 7.06118 7.15527C6.74279 7.45466 6.31471 7.6747 5.75551 7.77441C3.74328 8.13334 2.60156 9.85439 2.28676 10.667C2.15732 11.0372 1.38933 11.1313 1.20864 10.7832C-1.49003 5.5842 0.937615 1.47912 2.61293 0L3.66567 1.8584ZM4.91274 3.74023C4.61747 3.74023 4.30346 3.88659 4.30336 4.47266C4.30336 4.8774 4.81984 4.47266 5.1559 4.47266C5.49176 4.47284 5.52114 4.87731 5.52114 4.47266C5.52102 4.06821 5.24852 3.74053 4.91274 3.74023Z" fill="#CFCFCF" />
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="22" viewBox="0 0 16 22" fill="none">
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M7.0661 3.58301C7.82655 3.48924 8.87949 3.51286 9.88642 3.85352C10.9998 4.23021 12.075 5.00401 12.6013 6.43945L14.7712 7.47949L14.8181 7.64941C15.1058 8.68692 15.2764 10.2987 14.8308 11.7656C14.6062 12.5047 14.2222 13.2153 13.6101 13.791C12.9963 14.3682 12.1714 14.7931 11.0934 14.9854C7.21531 15.6771 5.01491 18.9931 4.4079 20.5596C4.15869 21.2733 2.6782 21.455 2.32978 20.7842C-2.87181 10.7633 1.80671 2.85095 5.03583 0L7.0661 3.58301ZM9.46845 7.20898C8.8993 7.20899 8.29571 7.49133 8.2956 8.62109C8.2956 9.40106 9.28944 8.62143 9.9372 8.62109C10.585 8.62109 10.6413 9.40123 10.6413 8.62109C10.6412 7.84111 10.1161 7.20898 9.46845 7.20898Z" fill="#FFC97A" />
                                 </svg>
                                 @elseif (($pet['type'] ?? '') === 'other')
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 22 20" fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="20" viewBox="0 0 9 20" fill="none">
                                     <path d="M11 7.89474C7.68219 7.89474 4.87876 10.8058 3.97362 14.5447C3.57552 16.1889 4.17581 17.9342 5.64929 18.7542C6.81738 19.4042 8.55486 20 11 20C13.4451 20 15.1831 19.4042 16.3512 18.7542C17.8247 17.9342 18.4245 16.1889 18.0264 14.5447C17.1212 10.8053 14.3178 7.89474 11 7.89474ZM0 7.07579C0 8.52947 0.937619 10 2.09524 10C3.25286 10 4.19048 8.52947 4.19048 7.07579C4.19048 5.62211 3.25286 4.73684 2.09524 4.73684C0.937619 4.73684 0 5.62263 0 7.07579ZM22 7.07579C22 8.52947 21.0624 10 19.9048 10C18.7471 10 17.8095 8.52947 17.8095 7.07579C17.8095 5.62211 18.7471 4.73684 19.9048 4.73684C21.0624 4.73684 22 5.62263 22 7.07579ZM5.5 2.33895C5.5 3.79263 6.43762 5.26316 7.59524 5.26316C8.75286 5.26316 9.69048 3.79263 9.69048 2.33895C9.69048 0.885263 8.75286 0 7.59524 0C6.43762 0 5.5 0.88579 5.5 2.33895ZM16.5 2.33895C16.5 3.79263 15.5624 5.26316 14.4048 5.26316C13.2471 5.26316 12.3095 3.79263 12.3095 2.33895C12.3095 0.885263 13.2471 0 14.4048 0C15.5624 0 16.5 0.88579 16.5 2.33895Z" fill="#FFC97A" />
                                 </svg>
                                 @else
@@ -235,12 +285,6 @@ $defaultPetId = $pets[0]['id'] ?? null;
                     </p>
                 </div>
             </div>
-
-            <button type="button" class="admin-co-more-btn" aria-label="Pet actions">
-                <svg xmlns="http://www.w3.org/2000/svg" width="4" height="18" viewBox="0 0 4 18" fill="none">
-                    <path d="M1.71 2.67C1.96461 2.67 2.20879 2.56886 2.38882 2.38882C2.56886 2.20879 2.67 1.96461 2.67 1.71C2.67 1.45539 2.56886 1.21121 2.38882 1.03118C2.20879 0.851143 1.96461 0.75 1.71 0.75C1.45539 0.75 1.21121 0.851143 1.03118 1.03118C0.851143 1.21121 0.75 1.45539 0.75 1.71C0.75 1.96461 0.851143 2.20879 1.03118 2.38882C1.21121 2.56886 1.45539 2.67 1.71 2.67ZM1.71 9.71C1.96461 9.71 2.20879 9.60886 2.38882 9.42882C2.56886 9.24879 2.67 9.00461 2.67 8.75C2.67 8.49539 2.56886 8.25121 2.38882 8.07118C2.20879 7.89114 1.96461 7.79 1.71 7.79C1.45539 7.79 1.21121 7.89114 1.03118 8.07118C0.851143 8.25121 0.75 8.49539 0.75 8.75C0.75 9.00461 0.851143 9.24879 1.03118 9.42882C1.21121 9.60886 1.45539 9.71 1.71 9.71ZM1.71 16.75C1.96461 16.75 2.20879 16.6489 2.38882 16.4688C2.56886 16.2888 2.67 16.0446 2.67 15.79C2.67 15.5354 2.56886 15.2912 2.38882 15.1112C2.20879 14.9311 1.96461 14.83 1.71 14.83C1.45539 14.83 1.21121 14.9311 1.03118 15.1112C0.851143 15.2912 0.75 15.5354 0.75 15.79C0.75 16.0446 0.851143 16.2888 1.03118 16.4688C1.21121 16.6489 1.45539 16.75 1.71 16.75Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-            </button>
         </section>
 
         {{-- Pet Details + Health & Medical --}}
@@ -1105,7 +1149,7 @@ $defaultPetId = $pets[0]['id'] ?? null;
         @endphp
         <section class="admin-card admin-co-panel">
             <x-admin.customer.section-header title="Booking History">
-                <button type="button" class="admin-co-link-btn" @click="detailTab = 'bookings'">
+                <button type="button" class="admin-co-link-btn" @click="switchDetailTab('bookings')">
                     <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
                         <path d="M10.0284 0.00548691L10.0229 6.35299L9.19447 6.33653C9.02623 6.33653 8.90736 6.28715 8.83787 6.1884C8.76838 6.08234 8.7318 5.95067 8.72814 5.7934L8.73912 3.11615C8.73912 2.92596 8.7446 2.74857 8.75558 2.58399C8.76289 2.41575 8.77569 2.2603 8.79398 2.11766C8.60379 2.35906 8.39897 2.60776 8.17953 2.86378C7.96008 3.11249 7.72966 3.35754 7.48827 3.59893L1.29164 9.79556C0.996218 10.091 0.517251 10.091 0.221833 9.79556C-0.073585 9.50015 -0.0735852 9.02118 0.221833 8.72576L6.41847 2.52913C6.65986 2.28774 6.90856 2.05732 7.16459 1.83787C7.41695 1.61476 7.66566 1.40995 7.9107 1.22342C7.76441 1.24536 7.60896 1.26182 7.44438 1.27279C7.27614 1.28011 7.09692 1.28377 6.90673 1.28376L4.20754 1.29474C4.05393 1.29474 3.92409 1.25999 3.81802 1.1905C3.71561 1.11735 3.66441 0.996656 3.66441 0.828412L3.64795 3.3782e-07L10.0284 0.00548691Z" fill="#3B3731" />
                     </svg>
@@ -1257,7 +1301,7 @@ $defaultPetId = $pets[0]['id'] ?? null;
         {{-- Recent Activity --}}
         <section class="admin-card admin-co-panel admin-co-activity-panel">
             <x-admin.customer.section-header title="Recent Activity">
-                <button type="button" class="admin-co-link-btn" @click="detailTab = 'activity'">
+                <button type="button" class="admin-co-link-btn" @click="switchDetailTab('activity')">
                     <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
                         <path d="M10.0279 0.00548759L10.0224 6.35299L9.19398 6.33653C9.02574 6.33653 8.90687 6.28715 8.83738 6.1884C8.76789 6.08234 8.73131 5.95067 8.72766 5.7934L8.73863 3.11615C8.73863 2.92596 8.74411 2.74857 8.75509 2.58399C8.7624 2.41575 8.7752 2.2603 8.79349 2.11766C8.6033 2.35906 8.39849 2.60776 8.17904 2.86378C7.95959 3.11249 7.72917 3.35754 7.48778 3.59893L1.29115 9.79556C0.99573 10.091 0.516763 10.091 0.221345 9.79556C-0.0740737 9.50014 -0.0740733 9.02118 0.221345 8.72576L6.41798 2.52913C6.65937 2.28774 6.90808 2.05732 7.1641 1.83787C7.41646 1.61476 7.66517 1.40995 7.91022 1.22342C7.76392 1.24536 7.60848 1.26182 7.44389 1.27279C7.27565 1.28011 7.09643 1.28377 6.90625 1.28377L4.20705 1.29474C4.05344 1.29474 3.9236 1.25999 3.81753 1.1905C3.71512 1.11735 3.66392 0.996656 3.66392 0.828413L3.64746 1.01217e-06L10.0279 0.00548759Z" fill="#3B3731" />
                     </svg>

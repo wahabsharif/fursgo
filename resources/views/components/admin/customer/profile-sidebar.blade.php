@@ -26,6 +26,24 @@ $transferAccounts = [
         suspendNotes: '',
         openSuspendReason: false,
         openSuspendDuration: false,
+        pauseBookingsOpen: false,
+        pauseReason: '',
+        pauseDuration: 'indefinite',
+        pauseNotes: '',
+        openPauseReason: false,
+        openPauseDuration: false,
+        openPauseBookings() {
+            this.pauseReason = '';
+            this.pauseDuration = 'indefinite';
+            this.pauseNotes = '';
+            this.openPauseReason = false;
+            this.openPauseDuration = false;
+            this.pauseBookingsOpen = true;
+        },
+        pauseDurationLabel() {
+            if (this.pauseDuration === 'indefinite') return 'Until manually listed';
+            return this.pauseDuration;
+        },
         flagOpen: false,
         flagReason: '',
         flagNote: '',
@@ -42,10 +60,21 @@ $transferAccounts = [
         transferSearch: '',
         transferTargetId: null,
         selectedPetId: @js($defaultTransferPet['id'] ?? null),
+        bookingDetail: null,
         pets: @js($profilePets),
         transferAccounts: @js($transferAccounts),
         currentPet() {
             return this.pets.find((p) => p.id === this.selectedPetId) || this.pets[0] || null;
+        },
+        bookingDispute() {
+            return this.bookingDetail?.detail?.dispute || null;
+        },
+        canCancelBooking() {
+            if (!this.bookingDetail) return false;
+            return !['cancelled', 'refunded'].includes(this.bookingDetail.status);
+        },
+        canAssignBooking() {
+            return !!this.bookingDetail;
         },
         filteredTransferAccounts() {
             const q = (this.transferSearch || '').trim().toLowerCase();
@@ -70,6 +99,20 @@ $transferAccounts = [
             this.archiveNotes = '';
             this.openArchiveReason = false;
             this.archiveOpen = true;
+        },
+        unarchiveOpen: false,
+        unarchiveReason: '',
+        unarchiveNotes: '',
+        openUnarchiveReason: false,
+        openUnarchive() {
+            this.unarchiveReason = '';
+            this.unarchiveNotes = '';
+            this.openUnarchiveReason = false;
+            this.unarchiveOpen = true;
+        },
+        // True when the selected pet is archived
+        isPetArchived() {
+            return this.currentPet()?.status === 'archived';
         },
         petBreed() {
             const pet = this.currentPet();
@@ -97,9 +140,11 @@ $transferAccounts = [
         },
     }"
     @admin-pet-selected.window="selectedPetId = $event.detail.id"
+    @admin-booking-selected.window="bookingDetail = $event.detail.booking || null"
+    @admin-booking-closed.window="bookingDetail = null"
     x-init="
         const syncModalLock = () => {
-            const open = verifyEmailOpen || resetPasswordOpen || suspendOpen || flagOpen || deleteOpen || transferOpen || archiveOpen || deletePetOpen;
+            const open = verifyEmailOpen || resetPasswordOpen || suspendOpen || pauseBookingsOpen || flagOpen || deleteOpen || transferOpen || archiveOpen || unarchiveOpen || deletePetOpen;
             if (open) {
                 if (!document.body.classList.contains('admin-co-modal-lock')) {
                     document.body.dataset.adminCoScrollY = String(window.scrollY);
@@ -125,10 +170,12 @@ $transferAccounts = [
         $watch('verifyEmailOpen', () => $nextTick(() => syncModalLock()));
         $watch('resetPasswordOpen', () => $nextTick(() => syncModalLock()));
         $watch('suspendOpen', () => $nextTick(() => syncModalLock()));
+        $watch('pauseBookingsOpen', () => $nextTick(() => syncModalLock()));
         $watch('flagOpen', () => $nextTick(() => syncModalLock()));
         $watch('deleteOpen', () => $nextTick(() => syncModalLock()));
         $watch('transferOpen', () => $nextTick(() => syncModalLock()));
         $watch('archiveOpen', () => $nextTick(() => syncModalLock()));
+        $watch('unarchiveOpen', () => $nextTick(() => syncModalLock()));
         $watch('deletePetOpen', () => $nextTick(() => syncModalLock()));
         $watch('deleteReason', () => syncDeleteReady());
         $watch('deleteGdprRef', () => syncDeleteReady());
@@ -148,13 +195,6 @@ $transferAccounts = [
             @else
             <span></span>
             @endif
-            <button type="button" class="admin-co-more-btn" aria-label="More actions">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="4" viewBox="0 0 16 4" fill="none" aria-hidden="true">
-                    <circle cx="2" cy="2" r="1.5" fill="#3B3731" />
-                    <circle cx="8" cy="2" r="1.5" fill="#3B3731" />
-                    <circle cx="14" cy="2" r="1.5" fill="#3B3731" />
-                </svg>
-            </button>
         </div>
 
         <div class="admin-co-profile-identity">
@@ -202,7 +242,7 @@ $transferAccounts = [
     </div>
 
     {{-- Stats strip (changes with detail tab) --}}
-    <div class="admin-co-stats" x-show="detailTab !== 'pets'" x-cloak>
+    <div class="admin-co-stats" x-show="detailTab !== 'pets' && detailTab !== 'bookings'" x-cloak>
         <div class="admin-co-stat">
             <p class="admin-co-stat-value">{{ $profile['stats']['spend'] }}</p>
             <p class="admin-co-stat-label">Total spend</p>
@@ -240,11 +280,47 @@ $transferAccounts = [
         </div>
     </div>
 
+    <div class="admin-co-stats" x-show="detailTab === 'bookings'" x-cloak>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['booking_stats']['total'] ?? '—' }}</p>
+            <p class="admin-co-stat-label">Bookings</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['booking_stats']['completed'] ?? '—' }}</p>
+            <p class="admin-co-stat-label">Completed</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['booking_stats']['cancelled'] ?? '—' }}</p>
+            <p class="admin-co-stat-label">Cancelled</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['booking_stats']['spend'] ?? '—' }}</p>
+            <p class="admin-co-stat-label">Total spend</p>
+        </div>
+    </div>
+
+    {{-- Open dispute alert (booking detail) --}}
+    <div
+        class="admin-co-bk-dispute-alert"
+        x-show="detailTab === 'bookings' && bookingDispute()"
+        x-cloak>
+        <div class="admin-co-bk-dispute-alert-head">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="11" viewBox="0 0 10 9" fill="none" aria-hidden="true">
+                <path d="M5.485 0.308055C5.24845 -0.102644 4.61103 -0.102644 4.37448 0.308055L0.0743152 7.77965L0.0386903 7.85279C-0.0996183 8.19795 0.147844 8.57813 0.542967 8.62728L0.630186 8.63238H9.2293C9.70357 8.63238 10.0075 8.1663 9.78517 7.77965L5.485 0.308055Z" fill="#FFC97A" />
+                <path d="M4.8365 3.15331L4.9516 5.59952L5.06649 3.15431C5.0672 3.13868 5.06471 3.12306 5.05918 3.10842C5.05365 3.09379 5.0452 3.08043 5.03433 3.06917C5.02347 3.05791 5.01042 3.04898 4.99599 3.04294C4.98155 3.03689 4.96604 3.03385 4.95039 3.034C4.93502 3.03415 4.91983 3.03738 4.90573 3.0435C4.89162 3.04962 4.87888 3.0585 4.86827 3.06962C4.85765 3.08074 4.84937 3.09387 4.84392 3.10825C4.83846 3.12262 4.83594 3.13794 4.8365 3.15331Z" fill="#3B3731" stroke="#3B3731" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M5.00879 6.66028C5.03629 6.67172 5.05962 6.69118 5.07617 6.71594C5.09273 6.74076 5.10156 6.77009 5.10156 6.79993C5.10147 6.83985 5.08586 6.87813 5.05762 6.90637C5.02938 6.93461 4.9911 6.95023 4.95117 6.95032C4.92134 6.95032 4.892 6.94149 4.86719 6.92493C4.84242 6.90838 4.82297 6.88504 4.81152 6.85754C4.80009 6.82995 4.79691 6.79895 4.80273 6.76965C4.80862 6.74053 4.82274 6.71352 4.84375 6.6925C4.86476 6.67149 4.89178 6.65737 4.9209 6.65149C4.95019 6.64566 4.98119 6.64885 5.00879 6.66028Z" fill="#3B3731" stroke="#3B3731" stroke-width="0.5" />
+            </svg>
+            <p class="admin-co-bk-dispute-alert-title" x-text="bookingDispute()?.title"></p>
+        </div>
+        <p class="admin-co-bk-dispute-alert-body" x-text="bookingDispute()?.body"></p>
+        <p class="admin-co-bk-dispute-alert-footer" x-text="bookingDispute()?.footer"></p>
+    </div>
+
     {{-- Admin actions (changes with detail tab) --}}
     <div class="admin-co-actions">
         <h3 class="admin-co-actions-title">Admin Actions</h3>
 
-        <div x-show="detailTab !== 'pets'" x-cloak>
+        <div x-show="detailTab !== 'pets' && detailTab !== 'bookings'" x-cloak>
             <x-admin.customer.action-btn
                 variant="verify"
                 label="Send account verification email"
@@ -292,14 +368,66 @@ $transferAccounts = [
                 variant="transfer"
                 label="Transfer pet profile"
                 x-on:click="openTransfer()" />
-            <x-admin.customer.action-btn
-                variant="archive"
-                label="Archive pet profile"
-                x-on:click="openArchive()" />
+
+            {{-- Active pet → Archive --}}
+            <div x-show="!isPetArchived()" x-cloak>
+                <x-admin.customer.action-btn
+                    variant="archive"
+                    label="Archive pet profile"
+                    x-on:click="openArchive()" />
+            </div>
+
+            {{-- Archived pet → Unarchive --}}
+            <div x-show="isPetArchived()" x-cloak>
+                <x-admin.customer.action-btn
+                    variant="archive"
+                    label="Unarchive pet profile"
+                    x-on:click="openUnarchive()" />
+            </div>
+
             <x-admin.customer.action-btn
                 variant="delete-pet"
                 label="Delete pet profile"
                 x-on:click="openDeletePet()" />
+        </div>
+
+        <div x-show="detailTab === 'bookings' && !bookingDetail" x-cloak>
+            <x-admin.customer.action-btn
+                variant="suspend"
+                label="Pause all bookings"
+                x-on:click="openPauseBookings()" />
+            <x-admin.customer.action-btn
+                variant="flag"
+                label="Flag account for review"
+                x-on:click="
+                    flagReason = '';
+                    flagNote = '';
+                    flagBy = 'Michelle M (me)';
+                    openFlagReason = false;
+                    openFlagBy = false;
+                    flagOpen = true;
+                " />
+        </div>
+
+        <div x-show="detailTab === 'bookings' && bookingDetail" x-cloak>
+            <div x-show="bookingDispute()" x-cloak>
+                <x-admin.customer.action-btn
+                    variant="view-dispute"
+                    label="View full dispute"
+                    x-on:click="$dispatch('admin-view-dispute')" />
+            </div>
+            <div x-show="canAssignBooking()" x-cloak>
+                <x-admin.customer.action-btn
+                    variant="assign"
+                    label="Assign to team member"
+                    x-on:click="$dispatch('admin-open-assign-booking')" />
+            </div>
+            <div x-show="canCancelBooking()" x-cloak>
+                <x-admin.customer.action-btn
+                    variant="cancel-booking"
+                    label="Cancel booking"
+                    x-on:click="$dispatch('admin-open-cancel-booking')" />
+            </div>
         </div>
     </div>
 
@@ -564,6 +692,136 @@ $transferAccounts = [
                             <path d="M3.15132 0.625H1.88816C1.55315 0.625 1.23186 0.756696 0.994971 0.991117C0.758083 1.22554 0.625 1.54348 0.625 1.875V14.375C0.625 14.7065 0.758083 15.0245 0.994971 15.2589C1.23186 15.4933 1.55315 15.625 1.88816 15.625H3.15132C3.48633 15.625 3.80761 15.4933 4.0445 15.2589C4.28139 15.0245 4.41447 14.7065 4.41447 14.375V1.875C4.41447 1.54348 4.28139 1.22554 4.0445 0.991117C3.80761 0.756696 3.48633 0.625 3.15132 0.625ZM11.3618 0.625H10.0987C9.76367 0.625 9.44238 0.756696 9.2055 0.991117C8.96861 1.22554 8.83553 1.54348 8.83553 1.875V14.375C8.83553 14.7065 8.96861 15.0245 9.2055 15.2589C9.44238 15.4933 9.76367 15.625 10.0987 15.625H11.3618C11.6969 15.625 12.0181 15.4933 12.255 15.2589C12.4919 15.0245 12.625 14.7065 12.625 14.375V1.875C12.625 1.54348 12.4919 1.22554 12.255 0.991117C12.0181 0.756696 11.6969 0.625 11.3618 0.625Z" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                         Suspend account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    {{-- Pause all bookings modal --}}
+    <template x-teleport="body">
+        <div
+            class="admin-co-modal-backdrop"
+            :class="{ 'is-open': pauseBookingsOpen }"
+            @click.self="pauseBookingsOpen = false">
+            <div class="admin-co-modal admin-co-verify-email-modal admin-co-suspend-modal" role="dialog" aria-modal="true" @click.stop>
+                <div class="admin-co-modal-head admin-co-blocked-modal-head">
+                    <div>
+                        <div class="admin-co-modal-title-row">
+                            <span class="admin-co-verify-email-icon is-suspend" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 14 17" fill="none">
+                                    <path d="M3.15132 0.625H1.88816C1.55315 0.625 1.23186 0.756696 0.994971 0.991117C0.758083 1.22554 0.625 1.54348 0.625 1.875V14.375C0.625 14.7065 0.758083 15.0245 0.994971 15.2589C1.23186 15.4933 1.55315 15.625 1.88816 15.625H3.15132C3.48633 15.625 3.80761 15.4933 4.0445 15.2589C4.28139 15.0245 4.41447 14.7065 4.41447 14.375V1.875C4.41447 1.54348 4.28139 1.22554 4.0445 0.991117C3.80761 0.756696 3.48633 0.625 3.15132 0.625ZM11.3618 0.625H10.0987C9.76367 0.625 9.44238 0.756696 9.2055 0.991117C8.96861 1.22554 8.83553 1.54348 8.83553 1.875V14.375C8.83553 14.7065 8.96861 15.0245 9.2055 15.2589C9.44238 15.4933 9.76367 15.625 10.0987 15.625H11.3618C11.6969 15.625 12.0181 15.4933 12.255 15.2589C12.4919 15.0245 12.625 14.7065 12.625 14.375V1.875C12.625 1.54348 12.4919 1.22554 12.255 0.991117C12.0181 0.756696 11.6969 0.625 11.3618 0.625Z" stroke="#FFAF3B" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="admin-co-modal-title">Pause all bookings</h3>
+                                <p class="admin-co-modal-sub">{{ $profile['name'] }} · {{ $profile['id'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="admin-co-modal-close" @click="pauseBookingsOpen = false" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8"></circle>
+                            <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="admin-co-blocked-modal-body admin-co-verify-email-body">
+                    <div class="admin-co-suspend-alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="9" viewBox="0 0 10 9" fill="none" aria-hidden="true">
+                            <path d="M5.485 0.308055C5.24845 -0.102644 4.61103 -0.102644 4.37448 0.308055L0.0743152 7.77965L0.0386903 7.85279C-0.0996183 8.19795 0.147844 8.57813 0.542967 8.62728L0.630186 8.63238H9.2293C9.70357 8.63238 10.0075 8.1663 9.78517 7.77965L5.485 0.308055Z" fill="#FFC97A" />
+                            <path d="M4.8365 3.15331L4.9516 5.59952L5.06649 3.15431C5.0672 3.13868 5.06471 3.12306 5.05918 3.10842C5.05365 3.09379 5.0452 3.08043 5.03433 3.06917C5.02347 3.05791 5.01042 3.04898 4.99599 3.04294C4.98155 3.03689 4.96604 3.03385 4.95039 3.034C4.93502 3.03415 4.91983 3.03738 4.90573 3.0435C4.89162 3.04962 4.87888 3.0585 4.86827 3.06962C4.85765 3.08074 4.84937 3.09387 4.84392 3.10825C4.83846 3.12262 4.83594 3.13794 4.8365 3.15331Z" fill="#3B3731" stroke="#3B3731" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M5.00879 6.66028C5.03629 6.67172 5.05962 6.69118 5.07617 6.71594C5.09273 6.74076 5.10156 6.77009 5.10156 6.79993C5.10147 6.83985 5.08586 6.87813 5.05762 6.90637C5.02938 6.93461 4.9911 6.95023 4.95117 6.95032C4.92134 6.95032 4.892 6.94149 4.86719 6.92493C4.84242 6.90838 4.82297 6.88504 4.81152 6.85754C4.80009 6.82995 4.79691 6.79895 4.80273 6.76965C4.80862 6.74053 4.82274 6.71352 4.84375 6.6925C4.86476 6.67149 4.89178 6.65737 4.9209 6.65149C4.95019 6.64566 4.98119 6.64885 5.00879 6.66028Z" fill="#3B3731" stroke="#3B3731" stroke-width="0.5" />
+                        </svg>
+                        <p>This will prevent {{ $firstName }} from making any new bookings. Existing upcoming bookings will remain in place unless you cancel them separately.</p>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">
+                            Reason for pausing <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openPauseReason = false">
+                            <button
+                                type="button"
+                                class="admin-co-dd-trigger"
+                                @click="openPauseReason = !openPauseReason; openPauseDuration = false">
+                                <span
+                                    class="admin-co-dd-value"
+                                    :class="{ 'is-placeholder': !pauseReason }"
+                                    x-text="pauseReason || 'Select a reason ...'"></span>
+                                <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                                    <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <div class="admin-co-dd-menu" x-show="openPauseReason" x-cloak>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseReason === 'Open dispute under investigation' }" @click="pauseReason = 'Open dispute under investigation'; openPauseReason = false">Open dispute under investigation</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseReason === 'Suspected fraudulent activity' }" @click="pauseReason = 'Suspected fraudulent activity'; openPauseReason = false">Suspected fraudulent activity</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseReason === 'Payment issues - chargeback raised' }" @click="pauseReason = 'Payment issues - chargeback raised'; openPauseReason = false">Payment issues - chargeback raised</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseReason === 'Account under compliance review' }" @click="pauseReason = 'Account under compliance review'; openPauseReason = false">Account under compliance review</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseReason === 'Customer requested pause' }" @click="pauseReason = 'Customer requested pause'; openPauseReason = false">Customer requested pause</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseReason === 'Other' }" @click="pauseReason = 'Other'; openPauseReason = false">Other</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">
+                            Pause duration <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openPauseDuration = false">
+                            <button
+                                type="button"
+                                class="admin-co-dd-trigger"
+                                @click="openPauseDuration = !openPauseDuration; openPauseReason = false">
+                                <span
+                                    class="admin-co-dd-value"
+                                    x-text="pauseDurationLabel()"></span>
+                                <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                                    <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <div class="admin-co-dd-menu" x-show="openPauseDuration" x-cloak>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseDuration === '7 days' }" @click="pauseDuration = '7 days'; openPauseDuration = false">7 days</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseDuration === '14 days' }" @click="pauseDuration = '14 days'; openPauseDuration = false">14 days</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseDuration === '30 days' }" @click="pauseDuration = '30 days'; openPauseDuration = false">30 days</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': pauseDuration === 'indefinite' }" @click="pauseDuration = 'indefinite'; openPauseDuration = false">Until manually listed</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">Internal notes (optional)</label>
+                        <textarea
+                            class="admin-co-suspend-notes"
+                            rows="3"
+                            placeholder="Context for the audit log ..."
+                            x-model="pauseNotes"></textarea>
+                    </div>
+
+                    <div class="admin-co-verify-email-happens">
+                        <h4 class="admin-co-verify-email-happens-title">What pausing does</h4>
+                        <ul class="admin-co-verify-email-happens-list">
+                            <li>{{ $firstName }} cannot make any new bookings while paused.</li>
+                            <li>Existing upcoming bookings are not automatically affected.</li>
+                            <li>{{ $firstName }} is not notified — pause is internal only.</li>
+                            <li>Logged in activity log with your name and timestamp.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="admin-co-blocked-modal-foot is-confirm">
+                    <button type="button" class="admin-co-form-btn is-cancel" @click="pauseBookingsOpen = false">Cancel</button>
+                    <button
+                        type="button"
+                        class="admin-co-form-btn is-send-email"
+                        :disabled="!pauseReason"
+                        @click="pauseReason && (pauseBookingsOpen = false)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 14 17" fill="none" aria-hidden="true">
+                            <path d="M3.15132 0.625H1.88816C1.55315 0.625 1.23186 0.756696 0.994971 0.991117C0.758083 1.22554 0.625 1.54348 0.625 1.875V14.375C0.625 14.7065 0.758083 15.0245 0.994971 15.2589C1.23186 15.4933 1.55315 15.625 1.88816 15.625H3.15132C3.48633 15.625 3.80761 15.4933 4.0445 15.2589C4.28139 15.0245 4.41447 14.7065 4.41447 14.375V1.875C4.41447 1.54348 4.28139 1.22554 4.0445 0.991117C3.80761 0.756696 3.48633 0.625 3.15132 0.625ZM11.3618 0.625H10.0987C9.76367 0.625 9.44238 0.756696 9.2055 0.991117C8.96861 1.22554 8.83553 1.54348 8.83553 1.875V14.375C8.83553 14.7065 8.96861 15.0245 9.2055 15.2589C9.44238 15.4933 9.76367 15.625 10.0987 15.625H11.3618C11.6969 15.625 12.0181 15.4933 12.255 15.2589C12.4919 15.0245 12.625 14.7065 12.625 14.375V1.875C12.625 1.54348 12.4919 1.22554 12.255 0.991117C12.0181 0.756696 11.6969 0.625 11.3618 0.625Z" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Pause bookings
                     </button>
                 </div>
             </div>
@@ -1076,6 +1334,133 @@ $transferAccounts = [
                             <path d="M7.16531 6.3C7.07594 6.38938 7.03125 6.50094 7.03125 6.63469V10.5722L5.39437 8.93531C5.30687 8.84781 5.19937 8.80094 5.07187 8.79469C4.94437 8.78844 4.83062 8.83531 4.73062 8.93531C4.63062 9.03531 4.58062 9.14594 4.58062 9.26719C4.58062 9.38844 4.63062 9.49906 4.73062 9.59906L6.97031 11.8378C7.12156 11.9891 7.29812 12.0647 7.5 12.0647C7.70188 12.0647 7.87875 11.9891 8.03063 11.8378L10.2694 9.59906C10.3569 9.51094 10.4037 9.40312 10.41 9.27563C10.4163 9.14813 10.3694 9.03469 10.2694 8.93531C10.1694 8.83594 10.0588 8.78594 9.9375 8.78531C9.81625 8.78469 9.70563 8.83469 9.60563 8.93531L7.96875 10.5722V6.63469C7.96875 6.50156 7.92406 6.39 7.83469 6.3C7.74531 6.21 7.63375 6.16531 7.5 6.16594C7.36625 6.16656 7.25469 6.21125 7.16531 6.3ZM0.9375 3.57V13.4859C0.9375 13.6541 0.991562 13.7922 1.09969 13.9003C1.20781 14.0084 1.34625 14.0625 1.515 14.0625H13.4859C13.6541 14.0625 13.7922 14.0084 13.9003 13.9003C14.0084 13.7922 14.0625 13.6541 14.0625 13.4859V3.57H0.9375ZM1.65937 15C1.23937 15 0.857812 14.8284 0.514687 14.4853C0.171562 14.1422 0 13.7609 0 13.3416V3.26813C0 3.08563 0.0290624 2.91375 0.0871874 2.7525C0.145312 2.59125 0.232813 2.44281 0.349688 2.30719L1.81031 0.554063C1.94594 0.370938 2.11563 0.232813 2.31938 0.139688C2.52312 0.0465627 2.74156 0 2.97469 0H11.9897C12.2222 0 12.4434 0.0465627 12.6534 0.139688C12.8634 0.232813 13.0362 0.370625 13.1719 0.553125L14.6503 2.34375C14.7672 2.47937 14.8547 2.63094 14.9128 2.79844C14.9709 2.96531 15 3.14031 15 3.32344V13.3406C15 13.76 14.8284 14.1413 14.4853 14.4844C14.1422 14.8275 13.7609 14.9991 13.3416 14.9991L1.65937 15ZM1.29375 2.6325H13.6875L12.4406 1.13438C12.38 1.07438 12.3106 1.02656 12.2325 0.990938C12.1544 0.955313 12.0731 0.9375 11.9888 0.9375H2.9925C2.90875 0.9375 2.8275 0.955625 2.74875 0.991875C2.67 1.02813 2.60125 1.07625 2.5425 1.13625L1.29375 2.6325Z" fill="currentColor" />
                         </svg>
                         Archive pet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    {{-- Unarchive pet profile modal --}}
+    <template x-teleport="body">
+        <div
+            class="admin-co-modal-backdrop"
+            :class="{ 'is-open': unarchiveOpen }"
+            @click.self="unarchiveOpen = false">
+            <div class="admin-co-modal admin-co-verify-email-modal admin-co-suspend-modal admin-co-archive-modal" role="dialog" aria-modal="true" @click.stop>
+                <div class="admin-co-modal-head admin-co-blocked-modal-head">
+                    <div>
+                        <div class="admin-co-modal-title-row">
+                            <span class="admin-co-verify-email-icon is-archive" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none">
+                                    <path d="M7.16531 6.3C7.07594 6.38938 7.03125 6.50094 7.03125 6.63469V10.5722L5.39437 8.93531C5.30687 8.84781 5.19937 8.80094 5.07187 8.79469C4.94437 8.78844 4.83062 8.83531 4.73062 8.93531C4.63062 9.03531 4.58062 9.14594 4.58062 9.26719C4.58062 9.38844 4.63062 9.49906 4.73062 9.59906L6.97031 11.8378C7.12156 11.9891 7.29812 12.0647 7.5 12.0647C7.70188 12.0647 7.87875 11.9891 8.03063 11.8378L10.2694 9.59906C10.3569 9.51094 10.4037 9.40312 10.41 9.27563C10.4163 9.14813 10.3694 9.03469 10.2694 8.93531C10.1694 8.83594 10.0588 8.78594 9.9375 8.78531C9.81625 8.78469 9.70563 8.83469 9.60563 8.93531L7.96875 10.5722V6.63469C7.96875 6.50156 7.92406 6.39 7.83469 6.3C7.74531 6.21 7.63375 6.16531 7.5 6.16594C7.36625 6.16656 7.25469 6.21125 7.16531 6.3ZM0.9375 3.57V13.4859C0.9375 13.6541 0.991562 13.7922 1.09969 13.9003C1.20781 14.0084 1.34625 14.0625 1.515 14.0625H13.4859C13.6541 14.0625 13.7922 14.0084 13.9003 13.9003C14.0084 13.7922 14.0625 13.6541 14.0625 13.4859V3.57H0.9375ZM1.65937 15C1.23937 15 0.857812 14.8284 0.514687 14.4853C0.171562 14.1422 0 13.7609 0 13.3416V3.26813C0 3.08563 0.0290624 2.91375 0.0871874 2.7525C0.145312 2.59125 0.232813 2.44281 0.349688 2.30719L1.81031 0.554063C1.94594 0.370938 2.11563 0.232813 2.31938 0.139688C2.52312 0.0465627 2.74156 0 2.97469 0H11.9897C12.2222 0 12.4434 0.0465627 12.6534 0.139688C12.8634 0.232813 13.0362 0.370625 13.1719 0.553125L14.6503 2.34375C14.7672 2.47937 14.8547 2.63094 14.9128 2.79844C14.9709 2.96531 15 3.14031 15 3.32344V13.3406C15 13.76 14.8284 14.1413 14.4853 14.4844C14.1422 14.8275 13.7609 14.9991 13.3416 14.9991L1.65937 15ZM1.29375 2.6325H13.6875L12.4406 1.13438C12.38 1.07438 12.3106 1.02656 12.2325 0.990938C12.1544 0.955313 12.0731 0.9375 11.9888 0.9375H2.9925C2.90875 0.9375 2.8275 0.955625 2.74875 0.991875C2.67 1.02813 2.60125 1.07625 2.5425 1.13625L1.29375 2.6325Z" fill="#649FC9" />
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="admin-co-modal-title">Unarchive pet profile</h3>
+                                <p class="admin-co-modal-sub" x-text="archiveSubtitle()"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="admin-co-modal-close" @click="unarchiveOpen = false" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8"></circle>
+                            <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="admin-co-blocked-modal-body admin-co-verify-email-body">
+                    <div class="admin-co-suspend-alert">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="9" viewBox="0 0 10 9" fill="none" aria-hidden="true">
+                            <path d="M5.485 0.308055C5.24845 -0.102644 4.61103 -0.102644 4.37448 0.308055L0.0743152 7.77965L0.0386903 7.85279C-0.0996183 8.19795 0.147844 8.57813 0.542967 8.62728L0.630186 8.63238H9.2293C9.70357 8.63238 10.0075 8.1663 9.78517 7.77965L5.485 0.308055Z" fill="#FFC97A" />
+                            <path d="M4.8365 3.15331L4.9516 5.59952L5.06649 3.15431C5.0672 3.13868 5.06471 3.12306 5.05918 3.10842C5.05365 3.09379 5.0452 3.08043 5.03433 3.06917C5.02347 3.05791 5.01042 3.04898 4.99599 3.04294C4.98155 3.03689 4.96604 3.03385 4.95039 3.034C4.93502 3.03415 4.91983 3.03738 4.90573 3.0435C4.89162 3.04962 4.87888 3.0585 4.86827 3.06962C4.85765 3.08074 4.84937 3.09387 4.84392 3.10825C4.83846 3.12262 4.83594 3.13794 4.8365 3.15331Z" fill="#3B3731" stroke="#3B3731" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M5.00879 6.66028C5.03629 6.67172 5.05962 6.69118 5.07617 6.71594C5.09273 6.74076 5.10156 6.77009 5.10156 6.79993C5.10147 6.83985 5.08586 6.87813 5.05762 6.90637C5.02938 6.93461 4.9911 6.95023 4.95117 6.95032C4.92134 6.95032 4.892 6.94149 4.86719 6.92493C4.84242 6.90838 4.82297 6.88504 4.81152 6.85754C4.80009 6.82995 4.79691 6.79895 4.80273 6.76965C4.80862 6.74053 4.82274 6.71352 4.84375 6.6925C4.86476 6.67149 4.89178 6.65737 4.9209 6.65149C4.95019 6.64566 4.98119 6.64885 5.00879 6.66028Z" fill="#3B3731" stroke="#3B3731" stroke-width="0.5" />
+                        </svg>
+                        <p>
+                            Unarchiving shows <span x-text="currentPet()?.name || 'this pet'"></span>'s profile back to active use — it will appear in new bookings and is shown from the customer's view. Profile can be archived at any time.
+                        </p>
+                    </div>
+
+                    <template x-if="currentPet()">
+                        <div class="admin-co-transfer-pet-card">
+                            <img :src="currentPet().image" :alt="currentPet().name" class="admin-co-transfer-pet-avatar" width="40" height="40">
+                            <div class="admin-co-transfer-pet-body">
+                                <p class="admin-co-transfer-pet-name">
+                                    <span class="admin-co-pet-type-icon" aria-hidden="true">
+                                        <svg x-show="currentPet().type === 'cat'" xmlns="http://www.w3.org/2000/svg" width="14" height="18" viewBox="0 0 16 22" fill="none">
+                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M7.0661 3.58301C7.82655 3.48924 8.87949 3.51286 9.88642 3.85352C10.9998 4.23021 12.075 5.00401 12.6013 6.43945L14.7712 7.47949L14.8181 7.64941C15.1058 8.68692 15.2764 10.2987 14.8308 11.7656C14.6062 12.5047 14.2222 13.2153 13.6101 13.791C12.9963 14.3682 12.1714 14.7931 11.0934 14.9854C7.21531 15.6771 5.01491 18.9931 4.4079 20.5596C4.15869 21.2733 2.6782 21.455 2.32978 20.7842C-2.87181 10.7633 1.80671 2.85095 5.03583 0L7.0661 3.58301ZM9.46845 7.20898C8.8993 7.20899 8.29571 7.49133 8.2956 8.62109C8.2956 9.40106 9.28944 8.62143 9.9372 8.62109C10.585 8.62109 10.6413 9.40123 10.6413 8.62109C10.6412 7.84111 10.1161 7.20898 9.46845 7.20898Z" fill="#FFC97A" />
+                                        </svg>
+                                        <svg x-show="currentPet().type === 'other'" xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 22 20" fill="none">
+                                            <path d="M11 7.89474C7.68219 7.89474 4.87876 10.8058 3.97362 14.5447C3.57552 16.1889 4.17581 17.9342 5.64929 18.7542C6.81738 19.4042 8.55486 20 11 20C13.4451 20 15.1831 19.4042 16.3512 18.7542C17.8247 17.9342 18.4245 16.1889 18.0264 14.5447C17.1212 10.8053 14.3178 7.89474 11 7.89474ZM0 7.07579C0 8.52947 0.937619 10 2.09524 10C3.25286 10 4.19048 8.52947 4.19048 7.07579C4.19048 5.62211 3.25286 4.73684 2.09524 4.73684C0.937619 4.73684 0 5.62263 0 7.07579ZM22 7.07579C22 8.52947 21.0624 10 19.9048 10C18.7471 10 17.8095 8.52947 17.8095 7.07579C17.8095 5.62211 18.7471 4.73684 19.9048 4.73684C21.0624 4.73684 22 5.62263 22 7.07579ZM5.5 2.33895C5.5 3.79263 6.43762 5.26316 7.59524 5.26316C8.75286 5.26316 9.69048 3.79263 9.69048 2.33895C9.69048 0.885263 8.75286 0 7.59524 0C6.43762 0 5.5 0.88579 5.5 2.33895ZM16.5 2.33895C16.5 3.79263 15.5624 5.26316 14.4048 5.26316C13.2471 5.26316 12.3095 3.79263 12.3095 2.33895C12.3095 0.885263 13.2471 0 14.4048 0C15.5624 0 16.5 0.88579 16.5 2.33895Z" fill="#FFC97A" />
+                                        </svg>
+                                        <svg x-show="currentPet().type !== 'cat' && currentPet().type !== 'other'" xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 22 21" fill="none">
+                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.4592 8.68947e-10C12.0763 -1.81862e-05 12.6594 0.285457 13.0383 0.772461L16.2532 4.90625C16.4122 5.11071 16.6452 5.2455 16.9016 5.28223L19.9856 5.72266C20.3435 5.77379 20.646 6.01399 20.759 6.35742C21.0768 7.32445 21.6377 9.33341 21.2551 10.5C20.8003 11.8863 20.0704 12.5797 18.7551 12.9189C16.5021 13.4997 14.639 12.8357 12.4377 14.5137C11.758 15.0319 11.2942 15.7103 10.9895 16.4678C9.95215 19.0461 6.72476 21.706 4.32933 20.2969L1.40648 18.5781L2.88597 12.9932C3.03732 12.9827 3.18549 12.9709 3.3264 12.9531C3.72901 12.9023 4.11587 12.8149 4.36937 12.6543C4.57272 12.5254 4.78068 12.3019 4.97777 12.0498C5.17869 11.7928 5.38391 11.4855 5.57835 11.168C5.96743 10.5326 6.32411 9.84073 6.53441 9.39648C6.59343 9.27173 6.53998 9.12257 6.41527 9.06348C6.29079 9.00495 6.1424 9.05746 6.08324 9.18164C5.87884 9.61348 5.5304 10.2892 5.15257 10.9062C4.96359 11.2149 4.7693 11.5055 4.58421 11.7422C4.39522 11.9839 4.2301 12.1511 4.10179 12.2324C3.94887 12.3293 3.65899 12.4072 3.2639 12.457C2.87954 12.5055 2.43079 12.5234 1.98949 12.5225C1.58427 12.5216 1.18933 12.5013 0.862533 12.4795C0.853021 12.4768 0.842688 12.4744 0.833236 12.4717C0.25988 12.3087 -0.117659 11.685 0.0334314 11.1084C1.50838 5.48351 2.3485 2.92214 3.76585 1.50488C5.2619 0.00933487 8.24416 5.75404e-05 8.28148 8.68947e-10H11.4592ZM11.8508 5.01758C11.2139 5.01758 10.5383 5.33425 10.5383 6.59863C10.5386 7.47081 11.6506 6.59876 12.3752 6.59863C13.0999 6.59863 13.1623 7.47088 13.1623 6.59863C13.1623 5.72589 12.5754 5.0178 11.8508 5.01758Z" fill="#FFC97A" />
+                                        </svg>
+                                    </span>
+                                    <span x-text="currentPet().name"></span>
+                                </p>
+                                <p class="admin-co-transfer-pet-meta" x-text="(currentPet().meta || '').replace(/ · /g, ' • ')"></p>
+                            </div>
+                        </div>
+                    </template>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">
+                            Reason for unarchiving <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <div class="admin-co-dd admin-co-suspend-dd" @click.outside="openUnarchiveReason = false">
+                            <button
+                                type="button"
+                                class="admin-co-dd-trigger"
+                                @click="openUnarchiveReason = !openUnarchiveReason">
+                                <span
+                                    class="admin-co-dd-value"
+                                    :class="{ 'is-placeholder': !unarchiveReason }"
+                                    x-text="unarchiveReason || 'Select a reason ...'"></span>
+                                <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                                    <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <div class="admin-co-dd-menu" x-show="openUnarchiveReason" x-cloak>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': unarchiveReason === 'Customer request' }" @click="unarchiveReason = 'Customer request'; openUnarchiveReason = false">Customer request</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': unarchiveReason === 'Error' }" @click="unarchiveReason = 'Error'; openUnarchiveReason = false">Error</button>
+                                <button type="button" class="admin-co-dd-option" :class="{ 'is-active': unarchiveReason === 'Other' }" @click="unarchiveReason = 'Other'; openUnarchiveReason = false">Other</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-co-suspend-field">
+                        <label class="admin-co-suspend-label">Additional notes (optional)</label>
+                        <textarea
+                            class="admin-co-suspend-notes"
+                            rows="3"
+                            placeholder="Any additional context for the activity log ..."
+                            x-model="unarchiveNotes"></textarea>
+                    </div>
+
+                    <div class="admin-co-verify-email-happens">
+                        <h4 class="admin-co-verify-email-happens-title">What unarchiving does</h4>
+                        <ul class="admin-co-verify-email-happens-list">
+                            <li><span x-text="currentPet()?.name || 'Pet'"></span> appears back on {{ $firstName }}'s active pet list</li>
+                            <li><span x-text="currentPet()?.name || 'Pet'"></span> can be added to new bookings</li>
+                            <li>All grooming history and health records are preserved</li>
+                            <li>Admins can still view and archive the profile at any time</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="admin-co-blocked-modal-foot is-confirm">
+                    <button type="button" class="admin-co-form-btn is-cancel" @click="unarchiveOpen = false">Cancel</button>
+                    <button
+                        type="button"
+                        class="admin-co-form-btn is-send-email"
+                        :disabled="!unarchiveReason"
+                        @click="unarchiveReason && (unarchiveOpen = false)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                            <path d="M7.16531 6.3C7.07594 6.38938 7.03125 6.50094 7.03125 6.63469V10.5722L5.39437 8.93531C5.30687 8.84781 5.19937 8.80094 5.07187 8.79469C4.94437 8.78844 4.83062 8.83531 4.73062 8.93531C4.63062 9.03531 4.58062 9.14594 4.58062 9.26719C4.58062 9.38844 4.63062 9.49906 4.73062 9.59906L6.97031 11.8378C7.12156 11.9891 7.29812 12.0647 7.5 12.0647C7.70188 12.0647 7.87875 11.9891 8.03063 11.8378L10.2694 9.59906C10.3569 9.51094 10.4037 9.40312 10.41 9.27563C10.4163 9.14813 10.3694 9.03469 10.2694 8.93531C10.1694 8.83594 10.0588 8.78594 9.9375 8.78531C9.81625 8.78469 9.70563 8.83469 9.60563 8.93531L7.96875 10.5722V6.63469C7.96875 6.50156 7.92406 6.39 7.83469 6.3C7.74531 6.21 7.63375 6.16531 7.5 6.16594C7.36625 6.16656 7.25469 6.21125 7.16531 6.3ZM0.9375 3.57V13.4859C0.9375 13.6541 0.991562 13.7922 1.09969 13.9003C1.20781 14.0084 1.34625 14.0625 1.515 14.0625H13.4859C13.6541 14.0625 13.7922 14.0084 13.9003 13.9003C14.0084 13.7922 14.0625 13.6541 14.0625 13.4859V3.57H0.9375ZM1.65937 15C1.23937 15 0.857812 14.8284 0.514687 14.4853C0.171562 14.1422 0 13.7609 0 13.3416V3.26813C0 3.08563 0.0290624 2.91375 0.0871874 2.7525C0.145312 2.59125 0.232813 2.44281 0.349688 2.30719L1.81031 0.554063C1.94594 0.370938 2.11563 0.232813 2.31938 0.139688C2.52312 0.0465627 2.74156 0 2.97469 0H11.9897C12.2222 0 12.4434 0.0465627 12.6534 0.139688C12.8634 0.232813 13.0362 0.370625 13.1719 0.553125L14.6503 2.34375C14.7672 2.47937 14.8547 2.63094 14.9128 2.79844C14.9709 2.96531 15 3.14031 15 3.32344V13.3406C15 13.76 14.8284 14.1413 14.4853 14.4844C14.1422 14.8275 13.7609 14.9991 13.3416 14.9991L1.65937 15ZM1.29375 2.6325H13.6875L12.4406 1.13438C12.38 1.07438 12.3106 1.02656 12.2325 0.990938C12.1544 0.955313 12.0731 0.9375 11.9888 0.9375H2.9925C2.90875 0.9375 2.8275 0.955625 2.74875 0.991875C2.67 1.02813 2.60125 1.07625 2.5425 1.13625L1.29375 2.6325Z" fill="currentColor" />
+                        </svg>
+                        Unarchive pet
                     </button>
                 </div>
             </div>
