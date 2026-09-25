@@ -66,6 +66,7 @@ $ticketStatusLabels = [
     previousTab: null,
     selectedPetId: null,
     selectedBookingId: null,
+    disputeOpen: false,
     // Remember scroll position per tab (first visit = top)
     tabScroll: {},
     detailTabLabels: {
@@ -95,6 +96,7 @@ $ticketStatusLabels = [
         this.previousTab = null;
         this.selectedPetId = null;
         this.selectedBookingId = null;
+        this.disputeOpen = false;
         this.tabScroll = {};
         this.view = 'detail';
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -106,11 +108,13 @@ $ticketStatusLabels = [
         this.previousTab = null;
         this.selectedPetId = null;
         this.selectedBookingId = null;
+        this.disputeOpen = false;
         this.tabScroll = {};
     },
     switchDetailTab(tab) {
         if (tab === this.detailTab) return;
-        if (this.selectedBookingId) {
+        if (this.disputeOpen || this.selectedBookingId) {
+            this.disputeOpen = false;
             this.selectedBookingId = null;
             this.$dispatch('admin-booking-close-request');
         }
@@ -125,6 +129,11 @@ $ticketStatusLabels = [
         });
     },
     goBack() {
+        if (this.disputeOpen) {
+            this.disputeOpen = false;
+            this.$dispatch('admin-dispute-close-request');
+            return;
+        }
         if (this.selectedBookingId) {
             this.selectedBookingId = null;
             this.$dispatch('admin-booking-close-request');
@@ -144,6 +153,9 @@ $ticketStatusLabels = [
         this.closeCustomer();
     },
     get backLabel() {
+        if (this.disputeOpen && this.selectedBookingId) {
+            return 'BOOKING ID ' + this.selectedBookingId;
+        }
         if (this.selectedBookingId) return 'BOOKINGS';
         if (this.previousTab && this.detailTabLabels[this.previousTab]) {
             return this.detailTabLabels[this.previousTab].toUpperCase();
@@ -169,8 +181,11 @@ $ticketStatusLabels = [
     },
 }"
 @admin-pet-selected.window="selectedPetId = $event.detail.id"
-@admin-booking-selected.window="selectedBookingId = $event.detail.booking?.id || null"
-@admin-booking-closed.window="selectedBookingId = null">
+@admin-pet-selected.window="selectedPetId = $event.detail.id"
+@admin-booking-selected.window="selectedBookingId = $event.detail.booking?.id || null; disputeOpen = false"
+@admin-booking-closed.window="selectedBookingId = null; disputeOpen = false"
+@admin-dispute-opened.window="disputeOpen = true"
+@admin-dispute-closed.window="disputeOpen = false">
     @include('admin.tabs.customer-detail')
 
     <div class="admin-po-list" x-show="view === 'list'">
