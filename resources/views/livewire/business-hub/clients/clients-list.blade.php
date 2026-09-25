@@ -1322,7 +1322,7 @@ new class extends Component {
         return Payment::query()
             ->where('pet_owner_id', $this->selectedClientId)
             ->whereHas('booking', fn($query) => $query->where('goormer_spacer_id', $this->spacerId()))
-            ->with(['booking:' . implode(',', self::BOOKING_LIST_COLUMNS), 'pet:' . implode(',', self::PET_LIST_COLUMNS)])
+            ->with(['booking:' . implode(',', self::BOOKING_LIST_COLUMNS), 'booking.pets:' . implode(',', self::PET_LIST_COLUMNS), 'pet:' . implode(',', self::PET_LIST_COLUMNS)])
             ->get();
     }
 
@@ -1799,7 +1799,7 @@ new class extends Component {
             @endif
         </section>
 
-        <x-business-hub.common.completed-booking-modal :booking="$this->profileCompletedBooking" />
+        <x-business-hub.common.completed-booking-modal :booking="$this->profileCompletedBooking" variant="history" />
         <x-business-hub.common.decline-modal :decline-booking="$this->profileDeclineBooking" />
         <x-business-hub.common.reschedule-modal :reschedule-booking="$this->profileRescheduleBooking"
             :bookings="$rescheduleCalendarBookings ?? collect()" :reschedule-selected-date="$rescheduleSelectedDate"
