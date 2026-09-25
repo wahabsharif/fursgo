@@ -2249,7 +2249,7 @@ new class extends Component {
         border-radius: 144px;
         background: #F6F5F5;
         color: #3B3731;
-        font-family: Lato, sans-serif;
+        font-family: Lato;
         font-size: 16px;
         font-weight: 600;
     }
