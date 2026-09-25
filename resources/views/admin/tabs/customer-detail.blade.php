@@ -599,7 +599,11 @@ $customerProfiles[$customer['id']] = array_merge($janeProfile, [
                 <x-admin.customer.bookings :profile="$profile" />
             </div>
 
-            @foreach (['payments' => 'Payments', 'support' => 'Support', 'referrals' => 'Referrals', 'activity' => 'Activity'] as $tabKey => $tabLabel)
+            <div x-show="detailTab === 'activity'" x-cloak>
+                <x-admin.customer.activity :profile="$profile" />
+            </div>
+
+            @foreach (['payments' => 'Payments', 'support' => 'Support', 'referrals' => 'Referrals'] as $tabKey => $tabLabel)
             <div class="admin-co-placeholder" x-show="detailTab === '{{ $tabKey }}'" x-cloak>
                 <h2 class="admin-page-title mb-0">{{ $tabLabel }}</h2>
                 <p class="admin-section-label mb-0">This section will be built next.</p>

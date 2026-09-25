@@ -251,7 +251,7 @@ $transferAccounts = [
     </div>
 
     {{-- Stats strip (changes with detail tab) --}}
-    <div class="admin-co-stats" x-show="detailTab !== 'pets' && detailTab !== 'bookings'" x-cloak>
+    <div class="admin-co-stats" x-show="detailTab !== 'pets' && detailTab !== 'bookings' && detailTab !== 'activity'" x-cloak>
         <div class="admin-co-stat">
             <p class="admin-co-stat-value">{{ $profile['stats']['spend'] }}</p>
             <p class="admin-co-stat-label">Total spend</p>
@@ -308,6 +308,25 @@ $transferAccounts = [
         </div>
     </div>
 
+    <div class="admin-co-stats" x-show="detailTab === 'activity'" x-cloak>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['activity_stats']['total_events'] ?? '150' }}</p>
+            <p class="admin-co-stat-label">Total events</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['activity_stats']['admin_actions'] ?? '12' }}</p>
+            <p class="admin-co-stat-label">Admin actions</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['activity_stats']['last_active'] ?? '2d ago' }}</p>
+            <p class="admin-co-stat-label">Last active</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['activity_stats']['account_age'] ?? '2 yrs' }}</p>
+            <p class="admin-co-stat-label">Account age</p>
+        </div>
+    </div>
+
     {{-- Open dispute alert (booking detail) --}}
     <div
         class="admin-co-bk-dispute-alert"
@@ -325,11 +344,11 @@ $transferAccounts = [
         <p class="admin-co-bk-dispute-alert-footer" x-text="bookingDispute()?.footer"></p>
     </div>
 
-    {{-- Admin actions (changes with detail tab) --}}
-    <div class="admin-co-actions">
+    {{-- Admin actions (hidden on the activity tab) --}}
+    <div class="admin-co-actions" x-show="detailTab !== 'activity'" x-cloak>
         <h3 class="admin-co-actions-title">Admin Actions</h3>
 
-        <div x-show="detailTab !== 'pets' && detailTab !== 'bookings'" x-cloak>
+        <div x-show="detailTab !== 'pets' && detailTab !== 'bookings' && detailTab !== 'activity'" x-cloak>
             <x-admin.customer.action-btn
                 variant="verify"
                 label="Send account verification email"
