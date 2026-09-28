@@ -93,14 +93,14 @@
                 </div>
             </div>
 
-            <div class="active-section-header-pane" x-cloak x-show="activeSection === 'earnings'"
+            <div class="active-section-header-pane active-section-header-earnings" x-cloak x-show="activeSection === 'earnings'"
                 x-transition.opacity.duration.280ms>
                 <div>
                     <h2
                         x-text="activeEarningsMenu === 'transactions' ? 'Transactions' : (activeEarningsMenu === 'pay-outs' ? 'Pay-outs' : (activeEarningsMenu === 'invoices' ? 'Invoices' : 'Earnings Overview'))">
                     </h2>
                     <p
-                        x-text="activeEarningsMenu === 'transactions' ? 'View all your payment and pay-out transactions.' : (activeEarningsMenu === 'pay-outs' ? 'Payouts are processed 2–3 business days after release' : (activeEarningsMenu === 'invoices' ? 'View and download invoices generated for completed bookings.' : 'View your earnings, transactions, pay-outs and statement reports.'))">
+                        x-text="activeEarningsMenu === 'transactions' ? 'View all your payment and pay-out transactions.' : (activeEarningsMenu === 'pay-outs' ? 'Payouts are processed 2–3 business days after release.' : (activeEarningsMenu === 'invoices' ? 'View and download invoices generated for completed bookings. Invoices are automatically generated for every completed booking.' : 'View your earnings, transactions, pay-outs and statement reports.'))">
                     </p>
                 </div>
             </div>
@@ -167,7 +167,7 @@
     };
     const restoreEarningsMenu = () => {
         if (activeSection === 'earnings') {
-            window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: @js($dashboardNav['active_earnings_menu']) } }));
+            window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: activeEarningsMenu || 'overview' } }));
         }
     };
     const easeSectionHeight = () => {
@@ -196,9 +196,6 @@
         if (section === 'services') {
             restoreServicesMenu();
         }
-        if (section === 'earnings') {
-            restoreEarningsMenu();
-        }
         if (section === 'business-hub') {
             requestAnimationFrame(() => {
                 window.dispatchEvent(new CustomEvent('business-hub-mounted'));
@@ -206,9 +203,12 @@
             });
         }
         if (section === 'earnings') {
-            requestAnimationFrame(() => {
-                window.dispatchEvent(new CustomEvent('earnings-mounted'));
-                window.scheduleEarningsChartsInit?.();
+            $nextTick(() => {
+                restoreEarningsMenu();
+                requestAnimationFrame(() => {
+                    window.dispatchEvent(new CustomEvent('earnings-mounted'));
+                    window.scheduleEarningsChartsInit?.();
+                });
             });
         }
         $nextTick(() => {
@@ -255,6 +255,7 @@
         </div>
         <template x-if="mountedSections.includes('earnings')">
             <div class="section-panel" :class="{ 'section-active': activeSection === 'earnings' }" x-init="$nextTick(() => {
+                window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: activeEarningsMenu || 'overview' } }));
                 requestAnimationFrame(() => {
                     window.dispatchEvent(new CustomEvent('earnings-mounted'));
                     window.scheduleEarningsChartsInit?.();
@@ -322,6 +323,15 @@
         font-weight: 600;
         line-height: 20px;
         text-transform: none;
+    }
+
+    .active-section-header-earnings {
+        margin-bottom: 20px;
+    }
+
+    .active-section-header-earnings p {
+        font-weight: 400;
+        line-height: 20px;
     }
 
     .active-section-loading-bar {
@@ -563,7 +573,9 @@
 
     .section-container:has(.section-panel.section-active .ma-board),
     .section-container:has(.section-panel.section-active .service-form-footer),
-    .section-container:has(.section-panel.section-active .clients-list-table-shell) {
+    .section-container:has(.section-panel.section-active .clients-list-table-shell),
+    .section-container:has(.section-panel.section-active .earnings-tx-card),
+    .section-container:has(.section-panel.section-active .bookings-board) {
         overflow: visible;
     }
 

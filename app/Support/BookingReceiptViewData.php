@@ -16,9 +16,12 @@ class BookingReceiptViewData
      *     booking_id_label: string,
      *     date_label: string,
      *     owner_name: string,
+     *     owner_initial: string,
+     *     owner_photo_url: string|null,
      *     pet_name: string,
      *     pet_type: string,
      *     service: string,
+     *     service_line_label: string,
      *     space_label: string,
      *     service_time_label_for_space: string,
      *     service_amount: float,
@@ -27,6 +30,7 @@ class BookingReceiptViewData
      *     extras_amount_formatted: string,
      *     promo_discount: float,
      *     promo_discount_formatted: string,
+     *     promo_discount_label: string,
      *     total_amount: float,
      *     total_amount_formatted: string,
      *     addons: list<array{label: string, amount: float, amount_formatted: string}>
@@ -46,8 +50,8 @@ class BookingReceiptViewData
         }
         $ownerName ??= 'N/A';
 
+        $pet = $booking->relationLoaded('pets') ? $booking->pets->first() : null;
         if ($petName === null || $petType === null) {
-            $pet = $booking->relationLoaded('pets') ? $booking->pets->first() : null;
             $petName ??= $pet->name ?? 'N/A';
             $petType ??= $pet->pet_type ?? '';
         }
@@ -70,6 +74,7 @@ class BookingReceiptViewData
 
         $timeRaw = (string) ($booking->time ?? '');
         $timeLabelForSpace = trim($timeRaw) !== '' ? trim($timeRaw) : 'N/A';
+        $spaceTimeRange = '';
         if (str_contains($timeRaw, '-')) {
             $parts = preg_split('/\s*-\s*/', $timeRaw, 2);
             $start = $parts[0] ?? '';
@@ -84,7 +89,10 @@ class BookingReceiptViewData
                 } catch (Throwable) {
                     $timeLabelForSpace = trim((string) $startMatch[1]) . ' - ' . trim((string) $endMatch[1]);
                 }
+                $spaceTimeRange = $startMatch[1] . '-' . $endMatch[1];
             }
+        } elseif (trim($timeRaw) !== '') {
+            $spaceTimeRange = trim($timeRaw);
         }
 
         $serviceAmount = (float) $booking->amount;
@@ -106,6 +114,30 @@ class BookingReceiptViewData
         $promoDiscount = (float) ($booking->discount ?? 0);
         $totalAmount = $serviceAmount + $extrasAmount - $promoDiscount;
 
+        $serviceLineLabel = trim((string) ($booking->service ?: 'Service'));
+        if (!$isSpaceUser && $petName !== '' && $petName !== 'N/A') {
+            $serviceLineLabel .= ' (' . $petName . ')';
+        }
+
+        $serviceLower = strtolower(trim((string) ($booking->service ?? '')));
+        $durationLabel = match (true) {
+            (bool) preg_match('/full[\s_-]*day|fullday/', $serviceLower) => 'Full-day',
+            (bool) preg_match('/half[\s_-]*day/', $serviceLower) => 'Half-day',
+            str_contains($serviceLower, 'hour') => 'Hourly',
+            default => 'Half-day',
+        };
+        $spaceDetail = $durationLabel;
+        if ($spaceTimeRange !== '') {
+            $spaceDetail .= ' - ' . $spaceTimeRange;
+        }
+        $spaceLineLabel = str_replace(' / ', '/', $spaceLabel) . ' (' . $spaceDetail . ')';
+
+        $ownerPhotoRaw = '';
+        if ($booking->relationLoaded('petOwner')) {
+            $ownerPhotoRaw = trim((string) ($booking->petOwner?->profile_image ?? ''));
+        }
+        $ownerPhotoUrl = self::resolvePhotoUrl($ownerPhotoRaw);
+
         return [
             'booking_id' => (int) $booking->id,
             'invoice_url' => route('business-hub.bookings.invoice-pdf', $booking),
@@ -113,9 +145,12 @@ class BookingReceiptViewData
             'booking_id_label' => 'FG-' . str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT),
             'date_label' => optional($booking->date)->format('d/m/Y') ?? 'N/A',
             'owner_name' => $ownerName,
+            'owner_initial' => strtoupper(substr((string) $ownerName, 0, 1)) ?: '?',
+            'owner_photo_url' => $ownerPhotoUrl,
             'pet_name' => $petName,
             'pet_type' => $petType,
             'service' => $service,
+            'service_line_label' => $isSpaceUser ? $spaceLineLabel : $serviceLineLabel,
             'space_label' => $spaceLabel,
             'service_time_label_for_space' => $service . ' (' . $timeLabelForSpace . ')',
             'service_amount' => $serviceAmount,
@@ -124,9 +159,27 @@ class BookingReceiptViewData
             'extras_amount_formatted' => number_format($extrasAmount, 2),
             'promo_discount' => $promoDiscount,
             'promo_discount_formatted' => number_format($promoDiscount, 2),
+            'promo_discount_label' => $promoDiscount > 0
+                ? '- £' . number_format($promoDiscount, 2)
+                : '£' . number_format($promoDiscount, 2),
             'total_amount' => $totalAmount,
             'total_amount_formatted' => number_format($totalAmount, 2),
             'addons' => $addons,
         ];
+    }
+
+    private static function resolvePhotoUrl(?string $raw): ?string
+    {
+        $raw = trim((string) $raw);
+        if ($raw === '') {
+            return null;
+        }
+
+        $isAbsolute = str_starts_with($raw, 'http://') ||
+            str_starts_with($raw, 'https://') ||
+            str_starts_with($raw, 'data:') ||
+            str_starts_with($raw, '/');
+
+        return $isAbsolute ? $raw : asset('storage/' . ltrim($raw, '/'));
     }
 }
