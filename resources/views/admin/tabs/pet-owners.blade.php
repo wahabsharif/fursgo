@@ -59,7 +59,7 @@ $ticketStatusLabels = [
 ];
 @endphp
 
-<div class="admin-pet-owners" x-data="{
+<div class="admin-pet-owners" wire:ignore.self x-data="{
     view: 'list',
     selectedCustomerId: null,
     detailTab: 'overview',
@@ -89,6 +89,7 @@ $ticketStatusLabels = [
     // Mass-select for export
     selectedIds: [],
     allIds: @js(collect($customers)->pluck('id')->values()),
+    openedIds: @js($openedCustomerIds ?? []),
 
     openCustomer(id) {
         this.selectedCustomerId = id;
@@ -100,6 +101,13 @@ $ticketStatusLabels = [
         this.tabScroll = {};
         this.view = 'detail';
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (typeof $wire !== 'undefined' && $wire.openCustomer) {
+            if (!this.openedIds.includes(id)) {
+                this.openedIds.push(id);
+                startAdminLoading(true);
+            }
+            $wire.openCustomer(id);
+        }
     },
     closeCustomer() {
         this.view = 'list';

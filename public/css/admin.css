@@ -154,7 +154,53 @@
 }
 
 .admin-main {
+    position: relative;
     padding: 30px 0 48px;
+}
+
+/* Lazy-tab loading bar — same pattern as business hub */
+.admin-tab-loading-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 4px;
+    overflow: hidden;
+    z-index: 200;
+    pointer-events: none;
+    background: rgba(232, 228, 222, 0.85);
+}
+
+.admin-tab-loading-bar__sweep {
+    position: absolute;
+    top: 0;
+    left: -42%;
+    height: 100%;
+    width: 42%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #ffc97a 0%, #f6a623 45%, #ffc97a 100%);
+    box-shadow: 0 0 12px rgba(246, 166, 35, 0.45);
+    will-change: left;
+    animation: admin-tab-load-sweep 1.1s linear infinite;
+}
+
+@keyframes admin-tab-load-sweep {
+    0% {
+        left: -42%;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-tab-loading-bar__sweep {
+        animation: none;
+        left: 0;
+        width: 100%;
+        opacity: 0.85;
+    }
 }
 
 /* Shared page chrome */

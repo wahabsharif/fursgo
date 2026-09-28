@@ -12,7 +12,7 @@
                 <template x-for="item in tabs" :key="item.id">
                     <button type="button"
                         class="admin-tab"
-                        :class="{ 'is-active': tab === item.id }"
+                        :class="{ 'is-active': ($wire && $wire.activeTab ? $wire.activeTab : tab) === item.id }"
                         @click="setTab(item.id)"
                         x-text="item.label">
                     </button>

@@ -572,7 +572,8 @@ $customerProfiles[$customer['id']] = array_merge($janeProfile, [
     </button>
 
     @foreach ($customerProfiles as $profileId => $profile)
-    <div class="admin-co-layout" x-show="selectedCustomerId === '{{ $profileId }}'" x-cloak>
+    @continue(! in_array($profileId, $openedCustomerIds ?? [], true))
+    <div class="admin-co-layout" wire:key="customer-detail-{{ $profileId }}" x-show="selectedCustomerId === '{{ $profileId }}'" x-cloak>
         <x-admin.customer.profile-sidebar :profile="$profile" />
 
         <div class="admin-co-main">

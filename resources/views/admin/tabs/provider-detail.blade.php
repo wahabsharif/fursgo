@@ -467,12 +467,14 @@ foreach ($providers as $provider) {
     </button>
 
     @foreach ($providerProfiles as $profileId => $profile)
+    @continue(! in_array($profileId, $openedProviderIds ?? [], true))
     @php
         $isDual = ! empty($profile['dual']);
         $defaultView = $profile['default_view'] ?? $profile['type'] ?? 'groomer';
     @endphp
     <div
         class="admin-co-layout"
+        wire:key="provider-detail-{{ $profileId }}"
         x-show="selectedProviderId === '{{ $profileId }}'"
         x-cloak
         @admin-provider-opened.window="if ($event.detail && $event.detail.id === '{{ $profileId }}') viewAs = @js($defaultView)"
