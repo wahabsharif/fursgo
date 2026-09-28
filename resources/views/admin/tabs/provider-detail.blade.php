@@ -211,6 +211,161 @@ $pawfectProfile = [
             'icon' => 'zapier',
         ],
     ],
+    'compliance' => [
+        'groomer' => [
+            'status' => 'verified',
+            'banner_title' => 'Account verified',
+            'banner_text' => 'All required documents verified & approved.',
+            'verification' => [
+                'status_label' => 'Verified',
+                'identity_title' => 'Identity verified',
+                'identity_text' => 'Provider passed third-party verification at onboarding',
+                'system_title' => 'Third-party verification system',
+                'system_text' => 'Documents and identity files are held externally.',
+                'meta' => [
+                    ['label' => 'Verified', 'value' => '12 Jan 2023'],
+                    ['label' => 'Type', 'value' => 'Freelance Groomer'],
+                    ['label' => 'Result', 'value' => 'Pass', 'tone' => 'pass'],
+                    ['label' => 'Reference', 'value' => 'VRF-2023-00142'],
+                ],
+            ],
+            'business' => [
+                ['label' => 'Account type', 'value' => 'Freelance Groomer', 'key' => 'account_type'],
+                ['label' => 'Business name', 'value' => 'Pawfect Grooming', 'key' => 'business_name'],
+                ['label' => 'Owner', 'value' => 'Sarah Williams', 'key' => 'owner'],
+                ['label' => 'Provider ID', 'value' => 'GS-00312', 'key' => 'provider_id'],
+                ['label' => 'Joined', 'value' => '12 Jan 2023', 'key' => 'joined'],
+                ['label' => 'Business reg. number', 'value' => '—', 'key' => 'reg_number'],
+            ],
+            'agreements_status' => 'All signed',
+            'agreements' => [
+                [
+                    'title' => 'FursGo refund policy',
+                    'meta' => 'Signed 12 Jan 2026 · Annual renewal · due Jan 2027',
+                    'status' => 'signed',
+                ],
+                [
+                    'title' => 'Animal welfare statement',
+                    'meta' => 'Signed 12 Jan 2026 · Annual renewal · due Jan 2027',
+                    'status' => 'signed',
+                ],
+                [
+                    'title' => 'Compliance declaration',
+                    'meta' => 'Signed 12 Jan 2026 · Annual renewal · due Jan 2027',
+                    'status' => 'signed',
+                ],
+                [
+                    'title' => 'Provider terms of service',
+                    'meta' => 'Signed 12 Jan 2026 · Annual renewal · due Jan 2027',
+                    'status' => 'signed',
+                ],
+                [
+                    'title' => 'Privacy & data policy',
+                    'meta' => 'Signed 12 Jan 2026 · Annual renewal · due Jan 2027',
+                    'status' => 'signed',
+                ],
+            ],
+            'activity' => [
+                [
+                    'title' => 'Annual re-verification passed',
+                    'time' => '18 Apr 2025 · 14:32',
+                    'tone' => 'pass',
+                ],
+                [
+                    'title' => 'Annual re-verification passed',
+                    'time' => '18 Apr 2025 · 11:32',
+                    'tone' => 'pass',
+                ],
+                [
+                    'title' => 'Annual re-verification passed',
+                    'time' => '05 Mar 2025 · 21:50',
+                    'tone' => 'pass',
+                ],
+                [
+                    'title' => 'Verification submitted by provider · Documents uploaded for review',
+                    'time' => '01 Dec 2024 · 18:55',
+                    'tone' => 'neutral',
+                ],
+            ],
+        ],
+        'space' => [
+            'status' => 'needs_info',
+            'banner_title' => 'More Info Needed',
+            'banner_text' => 'Required documents are pending · Awaiting resubmission.',
+            'verification' => [
+                'status_label' => 'Verified',
+                'identity_title' => 'Identity verified',
+                'identity_text' => 'Provider passed third-party verification at onboarding',
+                'system_title' => 'Third-party verification system',
+                'system_text' => 'Documents and identity files are held externally.',
+                'meta' => [
+                    ['label' => 'Verified', 'value' => '12 Jan 2023'],
+                    ['label' => 'Type', 'value' => 'Registered Space Host'],
+                    ['label' => 'Result', 'value' => 'Pass', 'tone' => 'pass'],
+                    ['label' => 'Reference', 'value' => 'VRF-2023-00142'],
+                ],
+            ],
+            'business' => [
+                ['label' => 'Account type', 'value' => 'Registered Space Host', 'key' => 'account_type'],
+                ['label' => 'Business name', 'value' => 'The Garden Grooming Spot', 'key' => 'business_name'],
+                ['label' => 'Owner', 'value' => 'Dev Evans', 'key' => 'owner'],
+                ['label' => 'Provider ID', 'value' => 'GS-00312', 'key' => 'provider_id'],
+                ['label' => 'Joined', 'value' => '12 Jan 2023', 'key' => 'joined'],
+                ['label' => 'Business reg. number', 'value' => '87654321', 'key' => 'reg_number'],
+            ],
+            'agreements_status' => 'Overdue agreements (1)',
+            'agreements_tone' => 'overdue',
+            'agreements' => [
+                [
+                    'title' => 'FursGo refund policy',
+                    'meta' => 'Renewal overdue · was due 12 Jan 2025 · last signed 12 Jan 2024',
+                    'status' => 'overdue',
+                ],
+                [
+                    'title' => 'Animal welfare statement',
+                    'meta' => 'Signed 12 Jan 2026 · Annual renewal · due Jan 2027',
+                    'status' => 'signed',
+                ],
+                [
+                    'title' => 'Compliance declaration',
+                    'meta' => 'Signed 12 Jan 2026 · Annual renewal · due Jan 2027',
+                    'status' => 'signed',
+                ],
+                [
+                    'title' => 'Provider terms of service',
+                    'meta' => 'Signed 12 Jan 2026 · Annual renewal · due Jan 2027',
+                    'status' => 'signed',
+                ],
+                [
+                    'title' => 'Privacy & data policy',
+                    'meta' => 'Signed 12 Jan 2026 · Annual renewal · due Jan 2027',
+                    'status' => 'signed',
+                ],
+            ],
+            'activity' => [
+                [
+                    'title' => 'Annual re-verification passed',
+                    'time' => '18 Apr 2025 · 14:32',
+                    'tone' => 'pass',
+                ],
+                [
+                    'title' => 'Annual re-verification passed',
+                    'time' => '18 Apr 2025 · 11:32',
+                    'tone' => 'pass',
+                ],
+                [
+                    'title' => 'Annual re-verification passed',
+                    'time' => '05 Mar 2025 · 21:50',
+                    'tone' => 'pass',
+                ],
+                [
+                    'title' => 'Verification submitted by provider · Documents uploaded for review',
+                    'time' => '01 Dec 2024 · 18:55',
+                    'tone' => 'neutral',
+                ],
+            ],
+        ],
+    ],
     'groomer' => [
         'name' => 'Pawfect Grooming',
         'type' => 'groomer',
@@ -401,7 +556,11 @@ foreach ($providers as $provider) {
                 <x-admin.provider.account :profile="$profile" />
             </div>
 
-            @foreach (['profile' => 'Profile', 'bookings' => 'Bookings', 'payouts' => 'Payouts', 'compliance' => 'Compliance', 'support' => 'Support'] as $tabKey => $tabLabel)
+            <div x-show="detailTab === 'compliance'" x-cloak>
+                <x-admin.provider.compliance :profile="$profile" />
+            </div>
+
+            @foreach (['profile' => 'Profile', 'bookings' => 'Bookings', 'payouts' => 'Payouts', 'support' => 'Support'] as $tabKey => $tabLabel)
             <div class="admin-co-placeholder" x-show="detailTab === '{{ $tabKey }}'" x-cloak>
                 <h2 class="admin-page-title mb-0">{{ $tabLabel }}</h2>
                 <p class="admin-section-label mb-0">This section will be built next.</p>

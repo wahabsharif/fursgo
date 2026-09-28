@@ -231,7 +231,7 @@
     color: #fff;
     font-family: Lato, sans-serif;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 400;
     cursor: pointer;
 }
 
@@ -4362,10 +4362,7 @@ body.admin-co-modal-lock {
 }
 
 .admin-co-activity-title {
-    margin: 0 0 4px;
     color: #3b3731;
-    leading-trim: both;
-    text-edge: cap;
     font-family: Lato, sans-serif;
     font-size: 14px;
     font-style: normal;
@@ -4376,8 +4373,6 @@ body.admin-co-modal-lock {
 .admin-co-activity-time {
     display: block;
     color: #9c9a97;
-    leading-trim: both;
-    text-edge: cap;
     font-family: Lato, sans-serif;
     font-size: 14px;
     font-style: normal;
@@ -6945,56 +6940,56 @@ body.admin-co-modal-lock {
 }
 
 .admin-co-act-chip.is-account {
-    background: #F1F5F8;
-    color: #7DAFD2;
-    border: 1px solid #CBDCE8;
+    background: #f1f5f8;
+    color: #7dafd2;
+    border: 1px solid #cbdce8;
 }
 .admin-co-act-chip.is-pets {
-    background: #F4F8EC;
-    color: #A7C569;
-    border: 1px solid #D8E8B7;
+    background: #f4f8ec;
+    color: #a7c569;
+    border: 1px solid #d8e8b7;
 }
 .admin-co-act-chip.is-bookings {
-    background: #FDE9DF;
-    color: #FFA06E;
-    border: 1px solid #FBAC83;
+    background: #fde9df;
+    color: #ffa06e;
+    border: 1px solid #fbac83;
 }
 .admin-co-act-chip.is-payments {
-    background: #FEF0DC;
-    color: #FFAF3B;
-    border: 1px solid #FFC97A;
+    background: #fef0dc;
+    color: #ffaf3b;
+    border: 1px solid #ffc97a;
 }
 .admin-co-act-chip.is-support {
-    background: #F1F5F8;
-    color: #7DAFD2;
-    border: 1px solid #CBDCE8;
+    background: #f1f5f8;
+    color: #7dafd2;
+    border: 1px solid #cbdce8;
 }
 .admin-co-act-chip.is-referrals {
-    background: #FDFCF8;
-    color: #CDC39D;
-    border: 1px solid #CDC39D;
+    background: #fdfcf8;
+    color: #cdc39d;
+    border: 1px solid #cdc39d;
 }
 .admin-co-act-chip.is-admin {
-    background: #F0F0F0;
-    color: #ACACAC;
-    border: 1px solid #ACACAC;
+    background: #f0f0f0;
+    color: #acacac;
+    border: 1px solid #acacac;
 }
 
 /* Provider activity categories — reuse the same palette tokens */
 .admin-co-act-chip.is-profile {
-    background: #F1F5F8;
-    color: #7DAFD2;
-    border: 1px solid #CBDCE8;
+    background: #f1f5f8;
+    color: #7dafd2;
+    border: 1px solid #cbdce8;
 }
 .admin-co-act-chip.is-payouts {
-    background: #FDE9DF;
-    color: #FFA06E;
-    border: 1px solid #FBAC83;
+    background: #fde9df;
+    color: #ffa06e;
+    border: 1px solid #fbac83;
 }
 .admin-co-act-chip.is-compliance {
-    background: #FEF0DC;
-    color: #FFAF3B;
-    border: 1px solid #FFC97A;
+    background: #fef0dc;
+    color: #ffaf3b;
+    border: 1px solid #ffc97a;
 }
 
 .admin-co-act-chip.is-account.is-active {
@@ -7041,18 +7036,18 @@ body.admin-co-modal-lock {
 
 /* Provider activity: Bookings uses the green pets palette from the mock */
 .admin-co-activity-tab--provider .admin-co-act-chip.is-bookings {
-    background: #F4F8EC;
-    color: #A7C569;
-    border: 1px solid #D8E8B7;
+    background: #f4f8ec;
+    color: #a7c569;
+    border: 1px solid #d8e8b7;
 }
 .admin-co-activity-tab--provider .admin-co-act-chip.is-bookings.is-active {
-    background: #A7C569;
+    background: #a7c569;
     color: #fff;
 }
 .admin-co-activity-tab--provider .admin-co-act-chip.is-account {
-    background: #FDE9DF;
-    color: #FFA06E;
-    border: 1px solid #FBAC83;
+    background: #fde9df;
+    color: #ffa06e;
+    border: 1px solid #fbac83;
 }
 .admin-co-activity-tab--provider .admin-co-act-chip.is-account.is-active {
     background: #ee9a62;
@@ -7136,31 +7131,31 @@ body.admin-co-modal-lock {
 
 .admin-co-act-dot.is-account,
 .admin-co-act-dot.is-support {
-    background: #7DAFD2;
+    background: #7dafd2;
 }
 .admin-co-act-dot.is-profile {
-    background: #7DAFD2;
+    background: #7dafd2;
 }
 .admin-co-act-dot.is-pets {
-    background: #A7C569;
+    background: #a7c569;
 }
 .admin-co-act-dot.is-bookings {
-    background: #FFA06E;
+    background: #ffa06e;
 }
 .admin-co-act-dot.is-payouts {
-    background: #FFA06E;
+    background: #ffa06e;
 }
 .admin-co-act-dot.is-payments {
-    background: #FFAF3B;
+    background: #ffaf3b;
 }
 .admin-co-act-dot.is-compliance {
-    background: #FFAF3B;
+    background: #ffaf3b;
 }
 .admin-co-act-dot.is-referrals {
-    background: #CDC39D;
+    background: #cdc39d;
 }
 .admin-co-act-dot.is-admin {
-    background: #ACACAC;
+    background: #acacac;
 }
 
 .admin-co-act-title,
@@ -7198,76 +7193,76 @@ body.admin-co-modal-lock {
 }
 
 .admin-co-act-pill.is-account {
-    background: #F1F5F8;
-    color: #7DAFD2;
-    border: 1px solid #CBDCE8;
+    background: #f1f5f8;
+    color: #7dafd2;
+    border: 1px solid #cbdce8;
 }
 .admin-co-act-pill.is-pets {
-    background: #F4F8EC;
-    color: #A7C569;
-    border: 1px solid #D8E8B7;
+    background: #f4f8ec;
+    color: #a7c569;
+    border: 1px solid #d8e8b7;
 }
 .admin-co-act-pill.is-bookings {
-    background: #FDE9DF;
-    color: #FFA06E;
-    border: 1px solid #FBAC83;
+    background: #fde9df;
+    color: #ffa06e;
+    border: 1px solid #fbac83;
 }
 .admin-co-act-pill.is-payments {
-    background: #FEF0DC;
-    color: #FFAF3B;
-    border: 1px solid #FFC97A;
+    background: #fef0dc;
+    color: #ffaf3b;
+    border: 1px solid #ffc97a;
 }
 .admin-co-act-pill.is-support {
-    background: #F1F5F8;
-    color: #7DAFD2;
-    border: 1px solid #CBDCE8;
+    background: #f1f5f8;
+    color: #7dafd2;
+    border: 1px solid #cbdce8;
 }
 .admin-co-act-pill.is-referrals {
-    background: #FDFCF8;
-    color: #CDC39D;
-    border: 1px solid #CDC39D;
+    background: #fdfcf8;
+    color: #cdc39d;
+    border: 1px solid #cdc39d;
 }
 .admin-co-act-pill.is-admin {
-    background: #F0F0F0;
-    color: #ACACAC;
-    border: 1px solid #ACACAC;
+    background: #f0f0f0;
+    color: #acacac;
+    border: 1px solid #acacac;
 }
 
 .admin-co-act-pill.is-profile {
-    background: #F1F5F8;
-    color: #7DAFD2;
-    border: 1px solid #CBDCE8;
+    background: #f1f5f8;
+    color: #7dafd2;
+    border: 1px solid #cbdce8;
 }
 .admin-co-act-pill.is-payouts {
-    background: #FDE9DF;
-    color: #FFA06E;
-    border: 1px solid #FBAC83;
+    background: #fde9df;
+    color: #ffa06e;
+    border: 1px solid #fbac83;
 }
 .admin-co-act-pill.is-compliance {
-    background: #FEF0DC;
-    color: #FFAF3B;
-    border: 1px solid #FFC97A;
+    background: #fef0dc;
+    color: #ffaf3b;
+    border: 1px solid #ffc97a;
 }
 
 .admin-co-activity-tab--provider .admin-co-act-dot.is-bookings {
-    background: #A7C569;
+    background: #a7c569;
 }
 .admin-co-activity-tab--provider .admin-co-act-pill.is-bookings {
-    background: #F4F8EC;
-    color: #A7C569;
-    border: 1px solid #D8E8B7;
+    background: #f4f8ec;
+    color: #a7c569;
+    border: 1px solid #d8e8b7;
 }
 .admin-co-activity-tab--provider .admin-co-act-dot.is-account {
-    background: #FFA06E;
+    background: #ffa06e;
 }
 .admin-co-activity-tab--provider .admin-co-act-pill.is-account {
-    background: #FDE9DF;
-    color: #FFA06E;
-    border: 1px solid #FBAC83;
+    background: #fde9df;
+    color: #ffa06e;
+    border: 1px solid #fbac83;
 }
 
 .admin-co-act-ref {
-    color: #FFAF3B;
+    color: #ffaf3b;
     font-family: Lato, sans-serif;
     font-size: 14px;
     font-weight: 400;
@@ -7358,7 +7353,7 @@ body.admin-co-modal-lock {
 
 .admin-bp-connected-label {
     margin: 18px 0 0;
-    color: #3B3731;
+    color: #3b3731;
     font-family: Lato, sans-serif;
     font-size: 14px;
     font-weight: 600;
@@ -7385,7 +7380,8 @@ body.admin-co-modal-lock {
     border-bottom: none;
 }
 
-.admin-bp-connected-list:has(+ .admin-bp-connected-label) .admin-bp-connected-item:last-child {
+.admin-bp-connected-list:has(+ .admin-bp-connected-label)
+    .admin-bp-connected-item:last-child {
     padding-bottom: 14px;
     border-bottom: 1px solid rgba(59, 55, 49, 0.08);
 }
@@ -7424,7 +7420,7 @@ body.admin-co-modal-lock {
 }
 
 .admin-bp-connected-name {
-    color: #9C9A97;
+    color: #9c9a97;
     font-family: Lato, sans-serif;
     font-size: 14px;
     font-weight: 400;
@@ -7477,4 +7473,355 @@ body.admin-co-modal-lock {
     border-radius: 50%;
     background: #a7c569;
     flex-shrink: 0;
+}
+
+/* Provider Compliance (shared groomer + space) */
+.admin-bp-compliance-tab .admin-bp-comp-role {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.admin-bp-comp-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 14px;
+    min-height: 44px;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid #a7c569;
+    background: #ecf4db;
+}
+
+.admin-bp-comp-banner.is-needs_info {
+    border-radius: 5px;
+    border: 1px solid #ffaf3b;
+    background: #fef0dc;
+}
+
+.admin-bp-comp-banner.is-needs_info .admin-bp-comp-banner-title,
+.admin-bp-comp-banner.is-needs_info .admin-bp-comp-banner-text {
+    color: #ffaf3b;
+}
+
+.admin-bp-comp-banner-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.admin-bp-comp-banner-title {
+    color: #7ea233;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.admin-bp-comp-banner-text {
+    margin: 0;
+    color: #7ea233;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 0.7;
+}
+
+.admin-bp-comp-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #a7c569;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.admin-bp-comp-identity {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.admin-bp-comp-identity-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+}
+
+.admin-bp-comp-identity-title {
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.admin-bp-comp-identity-text {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1;
+}
+
+.admin-bp-comp-system {
+    border-radius: 10px;
+    border: 1px solid #f1f0f0;
+    background: #f5f5f5;
+}
+
+.admin-bp-comp-system-title {
+    margin: 0 0 4px;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+    padding: 14px 16px 0;
+}
+
+.admin-bp-comp-system-text {
+    margin: 0 0 14px;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    padding: 0px 16px 0;
+    line-height: 0.8;
+}
+
+.admin-bp-comp-meta {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px 16px;
+    padding: 12px 16px;
+    border-radius: 0px 0px 10px 10px;
+    background: #fff;
+    border-top: 1px solid #F1F0F0;
+}
+
+.admin-bp-comp-meta-item {
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+}
+
+.admin-bp-comp-meta-label {
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.admin-bp-comp-meta-value {
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+.admin-bp-comp-meta-value.is-pass {
+    color: #9FC356;
+}
+
+.admin-bp-comp-edit-list .admin-co-details-row dd {
+    width: 100%;
+    max-width: 280px;
+}
+
+.admin-bp-comp-edit-list .admin-co-input {
+    width: 100%;
+    min-height: 34px;
+    padding: 6px 10px;
+    border: 1px solid rgba(59, 55, 49, 0.15);
+    border-radius: 6px;
+    background: #fff;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    outline: none;
+}
+
+.admin-bp-comp-edit-list .admin-co-input:focus {
+    border-color: rgba(59, 55, 49, 0.35);
+}
+
+.admin-bp-comp-agreements-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #9FC356;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.admin-bp-comp-agreements-status.is-overdue {
+    color: #ffaf3b;
+}
+
+.admin-bp-comp-agreements-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #9FC356;
+    flex-shrink: 0;
+}
+
+.admin-bp-comp-agreements-status.is-overdue .admin-bp-comp-agreements-dot {
+    background: #ffaf3b;
+}
+
+.admin-bp-comp-agreements {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.admin-bp-comp-agreement {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(59, 55, 49, 0.08);
+}
+
+.admin-bp-comp-agreement.is-overdue {
+    margin: 0 0 4px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border-bottom: none;
+    background: rgba(254, 240, 220, 0.20);
+}
+
+.admin-bp-comp-agreement:first-child:not(.is-overdue) {
+    padding-top: 0;
+}
+
+.admin-bp-comp-agreement:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.admin-bp-comp-agreement-body {
+    min-width: 0;
+    flex: 1;
+}
+
+.admin-bp-comp-agreement-title {
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.admin-bp-comp-agreement-meta {
+    margin: 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.admin-bp-comp-agreement-meta.is-overdue {
+    color: #ffaf3b;
+}
+
+.admin-bp-comp-agreement-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.admin-bp-comp-download,
+.admin-bp-comp-resubmit {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.admin-bp-comp-signed-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 26px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(167, 197, 105, 0.15);
+    color: #9FC356;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.admin-bp-comp-overdue-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 26px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #FEF0DC;
+    color: #ffaf3b;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.admin-bp-comp-activity .admin-co-activity-dot.is-pass {
+    background: #9FC356;
+}
+
+.admin-bp-comp-activity .admin-co-activity-dot.is-neutral {
+    background: #D9D9D9;
+}
+
+.admin-bp-comp-placeholder {
+    padding: 24px 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+}
+
+@media (max-width: 991.98px) {
+    .admin-bp-comp-meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575.98px) {
+    .admin-bp-comp-meta {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-bp-comp-agreement {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-bp-comp-agreement-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
 }
