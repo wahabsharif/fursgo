@@ -1,308 +1,633 @@
 @props(['invoices' => []])
 
-<div class="earnings-invoices" x-data="earningsInvoices(@js(array_values($invoices)))"
-    x-on:range-calendar-changed.window="handleDateRangeChanged($event.detail)">
+@php
+    $rows = collect($invoices)
+        ->values()
+        ->map(function (array $row) {
+            $haystack = strtolower(trim(implode(' ', array_filter([(string) ($row['invoice_no'] ?? ''), (string) ($row['booking_reference'] ?? ''), (string) ($row['client'] ?? ''), (string) ($row['reference'] ?? '')]))));
+
+            return array_merge($row, [
+                'haystack' => $haystack,
+                'sort_ts' => (int) ($row['sort_ts'] ?? 0),
+                'time' => (string) ($row['time'] ?? ''),
+            ]);
+        })
+        ->all();
+@endphp
+
+<div class="earnings-invoices"
+    x-data="{
+        rows: @js($rows),
+        search: '',
+        period: 'last-3-months',
+        sort: 'newest',
+        sortOpen: false,
+        menuLeft: 8,
+        menuTop: 8,
+        menuWidth: 220,
+        pageSize: 15,
+        visibleCount: 15,
+        dateFrom: '',
+        dateTo: '',
+        get filteredRows() {
+            const q = (this.search || '').trim().toLowerCase();
+            let list = this.rows.filter((row) => {
+                if (!this.matchesPeriod(row)) return false;
+                if (!this.matchesDateRange(row)) return false;
+                if (!q) return true;
+                return (row.haystack || '').includes(q);
+            });
+    
+            list = [...list].sort((a, b) => {
+                if (this.sort === 'oldest') return (a.sort_ts || 0) - (b.sort_ts || 0);
+                if (this.sort === 'amount_high') return (b.total || 0) - (a.total || 0);
+                if (this.sort === 'amount_low') return (a.total || 0) - (b.total || 0);
+                return (b.sort_ts || 0) - (a.sort_ts || 0);
+            });
+    
+            return list;
+        },
+        get visibleRows() {
+            return this.filteredRows.slice(0, this.visibleCount);
+        },
+        get showLoadMore() {
+            return this.filteredRows.length > this.visibleCount;
+        },
+        get summary() {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const startOfNext = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+            let thisMonthCount = 0;
+            let totalInvoiced = 0;
+            let paid = 0;
+            let outstanding = 0;
+    
+            this.rows.forEach((row) => {
+                const total = Number(row.total || 0);
+                totalInvoiced += total;
+                if (row.status_key === 'paid') paid += total;
+                if (row.status_key === 'pending') outstanding += total;
+                if (row.date_iso) {
+                    const d = new Date(row.date_iso + 'T00:00:00');
+                    if (d >= startOfMonth && d < startOfNext) thisMonthCount += 1;
+                }
+            });
+    
+            return {
+                thisMonthCount,
+                totalInvoiced,
+                paid,
+                outstanding,
+            };
+        },
+        matchesPeriod(row) {
+            if (!row.date_iso) return false;
+            const date = new Date(row.date_iso + 'T00:00:00');
+            const now = new Date();
+            const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+            const startOfThreeMonths = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+    
+            if (this.period === 'last-month') {
+                return date >= startOfLastMonth && date < startOfThisMonth;
+            }
+            if (this.period === 'last-3-months') {
+                return date >= startOfThreeMonths && date < startOfNextMonth;
+            }
+            return date >= startOfThisMonth && date < startOfNextMonth;
+        },
+        matchesDateRange(row) {
+            if (!this.dateFrom && !this.dateTo) return true;
+            if (!row.date_iso) return false;
+            const start = this.dateFrom || this.dateTo;
+            const end = this.dateTo || this.dateFrom;
+            const rangeStart = start <= end ? start : end;
+            const rangeEnd = start <= end ? end : start;
+            return row.date_iso >= rangeStart && row.date_iso <= rangeEnd;
+        },
+        setPeriod(period) {
+            this.period = period;
+            this.visibleCount = this.pageSize;
+        },
+        setSort(sort) {
+            this.sort = sort;
+            this.sortOpen = false;
+            this.visibleCount = this.pageSize;
+        },
+        clearDates() {
+            this.dateFrom = '';
+            this.dateTo = '';
+            this.visibleCount = this.pageSize;
+        },
+        loadMore() {
+            this.visibleCount += this.pageSize;
+        },
+        formatMoney(value, decimals = 2) {
+            return '£' + Number(value || 0).toFixed(decimals);
+        },
+        formatMoneyShort(value) {
+            const n = Number(value || 0);
+            return Number.isInteger(n) ? ('£' + n) : ('£' + n.toFixed(2));
+        },
+        displayDate(iso) {
+            if (!iso) return 'Select date';
+            const parts = String(iso).split('-');
+            if (parts.length !== 3) return iso;
+            return parts[2] + '/' + parts[1] + '/' + parts[0];
+        },
+        repositionMenu() {
+            const btn = this.$refs.sortBtn;
+            if (!btn) return;
+            const rect = btn.getBoundingClientRect();
+            this.menuTop = rect.bottom + 10;
+            this.menuLeft = Math.max(8, Math.min(rect.right - this.menuWidth, window.innerWidth - this.menuWidth - 8));
+        },
+        toggleSort() {
+            if (!this.sortOpen) this.repositionMenu();
+            this.sortOpen = !this.sortOpen;
+        },
+        download(invoiceUrl) {
+            window.downloadBookingInvoicePdf?.(invoiceUrl);
+        },
+        exportAll() {
+            this.filteredRows
+                .filter((invoice) => invoice.invoice_url)
+                .forEach((invoice, index) => {
+                    window.setTimeout(() => this.download(invoice.invoice_url), index * 250);
+                });
+        }
+    }"
+    @keydown.escape.window="sortOpen = false"
+    @resize.window="if (sortOpen) repositionMenu()"
+    @scroll.window="if (sortOpen) repositionMenu()"
+    @click.window="if (sortOpen && (!$refs.sortBtn || !$refs.sortBtn.contains($event.target)) && (!$refs.sortMenu || !$refs.sortMenu.contains($event.target))) sortOpen = false">
     <style>
         .earnings-invoices {
-            color: #3B3731;
-            font-family: Lato;
-            margin-top: 3rem;
-            position: relative;
-        }
-
-        .earnings-invoices-search {
-            border-radius: 10px;
-            background: rgba(59, 55, 49, 0.02);
-            padding: 1.6rem 2rem;
-            margin-bottom: 3rem;
-            overflow: visible;
-            position: relative;
-            z-index: 5;
-        }
-
-        .earnings-invoices-search.is-date-picker-open {
-            z-index: 100100;
-        }
-
-        .earnings-invoices-search-top {
             display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 1rem;
-            margin-bottom: 1rem;
+            flex-direction: column;
+            gap: 40px;
+            width: 100%;
+            color: #3B3731;
+            font-family: Lato, sans-serif;
+            box-sizing: border-box;
         }
 
-        .earnings-invoices-search-title {
+        .earnings-invoices-summary {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 21px;
+        }
+
+        .earnings-invoices-stat {
+            min-height: 107px;
+            padding: 20px;
+            border: 1px solid #E2E2E2;
+            border-radius: 10px;
+            background: #FFF;
+            box-shadow: 0 4px 15px 5px rgba(0, 0, 0, 0.02);
+            box-sizing: border-box;
+        }
+
+        .earnings-invoices-stat__label {
+            margin: 0 0 10px;
+            color: #565149;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .earnings-invoices-stat__value {
             margin: 0;
             color: #3B3731;
-            font-family: Lato;
-            font-size: 18px;
-            font-style: normal;
+            font-family: "Playfair Display", serif;
+            font-size: 30px;
             font-weight: 600;
             line-height: normal;
         }
 
-        .earnings-invoices-search-copy {
-            margin: 0.25rem 0 0;
-            color: #9C9790;
-            font-family: Lato;
-            font-size: 14px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: normal;
+        .earnings-invoices-stat__value.is-paid {
+            color: #A1BF63;
         }
 
-        .earnings-invoices-export {
-            border: 0;
-            background: transparent;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.8rem;
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 16px;
-            font-style: normal;
-            font-weight: 700;
-            line-height: normal;
-            text-decoration-line: underline;
-            text-decoration-style: solid;
-            text-decoration-skip-ink: auto;
-            text-decoration-thickness: auto;
-            text-underline-offset: auto;
-            text-underline-position: from-font;
-            cursor: pointer;
-            padding: 0;
-        }
-
-        .earnings-invoices-fields {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 2rem;
-            overflow: visible;
-        }
-
-        .earnings-invoices-field {
-            min-width: 0;
-            overflow: visible;
-        }
-
-        .earnings-invoices-field label {
-            display: block;
-            margin-bottom: 0.6rem;
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 18px;
-            font-style: normal;
-            font-weight: 600;
-            line-height: normal;
-        }
-
-        .earnings-invoices-field input {
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 18px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: normal;
-        }
-
-        .earnings-invoices-input-wrap {
-            position: relative;
-        }
-
-        .earnings-invoices-input-wrap>svg {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-        }
-
-        .earnings-invoices-field input {
-            width: 100%;
-            height: 44px;
-            border: 1px solid #D4D4D4;
-            border-radius: 10px;
-            background: #FFF;
-            color: #3B3731;
-            font: inherit;
-            outline: none;
-            padding: 0 1rem;
-        }
-
-        .earnings-invoices-field input.has-icon {
-            padding-left: 3rem;
-        }
-
-        .earnings-invoices-field input:focus {
-            border-color: #AFCD6F;
-            box-shadow: 0 0 0 3px rgba(175, 205, 111, 0.18);
-        }
-
-        .earnings-invoices-date-trigger {
-            width: 100%;
-            height: 44px;
-            border: 1px solid #D4D4D4;
-            border-radius: 10px;
-            background: #FFF;
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 18px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: normal;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            overflow: hidden;
-            padding: 0 1rem 0 3rem;
-            text-align: left;
-            white-space: nowrap;
-        }
-
-        .earnings-invoices-date-trigger:focus {
-            border-color: #AFCD6F;
-            box-shadow: 0 0 0 3px rgba(175, 205, 111, 0.18);
-            outline: none;
-        }
-
-        .earnings-invoices-date-placeholder {
+        .earnings-invoices-stat__value.is-outstanding {
             color: #9D9B98;
-        }
-
-        .earnings-invoices-date-picker {
-            position: fixed;
-            width: min(44rem, calc(100vw - 3rem));
-            max-height: calc(100vh - 10rem);
-            overflow: auto;
-            z-index: 100100;
-            border: 1px solid #E3E3E3;
-            border-radius: 14px;
-            background: #FFF;
-            box-shadow: 0 16px 34px rgba(0, 0, 0, 0.12);
-            color: #3B3731;
-            font-family: Lato;
-            padding: 1rem;
-        }
-
-        .earnings-invoices-date-picker .rdc {
-            min-width: 38rem;
-        }
-
-        .earnings-invoices-date-picker-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.75rem;
-            margin-top: 1rem;
-        }
-
-        .earnings-invoices-date-picker-actions button {
-            border: 1px solid #D4D4D4;
-            border-radius: 999px;
-            background: #FFF;
-            color: #3B3731;
-            cursor: pointer;
-            font-family: Lato;
-            font-size: 14px;
-            font-weight: 700;
-            padding: 0.55rem 1.1rem;
-        }
-
-        .earnings-invoices-date-picker-actions button.is-primary {
-            border-color: #AFCD6F;
-            background: #AFCD6F;
-            color: #FFF;
         }
 
         .earnings-invoices-toolbar {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            margin-bottom: 2.2rem;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .earnings-invoices-search {
             position: relative;
-            z-index: 1;
+            display: flex;
+            align-items: center;
+            width: 400px;
+            max-width: 100%;
+            height: 42px;
         }
 
-        .earnings-invoices-note {
-            margin: 0;
-            color: #9D9B98;
-            font-size: 14px;
+        .earnings-invoices-search input {
+            width: 100%;
+            height: 42px;
+            border-radius: 10px;
+            border: 1px solid #FFC97A;
+            background: #FFF;
+            padding: 0 42px 0 10px;
+            color: #3B3731;
+            font-family: Lato, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            outline: none;
+            box-sizing: border-box;
         }
 
-        .earnings-invoices-period-toggle {
+        .earnings-invoices-search input::placeholder {
+            color: #D4D4D4;
+        }
+
+        .earnings-invoices-search-icon {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            display: inline-flex;
+            width: 15px;
+            height: 15px;
+        }
+
+        .earnings-invoices-search-icon img {
+            width: 15px;
+            height: 15px;
+            display: block;
+        }
+
+        .earnings-invoices-periods {
             display: inline-flex;
             align-items: center;
-            overflow: hidden;
-            border: 1px solid #D4D4D4;
-            border-radius: 6px;
-            background: #FFF;
+            height: 42px;
+            padding: 3px;
+            border-radius: 100px;
+            background: #F9FAFC;
+            box-sizing: border-box;
         }
 
-        .earnings-invoices-period-toggle button {
-            min-width: 108px;
+        .earnings-invoices-period {
+            height: 36px;
+            padding: 0 16px;
             border: 0;
-            border-right: 1px solid #D4D4D4;
+            border-radius: 100px;
             background: transparent;
-            color: #3B3731;
-            cursor: pointer;
-            font: inherit;
+            color: #888;
+            font-family: Lato, sans-serif;
             font-size: 14px;
-            padding: 0.65rem 1rem;
-            transition: background-color 180ms ease, color 180ms ease;
+            font-weight: 600;
+            line-height: normal;
+            cursor: pointer;
+            white-space: nowrap;
         }
 
-        .earnings-invoices-period-toggle button:last-child {
-            border-right: 0;
+        .earnings-invoices-period.is-active {
+            background: #FFF;
+            color: #3B3731;
+            box-shadow: 0 2px 4px 0 rgba(59, 55, 49, 0.10);
         }
 
-        .earnings-invoices-period-toggle button.is-active {
-            background: #FBAC83;
+        .earnings-invoices-export {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 107px;
+            height: 42px;
+            padding: 0 20px;
+            border: 0;
+            border-radius: 100px;
+            background: #3B3731;
             color: #FFF;
+            font-family: Lato, sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .earnings-invoices-export img {
+            width: 9.17px;
+            height: 11px;
+            display: block;
+        }
+
+        .earnings-invoices-sort {
+            margin-left: auto;
+            position: relative;
+            z-index: 30;
+        }
+
+        .earnings-invoices-sort-trigger {
+            width: 59px;
+            height: 32px;
+            border-radius: 100px;
+            border: none;
+            background: #FFF;
+            color: #A8A8A8;
+            font-family: Lato, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            box-shadow: 0px 1px 6.7px 0px rgba(59, 55, 49, 0.12);
+        }
+
+        .earnings-invoices-sort-menu {
+            background: #F8F8F8;
+            border: 2px solid #e6e6e5;
+            border-radius: 10px 0 10px 10px;
+            overflow: hidden;
+        }
+
+        .earnings-invoices-sort-option {
+            width: 100%;
+            border: 0;
+            border-bottom: 2px solid #e6e6e5;
+            background: #FFF;
+            padding: 1rem;
+            text-align: left;
+            color: #3B3731;
+            font-family: Lato, sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .earnings-invoices-sort-option:last-child {
+            border-bottom: none;
+        }
+
+        .earnings-invoices-sort-option:hover {
+            background: #F2F2F2;
+        }
+
+        .earnings-invoices-sort-indicator {
+            width: 26px;
+            height: 26px;
+            border-radius: 999px;
+            border: 2px solid #FFC97A;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .earnings-invoices-sort-option.is-active .earnings-invoices-sort-indicator::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            border-radius: 999px;
+            background: #FFC97A;
+        }
+
+        .earnings-invoices-range {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            min-height: 71px;
+            padding: 20px;
+            border: 1px solid #F6F5F5;
+            border-radius: 10px;
+            background: #FDFDFD;
+            box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.10);
+            box-sizing: border-box;
+        }
+
+        .earnings-invoices-range__label {
+            margin: 0;
+            color: #3B3731;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: normal;
+            white-space: nowrap;
+        }
+
+        .earnings-invoices-range__field {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .earnings-invoices-range__field span {
+            color: #9D9B98;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .earnings-invoices-range__input {
+            position: relative;
+            width: 131px;
+        }
+
+        .earnings-invoices-range__input input {
+            width: 100%;
+            height: 31px;
+            padding: 0 28px 0 10px;
+            border: 1px solid #DDD;
+            border-radius: 5px;
+            background: #FFF;
+            color: #3B3731;
+            font-family: Lato, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 25px;
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .earnings-invoices-range__input input::-webkit-calendar-picker-indicator {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .earnings-invoices-range__input input::-webkit-inner-spin-button,
+        .earnings-invoices-range__input input::-webkit-clear-button {
+            display: none;
+            -webkit-appearance: none;
+        }
+
+        .earnings-invoices-range__input img {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            width: 12px;
+            height: 11px;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .earnings-invoices-range__count {
+            margin: 0;
+            color: #9D9B98;
+            font-size: 16px;
+            font-weight: 400;
+            line-height: normal;
+            white-space: nowrap;
+        }
+
+        .earnings-invoices-range__clear {
+            margin-left: auto;
+            border: 0;
+            background: transparent;
+            color: #FFC97A;
+            font-family: Lato, sans-serif;
+            font-size: 16px;
             font-weight: 700;
+            line-height: normal;
+            cursor: pointer;
+            padding: 0;
+            white-space: nowrap;
+        }
+
+        .earnings-invoices-card {
+            width: 100%;
+            overflow: visible;
+            background: #FDFDFD;
+            border: 1px solid #F6F5F5;
+            border-radius: 10px;
+            box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.10);
         }
 
         .earnings-invoices-table-wrap {
+            width: 100%;
             overflow-x: auto;
-            position: relative;
-            z-index: 1;
-            transition: opacity 180ms ease, transform 180ms ease, filter 180ms ease;
-            will-change: opacity, transform;
-        }
-
-        .earnings-invoices-table-wrap.is-switching {
-            opacity: 0;
-            transform: translateY(8px);
-            filter: blur(1px);
+            overflow-y: hidden;
+            border-radius: 10px;
         }
 
         .earnings-invoices-table {
             width: 100%;
-            min-width: 940px;
+            min-width: 1030px;
             border-collapse: collapse;
+            border-spacing: 0;
             table-layout: fixed;
         }
 
         .earnings-invoices-table th,
         .earnings-invoices-table td {
-            border-bottom: 1px solid #E3E3E3;
-            font-family: Lato;
-            font-size: 16px;
-            font-style: normal;
-            line-height: normal;
-            padding: 1.25rem 1rem;
+            border: 0;
             text-align: left;
             vertical-align: middle;
+            background: transparent;
+            color: #3B3731;
+            font-family: Lato, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            line-height: normal;
+            white-space: nowrap;
         }
 
         .earnings-invoices-table th {
-            color: #000;
+            height: 50px;
+            padding: 0 8px;
+            color: #948F88;
             font-weight: 600;
+            background: #F6F5F5;
+        }
+
+        .earnings-invoices-table th:first-child {
+            border-top-left-radius: 10px;
+            padding-left: 20px;
+        }
+
+        .earnings-invoices-table th:last-child {
+            border-top-right-radius: 10px;
+            padding-right: 20px;
         }
 
         .earnings-invoices-table td {
+            height: 59px;
+            padding: 8px;
+        }
+
+        .earnings-invoices-table td:first-child {
+            padding-left: 20px;
+        }
+
+        .earnings-invoices-table td:last-child {
+            padding-right: 20px;
+        }
+
+        .earnings-invoices-table tbody tr {
+            background-color: #FDFDFD;
+        }
+
+        .earnings-invoices-table tbody tr:not(:last-child) {
+            background-image: linear-gradient(#E2E2E2, #E2E2E2);
+            background-repeat: no-repeat;
+            background-size: calc(100% - 40px) 1px;
+            background-position: center bottom;
+        }
+
+        .earnings-invoices-table col.col-date {
+            width: 11%;
+        }
+
+        .earnings-invoices-table col.col-invoice {
+            width: 14%;
+        }
+
+        .earnings-invoices-table col.col-booking {
+            width: 12%;
+        }
+
+        .earnings-invoices-table col.col-client {
+            width: 12%;
+        }
+
+        .earnings-invoices-table col.col-gross,
+        .earnings-invoices-table col.col-tax,
+        .earnings-invoices-table col.col-total {
+            width: 9%;
+        }
+
+        .earnings-invoices-table col.col-status {
+            width: 12%;
+        }
+
+        .earnings-invoices-table col.col-actions {
+            width: 10%;
+        }
+
+        .earnings-invoices-date {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 0;
+            line-height: normal;
+        }
+
+        .earnings-invoices-date span:first-child {
             color: #3B3731;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .earnings-invoices-date span:last-child {
+            color: #9D9B98;
+            font-size: 14px;
             font-weight: 400;
         }
 
@@ -310,449 +635,308 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 84px;
+            height: 32px;
+            padding: 0 10px;
             border-radius: 100px;
-            padding: 0.45rem 0.85rem;
+            box-sizing: border-box;
+            font-family: Lato, sans-serif;
             font-size: 14px;
             font-weight: 500;
+            line-height: normal;
+            white-space: nowrap;
         }
 
         .earnings-invoices-status.is-paid {
-            background: rgba(186, 207, 142, 0.10);
+            background: #F9FBF4;
             color: #AFCD6F;
         }
 
-        .earnings-invoices-status.is-failed {
-            background: #FFE2E2;
-            color: #FF6E6E;
+        .earnings-invoices-status.is-pending {
+            background: #F5F8FA;
+            color: #7AB7E3;
         }
 
         .earnings-invoices-status.is-refunded {
-            background: #FFF4E4;
-            color: #FFAE37;
+            background: rgba(255, 201, 122, 0.1);
+            color: #F9C45C;
         }
 
-        .earnings-invoices-download-cell {
-            border-left: 1px solid #E3E3E3;
+        .earnings-invoices-status.is-failed {
+            background: #FFF4F4;
+            color: #FF6E6E;
+        }
+
+        .earnings-invoices-actions-col {
             text-align: center !important;
         }
 
-        .earnings-invoices-icon-btn {
+        .earnings-invoices-download {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            padding: 0;
             border: 0;
             background: transparent;
-            color: #3B3731;
             cursor: pointer;
-            line-height: 0;
-            padding: 0.2rem;
+        }
+
+        .earnings-invoices-download:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .earnings-invoices-download img:first-child {
+            display: block;
+            width: 36px;
+            height: 36px;
+        }
+
+        .earnings-invoices-download-glyph {
+            position: absolute;
+            top: 8.5px;
+            left: 10px;
+            width: 16px;
+            height: 19px;
         }
 
         .earnings-invoices-empty {
             color: #9D9B98 !important;
             text-align: center !important;
+            padding: 2rem !important;
         }
 
         .earnings-invoices-load {
             display: flex;
             justify-content: center;
-            margin-top: 4rem;
+            margin-top: -8px;
         }
 
         .earnings-invoices-load button {
-            min-width: 124px;
+            min-width: 133px;
+            height: 48px;
             border: 1px solid #3B3731;
             border-radius: 999px;
             background: #FFF;
             color: #3B3731;
             cursor: pointer;
-            font: inherit;
+            font-family: Lato, sans-serif;
             font-size: 16px;
-            padding: 0.75rem 1.4rem;
+            font-weight: 400;
+            padding: 0 1.4rem;
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 1100px) {
+            .earnings-invoices-summary {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
 
-            .earnings-invoices-fields,
-            .earnings-invoices-toolbar {
+        @media (max-width: 720px) {
+            .earnings-invoices-summary {
                 grid-template-columns: 1fr;
-                flex-direction: column;
+            }
+
+            .earnings-invoices-toolbar {
                 align-items: stretch;
             }
 
-            .earnings-invoices-date-picker {
-                width: calc(100vw - 3rem);
+            .earnings-invoices-search,
+            .earnings-invoices-periods,
+            .earnings-invoices-export {
+                width: 100%;
             }
 
-            .earnings-invoices-date-picker .rdc {
-                min-width: 0;
+            .earnings-invoices-sort {
+                margin-left: 0;
             }
 
-            .earnings-invoices-date-picker .rdc-panel {
-                grid-template-columns: 1fr;
+            .earnings-invoices-range__clear {
+                margin-left: 0;
             }
         }
     </style>
 
-    <section class="earnings-invoices-search" :class="{ 'is-date-picker-open': dateDropdownOpen }"
-        aria-label="Invoice search">
-        <div class="earnings-invoices-search-top">
-            <div>
-                <h3 class="earnings-invoices-search-title">Invoice Search</h3>
-                <p class="earnings-invoices-search-copy">Search by date, reference or invoice number.</p>
-            </div>
-            <button type="button" class="earnings-invoices-export" @click="exportAll()">
-                <span>Export All</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19" fill="none"
-                    aria-hidden="true">
-                    <path
-                        d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
-                        stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                    <path d="M7.99997 0.5V12.875M12.0909 8.75L7.99997 13.25L3.90906 8.75" stroke="#3B3731"
-                        stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-            </button>
-        </div>
-
-        <div class="earnings-invoices-fields">
-            <div class="earnings-invoices-field">
-                <label for="earnings-invoices-date">Date</label>
-                <div class="earnings-invoices-input-wrap">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="14" viewBox="0 0 15 14" fill="none">
-                        <path
-                            d="M0.5 6.83375C0.5 4.31955 0.5 3.06212 1.31621 2.28139C2.13243 1.50067 3.4452 1.5 6.07143 1.5H8.85714C11.4834 1.5 12.7968 1.5 13.6124 2.28139C14.4279 3.06279 14.4286 4.31955 14.4286 6.83375V8.16718C14.4286 10.6814 14.4286 11.9388 13.6124 12.7195C12.7961 13.5003 11.4834 13.5009 8.85714 13.5009H6.07143C3.4452 13.5009 2.13173 13.5009 1.31621 12.7195C0.500696 11.9381 0.5 10.6814 0.5 8.16718V6.83375Z"
-                            stroke="#3B3731" />
-                        <path d="M3.98256 1.50008V0.5M10.9468 1.50008V0.5M0.848633 4.83367H14.0808" stroke="#3B3731"
-                            stroke-linecap="round" />
-                        <path
-                            d="M11.6433 10.1656C11.6433 10.3424 11.5699 10.512 11.4393 10.6371C11.3087 10.7621 11.1316 10.8323 10.9468 10.8323C10.7621 10.8323 10.585 10.7621 10.4544 10.6371C10.3238 10.512 10.2504 10.3424 10.2504 10.1656C10.2504 9.9888 10.3238 9.81922 10.4544 9.69418C10.585 9.56915 10.7621 9.4989 10.9468 9.4989C11.1316 9.4989 11.3087 9.56915 11.4393 9.69418C11.5699 9.81922 11.6433 9.9888 11.6433 10.1656ZM11.6433 7.49875C11.6433 7.67557 11.5699 7.84516 11.4393 7.97019C11.3087 8.09522 11.1316 8.16547 10.9468 8.16547C10.7621 8.16547 10.585 8.09522 10.4544 7.97019C10.3238 7.84516 10.2504 7.67557 10.2504 7.49875C10.2504 7.32192 10.3238 7.15234 10.4544 7.02731C10.585 6.90227 10.7621 6.83203 10.9468 6.83203C11.1316 6.83203 11.3087 6.90227 11.4393 7.02731C11.5699 7.15234 11.6433 7.32192 11.6433 7.49875ZM8.16113 10.1656C8.16113 10.3424 8.08776 10.512 7.95715 10.6371C7.82655 10.7621 7.64941 10.8323 7.4647 10.8323C7.28 10.8323 7.10286 10.7621 6.97225 10.6371C6.84165 10.512 6.76828 10.3424 6.76828 10.1656C6.76828 9.9888 6.84165 9.81922 6.97225 9.69418C7.10286 9.56915 7.28 9.4989 7.4647 9.4989C7.64941 9.4989 7.82655 9.56915 7.95715 9.69418C8.08776 9.81922 8.16113 9.9888 8.16113 10.1656ZM8.16113 7.49875C8.16113 7.67557 8.08776 7.84516 7.95715 7.97019C7.82655 8.09522 7.64941 8.16547 7.4647 8.16547C7.28 8.16547 7.10286 8.09522 6.97225 7.97019C6.84165 7.84516 6.76828 7.67557 6.76828 7.49875C6.76828 7.32192 6.84165 7.15234 6.97225 7.02731C7.10286 6.90227 7.28 6.83203 7.4647 6.83203C7.64941 6.83203 7.82655 6.90227 7.95715 7.02731C8.08776 7.15234 8.16113 7.32192 8.16113 7.49875ZM4.67899 10.1656C4.67899 10.3424 4.60562 10.512 4.47501 10.6371C4.3444 10.7621 4.16727 10.8323 3.98256 10.8323C3.79786 10.8323 3.62072 10.7621 3.49011 10.6371C3.35951 10.512 3.28613 10.3424 3.28613 10.1656C3.28613 9.9888 3.35951 9.81922 3.49011 9.69418C3.62072 9.56915 3.79786 9.4989 3.98256 9.4989C4.16727 9.4989 4.3444 9.56915 4.47501 9.69418C4.60562 9.81922 4.67899 9.9888 4.67899 10.1656ZM4.67899 7.49875C4.67899 7.67557 4.60562 7.84516 4.47501 7.97019C4.3444 8.09522 4.16727 8.16547 3.98256 8.16547C3.79786 8.16547 3.62072 8.09522 3.49011 7.97019C3.35951 7.84516 3.28613 7.67557 3.28613 7.49875C3.28613 7.32192 3.35951 7.15234 3.49011 7.02731C3.62072 6.90227 3.79786 6.83203 3.98256 6.83203C4.16727 6.83203 4.3444 6.90227 4.47501 7.02731C4.60562 7.15234 4.67899 7.32192 4.67899 7.49875Z"
-                            fill="#3B3731" />
-                    </svg>
-                    <button id="earnings-invoices-date" x-ref="dateTrigger" type="button"
-                        class="earnings-invoices-date-trigger" @click="toggleDateDropdown()"
-                        :aria-expanded="dateDropdownOpen ? 'true' : 'false'" aria-haspopup="dialog">
-                        <span x-text="dateRangeLabel"
-                            :class="{ 'earnings-invoices-date-placeholder': !dateRange.start && !dateRange.end }"></span>
-                    </button>
-                </div>
-                <template x-teleport="body">
-                    <div class="earnings-invoices-date-picker" data-earnings-invoices-date-picker x-cloak
-                        x-show="dateDropdownOpen" :style="datePickerStyle"
-                        x-transition:enter="transition ease-out duration-180"
-                        x-transition:enter-start="opacity-0 -translate-y-2"
-                        x-transition:enter-end="opacity-100 translate-y-0"
-                        x-transition:leave="transition ease-in duration-140"
-                        x-transition:leave-start="opacity-100 translate-y-0"
-                        x-transition:leave-end="opacity-0 -translate-y-2">
-                        <x-ui.range-date-calendar id="earnings-invoices-date-range"
-                            start-name="earnings_invoice_start_date" end-name="earnings_invoice_end_date"
-                            calendar-width="100%" />
-                        <div class="earnings-invoices-date-picker-actions">
-                            <button type="button" @click="clearDateRange()">Clear</button>
-                            <button type="button" class="is-primary" @click="dateDropdownOpen = false">Apply</button>
-                        </div>
-                    </div>
-                </template>
-            </div>
-            <div class="earnings-invoices-field">
-                <label for="earnings-invoices-reference">Reference</label>
-                <input id="earnings-invoices-reference" type="text" x-model.debounce.150ms="filters.reference"
-                    placeholder="Full Groom">
-            </div>
-            <div class="earnings-invoices-field">
-                <label for="earnings-invoices-number">Invoice Number</label>
-                <input id="earnings-invoices-number" type="text" x-model.debounce.150ms="filters.invoice"
-                    placeholder="CI-2025-0118">
-            </div>
-        </div>
+    <section class="earnings-invoices-summary" aria-label="Invoice summary">
+        <article class="earnings-invoices-stat">
+            <p class="earnings-invoices-stat__label">Invoices this month</p>
+            <p class="earnings-invoices-stat__value" x-text="summary.thisMonthCount"></p>
+        </article>
+        <article class="earnings-invoices-stat">
+            <p class="earnings-invoices-stat__label">Total invoiced</p>
+            <p class="earnings-invoices-stat__value" x-text="formatMoneyShort(summary.totalInvoiced)"></p>
+        </article>
+        <article class="earnings-invoices-stat">
+            <p class="earnings-invoices-stat__label">Paid</p>
+            <p class="earnings-invoices-stat__value is-paid" x-text="formatMoneyShort(summary.paid)"></p>
+        </article>
+        <article class="earnings-invoices-stat">
+            <p class="earnings-invoices-stat__label">Outstanding</p>
+            <p class="earnings-invoices-stat__value is-outstanding" x-text="formatMoneyShort(summary.outstanding)"></p>
+        </article>
     </section>
 
     <div class="earnings-invoices-toolbar">
-        <p class="earnings-invoices-note">Invoices are automatically generated for every completed booking.</p>
-        <div class="earnings-invoices-period-toggle" role="group" aria-label="Invoice period">
-            <button type="button" :class="{ 'is-active': period === 'month' }" @click="setPeriod('month')">This
-                Month</button>
-            <button type="button" :class="{ 'is-active': period === 'last-month' }"
-                @click="setPeriod('last-month')">Last Month</button>
-            <button type="button" :class="{ 'is-active': period === 'last-3-months' }"
-                @click="setPeriod('last-3-months')">Last 3 Months</button>
+        <div class="earnings-invoices-search">
+            <input type="search" x-model.debounce.150ms="search" placeholder="Search by invoice, booking or client..."
+                aria-label="Search invoices">
+            <span class="earnings-invoices-search-icon" aria-hidden="true">
+                <img src="{{ asset('images/business-hub/icon-earnings-inv-search.svg') }}" width="15" height="15" alt="">
+            </span>
+        </div>
+
+        <div class="earnings-invoices-periods" role="group" aria-label="Invoice period">
+            <button type="button" class="earnings-invoices-period"
+                :class="{ 'is-active': period === 'month' }" @click="setPeriod('month')">This month</button>
+            <button type="button" class="earnings-invoices-period"
+                :class="{ 'is-active': period === 'last-month' }" @click="setPeriod('last-month')">Last month</button>
+            <button type="button" class="earnings-invoices-period"
+                :class="{ 'is-active': period === 'last-3-months' }" @click="setPeriod('last-3-months')">Last 3 months</button>
+        </div>
+
+        <button type="button" class="earnings-invoices-export" @click="exportAll()" aria-label="Export invoices">
+            <img src="{{ asset('images/business-hub/icon-earnings-inv-export.svg') }}" width="9.17" height="11" alt="">
+            Export
+        </button>
+
+        <div class="earnings-invoices-sort">
+            <button type="button" class="earnings-invoices-sort-trigger" x-ref="sortBtn"
+                @click="toggleSort()" :aria-expanded="sortOpen.toString()" aria-haspopup="listbox">
+                Sort
+                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
+                    <path d="M1 3.25L4.5 6.75L8 3.25" stroke="#A8A8A8" stroke-width="1.2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </button>
+            <template x-teleport="body">
+                <div class="earnings-invoices-sort-menu" x-cloak x-show="sortOpen" x-ref="sortMenu" role="listbox"
+                    :style="`position: fixed; top: ${menuTop}px; left: ${menuLeft}px; width: ${menuWidth}px; z-index: 100200;`">
+                    <button type="button" class="earnings-invoices-sort-option"
+                        :class="{ 'is-active': sort === 'newest' }" @click="setSort('newest')">
+                        <span>Newest first</span>
+                        <span class="earnings-invoices-sort-indicator" aria-hidden="true"></span>
+                    </button>
+                    <button type="button" class="earnings-invoices-sort-option"
+                        :class="{ 'is-active': sort === 'oldest' }" @click="setSort('oldest')">
+                        <span>Oldest first</span>
+                        <span class="earnings-invoices-sort-indicator" aria-hidden="true"></span>
+                    </button>
+                    <button type="button" class="earnings-invoices-sort-option"
+                        :class="{ 'is-active': sort === 'amount_high' }" @click="setSort('amount_high')">
+                        <span>Highest total</span>
+                        <span class="earnings-invoices-sort-indicator" aria-hidden="true"></span>
+                    </button>
+                    <button type="button" class="earnings-invoices-sort-option"
+                        :class="{ 'is-active': sort === 'amount_low' }" @click="setSort('amount_low')">
+                        <span>Lowest total</span>
+                        <span class="earnings-invoices-sort-indicator" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </template>
         </div>
     </div>
 
-    <div class="earnings-invoices-table-wrap" :class="{ 'is-switching': tableSwitching }"
-        :aria-busy="tableSwitching ? 'true' : 'false'">
-        <table class="earnings-invoices-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Invoice No.</th>
-                    <th>Booking ID</th>
-                    <th>Client</th>
-                    <th>Gross</th>
-                    <th>Tax</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                    <th class="earnings-invoices-download-cell">Download</th>
-                </tr>
-            </thead>
-            <tbody>
-                <template x-for="invoice in visibleRows" :key="invoice.invoice_no + '-' + invoice.booking_reference">
+    <section class="earnings-invoices-range" aria-label="Invoice date range">
+        <p class="earnings-invoices-range__label">Date range</p>
+        <label class="earnings-invoices-range__field">
+            <span>From</span>
+            <span class="earnings-invoices-range__input">
+                <input type="date" x-model="dateFrom" @change="visibleCount = pageSize" aria-label="From date">
+                <img src="{{ asset('images/business-hub/icon-earnings-inv-calendar.svg') }}" width="12" height="11" alt="">
+            </span>
+        </label>
+        <label class="earnings-invoices-range__field">
+            <span>To</span>
+            <span class="earnings-invoices-range__input">
+                <input type="date" x-model="dateTo" @change="visibleCount = pageSize" aria-label="To date">
+                <img src="{{ asset('images/business-hub/icon-earnings-inv-calendar.svg') }}" width="12" height="11" alt="">
+            </span>
+        </label>
+        <p class="earnings-invoices-range__count"
+            x-text="filteredRows.length + (filteredRows.length === 1 ? ' invoice' : ' invoices')"></p>
+        <button type="button" class="earnings-invoices-range__clear" @click="clearDates()">Clear dates</button>
+    </section>
+
+    <div class="earnings-invoices-card">
+        <div class="earnings-invoices-table-wrap">
+            <table class="earnings-invoices-table">
+                <colgroup>
+                    <col class="col-date">
+                    <col class="col-invoice">
+                    <col class="col-booking">
+                    <col class="col-client">
+                    <col class="col-gross">
+                    <col class="col-tax">
+                    <col class="col-total">
+                    <col class="col-status">
+                    <col class="col-actions">
+                </colgroup>
+                <thead>
                     <tr>
-                        <td x-text="invoice.date"></td>
-                        <td x-text="invoice.invoice_no"></td>
-                        <td x-text="invoice.booking_reference"></td>
-                        <td x-text="invoice.client"></td>
-                        <td x-text="formatMoney(invoice.gross)"></td>
-                        <td x-text="formatMoney(invoice.tax)"></td>
-                        <td x-text="formatMoney(invoice.total)"></td>
-                        <td>
-                            <span class="earnings-invoices-status" :class="'is-' + invoice.status_key"
-                                x-text="invoice.status_label"></span>
-                        </td>
-                        <td class="earnings-invoices-download-cell">
-                            <button type="button" class="earnings-invoices-icon-btn" :disabled="!invoice.invoice_url"
-                                @click="download(invoice.invoice_url)" aria-label="Download invoice">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19"
-                                    fill="none">
-                                    <path
-                                        d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5"
-                                        stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M8.00009 0.5V12.875M12.091 8.75L8.00009 13.25L3.90918 8.75"
-                                        stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </button>
-                        </td>
+                        <th>Date</th>
+                        <th>Invoice No.</th>
+                        <th>Booking ID</th>
+                        <th>Client</th>
+                        <th>Gross</th>
+                        <th>Tax</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th class="earnings-invoices-actions-col">Actions</th>
                     </tr>
-                </template>
-                <tr x-show="filteredRows.length === 0">
-                    <td colspan="9" class="earnings-invoices-empty">No invoices found.</td>
-                </tr>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <template x-for="invoice in visibleRows" :key="invoice.invoice_no + '-' + invoice.booking_reference + '-' + invoice.sort_ts">
+                        <tr>
+                            <td>
+                                <div class="earnings-invoices-date">
+                                    <span x-text="invoice.date"></span>
+                                    <span x-text="invoice.time || '—'"></span>
+                                </div>
+                            </td>
+                            <td x-text="invoice.invoice_no"></td>
+                            <td x-text="invoice.booking_reference"></td>
+                            <td x-text="invoice.client"></td>
+                            <td x-text="formatMoney(invoice.gross)"></td>
+                            <td x-text="formatMoney(invoice.tax)"></td>
+                            <td x-text="formatMoney(invoice.total)"></td>
+                            <td>
+                                <span class="earnings-invoices-status" :class="'is-' + invoice.status_key"
+                                    x-text="invoice.status_label"></span>
+                            </td>
+                            <td class="earnings-invoices-actions-col">
+                                <button type="button" class="earnings-invoices-download"
+                                    :disabled="!invoice.invoice_url"
+                                    @click="download(invoice.invoice_url)"
+                                    aria-label="Download invoice">
+                                    <img src="{{ asset('images/business-hub/icon-earnings-inv-download-ring.svg') }}"
+                                        width="36" height="36" alt="">
+                                    <img class="earnings-invoices-download-glyph"
+                                        src="{{ asset('images/business-hub/icon-earnings-inv-download-arrow.svg') }}"
+                                        width="16" height="19" alt="">
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr x-show="filteredRows.length === 0">
+                        <td colspan="9" class="earnings-invoices-empty">No invoices found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="earnings-invoices-load" x-show="visibleRows.length < filteredRows.length">
-        <button type="button" @click="limit += 8">Load More</button>
+    <div class="earnings-invoices-load" x-show="showLoadMore">
+        <button type="button" @click="loadMore">Load More</button>
     </div>
 </div>
 
 @once
     @push('script')
         <script>
-            window.earningsInvoices = function (invoices) {
-                return {
-                    invoices,
-                    filters: {
-                        reference: '',
-                        invoice: '',
-                    },
-                    dateDropdownOpen: false,
-                    dateRange: {
-                        start: '',
-                        end: '',
-                    },
-                    datePickerPosition: {
-                        top: -9999,
-                        left: -9999,
-                    },
-                    period: 'all',
-                    tableSwitching: false,
-                    limit: 8,
-                    init() {
-                        window.addEventListener('scroll', () => {
-                            if (this.dateDropdownOpen) {
-                                this.positionDatePicker();
-                            }
-                        }, true);
-                        window.addEventListener('resize', () => {
-                            if (this.dateDropdownOpen) {
-                                this.positionDatePicker();
-                            }
-                        });
-                        document.addEventListener('click', (event) => {
-                            if (!this.dateDropdownOpen) {
-                                return;
-                            }
-
-                            const trigger = this.$refs.dateTrigger;
-                            const picker = document.querySelector('[data-earnings-invoices-date-picker]');
-                            const target = event.target;
-
-                            if (trigger?.contains(target) || picker?.contains(target)) {
-                                return;
-                            }
-
-                            this.dateDropdownOpen = false;
-                        });
-                    },
-                    get datePickerStyle() {
-                        return `top: ${this.datePickerPosition.top}px; left: ${this.datePickerPosition.left}px;`;
-                    },
-                    get dateRangeLabel() {
-                        if (this.dateRange.start && this.dateRange.end) {
-                            return `${this.formatDateLabel(this.dateRange.start)} — ${this.formatDateLabel(this.dateRange.end)}`;
-                        }
-
-                        if (this.dateRange.start) {
-                            return this.formatDateLabel(this.dateRange.start);
-                        }
-
-                        return 'Select date range';
-                    },
-                    get filteredRows() {
-                        return this.invoices.filter((invoice) => {
-                            const haystack = [
-                                invoice.reference,
-                                invoice.booking_reference,
-                                invoice.client,
-                            ].join(' ').toLowerCase();
-
-                            return this.matchesPeriod(invoice) &&
-                                this.matchesSelectedDateRange(invoice) &&
-                                haystack.includes(this.filters.reference.toLowerCase().trim()) &&
-                                invoice.invoice_no.toLowerCase().includes(this.filters.invoice.toLowerCase()
-                                    .trim());
-                        });
-                    },
-                    get visibleRows() {
-                        return this.filteredRows.slice(0, this.limit);
-                    },
-                    setPeriod(period) {
-                        if (this.period === period || this.tableSwitching) {
-                            return;
-                        }
-
-                        this.tableSwitching = true;
-
-                        window.setTimeout(() => {
-                            this.period = period;
-                            this.limit = 8;
-
-                            this.$nextTick(() => {
-                                window.requestAnimationFrame(() => {
-                                    this.tableSwitching = false;
-                                });
-                            });
-                        }, 160);
-                    },
-                    toggleDateDropdown() {
-                        if (this.dateDropdownOpen) {
-                            this.dateDropdownOpen = false;
-
-                            return;
-                        }
-
-                        this.positionDatePicker();
-                        this.dateDropdownOpen = true;
-                    },
-                    positionDatePicker() {
-                        const trigger = this.$refs.dateTrigger;
-                        if (!trigger) {
-                            return;
-                        }
-
-                        const rect = trigger.getBoundingClientRect();
-                        const pickerWidth = Math.min(704, window.innerWidth - 48);
-                        const left = Math.min(Math.max(rect.left, 24), window.innerWidth - pickerWidth - 24);
-
-                        this.datePickerPosition = {
-                            top: rect.bottom + 10,
-                            left,
-                        };
-                    },
-                    handleDateRangeChanged(detail) {
-                        if (detail?.componentId !== 'earnings-invoices-date-range') {
-                            return;
-                        }
-
-                        this.dateRange.start = detail.start || '';
-                        this.dateRange.end = detail.end || '';
-                        this.limit = 8;
-                    },
-                    clearDateRange() {
-                        this.dateRange.start = '';
-                        this.dateRange.end = '';
-                        this.limit = 8;
-                        window.dispatchEvent(new CustomEvent('range-calendar-set', {
-                            detail: {
-                                componentId: 'earnings-invoices-date-range',
-                                start: '',
-                                end: '',
-                            },
-                        }));
-                    },
-                    matchesSelectedDateRange(invoice) {
-                        if (!this.dateRange.start && !this.dateRange.end) {
-                            return true;
-                        }
-
-                        if (!invoice.date_iso) {
-                            return false;
-                        }
-
-                        const invoiceDate = invoice.date_iso;
-                        const start = this.dateRange.start || this.dateRange.end;
-                        const end = this.dateRange.end || this.dateRange.start;
-                        const rangeStart = start <= end ? start : end;
-                        const rangeEnd = start <= end ? end : start;
-
-                        return invoiceDate >= rangeStart && invoiceDate <= rangeEnd;
-                    },
-                    matchesPeriod(invoice) {
-                        if (!invoice.date_iso) {
-                            return false;
-                        }
-
-                        if (this.period === 'all') {
-                            return true;
-                        }
-
-                        const date = new Date(`${invoice.date_iso}T00:00:00`);
-                        const now = new Date();
-                        const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-                        const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-                        const startOfThreeMonths = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-
-                        if (this.period === 'last-month') {
-                            return date >= startOfLastMonth && date < startOfThisMonth;
-                        }
-
-                        if (this.period === 'last-3-months') {
-                            return date >= startOfThreeMonths && date < startOfNextMonth;
-                        }
-
-                        return date >= startOfThisMonth && date < startOfNextMonth;
-                    },
-                    formatDateLabel(dateIso) {
-                        if (!dateIso) {
-                            return '';
-                        }
-
-                        const date = new Date(`${dateIso}T00:00:00`);
-
-                        return date.toLocaleDateString('en-GB', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                        });
-                    },
-                    formatMoney(value) {
-                        return `£${Number(value || 0).toFixed(2)}`;
-                    },
-                    download(invoiceUrl) {
-                        window.downloadBookingInvoicePdf?.(invoiceUrl);
-                    },
-                    exportAll() {
-                        this.filteredRows
-                            .filter((invoice) => invoice.invoice_url)
-                            .forEach((invoice, index) => {
-                                window.setTimeout(() => this.download(invoice.invoice_url), index * 250);
-                            });
-                    },
-                };
-            };
-
             if (!window.downloadBookingInvoicePdf) {
-                window.downloadBookingInvoicePdf = async function (invoiceUrl) {
+                window.downloadBookingInvoicePdf = async function(invoiceUrl) {
                     if (!invoiceUrl) {
                         return;
                     }
@@ -768,7 +952,7 @@
                         });
                         const contentType = (res.headers.get('Content-Type') || '').toLowerCase();
                         if (!res.ok || (!contentType.includes('application/pdf') && !contentType.includes(
-                            'octet-stream'))) {
+                                'octet-stream'))) {
                             throw new Error('Invoice download failed');
                         }
 

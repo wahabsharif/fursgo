@@ -342,7 +342,7 @@
             <!-- Earnings -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="if (shouldNavigate('earnings', activeSection)) { startNavLoading(); activeSection = 'earnings'; activeEarningsMenu = 'overview'; window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: 'overview' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: 'overview' } })) }"
+                    @click.prevent="const onEarnings = activeSection === 'earnings'; if (onEarnings && activeEarningsMenu === 'overview') { earningsOpen = !earningsOpen; return; } startNavLoading(); if (!onEarnings) { closeMenus('earnings'); activeSection = 'earnings'; } earningsOpen = true; activeEarningsMenu = 'overview'; window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: 'overview' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: 'overview' } }))"
                     :class="{ 'active': activeSection === 'earnings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="12" viewBox="0 0 14 12" fill="none">
                         <path

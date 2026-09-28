@@ -23,6 +23,10 @@ new class extends Component {
 
     public string $payoutFrequency = 'Weekly';
 
+    public string $payoutMonthlyDate = '';
+
+    public string $payoutMonthlyMode = 'day_of_month';
+
     public function mount(): void
     {
         $this->refreshPayoutBankDetails();
@@ -181,6 +185,18 @@ new class extends Component {
         };
     }
 
+    private function invoiceStatusPill(?string $status): array
+    {
+        $normalized = strtolower(trim((string) $status));
+
+        return match ($normalized) {
+            'failed' => ['label' => 'Failed', 'key' => 'failed'],
+            'refunded' => ['label' => 'Refunded', 'key' => 'refunded'],
+            'pending', 'processing', 'unpaid' => ['label' => 'Pending', 'key' => 'pending'],
+            default => ['label' => 'Paid', 'key' => 'paid'],
+        };
+    }
+
     private function payoutEligiblePaymentsQuery()
     {
         return Payment::query()
@@ -218,18 +234,23 @@ new class extends Component {
     {
         $details = $this->payoutDetails();
         $frequency = (string) ($details['payout_frequency'] ?? 'Weekly');
+        if ($frequency === 'Fortnightly') {
+            $frequency = 'Weekly';
+        }
 
-        $this->payoutFrequency = in_array($frequency, ['Weekly', 'Fortnightly', 'Monthly'], true) ? $frequency : 'Weekly';
+        $this->payoutFrequency = in_array($frequency, ['Daily', 'Weekly', 'Monthly'], true) ? $frequency : 'Weekly';
+        $this->payoutMonthlyDate = (string) ($details['payout_monthly_date'] ?? now()->format('Y-m-d'));
+        $mode = (string) ($details['payout_monthly_mode'] ?? 'day_of_month');
+        $this->payoutMonthlyMode = in_array($mode, ['day_of_month', 'nth_weekday'], true) ? $mode : 'day_of_month';
     }
 
     public function updatePayoutBankDetails(): void
     {
         $validated = $this->validate([
-            'payoutBank' => ['required', 'string', 'max:100'],
+            'payoutBank' => ['nullable', 'string', 'max:100'],
             'payoutAccountHolderName' => ['required', 'string', 'max:255'],
             'payoutAccountNumber' => ['required', 'string', 'max:50'],
             'payoutSortCode' => ['required', 'string', 'max:20'],
-            'payoutIban' => ['required', 'string', 'max:50'],
         ]);
 
         $user = auth('groomer_spacer')->user();
@@ -240,11 +261,10 @@ new class extends Component {
 
         $details = $this->payoutDetails();
         $details = array_merge($details, [
-            'bank' => $validated['payoutBank'],
+            'bank' => trim((string) ($validated['payoutBank'] ?? '')),
             'account_holder_name' => $validated['payoutAccountHolderName'],
             'account_number' => $validated['payoutAccountNumber'],
             'sort_code' => $validated['payoutSortCode'],
-            'iban' => $validated['payoutIban'],
         ]);
 
         $user->update(['payout_details' => $details]);
@@ -255,7 +275,9 @@ new class extends Component {
     public function updatePayoutFrequency(): void
     {
         $validated = $this->validate([
-            'payoutFrequency' => ['required', 'string', 'in:Weekly,Fortnightly,Monthly'],
+            'payoutFrequency' => ['required', 'string', 'in:Daily,Weekly,Monthly'],
+            'payoutMonthlyDate' => ['nullable', 'date'],
+            'payoutMonthlyMode' => ['nullable', 'string', 'in:day_of_month,nth_weekday'],
         ]);
 
         $user = auth('groomer_spacer')->user();
@@ -266,21 +288,248 @@ new class extends Component {
 
         $details = $this->payoutDetails();
         $details['payout_frequency'] = $validated['payoutFrequency'];
+        $details['payout_monthly_date'] = filled($validated['payoutMonthlyDate'] ?? null) ? $validated['payoutMonthlyDate'] : ((string) ($details['payout_monthly_date'] ?? '') ?: now()->format('Y-m-d'));
+        $details['payout_monthly_mode'] = filled($validated['payoutMonthlyMode'] ?? null) ? $validated['payoutMonthlyMode'] : ((string) ($details['payout_monthly_mode'] ?? '') ?: 'day_of_month');
 
         $user->update(['payout_details' => $details]);
+        $this->refreshPayoutFrequency();
 
         $this->dispatch('payout-frequency-saved');
     }
 
     private function nextPayoutDateForFrequency(string $frequency): string
     {
-        $nextTuesday = now()->next('Tuesday');
+        return $this->nextPayoutDate($frequency)->format('d F Y');
+    }
 
-        return match ($frequency) {
-            'Fortnightly' => $nextTuesday->addWeek()->format('d F Y'),
-            'Monthly' => now()->addMonthNoOverflow()->next('Tuesday')->format('d F Y'),
-            default => $nextTuesday->format('d F Y'),
+    private function nextPayoutDate(string $frequency): \Carbon\Carbon
+    {
+        return $this->nextPayoutDateAfter($frequency, now()->copy()->subSecond());
+    }
+
+    /**
+     * Next payout date strictly after $after (exclusive).
+     */
+    private function nextPayoutDateAfter(string $frequency, \Carbon\Carbon $after): \Carbon\Carbon
+    {
+        $after = $after->copy();
+
+        if ($frequency === 'Daily') {
+            $next = $after->copy()->addDay()->startOfDay();
+            while ($next->isWeekend()) {
+                $next->addDay();
+            }
+
+            return $next;
+        }
+
+        if ($frequency === 'Monthly') {
+            return $this->nextMonthlyPayoutAfter($after);
+        }
+
+        $from = $after->copy()->addDay()->startOfDay();
+
+        return $from->isTuesday() ? $from : $from->next(\Carbon\Carbon::TUESDAY);
+    }
+
+    private function nextMonthlyPayoutAfter(\Carbon\Carbon $after): \Carbon\Carbon
+    {
+        $details = $this->payoutDetails();
+        $mode = (string) ($details['payout_monthly_mode'] ?? $this->payoutMonthlyMode ?: 'day_of_month');
+        $rawDate = (string) ($details['payout_monthly_date'] ?? '');
+        if ($rawDate === '') {
+            $rawDate = (string) ($this->payoutMonthlyDate ?: now()->format('Y-m-d'));
+        }
+
+        try {
+            $anchor = \Carbon\Carbon::parse($rawDate);
+        } catch (\Throwable) {
+            $anchor = now();
+        }
+
+        if ($mode === 'nth_weekday') {
+            $month = $after->copy()->startOfMonth();
+            $candidate = $month->copy()->firstOfMonth(\Carbon\Carbon::THURSDAY)->addWeeks(2)->startOfDay();
+            if ($candidate->lte($after)) {
+                $candidate = $after->copy()->addMonthNoOverflow()->startOfMonth()->firstOfMonth(\Carbon\Carbon::THURSDAY)->addWeeks(2)->startOfDay();
+            }
+
+            return $candidate;
+        }
+
+        $day = max(1, min(28, (int) $anchor->format('j')));
+        $candidate = $after->copy()->day($day)->startOfDay();
+        if ($candidate->lte($after)) {
+            $candidate = $after->copy()->addMonthNoOverflow()->day($day)->startOfDay();
+        }
+
+        return $candidate;
+    }
+
+    /**
+     * Payout date that will include earnings earned on $earningsDate.
+     */
+    private function payoutDateForEarningsOn(\Carbon\Carbon $earningsDate, string $frequency): \Carbon\Carbon
+    {
+        $date = $earningsDate->copy()->startOfDay();
+
+        if ($frequency === 'Daily') {
+            while ($date->isWeekend()) {
+                $date->addDay();
+            }
+
+            return $date;
+        }
+
+        if ($frequency === 'Monthly') {
+            $details = $this->payoutDetails();
+            $mode = (string) ($details['payout_monthly_mode'] ?? $this->payoutMonthlyMode ?: 'day_of_month');
+            $rawDate = (string) ($details['payout_monthly_date'] ?? '');
+            if ($rawDate === '') {
+                $rawDate = (string) ($this->payoutMonthlyDate ?: now()->format('Y-m-d'));
+            }
+
+            try {
+                $anchor = \Carbon\Carbon::parse($rawDate);
+            } catch (\Throwable) {
+                $anchor = now();
+            }
+
+            if ($mode === 'nth_weekday') {
+                $month = $date->copy()->startOfMonth();
+                $candidate = $month->copy()->firstOfMonth(\Carbon\Carbon::THURSDAY)->addWeeks(2)->startOfDay();
+                if ($candidate->lt($date)) {
+                    $candidate = $date->copy()->addMonthNoOverflow()->startOfMonth()->firstOfMonth(\Carbon\Carbon::THURSDAY)->addWeeks(2)->startOfDay();
+                }
+
+                return $candidate;
+            }
+
+            $day = max(1, min(28, (int) $anchor->format('j')));
+            $candidate = $date->copy()->day($day)->startOfDay();
+            if ($candidate->lt($date)) {
+                $candidate = $date->copy()->addMonthNoOverflow()->day($day)->startOfDay();
+            }
+
+            return $candidate;
+        }
+
+        return $date->isTuesday() ? $date->copy() : $date->copy()->next(\Carbon\Carbon::TUESDAY);
+    }
+
+    /**
+     * @return list<\Carbon\Carbon>
+     */
+    private function upcomingPayoutDates(string $frequency, int $count = 12): array
+    {
+        $dates = [];
+        $cursor = now()->copy()->subSecond();
+
+        for ($i = 0; $i < $count; $i++) {
+            $next = $this->nextPayoutDateAfter($frequency, $cursor);
+            $dates[] = $next->copy();
+            $cursor = $next->copy();
+        }
+
+        return $dates;
+    }
+
+    /**
+     * Build future payout rows from the active frequency schedule + live earnings.
+     *
+     * @return list<array{date: string, amount: float, arrival_date: string, arrival_date_short: string}>
+     */
+    private function buildFuturePayoutItems(string $frequency, float $pendingAmount): array
+    {
+        $schedule = $this->upcomingPayoutDates($frequency, 12);
+        $buckets = [];
+
+        foreach ($schedule as $payoutDate) {
+            $buckets[$payoutDate->format('Y-m-d')] = 0.0;
+        }
+
+        $nextKey = $schedule[0]->format('Y-m-d');
+        if ($pendingAmount > 0) {
+            $buckets[$nextKey] += $pendingAmount;
+        }
+
+        $futureBookings = $this->bookingsQuery()
+            ->whereIn('booking_status', ['pending', 'confirmed'])
+            ->whereDate('date', '>=', now()->startOfDay())
+            ->orderBy('date')
+            ->get(['id', 'date', 'amount']);
+
+        $nextPayout = $schedule[0]->copy()->startOfDay();
+
+        foreach ($futureBookings as $booking) {
+            if (!$booking->date) {
+                continue;
+            }
+
+            $payoutOn = $this->payoutDateForEarningsOn($booking->date, $frequency)->startOfDay();
+            if ($payoutOn->lt($nextPayout)) {
+                $payoutOn = $nextPayout->copy();
+            }
+
+            $key = $payoutOn->format('Y-m-d');
+            if (!array_key_exists($key, $buckets)) {
+                $buckets[$key] = 0.0;
+            }
+            $buckets[$key] += (float) $booking->amount;
+        }
+
+        $scheduleKeys = [];
+        foreach ($schedule as $payoutDate) {
+            $scheduleKeys[$payoutDate->format('Y-m-d')] = true;
+        }
+
+        $items = [];
+        foreach ($schedule as $index => $payoutDate) {
+            $key = $payoutDate->format('Y-m-d');
+            $amount = round((float) ($buckets[$key] ?? 0), 2);
+
+            // Always keep the next two schedule dates so frequency changes are visible immediately.
+            if ($amount <= 0 && $index >= 2) {
+                continue;
+            }
+
+            $arrival = $payoutDate->copy()->addWeekdays(1);
+            $items[] = [
+                'date' => $payoutDate->format('d/m/Y'),
+                'amount' => $amount,
+                'arrival_date' => $arrival->format('d/m/Y'),
+                'arrival_date_short' => $arrival->format('d/m'),
+            ];
+        }
+
+        foreach ($buckets as $ymd => $amount) {
+            if ($amount <= 0 || isset($scheduleKeys[$ymd])) {
+                continue;
+            }
+
+            $payoutDate = \Carbon\Carbon::parse($ymd)->startOfDay();
+            $arrival = $payoutDate->copy()->addWeekdays(1);
+            $items[] = [
+                'date' => $payoutDate->format('d/m/Y'),
+                'amount' => round((float) $amount, 2),
+                'arrival_date' => $arrival->format('d/m/Y'),
+                'arrival_date_short' => $arrival->format('d/m'),
+            ];
+        }
+
+        return $items;
+    }
+
+    private function nextPayoutShortLabel(string $frequency): string
+    {
+        $date = $this->nextPayoutDate($frequency);
+        $day = match ($date->format('D')) {
+            'Tue' => 'Tues',
+            'Thu' => 'Thurs',
+            default => $date->format('D'),
         };
+
+        return 'Next auto pay out ' . $day . ', ' . $date->format('j M');
     }
 
     private function maskedAccountNumber(?string $accountNumber): string
@@ -457,10 +706,29 @@ new class extends Component {
         $total = (float) ($stats->total_revenue ?? 0);
         $average = $count > 0 ? round($total / $count, 2) : 0.0;
 
+        $thisMonthStart = now()->copy()->startOfMonth();
+        $lastMonthStart = now()->copy()->subMonthNoOverflow()->startOfMonth();
+        $lastMonthEnd = now()->copy()->subMonthNoOverflow()->endOfMonth();
+
+        $thisMonth = $this->completedBookingsQuery()->whereDate('date', '>=', $thisMonthStart)->selectRaw('COUNT(*) as booking_count, COALESCE(SUM(amount), 0) as total_revenue')->first();
+        $lastMonth = $this->completedBookingsQuery()->whereDate('date', '>=', $lastMonthStart)->whereDate('date', '<=', $lastMonthEnd)->selectRaw('COUNT(*) as booking_count, COALESCE(SUM(amount), 0) as total_revenue')->first();
+
+        $thisMonthTotal = (float) ($thisMonth->total_revenue ?? 0);
+        $lastMonthTotal = (float) ($lastMonth->total_revenue ?? 0);
+        $bookingDelta = (int) ($thisMonth->booking_count ?? 0) - (int) ($lastMonth->booking_count ?? 0);
+        $revenueDelta = $thisMonthTotal - $lastMonthTotal;
+
         return [
             'total_earnings' => $total,
             'average_revenue' => $average,
             'booking_count' => $count,
+            'this_month' => $thisMonthTotal,
+            'this_month_label' => now()->format('F Y'),
+            'previous_month_short' => now()->copy()->subMonthNoOverflow()->format('M'),
+            'booking_delta' => $bookingDelta,
+            'booking_delta_positive' => $bookingDelta >= 0,
+            'revenue_delta' => $revenueDelta,
+            'revenue_delta_positive' => $revenueDelta >= 0,
         ];
     }
 
@@ -517,30 +785,35 @@ new class extends Component {
             $ownerColumns[] = 'profile_image';
         }
 
-        return $this->completedBookingsQuery()
+        $bookings = $this->completedBookingsQuery()
             ->with(['pets', 'petOwner:' . implode(',', $ownerColumns)])
             ->orderByDesc('date')
             ->orderByDesc('time')
-            ->limit(4)
-            ->get()
-            ->map(function (Booking $booking) use ($isSpaceAccount) {
+            ->limit(3)
+            ->get();
+
+        $ownerIds = $bookings->pluck('pet_owner_id')->filter()->unique()->values();
+        $completedCounts = $ownerIds->isEmpty() ? collect() : $this->completedBookingsQuery()->whereIn('pet_owner_id', $ownerIds)->selectRaw('pet_owner_id, COUNT(*) as completed_count')->groupBy('pet_owner_id')->pluck('completed_count', 'pet_owner_id');
+
+        return $bookings
+            ->map(function (Booking $booking) use ($isSpaceAccount, $completedCounts) {
                 $completedAt = $booking->date?->copy()->endOfDay() ?? now();
                 $avatar = $this->recentBookingAvatar($booking, $isSpaceAccount);
-
-                if ($isSpaceAccount) {
-                    return [
-                        'visit_type_label' => $this->visitTypeLabel($booking->visit_type),
-                        'client_photo' => $avatar['photo'],
-                        'client_initials' => $avatar['initials'],
-                        'client_name' => $avatar['alt'],
-                        'relative_time' => $completedAt->diffForHumans(),
-                        'amount' => (float) $booking->amount,
-                    ];
-                }
+                $completedCount = (int) ($completedCounts[$booking->pet_owner_id] ?? 0);
+                $clientType = $completedCount <= 1 ? 'new' : ($completedCount <= 4 ? 'regular' : 'repeat');
+                $displayName = $isSpaceAccount ? $this->visitTypeLabel($booking->visit_type) : $booking->pets->first()?->name ?? 'Pet';
+                $initialSource = $isSpaceAccount ? (string) ($booking->petOwner?->name ?? $displayName) : $displayName;
 
                 return [
-                    'pet_name' => $booking->pets->first()?->name ?? 'Pet',
-                    'pet_photo' => $avatar['photo'] ?? 'https://i.pravatar.cc/150?img=12',
+                    'display_name' => $displayName,
+                    'photo' => $avatar['photo'],
+                    'initial' => Str::upper(Str::substr(trim($initialSource), 0, 1) ?: '?'),
+                    'client_type' => $clientType,
+                    'client_type_label' => match ($clientType) {
+                        'repeat' => 'Repeat Client',
+                        'regular' => 'Regular Client',
+                        default => 'New Client',
+                    },
                     'relative_time' => $completedAt->diffForHumans(),
                     'amount' => (float) $booking->amount,
                 ];
@@ -555,9 +828,9 @@ new class extends Component {
 
         return Payment::query()
             ->whereHas('booking', fn($query) => $query->where(['goormer_spacer_id' => $this->loggedInSpacerId() ?? 0]))
-            ->with(['booking:id,goormer_spacer_id,time,service,visit_type,amount,discount,extra_add_ons,date,pet_owner_id', 'petOwner:id,name', 'pet:id,name,pet_type'])
+            ->with(['booking:id,goormer_spacer_id,time,service,visit_type,amount,discount,extra_add_ons,date,pet_owner_id', 'booking.petOwner:id,name,profile_image', 'petOwner:id,name,profile_image', 'pet:id,name,pet_type'])
             ->orderByDesc('date')
-            ->limit(8)
+            ->limit(50)
             ->get(['id', 'booking_id', 'pet_owner_id', 'pet_detail_id', 'date', 'amount', 'status', 'payment_method', 'service_type'])
             ->values()
             ->map(function (Payment $payment) use ($isSpaceAccount) {
@@ -565,10 +838,15 @@ new class extends Component {
                 $time = $this->normalizedBookingTime($bookingTime);
                 $status = $this->transactionStatusPill($payment->status);
                 $method = filled($payment->payment_method) ? $payment->payment_method : 'N/A';
+                $sortTs = $payment->date?->timestamp ?? 0;
+                if ($time !== '' && preg_match('/^(\d{1,2}):(\d{2})$/', $time, $parts)) {
+                    $sortTs += ((int) $parts[1] * 60 + (int) $parts[2]) * 60;
+                }
 
                 $row = [
                     'date' => $payment->date?->format('d/m/y') ?? '--/--/--',
                     'time' => $time !== '' ? $time : '--:--',
+                    'sort_ts' => $sortTs,
                     'amount' => (float) $payment->amount,
                     'payment_method' => $method,
                     'status_label' => $status['label'],
@@ -578,8 +856,8 @@ new class extends Component {
                 ];
 
                 if ($isSpaceAccount) {
-                    $row['service_type'] = filled($payment->service_type) ? $payment->service_type : $this->spaceDurationCategory($payment->booking?->service, $payment->booking?->time);
-                    $row['space'] = $this->visitTypeLabel($payment->booking?->visit_type);
+                    $row['client'] = trim((string) ($payment->petOwner?->name ?? 'Unknown Client'));
+                    $row['space'] = str_replace(' / ', '/', $this->visitTypeLabel($payment->booking?->visit_type));
                 } else {
                     $row['client'] = trim((string) ($payment->petOwner?->name ?? 'Unknown Client'));
                     $row['pet'] = trim((string) ($payment->pet?->name ?? 'Unknown Pet'));
@@ -618,11 +896,13 @@ new class extends Component {
                 $discount = (float) ($booking?->discount ?? 0);
                 $gross = max(0, $serviceAmount + $extrasAmount - $discount);
                 $tax = round($gross * ($platformPercent / 100), 2);
-                $status = $this->transactionStatusPill($payment->status);
+                $status = $this->invoiceStatusPill($payment->status);
 
                 return [
                     'date' => $bookingDate?->format('d/m/y') ?? '--/--/--',
+                    'time' => $bookingDate?->format('H:i') ?? '',
                     'date_iso' => $bookingDate?->format('Y-m-d') ?? '',
+                    'sort_ts' => $bookingDate?->getTimestamp() ?? 0,
                     'invoice_no' => InvoiceNumber::customerBooking((int) $payment->booking_id, $bookingDate),
                     'booking_reference' => 'FG-' . str_pad((string) $payment->booking_id, 5, '0', STR_PAD_LEFT),
                     'client' => trim((string) ($payment->petOwner?->name ?? 'Unknown Client')),
@@ -648,43 +928,36 @@ new class extends Component {
 
         $totalPayouts = (clone $this->payoutEligiblePaymentsQuery())->sum('amount');
 
-        $futureBookings = $this->bookingsQuery()
-            ->whereIn('booking_status', ['pending', 'confirmed'])
-            ->whereDate('date', '>=', now()->startOfDay())
-            ->orderBy('date')
-            ->get(['id', 'date', 'amount'])
-            ->map(
-                fn(Booking $booking) => [
-                    'date' => $booking->date?->format('d/m/Y') ?? '--/--/----',
-                    'amount' => (float) $booking->amount,
-                    'arrival_date' => $booking->date?->copy()->addWeekdays(2)->format('d/m/Y') ?? '--/--/----',
-                ],
-            )
-            ->all();
+        $frequency = (string) ($payoutDetails['payout_frequency'] ?? 'Weekly');
+        if ($frequency === 'Fortnightly') {
+            $frequency = 'Weekly';
+        }
+        if (!in_array($frequency, ['Daily', 'Weekly', 'Monthly'], true)) {
+            $frequency = 'Weekly';
+        }
 
+        $futureBookings = $this->buildFuturePayoutItems($frequency, (float) $pendingAmount);
         $futureAmount = collect($futureBookings)->sum(fn(array $booking) => (float) $booking['amount']);
-        $futurePreviewBookings = array_slice($futureBookings, 0, 2);
+        $futurePreviewBookings = array_values(array_slice($futureBookings, 0, 2));
 
         $history = $this->payoutEligiblePaymentsQuery()
             ->with('booking:id,date')
             ->orderByDesc('date')
-            ->limit(7)
+            ->limit(10)
             ->get(['id', 'booking_id', 'date', 'amount'])
             ->map(
                 fn(Payment $payment) => [
                     'date' => $payment->date?->format('d/m/y') ?? '--/--/--',
                     'amount' => (float) $payment->amount,
-                    'status' => 'Completed',
+                    'status' => 'Confirmed',
                     'reference' => 'FG-' . str_pad((string) $payment->booking_id, 5, '0', STR_PAD_LEFT),
                     'invoice_url' => $payment->booking ? route('business-hub.bookings.invoice-pdf', $payment->booking) : null,
                 ],
             )
             ->all();
 
-        $frequency = (string) ($payoutDetails['payout_frequency'] ?? 'Weekly');
-        if (!in_array($frequency, ['Weekly', 'Fortnightly', 'Monthly'], true)) {
-            $frequency = 'Weekly';
-        }
+        $nextPayout = $this->nextPayoutDate($frequency);
+        $nextWeekly = now()->next('Tuesday');
 
         return [
             'pending_amount' => (float) $pendingAmount,
@@ -694,24 +967,50 @@ new class extends Component {
             'future_items_all' => $futureBookings,
             'history' => $history,
             'frequency' => $frequency,
-            'next_payout_date' => $this->nextPayoutDateForFrequency($frequency),
+            'next_payout_date' => $nextPayout->format('d F Y'),
+            'next_payout_friendly' => $nextPayout->format('l j F'),
+            'next_payout_short' => $this->nextPayoutShortLabel($frequency),
+            'next_payout_day_month' => $nextPayout->format('j F'),
+            'next_weekly_day_month' => $nextWeekly->format('j F'),
             'bank' => [
                 'verified' => filled($payoutDetails['bank'] ?? null) && filled($payoutDetails['account_holder_name'] ?? null) && filled($payoutDetails['account_number'] ?? null),
                 'name' => filled($payoutDetails['bank'] ?? null) ? $payoutDetails['bank'] : 'Bank details',
                 'account_number' => $this->maskedAccountNumber($payoutDetails['account_number'] ?? null),
                 'account_holder' => $payoutDetails['account_holder_name'] ?? 'Not added',
+                'ending' => (function () use ($payoutDetails) {
+                    $digits = preg_replace('/\D+/', '', (string) ($payoutDetails['account_number'] ?? ''));
+
+                    return $digits !== '' ? substr($digits, -4) : 'Not added';
+                })(),
             ],
         ];
     }
 }; ?>
 
 @php
-    $primaryColor = '#F4A47C';
-    $lightColor = '#FDEBD0';
-    $donutColors = ['#E88B5C', '#F4A47C', '#FDE8D4'];
+    $primaryColor = '#FBAC83';
+    $lightColor = '#FBAC83';
+    $donutColors = ['#CBDCE8', '#D8E8B7', '#FFC97A'];
     $isSpaceAccount = $this->isSpaceAccount();
     $breakdown = $this->revenueBreakdown;
+    $breakdownTotal = (float) collect($breakdown['segments'])->sum('amount');
+    $breakdownTotalLabel = $breakdownTotal >= 1000 ? '£' . rtrim(rtrim(number_format($breakdownTotal / 1000, 1), '0'), '.') . 'k' : '£' . number_format($breakdownTotal, $breakdownTotal == 0.0 ? 0 : 2);
     $summary = $this->summary;
+    $formatStatAmount = function (float $amount, bool $alwaysDecimals = false): string {
+        $whole = abs($amount - round($amount)) < 0.005;
+
+        return number_format($amount, $alwaysDecimals || !$whole ? 2 : 0);
+    };
+    $bookingDeltaLabel = match (true) {
+        $summary['booking_delta'] > 0 => '+' . $summary['booking_delta'] . ' vs last month',
+        $summary['booking_delta'] < 0 => '−' . abs($summary['booking_delta']) . ' vs last month',
+        default => '0 vs last month',
+    };
+    $revenueDeltaLabel = match (true) {
+        $summary['revenue_delta'] > 0 => '+ £' . $formatStatAmount($summary['revenue_delta']) . ' vs ' . $summary['previous_month_short'],
+        $summary['revenue_delta'] < 0 => '− £' . $formatStatAmount(abs($summary['revenue_delta'])) . ' vs ' . $summary['previous_month_short'],
+        default => '£0 vs ' . $summary['previous_month_short'],
+    };
     $chartBookings = $this->chartBookings;
     $transactions = $this->transactions;
     $invoices = $this->invoices;
@@ -726,8 +1025,7 @@ new class extends Component {
     <style>
         .earnings-overview {
             --earnings-primary:
-                {{ $primaryColor }}
-            ;
+                {{ $primaryColor }};
             --earnings-light: rgba(255, 216, 140, 0.20);
             ;
             --earnings-text: #333333;
@@ -744,176 +1042,291 @@ new class extends Component {
 
         .earnings-layout {
             display: flex;
-            justify-content: space-between;
-            gap: 4rem;
-            align-items: start;
+            flex-direction: column;
+            gap: 20px;
+            align-items: stretch;
             width: 100%;
-            margin-top: 4rem;
+            margin-top: 0;
         }
 
-        .earnings-layout-left,
-        .earnings-layout-right {
+        .earnings-menu-tabs {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .earnings-menu-tab {
+            appearance: none;
+            -webkit-appearance: none;
+            border: 0;
+            background: #F6F5F5;
+            color: #9D9B98;
+            font-family: Lato, sans-serif;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 1;
+            border-radius: 100px;
+            height: 42px;
+            padding: 0 20px;
+            cursor: pointer;
+        }
+
+        .earnings-menu-tab.is-active {
+            background: #3B3731;
+            color: #fff;
+        }
+
+        .earnings-overview-panel {
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
-            min-width: 0;
-        }
-
-        .earnings-layout-left {
-            gap: 3rem !important;
+            gap: 20px;
+            width: 100%;
         }
 
         .earnings-summary-cards {
-            display: flex;
-            align-items: center;
-            /* justify-content: space-between; */
-            gap: 1rem;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 20px;
         }
 
         .earnings-stat-card {
             display: flex;
             flex-direction: column;
-            align-items: start;
-            justify-content: center;
-            border: 1px solid var(--earnings-border);
-            border-radius: 14px;
-            padding: 1.25rem 1.5rem;
+            align-items: flex-start;
+            justify-content: space-between;
+            border: 1px solid #E2E2E2;
+            border-radius: 10px;
+            padding: 21px 20px 16px;
             background: #fff;
             width: 100%;
-            height: 160px;
+            min-height: 140px;
+            box-shadow: 0 4px 15px 5px rgba(0, 0, 0, 0.02);
+            min-width: 0;
         }
 
-        .earnings-stat-card div {
-            margin: 0 auto;
-        }
-
-        .earnings-stat-card--accent {
-            background: var(--earnings-light);
+        .earnings-stat-card--payout {
+            border-color: #FFD88C;
+            background: linear-gradient(316deg, #FFFDF9 16.58%, #FFF8EA 89.9%);
+            box-shadow: none;
         }
 
         .earnings-stat-label {
-            margin: 0 0 0.5rem;
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 18px;
+            margin: 0;
+            color: #565149;
+            font-family: Lato, sans-serif;
+            font-size: 14px;
             font-style: normal;
             font-weight: 600;
             line-height: normal;
         }
 
         .earnings-stat-value {
+            margin: 0;
             color: #3B3731;
-            font-family: Lato;
-            font-size: 24px;
+            font-family: "Playfair Display", serif;
+            font-size: 30px;
             font-style: normal;
-            font-weight: 800;
+            font-weight: 600;
             line-height: normal;
         }
 
-        .earnings-stat-suffix {
+        .earnings-stat-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .earnings-stat-note {
+            margin: 0;
             color: #9D9B98;
-            text-align: center;
-            font-family: Lato;
+            font-family: Lato, sans-serif;
             font-size: 14px;
             font-style: normal;
             font-weight: 400;
             line-height: normal;
-            margin-left: 15px;
+            white-space: nowrap;
+        }
+
+        .earnings-stat-delta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: 28px;
+            padding: 0 10px;
+            border-radius: 74px;
+            background: rgba(209, 235, 154, 0.2);
+            color: #8BAE40;
+            font-family: Lato, sans-serif;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            letter-spacing: 0.12px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .earnings-stat-delta img {
+            display: block;
+            flex-shrink: 0;
+        }
+
+        .earnings-stat-delta.is-negative {
+            background: rgba(255, 110, 110, 0.12);
+            color: #D94848;
+        }
+
+        .earnings-stat-delta.is-negative img {
+            transform: rotate(180deg);
+        }
+
+        .earnings-panels {
+            display: grid;
+            grid-template-columns: minmax(0, 610fr) minmax(320px, 400fr);
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        .earnings-side {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+            min-height: 472px;
         }
 
         .earnings-breakdown-card {
             display: flex;
             flex-direction: column;
-            min-height: 100%;
+            justify-content: space-between;
+            flex: 0 0 auto;
+            min-height: 182px;
+            border: 1px solid #E2E2E2;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 4px 15px 5px rgba(0, 0, 0, 0.02);
+            padding: 20px 20px 18px;
         }
 
-        .earnings-breakdown-body {
+        .earnings-breakdown-top {
             display: flex;
-            align-items: center;
-            gap: 3rem;
-            margin-top: 0.25rem;
-            height: 160px;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
         }
 
-        .earnings-breakdown-content {
-            flex: 1;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: start;
-            align-items: start;
-            gap: 0.75rem;
-        }
-
-        .earnings-breakdown-header h3 {
+        .earnings-breakdown-top h3 {
             margin: 0;
             color: #3B3731;
-            font-family: Lato;
+            font-family: Lato, sans-serif;
             font-size: 18px;
             font-style: normal;
             font-weight: 600;
             line-height: normal;
         }
 
-        .earnings-breakdown-growth {
-            margin: 0.35rem 0 0;
-            color: #AFCD6F;
-            font-family: Lato;
-            font-size: 14px;
+        .earnings-breakdown-total {
+            margin: 0;
+            color: #3B3731;
+            font-family: "Playfair Display", serif;
+            font-size: 30px;
             font-style: normal;
-            font-weight: 400;
-            line-height: 20px;
+            font-weight: 600;
+            line-height: 1;
+            white-space: nowrap;
         }
 
-        .earnings-breakdown-growth.is-negative {
-            color: #D94848;
+        .earnings-breakdown-total span {
+            margin-left: 6px;
+            color: #9D9B98;
+            font-family: Lato, sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .earnings-breakdown-body {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            margin-top: 8px;
         }
 
         .earnings-donut-wrap {
             position: relative;
-            width: 108px;
-            height: 108px;
+            width: 100px;
+            height: 100px;
             flex-shrink: 0;
-            align-self: center;
+        }
+
+        .earnings-donut {
+            display: block;
+            width: 100px;
+            height: 100px;
         }
 
         .earnings-breakdown-legend {
             display: flex;
-            align-items: start;
-            justify-content: start;
-            gap: 1.5rem;
-            margin-top: 0;
+            flex-direction: column;
+            gap: 14px;
+            flex: 1;
+            min-width: 0;
+            margin: 0;
         }
 
         .earnings-legend-item {
-            display: flex;
-            flex-direction: column;
-            align-items: start;
-            gap: 0.5rem;
+            display: grid;
+            grid-template-columns: 10px minmax(0, 1fr) auto;
+            align-items: center;
+            column-gap: 10px;
             color: #9D9B98;
-            font-family: Lato;
+            font-family: Lato, sans-serif;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .earnings-legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: block;
+        }
+
+        .earnings-legend-item strong {
+            color: #3B3731;
+            font-family: Lato, sans-serif;
             font-size: 16px;
             font-style: normal;
             font-weight: 600;
             line-height: normal;
         }
 
-        .earnings-legend-item strong {
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 16px;
-            font-style: normal;
-            font-weight: 800;
-            line-height: normal;
-        }
-
         .earnings-chart-card,
         .earnings-recent-card {
             border-radius: 10px;
+            border: 1px solid #E2E2E2;
+            background: #fff;
+            box-shadow: 0 4px 15px 5px rgba(0, 0, 0, 0.02);
         }
 
         .earnings-chart-card {
-            padding: 1.25rem 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 20px 18px;
+            min-height: 472px;
+            height: 100%;
         }
 
         .earnings-chart-toolbar {
@@ -921,8 +1334,8 @@ new class extends Component {
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            flex-wrap: wrap;
-            margin-bottom: 1rem;
+            flex-wrap: nowrap;
+            margin-bottom: 14px;
         }
 
         .earnings-period-nav {
@@ -986,31 +1399,36 @@ new class extends Component {
         .earnings-period-toggle {
             display: inline-flex;
             align-items: center;
-            background: #F8F8F8;
-            border: 1px solid #D4D4D4;
-            border-radius: 10px;
-            padding: 0;
-            overflow: hidden;
+            background: #F9FAFC;
+            border: 0;
+            border-radius: 100px;
+            padding: 3px;
+            height: 42px;
+            width: 243px;
+            flex-shrink: 0;
         }
 
         .earnings-period-toggle button {
+            appearance: none;
+            -webkit-appearance: none;
+            flex: 1;
             border: 0;
-            border-right: 1px solid #D4D4D4;
             background: transparent;
-            color: #3B3731;
+            color: #888;
             text-align: center;
-            font-family: Lato;
+            font-family: Lato, sans-serif;
             font-size: 14px;
             font-style: normal;
-            font-weight: 400;
+            font-weight: 600;
             line-height: normal;
-            padding: 0.75rem 1.75rem;
-            min-width: 6rem;
+            height: 36px;
+            min-width: 0;
+            padding: 0;
+            border-radius: 100px;
             cursor: pointer;
             transition:
                 background-color 0.28s cubic-bezier(0.22, 1, 0.36, 1),
                 color 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
                 box-shadow 0.28s ease;
         }
 
@@ -1018,31 +1436,19 @@ new class extends Component {
             outline: none;
         }
 
-        .earnings-period-toggle button:active {
-            transform: scale(0.96);
-        }
-
-        .earnings-period-toggle button:last-child {
-            border-right: 0;
-        }
-
         .earnings-period-toggle button.is-active {
-            background: #F1AA7D;
-            color: #fff;
-            border-right-color: transparent;
-            position: relative;
-            z-index: 1;
-            font-weight: 600;
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+            background: #fff;
+            color: #3B3731;
+            box-shadow: 0 2px 4px rgba(59, 55, 49, 0.1);
         }
 
         .earnings-chart-heading {
             display: flex;
-            align-items: baseline;
+            align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            margin-bottom: 2rem;
-            min-height: 2rem;
+            margin-bottom: 18px;
+            min-height: 30px;
         }
 
         .earnings-chart-heading__title,
@@ -1066,89 +1472,117 @@ new class extends Component {
             }
         }
 
-        .earnings-chart-heading h3 {
+        .earnings-chart-title {
             margin: 0;
             color: #3B3731;
-            font-family: Lato;
+            font-family: Lato, sans-serif;
             font-size: 18px;
             font-style: normal;
-            font-weight: 700;
+            font-weight: 600;
             line-height: normal;
         }
 
         .earnings-chart-total {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: inline-flex;
+            align-items: baseline;
+            gap: 0;
+            margin: 0;
             color: #3B3731;
-            font-family: Lato;
-            font-size: 24px;
-            font-style: normal;
-            font-weight: 800;
-            line-height: normal;
-        }
-
-        .earnings-chart-total span:nth-child(2) {
-            color: #9D9B98;
-            font-weight: 400 !important;
-            font-size: 14px !important;
-            margin-left: 15px;
-        }
-
-        .earnings-chart-wrap {
-            position: relative;
-            height: 22.5rem;
-        }
-
-        .earnings-bar-chart {
-            display: flex;
-            align-items: stretch;
-            gap: 0.75rem;
-            height: 100%;
-        }
-
-        .earnings-bar-chart__y-axis {
-            display: flex;
-            flex-direction: column-reverse;
-            justify-content: space-between;
-            flex-shrink: 0;
-            height: 100%;
-            padding-bottom: 2.35rem;
-        }
-
-        .earnings-bar-chart__tick {
-            color: #9D9B98;
-            font-family: Lato;
-            font-size: 18px;
+            font-family: "Playfair Display", serif;
+            font-size: 30px;
             font-style: normal;
             font-weight: 600;
             line-height: normal;
             white-space: nowrap;
         }
 
-        .earnings-bar-chart__plot {
+        .earnings-chart-total-amount {
+            font-family: "Playfair Display", serif;
+            font-size: 30px;
+            font-weight: 600;
+            color: #3B3731;
+            line-height: normal;
+        }
+
+        .earnings-chart-total-period {
+            margin-left: 8px;
+            color: #9D9B98;
+            font-family: Lato, sans-serif;
+            font-weight: 400;
+            font-size: 14px;
+            line-height: normal;
+        }
+
+        .earnings-chart-range {
+            margin: 0;
+            color: #3B3731;
+            font-family: Lato, sans-serif;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+            white-space: nowrap;
+        }
+
+        .earnings-chart-wrap {
+            position: relative;
             flex: 1;
-            min-width: 0;
+            min-height: 302px;
+            height: 302px;
+        }
+
+        .earnings-bar-chart {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            grid-template-rows: minmax(0, 1fr) 17px;
+            column-gap: 16px;
+            row-gap: 16px;
+            height: 100%;
+            width: 100%;
+        }
+
+        .earnings-bar-chart__y-ticks {
+            grid-column: 1;
+            grid-row: 1;
+            display: flex;
+            flex-direction: column-reverse;
+            justify-content: space-between;
+            align-items: flex-end;
+            min-height: 0;
             height: 100%;
         }
 
-        .earnings-bar-chart__bars {
+        .earnings-bar-chart__tick {
+            color: #9D9B98;
+            font-family: Lato, sans-serif;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: normal;
+            white-space: nowrap;
+            text-align: right;
+        }
+
+        .earnings-bar-chart__tracks {
+            grid-column: 2;
+            grid-row: 1;
             display: flex;
             align-items: stretch;
-            justify-content: space-around;
-            gap: 0.5rem;
+            justify-content: space-between;
+            gap: 0;
+            min-height: 0;
             height: 100%;
+            padding: 0 4px;
         }
 
         .earnings-bar-chart__bar-col {
-            flex: 1;
+            flex: 1 1 0;
+            position: relative;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 0.75rem;
+            align-items: flex-end;
+            justify-content: center;
             min-width: 0;
-            max-width: 50px;
+            max-width: 90px;
             height: 100%;
             animation: earningsBarColFade 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
@@ -1159,10 +1593,6 @@ new class extends Component {
 
         .earnings-bar-chart__bar-col.is-clickable:hover .earnings-bar-chart__bar {
             filter: brightness(0.96);
-        }
-
-        .earnings-bar-chart__bar-col.is-clickable:hover .earnings-bar-chart__label {
-            color: #3B3731;
         }
 
         @keyframes earningsBarColFade {
@@ -1177,56 +1607,71 @@ new class extends Component {
             }
         }
 
-        .earnings-bar-chart__bar-track {
-            flex: 1;
-            width: 100%;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            min-height: 0;
-        }
-
         .earnings-bar-chart__bar {
-            width: 100%;
-            max-width: 50px;
-            border-radius: 10px;
+            width: 50px;
+            max-width: 100%;
+            border-radius: 10px 10px 5px 5px;
+            background: #FBAC83;
+            opacity: 0.5;
             min-height: 0;
+            align-self: flex-end;
             transform-origin: bottom center;
             transition:
                 height 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-                background-color 0.35s ease,
                 opacity 0.35s ease;
             animation: earningsBarGrow 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .earnings-bar-chart__bar.is-active {
+            opacity: 1;
         }
 
         @keyframes earningsBarGrow {
             from {
                 transform: scaleY(0);
-                opacity: 0.45;
             }
 
             to {
                 transform: scaleY(1);
-                opacity: 1;
             }
         }
 
+        .earnings-bar-chart__labels {
+            grid-column: 2;
+            grid-row: 2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0;
+            padding: 0 4px;
+            height: 17px;
+        }
+
         .earnings-bar-chart__label {
+            flex: 1 1 0;
+            max-width: 90px;
+            border: 0;
+            background: transparent;
             color: #9D9B98;
-            font-family: Lato;
-            font-size: 18px;
+            font-family: Lato, sans-serif;
+            font-size: 14px;
             font-style: normal;
             font-weight: 600;
-            line-height: normal;
+            line-height: 17px;
             text-align: center;
             white-space: nowrap;
-            transition: color 0.3s ease, font-weight 0.3s ease, transform 0.3s ease;
+            height: 17px;
+            padding: 0;
+            cursor: pointer;
+            transition: color 0.3s ease;
         }
 
         .earnings-bar-chart__label.is-active {
             color: #3B3731;
-            font-weight: 700;
-            transform: translateY(-1px);
+        }
+
+        .earnings-bar-chart__label:hover {
+            color: #3B3731;
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -1246,35 +1691,38 @@ new class extends Component {
         }
 
         .earnings-recent-card {
-            background: var(--earnings-panel);
-            border-color: transparent;
-            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 20px 8px;
+            flex: 1 1 auto;
+            min-height: 270px;
         }
 
         .earnings-recent-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1rem;
+            margin-bottom: 8px;
         }
 
         .earnings-recent-header h3 {
             margin: 0;
             color: #3B3731;
-            font-family: Lato;
+            font-family: Lato, sans-serif;
             font-size: 18px;
             font-style: normal;
-            font-weight: 700;
+            font-weight: 600;
             line-height: normal;
         }
 
         .earnings-recent-header a {
-            color: #3B3731;
-            font-family: Lato;
+            color: #FFC97A;
+            font-family: Lato, sans-serif;
             font-size: 16px;
             font-style: normal;
-            font-weight: 400;
+            font-weight: 600;
             line-height: normal;
+            text-decoration: none;
         }
 
         .earnings-recent-header a:hover {
@@ -1284,35 +1732,39 @@ new class extends Component {
         .earnings-recent-list {
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
         }
 
         .earnings-recent-item {
-            display: flex;
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr) auto auto;
             align-items: center;
-            gap: 0.85rem;
-            background: #fff;
-            border-radius: 10px;
-            padding: 0.85rem 1rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            column-gap: 12px;
+            background: transparent;
+            border-radius: 0;
+            padding: 15px 0;
+            box-shadow: none;
+            border-bottom: 1px solid #EEEEEE;
+        }
+
+        .earnings-recent-item:last-child {
+            border-bottom: 0;
         }
 
         .earnings-recent-avatar {
-            width: 50px;
-            height: 50px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             object-fit: cover;
             flex-shrink: 0;
         }
 
         .earnings-recent-avatar-wrap {
-            width: 50px;
-            height: 50px;
+            width: 42px;
+            height: 42px;
             box-sizing: border-box;
-            padding: 2px;
             border-radius: 999px;
-            border: 1px solid #FFC97A;
-            background: #fff;
+            border: 0;
+            background: #FBAC83;
             flex-shrink: 0;
             display: inline-flex;
             align-items: center;
@@ -1329,11 +1781,11 @@ new class extends Component {
             width: 100%;
             height: 100%;
             border-radius: 999px;
-            background: #FFF1DE;
-            color: #FFC97A;
+            background: #FBAC83;
+            color: #FDFDFD;
             text-align: center;
-            font-family: Lato;
-            font-size: 20px;
+            font-family: Lato, sans-serif;
+            font-size: 18px;
             font-style: normal;
             font-weight: 800;
             line-height: normal;
@@ -1351,16 +1803,13 @@ new class extends Component {
         }
 
         .earnings-recent-meta {
-            flex: 1;
             min-width: 0;
         }
 
         .earnings-recent-name {
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
+            display: block;
             color: #3B3731;
-            font-family: Lato;
+            font-family: Lato, sans-serif;
             font-size: 16px;
             font-style: normal;
             font-weight: 600;
@@ -1369,23 +1818,87 @@ new class extends Component {
         }
 
         .earnings-recent-time {
-            margin: 0.15rem 0 0;
+            margin: 2px 0 0;
             color: #9D9B98;
-            font-family: Lato;
-            font-size: 16px;
+            font-family: Lato, sans-serif;
+            font-size: 14px;
             font-style: normal;
             font-weight: 400;
             line-height: normal;
         }
 
+        .earnings-client-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 28px;
+            padding: 0 10px;
+            border-radius: 100px;
+            font-family: Lato, sans-serif;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: normal;
+            white-space: nowrap;
+            grid-column: 3;
+            justify-self: end;
+        }
+
+        .earnings-client-badge.is-repeat {
+            color: #94BEDB;
+            background: rgba(216, 229, 238, 0.2);
+        }
+
+        .earnings-client-badge.is-regular {
+            color: #F9C45C;
+            background: rgba(255, 201, 122, 0.1);
+        }
+
+        .earnings-client-badge.is-new {
+            color: #AFCD6F;
+            background: rgba(186, 207, 142, 0.1);
+        }
+
         .earnings-recent-amount {
-            color: #3B3731;
-            font-family: Lato;
+            color: #A1BF63;
+            font-family: Lato, sans-serif;
             font-size: 16px;
             font-style: normal;
             font-weight: 700;
             line-height: normal;
             white-space: nowrap;
+            grid-column: 4;
+            justify-self: end;
+        }
+
+        @media (max-width: 980px) {
+            .earnings-summary-cards {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .earnings-panels {
+                grid-template-columns: 1fr;
+            }
+
+            .earnings-side,
+            .earnings-chart-card {
+                min-height: 0;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .earnings-summary-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .earnings-period-toggle {
+                width: 100%;
+            }
+
+            .earnings-chart-heading {
+                align-items: flex-start;
+                flex-direction: column;
+            }
         }
 
         .earnings-empty {
@@ -1499,34 +2012,32 @@ new class extends Component {
             line-height: 0;
         }
 
-        .completed-booking-modal-overlay {
+        .earnings-receipt-modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.22);
+            z-index: 100100;
             display: none;
             align-items: center;
             justify-content: center;
-            padding: 1rem;
-            z-index: 100100;
+            padding: 24px;
+            background: rgba(59, 55, 49, 0.35);
             opacity: 0;
             pointer-events: none;
             transition: opacity 180ms ease;
         }
 
-        .completed-booking-modal-overlay.is-open {
+        .earnings-receipt-modal-overlay.is-open {
             opacity: 1;
             pointer-events: auto;
         }
 
-        .completed-booking-modal-card {
-            width: min(610px, 100%);
+        .earnings-receipt-modal {
+            width: 610px;
+            max-width: 100%;
+            max-height: calc(100vh - 48px);
+            overflow: auto;
+            background: #fff;
             border-radius: 10px;
-            border: 1px solid #CBDCE8;
-            background: #F8F8F8;
-            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
-            overflow: hidden;
-            max-height: calc(100vh - 2rem);
-            overflow-y: auto;
             opacity: 0;
             transform: translateY(12px) scale(0.98);
             transition:
@@ -1534,275 +2045,235 @@ new class extends Component {
                 transform 180ms ease;
         }
 
-        .completed-booking-modal-overlay.is-open .completed-booking-modal-card {
+        .earnings-receipt-modal-overlay.is-open .earnings-receipt-modal {
             opacity: 1;
             transform: translateY(0) scale(1);
         }
 
         @media (prefers-reduced-motion: reduce) {
 
-            .completed-booking-modal-overlay,
-            .completed-booking-modal-card {
+            .earnings-receipt-modal-overlay,
+            .earnings-receipt-modal {
                 transition: none;
             }
         }
 
-        .completed-booking-modal-head {
+        .earnings-receipt-modal__head {
+            position: relative;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
+            height: 80px;
+            background: rgba(203, 220, 232, 0.2);
             border-radius: 10px 10px 0 0;
-            border-bottom: 1px solid #CBDCE8;
-            background: rgba(203, 220, 232, 0.20);
-            padding: 1.2rem 1.65rem;
         }
 
-        .completed-booking-modal-title {
+        .earnings-receipt-modal__head.is-space {
+            background: #F5F8FA;
+        }
+
+        .earnings-receipt-modal__title {
             margin: 0;
             color: #3B3731;
-            font-family: Lato;
-            font-size: 20px;
-            font-style: normal;
-            font-weight: 700;
+            font-family: "Playfair Display", serif;
+            font-size: 28px;
+            font-weight: 800;
             line-height: normal;
+            text-align: center;
         }
 
-        .completed-booking-modal-close {
-            border: none;
-            background: transparent;
+        .earnings-receipt-modal__title span {
+            font-weight: 600;
+        }
+
+        .earnings-receipt-modal__close {
+            position: absolute;
+            top: 30px;
+            right: 30px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
+            width: 14.5px;
+            height: 14.5px;
             padding: 0;
-            line-height: 1;
-        }
-
-        .completed-booking-modal-booking-row {
-            padding: 1.2rem 1.65rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            position: relative;
-        }
-
-        .completed-booking-modal-booking-row strong {
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 18px;
-            font-style: normal;
-            font-weight: 600;
-            line-height: normal;
-        }
-
-        .completed-booking-modal-booking-meta {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: #9D9B98;
-            font-family: Lato;
-            font-size: 18px;
-            font-weight: 400;
-            line-height: normal;
-        }
-
-        .completed-booking-download-btn {
             border: 0;
             background: transparent;
-            color: inherit;
-            width: 26px;
-            height: 26px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
             cursor: pointer;
         }
 
-        .completed-booking-modal-customer {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            padding: 1.2rem 1.65rem;
-            position: relative;
+        .earnings-receipt-modal__close img {
+            width: 14.5px;
+            height: 14.5px;
+            max-width: 14.5px;
+            display: block;
         }
 
-        .completed-booking-modal-user-icon {
+        .earnings-receipt-modal__body {
+            padding: 0 25px 32px;
+        }
+
+        .earnings-receipt-modal__id,
+        .earnings-receipt-modal__line,
+        .earnings-receipt-modal__total {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .earnings-receipt-modal__id {
+            min-height: 56px;
+            margin: 0;
+            border-bottom: 1px solid #E2E2E2;
+            color: #000;
+            font-family: Lato, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .earnings-receipt-modal__id p {
+            margin: 0;
+        }
+
+        .earnings-receipt-modal__id-end {
             display: inline-flex;
+            align-items: center;
+            gap: 20px;
+            color: #9D9B98;
+        }
+
+        .earnings-receipt-modal__download {
+            position: relative;
+            display: inline-flex;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .earnings-receipt-modal__download img {
+            width: 36px;
+            height: 36px;
+            max-width: 36px;
+            display: block;
+        }
+
+        .earnings-receipt-modal__download-glyph {
+            position: absolute;
+            top: 8px;
+            left: 10px;
+            width: 16px !important;
+            height: 19px !important;
+            max-width: 16px !important;
+        }
+
+        .earnings-receipt-modal__person {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 0 0;
+        }
+
+        .earnings-receipt-modal__avatar,
+        .earnings-receipt-modal__avatar img,
+        .earnings-receipt-modal__avatar span {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+        }
+
+        .earnings-receipt-modal__avatar {
+            display: inline-flex;
+            flex: 0 0 44px;
+            overflow: hidden;
+            background: #E7EEF3;
+        }
+
+        .earnings-receipt-modal__avatar img {
+            max-width: 44px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .earnings-receipt-modal__avatar span {
+            display: flex;
             align-items: center;
             justify-content: center;
+            color: #3B3731;
+            font-family: Lato, sans-serif;
+            font-size: 18px;
+            font-weight: 600;
         }
 
-        .completed-booking-modal-owner {
-            margin: 0;
+        .earnings-receipt-modal__name,
+        .earnings-receipt-modal__pet {
+            display: block;
             color: #3B3731;
-            font-family: Lato;
+            font-family: Lato, sans-serif;
             font-size: 18px;
-            font-style: normal;
+            line-height: normal;
+        }
+
+        .earnings-receipt-modal__name {
+            font-weight: 600;
+        }
+
+        .earnings-receipt-modal__pet {
+            font-weight: 400;
+        }
+
+        .earnings-receipt-modal__pet [data-field="pet_type"] {
+            color: #9D9B98;
+        }
+
+        .earnings-receipt-modal__section,
+        .earnings-receipt-modal__summary {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #E2E2E2;
+        }
+
+        .earnings-receipt-modal__section-title {
+            margin: 0 0 20px;
+            color: #3B3731;
+            font-family: Lato, sans-serif;
+            font-size: 18px;
             font-weight: 600;
             line-height: normal;
         }
 
-        .completed-booking-modal-pet {
-            margin: 0;
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 18px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: normal;
-        }
-
-        .completed-booking-modal-pet-type {
+        .earnings-receipt-modal__line {
             color: #9D9B98;
-            font-family: Lato;
+            font-family: Lato, sans-serif;
             font-size: 18px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: normal;
-            margin-left: 0.35rem;
-        }
-
-        .completed-booking-modal-section {
-            padding: 1.2rem 1.65rem;
-            position: relative;
-        }
-
-        .completed-booking-modal-booking-row::after,
-        .completed-booking-modal-section::after {
-            content: '';
-            position: absolute;
-            left: 1.65rem;
-            right: 1.65rem;
-            bottom: 0;
-            height: 1px;
-            background: #DCDCDC;
-        }
-
-        .completed-booking-modal-section-label {
-            margin: 0 0 1rem;
-            color: #9D9B98;
-            font-family: Lato;
-            font-size: 18px;
-            font-style: normal;
-            font-weight: 600;
-            line-height: normal;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .completed-booking-modal-section-label-inner {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .completed-booking-modal-section-title {
-            margin: 0 0 0.65rem;
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 18px;
-            font-style: normal;
-            font-weight: 600;
-            line-height: normal;
-        }
-
-        .completed-booking-modal-line {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 1rem;
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 18px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: normal;
-        }
-
-        .completed-booking-modal-line p {
-            margin: 0;
-        }
-
-        .completed-booking-modal-line-sub {
-            color: #9D9B98;
-            font-family: Lato;
-            font-size: 16px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: 20px;
-        }
-
-        .completed-booking-modal-space-name {
-            margin: 0;
-            color: #3B3731;
-            font-family: Lato;
-            font-size: 18px;
-            font-style: normal;
             font-weight: 400;
             line-height: 23px;
         }
 
-        .completed-booking-modal-total-block {
-            padding: 1.35rem 1.65rem 1.55rem;
+        .earnings-receipt-modal__line+.earnings-receipt-modal__line {
+            margin-top: 10px;
         }
 
-        .completed-booking-modal-total-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            color: #9D9B98;
-            font-family: Lato;
-            font-size: 18px;
-            font-weight: 400;
-            line-height: 23px;
-            margin-bottom: 1.7rem;
-        }
-
-        .completed-booking-modal-total-row>span:last-child {
+        .earnings-receipt-modal__line span:last-child {
             color: #3B3731;
             text-align: right;
-            font-family: Lato;
-            font-size: 18px;
-            font-weight: 400;
-            line-height: 23px;
+            white-space: nowrap;
         }
 
-        .completed-booking-modal-total-row.is-grand {
-            border-top: 1px solid #DCDCDC;
-            padding-top: 1rem;
-            margin-top: 0.8rem;
-            margin-bottom: 0;
+        .earnings-receipt-modal__summary {
+            padding-bottom: 20px;
+            border-bottom: 1px solid #E2E2E2;
         }
 
-        .completed-booking-modal-total-row.is-grand>span {
-            color: #3B3731 !important;
-            font-family: Lato !important;
-            font-style: normal !important;
-            font-size: 18px !important;
-            font-weight: 700 !important;
-            line-height: normal !important;
-        }
-
-        .completed-booking-addon-line {
-            margin-bottom: 0.35rem;
-        }
-
-        .completed-booking-addon-line .completed-booking-modal-line-sub,
-        .completed-booking-addon-line>span {
+        .earnings-receipt-modal__total {
+            padding-top: 20px;
             color: #3B3731;
-            font-family: Lato;
-            font-size: 18px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: 23px;
-        }
-
-        .completed-booking-addon-line:last-child {
-            margin-bottom: 0;
+            font-family: Lato, sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            line-height: normal;
         }
 
         .earnings-transactions-empty {
@@ -1812,269 +2283,235 @@ new class extends Component {
         }
     </style>
 
-    <div x-show="activeEarningsMenu === 'transactions'" x-cloak>
-        <x-business-hub.earnings.transactions :transactions="$transactions" :is-space-user="$isSpaceAccount" />
-    </div>
+    <div class="earnings-layout">
+        <nav class="earnings-menu-tabs" aria-label="Earnings sections">
+            @foreach (['overview' => 'Overview', 'transactions' => 'Transactions', 'pay-outs' => 'Pay-outs', 'invoices' => 'Invoices'] as $menu => $label)
+                <button type="button" class="earnings-menu-tab" :class="{ 'is-active': activeEarningsMenu === @js($menu) }"
+                    @click="if (activeEarningsMenu === @js($menu)) return; window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeEarningsMenu = @js($menu); window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: @js($menu) } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: @js($menu) } }))">
+                    {{ $label }}
+                </button>
+            @endforeach
+        </nav>
 
-    <div x-show="activeEarningsMenu === 'pay-outs'" x-cloak>
-        <x-business-hub.earnings.payouts :payouts="$payouts" />
-    </div>
+        <div x-show="activeEarningsMenu === 'transactions'" x-cloak>
+            <x-business-hub.earnings.transactions :transactions="$transactions" :is-space-user="$isSpaceAccount" />
+        </div>
 
-    <div x-show="activeEarningsMenu === 'invoices'" x-cloak>
-        <x-business-hub.earnings.invoices :invoices="$invoices" />
-    </div>
+        <div x-show="activeEarningsMenu === 'pay-outs'" x-cloak>
+            <x-business-hub.earnings.payouts :payouts="$payouts" />
+        </div>
 
-    <div class="earnings-layout"
-        x-show="activeEarningsMenu !== 'transactions' && activeEarningsMenu !== 'pay-outs' && activeEarningsMenu !== 'invoices'"
-        x-cloak>
-        <div class="earnings-layout-left" style="width: 60%;">
+        <div x-show="activeEarningsMenu === 'invoices'" x-cloak>
+            <x-business-hub.earnings.invoices :invoices="$invoices" />
+        </div>
+
+        <div class="earnings-overview-panel"
+            x-show="activeEarningsMenu !== 'transactions' && activeEarningsMenu !== 'pay-outs' && activeEarningsMenu !== 'invoices'"
+            x-cloak>
             <div class="earnings-summary-cards">
-                <div class="earnings-stat-card">
-                    <div>
-                        <p class="earnings-stat-label">Total Earnings</p>
-                        <div>
-                            <span class="earnings-stat-value">£{{ number_format($summary['total_earnings'], 2) }}</span>
-                            <span class="earnings-stat-suffix"> / All Time</span>
-                        </div>
+                <article class="earnings-stat-card earnings-stat-card--payout">
+                    <p class="earnings-stat-label">Next pay-out total</p>
+                    <p class="earnings-stat-value">£{{ number_format((float) $payouts['pending_amount'], 2) }}</p>
+                    <div class="earnings-stat-footer">
+                        <p class="earnings-stat-note">{{ $payouts['next_payout_short'] }}</p>
                     </div>
-                </div>
-                <div class="earnings-stat-card earnings-stat-card--accent">
-                    <div>
-                        <p class="earnings-stat-label">Average Revenue</p>
-                        <div>
-                            <span
-                                class="earnings-stat-value">£{{ number_format($summary['average_revenue'], 2) }}</span>
-                            <span class="earnings-stat-suffix"> / Per Booking</span>
-                        </div>
+                </article>
+                <article class="earnings-stat-card">
+                    <p class="earnings-stat-label">Total earnings</p>
+                    <p class="earnings-stat-value">£{{ $formatStatAmount((float) $summary['total_earnings']) }}</p>
+                    <div class="earnings-stat-footer">
+                        <p class="earnings-stat-note">All time</p>
+                        <span class="earnings-stat-delta {{ $summary['booking_delta_positive'] ? '' : 'is-negative' }}">
+                            @if ($summary['booking_delta'] > 0)
+                                <img src="{{ asset('images/business-hub/icon-earnings-trend-up.svg') }}" alt="" width="5.8"
+                                    height="8.93">
+                            @endif
+                            {{ $bookingDeltaLabel }}
+                        </span>
                     </div>
-                </div>
+                </article>
+                <article class="earnings-stat-card">
+                    <p class="earnings-stat-label">This month</p>
+                    <p class="earnings-stat-value">£{{ $formatStatAmount((float) $summary['this_month']) }}</p>
+                    <div class="earnings-stat-footer">
+                        <p class="earnings-stat-note">{{ $summary['this_month_label'] }}</p>
+                        <span class="earnings-stat-delta {{ $summary['revenue_delta_positive'] ? '' : 'is-negative' }}">
+                            {{ $revenueDeltaLabel }}
+                        </span>
+                    </div>
+                </article>
+                <article class="earnings-stat-card">
+                    <p class="earnings-stat-label">Avg per booking</p>
+                    <p class="earnings-stat-value">£{{ $formatStatAmount((float) $summary['average_revenue']) }}</p>
+                    <div class="earnings-stat-footer">
+                        <p class="earnings-stat-note">Across {{ number_format((int) $summary['booking_count']) }}
+                            bookings</p>
+                    </div>
+                </article>
             </div>
 
-            <div class="earnings-chart-card" wire:ignore x-data="earningsChartPanel(@js([
-                'bookings' => $chartBookings,
-                'month' => (int) $now->month,
-                'year' => (int) $now->year,
-                'period' => 'month',
-                'primary' => $primaryColor,
-                'light' => $lightColor,
-            ]))">
-                <div class="earnings-chart-toolbar">
-                    <div class="earnings-period-nav">
-                        <button type="button" @click="previousPeriod()" aria-label="Previous month"><svg
-                                xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34"
-                                fill="none">
-                                <g filter="url(#filter0_d_48_564)">
-                                    <circle cx="17" cy="13" r="13" fill="white" />
-                                    <circle cx="17" cy="13" r="12.5" stroke="#F5F5F5" />
-                                </g>
-                                <path d="M18.625 17.0625L14.5347 12.9722L18.5563 8.9505" stroke="#3B3731"
-                                    stroke-linecap="round" stroke-linejoin="round" />
-                                <defs>
-                                    <filter id="filter0_d_48_564" x="0" y="0" width="34" height="34"
-                                        filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                                        <feFlood flood-opacity="0" result="BackgroundImageFix" />
-                                        <feColorMatrix in="SourceAlpha" type="matrix"
-                                            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
-                                        <feOffset dy="4" />
-                                        <feGaussianBlur stdDeviation="2" />
-                                        <feComposite in2="hardAlpha" operator="out" />
-                                        <feColorMatrix type="matrix"
-                                            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.03 0" />
-                                        <feBlend mode="normal" in2="BackgroundImageFix"
-                                            result="effect1_dropShadow_48_564" />
-                                        <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_48_564"
-                                            result="shape" />
-                                    </filter>
-                                </defs>
-                            </svg></button>
-                        <span class="earnings-period-nav__label" :key="periodLabel" x-text="periodLabel"></span>
-                        <button type="button" @click="nextPeriod()" aria-label="Next month"><svg
-                                xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34"
-                                fill="none">
-                                <g filter="url(#filter0_d_48_567)">
-                                    <circle cx="13" cy="13" r="13" transform="matrix(-1 0 0 1 30 0)" fill="white" />
-                                    <circle cx="13" cy="13" r="12.5" transform="matrix(-1 0 0 1 30 0)"
-                                        stroke="#F5F5F5" />
-                                </g>
-                                <path d="M15.375 17.0625L19.4653 12.9722L15.4437 8.9505" stroke="#3B3731"
-                                    stroke-linecap="round" stroke-linejoin="round" />
-                                <defs>
-                                    <filter id="filter0_d_48_567" x="0" y="0" width="34" height="34"
-                                        filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                                        <feFlood flood-opacity="0" result="BackgroundImageFix" />
-                                        <feColorMatrix in="SourceAlpha" type="matrix"
-                                            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
-                                        <feOffset dy="4" />
-                                        <feGaussianBlur stdDeviation="2" />
-                                        <feComposite in2="hardAlpha" operator="out" />
-                                        <feColorMatrix type="matrix"
-                                            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.03 0" />
-                                        <feBlend mode="normal" in2="BackgroundImageFix"
-                                            result="effect1_dropShadow_48_567" />
-                                        <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_48_567"
-                                            result="shape" />
-                                    </filter>
-                                </defs>
-                            </svg></button>
-                    </div>
-
-                    <div class="earnings-period-toggle" role="group" aria-label="Earnings period">
-                        <button type="button" @click="setPeriod('day')"
-                            :class="{ 'is-active': period === 'day' }">Day</button>
-                        <button type="button" @click="setPeriod('week')"
-                            :class="{ 'is-active': period === 'week' }">Week</button>
-                        <button type="button" @click="setPeriod('month')"
-                            :class="{ 'is-active': period === 'month' }">Month</button>
-                    </div>
-                </div>
-
-                <div class="earnings-chart-heading">
-                    <h3 class="earnings-chart-heading__title" :key="'heading-title-' + chartAnimationKey"
-                        x-text="chartTitle"></h3>
-                    <div class="earnings-chart-total earnings-chart-heading__value"
-                        :key="'heading-total-' + chartAnimationKey">
-                        £<span x-text="formattedTotal"></span>
-                        <span>/ <span x-text="periodShort"></span></span>
-                    </div>
-                </div>
-
-                <div class="earnings-chart-wrap" role="img" aria-label="Earnings bar chart">
-                    <div class="earnings-bar-chart">
-                        <div class="earnings-bar-chart__y-axis" aria-hidden="true">
-                            <template x-for="tick in yTicks" :key="chartAnimationKey + '-tick-' + tick">
-                                <span class="earnings-bar-chart__tick" x-text="formatPound(tick)"></span>
-                            </template>
+            <div class="earnings-panels">
+                <div class="earnings-chart-card" wire:ignore x-data="earningsChartPanel(@js([
+    'bookings' => $chartBookings,
+    'month' => (int) $now->month,
+    'year' => (int) $now->year,
+    'period' => 'month',
+    'primary' => $primaryColor,
+    'light' => $lightColor,
+]))">
+                    <div class="earnings-chart-toolbar">
+                        <h3 class="earnings-chart-title">Earnings</h3>
+                        <div class="earnings-period-toggle" role="group" aria-label="Earnings period">
+                            <button type="button" @click="setPeriod('day')"
+                                :class="{ 'is-active': period === 'day' }">Day</button>
+                            <button type="button" @click="setPeriod('week')"
+                                :class="{ 'is-active': period === 'week' }">Week</button>
+                            <button type="button" @click="setPeriod('month')"
+                                :class="{ 'is-active': period === 'month' }">Month</button>
                         </div>
+                    </div>
 
-                        <div class="earnings-bar-chart__plot">
-                            <div class="earnings-bar-chart__bars">
+                    <div class="earnings-chart-heading">
+                        <div class="earnings-chart-total earnings-chart-heading__value"
+                            :key="'heading-total-' + chartAnimationKey">
+                            <span class="earnings-chart-total-amount">£<span x-text="formattedTotal"></span></span><span
+                                class="earnings-chart-total-period">/ <span x-text="periodShort"></span></span>
+                        </div>
+                        <p class="earnings-chart-range" x-text="rangeLabel"></p>
+                    </div>
+
+                    <div class="earnings-chart-wrap" role="img" aria-label="Earnings bar chart">
+                        <div class="earnings-bar-chart">
+                            <div class="earnings-bar-chart__y-ticks" aria-hidden="true">
+                                <span class="earnings-bar-chart__tick">£0</span>
+                                <span class="earnings-bar-chart__tick">£100</span>
+                                <span class="earnings-bar-chart__tick">£250</span>
+                                <span class="earnings-bar-chart__tick">£500</span>
+                                <span class="earnings-bar-chart__tick">£1K</span>
+                            </div>
+
+                            <div class="earnings-bar-chart__tracks">
                                 <template x-for="(bar, index) in bars"
-                                    :key="chartAnimationKey + '-bar-' + index + '-' + bar.label">
+                                    :key="chartAnimationKey + '-track-' + index + '-' + bar.label">
                                     <div class="earnings-bar-chart__bar-col is-clickable"
                                         :style="{ animationDelay: barStaggerDelay(index) }" @click="selectBar(index)"
                                         role="button" tabindex="0" @keydown.enter.prevent="selectBar(index)"
                                         @keydown.space.prevent="selectBar(index)"
                                         :aria-label="'View earnings for ' + bar.label">
-                                        <div class="earnings-bar-chart__bar-track">
-                                            <div class="earnings-bar-chart__bar" :style="{
-                                                    height: barHeight(bar.value) + '%',
-                                                    backgroundColor: barColor(index),
-                                                    animationDelay: barStaggerDelay(index),
-                                                }" :title="formatPound(bar.value)"></div>
-                                        </div>
-                                        <span class="earnings-bar-chart__label"
-                                            :class="{ 'is-active': isActive(index) }" x-text="bar.label"></span>
+                                        <div class="earnings-bar-chart__bar" :class="{ 'is-active': isActive(index) }"
+                                            :style="{
+                                                height: barHeight(bar.value) + '%',
+                                                animationDelay: barStaggerDelay(index),
+                                            }" :title="formatPound(bar.value)"></div>
                                     </div>
+                                </template>
+                            </div>
+
+                            <div class="earnings-bar-chart__labels">
+                                <template x-for="(bar, index) in bars"
+                                    :key="chartAnimationKey + '-label-' + index + '-' + bar.label">
+                                    <button type="button" class="earnings-bar-chart__label"
+                                        :class="{ 'is-active': isActive(index) }" @click="selectBar(index)"
+                                        x-text="bar.label"></button>
                                 </template>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="earnings-layout-right" style="width: 40%;">
-            <div class="earnings-breakdown-card">
-                <div class="earnings-breakdown-body">
-                    <div class="earnings-donut-wrap earnings-chart-wrap" wire:ignore>
-                        <canvas id="earningsDonutChart" role="img" aria-label="Revenue breakdown chart"
-                            data-labels='@json(array_column($breakdown['segments'], 'label'))'
-                            data-values='@json(array_column($breakdown['segments'], 'amount'))'
-                            data-colors='@json($donutColors)'></canvas>
-                    </div>
-
-                    <div class="earnings-breakdown-content">
-                        <div class="earnings-breakdown-header">
+                <div class="earnings-side">
+                    <div class="earnings-breakdown-card">
+                        <div class="earnings-breakdown-top">
                             <h3>Revenue Breakdown</h3>
-                            <p
-                                class="earnings-breakdown-growth {{ $breakdown['growth_positive'] ? '' : 'is-negative' }}">
-                                {{ $breakdown['growth_positive'] ? '+' : '' }}{{ $breakdown['growth'] }}% growth over
-                                last
-                                12 weeks
-                            </p>
+                            <p class="earnings-breakdown-total">{{ $breakdownTotalLabel }} <span>Total</span></p>
                         </div>
-
-                        <div class="earnings-breakdown-legend">
-                            @foreach ($breakdown['segments'] as $index => $segment)
-                                <div class="earnings-legend-item">
-                                    <span>{{ $segment['label'] }}</span>
-                                    <strong>{{ $segment['percent'] }}%</strong>
-                                </div>
-                            @endforeach
+                        <div class="earnings-breakdown-body">
+                            <div class="earnings-donut-wrap">
+                                @php
+                                    $donutRadius = 36;
+                                    $donutCircumference = 2 * M_PI * $donutRadius;
+                                    $donutCursor = 0;
+                                    $donutPercentTotal = (float) collect($breakdown['segments'])->sum('percent');
+                                    $donutHasValue = $donutPercentTotal > 0;
+                                @endphp
+                                <svg class="earnings-donut" width="100" height="100" viewBox="0 0 100 100" role="img"
+                                    aria-label="Revenue breakdown chart">
+                                    <g transform="rotate(-90 50 50)">
+                                        @if (!$donutHasValue)
+                                            <circle cx="50" cy="50" r="{{ $donutRadius }}" fill="none" stroke="#F3F1EE"
+                                                stroke-width="18" />
+                                        @else
+                                            @foreach ($breakdown['segments'] as $index => $segment)
+                                                @php
+                                                    $donutPortion = ((float) $segment['percent'] / $donutPercentTotal) * $donutCircumference;
+                                                    $donutDraw = $donutPortion + 1.25;
+                                                @endphp
+                                                @if ($donutPortion > 0)
+                                                    <circle cx="50" cy="50" r="{{ $donutRadius }}" fill="none"
+                                                        stroke="{{ $donutColors[$index] ?? '#CBDCE8' }}" stroke-width="18"
+                                                        stroke-linecap="butt"
+                                                        stroke-dasharray="{{ round($donutDraw, 2) }} {{ round($donutCircumference, 2) }}"
+                                                        stroke-dashoffset="{{ round(-$donutCursor, 2) }}" />
+                                                @endif
+                                                @php $donutCursor += $donutPortion; @endphp
+                                            @endforeach
+                                        @endif
+                                    </g>
+                                </svg>
+                            </div>
+                            <div class="earnings-breakdown-legend">
+                                @foreach ($breakdown['segments'] as $index => $segment)
+                                    <div class="earnings-legend-item">
+                                        <span class="earnings-legend-dot"
+                                            style="background: {{ $donutColors[$index] ?? '#CBDCE8' }}"></span>
+                                        <span>{{ $segment['label'] }}</span>
+                                        <strong>{{ $segment['percent'] }}%</strong>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="earnings-recent-card">
-                <div class="earnings-recent-header">
-                    <h3>Recent Bookings</h3>
-                    <a href="#"
-                        @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'bookings'; window.dispatchEvent(new CustomEvent('booking-status-changed', { detail: { status: 'completed' } }))">View
-                        All</a>
-                </div>
-
-                <div class="earnings-recent-list">
-                    @forelse ($this->recentBookings as $booking)
-                        <div class="earnings-recent-item">
-                            @if ($isSpaceAccount)
-                                <div class="earnings-recent-avatar-wrap">
-                                    @if (filled($booking['client_photo']))
-                                        <img class="earnings-recent-avatar" src="{{ $booking['client_photo'] }}"
-                                            alt="{{ $booking['client_name'] }}"
-                                            onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
-                                        <span
-                                            class="earnings-recent-avatar-initials is-hidden">{{ $booking['client_initials'] }}</span>
-                                    @else
-                                        <span class="earnings-recent-avatar-initials">{{ $booking['client_initials'] }}</span>
-                                    @endif
-                                </div>
-                                <div class="earnings-recent-meta">
-                                    <p class="earnings-recent-name is-space">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="13" viewBox="0 0 15 13"
-                                            fill="none" aria-hidden="true">
-                                            <path
-                                                d="M13.1094 12.1166V3.83417C13.1094 3.81429 13.1111 3.79482 13.1141 3.77576L10.8748 1.86616C10.3986 1.46067 10.0696 1.18119 9.79046 0.998982C9.52095 0.823101 9.33983 0.766834 9.16658 0.766834C8.99347 0.766835 8.81349 0.823306 8.54428 0.998982C8.26512 1.18121 7.93524 1.46044 7.45838 1.86616L5.21745 3.77576C5.22054 3.7949 5.22374 3.81422 5.22374 3.83417V12.1166C5.2234 12.3281 5.04341 12.5 4.82144 12.5C4.59961 12.4998 4.41948 12.328 4.41914 12.1166V4.45573L4.00427 4.81069C3.83864 4.95183 3.58349 4.93709 3.43539 4.77924C3.28788 4.62148 3.30169 4.3796 3.46682 4.23856L6.92094 1.29553H6.92251C7.38342 0.90337 7.75667 0.583679 8.08855 0.366942C8.43046 0.143752 8.76989 2.24995e-07 9.16658 0C9.56323 0 9.9026 0.143743 10.2446 0.366942C10.5767 0.583731 10.9515 0.903225 11.4122 1.29553L14.8663 4.23856C15.0315 4.3796 15.0453 4.62148 14.8978 4.77924C14.7497 4.93709 14.4945 4.95183 14.3289 4.81069L13.914 4.45573V12.1166C13.9137 12.328 13.7336 12.4998 13.5117 12.5C13.2898 12.5 13.1098 12.3281 13.1094 12.1166Z"
-                                                fill="#3B3731" />
-                                            <path
-                                                d="M1.82418 6.66737C1.82418 6.37816 1.74192 6.13002 1.62487 5.96249C1.50777 5.79507 1.37173 5.7247 1.25 5.7247C1.12833 5.7248 0.992145 5.79519 0.875132 5.96249C0.758177 6.13002 0.675818 6.37832 0.675818 6.66737C0.675926 6.95653 0.758033 7.20483 0.875132 7.37226C0.992124 7.53946 1.12837 7.60853 1.25 7.60863C1.37164 7.60863 1.50783 7.53939 1.62487 7.37226C1.74197 7.20483 1.82407 6.95653 1.82418 6.66737ZM2.5 6.66737C2.49989 7.09818 2.37897 7.50235 2.16605 7.80679C1.95294 8.11149 1.63215 8.33333 1.25 8.33333C0.868121 8.33323 0.548331 8.11124 0.335269 7.80679C0.12233 7.50234 0.000106589 7.0982 0 6.66737C0 6.23634 0.122237 5.83113 0.335269 5.52654C0.548331 5.22219 0.868196 5.0001 1.25 5C1.63209 5 1.95294 5.22191 2.16605 5.52654C2.37908 5.83113 2.5 6.23634 2.5 6.66737Z"
-                                                fill="#3B3731" />
-                                            <path
-                                                d="M0.833252 12.1094V7.8906C0.833252 7.67488 1.0198 7.5 1.24992 7.5C1.48004 7.5 1.66659 7.67488 1.66659 7.8906V12.1094C1.66641 12.325 1.47993 12.5 1.24992 12.5C1.01991 12.5 0.833428 12.325 0.833252 12.1094Z"
-                                                fill="#3B3731" />
-                                            <path
-                                                d="M10.6579 9.31364C10.6579 8.9734 10.6564 8.75738 10.6348 8.59906C10.6147 8.4523 10.584 8.41411 10.5654 8.39576C10.5468 8.37748 10.5083 8.34577 10.3588 8.32597C10.1978 8.30466 9.97715 8.30473 9.63096 8.30473H8.92167C8.57549 8.30473 8.35488 8.30466 8.19387 8.32597C8.04438 8.34577 8.00583 8.37748 7.98725 8.39576C7.96865 8.41411 7.93793 8.4523 7.91787 8.59906C7.89622 8.75738 7.89474 8.9734 7.89474 9.31364V11.7229H10.6579V9.31364ZM9.98715 5.42972C10.2048 5.42988 10.3816 5.60399 10.3819 5.81811C10.3819 6.03251 10.205 6.20634 9.98715 6.2065H8.56548C8.34762 6.20634 8.17074 6.03251 8.17074 5.81811C8.17108 5.60399 8.34782 5.42988 8.56548 5.42972H9.98715ZM9.98715 3.33301L10.0658 3.34059C10.246 3.37657 10.3819 3.53349 10.3819 3.7214C10.3819 3.90931 10.246 4.06623 10.0658 4.10221L9.98715 4.10979H8.56548C8.34762 4.10963 8.17074 3.9358 8.17074 3.7214C8.17074 3.507 8.34762 3.33317 8.56548 3.33301H9.98715ZM11.4474 11.7229H14.6053C14.8233 11.7229 15 11.8968 15 12.1113C14.9997 12.3255 14.8231 12.4997 14.6053 12.4997H0.394737C0.176935 12.4997 0.000332468 12.3255 0 12.1113C0 11.8968 0.17673 11.7229 0.394737 11.7229H7.10526V9.31364C7.10526 8.99552 7.10427 8.71791 7.13456 8.4959C7.16648 8.26247 7.23958 8.03308 7.42907 7.84655C7.61867 7.66 7.85172 7.58819 8.08902 7.55678C8.31486 7.52691 8.59793 7.52795 8.92167 7.52795H9.63096C9.95471 7.52795 10.2378 7.52691 10.4636 7.55678C10.7009 7.58819 10.934 7.66 11.1236 7.84655C11.313 8.03308 11.3862 8.26247 11.4181 8.4959C11.4484 8.71791 11.4474 8.99552 11.4474 9.31364V11.7229Z"
-                                                fill="#3B3731" />
-                                        </svg>
-                                        {{ $booking['visit_type_label'] }}
-                                    </p>
-                                    <p class="earnings-recent-time">{{ $booking['relative_time'] }}</p>
-                                </div>
-                            @else
-                                <div class="earnings-recent-avatar-wrap">
-                                    <img class="earnings-recent-avatar" src="{{ $booking['pet_photo'] }}"
-                                        alt="{{ $booking['pet_name'] }}">
-                                </div>
-                                <div class="earnings-recent-meta">
-                                    <p class="earnings-recent-name">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 16 15"
-                                            fill="none">
-                                            <path
-                                                d="M8 6.02632C5.73786 6.02632 3.82643 8.06405 3.20929 10.6813C2.93786 11.8323 3.34714 13.0539 4.35179 13.6279C5.14821 14.0829 6.33286 14.5 8 14.5C9.66714 14.5 10.8521 14.0829 11.6486 13.6279C12.6532 13.0539 13.0621 11.8323 12.7907 10.6813C12.1736 8.06368 10.2621 6.02632 8 6.02632ZM0.5 5.45305C0.5 6.47063 1.13929 7.5 1.92857 7.5C2.71786 7.5 3.35714 6.47063 3.35714 5.45305C3.35714 4.43547 2.71786 3.81579 1.92857 3.81579C1.13929 3.81579 0.5 4.43584 0.5 5.45305ZM15.5 5.45305C15.5 6.47063 14.8607 7.5 14.0714 7.5C13.2821 7.5 12.6429 6.47063 12.6429 5.45305C12.6429 4.43547 13.2821 3.81579 14.0714 3.81579C14.8607 3.81579 15.5 4.43584 15.5 5.45305ZM4.25 2.13726C4.25 3.15484 4.88929 4.18421 5.67857 4.18421C6.46786 4.18421 7.10714 3.15484 7.10714 2.13726C7.10714 1.11968 6.46786 0.5 5.67857 0.5C4.88929 0.5 4.25 1.12005 4.25 2.13726ZM11.75 2.13726C11.75 3.15484 11.1107 4.18421 10.3214 4.18421C9.53214 4.18421 8.89286 3.15484 8.89286 2.13726C8.89286 1.11968 9.53214 0.5 10.3214 0.5C11.1107 0.5 11.75 1.12005 11.75 2.13726Z"
-                                                stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                        {{ $booking['pet_name'] }}
-                                    </p>
-                                    <p class="earnings-recent-time">{{ $booking['relative_time'] }}</p>
-                                </div>
-                            @endif
-                            <div class="earnings-recent-amount">+ £{{ number_format($booking['amount'], 2) }}</div>
+                    <div class="earnings-recent-card">
+                        <div class="earnings-recent-header">
+                            <h3>Recent Transactions</h3>
+                            <a href="#"
+                                @click.prevent="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeEarningsMenu = 'transactions'; window.dispatchEvent(new CustomEvent('earnings-menu-selected', { detail: { menu: 'transactions' } })); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'earnings', active_earnings_menu: 'transactions' } }))">View
+                                All</a>
                         </div>
-                    @empty
-                        <p class="earnings-empty">No completed bookings yet.</p>
-                    @endforelse
+
+                        <div class="earnings-recent-list">
+                            @forelse ($this->recentBookings as $booking)
+                                <div class="earnings-recent-item">
+                                    <div class="earnings-recent-avatar-wrap">
+                                        @if (filled($booking['photo']))
+                                            <img class="earnings-recent-avatar" src="{{ $booking['photo'] }}"
+                                                alt="{{ $booking['display_name'] }}"
+                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                            <span
+                                                class="earnings-recent-avatar-initials is-hidden">{{ $booking['initial'] }}</span>
+                                        @else
+                                            <span class="earnings-recent-avatar-initials">{{ $booking['initial'] }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="earnings-recent-meta">
+                                        <p class="earnings-recent-name">{{ $booking['display_name'] }}</p>
+                                        <p class="earnings-recent-time">{{ $booking['relative_time'] }}</p>
+                                    </div>
+                                    @unless ($isSpaceAccount)
+                                        <span
+                                            class="earnings-client-badge is-{{ $booking['client_type'] }}">{{ $booking['client_type_label'] }}</span>
+                                    @endunless
+                                    <div class="earnings-recent-amount">+ £{{ number_format($booking['amount'], 2) }}</div>
+                                </div>
+                            @empty
+                                <p class="earnings-empty">No completed bookings yet.</p>
+                            @endforelse
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
 </div>

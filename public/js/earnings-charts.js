@@ -5,7 +5,7 @@
     const DEFAULT_COLORS = {
         primary: "#FBAC83",
         light: "#FBAC83",
-        donut: ["#FBAC83", "#FDD0B3", "#FFF4E4"],
+        donut: ["#CBDCE8", "#D8E8B7", "#FFC97A"],
     };
 
     function parseJsonDataset(canvas, key, fallback) {
@@ -32,27 +32,32 @@
             const inThousands = value / 1000;
             const rounded =
                 inThousands % 1 === 0
-                    ? inThousands.toFixed(0)
-                    : inThousands.toFixed(1);
+                    ? String(inThousands)
+                    : inThousands.toFixed(1).replace(/\.0$/, "");
+            return "£" + rounded + "K";
+        }
+        return "£" + Math.round(value);
+    }
+
+    function formatAxisTickLabel(n) {
+        const value = Number(n) || 0;
+        if (value === 0) return "£0";
+        if (value >= 1000) {
+            const inThousands = value / 1000;
+            const rounded =
+                inThousands % 1 === 0
+                    ? String(inThousands)
+                    : inThousands.toFixed(1).replace(/\.0$/, "");
             return "£" + rounded + "K";
         }
         return "£" + Math.round(value);
     }
 
     function buildYAxisTicks(values) {
-        const maxValue = Math.max(...values.map((v) => Number(v) || 0), 0);
-        const yMax = Math.max(
-            1000,
-            maxValue <= 0 ? 1000 : Math.ceil((maxValue * 1.15) / 100) * 100,
-        );
-        const tickCount = 5;
-        const step = yMax / (tickCount - 1);
-
+        // Fixed design scale for Earnings Overview: £0 → £1K
         return {
-            yMax,
-            ticks: Array.from({ length: tickCount }, (_, i) =>
-                i === tickCount - 1 ? yMax : Math.round(i * step),
-            ),
+            yMax: 1000,
+            ticks: [0, 100, 250, 500, 1000],
         };
     }
 
@@ -345,7 +350,10 @@
                         this.year,
                         this.month - 1,
                         1,
-                    ).toLocaleDateString("en-GB", { month: "long" });
+                    ).toLocaleDateString("en-GB", {
+                        month: "long",
+                        year: "numeric",
+                    });
                     const activeBar = this.bars[this.highlightIndex];
 
                     if (this.period === "week" && activeBar?.label) {
@@ -357,6 +365,48 @@
                     }
 
                     return monthName;
+                },
+
+                get rangeLabel() {
+                    const bars = this.bars;
+                    if (!bars.length) return "";
+
+                    if (this.period === "month") {
+                        const first = bars[0];
+                        const last = bars[bars.length - 1];
+                        const firstLabel = first.label || "";
+                        const lastLabel = last.label || "";
+
+                        if (
+                            first.year &&
+                            last.year &&
+                            first.year !== last.year
+                        ) {
+                            return (
+                                firstLabel +
+                                " " +
+                                first.year +
+                                " – " +
+                                lastLabel +
+                                " " +
+                                last.year
+                            );
+                        }
+
+                        return (
+                            firstLabel +
+                            " – " +
+                            lastLabel +
+                            " " +
+                            (last.year || this.year)
+                        );
+                    }
+
+                    if (this.period === "week") {
+                        return this.periodLabel;
+                    }
+
+                    return this.periodLabel;
                 },
 
                 get axis() {
@@ -460,7 +510,10 @@
 
                 barHeight(value) {
                     if (this.yMax <= 0) return 0;
-                    return Math.max(0, (Number(value) / this.yMax) * 100);
+                    return Math.min(
+                        100,
+                        Math.max(0, (Number(value) / this.yMax) * 100),
+                    );
                 },
 
                 barColor(index) {
@@ -474,6 +527,7 @@
                 },
 
                 formatPound: formatPoundLabel,
+                formatAxisTick: formatAxisTickLabel,
             }));
 
             window.__earningsBarChartAlpineRegistered = true;
@@ -508,13 +562,15 @@
                         backgroundColor: colors,
                         borderWidth: 0,
                         hoverOffset: 4,
+                        spacing: 3,
+                        borderRadius: 8,
                     },
                 ],
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: "72%",
+                cutout: "68%",
                 plugins: {
                     legend: { display: false },
                     tooltip: {
