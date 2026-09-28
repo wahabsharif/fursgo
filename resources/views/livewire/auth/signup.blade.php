@@ -15,7 +15,6 @@ new #[Layout('layouts.app')] class extends Component {
     public bool $terms = false;
     public bool $newsletter = false;
     public bool $emailExists = false;
-    public bool $showPassword = false;
 
     /**
      * Check if email already exists in database
@@ -27,14 +26,6 @@ new #[Layout('layouts.app')] class extends Component {
         } else {
             $this->emailExists = false;
         }
-    }
-
-    /**
-     * Toggle password visibility
-     */
-    public function togglePassword(): void
-    {
-        $this->showPassword = !$this->showPassword;
     }
 
     /**
@@ -72,23 +63,28 @@ new #[Layout('layouts.app')] class extends Component {
 };
 ?>
 
-<section class="container-fluid mt-5 mb-5">
-    <div class="row" style="gap: 4%;">
-        <div class="col-lg-6">
-            <div class="login-image-form">
-                <div class="login-image-wrapper">
-                    <img src="{{ asset('images/login-page.png') }}" alt="Sign Up">
+<section class="container-fluid mb-5 login-signup-page">
+    <div class="row g-0">
+        <div class="col-lg-6 p-0">
+            <div class="login-image-form h-100">
+                <div class="login-image-wrapper h-100">
+                    <img src="{{ asset('images/login-page.png') }}" alt="Signup Image"
+                        style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 d-flex align-items-center">
-            <div class="login-form">
-                <h1 class="heading">Sign Up to FursGo</h1>
+        <div class="col-lg-6 d-flex align-items-center justify-content-center">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8 col-md-10">
+                        <div class="login-form mt-3">
+                            <h1 class="heading">Sign Up to FursGo</h1>
 
-                <form wire:submit="register" class="mt-4">
+                <form wire:submit="register" class="mt-5">
+                    <div class="form-inner d-flex flex-column align-items-stretch">
 
                     <!-- Name -->
-                    <div class="form-field mt-4">
+                    <div class="form-group">
                         <label>Full Name</label>
                         <div class="input-wrapper">
                             <input type="text" id="name" wire:model.live="name" required>
@@ -117,7 +113,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
 
                     <!-- Email -->
-                    <div class="form-field mt-4">
+                    <div class="form-group">
                         <label>Email Address</label>
                         <div class="input-wrapper">
                             <input type="email" id="email" wire:model.live="email" wire:blur="checkEmail"
@@ -152,11 +148,10 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
 
                     <!-- Password -->
-                    <div class="form-field mt-4">
+                    <div class="form-group mb-2">
                         <label>Create a Password</label>
-                        <div class="input-wrapper" style="position: relative;">
-                            <input type="{{ $showPassword ? 'text' : 'password' }}" id="password"
-                                wire:model.live="password" required>
+                        <div class="input-wrapper">
+                            <input type="password" id="password" wire:model.live="password" required>
 
                             @php
                                 $hasLength = $password && strlen($password) >= 8;
@@ -165,32 +160,8 @@ new #[Layout('layouts.app')] class extends Component {
                                 $passwordValid = $hasLength && $hasUpper && $hasNumSym;
                             @endphp
 
-                            {{-- Show / Hide Toggle --}}
-                            <span wire:click="togglePassword"
-                                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; display: flex; align-items: center; color: #9D9B98; z-index: 2;">
-                                @if ($showPassword)
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round">
-                                        <path
-                                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                                        <path
-                                            d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                                        <line x1="1" y1="1" x2="23" y2="23" />
-                                    </svg>
-                                @else
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                        <circle cx="12" cy="12" r="3" />
-                                    </svg>
-                                @endif
-                            </span>
-
-                            {{-- Success / Error icons shifted left to avoid overlapping eye icon --}}
                             @if ($passwordValid && !$errors->has('password'))
-                                <span class="icon success" style="display: block !important; right: 40px;">
+                                <span class="icon success" style="display: block !important;">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19"
                                         viewBox="0 0 19 19" fill="none">
                                         <path
@@ -200,7 +171,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 </span>
                             @endif
                             @if ($errors->has('password'))
-                                <span class="icon error" style="display: block !important; right: 40px;">
+                                <span class="icon error" style="display: block !important;">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19"
                                         viewBox="0 0 19 19" fill="none">
                                         <path
@@ -238,7 +209,7 @@ new #[Layout('layouts.app')] class extends Component {
                         @enderror
                     </div>
 
-                    <!-- Checkboxes -->
+                    <div class="checkbox-wrapper">
                     <div class="checkbox-group custom-check-group">
                         <label class="custom-check">
                             <input type="checkbox" id="terms" wire:model.live="terms" required>
@@ -257,28 +228,31 @@ new #[Layout('layouts.app')] class extends Component {
                             <input type="checkbox" id="newsletter" wire:model="newsletter">
                             <span class="checkmark"></span>
                             <span class="check-text">
-                                Sign up to receive updates, promotions, & personalised offers <br>
+                                Sign up to receive updates, promotions, &amp; personalised offers
                                 from FursGo.
                                 <span style="color:#9D9B98">(You can unsubscribe at any time.)</span>
                             </span>
                         </label>
                     </div>
-
-                    <div class="submit-button d-flex justify-content-center mt-4">
-                        <button type="submit"
-                            class="btn-custom btn-active-bg btn-custom-hover btn-shadow login-width text-center"
-                            id="submitBtn" wire:loading.attr="disabled"
-                            @if ($this->isFormValid()) @else disabled @endif>Sign Up</button>
                     </div>
 
+                    <div class="d-flex align-items-center justify-content-center mt-4">
+                        <button type="submit"
+                            class="btn-custom btn-active-bg btn-custom-hover btn-shadow login-width text-center"
+                            id="submitBtn" wire:loading.attr="disabled">Sign Up</button>
+                    </div>
+                    </div>
                 </form>
 
                 <div class="signup-divider"></div>
                 <div class="footer-text">
                     Already have a FursGo account?
-                    <a href="{{ route('login') }}" wire:navigate>Log in now</a>
+                    <a href="{{ route('login-signup.login') }}">Log in now</a>
                 </div>
 
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

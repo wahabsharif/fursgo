@@ -61,6 +61,7 @@ $transferAccounts = [
         transferTargetId: null,
         selectedPetId: @js($defaultTransferPet['id'] ?? null),
         bookingDetail: null,
+        disputeOpen: false,
         pets: @js($profilePets),
         transferAccounts: @js($transferAccounts),
         currentPet() {
@@ -75,6 +76,12 @@ $transferAccounts = [
         },
         canAssignBooking() {
             return !!this.bookingDetail;
+        },
+        showBookingActions() {
+            return this.detailTab === 'bookings' && this.bookingDetail && !this.disputeOpen;
+        },
+        showDisputeActions() {
+            return this.detailTab === 'bookings' && this.bookingDetail && this.disputeOpen;
         },
         filteredTransferAccounts() {
             const q = (this.transferSearch || '').trim().toLowerCase();
@@ -140,8 +147,10 @@ $transferAccounts = [
         },
     }"
     @admin-pet-selected.window="selectedPetId = $event.detail.id"
-    @admin-booking-selected.window="bookingDetail = $event.detail.booking || null"
-    @admin-booking-closed.window="bookingDetail = null"
+    @admin-booking-selected.window="bookingDetail = $event.detail.booking || null; disputeOpen = false"
+    @admin-booking-closed.window="bookingDetail = null; disputeOpen = false"
+    @admin-dispute-opened.window="disputeOpen = true"
+    @admin-dispute-closed.window="disputeOpen = false"
     x-init="
         const syncModalLock = () => {
             const open = verifyEmailOpen || resetPasswordOpen || suspendOpen || pauseBookingsOpen || flagOpen || deleteOpen || transferOpen || archiveOpen || unarchiveOpen || deletePetOpen;
@@ -242,7 +251,7 @@ $transferAccounts = [
     </div>
 
     {{-- Stats strip (changes with detail tab) --}}
-    <div class="admin-co-stats" x-show="detailTab !== 'pets' && detailTab !== 'bookings'" x-cloak>
+    <div class="admin-co-stats" x-show="detailTab !== 'pets' && detailTab !== 'bookings' && detailTab !== 'activity'" x-cloak>
         <div class="admin-co-stat">
             <p class="admin-co-stat-value">{{ $profile['stats']['spend'] }}</p>
             <p class="admin-co-stat-label">Total spend</p>
@@ -299,6 +308,25 @@ $transferAccounts = [
         </div>
     </div>
 
+    <div class="admin-co-stats" x-show="detailTab === 'activity'" x-cloak>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['activity_stats']['total_events'] ?? '150' }}</p>
+            <p class="admin-co-stat-label">Total events</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['activity_stats']['admin_actions'] ?? '12' }}</p>
+            <p class="admin-co-stat-label">Admin actions</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['activity_stats']['last_active'] ?? '2d ago' }}</p>
+            <p class="admin-co-stat-label">Last active</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['activity_stats']['account_age'] ?? '2 yrs' }}</p>
+            <p class="admin-co-stat-label">Account age</p>
+        </div>
+    </div>
+
     {{-- Open dispute alert (booking detail) --}}
     <div
         class="admin-co-bk-dispute-alert"
@@ -316,11 +344,11 @@ $transferAccounts = [
         <p class="admin-co-bk-dispute-alert-footer" x-text="bookingDispute()?.footer"></p>
     </div>
 
-    {{-- Admin actions (changes with detail tab) --}}
-    <div class="admin-co-actions">
+    {{-- Admin actions (hidden on the activity tab) --}}
+    <div class="admin-co-actions" x-show="detailTab !== 'activity'" x-cloak>
         <h3 class="admin-co-actions-title">Admin Actions</h3>
 
-        <div x-show="detailTab !== 'pets' && detailTab !== 'bookings'" x-cloak>
+        <div x-show="detailTab !== 'pets' && detailTab !== 'bookings' && detailTab !== 'activity'" x-cloak>
             <x-admin.customer.action-btn
                 variant="verify"
                 label="Send account verification email"
@@ -409,13 +437,28 @@ $transferAccounts = [
                 " />
         </div>
 
-        <div x-show="detailTab === 'bookings' && bookingDetail" x-cloak>
+        <div x-show="detailTab === 'bookings' && bookingDetail && !disputeOpen" x-cloak>
             <div x-show="bookingDispute()" x-cloak>
                 <x-admin.customer.action-btn
                     variant="view-dispute"
                     label="View full dispute"
                     x-on:click="$dispatch('admin-view-dispute')" />
             </div>
+            <div x-show="canAssignBooking()" x-cloak>
+                <x-admin.customer.action-btn
+                    variant="assign"
+                    label="Assign to team member"
+                    x-on:click="$dispatch('admin-open-assign-booking')" />
+            </div>
+            <div x-show="canCancelBooking()" x-cloak>
+                <x-admin.customer.action-btn
+                    variant="cancel-booking"
+                    label="Cancel booking"
+                    x-on:click="$dispatch('admin-open-cancel-booking')" />
+            </div>
+        </div>
+
+        <div x-show="detailTab === 'bookings' && bookingDetail && disputeOpen" x-cloak>
             <div x-show="canAssignBooking()" x-cloak>
                 <x-admin.customer.action-btn
                     variant="assign"

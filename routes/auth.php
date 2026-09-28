@@ -7,15 +7,23 @@ use App\Livewire\Actions\Logout;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
-Route::middleware('guest')->group(function () {
-    Volt::route('login', 'auth.login')
-        ->name('login');
+// Always reachable — guest middleware was sending logged-in users back to home,
+// so the header Log in link looked like it did nothing.
+Volt::route('login', 'auth.login')
+    ->name('login');
 
+Volt::route('login-signup/login', 'auth.login')
+    ->name('login-signup.login');
+
+Volt::route('signup', 'auth.signup')
+    ->name('signup');
+
+Volt::route('login-signup/signup', 'auth.signup')
+    ->name('login-signup.signup');
+
+Route::middleware('guest')->group(function () {
     Volt::route('login-groomer-space', 'auth.login-groomer-space')
         ->name('login-groomer-space');
-
-    Volt::route('signup', 'auth.signup')
-        ->name('signup');
 
     Volt::route('signup-groomer-space', 'auth.signup-groomer-space')
         ->name('signup-groomer-space');
@@ -58,3 +66,13 @@ Route::middleware('auth.groomer_spacer')->group(function () {
 
 Route::post('logout', Logout::class)
     ->name('logout');
+
+// Pet-owner login-signup setup flow (imported from legacy login-signup/)
+Volt::route('login-signup/setup_owner_account', 'login-signup.setup-owner-account')
+    ->name('login-signup.setup-owner-account');
+
+Volt::route('login-signup/owner_account_setup_form', 'login-signup.owner-account-setup-form')
+    ->name('login-signup.owner-account-setup-form');
+
+Volt::route('login-signup/setup_owner_account_complete', 'login-signup.setup-owner-account-complete')
+    ->name('login-signup.setup-owner-account-complete');
