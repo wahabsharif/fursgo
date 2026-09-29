@@ -93,14 +93,14 @@ Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/vie
 
 ### Provider (`groomer_spacer`)
 
-| Route                                                 | Notes                                           |
-| ----------------------------------------------------- | ----------------------------------------------- |
-| `/login-groomer-space`, `/signup-groomer-space`       | Guest                                           |
-| `/business-verification` (+ PDF/private files)        | Onboarding                                      |
-| `/business-hub`                                       | Main provider app (session nav)                 |
-| `POST /business-hub/nav`, `POST /business-hub/switch` | Nav persist / multi-profile switch (same email) |
-| `/marketing-hub` + `POST /marketing-hub/nav`          | Marketing                                       |
-| Invoice PDF/HTML                                      | `business-hub/bookings/{booking}/invoice.pdf`   |
+| Route                                                 | Notes                                                                                   |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `/login-groomer-space`, `/signup-groomer-space`       | Always reachable (not behind `guest`; already-authed groomer redirects in page `mount`) |
+| `/business-verification` (+ PDF/private files)        | Onboarding                                                                              |
+| `/business-hub`                                       | Main provider app (session nav)                                                         |
+| `POST /business-hub/nav`, `POST /business-hub/switch` | Nav persist / multi-profile switch (same email)                                         |
+| `/marketing-hub` + `POST /marketing-hub/nav`          | Marketing                                                                               |
+| Invoice PDF/HTML                                      | `business-hub/bookings/{booking}/invoice.pdf`                                           |
 
 ### Admin
 

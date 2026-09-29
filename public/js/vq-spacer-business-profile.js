@@ -50,9 +50,7 @@
             submitting: false,
 
             get canContinue() {
-                return Object.values(this.servicesPricing).some(
-                    (row) => row?.selected,
-                );
+                return true;
             },
 
             get selectedAddonList() {

@@ -12,8 +12,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 
-new #[Layout('layouts.dashboard')]
-    class extends Component {
+new #[Layout('layouts.dashboard')] class extends Component {
     use WithFileUploads;
 
     // Form display control
@@ -1522,6 +1521,7 @@ new #[Layout('layouts.dashboard')]
 
     /**
      * Handle "Verify Your Account for Payouts" Continue.
+     * Selections are optional so reviewers can progress with empty inputs.
      */
     public function submitAccountPayouts(): void
     {
@@ -1531,9 +1531,9 @@ new #[Layout('layouts.dashboard')]
         }
 
         $this->validate([
-            'fursgo_usage' => ['required', 'string', 'in:groomer,space'],
-            'account_type' => ['required', 'string', 'in:registered_business,freelance'],
-            'location_types' => ['required', 'array', 'min:1'],
+            'fursgo_usage' => ['nullable', 'string', 'in:groomer,space'],
+            'account_type' => ['nullable', 'string', 'in:registered_business,freelance'],
+            'location_types' => ['nullable', 'array'],
             'location_types.*' => ['string', 'in:space_visits,commercial_salon,home_studio,house_visit,mobile_van'],
         ]);
 
@@ -1551,6 +1551,10 @@ new #[Layout('layouts.dashboard')]
         if ($locationTypesForSave === [] && is_array($user->select_location_type ?? null)) {
             $locationTypesForSave = array_values($user->select_location_type);
         }
+
+        $this->fursgo_usage = $usageForSave;
+        $this->account_type = $accountTypeForSave;
+        $this->location_types = $locationTypesForSave;
 
         $user->update([
             'user_type' => $usageForSave,
@@ -1571,11 +1575,12 @@ new #[Layout('layouts.dashboard')]
     }
 
     /**
-     * Check if form is valid for enabling submit button
+     * Check if form is valid for enabling submit button.
+     * Always true so reviewers can progress without filling fields.
      */
     public function isFormValid(): bool
     {
-        return $this->fursgo_usage && $this->account_type && count($this->location_types) > 0;
+        return true;
     }
 
     public function verifyBusiness(): void
@@ -1864,8 +1869,8 @@ new #[Layout('layouts.dashboard')]
             }
             $this->groomer_pet_specialties = array_values(array_filter($fromBasics, fn($v) => in_array($v, ['dog', 'cat', 'other'], true)));
         }
-        $this->groomer_specialty_other = trim((string) ($groomerProfile['specialty_other'] ?? $bb['specialty_other'] ?? ''));
-        $petSizes = $groomerProfile['pet_sizes'] ?? $bb['pet_sizes'] ?? [];
+        $this->groomer_specialty_other = trim((string) ($groomerProfile['specialty_other'] ?? ($bb['specialty_other'] ?? '')));
+        $petSizes = $groomerProfile['pet_sizes'] ?? ($bb['pet_sizes'] ?? []);
         if (!is_array($petSizes)) {
             $petSizes = [];
         }
@@ -1952,8 +1957,8 @@ new #[Layout('layouts.dashboard')]
                     if (typeof window.VqDocUpload.init === 'function') window.VqDocUpload.init();
                     if (typeof window.VqDocUpload.afterMorph === 'function') window.VqDocUpload.afterMorph();
                 }
-            JS,
-
+            JS
+            ,
         );
     }
 
@@ -2152,11 +2157,7 @@ new #[Layout('layouts.dashboard')]
     /** @return list<string> */
     public function groomerRulesCatalog(): array
     {
-        return [
-            'Works with dogs & cats up to 35kg',
-            'Special care for seniors & anxious pets',
-            'Not suitable for aggressive pets',
-        ];
+        return ['Works with dogs & cats up to 35kg', 'Special care for seniors & anxious pets', 'Not suitable for aggressive pets'];
     }
 
     public function groomerServiceDefaultDescription(string $name): string
@@ -2356,10 +2357,7 @@ new #[Layout('layouts.dashboard')]
         $this->spacer_services_pricing = $this->mergeSpacerProfileKeyedRows($defSvc, is_array($svcIn) ? $svcIn : []);
 
         $fuIn = $data['addons_service'] ?? ($data['addons_fursgo'] ?? []);
-        $this->spacer_addons_service = $this->mergeSpacerProfileKeyedRows(
-            $this->defaultAddonServiceRows(),
-            is_array($fuIn) ? $fuIn : [],
-        );
+        $this->spacer_addons_service = $this->mergeSpacerProfileKeyedRows($this->defaultAddonServiceRows(), is_array($fuIn) ? $fuIn : []);
 
         $this->spacer_addon_custom_rows = [];
         $customIn = $data['addons_custom'] ?? [];
@@ -2627,7 +2625,7 @@ new #[Layout('layouts.dashboard')]
 
     public function isBusinessBasicsContinueEnabled(): bool
     {
-        return trim($this->business_display_name) !== '';
+        return true;
     }
 
     /**
@@ -2713,23 +2711,17 @@ new #[Layout('layouts.dashboard')]
 
     public function isGroomerBusinessProfileContinueEnabled(): bool
     {
-        return count($this->groomer_selected_services) > 0;
+        return true;
     }
 
     public function isSpacerBusinessProfileContinueEnabled(): bool
     {
-        foreach ($this->spacer_services_pricing as $row) {
-            if (!empty($row['selected'])) {
-                return true;
-            }
-        }
-
-        return false;
+        return true;
     }
 
     public function isLegalPolicyContinueEnabled(): bool
     {
-        return $this->legal_terms_accepted;
+        return true;
     }
 
     public function toggleLegalAgreementsExpanded(): void
@@ -2744,9 +2736,7 @@ new #[Layout('layouts.dashboard')]
             return;
         }
 
-        $this->validate([
-            'legal_terms_accepted' => ['accepted'],
-        ]);
+        $this->legal_terms_accepted = true;
 
         $user->update(['legal_policy_agreements' => true]);
 
@@ -3355,7 +3345,7 @@ new #[Layout('layouts.dashboard')]
         }
 
         $this->validate([
-            'business_display_name' => ['required', 'string', 'max:255'],
+            'business_display_name' => ['nullable', 'string', 'max:255'],
             'business_tagline' => ['nullable', 'string', 'max:500'],
             'business_bio' => ['nullable', 'string', 'max:5000'],
             'business_avatar_upload' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:51200'],
@@ -3419,6 +3409,11 @@ new #[Layout('layouts.dashboard')]
         if (!in_array($usage, ['groomer', 'space'], true)) {
             $usage = $this->normalizeFursgoUsage((string) ($user->user_type ?? ''));
         }
+        if (!in_array($usage, ['groomer', 'space'], true)) {
+            $usage = 'groomer';
+            $user->update(['user_type' => $usage]);
+            $this->fursgo_usage = $usage;
+        }
         $this->showGroomerBusinessProfileForm = $usage === 'groomer';
         $this->showSpacerBusinessProfileForm = $usage === 'space';
         if ($this->showGroomerBusinessProfileForm || $this->showSpacerBusinessProfileForm) {
@@ -3429,12 +3424,6 @@ new #[Layout('layouts.dashboard')]
             $this->setBuildProfileSubstep('groomer_profile');
         } elseif ($this->showSpacerBusinessProfileForm) {
             $this->setBuildProfileSubstep('spacer_profile');
-        }
-
-        if (!$this->showGroomerBusinessProfileForm && !$this->showSpacerBusinessProfileForm) {
-            $this->showBusinessBasicsForm = true;
-            $this->setBuildProfileSubstep('business_basics');
-            $this->js('alert(' . json_encode('Please select how you use FursGo (groomer or space).') . ')');
         }
 
         $this->scrollBusinessVerificationStepToTop();
@@ -3548,10 +3537,7 @@ new #[Layout('layouts.dashboard')]
         }
 
         if (isset($form['fursgoAddons']) && is_array($form['fursgoAddons'])) {
-            $this->spacer_addons_service = $this->mergeSpacerProfileKeyedRows(
-                $this->defaultAddonServiceRows(),
-                $form['fursgoAddons'],
-            );
+            $this->spacer_addons_service = $this->mergeSpacerProfileKeyedRows($this->defaultAddonServiceRows(), $form['fursgoAddons']);
         }
 
         $customAddonRows = $form['customAddonRows'] ?? [];
@@ -3675,7 +3661,7 @@ new #[Layout('layouts.dashboard')]
             'groomer_selected_addons.*' => ['string', 'max:255'],
             'groomer_custom_services' => ['nullable', 'array'],
             'groomer_custom_services.*' => ['string', 'max:255'],
-            'groomer_selected_services' => ['required', 'array', 'min:1'],
+            'groomer_selected_services' => ['nullable', 'array'],
             'groomer_selected_services.*' => ['string', 'max:255'],
             'groomer_custom_rules' => ['nullable', 'array'],
             'groomer_custom_rules.*' => ['string', 'max:255'],
@@ -3741,26 +3727,13 @@ new #[Layout('layouts.dashboard')]
 
         $this->validate([
             'spacer_bio' => ['nullable', 'string', 'max:5000'],
-            'spacer_services_pricing' => ['required', 'array'],
+            'spacer_services_pricing' => ['nullable', 'array'],
             'spacer_addon_custom_rows' => ['nullable', 'array'],
             'spacer_suitable_for' => ['nullable', 'array'],
             'spacer_suitable_for.*' => ['string', 'max:255'],
             'spacer_rules_custom' => ['nullable', 'array'],
             'spacer_amenities_custom' => ['nullable', 'array'],
         ]);
-
-        $anyService = false;
-        foreach ($this->spacer_services_pricing as $row) {
-            if (!empty($row['selected'])) {
-                $anyService = true;
-                break;
-            }
-        }
-        if (!$anyService) {
-            $this->addError('spacer_services_pricing', 'Select at least one pricing option (Hourly, Half-Day, or Full-Day).');
-
-            return;
-        }
 
         $rulesMerged = array_values(array_unique(array_merge($this->spacer_rules_preset_selected, $this->selectedSpacerCustomEntryTexts($this->spacer_rules_custom))));
         $amenitiesMerged = array_values(array_unique(array_merge($this->spacer_amenities_preset_selected, $this->selectedSpacerCustomEntryTexts($this->spacer_amenities_custom))));
@@ -3880,7 +3853,8 @@ new #[Layout('layouts.dashboard')]
     }
 
     /**
-     * Handle personal information form submission
+     * Handle personal information form submission.
+     * Fields and ID uploads are optional so reviewers can progress with empty inputs.
      */
     public function submitPersonalInfo(): void
     {
@@ -3898,50 +3872,40 @@ new #[Layout('layouts.dashboard')]
 
         if ($isFreelance) {
             $this->validate([
-                'full_name' => ['required', 'string', 'max:255'],
-                'business_email' => ['required', 'email'],
+                'full_name' => ['nullable', 'string', 'max:255'],
+                'business_email' => ['nullable', 'string', 'max:255'],
                 'freelance_service_home_address_line1' => ['nullable', 'string', 'max:500'],
                 'freelance_service_home_address_line2' => ['nullable', 'string', 'max:500'],
-                'business_phone' => ['required', 'string', 'max:20'],
+                'business_phone' => ['nullable', 'string', 'max:20'],
                 'government_id' => ['nullable', 'array'],
                 'id_documents' => ['nullable', 'array'],
                 'insurance_certificate_upload' => ['nullable', 'array'],
-                'account_holder_name' => ['required', 'string', 'max:255'],
-                'account_number' => ['required', 'string', 'max:50'],
-                'sort_code' => ['required', 'string', 'max:20'],
-                'iban' => ['required', 'string', 'max:50'],
-                'information_accuracy_confirmed' => ['accepted'],
+                'account_holder_name' => ['nullable', 'string', 'max:255'],
+                'account_number' => ['nullable', 'string', 'max:50'],
+                'sort_code' => ['nullable', 'string', 'max:20'],
+                'iban' => ['nullable', 'string', 'max:50'],
+                'information_accuracy_confirmed' => ['nullable', 'boolean'],
             ]);
-            $hasGovernmentId = count($this->storedGovernmentIdPathsForDisplay()) > 0 || count($this->pendingGovernmentIdUploads()) > 0;
-            if (!$hasGovernmentId) {
-                $this->addError('government_id', 'Please upload at least one valid government ID document.');
-
-                return;
-            }
         } else {
             $this->validate([
-                'full_name' => ['required', 'string', 'max:255'],
-                'business_email' => ['required', 'email'],
-                'business_name' => ['required', 'string', 'max:255'],
-                'business_registration_number' => ['required', 'string', 'max:255'],
-                'business_phone' => ['required', 'string', 'max:20'],
+                'full_name' => ['nullable', 'string', 'max:255'],
+                'business_email' => ['nullable', 'string', 'max:255'],
+                'business_name' => ['nullable', 'string', 'max:255'],
+                'business_registration_number' => ['nullable', 'string', 'max:255'],
+                'business_phone' => ['nullable', 'string', 'max:20'],
                 'business_owner_id_images' => ['nullable', 'array'],
                 'business_owner_id_paths' => ['nullable', 'array'],
                 'id_documents' => ['nullable', 'array'],
                 'insurance_certificate_upload' => ['nullable', 'array'],
-                'account_holder_name' => ['required', 'string', 'max:255'],
-                'account_number' => ['required', 'string', 'max:50'],
-                'sort_code' => ['required', 'string', 'max:20'],
-                'iban' => ['required', 'string', 'max:50'],
-                'information_accuracy_confirmed' => ['accepted'],
+                'account_holder_name' => ['nullable', 'string', 'max:255'],
+                'account_number' => ['nullable', 'string', 'max:50'],
+                'sort_code' => ['nullable', 'string', 'max:20'],
+                'iban' => ['nullable', 'string', 'max:50'],
+                'information_accuracy_confirmed' => ['nullable', 'boolean'],
             ]);
-            $hasBusinessOwnerId = count($this->storedBusinessOwnerIdPathsForDisplay()) > 0 || count($this->pendingBusinessOwnerIdUploads()) > 0;
-            if (!$hasBusinessOwnerId) {
-                $this->addError('business_owner_id_images', 'Please upload at least one valid ID document.');
-
-                return;
-            }
         }
+
+        $this->information_accuracy_confirmed = true;
 
         $idUploadProperty = $isFreelance ? 'government_id' : 'business_owner_id_images';
         $idUploadLabel = $isFreelance ? 'government ID' : 'business owner ID';
@@ -4129,7 +4093,7 @@ new #[Layout('layouts.dashboard')]
                 $payload['id_document_paths'] = $documentPaths;
             }
 
-            $status = $this->isPersonalInfoFormValid() ? 'approved' : 'pending';
+            $status = 'approved';
             if ($isFreelance) {
                 $payload['freelance_details']['verification_status'] = $status;
             } else {
@@ -4164,18 +4128,12 @@ new #[Layout('layouts.dashboard')]
     }
 
     /**
-     * Check if personal information form is valid for enabling submit button
+     * Check if personal information form is valid for enabling submit button.
+     * Always true so reviewers can progress without filling fields.
      */
     public function isPersonalInfoFormValid(): bool
     {
-        $hasIdProof = $this->isFreelanceAccount() ? count($this->storedGovernmentIdPathsForDisplay()) > 0 || count($this->pendingGovernmentIdUploads()) > 0 : count($this->storedBusinessOwnerIdPathsForDisplay()) > 0 || count($this->pendingBusinessOwnerIdUploads()) > 0;
-        $emailOk = (bool) filter_var($this->business_email, FILTER_VALIDATE_EMAIL);
-
-        if ($this->isFreelanceAccount()) {
-            return $this->information_accuracy_confirmed && $this->full_name && $this->business_email && $this->business_phone && $this->account_holder_name && $this->account_number && $this->sort_code && $this->iban && $hasIdProof && $emailOk;
-        }
-
-        return $this->information_accuracy_confirmed && $this->full_name && $this->business_email && $this->business_name && $this->business_registration_number && $this->business_phone && $this->account_holder_name && $this->account_number && $this->sort_code && $this->iban && $hasIdProof && $emailOk;
+        return true;
     }
 
     /**
@@ -4419,15 +4377,7 @@ new #[Layout('layouts.dashboard')]
                                 <p class="basics-section-muted">Upload your profile photo or logo.</p>
                             </div>
                             @php
-                                $__avatarSavedFileEntries =
-                                    ($business_avatar_path ?? '') !== ''
-                                    ? [
-                                        $this->savedDocUploadEntry(
-                                            (string) $business_avatar_path,
-                                            'groomer-spacer.business-basics-file',
-                                        ),
-                                    ]
-                                    : [];
+                                $__avatarSavedFileEntries = ($business_avatar_path ?? '') !== '' ? [$this->savedDocUploadEntry((string) $business_avatar_path, 'groomer-spacer.business-basics-file')] : [];
                                 $__avatarSavedKey = md5(implode("\0", array_column($__avatarSavedFileEntries, 'path')));
                             @endphp
                             <input type="hidden" id="profile-photo-saved-urls-json"
@@ -4463,13 +4413,7 @@ new #[Layout('layouts.dashboard')]
                                     }
                                     $gallery_used = count($gallery_items);
                                     $gallery_total_slots = $this->galleryVisibleSlotCount();
-                                    $gallery_slots_key = md5(
-                                        implode("\0", $business_gallery_paths) .
-                                        '|' .
-                                        count($business_gallery_pending) .
-                                        '|' .
-                                        $gallery_total_slots,
-                                    );
+                                    $gallery_slots_key = md5(implode("\0", $business_gallery_paths) . '|' . count($business_gallery_pending) . '|' . $gallery_total_slots);
                                 @endphp
                                 @foreach (range(0, $gallery_total_slots - 1) as $slot)
                                     @php $item = $gallery_items[$slot] ?? null; @endphp
@@ -4482,11 +4426,7 @@ new #[Layout('layouts.dashboard')]
                                                 <img src="{{ asset('images/business-verification/icon-gallery-remove.svg') }}" alt=""
                                                     width="18" height="18">
                                             </button>
-                                        @elseif (
-                                                $item &&
-                                                $item['kind'] === 'pending' &&
-                                                $item['file'] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile
-                                            )
+                                        @elseif ($item && $item['kind'] === 'pending' && $item['file'] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile)
                                             <img class="gallery-slot-img" src="{{ $item['file']->temporaryUrl() }}" alt="">
                                             <button type="button" class="gallery-slot-remove"
                                                 wire:click="removeBusinessGalleryPending({{ (int) $item['idx'] }})"
@@ -4540,11 +4480,7 @@ new #[Layout('layouts.dashboard')]
                 </div>
             @elseif ($showLegalPolicyForm)
                 @include($this->vqView('legal-policy'))
-            @elseif (
-                    $fursgo_usage === 'space' &&
-                    !$showBusinessBasicsForm &&
-                    ($showSpacerBusinessProfileForm || $showGroomerBusinessProfileForm)
-                )
+            @elseif ($fursgo_usage === 'space' && !$showBusinessBasicsForm && ($showSpacerBusinessProfileForm || $showGroomerBusinessProfileForm))
                 @include($this->vqView('spacer-business-profile'))
             @elseif ($fursgo_usage === 'groomer' && !$showBusinessBasicsForm && $showGroomerBusinessProfileForm)
                 @include($this->vqView('groomer-business-profile'))
@@ -4637,31 +4573,28 @@ new #[Layout('layouts.dashboard')]
 
                     <div class="verification-form"
                         x-data="{
-                                                                                                                                                                                                fursgoUsage: @js($fursgo_usage),
-                                                                                                                                                                                                accountType: @js($account_type),
-                                                                                                                                                                                                locationTypes: @js(array_values($location_types ?? [])),
-                                                                                                                                                                                                get canContinue() {
-                                                                                                                                                                                                    return Boolean(this.fursgoUsage) &&
-                                                                                                                                                                                                        Boolean(this.accountType) &&
-                                                                                                                                                                                                        Array.isArray(this.locationTypes) &&
-                                                                                                                                                                                                        this.locationTypes.length > 0;
-                                                                                                                                                                                                },
-                                                                                                                                                                                                isLocationChecked(value) {
-                                                                                                                                                                                                    return Array.isArray(this.locationTypes) && this.locationTypes.includes(value);
-                                                                                                                                                                                                },
-                                                                                                                                                                                                toggleLocation(value, checked) {
-                                                                                                                                                                                                    if (!Array.isArray(this.locationTypes)) {
-                                                                                                                                                                                                        this.locationTypes = [];
-                                                                                                                                                                                                    }
-                                                                                                                                                                                                    if (checked) {
-                                                                                                                                                                                                        if (!this.locationTypes.includes(value)) {
-                                                                                                                                                                                                            this.locationTypes.push(value);
-                                                                                                                                                                                                        }
-                                                                                                                                                                                                        return;
-                                                                                                                                                                                                    }
-                                                                                                                                                                                                    this.locationTypes = this.locationTypes.filter((item) => item !== value);
-                                                                                                                                                                                                },
-                                                                                                                                                                                            }">
+                            fursgoUsage: @js($fursgo_usage),
+                            accountType: @js($account_type),
+                            locationTypes: @js(array_values($location_types ?? [])),
+                            get canContinue() {
+                                return true;
+                            },
+                            isLocationChecked(value) {
+                                return Array.isArray(this.locationTypes) && this.locationTypes.includes(value);
+                            },
+                            toggleLocation(value, checked) {
+                                if (!Array.isArray(this.locationTypes)) {
+                                    this.locationTypes = [];
+                                }
+                                if (checked) {
+                                    if (!this.locationTypes.includes(value)) {
+                                        this.locationTypes.push(value);
+                                    }
+                                    return;
+                                }
+                                this.locationTypes = this.locationTypes.filter((item) => item !== value);
+                            },
+                        }">
                         <div>
                             <div class="form-section">
                                 <div class="section-title">
@@ -4791,12 +4724,11 @@ new #[Layout('layouts.dashboard')]
                                 loading-target="submitAccountPayouts" x-bind:disabled="!canContinue"
                                 x-bind:class="{ 'common-btn--disabled': !canContinue }"
                                 x-bind:style="{
-                                                                                                                                                                                                                backgroundColor: canContinue ? '#FFC97A' : '#e5e7eb',
-                                                                                                                                                                                                                color: canContinue ? '#FFFFFF' : '#9ca3af',
-                                                                                                                                                                                                                boxShadow: canContinue ? '0 5px 8px 0 rgba(0, 0, 0, 0.10)' : 'none',
-                                                                                                                                                                                                            }"
+                                    backgroundColor: canContinue ? '#FFC97A' : '#e5e7eb',
+                                    color: canContinue ? '#FFFFFF' : '#9ca3af',
+                                    boxShadow: canContinue ? '0 5px 8px 0 rgba(0, 0, 0, 0.10)' : 'none',
+                                }"
                                 @click="
-                                                                                                                                                                                                                if (!canContinue) { return; }
                                                                                                                                                                                                                 $wire.set('fursgo_usage', fursgoUsage, false);
                                                                                                                                                                                                                 $wire.set('account_type', accountType, false);
                                                                                                                                                                                                                 $wire.set('location_types', locationTypes, false);
@@ -4918,13 +4850,7 @@ new #[Layout('layouts.dashboard')]
                                         documents must be in English and dated within the last 3 months.</p>
 
                                     @php
-                                        $__boSavedFileEntries = $this->savedDocUploadEntriesForPaths(
-                                            is_array($business_owner_id_paths ?? null) ? $business_owner_id_paths : [],
-                                            is_array($business_owner_id_file_names ?? null)
-                                            ? $business_owner_id_file_names
-                                            : [],
-                                            'groomer-spacer.business-owner-id-file',
-                                        );
+                                        $__boSavedFileEntries = $this->savedDocUploadEntriesForPaths(is_array($business_owner_id_paths ?? null) ? $business_owner_id_paths : [], is_array($business_owner_id_file_names ?? null) ? $business_owner_id_file_names : [], 'groomer-spacer.business-owner-id-file');
                                         $__boSavedKey = md5(implode("\0", array_column($__boSavedFileEntries, 'path')));
                                     @endphp
                                     <input type="hidden" id="business-owner-saved-urls-json-registered"
@@ -5019,18 +4945,8 @@ new #[Layout('layouts.dashboard')]
                                 <div>
                                     <label class="form-label">Insurance Certificate <span>(Optional)</span></label>
                                     @php
-                                        $__insSavedFileEntries = $this->savedDocUploadEntriesForPaths(
-                                            is_array($insurance_certificate_paths ?? null)
-                                            ? $insurance_certificate_paths
-                                            : [],
-                                            is_array($insurance_certificate_file_names ?? null)
-                                            ? $insurance_certificate_file_names
-                                            : [],
-                                            'groomer-spacer.insurance-certificate-file',
-                                        );
-                                        $__insSavedKey = md5(
-                                            implode("\0", array_column($__insSavedFileEntries, 'path')),
-                                        );
+                                        $__insSavedFileEntries = $this->savedDocUploadEntriesForPaths(is_array($insurance_certificate_paths ?? null) ? $insurance_certificate_paths : [], is_array($insurance_certificate_file_names ?? null) ? $insurance_certificate_file_names : [], 'groomer-spacer.insurance-certificate-file');
+                                        $__insSavedKey = md5(implode("\0", array_column($__insSavedFileEntries, 'path')));
                                     @endphp
                                     <input type="hidden" id="insurance-saved-urls-json"
                                         value="{{ htmlspecialchars(json_encode($__insSavedFileEntries), ENT_QUOTES, 'UTF-8') }}"
@@ -5079,225 +4995,225 @@ new #[Layout('layouts.dashboard')]
 </section>
 
 @script
-<script>
-    (function () {
-        function easeInOutCubic(t) {
-            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-        }
-
-        function revealMainContent() {
-            const main = document.querySelector(
-                ".verification-wrapper .main-content",
-            );
-            if (!main) {
-                return;
+    <script>
+        (function() {
+            function easeInOutCubic(t) {
+                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
             }
-            main.classList.remove("vq-step-enter");
-            void main.offsetWidth;
-            main.classList.add("vq-step-enter");
-            main.addEventListener(
-                "animationend",
-                () => main.classList.remove("vq-step-enter"), {
-                once: true
-            },
-            );
-        }
 
-        if (!window.__vqScrollStepToTop) {
-            window.__vqScrollStepToTop = function __vqScrollStepToTop() {
-                const reduceMotion = window.matchMedia(
-                    "(prefers-reduced-motion: reduce)",
-                ).matches;
-                const root =
-                    document.scrollingElement || document.documentElement;
-                const startTop = root.scrollTop || window.scrollY || 0;
-                const targetTop = 0;
-                const distance = targetTop - startTop;
-
-                const snapToTop = () => {
-                    window.scrollTo({
-                        top: 0,
-                        left: 0,
-                        behavior: "auto",
-                    });
-                    root.scrollTop = 0;
-                    document.body.scrollTop = 0;
-                    revealMainContent();
-                };
-
-                if (reduceMotion || Math.abs(distance) < 6) {
-                    snapToTop();
-                    return;
-                }
-
-                const duration = Math.min(
-                    780,
-                    Math.max(420, Math.abs(distance) * 0.5),
+            function revealMainContent() {
+                const main = document.querySelector(
+                    ".verification-wrapper .main-content",
                 );
-                const startTime = performance.now();
-
-                const tick = (now) => {
-                    const progress = Math.min((now - startTime) / duration, 1);
-                    const nextTop =
-                        startTop + distance * easeInOutCubic(progress);
-                    window.scrollTo(0, nextTop);
-                    root.scrollTop = nextTop;
-                    if (progress < 1) {
-                        requestAnimationFrame(tick);
-                    } else {
-                        snapToTop();
-                    }
-                };
-
-                requestAnimationFrame(() => requestAnimationFrame(tick));
-            };
-        }
-
-        if (window.__businessVerificationDebugInstalled) {
-            return;
-        }
-        window.__businessVerificationDebugInstalled = true;
-
-        let t = null;
-        const debounceMs = 250;
-
-        function wireRootFromNode(node) {
-            if (!node || !node.closest) {
-                return null;
-            }
-            return node.closest('[wire\\:id]');
-        }
-
-        function resolveComponent(component, el) {
-            if (component && typeof component.call === 'function') {
-                return component;
-            }
-            const root = wireRootFromNode(el);
-            const id = root && root.getAttribute('wire:id');
-            if (!id || typeof Livewire === 'undefined' || typeof Livewire.find !== 'function') {
-                return null;
-            }
-            return Livewire.find(id);
-        }
-
-        function logBusinessVerificationState(component, el) {
-            const cmp = resolveComponent(component, el);
-            if (!cmp || typeof cmp.call !== 'function') {
-                return;
-            }
-            clearTimeout(t);
-            t = setTimeout(() => {
-                cmp.call('getSubmitButtonDebug').then((data) => {
-                    const p = data.personal_step;
-                    const c = data.continue_step;
-
-                    if (data.step.showBusinessBasicsForm) {
-                        console.log(
-                            '%c[business-verification]%c Business basics (Build Your Profile)',
-                            'color:#ca8a04;font-weight:bold',
-                            'color:inherit',
-                            data.business_basics?.continue_enabled ? 'Continue ENABLED' :
-                                'Continue DISABLED — Business name required',
-                            data
-                        );
-                        return;
-                    }
-
-                    if (data.step.showVerificationStatus) {
-                        console.log(
-                            '%c[business-verification]%c Verification approved screen',
-                            'color:#16a34a;font-weight:bold',
-                            'color:inherit',
-                            data
-                        );
-                        return;
-                    }
-
-                    if (data.step.showAccountPayoutsForm) {
-                        const continueReasons = [];
-                        if (!c.continue_would_enable) {
-                            if (!data.continue_step.fursgo_usage) {
-                                continueReasons.push(
-                                    'Choose how you use FursGo (groomer vs space)');
-                            }
-                            if (!data.continue_step.account_type) {
-                                continueReasons.push('Select account type');
-                            }
-                            if (data.continue_step.location_types_count < 1) {
-                                continueReasons.push('Select at least one location type');
-                            }
-                        }
-                        console.log(
-                            '%c[business-verification]%c Continue',
-                            'color:#2563eb;font-weight:bold',
-                            'color:inherit',
-                            c.continue_would_enable ? 'ENABLED' : 'DISABLED — ' +
-                                continueReasons.join('; '),
-                            data
-                        );
-                    }
-
-                    if (data.step.showRegisteredBusiness || data.step.showFreelance) {
-                        const submitReasons = [];
-                        if (!p.submit_would_enable) {
-                            const skipKeys = new Set([
-                                'email_format_ok',
-                                'business_owner_id_images_count',
-                                'id_documents_count',
-                                'has_id_proof',
-                                'submit_would_enable',
-                            ]);
-                            Object.entries(p).forEach(([key, ok]) => {
-                                if (skipKeys.has(key) || key.endsWith('_count')) {
-                                    return;
-                                }
-                                if (ok === false) {
-                                    submitReasons.push('missing or empty: ' + key);
-                                }
-                            });
-                            if (!p.email_format_ok && p.business_email) {
-                                submitReasons.push('business_email fails email validation');
-                            }
-                            if (!p.has_id_proof) {
-                                submitReasons.push(
-                                    'no ID files on server (upload Business Owner ID; drag-drop must fire change on the Livewire input)'
-                                );
-                            }
-                        }
-                        console.log(
-                            '%c[business-verification]%c Submit',
-                            'color:#059669;font-weight:bold',
-                            'color:inherit',
-                            p.submit_would_enable ? 'ENABLED' : 'DISABLED — ' + submitReasons
-                                .join('; '),
-                            data
-                        );
-                    }
-                }).catch((e) => console.warn('[business-verification] getSubmitButtonDebug failed', e));
-            }, debounceMs);
-        }
-
-        document.addEventListener('livewire:init', () => {
-            Livewire.hook('morph.updated', ({
-                el,
-                component
-            }) => {
-                const root = wireRootFromNode(el);
-                if (!root || !root.querySelector('.verification-wrapper')) {
+                if (!main) {
                     return;
                 }
-                logBusinessVerificationState(component, el);
-            });
+                main.classList.remove("vq-step-enter");
+                void main.offsetWidth;
+                main.classList.add("vq-step-enter");
+                main.addEventListener(
+                    "animationend",
+                    () => main.classList.remove("vq-step-enter"), {
+                        once: true
+                    },
+                );
+            }
 
-            queueMicrotask(() => {
-                const wrap = document.querySelector('.verification-wrapper');
-                if (wrap) {
-                    logBusinessVerificationState(null, wrap);
+            if (!window.__vqScrollStepToTop) {
+                window.__vqScrollStepToTop = function __vqScrollStepToTop() {
+                    const reduceMotion = window.matchMedia(
+                        "(prefers-reduced-motion: reduce)",
+                    ).matches;
+                    const root =
+                        document.scrollingElement || document.documentElement;
+                    const startTop = root.scrollTop || window.scrollY || 0;
+                    const targetTop = 0;
+                    const distance = targetTop - startTop;
+
+                    const snapToTop = () => {
+                        window.scrollTo({
+                            top: 0,
+                            left: 0,
+                            behavior: "auto",
+                        });
+                        root.scrollTop = 0;
+                        document.body.scrollTop = 0;
+                        revealMainContent();
+                    };
+
+                    if (reduceMotion || Math.abs(distance) < 6) {
+                        snapToTop();
+                        return;
+                    }
+
+                    const duration = Math.min(
+                        780,
+                        Math.max(420, Math.abs(distance) * 0.5),
+                    );
+                    const startTime = performance.now();
+
+                    const tick = (now) => {
+                        const progress = Math.min((now - startTime) / duration, 1);
+                        const nextTop =
+                            startTop + distance * easeInOutCubic(progress);
+                        window.scrollTo(0, nextTop);
+                        root.scrollTop = nextTop;
+                        if (progress < 1) {
+                            requestAnimationFrame(tick);
+                        } else {
+                            snapToTop();
+                        }
+                    };
+
+                    requestAnimationFrame(() => requestAnimationFrame(tick));
+                };
+            }
+
+            if (window.__businessVerificationDebugInstalled) {
+                return;
+            }
+            window.__businessVerificationDebugInstalled = true;
+
+            let t = null;
+            const debounceMs = 250;
+
+            function wireRootFromNode(node) {
+                if (!node || !node.closest) {
+                    return null;
                 }
+                return node.closest('[wire\\:id]');
+            }
+
+            function resolveComponent(component, el) {
+                if (component && typeof component.call === 'function') {
+                    return component;
+                }
+                const root = wireRootFromNode(el);
+                const id = root && root.getAttribute('wire:id');
+                if (!id || typeof Livewire === 'undefined' || typeof Livewire.find !== 'function') {
+                    return null;
+                }
+                return Livewire.find(id);
+            }
+
+            function logBusinessVerificationState(component, el) {
+                const cmp = resolveComponent(component, el);
+                if (!cmp || typeof cmp.call !== 'function') {
+                    return;
+                }
+                clearTimeout(t);
+                t = setTimeout(() => {
+                    cmp.call('getSubmitButtonDebug').then((data) => {
+                        const p = data.personal_step;
+                        const c = data.continue_step;
+
+                        if (data.step.showBusinessBasicsForm) {
+                            console.log(
+                                '%c[business-verification]%c Business basics (Build Your Profile)',
+                                'color:#ca8a04;font-weight:bold',
+                                'color:inherit',
+                                data.business_basics?.continue_enabled ? 'Continue ENABLED' :
+                                'Continue DISABLED — Business name required',
+                                data
+                            );
+                            return;
+                        }
+
+                        if (data.step.showVerificationStatus) {
+                            console.log(
+                                '%c[business-verification]%c Verification approved screen',
+                                'color:#16a34a;font-weight:bold',
+                                'color:inherit',
+                                data
+                            );
+                            return;
+                        }
+
+                        if (data.step.showAccountPayoutsForm) {
+                            const continueReasons = [];
+                            if (!c.continue_would_enable) {
+                                if (!data.continue_step.fursgo_usage) {
+                                    continueReasons.push(
+                                        'Choose how you use FursGo (groomer vs space)');
+                                }
+                                if (!data.continue_step.account_type) {
+                                    continueReasons.push('Select account type');
+                                }
+                                if (data.continue_step.location_types_count < 1) {
+                                    continueReasons.push('Select at least one location type');
+                                }
+                            }
+                            console.log(
+                                '%c[business-verification]%c Continue',
+                                'color:#2563eb;font-weight:bold',
+                                'color:inherit',
+                                c.continue_would_enable ? 'ENABLED' : 'DISABLED — ' +
+                                continueReasons.join('; '),
+                                data
+                            );
+                        }
+
+                        if (data.step.showRegisteredBusiness || data.step.showFreelance) {
+                            const submitReasons = [];
+                            if (!p.submit_would_enable) {
+                                const skipKeys = new Set([
+                                    'email_format_ok',
+                                    'business_owner_id_images_count',
+                                    'id_documents_count',
+                                    'has_id_proof',
+                                    'submit_would_enable',
+                                ]);
+                                Object.entries(p).forEach(([key, ok]) => {
+                                    if (skipKeys.has(key) || key.endsWith('_count')) {
+                                        return;
+                                    }
+                                    if (ok === false) {
+                                        submitReasons.push('missing or empty: ' + key);
+                                    }
+                                });
+                                if (!p.email_format_ok && p.business_email) {
+                                    submitReasons.push('business_email fails email validation');
+                                }
+                                if (!p.has_id_proof) {
+                                    submitReasons.push(
+                                        'no ID files on server (upload Business Owner ID; drag-drop must fire change on the Livewire input)'
+                                    );
+                                }
+                            }
+                            console.log(
+                                '%c[business-verification]%c Submit',
+                                'color:#059669;font-weight:bold',
+                                'color:inherit',
+                                p.submit_would_enable ? 'ENABLED' : 'DISABLED — ' + submitReasons
+                                .join('; '),
+                                data
+                            );
+                        }
+                    }).catch((e) => console.warn('[business-verification] getSubmitButtonDebug failed', e));
+                }, debounceMs);
+            }
+
+            document.addEventListener('livewire:init', () => {
+                Livewire.hook('morph.updated', ({
+                    el,
+                    component
+                }) => {
+                    const root = wireRootFromNode(el);
+                    if (!root || !root.querySelector('.verification-wrapper')) {
+                        return;
+                    }
+                    logBusinessVerificationState(component, el);
+                });
+
+                queueMicrotask(() => {
+                    const wrap = document.querySelector('.verification-wrapper');
+                    if (wrap) {
+                        logBusinessVerificationState(null, wrap);
+                    }
+                });
             });
-        });
-    })();
-</script>
+        })();
+    </script>
 @endscript
 
 <style>
@@ -5736,7 +5652,6 @@ new #[Layout('layouts.dashboard')]
         margin: 0;
     }
 
-
     .verification-approved-copy {
         text-align: center;
         margin: 1rem 0;
@@ -6033,7 +5948,6 @@ new #[Layout('layouts.dashboard')]
         font-weight: 400;
         line-height: 20px;
         margin-bottom: 1rem;
-
     }
 
     .radio-group {
@@ -6057,7 +5971,6 @@ new #[Layout('layouts.dashboard')]
         -ms-user-select: none;
         user-select: none;
     }
-
 
     .radio-item:hover {
         background: #FFF4E4;
@@ -7081,8 +6994,8 @@ new #[Layout('layouts.dashboard')]
             main.addEventListener(
                 "animationend",
                 () => main.classList.remove("vq-step-enter"), {
-                once: true
-            },
+                    once: true
+                },
             );
         }
 
@@ -7193,13 +7106,13 @@ new #[Layout('layouts.dashboard')]
     }
 
     if (!window.removeBusinessOwnerStoredFile) {
-        window.removeBusinessOwnerStoredFile = function (storagePath) {
+        window.removeBusinessOwnerStoredFile = function(storagePath) {
             if (!storagePath) {
                 return Promise.reject(new Error("Missing storage path"));
             }
             const result = vqCallLivewire('removeStoredBusinessOwnerImage', storagePath);
             if (result && typeof result.then === 'function') {
-                return result.then(function () {
+                return result.then(function() {
                     vqAfterDocUploadMorph();
                 });
             }
@@ -7209,13 +7122,13 @@ new #[Layout('layouts.dashboard')]
     }
 
     if (!window.removeInsuranceStoredFile) {
-        window.removeInsuranceStoredFile = function (storagePath) {
+        window.removeInsuranceStoredFile = function(storagePath) {
             if (!storagePath) {
                 return Promise.reject(new Error("Missing storage path"));
             }
             const result = vqCallLivewire('removeStoredInsuranceCertificate', storagePath);
             if (result && typeof result.then === 'function') {
-                return result.then(function () {
+                return result.then(function() {
                     vqAfterDocUploadMorph();
                 });
             }
@@ -7225,10 +7138,10 @@ new #[Layout('layouts.dashboard')]
     }
 
     if (!window.removeBusinessAvatarStoredFile) {
-        window.removeBusinessAvatarStoredFile = function () {
+        window.removeBusinessAvatarStoredFile = function() {
             const result = vqCallLivewire('removeBusinessAvatar');
             if (result && typeof result.then === 'function') {
-                return result.then(function () {
+                return result.then(function() {
                     vqAfterDocUploadMorph();
                 });
             }
@@ -7238,13 +7151,13 @@ new #[Layout('layouts.dashboard')]
     }
 
     if (!window.removeBusinessGalleryStoredFile) {
-        window.removeBusinessGalleryStoredFile = function (storagePath) {
+        window.removeBusinessGalleryStoredFile = function(storagePath) {
             if (!storagePath) {
                 return Promise.reject(new Error("Missing storage path"));
             }
             const result = vqCallLivewire('removeBusinessGalleryStoredFile', storagePath);
             if (result && typeof result.then === 'function') {
-                return result.then(function () {
+                return result.then(function() {
                     vqAfterDocUploadMorph();
                 });
             }
@@ -7406,7 +7319,7 @@ new #[Layout('layouts.dashboard')]
             if (batch.fileSlots.has(fp)) {
                 return batch.fileSlots.get(fp);
             }
-            const idx = batch.files.findIndex(function (item) {
+            const idx = batch.files.findIndex(function(item) {
                 return galleryFileFingerprint(item) === fp;
             });
             if (idx < 0) {
@@ -7450,8 +7363,8 @@ new #[Layout('layouts.dashboard')]
 
             const prop =
                 e.detail && (e.detail.property || e.detail.name) ?
-                    e.detail.property || e.detail.name :
-                    '';
+                e.detail.property || e.detail.name :
+                '';
             if (prop && prop !== 'business_gallery_pending') {
                 return false;
             }
@@ -7462,7 +7375,7 @@ new #[Layout('layouts.dashboard')]
             }
 
             const fp = galleryFileFingerprint(file);
-            return batch.files.some(function (item) {
+            return batch.files.some(function(item) {
                 return galleryFileFingerprint(item) === fp;
             });
         }
@@ -7480,7 +7393,7 @@ new #[Layout('layouts.dashboard')]
                 return;
             }
             batch.fileSlots = new Map();
-            files.forEach(function (file, i) {
+            files.forEach(function(file, i) {
                 const slot = ensureGallerySlotAtIndex(startIndex + i);
                 if (slot) {
                     batch.fileSlots.set(galleryFileFingerprint(file), slot);
@@ -7529,7 +7442,7 @@ new #[Layout('layouts.dashboard')]
         function showAllGallerySlotPreviews(input, files, startIndex) {
             rememberGalleryBatchSlots(files, startIndex);
             const isBatch = files.length > 1;
-            files.forEach(function (file, i) {
+            files.forEach(function(file, i) {
                 const slot = ensureGallerySlotAtIndex(startIndex + i);
                 showGalleryFilePreviewInSlot(slot, file, {
                     withProgress: true,
@@ -7552,7 +7465,7 @@ new #[Layout('layouts.dashboard')]
                 return;
             }
 
-            const onFinish = function () {
+            const onFinish = function() {
                 if (slot) {
                     const ring = slot.querySelector('.gallery-upload-ring');
                     if (ring) {
@@ -7560,18 +7473,18 @@ new #[Layout('layouts.dashboard')]
                     }
                 }
             };
-            const onError = function () {
+            const onError = function() {
                 if (slot) {
                     clearGallerySlotClientState(slot);
                 }
             };
-            const onProgress = function (event) {
+            const onProgress = function(event) {
                 const percent =
                     event && event.detail && event.detail.progress != null ?
-                        event.detail.progress :
-                        event && event.progress != null ?
-                            event.progress :
-                            null;
+                    event.detail.progress :
+                    event && event.progress != null ?
+                    event.progress :
+                    null;
                 if (slot && percent != null) {
                     const ring = slot.querySelector('.gallery-upload-ring');
                     if (ring) {
@@ -7603,8 +7516,8 @@ new #[Layout('layouts.dashboard')]
             rememberGalleryBatchSlots(
                 files,
                 window.__vqGalleryBatch ?
-                    window.__vqGalleryBatch.startIndex :
-                    0,
+                window.__vqGalleryBatch.startIndex :
+                0,
             );
 
             const uploadMultipleFn = wire.$uploadMultiple || wire.uploadMultiple;
@@ -7614,7 +7527,7 @@ new #[Layout('layouts.dashboard')]
                 return true;
             }
 
-            files.forEach(function (file) {
+            files.forEach(function(file) {
                 uploadSingleGalleryFile(wire, file);
             });
 
@@ -7648,7 +7561,7 @@ new #[Layout('layouts.dashboard')]
                 return;
             }
 
-            remaining.forEach(function (file, i) {
+            remaining.forEach(function(file, i) {
                 const slot = ensureGallerySlotAtIndex(remainingStart + i);
                 if (!slot) {
                     return;
@@ -7678,7 +7591,7 @@ new #[Layout('layouts.dashboard')]
                 return;
             }
 
-            getGallerySlotElements().forEach(function (slot) {
+            getGallerySlotElements().forEach(function(slot) {
                 if (slot.querySelector('.gallery-slot-img:not(.gallery-slot-preview)')) {
                     clearGallerySlotClientState(slot);
                 }
@@ -7687,7 +7600,7 @@ new #[Layout('layouts.dashboard')]
 
             document
                 .querySelectorAll('.gallery-slot[data-vq-gallery-client-slot="1"]')
-                .forEach(function (slot) {
+                .forEach(function(slot) {
                     if (!slot.querySelector('.gallery-slot-img:not(.gallery-slot-preview)')) {
                         clearGallerySlotClientState(slot);
                         slot.remove();
@@ -7702,7 +7615,7 @@ new #[Layout('layouts.dashboard')]
         }
 
         function handleGalleryInputChange(input) {
-            const files = Array.from(input.files || []).filter(function (file) {
+            const files = Array.from(input.files || []).filter(function(file) {
                 return String(file.type || '').startsWith('image/');
             });
             if (!files.length) {
@@ -7804,11 +7717,11 @@ new #[Layout('layouts.dashboard')]
             const delta = goal - startValue;
             const startedAt = performance.now();
             const duration = Math.min(900, Math.max(300, delta * 16));
-            const easeInOut = function (t) {
+            const easeInOut = function(t) {
                 return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
             };
 
-            const step = function (now) {
+            const step = function(now) {
                 const elapsed = Math.min(1, (now - startedAt) / duration);
                 paintGalleryProgress(ring, startValue + delta * easeInOut(elapsed));
                 if (elapsed < 1) {
@@ -7834,7 +7747,7 @@ new #[Layout('layouts.dashboard')]
             state.target = 1;
             paintGalleryProgress(ring, 1);
 
-            state.creepTimer = setInterval(function () {
+            state.creepTimer = setInterval(function() {
                 if (!state.uploading) {
                     clearGalleryProgressCreep(state);
                     return;
@@ -7928,13 +7841,13 @@ new #[Layout('layouts.dashboard')]
             }
         }
 
-        document.addEventListener('change', function (e) {
+        document.addEventListener('change', function(e) {
             const input = e.target;
             if (!isGalleryInput(input) || !input.files || !input.files.length) return;
             handleGalleryInputChange(input);
         });
 
-        document.addEventListener('livewire-upload-start', function (e) {
+        document.addEventListener('livewire-upload-start', function(e) {
             if (!isActiveGalleryUploadEvent(e)) return;
             const slot = resolveGalleryEventSlot(e);
             const ring = ensureGalleryUploadRing(slot);
@@ -7947,7 +7860,7 @@ new #[Layout('layouts.dashboard')]
             }
         });
 
-        document.addEventListener('livewire-upload-progress', function (e) {
+        document.addEventListener('livewire-upload-progress', function(e) {
             if (!isActiveGalleryUploadEvent(e)) return;
             const percent = e.detail && e.detail.progress != null ? e.detail.progress : 1;
             const slot = resolveGalleryEventSlot(e);
@@ -7956,14 +7869,14 @@ new #[Layout('layouts.dashboard')]
             }
         });
 
-        document.addEventListener('livewire-upload-finish', function (e) {
+        document.addEventListener('livewire-upload-finish', function(e) {
             if (!isActiveGalleryUploadEvent(e)) return;
             const slot = resolveGalleryEventSlot(e);
             const ring = slot ? slot.querySelector('.gallery-upload-ring') : null;
             if (ring) finishGalleryUploadProgress(ring);
         });
 
-        document.addEventListener('livewire-upload-error', function (e) {
+        document.addEventListener('livewire-upload-error', function(e) {
             if (!isActiveGalleryUploadEvent(e)) return;
             const slot = resolveGalleryEventSlot(e);
             if (slot) {
@@ -7975,7 +7888,7 @@ new #[Layout('layouts.dashboard')]
             }
         });
 
-        document.addEventListener('livewire-upload-cancel', function (e) {
+        document.addEventListener('livewire-upload-cancel', function(e) {
             if (!isActiveGalleryUploadEvent(e)) return;
             const slot = resolveGalleryEventSlot(e);
             if (slot) {
@@ -8034,7 +7947,7 @@ new #[Layout('layouts.dashboard')]
             if (window.__vqGalleryActiveSlot) {
                 slots.push(window.__vqGalleryActiveSlot);
             }
-            document.querySelectorAll('.gallery-slot--uploading').forEach(function (slot) {
+            document.querySelectorAll('.gallery-slot--uploading').forEach(function(slot) {
                 if (slots.indexOf(slot) === -1) slots.push(slot);
             });
 
@@ -8042,7 +7955,7 @@ new #[Layout('layouts.dashboard')]
                 return;
             }
 
-            slots.forEach(function (slot) {
+            slots.forEach(function(slot) {
                 const serverImg = slot.querySelector('.gallery-slot-img:not(.gallery-slot-preview)');
 
                 if (slot.classList.contains('gallery-slot--batch-pending')) {
@@ -8051,9 +7964,9 @@ new #[Layout('layouts.dashboard')]
                         if (ring) {
                             finishGalleryUploadProgress(ring);
                         }
-                        const revealServerImage = function () {
+                        const revealServerImage = function() {
                             serverImg.style.opacity = '1';
-                            requestAnimationFrame(function () {
+                            requestAnimationFrame(function() {
                                 clearGallerySlotClientState(slot);
                                 slot.classList.remove('gallery-slot--batch-pending');
                             });
@@ -8087,9 +8000,9 @@ new #[Layout('layouts.dashboard')]
                     return;
                 }
 
-                const revealServerImage = function () {
+                const revealServerImage = function() {
                     serverImg.style.opacity = '1';
-                    requestAnimationFrame(function () {
+                    requestAnimationFrame(function() {
                         clearGallerySlotClientState(slot);
                         if (window.__vqGalleryActiveSlot === slot) {
                             window.__vqGalleryActiveSlot = null;
@@ -8118,10 +8031,10 @@ new #[Layout('layouts.dashboard')]
         function registerGalleryMorphCleanup() {
             if (window.__vqGalleryMorphCleanupHooked) return;
             window.__vqGalleryMorphCleanupHooked = true;
-            const register = function () {
-                Livewire.hook('commit', function (payload) {
+            const register = function() {
+                Livewire.hook('commit', function(payload) {
                     if (typeof payload.succeed !== 'function') return;
-                    payload.succeed(function () {
+                    payload.succeed(function() {
                         finalizeGallerySlotAfterMorph();
                     });
                 });

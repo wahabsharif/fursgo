@@ -565,7 +565,7 @@
             },
 
             get canContinue() {
-                return this.selectedServices.length > 0;
+                return true;
             },
 
             payload() {

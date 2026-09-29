@@ -7,8 +7,8 @@ use App\Livewire\Actions\Logout;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
-// Always reachable — guest middleware was sending logged-in users back to home,
-// so the header Log in link looked like it did nothing.
+// Always reachable — guest middleware was sending logged-in users back to home
+// (customer homepage), so Log in / Sign Up links looked broken.
 Volt::route('login', 'auth.login')
     ->name('login');
 
@@ -21,13 +21,13 @@ Volt::route('signup', 'auth.signup')
 Volt::route('login-signup/signup', 'auth.signup')
     ->name('login-signup.signup');
 
+Volt::route('login-groomer-space', 'auth.login-groomer-space')
+    ->name('login-groomer-space');
+
+Volt::route('signup-groomer-space', 'auth.signup-groomer-space')
+    ->name('signup-groomer-space');
+
 Route::middleware('guest')->group(function () {
-    Volt::route('login-groomer-space', 'auth.login-groomer-space')
-        ->name('login-groomer-space');
-
-    Volt::route('signup-groomer-space', 'auth.signup-groomer-space')
-        ->name('signup-groomer-space');
-
     Route::redirect('forgot-password', 'login')
         ->name('password.request');
 

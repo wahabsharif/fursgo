@@ -9,12 +9,18 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Renderless;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.groomer-auth')]
-    class extends Component {
+new #[Layout('layouts.groomer-auth')] class extends Component {
     public string $name = '';
     public string $email = '';
     public string $password = '';
     public bool $emailExists = false;
+
+    public function mount(): void
+    {
+        if (Auth::guard('groomer_spacer')->check()) {
+            $this->redirectRoute('business-homepage-groomer-space-owner', navigate: false);
+        }
+    }
 
     #[Renderless]
     public function checkEmail(string $email = ''): bool

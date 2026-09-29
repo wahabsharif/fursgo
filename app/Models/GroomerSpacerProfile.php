@@ -55,12 +55,29 @@ class GroomerSpacerProfile extends Authenticatable
      */
     public function hasCompletedBusinessVerificationPersonalStep(): bool
     {
+        $freelance = $this->freelance_details ?? [];
+        if (!is_array($freelance)) {
+            $freelance = is_string($freelance) ? (json_decode($freelance, true) ?: []) : [];
+        }
+        $business = $this->business_details ?? [];
+        if (!is_array($business)) {
+            $business = is_string($business) ? (json_decode($business, true) ?: []) : [];
+        }
+
+        // Once a verification status is recorded (including empty QA submissions), the personal step is done.
+        foreach ([$freelance, $business] as $details) {
+            $status = strtolower(trim((string) ($details['verification_status'] ?? '')));
+            if (in_array($status, ['approved', 'pending', 'rejected'], true)) {
+                return true;
+            }
+        }
+
         if (trim((string) ($this->full_name ?? '')) === '') {
             return false;
         }
 
         $payout = $this->payout_details ?? [];
-        if (! is_array($payout)) {
+        if (!is_array($payout)) {
             $payout = is_string($payout) ? (json_decode($payout, true) ?: []) : [];
         }
         foreach (['bank', 'account_holder_name', 'account_number', 'sort_code', 'iban'] as $key) {
@@ -70,36 +87,27 @@ class GroomerSpacerProfile extends Authenticatable
         }
 
         if (($this->account_type ?? '') === 'freelance') {
-            $fd = $this->freelance_details ?? [];
-            if (! is_array($fd)) {
-                $fd = is_string($fd) ? (json_decode($fd, true) ?: []) : [];
-            }
-            if (trim((string) ($fd['contact_email'] ?? '')) === '') {
+            if (trim((string) ($freelance['contact_email'] ?? '')) === '') {
                 return false;
             }
-            if (trim((string) ($fd['contact_phone'] ?? '')) === '') {
+            if (trim((string) ($freelance['contact_phone'] ?? '')) === '') {
                 return false;
             }
-            $ids = self::governmentIdPathsFromFreelanceDetails($fd);
 
-            return count($ids) > 0;
+            return count(self::governmentIdPathsFromFreelanceDetails($freelance)) > 0;
         }
 
         if (($this->account_type ?? '') !== 'registered_business') {
             return false;
         }
 
-        $bd = $this->business_details ?? [];
-        if (! is_array($bd)) {
-            $bd = is_string($bd) ? (json_decode($bd, true) ?: []) : [];
-        }
         foreach (['business_email', 'business_name', 'business_registration_number', 'business_phone'] as $key) {
-            if (trim((string) ($bd[$key] ?? '')) === '') {
+            if (trim((string) ($business[$key] ?? '')) === '') {
                 return false;
             }
         }
 
-        return count(self::businessOwnerIdPathsFromBusinessDetails($bd)) > 0;
+        return count(self::businessOwnerIdPathsFromBusinessDetails($business)) > 0;
     }
 
     /**
@@ -108,16 +116,16 @@ class GroomerSpacerProfile extends Authenticatable
      */
     public static function businessOwnerIdPathsFromBusinessDetails(?array $businessDetails): array
     {
-        if (! is_array($businessDetails)) {
+        if (!is_array($businessDetails)) {
             return [];
         }
 
         $paths = $businessDetails['business_owner_id_images'] ?? null;
-        if (! is_array($paths)) {
+        if (!is_array($paths)) {
             return [];
         }
 
-        return array_values(array_filter($paths, fn ($path) => is_string($path) && $path !== ''));
+        return array_values(array_filter($paths, fn($path) => is_string($path) && $path !== ''));
     }
 
     /**
@@ -126,21 +134,21 @@ class GroomerSpacerProfile extends Authenticatable
      */
     public static function governmentIdPathsFromFreelanceDetails(?array $freelanceDetails): array
     {
-        if (! is_array($freelanceDetails)) {
+        if (!is_array($freelanceDetails)) {
             return [];
         }
 
         $paths = $freelanceDetails['government_id'] ?? null;
         if (is_array($paths) && $paths !== []) {
-            return array_values(array_filter($paths, fn ($path) => is_string($path) && $path !== ''));
+            return array_values(array_filter($paths, fn($path) => is_string($path) && $path !== ''));
         }
 
         $legacy = $freelanceDetails['id_verification_images'] ?? null;
-        if (! is_array($legacy)) {
+        if (!is_array($legacy)) {
             return [];
         }
 
-        return array_values(array_filter($legacy, fn ($path) => is_string($path) && $path !== ''));
+        return array_values(array_filter($legacy, fn($path) => is_string($path) && $path !== ''));
     }
 
     /**

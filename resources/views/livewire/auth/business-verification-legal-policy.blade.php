@@ -100,9 +100,8 @@
                     wire:click="goBackFromBuildProfile">
                     Decline
                 </button>
-                <button type="submit" class="legal-policy-btn legal-policy-btn--continue"
-                    x-bind:class="accepted ? 'legal-policy-btn--continue-active' : 'legal-policy-btn--continue-muted'"
-                    x-bind:disabled="!accepted" wire:loading.attr="disabled" wire:target="submitLegalPolicy">
+                <button type="submit" class="legal-policy-btn legal-policy-btn--continue legal-policy-btn--continue-active"
+                    wire:loading.attr="disabled" wire:target="submitLegalPolicy">
                     <span wire:loading.remove wire:target="submitLegalPolicy">Agree &amp; Continue</span>
                     <span class="legal-policy-btn__spinner" wire:loading wire:target="submitLegalPolicy"
                         aria-hidden="true"></span>
@@ -247,7 +246,6 @@
         line-height: normal;
     }
 
-
     .legal-policy-checkbox-list {
         margin-top: 3rem;
         width: 100%;
@@ -299,8 +297,6 @@
         position: relative;
         transition: border-color 0.15s ease;
     }
-
-
 
     .legal-policy-checkbox-item input:checked+.legal-policy-checkbox-box {
         border-color: #FFD88C;
@@ -499,13 +495,13 @@
 @once
     @push('script')
         <script>
-            (function () {
+            (function() {
                 if (window.__fursgoLegalPdfDownloadInit) {
                     return;
                 }
                 window.__fursgoLegalPdfDownloadInit = true;
 
-                document.addEventListener('click', async function (e) {
+                document.addEventListener('click', async function(e) {
                     const link = e.target.closest('[data-download-legal-pdf]');
                     if (!link || !link.href) {
                         return;
@@ -537,7 +533,7 @@
                     }
                 });
             })
-                ();
+            ();
         </script>
     @endpush
 @endonce
