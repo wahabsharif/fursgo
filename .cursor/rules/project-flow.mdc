@@ -1,0 +1,14 @@
+---
+description: Read and update project-flow.md before exploring the Fursgo codebase
+alwaysApply: true
+---
+
+# Project flow context
+
+Before exploring or globbing the repo, **read [`project-flow.md`](project-flow.md)** at the repo root.
+
+- Prefer paths, routes, models, and flows listed there over broad scans.
+- Only dig into the codebase when this file lacks what the task needs.
+- After meaningful changes to routes, auth, models, hubs, or major flows, **update `project-flow.md`** in the same turn.
+- Keep the file limited to codebase project flow (architecture, routes, entities, flows) — no agent instructions, checklists, or changelogs inside it.
+- Keep it concise — replace obsolete bullets; do not append forever.
