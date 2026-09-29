@@ -10396,6 +10396,10 @@ body.admin-co-modal-lock {
 
 .admin-co-pay-footer {
     margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
 }
 
 .admin-co-pay-footer .admin-table-count {
@@ -10405,6 +10409,12 @@ body.admin-co-modal-lock {
     font-weight: 400;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+}
+
+.admin-co-pay-footer .admin-po-pagination {
+    grid-column: auto;
+    justify-self: auto;
+    margin-left: auto;
 }
 
 @media (max-width: 767.98px) {
