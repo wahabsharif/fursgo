@@ -2,10 +2,11 @@
  * Admin portal Alpine state.
  * Pass tabs from Blade so the list lives in one place.
  */
-function adminPortal(tabs) {
+function adminPortal(tabs, initialTab, loadedTabs) {
     return {
-        tab: (tabs[0] && tabs[0].id) ? tabs[0].id : 'overview',
+        tab: initialTab || ((tabs[0] && tabs[0].id) ? tabs[0].id : 'overview'),
         tabs: tabs || [],
+        loadedTabs: Array.isArray(loadedTabs) && loadedTabs.length ? loadedTabs.slice() : ['overview'],
         period: 'monthly',
         periods: [
             { id: 'today', label: 'Today' },
@@ -15,6 +16,18 @@ function adminPortal(tabs) {
         ],
         setTab(id) {
             this.tab = id;
+            const isNew = !this.loadedTabs.includes(id);
+            startAdminLoading(isNew);
+
+            if (this.$wire && typeof this.$wire.setTab === 'function') {
+                this.$wire.setTab(id);
+                if (isNew) {
+                    this.loadedTabs.push(id);
+                }
+                return;
+            }
+
+            stopAdminLoading();
 
             if (id === 'overview') {
                 this.$nextTick(() => {
@@ -35,6 +48,17 @@ function adminPortal(tabs) {
             });
         },
     };
+}
+
+/** Top progress bar: wait=true until Livewire finishes; wait=false auto-hides. */
+function startAdminLoading(wait) {
+    window.dispatchEvent(new CustomEvent('admin-tab-loading-start', {
+        detail: { wait: !!wait },
+    }));
+}
+
+function stopAdminLoading() {
+    window.dispatchEvent(new CustomEvent('admin-tab-loading-end'));
 }
 
 function resetAdminChartCanvas(canvas) {
@@ -61,9 +85,27 @@ function refreshAdminSignupGrowthChart() {
         return null;
     }
 
-    const panel = canvas.closest('.admin-tab-panel');
+    const panel = canvas.closest('.admin-tab-panel') || canvas.closest('[x-show]');
     if (panel && getComputedStyle(panel).display === 'none') {
         window.setTimeout(refreshAdminSignupGrowthChart, 30);
+        return null;
+    }
+
+    if (typeof Chart === 'undefined') {
+        if (window.__adminChartLoading) {
+            return null;
+        }
+        window.__adminChartLoading = true;
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js';
+        script.onload = function () {
+            window.__adminChartLoading = false;
+            mountAdminSignupGrowthChart(canvas);
+        };
+        script.onerror = function () {
+            window.__adminChartLoading = false;
+        };
+        document.head.appendChild(script);
         return null;
     }
 

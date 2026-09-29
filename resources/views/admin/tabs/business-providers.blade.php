@@ -77,7 +77,7 @@ $verificationStatusClass = [
 ];
 @endphp
 
-<div class="admin-pet-owners admin-business-providers" x-data="{
+<div class="admin-pet-owners admin-business-providers" wire:ignore.self x-data="{
     view: 'list',
     selectedProviderId: null,
     detailTab: 'overview',
@@ -100,6 +100,7 @@ $verificationStatusClass = [
     payoutSearch: '',
     verificationFilter: 'all',
     verificationSearch: '',
+    openedIds: @js($openedProviderIds ?? []),
     openProvider(id) {
         this.selectedProviderId = id;
         this.detailTab = 'overview';
@@ -108,6 +109,13 @@ $verificationStatusClass = [
         this.view = 'detail';
         this.$dispatch('admin-provider-opened', { id });
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (typeof $wire !== 'undefined' && $wire.openProvider) {
+            if (!this.openedIds.includes(id)) {
+                this.openedIds.push(id);
+                startAdminLoading(true);
+            }
+            $wire.openProvider(id);
+        }
     },
     closeProvider() {
         this.view = 'list';

@@ -59,13 +59,14 @@ $ticketStatusLabels = [
 ];
 @endphp
 
-<div class="admin-pet-owners" x-data="{
+<div class="admin-pet-owners" wire:ignore.self x-data="{
     view: 'list',
     selectedCustomerId: null,
     detailTab: 'overview',
     previousTab: null,
     selectedPetId: null,
     selectedBookingId: null,
+    selectedReferralId: null,
     disputeOpen: false,
     // Remember scroll position per tab (first visit = top)
     tabScroll: {},
@@ -89,6 +90,7 @@ $ticketStatusLabels = [
     // Mass-select for export
     selectedIds: [],
     allIds: @js(collect($customers)->pluck('id')->values()),
+    openedIds: @js($openedCustomerIds ?? []),
 
     openCustomer(id) {
         this.selectedCustomerId = id;
@@ -96,10 +98,18 @@ $ticketStatusLabels = [
         this.previousTab = null;
         this.selectedPetId = null;
         this.selectedBookingId = null;
+        this.selectedReferralId = null;
         this.disputeOpen = false;
         this.tabScroll = {};
         this.view = 'detail';
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (typeof $wire !== 'undefined' && $wire.openCustomer) {
+            if (!this.openedIds.includes(id)) {
+                this.openedIds.push(id);
+                startAdminLoading(true);
+            }
+            $wire.openCustomer(id);
+        }
     },
     closeCustomer() {
         this.view = 'list';
@@ -108,6 +118,7 @@ $ticketStatusLabels = [
         this.previousTab = null;
         this.selectedPetId = null;
         this.selectedBookingId = null;
+        this.selectedReferralId = null;
         this.disputeOpen = false;
         this.tabScroll = {};
     },
@@ -117,6 +128,10 @@ $ticketStatusLabels = [
             this.disputeOpen = false;
             this.selectedBookingId = null;
             this.$dispatch('admin-booking-close-request');
+        }
+        if (this.selectedReferralId) {
+            this.selectedReferralId = null;
+            this.$dispatch('admin-referral-close-request');
         }
         // Save where we were on the current tab
         this.tabScroll[this.detailTab] = window.scrollY;
@@ -139,6 +154,11 @@ $ticketStatusLabels = [
             this.$dispatch('admin-booking-close-request');
             return;
         }
+        if (this.selectedReferralId) {
+            this.selectedReferralId = null;
+            this.$dispatch('admin-referral-close-request');
+            return;
+        }
         if (this.previousTab) {
             this.tabScroll[this.detailTab] = window.scrollY;
             const target = this.previousTab;
@@ -157,6 +177,7 @@ $ticketStatusLabels = [
             return 'BOOKING ID ' + this.selectedBookingId;
         }
         if (this.selectedBookingId) return 'BOOKINGS';
+        if (this.selectedReferralId) return 'REFERRALS';
         if (this.previousTab && this.detailTabLabels[this.previousTab]) {
             return this.detailTabLabels[this.previousTab].toUpperCase();
         }
@@ -184,6 +205,8 @@ $ticketStatusLabels = [
 @admin-pet-selected.window="selectedPetId = $event.detail.id"
 @admin-booking-selected.window="selectedBookingId = $event.detail.booking?.id || null; disputeOpen = false"
 @admin-booking-closed.window="selectedBookingId = null; disputeOpen = false"
+@admin-referral-selected.window="selectedReferralId = $event.detail.referral?.detail?.invoice_id || $event.detail.referral?.id || null"
+@admin-referral-closed.window="selectedReferralId = null"
 @admin-dispute-opened.window="disputeOpen = true"
 @admin-dispute-closed.window="disputeOpen = false">
     @include('admin.tabs.customer-detail')
