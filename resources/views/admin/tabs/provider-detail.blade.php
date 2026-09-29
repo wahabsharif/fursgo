@@ -1,24 +1,245 @@
 @php
 $fallbackAvatar = asset('images/profile_image.png');
-$spaceAvatar = asset('images/space-profile.png');
+$spaceAvatar = asset('images/admin/provider/gallery/space/1.jpg');
 
 $groomerServices = [
-    ['name' => 'Full Groom', 'meta' => '60 - 90 mins', 'price' => '£45'],
-    ['name' => 'Bath & Tidy', 'meta' => '30 - 60 min', 'price' => '£30'],
-    ['name' => 'Nail Trim', 'meta' => '15 - 20 min', 'price' => '£10'],
-    ['name' => 'Pet Spa', 'meta' => '60 min', 'price' => '£50'],
-    ['name' => 'Mobile Grooming', 'meta' => "At customer's location", 'price' => '£35'],
+    [
+        'name' => 'Full Groom',
+        'meta' => 'Cat · Dog · Other · 60–90 min · Small £35 · Medium £45',
+        'price' => '£35',
+        'price_prefix' => 'From',
+        'status' => 'active',
+        'status_label' => 'Active',
+    ],
+    [
+        'name' => 'Bath & Tidy',
+        'meta' => 'Cat · Dog · Other · 30–60 min · Buffer: 15 min',
+        'price' => '£30',
+        'price_prefix' => 'From',
+        'status' => 'active',
+        'status_label' => 'Active',
+    ],
+    [
+        'name' => 'Nail Trim',
+        'meta' => 'Cat · Dog · Other · 5–15 min · Overtime: £1 per 5 min',
+        'price' => '£10',
+        'price_prefix' => 'From',
+        'status' => 'active',
+        'status_label' => 'Active',
+    ],
+    [
+        'name' => 'Ear Cleaning',
+        'meta' => 'Cat · Dog · 15 min · Add-ons compatible',
+        'price' => '£20',
+        'price_prefix' => '',
+        'status' => 'active',
+        'status_label' => 'Active',
+    ],
+    [
+        'name' => 'Face Trim Only',
+        'meta' => 'Cat · Dog · Other · 20 min',
+        'price' => '£10',
+        'price_prefix' => '',
+        'status' => 'active',
+        'status_label' => 'Active',
+    ],
+    [
+        'name' => 'Mobile Grooming',
+        'meta' => "At customer's location",
+        'price' => '£35',
+        'price_prefix' => 'From',
+        'status' => 'active',
+        'status_label' => 'Active',
+    ],
+    [
+        'name' => 'Luxury Spa',
+        'meta' => 'Cat · Dog · 90 min',
+        'price' => '£60',
+        'price_prefix' => '',
+        'status' => 'inactive',
+        'status_label' => 'Inactive',
+    ],
+];
+
+$groomerAddons = [
+    ['label' => 'Hypoallergenic Shampoo £5', 'active' => true],
+    ['label' => 'Coat Colour Enhancing Shampoo £10', 'active' => false],
+    ['label' => 'Anti-itch Treatment £4', 'active' => true],
+    ['label' => 'Coat Shine Spray £2', 'active' => false],
+    ['label' => 'Teeth Brushing £8', 'active' => true],
+    ['label' => 'Nail Grinding £20', 'active' => false],
+    ['label' => 'Anal Gland Expression £5', 'active' => false],
+    ['label' => 'De-shedding Treatment £10', 'active' => true],
+    ['label' => 'Flea Treatment £5', 'active' => false],
 ];
 
 $spaceServices = [
-    ['name' => 'Hourly', 'price' => '£25 / Hourly'],
-    ['name' => 'Half-day (4 hours)', 'price' => '£80 / Half-day'],
-    ['name' => 'Full day (8 hours)', 'price' => '£150 / Full-day'],
+    [
+        'name' => 'Hourly',
+        'meta' => 'Cat · Dog · Other · 60 min · Overtime: £10 per 15 min · Buffer: 15 min',
+        'price' => '£25 / hr',
+        'price_prefix' => '',
+        'status' => 'active',
+        'status_label' => 'Active',
+    ],
+    [
+        'name' => 'Half-day',
+        'meta' => 'Cat · Dog · 4 hours · Select start time',
+        'price' => '£80 / half day',
+        'price_prefix' => '',
+        'status' => 'active',
+        'status_label' => 'Active',
+    ],
+    [
+        'name' => 'Full-day',
+        'meta' => 'Cat · Dog · Other · 8 hours · Select start time',
+        'price' => '£150 / full day',
+        'price_prefix' => '',
+        'status' => 'active',
+        'status_label' => 'Active',
+    ],
+];
+
+$spaceListingAddons = [
+    [
+        'name' => 'Storage Locker',
+        'meta' => 'Per session',
+        'price' => '£5 / day',
+        'status' => 'active',
+        'status_label' => 'Active',
+    ],
+    [
+        'name' => 'Deep Clean',
+        'meta' => 'Per session',
+        'price' => '£10',
+        'status' => 'active',
+        'status_label' => 'Active',
+    ],
+    [
+        'name' => 'After-hours access',
+        'meta' => 'Per session',
+        'price' => '£20',
+        'status' => 'inactive',
+        'status_label' => 'Inactive',
+    ],
+];
+
+$spaceListingDetails = [
+    ['label' => 'Space type', 'value' => 'Garden / Shed'],
+    ['label' => 'Capacity', 'value' => '1–3 people · up to 4 pets at once'],
+    ['label' => 'Size', 'value' => '~ 400 sq ft'],
+    ['label' => 'Exact address', 'value' => '22 Studio Way, London, SW4 6NR'],
+];
+
+$spaceSuitableFor = [
+    ['label' => 'Full Groom', 'active' => true],
+    ['label' => 'Bath & Brush', 'active' => true],
+    ['label' => 'Nail Trim', 'active' => true],
+    ['label' => 'Ear Cleaning', 'active' => true],
+    ['label' => 'Deshedding', 'active' => true],
+    ['label' => 'Dematting', 'active' => true],
+    ['label' => 'Medicated / Sensitive Skin Bath', 'active' => false],
+    ['label' => 'Sanitary Trim', 'active' => false],
+    ['label' => 'Paw Pad Trim', 'active' => false],
+    ['label' => 'Teeth Brushing', 'active' => false],
+    ['label' => 'Anal Gland Expression', 'active' => false],
+    ['label' => 'Paw Balm', 'active' => false],
+    ['label' => 'Perfume', 'active' => false],
+    ['label' => 'Bandana / Bow', 'active' => false],
+];
+
+$spaceAmenities = [
+    ['label' => 'Grooming Table', 'active' => true],
+    ['label' => 'Bath', 'active' => true],
+    ['label' => 'Dryer', 'active' => true],
+    ['label' => 'Towels', 'active' => true],
+    ['label' => 'Wi-Fi', 'active' => true],
+    ['label' => 'Waiting area', 'active' => true],
+    ['label' => 'Parking', 'active' => true],
+];
+
+$spacePetRestrictions = [
+    ['type' => 'allow', 'text' => 'Suitable for all breeds and coat types'],
+    ['type' => 'allow', 'text' => 'Leave space tidy'],
+    ['type' => 'deny', 'text' => 'Not suitable for aggressive animals in heat'],
+    ['type' => 'deny', 'text' => 'No overnight stays'],
+    ['type' => 'deny', 'text' => 'Pets must remain supervised'],
+    ['type' => 'deny', 'text' => 'No smoking'],
+];
+
+$spaceHygiene = [
+    'Space regularly cleaned after each booking',
+    'CCTV running 24/7',
+    'Fire exits up to safety standards',
+    'Fire alarm installed in every room',
+];
+
+$spacePolicyRestrictions = [
+    ['type' => 'allow', 'text' => 'Suitable for all breeds and coat types'],
+    ['type' => 'allow', 'text' => 'Pets must remain supervised'],
+    ['type' => 'deny', 'text' => 'No overnight stays'],
+    ['type' => 'deny', 'text' => 'Not suitable for aggressive animals in heat'],
 ];
 
 $sharedPetPreferences = [
-    ['label' => 'Pet types accepted', 'value' => 'Cats, Others +'],
+    ['label' => 'Pet types accepted', 'value' => 'Dogs, Others +'],
     ['label' => 'Pet size preferences', 'value' => 'Small 0-7 kg, Medium 8-18kg'],
+];
+
+$petPreferenceGroups = [
+    [
+        'label' => 'Pet types accepted',
+        'tags' => [
+            ['label' => 'Dogs', 'active' => true],
+            ['label' => 'Other - Rabbits, Turtles, Guinea Pigs', 'active' => true],
+            ['label' => 'Cats', 'active' => false],
+        ],
+    ],
+    [
+        'label' => 'Pet sizes accepted',
+        'tags' => [
+            ['label' => 'Small 0-7 kg', 'active' => true],
+            ['label' => 'Medium 8-18 kg', 'active' => true],
+            ['label' => 'Large 19+ kg', 'active' => false],
+        ],
+    ],
+];
+
+$petRestrictions = [
+    ['type' => 'allow', 'text' => 'Works with dogs & cats up to 35kg'],
+    ['type' => 'allow', 'text' => 'Special care for seniors & anxious pets'],
+    ['type' => 'deny', 'text' => 'Not suitable for aggressive pets'],
+];
+
+$mapSouthwark = asset('images/admin/provider/map-southwark.png');
+
+$groomerCoverageAreas = [
+    [
+        'name' => 'Southwark',
+        'address' => "22 Studio Way, London, SW4 6NR\nUnited Kingdom",
+        'radius' => '1 mile radius',
+        'map' => $mapSouthwark,
+        'maps_url' => 'https://maps.google.com/?q=Southwark,London',
+    ],
+    [
+        'name' => 'Waterloo South Bank',
+        'address' => "14 Riverside Walk, London, SE1 9PP\nUnited Kingdom",
+        'radius' => '1 mile radius',
+        'map' => $mapSouthwark,
+        'maps_url' => 'https://maps.google.com/?q=Waterloo,London',
+    ],
+    [
+        'name' => 'Cannon Street',
+        'address' => "8 Cannon Street, London, EC4N 6AP\nUnited Kingdom",
+        'radius' => '0.5 mile radius',
+        'map' => $mapSouthwark,
+        'maps_url' => 'https://maps.google.com/?q=Cannon+Street,London',
+    ],
+];
+
+$coverageMeta = [
+    'location' => 'West London',
+    'accessibility' => 'Located near Victoria Embankment, with excellent public transport connections and free on-site parking available.',
 ];
 
 $spaceDefaults = [
@@ -28,29 +249,37 @@ $spaceDefaults = [
             'name' => 'Southwark',
             'address' => "22 Studio Way, London, SW4 6NR\nUnited Kingdom",
             'availability' => 'Full Day · Half Day · Hourly',
-            'map' => asset('images/admin/provider/map-southwark.png'),
+            'radius' => 'Studio location',
+            'map' => $mapSouthwark,
+            'maps_url' => 'https://maps.google.com/?q=Southwark,London',
             'location' => 'West London',
             'accessibility' => 'Located near Victoria Embankment, with excellent public transport connections and free on-site parking available.',
         ],
-        [
-            'name' => 'Camden',
-            'address' => "14 Regent's Canal Walk, London, NW1 8AN\nUnited Kingdom",
-            'availability' => 'Half Day · Hourly',
-            'map' => asset('images/admin/provider/map-southwark.png'),
-            'location' => 'North London',
-            'accessibility' => 'Step-free access from street level. Limited paid parking nearby.',
-        ],
-        [
-            'name' => 'Hackney',
-            'address' => "8 Mare Street Yard, London, E8 3RH\nUnited Kingdom",
-            'availability' => 'Full Day · Half Day',
-            'map' => asset('images/admin/provider/map-southwark.png'),
-            'location' => 'East London',
-            'accessibility' => 'Ground-floor space with wide doorway. Street parking only.',
-        ],
     ],
     'services' => $spaceServices,
+    'listing_details' => $spaceListingDetails,
+    'listing_addons' => $spaceListingAddons,
+    'suitable_for' => $spaceSuitableFor,
+    'amenities' => $spaceAmenities,
+    'addons' => [
+        ['label' => 'Storage Locker £5', 'active' => true],
+        ['label' => 'Deep Clean £10', 'active' => true],
+        ['label' => 'After-hours access £20', 'active' => false],
+    ],
     'pet_preferences' => $sharedPetPreferences,
+    'pet_preference_groups' => $petPreferenceGroups,
+    'pet_restrictions' => $spacePetRestrictions,
+    'hygiene_standards' => $spaceHygiene,
+    'policy_restrictions' => $spacePolicyRestrictions,
+    'coverage_meta' => $coverageMeta,
+    'gallery' => [
+        asset('images/admin/provider/gallery/space/1.jpg'),
+        asset('images/admin/provider/gallery/space/2.jpg'),
+        asset('images/admin/provider/gallery/space/3.jpg'),
+        asset('images/admin/provider/gallery/space/4.jpg'),
+        asset('images/admin/provider/gallery/space/5.jpg'),
+    ],
+    'gallery_extra' => 0,
 ];
 
 // Dual-role demo: Pawfect has both Groomer + Space Host profiles
@@ -95,9 +324,137 @@ $pawfectProfile = [
         ['label' => 'Business reg. number', 'value' => '12345678'],
         ['label' => 'Last active', 'value' => 'Today'],
     ],
+    'public_profile' => [
+        'tagline' => 'Luxury grooming with a gentle touch.',
+        'bio' => "Hi, I'm Sarah — a professional groomer with over 8 years' experience. I specialise in stress-free grooming for dogs and cats, using gentle techniques and premium products. Every pet leaves looking and feeling their best.",
+    ],
+    'gallery' => [
+        asset('images/admin/provider/gallery/1.jpg'),
+        asset('images/admin/provider/gallery/2.jpg'),
+        asset('images/admin/provider/gallery/3.jpg'),
+        asset('images/admin/provider/gallery/4.jpg'),
+        asset('images/admin/provider/gallery/5.jpg'),
+        asset('images/admin/provider/gallery/6.jpg'),
+        asset('images/admin/provider/gallery/1.jpg'),
+    ],
+    'gallery_extra' => 2,
+    'business_details' => [
+        ['label' => 'Full name (must match ID)', 'value' => 'Sarah Smith'],
+        ['label' => 'Business name', 'value' => 'Pawfect Grooming'],
+        ['label' => 'Account type', 'value' => 'Freelance Groomer'],
+        ['label' => 'Email', 'value' => 'sarah@pawfectgrooming.com'],
+        ['label' => 'Phone', 'value' => '+447 8562 5458'],
+        ['label' => 'Business reg. number', 'value' => '0123456'],
+        ['label' => 'Joined', 'value' => '12 Jan 2023'],
+        ['label' => 'Provider ID', 'value' => 'GS-00312'],
+        ['label' => 'Last active', 'value' => '2 days ago'],
+    ],
+    'edit_business' => [
+        'email' => 'sarah.w@pawfect.co.uk',
+        'phone' => '+447 8562 5458',
+        'address_1' => '142 Henderson Drive',
+        'address_2' => '',
+        'city' => 'London',
+        'postcode' => 'SE25 63CB',
+        'country' => 'United Kingdom',
+        'readonly' => [
+            ['label' => 'Business name', 'value' => 'Pawfect Grooming'],
+            ['label' => 'Account type', 'value' => 'Freelance'],
+            ['label' => 'Provider ID', 'value' => 'GS-00312'],
+            ['label' => 'Joined', 'value' => '12 Jan 2023'],
+        ],
+    ],
+    'policies' => [
+        'cancellation' => [
+            ['label' => 'Cancellation window', 'value' => '24 hours before appointment'],
+            ['label' => 'Late Cancellation window', 'value' => 'Late Cancellation Fee 50% of booking price'],
+            ['label' => 'No-show fee', 'value' => '100% of booking price'],
+        ],
+        'late_arrival' => [
+            ['label' => 'Grace Period', 'value' => '10 minutes'],
+            ['label' => 'Late arrival fee', 'value' => '£10 after 15 mins'],
+        ],
+    ],
+    'hygiene_standards' => [
+        'Tools sanitised between pets',
+        'Clean table after each appointment',
+        'Fresh towels per pet',
+        'Equipment safety checked',
+    ],
+    'reviews_summary' => [
+        'avg' => '4.8',
+        'count' => '94',
+        'items' => [
+            [
+                'author' => 'Jane Doe',
+                'user_id' => 'USER-01452',
+                'stars' => 5,
+                'time_ago' => '2 weeks ago',
+                'text' => 'Absolutely wonderful experience from start to finish. Biscuit was nervous at first but Sarah was so patient and gentle — he looked and smelled amazing afterwards. Will definitely book again.',
+                'service' => 'Full Groom',
+                'booking_id' => 'FG-0563-B12',
+                'reply' => 'Thank you so much for your kind words! It was a pleasure caring for him — he was such a good boy once he settled in.',
+            ],
+            [
+                'author' => 'Jane Doe',
+                'user_id' => 'USER-01452',
+                'stars' => 5,
+                'time_ago' => '2 weeks ago',
+                'text' => 'Absolutely wonderful experience from start to finish. Biscuit was nervous at first but Sarah was so patient and gentle — he looked and smelled amazing afterwards. Will definitely book again.',
+                'service' => 'Full Groom',
+                'booking_id' => 'FG-0563-B12',
+                'reply' => 'Thank you so much for your kind words! It was a pleasure caring for him — he was such a good boy once he settled in.',
+            ],
+            [
+                'author' => 'Tom Harris',
+                'user_id' => 'USER-01488',
+                'stars' => 4,
+                'time_ago' => '1 month ago',
+                'text' => 'Quick nail trim and friendly service. Studio was clean and calm. Would have given five stars if parking were a little easier.',
+                'service' => 'Nail Trim',
+                'booking_id' => 'NT-0499-B03',
+                'reply' => 'Thanks Tom — glad Max was comfortable. We are looking at extra parking guidance for future visits.',
+            ],
+            [
+                'author' => 'Alex Rivera',
+                'user_id' => 'USER-01519',
+                'stars' => 5,
+                'time_ago' => '6 weeks ago',
+                'text' => 'Best mobile groomer we have used. Punctual, professional, and Luna looked fantastic.',
+                'service' => 'Mobile Grooming',
+                'booking_id' => 'MG-0521-B17',
+                'reply' => null,
+            ],
+            [
+                'author' => 'Mia Brooks',
+                'user_id' => 'USER-01622',
+                'stars' => 5,
+                'time_ago' => '2 months ago',
+                'text' => 'Puppy intro session was perfect. Clear communication and a calm environment for our nervous pup.',
+                'service' => 'Puppy Intro',
+                'booking_id' => 'PI-0388-B21',
+                'reply' => 'So happy Poppy enjoyed her first groom — looking forward to seeing you both again!',
+            ],
+            [
+                'author' => 'Sam Patel',
+                'user_id' => 'USER-01690',
+                'stars' => 4,
+                'time_ago' => '3 months ago',
+                'text' => 'Bath & tidy left our spaniel fluffy and fresh. Slight wait at drop-off but overall excellent.',
+                'service' => 'Bath & Tidy',
+                'booking_id' => 'BT-0412-B08',
+                'reply' => 'Appreciate the feedback Sam — we have adjusted drop-off slots to reduce wait times.',
+            ],
+        ],
+    ],
     'location_types' => ['Home studio', 'Salon', 'Home visits'],
     'services' => $groomerServices,
+    'addons' => $groomerAddons,
     'pet_preferences' => $sharedPetPreferences,
+    'pet_preference_groups' => $petPreferenceGroups,
+    'pet_restrictions' => $petRestrictions,
+    'service_areas' => $groomerCoverageAreas,
+    'coverage_meta' => $coverageMeta,
     'bookings' => [
         ['id' => 'GS-0563-B12', 'service' => 'Full Groom', 'customer' => 'Jane Doe', 'user_no' => 'USR-01452', 'date' => '12 Aug 2025', 'amount' => '£55.00', 'status' => 'completed', 'status_label' => 'Completed'],
         ['id' => 'GS-0499-B03', 'service' => 'Nail Trim', 'customer' => 'Tom Harris', 'user_no' => 'USR-01488', 'date' => '28 Jul 2025', 'amount' => '£25.00', 'status' => 'disputed', 'status_label' => 'Disputed'],
@@ -125,10 +482,10 @@ $pawfectProfile = [
         ],
     ],
     'activity' => [
-        ['type' => 'booking', 'title' => 'Booking GS-0563-B12 completed', 'time' => '18 Apr 2025 · 11:32'],
-        ['type' => 'booking', 'title' => 'Payout PO-0142-25 processed (£580.00)', 'time' => '03 Mar 2025 · 09:15'],
-        ['type' => 'dispute', 'title' => 'Dispute raised on GS-0499-B03', 'time' => '28 Jul 2025 · 14:20'],
-        ['type' => 'flag', 'title' => 'Profile updated — new service added', 'time' => '15 Jul 2025 · 16:45'],
+        ['type' => 'booking', 'title' => 'Booking GS-0563-B12 completed · £55.00', 'time' => '18 Apr 2025 · 14:32'],
+        ['type' => 'hold', 'title' => 'Payout of £890 held — dispute open', 'time' => '18 Apr 2025 · 11:32'],
+        ['type' => 'pass', 'title' => 'Verification approved by Michelle M', 'time' => '05 Mar 2025 · 21:50'],
+        ['type' => 'password', 'title' => 'Account created · signed up via email', 'time' => '01 Dec 2024 · 18:55'],
     ],
     'sessions' => [
         [
@@ -373,10 +730,27 @@ $pawfectProfile = [
         'avatar' => $fallbackAvatar,
         'insurance_badge' => 'Freelance',
         'insurance_class' => 'freelance',
+        'tagline' => 'Luxury grooming with a gentle touch.',
+        'bio' => "Hi, I'm Sarah — a professional groomer with over 8 years' experience. I specialise in stress-free grooming for dogs and cats, using gentle techniques and premium products. Every pet leaves looking and feeling their best.",
+        'business_details' => [
+            ['label' => 'Full name (must match ID)', 'value' => 'Sarah Smith'],
+            ['label' => 'Business name', 'value' => 'Pawfect Grooming'],
+            ['label' => 'Account type', 'value' => 'Freelance Groomer'],
+            ['label' => 'Email', 'value' => 'sarah@pawfectgrooming.com'],
+            ['label' => 'Phone', 'value' => '+447 8562 5458'],
+            ['label' => 'Business reg. number', 'value' => '0123456'],
+            ['label' => 'Joined', 'value' => '12 Jan 2023'],
+            ['label' => 'Provider ID', 'value' => 'GS-00312'],
+            ['label' => 'Last active', 'value' => '2 days ago'],
+        ],
         'location_types' => ['Home studio', 'Salon', 'Home visits'],
-        'service_areas' => [],
+        'service_areas' => $groomerCoverageAreas,
         'services' => $groomerServices,
+        'addons' => $groomerAddons,
         'pet_preferences' => $sharedPetPreferences,
+        'pet_preference_groups' => $petPreferenceGroups,
+        'pet_restrictions' => $petRestrictions,
+        'coverage_meta' => $coverageMeta,
     ],
     'space' => array_merge($spaceDefaults, [
         'name' => 'The Garden Grooming Spot',
@@ -385,6 +759,67 @@ $pawfectProfile = [
         'avatar' => $spaceAvatar,
         'insurance_badge' => 'Registered',
         'insurance_class' => 'registered',
+        'tagline' => 'Luxury grooming with a gentle touch.',
+        'bio' => 'A bright, clean, fully equipped grooming outdoor space ideal for professional use. Outdoor garden grooming area. Calm, spacious, and ideal for stress-free sessions in fresh air.',
+        'email' => 'dev.e@gardenspot.co.uk',
+        'phone' => '+447 8562 5458',
+        'business_details' => [
+            ['label' => 'Full name (must match ID)', 'value' => 'Dev Étienne'],
+            ['label' => 'Business name', 'value' => 'The Garden Grooming Spot'],
+            ['label' => 'Account type', 'value' => 'Space Owner'],
+            ['label' => 'Email', 'value' => 'dev.e@gardenspot.co.uk'],
+            ['label' => 'Phone', 'value' => '+447 8562 5458'],
+            ['label' => 'Business reg. number', 'value' => '0123456'],
+            ['label' => 'Joined', 'value' => '12 Jan 2023'],
+            ['label' => 'Provider ID', 'value' => 'SP-00312'],
+            ['label' => 'Last active', 'value' => '2 days ago'],
+        ],
+        'reviews_summary' => [
+            'avg' => '4.8',
+            'count' => '94',
+            'items' => [
+                [
+                    'author' => 'Jane Doe',
+                    'user_id' => 'USER-01452',
+                    'stars' => 5,
+                    'time_ago' => '2 weeks ago',
+                    'text' => 'Absolutely wonderful experience from start to finish. The garden space was calm and spotless — Biscuit settled quickly and the setup made the whole session feel easy.',
+                    'service' => 'Garden / Shed · Half-Day',
+                    'booking_id' => 'SP-10291',
+                    'reply' => 'Thank you so much for your kind words! It was a pleasure hosting you — glad Biscuit felt at home.',
+                ],
+                [
+                    'author' => 'Tom Harris',
+                    'user_id' => 'USER-01488',
+                    'stars' => 4,
+                    'time_ago' => '1 month ago',
+                    'text' => 'Great outdoor shed space with everything I needed. Parking was straightforward and the dryer worked perfectly.',
+                    'service' => 'Garden / Shed · Hourly',
+                    'booking_id' => 'SP-10112',
+                    'reply' => null,
+                ],
+                [
+                    'author' => 'Alex Rivera',
+                    'user_id' => 'USER-01519',
+                    'stars' => 5,
+                    'time_ago' => '6 weeks ago',
+                    'text' => 'Clean, bright, and well equipped. Booked a full day and would happily return.',
+                    'service' => 'Garden / Shed · Full-day',
+                    'booking_id' => 'SP-10088',
+                    'reply' => 'Thanks Alex — looking forward to hosting you again!',
+                ],
+                [
+                    'author' => 'Mia Brooks',
+                    'user_id' => 'USER-01622',
+                    'stars' => 5,
+                    'time_ago' => '2 months ago',
+                    'text' => 'Perfect for mobile grooming. Quiet garden area and clear access instructions.',
+                    'service' => 'Garden / Shed · Half-Day',
+                    'booking_id' => 'SP-09941',
+                    'reply' => null,
+                ],
+            ],
+        ],
     ]),
 ];
 
@@ -481,6 +916,15 @@ foreach ($providers as $provider) {
         x-data="{
             viewAs: @js($defaultView),
             dual: @js($isDual),
+            profileSubTab: 'profile',
+            editBusinessOpen: false,
+            editEmail: @js($profile['edit_business']['email'] ?? $profile['email'] ?? ''),
+            editPhone: @js($profile['edit_business']['phone'] ?? $profile['phone'] ?? ''),
+            editAddress1: @js($profile['edit_business']['address_1'] ?? ''),
+            editAddress2: @js($profile['edit_business']['address_2'] ?? ''),
+            editCity: @js($profile['edit_business']['city'] ?? ''),
+            editPostcode: @js($profile['edit_business']['postcode'] ?? ''),
+            editCountry: @js($profile['edit_business']['country'] ?? ''),
             resetPasswordOpen: false,
             suspendOpen: false,
             suspendReason: '',
@@ -503,7 +947,7 @@ foreach ($providers as $provider) {
         }"
         x-init="
             const syncModalLock = () => {
-                const open = resetPasswordOpen || suspendOpen || flagOpen || deleteOpen;
+                const open = resetPasswordOpen || suspendOpen || flagOpen || deleteOpen || editBusinessOpen;
                 if (open) {
                     if (!document.body.classList.contains('admin-co-modal-lock')) {
                         document.body.dataset.adminCoScrollY = String(window.scrollY);
@@ -527,6 +971,7 @@ foreach ($providers as $provider) {
             $watch('suspendOpen', () => $nextTick(() => syncModalLock()));
             $watch('flagOpen', () => $nextTick(() => syncModalLock()));
             $watch('deleteOpen', () => $nextTick(() => syncModalLock()));
+            $watch('editBusinessOpen', () => $nextTick(() => syncModalLock()));
             $watch('deleteReason', () => syncDeleteReady());
             $watch('deleteGdprRef', () => syncDeleteReady());
             $watch('deleteConfirm', () => syncDeleteReady());
@@ -550,6 +995,10 @@ foreach ($providers as $provider) {
                 <x-admin.provider.overview :profile="$profile" />
             </div>
 
+            <div x-show="detailTab === 'profile'" x-cloak>
+                <x-admin.provider.profile :profile="$profile" />
+            </div>
+
             <div x-show="detailTab === 'activity'" x-cloak>
                 <x-admin.provider.activity :profile="$profile" />
             </div>
@@ -562,7 +1011,7 @@ foreach ($providers as $provider) {
                 <x-admin.provider.compliance :profile="$profile" />
             </div>
 
-            @foreach (['profile' => 'Profile', 'bookings' => 'Bookings', 'payouts' => 'Payouts', 'support' => 'Support'] as $tabKey => $tabLabel)
+            @foreach (['bookings' => 'Bookings', 'payouts' => 'Payouts', 'support' => 'Support'] as $tabKey => $tabLabel)
             <div class="admin-co-placeholder" x-show="detailTab === '{{ $tabKey }}'" x-cloak>
                 <h2 class="admin-page-title mb-0">{{ $tabLabel }}</h2>
                 <p class="admin-section-label mb-0">This section will be built next.</p>
