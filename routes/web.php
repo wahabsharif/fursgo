@@ -125,6 +125,12 @@ Route::get('/checkout_booking_space', fn() => VoltPage::render('checkout.booking
 Route::get('/checkout_booking_groomer_space', fn() => VoltPage::render('checkout.booking-groomer-space'))
     ->name('checkout.booking-groomer-space');
 
+// My Bookings (design shell — custom PHP URL parity)
+Route::get('/my_bookings', fn() => VoltPage::render('my-bookings.index'))
+    ->name('my-bookings');
+Route::get('/my_bookings/my_bookings.php', fn() => VoltPage::render('my-bookings.index'))
+    ->name('my-bookings.php');
+
 Route::get('/my-account/pet-owner-profile', fn() => VoltPage::render('account.profile'))
     ->middleware([EnsureWebOrGroomerSpacerAuthenticated::class])
     ->name('pet-owner-profile');
