@@ -2427,6 +2427,11 @@
     background: #fafafa;
 }
 
+.admin-card.admin-co-panel.compliance-activity {
+    padding: 0;
+    background: none;
+}
+
 /* First overview panel sits after the head ? no card chrome */
 .admin-co-overview-head + .admin-card.admin-co-panel {
     border: none;
