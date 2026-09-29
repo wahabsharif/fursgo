@@ -1,5 +1,9 @@
 @props(['title', 'tone' => null, 'section' => null, 'isEditing' => false, 'saveAction' => null])
 
+@php
+    $usesPageEditor = in_array($section, ['personal', 'business', 'gallery'], true);
+@endphp
+
 <div @class([
     'business-details-section-title',
     'business-details-section-title--warning' => $tone === 'warning',
@@ -17,36 +21,39 @@
         <div class="business-details-title-actions">
             @if ($saveAction)
                 <button type="button" class="business-details-save" x-data="{ loading: false }" x-cloak
-                    x-show="editingSection === @js($section)"
+                    x-show="editingSection === @js($section) && editingSection !== 'all'"
                     x-transition:enter="business-details-action-enter"
                     x-transition:enter-start="business-details-action-enter-start"
                     x-transition:enter-end="business-details-action-enter-end"
                     x-transition:leave="business-details-action-leave"
                     x-transition:leave-start="business-details-action-leave-start"
                     x-transition:leave-end="business-details-action-leave-end"
-                    @click="loading = true; Promise.resolve($wire.call(@js($saveAction))).then(() => editingSection = null).finally(() => loading = false)"
+                    @click="loading = true; Promise.resolve($wire.call(@js($saveAction))).then(() => editingSection = $wire.editingSection).finally(() => loading = false)"
                     :disabled="loading">
                     <span class="business-details-btn-spinner" x-cloak x-show="loading" aria-hidden="true"></span>
                     <span>Save Details</span>
                 </button>
             @endif
 
-            <button type="button" class="business-details-edit" x-cloak
-                x-show="editingSection !== @js($section)"
+            <button type="button" @class([
+                'business-details-edit',
+                'business-details-edit--manage' => $section === 'payout',
+            ]) x-cloak
+                x-show="editingSection !== @js($section) && editingSection !== 'all'"
                 x-transition:enter="business-details-action-enter"
                 x-transition:enter-start="business-details-action-enter-start"
                 x-transition:enter-end="business-details-action-enter-end"
                 x-transition:leave="business-details-action-leave"
                 x-transition:leave-start="business-details-action-leave-start"
                 x-transition:leave-end="business-details-action-leave-end"
-                @click="editingSection = @js($section)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                    aria-hidden="true">
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                </svg>
-                Edit details
+                aria-label="{{ $section === 'payout' ? 'Manage payout details' : 'Edit ' . $title }}"
+                @click="{{ $usesPageEditor ? 'editAll()' : 'editingSection = ' . Js::from($section) }}">
+                @if ($section === 'payout')
+                    Manage
+                @else
+                    <img src="{{ asset('images/business-hub/icon-edit-details.svg') }}" width="36" height="36"
+                        alt="" aria-hidden="true">
+                @endif
             </button>
         </div>
     @endif

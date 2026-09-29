@@ -88,6 +88,56 @@ new class extends Component {
         $this->editingSection = $section;
     }
 
+    public function editAll(): void
+    {
+        $this->hydrateEditableFields();
+        $this->editingSection = 'all';
+    }
+
+    public function saveAllDetails(): void
+    {
+        $profile = $this->profile();
+
+        if (!$profile) {
+            return;
+        }
+
+        $validated = $this->validate([
+            'fullName' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'businessPhone' => ['nullable', 'string', 'max:50'],
+            'businessName' => ['nullable', 'string', 'max:255'],
+            'businessRegistrationNumber' => ['nullable', 'string', 'max:100'],
+            'tagline' => ['nullable', 'string', 'max:255'],
+            'bio' => ['nullable', 'string', 'max:1000'],
+            'profilePhotoPath' => ['nullable', 'string', 'max:2048'],
+            'profilePhotoUpload' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:51200'],
+            'galleryUpload' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp,avif', 'max:2048'],
+        ]);
+
+        $businessDetails = $this->arrayValue($profile->business_details);
+        $businessBasics = $this->arrayValue($profile->business_basics);
+
+        $businessDetails['business_phone'] = $validated['businessPhone'];
+        $businessDetails['business_name'] = $validated['businessName'];
+        $businessDetails['business_registration_number'] = $validated['businessRegistrationNumber'];
+        $businessBasics['display_name'] = $validated['businessName'];
+        $businessBasics['tagline'] = $validated['tagline'];
+        $businessBasics['bio'] = $validated['bio'];
+        $businessBasics['profile_photo_path'] = $this->profilePhotoUpload ? $this->profilePhotoUpload->store($this->profileImageUploadDirectory($profile), 'public') : $validated['profilePhotoPath'];
+
+        $profile->update([
+            'full_name' => $validated['fullName'],
+            'email' => $validated['email'],
+            'business_details' => $businessDetails,
+            'business_basics' => $businessBasics,
+        ]);
+
+        $this->profilePhotoUpload = null;
+        $this->editingSection = null;
+        $this->hydrateEditableFields();
+    }
+
     public function cancelEdit(): void
     {
         $this->resetValidation();
@@ -139,7 +189,7 @@ new class extends Component {
             'tagline' => ['nullable', 'string', 'max:255'],
             'bio' => ['nullable', 'string', 'max:1000'],
             'profilePhotoPath' => ['nullable', 'string', 'max:2048'],
-            'profilePhotoUpload' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp,avif', 'max:1024'],
+            'profilePhotoUpload' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:51200'],
         ]);
 
         $businessDetails = $this->arrayValue($profile->business_details);
@@ -200,7 +250,7 @@ new class extends Component {
         }
 
         $this->persistGalleryUpload($profile);
-        $this->editingSection = 'gallery';
+        $this->editingSection = $this->editingSection === 'all' ? 'all' : 'gallery';
     }
 
     private function persistGalleryUpload(GroomerSpacerProfile $profile): void
@@ -255,7 +305,7 @@ new class extends Component {
         $this->galleryPathsText = implode("\n", $this->galleryPaths);
         $this->galleryUpload = null;
         $this->galleryReplaceIndex = null;
-        $this->editingSection = 'gallery';
+        $this->editingSection = $this->editingSection === 'all' ? 'all' : 'gallery';
         $this->hydrateEditableFields();
     }
 
@@ -657,7 +707,7 @@ new class extends Component {
                 'url' => Storage::url($normalizedPath),
                 'fallback_url' => $this->fileUrl($normalizedPath, true),
                 'size' => null,
-                'uploaded' => null,
+                'uploaded' => date('d M Y', Storage::disk('public')->lastModified($normalizedPath)),
                 'extension' => $extension,
                 'is_image' => true,
                 'available' => true,
@@ -797,9 +847,16 @@ new class extends Component {
     }
 }; ?>
 
-<div class="business-details-settings" x-data="{
+<div class="business-details-settings" :class="{ 'business-details-settings--editing': editingSection === 'all' }" x-data="{
     showBusinessDetailsAlert: true,
     editingSection: @js($editingSection),
+    isEditing(section) {
+        return this.editingSection === section || this.editingSection === 'all';
+    },
+    editAll() {
+        this.editingSection = 'all';
+        this.$wire.call('editAll');
+    },
     cancelEdit() {
         if (!this.editingSection) {
             return;
@@ -809,43 +866,26 @@ new class extends Component {
         this.$wire.call('cancelEdit');
     },
 }" x-on:keydown.escape.window="cancelEdit()">
-    <div class="business-details-heading">
-        <div>
-            <h2>Business Details</h2>
-            <p>Keep your business information and compliance details up to date.</p>
-        </div>
-    </div>
-
     <div class="business-details-alert" x-show="showBusinessDetailsAlert" x-cloak
         x-transition:enter="business-details-alert-enter" x-transition:enter-start="business-details-alert-enter-start"
         x-transition:enter-end="business-details-alert-enter-end" x-transition:leave="business-details-alert-leave"
         x-transition:leave-start="business-details-alert-leave-start"
         x-transition:leave-end="business-details-alert-leave-end" role="status">
         <span class="business-details-alert__icon" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" width="3" height="14" viewBox="0 0 3 14" fill="none">
-                <path
-                    d="M2.196 0V5.148C2.196 5.688 2.172 6.219 2.124 6.741C2.076 7.257 2.013 7.815 1.935 8.415H0.63C0.546 7.815 0.48 7.257 0.432 6.741C0.39 6.219 0.369 5.688 0.369 5.148V0H2.196ZM0 11.844C0 11.67 0.03 11.508 0.09 11.358C0.156 11.202 0.246 11.067 0.36 10.953C0.474 10.839 0.606 10.749 0.756 10.683C0.906 10.617 1.071 10.584 1.251 10.584C1.425 10.584 1.587 10.617 1.737 10.683C1.893 10.749 2.025 10.839 2.133 10.953C2.247 11.067 2.337 11.202 2.403 11.358C2.469 11.508 2.502 11.67 2.502 11.844C2.502 12.024 2.469 12.189 2.403 12.339C2.337 12.489 2.247 12.621 2.133 12.735C2.025 12.849 1.893 12.936 1.737 12.996C1.587 13.062 1.425 13.095 1.251 13.095C1.071 13.095 0.906 13.062 0.756 12.996C0.606 12.936 0.474 12.849 0.36 12.735C0.246 12.621 0.156 12.489 0.09 12.339C0.03 12.189 0 12.024 0 11.844Z"
-                    fill="white" />
-            </svg>
+            <img src="{{ asset('images/business-hub/icon-settings-alert-info.svg') }}" width="18" height="18" alt="">
         </span>
         <div>
-            <strong>Keeping your compliance information current ensures trust and platform safety.</strong>
-            <span>Please review and update your details regularly.</span>
+            <strong>Keeping your compliance details current keeps your account verified and visible to clients. Review these regularly.</strong>
         </div>
         <button type="button" class="business-details-alert__close" @click="showBusinessDetailsAlert = false"
-            aria-label="Dismiss compliance information alert"><svg xmlns="http://www.w3.org/2000/svg" width="24"
-                height="14" viewBox="0 0 24 14" fill="none" aria-hidden="true">
-                <path
-                    d="M6.65625 13.7071C6.26572 14.0976 5.63256 14.0976 5.24204 13.7071C4.85151 13.3166 4.85151 12.6834 5.24204 12.2929L5.94914 13L6.65625 13.7071ZM11.9999 6.94921L12.707 6.24211C13.0975 6.63263 13.0975 7.2658 12.707 7.65632L11.9999 6.94921ZM5.34361 1.70711C4.95309 1.31658 4.95309 0.683417 5.34361 0.292892C5.73413 -0.0976337 6.3673 -0.0976336 6.75782 0.292892L6.05072 1L5.34361 1.70711ZM5.94914 13L5.24204 12.2929L11.2928 6.24211L11.9999 6.94921L12.707 7.65632L6.65625 13.7071L5.94914 13ZM11.9999 6.94921L11.2928 7.65632L5.34361 1.70711L6.05072 1L6.75782 0.292892L12.707 6.24211L11.9999 6.94921Z"
-                    fill="#B4CCDD" />
-                <path
-                    d="M17.3025 13.7071C17.693 14.0976 18.3262 14.0976 18.7167 13.7071C19.1072 13.3166 19.1072 12.6834 18.7167 12.2929L18.0096 13L17.3025 13.7071ZM11.9588 6.94921L11.2517 6.24211C10.8612 6.63263 10.8612 7.2658 11.2517 7.65632L11.9588 6.94921ZM18.6151 1.70711C19.0056 1.31658 19.0056 0.683417 18.6151 0.292892C18.2246 -0.0976337 17.5914 -0.0976336 17.2009 0.292892L17.908 1L18.6151 1.70711ZM18.0096 13L18.7167 12.2929L12.6659 6.24211L11.9588 6.94921L11.2517 7.65632L17.3025 13.7071L18.0096 13ZM11.9588 6.94921L12.6659 7.65632L18.6151 1.70711L17.908 1L17.2009 0.292892L11.2517 6.24211L11.9588 6.94921Z"
-                    fill="#B4CCDD" />
-            </svg></button>
+            aria-label="Dismiss compliance information alert">
+            <img src="{{ asset('images/business-hub/icon-settings-alert-close.svg') }}" width="11" height="11" alt=""
+                aria-hidden="true">
+        </button>
     </div>
 
     <section class="business-details-block">
-        <x-business-hub.settings.business-details.section-title title="Personal Details" section="personal"
+        <x-business-hub.settings.business-details.section-title title="Personal details" section="personal"
             :is-editing="$editingSection === 'personal'" save-action="savePersonalDetails" />
         <div @class([
             'business-details-card',
@@ -853,11 +893,11 @@ new class extends Component {
             'business-details-grid--three',
             'business-details-card--editing' => $editingSection === 'personal',
         ])
-            :class="{ 'business-details-card--editing': editingSection === 'personal' }">
-            <div class="business-details-toggle-panel" x-cloak x-show="editingSection === 'personal'">
+            :class="{ 'business-details-card--editing': isEditing('personal') }">
+            <div class="business-details-toggle-panel" x-cloak x-show="isEditing('personal')">
                 <div class="business-details-edit-grid business-details-edit-grid--three">
                     <label class="business-details-input-field">
-                        <span>Full Name (must match ID)</span>
+                        <span>Full Name <em>(must match ID)</em></span>
                         <input type="text" wire:model.defer="fullName">
                     </label>
                     <label class="business-details-input-field">
@@ -870,7 +910,7 @@ new class extends Component {
                     </label>
                 </div>
             </div>
-            <div class="business-details-toggle-panel" x-show="editingSection !== 'personal'">
+            <div class="business-details-toggle-panel" x-show="!isEditing('personal')">
                 <div class="business-details-edit-grid business-details-edit-grid--three">
                     <x-business-hub.settings.business-details.field label="Full Name (must match ID)"
                         :value="$profile?->full_name" placeholder="Not provided" />
@@ -884,136 +924,141 @@ new class extends Component {
     </section>
 
     <section class="business-details-block">
-        <x-business-hub.settings.business-details.section-title title="Business Details" section="business"
+        <x-business-hub.settings.business-details.section-title title="Business details" section="business"
             :is-editing="$editingSection === 'business'" save-action="saveBusinessDetails" />
         <div @class([
             'business-details-card',
             'business-details-profile',
             'business-details-card--editing' => $editingSection === 'business',
         ])
-            :class="{ 'business-details-card--editing': editingSection === 'business' }">
+            :class="{ 'business-details-card--editing': isEditing('business') }">
             <div>
-                <span class="business-details-label">Business Profile Image</span>
-                <div class="business-details-avatar" x-show="editingSection !== 'business'">
+                <div class="business-details-avatar" x-show="!isEditing('business')">
                     @if ($profileImage && $profileImage['is_image'])
                         <img src="{{ $profileImage['url'] }}" data-fallback-src="{{ $profileImage['fallback_url'] ?? '' }}"
                             alt="Business profile image"
                             onerror="if (this.dataset.fallbackSrc && this.src !== this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; this.removeAttribute('data-fallback-src'); }">
                     @else
-                        <span class="business-details-paw" aria-hidden="true">paw</span>
+                        <img class="business-details-paw" src="{{ asset('images/business-hub/icon-gallery-paw.svg') }}"
+                            width="28" height="22" alt="" aria-hidden="true">
                     @endif
                 </div>
                 <div class="business-details-avatar-upload" wire:key="business-profile-image-uploader" x-data="{
-                        uploading: false,
-                        progress: 0,
-                        targetProgress: 0,
-                        progressFrame: null,
-                        previewUrl: null,
-                        startProgress() {
-                            this.cancelProgressFrame();
-                            this.uploading = true;
-                            this.progress = 0;
-                            this.targetProgress = 1;
-                            this.setProgress(1);
-                        },
-                        setProgress(value) {
-                            const nextTarget = Math.max(this.targetProgress, Math.min(100, Number(value || 0)));
-                            const startValue = this.progress;
-                            const delta = nextTarget - startValue;
-                    
-                            if (delta <= 0) {
+                    uploading: false,
+                    progress: 0,
+                    targetProgress: 0,
+                    progressFrame: null,
+                    previewUrl: @js($profileImage && ($profileImage['is_image'] ?? false) ? $profileImage['fallback_url'] ?? ($profileImage['url'] ?? null) : null),
+                    startProgress() {
+                        this.cancelProgressFrame();
+                        this.uploading = true;
+                        this.progress = 0;
+                        this.targetProgress = 1;
+                        this.setProgress(1);
+                    },
+                    setProgress(value) {
+                        const nextTarget = Math.max(this.targetProgress, Math.min(100, Number(value || 0)));
+                        const startValue = this.progress;
+                        const delta = nextTarget - startValue;
+                
+                        if (delta <= 0) {
+                            return;
+                        }
+                
+                        this.targetProgress = nextTarget;
+                        this.cancelProgressFrame();
+                
+                        const startedAt = performance.now();
+                        const duration = Math.min(900, Math.max(260, delta * 12));
+                        const easeInOut = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+                
+                        const step = (now) => {
+                            const elapsed = Math.min(1, (now - startedAt) / duration);
+                            this.progress = startValue + delta * easeInOut(elapsed);
+                
+                            if (elapsed < 1) {
+                                this.progressFrame = requestAnimationFrame(step);
                                 return;
                             }
-                    
-                            this.targetProgress = nextTarget;
-                            this.cancelProgressFrame();
-                    
-                            const startedAt = performance.now();
-                            const duration = Math.min(900, Math.max(260, delta * 12));
-                            const easeInOut = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-                    
-                            const step = (now) => {
-                                const elapsed = Math.min(1, (now - startedAt) / duration);
-                                this.progress = startValue + delta * easeInOut(elapsed);
-                    
-                                if (elapsed < 1) {
-                                    this.progressFrame = requestAnimationFrame(step);
-                                    return;
-                                }
-                    
-                                this.progress = nextTarget;
-                                this.progressFrame = null;
-                    
-                                if (this.progress >= 100 && this.targetProgress >= 100) {
-                                    setTimeout(() => {
-                                        this.uploading = false;
-                                        this.progress = 0;
-                                        this.targetProgress = 0;
-                                    }, 180);
-                                }
-                            };
-                    
-                            this.progressFrame = requestAnimationFrame(step);
-                        },
-                        cancelProgressFrame() {
-                            if (this.progressFrame) {
-                                cancelAnimationFrame(this.progressFrame);
-                                this.progressFrame = null;
+                
+                            this.progress = nextTarget;
+                            this.progressFrame = null;
+                
+                            if (this.progress >= 100 && this.targetProgress >= 100) {
+                                setTimeout(() => {
+                                    this.uploading = false;
+                                    this.progress = 0;
+                                    this.targetProgress = 0;
+                                }, 180);
                             }
-                        },
-                        resetProgress() {
-                            this.cancelProgressFrame();
-                            this.uploading = false;
-                            this.progress = 0;
-                            this.targetProgress = 0;
-                        },
-                    }" x-cloak x-show="editingSection === 'business'" x-on:livewire-upload-start="startProgress()"
+                        };
+                
+                        this.progressFrame = requestAnimationFrame(step);
+                    },
+                    cancelProgressFrame() {
+                        if (this.progressFrame) {
+                            cancelAnimationFrame(this.progressFrame);
+                            this.progressFrame = null;
+                        }
+                    },
+                    resetProgress() {
+                        this.cancelProgressFrame();
+                        this.uploading = false;
+                        this.progress = 0;
+                        this.targetProgress = 0;
+                    },
+                    previewFile(file) {
+                        if (this.previewUrl?.startsWith('blob:')) {
+                            URL.revokeObjectURL(this.previewUrl);
+                        }
+                
+                        this.previewUrl = file ? URL.createObjectURL(file) : null;
+                    },
+                }" x-cloak x-show="isEditing('business')" x-on:livewire-upload-start="startProgress()"
                     x-on:livewire-upload-finish="setProgress(100)" x-on:livewire-upload-error="resetProgress()"
                     x-on:livewire-upload-progress="setProgress($event.detail.progress)">
-                    <div class="business-details-avatar-upload__icon" aria-hidden="true">
+                    <div class="business-details-avatar-upload__preview" x-cloak x-show="previewUrl || uploading"
+                        aria-hidden="true">
                         <img x-cloak x-show="previewUrl" :src="previewUrl" alt="Selected business profile image">
-                        @if ($profileImage && $profileImage['is_image'])
-                            <img x-show="!previewUrl" src="{{ $profileImage['url'] }}"
-                                data-fallback-src="{{ $profileImage['fallback_url'] ?? '' }}" alt="Business profile image"
-                                onerror="if (this.dataset.fallbackSrc && this.src !== this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; this.removeAttribute('data-fallback-src'); }">
-                        @else
-                            <svg x-show="!previewUrl" xmlns="http://www.w3.org/2000/svg" width="88" height="88"
-                                viewBox="0 0 88 88" fill="none">
-                                <circle cx="44" cy="44" r="44" fill="#DFDFDF" />
-                                <circle cx="44" cy="32" r="14" fill="#FFFFFF" />
-                                <path d="M17.5 88C19.5 68.5 30.2 57.5 44 57.5C57.8 57.5 68.5 68.5 70.5 88H17.5Z"
-                                    fill="#FFFFFF" />
-                            </svg>
-                        @endif
-                        @unless ($profileImage && $profileImage['is_image'])
-                            <span class="business-details-avatar-upload__plus" x-show="!previewUrl">+</span>
-                        @endunless
-                    </div>
-                    <div class="business-details-avatar-upload__copy">
-                        <span>Upload Image</span>
-                        <span>Max file size: 1 MB</span>
-                    </div>
-                    <input x-ref="profilePhotoInput" type="file" class="business-details-avatar-upload__input"
-                        wire:model="profilePhotoUpload" accept="image/*"
-                        @change="previewUrl && URL.revokeObjectURL(previewUrl); previewUrl = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null">
-                    <button type="button" class="business-details-avatar-upload__button"
-                        @click="$refs.profilePhotoInput.click()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
-                            aria-hidden="true">
-                            <path d="M12 16V4" />
-                            <path d="m7 9 5-5 5 5" />
-                            <path d="M20 16v4H4v-4" />
-                        </svg>
-                        <span wire:loading.remove wire:target="profilePhotoUpload" x-show="!uploading">Upload
-                            Photo</span>
                         <span class="business-details-avatar-upload__button-progress" x-cloak x-show="uploading">
                             <span class="business-details-avatar-upload__progress-bar">
                                 <span :style="`width: ${progress}%`"></span>
                             </span>
                             <span x-text="`${Math.round(progress)}%`"></span>
                         </span>
-                    </button>
+                    </div>
+                    <div class="business-details-avatar-upload__empty" x-show="!previewUrl && !uploading">
+                        <span class="business-details-avatar-upload__cloud" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="37" height="34" viewBox="0 0 37 34" fill="none">
+                                <path
+                                    d="M9.00404 24.1362C-2.99132 25.4739 -1.65851 10.7594 9.00404 12.0971C5.00558 -2.61738 27.6635 -2.61738 26.3307 8.08405C39.6588 4.07101 39.6588 25.4739 27.6635 24.1362M24.9979 18.7855L18.3338 13.4348L11.6697 18.7855M18.3338 13.4348V33.5"
+                                    stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </span>
+                        <div class="business-details-avatar-upload__copy">
+                            <span>Drag &amp; Drop to upload</span>
+                            <span>
+                                <em>or</em>
+                                <button type="button" class="business-details-avatar-upload__browse"
+                                    @click.stop="$refs.profilePhotoInput.click()">browse files</button>
+                            </span>
+                        </div>
+                    </div>
+                    <input x-ref="profilePhotoInput" type="file" class="business-details-avatar-upload__input"
+                        wire:model="profilePhotoUpload" accept="image/*"
+                        @change="previewFile($event.target.files[0])">
+                    <button type="button" class="business-details-avatar-upload__hit"
+                        @click="$refs.profilePhotoInput.click()"
+                        @dragover.prevent
+                        @drop.prevent="
+                            const file = $event.dataTransfer.files?.[0];
+                            if (!file) return;
+                            const transfer = new DataTransfer();
+                            transfer.items.add(file);
+                            $refs.profilePhotoInput.files = transfer.files;
+                            $refs.profilePhotoInput.dispatchEvent(new Event('change', { bubbles: true }));
+                        "
+                        aria-label="Upload business profile image"></button>
                     @error('profilePhotoUpload')
                         <span class="business-details-avatar-upload__error">{{ $message }}</span>
                     @enderror
@@ -1021,7 +1066,7 @@ new class extends Component {
             </div>
 
             <div class="business-details-profile__copy">
-                <div class="business-details-toggle-panel" x-cloak x-show="editingSection === 'business'">
+                <div class="business-details-toggle-panel" x-cloak x-show="isEditing('business')">
                     <div class="business-details-edit-stack">
                         <label class="business-details-input-field">
                             <span>Business Name</span>
@@ -1041,7 +1086,7 @@ new class extends Component {
                         </label>
                     </div>
                 </div>
-                <div class="business-details-toggle-panel" x-show="editingSection !== 'business'">
+                <div class="business-details-toggle-panel" x-show="!isEditing('business')">
                     <div class="business-details-edit-stack">
                         <x-business-hub.settings.business-details.field label="Business Name"
                             :value="$businessDetails['business_name'] ?? ($businessBasics['display_name'] ?? null)"
@@ -1062,9 +1107,9 @@ new class extends Component {
         @php
             $isSpaceGallery = strtolower((string) ($profile?->user_type ?? '')) === 'space';
         @endphp
-        <x-business-hub.settings.business-details.section-title title="Photo Gallery" section="gallery"
+        <x-business-hub.settings.business-details.section-title title="Photo gallery" section="gallery"
             :is-editing="$editingSection === 'gallery'" save-action="saveGalleryDetails" />
-        <div class="business-details-fade-panel" x-cloak x-show="editingSection === 'gallery'">
+        <div class="business-details-fade-panel" x-cloak x-show="isEditing('gallery')">
             <div class="business-details-gallery business-details-gallery--editable">
                 @php
                     $galleryCount = count($gallery);
@@ -1073,213 +1118,315 @@ new class extends Component {
                 @for ($i = 0; $i <= $galleryCount; $i++)
                     @php
                         $image = $gallery[$i] ?? null;
-                        $hasUsableImage =
-                            $image &&
-                            ($image['is_image'] ?? false) &&
-                            ($image['available'] ?? true) &&
-                            !empty($image['url']);
+                        $hasUsableImage = $image && ($image['is_image'] ?? false) && ($image['available'] ?? true) && !empty($image['url']);
                         $hasExistingPath = $image && !empty($image['path']);
                         $shouldShowSlot = $i < $galleryCount || $i === $nextAddSlot;
+                        $isAddSlot = $i === $nextAddSlot;
                     @endphp
                     @if ($shouldShowSlot)
-                        <div class="business-details-gallery__slot"
-                            wire:key="business-gallery-edit-slot-{{ $i }}-{{ md5((string) ($image['path'] ?? 'add-slot')) }}"
-                            x-data="{
-                                        previewUrl: null,
-                                        uploading: false,
-                                        removing: false,
-                                        progress: 0,
-                                        targetProgress: 0,
-                                        progressFrame: null,
-                                        pick() {
-                                            this.progress = 0;
-                                            this.targetProgress = 0;
-                                            $wire.set('galleryReplaceIndex', {{ $hasExistingPath ? $i : 'null' }}, false);
-                                            this.$refs.galleryUploadInput.value = null;
-                                            this.$refs.galleryUploadInput.click();
-                                        },
-                                        preview(event) {
-                                            if (this.previewUrl) {
-                                                URL.revokeObjectURL(this.previewUrl);
-                                            }
-                                            const file = event.target.files[0] || null;
-                                            this.previewUrl = file ? URL.createObjectURL(file) : null;
-                                        },
-                                        clearPreview() {
-                                            if (this.uploading) {
+                        @if ($isAddSlot)
+                            <div class="business-details-gallery__slot"
+                                wire:key="business-gallery-edit-slot-{{ $i }}-add"
+                                x-data="{
+                                    previewUrl: null,
+                                    uploading: false,
+                                    progress: 0,
+                                    targetProgress: 0,
+                                    progressFrame: null,
+                                    pick() {
+                                        this.progress = 0;
+                                        this.targetProgress = 0;
+                                        $wire.set('galleryReplaceIndex', null, false);
+                                        this.$refs.galleryUploadInput.value = null;
+                                        this.$refs.galleryUploadInput.click();
+                                    },
+                                    preview(event) {
+                                        if (this.previewUrl) {
+                                            URL.revokeObjectURL(this.previewUrl);
+                                        }
+                                        const file = event.target.files[0] || null;
+                                        this.previewUrl = file ? URL.createObjectURL(file) : null;
+                                    },
+                                    clearPreview() {
+                                        if (this.uploading) {
+                                            return;
+                                        }
+                                        if (this.previewUrl) {
+                                            URL.revokeObjectURL(this.previewUrl);
+                                        }
+                                        this.previewUrl = null;
+                                        this.$refs.galleryUploadInput.value = null;
+                                        $wire.set('galleryUpload', null, false);
+                                    },
+                                    startProgress() {
+                                        this.cancelProgressFrame();
+                                        this.uploading = true;
+                                        this.progress = 1;
+                                        this.targetProgress = 1;
+                                    },
+                                    setProgress(value) {
+                                        const nextTarget = Math.max(this.targetProgress, Math.min(100, Number(value || 0)));
+                                        const startValue = this.progress;
+                                        const delta = nextTarget - startValue;
+                                
+                                        if (delta <= 0) {
+                                            return;
+                                        }
+                                
+                                        this.targetProgress = nextTarget;
+                                        this.cancelProgressFrame();
+                                
+                                        const startedAt = performance.now();
+                                        const duration = Math.min(900, Math.max(260, delta * 14));
+                                        const easeInOut = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+                                
+                                        const step = (now) => {
+                                            const elapsed = Math.min(1, (now - startedAt) / duration);
+                                            this.progress = startValue + delta * easeInOut(elapsed);
+                                
+                                            if (elapsed < 1) {
+                                                this.progressFrame = requestAnimationFrame(step);
                                                 return;
                                             }
-                                            if (this.previewUrl) {
-                                                URL.revokeObjectURL(this.previewUrl);
+                                
+                                            this.progress = nextTarget;
+                                            this.progressFrame = null;
+                                
+                                            if (this.progress >= 100 && this.targetProgress >= 100) {
+                                                setTimeout(() => {
+                                                    this.uploading = false;
+                                                    this.progress = 0;
+                                                    this.targetProgress = 0;
+                                                }, 250);
                                             }
-                                            this.previewUrl = null;
-                                            this.$refs.galleryUploadInput.value = null;
-                                            $wire.set('galleryUpload', null, false);
-                                        },
-                                        startProgress() {
-                                            this.cancelProgressFrame();
-                                            this.uploading = true;
-                                            this.progress = 1;
-                                            this.targetProgress = 1;
-                                        },
-                                        setProgress(value) {
-                                            const nextTarget = Math.max(this.targetProgress, Math.min(100, Number(value || 0)));
-                                            const startValue = this.progress;
-                                            const delta = nextTarget - startValue;
-
-                                            if (delta <= 0) {
-                                                return;
-                                            }
-
-                                            this.targetProgress = nextTarget;
-                                            this.cancelProgressFrame();
-
-                                            const startedAt = performance.now();
-                                            const duration = Math.min(900, Math.max(260, delta * 14));
-                                            const easeInOut = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-
-                                            const step = (now) => {
-                                                const elapsed = Math.min(1, (now - startedAt) / duration);
-                                                this.progress = startValue + delta * easeInOut(elapsed);
-
-                                                if (elapsed < 1) {
-                                                    this.progressFrame = requestAnimationFrame(step);
-                                                    return;
-                                                }
-
-                                                this.progress = nextTarget;
-                                                this.progressFrame = null;
-
-                                                if (this.progress >= 100 && this.targetProgress >= 100) {
-                                                    setTimeout(() => {
-                                                        this.uploading = false;
-                                                        this.progress = 0;
-                                                        this.targetProgress = 0;
-                                                    }, 250);
-                                                }
-                                            };
-
-                                            this.progressFrame = requestAnimationFrame(step);
-                                        },
-                                        finishProgress() {
-                                            this.cancelProgressFrame();
-                                            this.progress = 100;
-                                            this.targetProgress = 100;
-                                            setTimeout(() => {
-                                                this.uploading = false;
-                                                this.progress = 0;
-                                                this.targetProgress = 0;
-                                            }, 80);
-                                        },
-                                        cancelProgressFrame() {
-                                            if (this.progressFrame) {
-                                                cancelAnimationFrame(this.progressFrame);
-                                                this.progressFrame = null;
-                                            }
-                                        },
-                                        reset() {
-                                            this.cancelProgressFrame();
+                                        };
+                                
+                                        this.progressFrame = requestAnimationFrame(step);
+                                    },
+                                    finishProgress() {
+                                        this.cancelProgressFrame();
+                                        this.progress = 100;
+                                        this.targetProgress = 100;
+                                        setTimeout(() => {
                                             this.uploading = false;
                                             this.progress = 0;
                                             this.targetProgress = 0;
-                                        },
-                                        remove(index) {
-                                            if (this.removing) {
-                                                return;
-                                            }
-                                            this.removing = true;
-                                            setTimeout(() => $wire.removeGalleryImage(index), 240);
-                                        },
-                                    }" x-on:livewire-upload-start="startProgress()"
-                            x-on:livewire-upload-progress="setProgress($event.detail.progress)"
-                            x-on:livewire-upload-finish="finishProgress()" x-on:livewire-upload-error="reset()"
-                            :class="{ 'business-details-gallery__slot--removing': removing }">
-                            <input x-ref="galleryUploadInput" type="file" class="business-details-gallery__input"
-                                wire:model="galleryUpload" accept="image/*" @change="preview($event)">
-                            <button type="button" class="business-details-gallery__item business-details-gallery__upload-tile"
-                                @click="pick()"
-                                aria-label="{{ $hasUsableImage ? 'Replace gallery image ' . ($i + 1) : 'Upload gallery image ' . ($i + 1) }}">
-                                <template x-if="previewUrl">
-                                    <span class="business-details-gallery__preview">
-                                        <img :src="previewUrl" alt="Selected gallery image">
-                                        <span class="business-details-gallery-progress" x-cloak x-show="uploading"
-                                            :style="`--progress: ${progress}`">
-                                            <span x-text="`${Math.round(progress)}%`"></span>
+                                        }, 80);
+                                    },
+                                    cancelProgressFrame() {
+                                        if (this.progressFrame) {
+                                            cancelAnimationFrame(this.progressFrame);
+                                            this.progressFrame = null;
+                                        }
+                                    },
+                                    reset() {
+                                        this.cancelProgressFrame();
+                                        this.uploading = false;
+                                        this.progress = 0;
+                                        this.targetProgress = 0;
+                                    },
+                                }" x-on:livewire-upload-start="startProgress()"
+                                x-on:livewire-upload-progress="setProgress($event.detail.progress)"
+                                x-on:livewire-upload-finish="finishProgress()" x-on:livewire-upload-error="reset()">
+                                <input x-ref="galleryUploadInput" type="file" class="business-details-gallery__input"
+                                    wire:model="galleryUpload" accept="image/*" @change="preview($event)">
+                                <button type="button"
+                                    class="business-details-gallery__item business-details-gallery__upload-tile"
+                                    @click="pick()" aria-label="Upload gallery image">
+                                    <template x-if="previewUrl">
+                                        <span class="business-details-gallery__preview">
+                                            <img :src="previewUrl" alt="Selected gallery image">
+                                            <span class="business-details-gallery-progress" x-cloak x-show="uploading"
+                                                :style="`--progress: ${progress}`">
+                                                <span x-text="`${Math.round(progress)}%`"></span>
+                                            </span>
+                                        </span>
+                                    </template>
+                                    <span x-show="!previewUrl" class="business-details-gallery__dropzone" aria-hidden="true">
+                                        <img src="{{ asset('images/business-hub/icon-gallery-upload-cloud.svg') }}"
+                                            width="37" height="34" alt="" aria-hidden="true">
+                                        <span>
+                                            Drag &amp; Drop to upload
+                                            <small><em>or</em> <u>browse files</u></small>
                                         </span>
                                     </span>
-                                </template>
-                                <span x-show="!previewUrl" class="business-details-gallery__current">
-                                    @if ($hasUsableImage)
-                                        <img src="{{ $image['url'] }}" data-fallback-src="{{ $image['fallback_url'] ?? '' }}"
-                                            decoding="async" alt="Business gallery image {{ $i + 1 }}"
-                                            onerror="if (this.dataset.fallbackSrc && this.src !== this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; this.removeAttribute('data-fallback-src'); return; } this.hidden = true; this.nextElementSibling.hidden = false;">
-                                        <span class="business-details-gallery-add" hidden aria-hidden="true">
-                                            @if ($isSpaceGallery)
-                                                <x-business-hub.settings.business-details.space-gallery-placeholder />
-                                            @else
-                                                <svg class="business-details-gallery-paw" xmlns="http://www.w3.org/2000/svg" width="61"
-                                                    height="48" viewBox="0 0 61 48" fill="none">
-                                                    <path fill-rule="evenodd" clip-rule="evenodd"
-                                                        d="M19.5692 0C17.4166 0 15.7293 1.29255 14.6856 2.84275C13.6289 4.40583 13.0461 6.44557 13.0461 8.58837C13.0461 10.7312 13.6289 12.7709 14.6856 14.334C15.7293 15.8799 17.4166 17.1767 19.5692 17.1767C21.7218 17.1767 23.4091 15.8842 24.4528 14.334C25.5096 12.7709 26.0923 10.7312 26.0923 8.58837C26.0923 6.44557 25.5096 4.40583 24.4528 2.84275C23.4091 1.29684 21.7218 0 19.5692 0ZM41.3128 0C39.1602 0 37.4729 1.29255 36.4292 2.84275C35.3724 4.40583 34.7897 6.44557 34.7897 8.58837C34.7897 10.7312 35.3724 12.7709 36.4292 14.334C37.4729 15.8799 39.1602 17.1767 41.3128 17.1767C43.4654 17.1767 45.1527 15.8842 46.1964 14.334C47.2531 12.7709 47.8359 10.7312 47.8359 8.58837C47.8359 6.44557 47.2531 4.40583 46.1964 2.84275C45.1527 1.29684 43.4654 0 41.3128 0ZM6.52307 19.3238C4.37046 19.3238 2.68316 20.6164 1.63947 22.1666C0.582728 23.7297 0 25.7694 0 27.9122C0 30.055 0.582728 32.0947 1.63947 33.6578C2.68316 35.2037 4.37046 36.5006 6.52307 36.5006C8.67568 36.5006 10.363 35.208 11.4067 33.6578C12.4634 32.0947 13.0461 30.055 13.0461 27.9122C13.0461 25.7694 12.4634 23.7297 11.4067 22.1666C10.363 20.6207 8.67568 19.3238 6.52307 19.3238ZM30.441 19.3238C25.2225 19.3238 21.3565 22.0893 18.8865 25.5203C16.4468 28.8999 15.2205 33.0953 15.2205 36.5006C15.2205 40.4684 17.634 43.2296 20.5955 44.8828C23.5091 46.5146 27.1621 47.236 30.441 47.236C33.7199 47.236 37.3728 46.5189 40.2865 44.8828C43.2436 43.2253 45.6615 40.4684 45.6615 36.5006C45.6615 33.0953 44.4352 28.8999 41.9955 25.5203C39.5298 22.085 35.6638 19.3238 30.441 19.3238ZM54.3589 19.3238C52.2063 19.3238 50.519 20.6164 49.4753 22.1666C48.4186 23.7297 47.8359 25.7694 47.8359 27.9122C47.8359 30.055 48.4186 32.0947 49.4753 33.6578C50.519 35.2037 52.2063 36.5006 54.3589 36.5006C56.5115 36.5006 58.1988 35.208 59.2425 33.6578C60.2993 32.0947 60.882 30.055 60.882 27.9122C60.882 25.7694 60.2993 23.7297 59.2425 22.1666C58.1988 20.6207 56.5115 19.3238 54.3589 19.3238Z"
-                                                        fill="#E5E5E5" />
-                                                </svg>
-                                            @endif
-                                            <span class="business-details-gallery-add__plus">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
-                                                    fill="none" aria-hidden="true">
-                                                    <path
-                                                        d="M9.72378 19.4476C4.36181 19.4476 0 15.0857 0 9.72378C0 4.36181 4.36181 0 9.72378 0C15.0857 0 19.4476 4.36181 19.4476 9.72378C19.4476 15.0857 15.0857 19.4476 9.72378 19.4476Z"
-                                                        fill="#9D9B98" />
-                                                </svg>
-                                            </span>
-                                        </span>
-                                    @else
-                                        <span class="business-details-gallery-add" aria-hidden="true">
-                                            @if ($isSpaceGallery)
-                                                <x-business-hub.settings.business-details.space-gallery-placeholder />
-                                            @else
-                                                <svg class="business-details-gallery-paw" xmlns="http://www.w3.org/2000/svg" width="61"
-                                                    height="48" viewBox="0 0 61 48" fill="none">
-                                                    <path fill-rule="evenodd" clip-rule="evenodd"
-                                                        d="M19.5692 0C17.4166 0 15.7293 1.29255 14.6856 2.84275C13.6289 4.40583 13.0461 6.44557 13.0461 8.58837C13.0461 10.7312 13.6289 12.7709 14.6856 14.334C15.7293 15.8799 17.4166 17.1767 19.5692 17.1767C21.7218 17.1767 23.4091 15.8842 24.4528 14.334C25.5096 12.7709 26.0923 10.7312 26.0923 8.58837C26.0923 6.44557 25.5096 4.40583 24.4528 2.84275C23.4091 1.29684 21.7218 0 19.5692 0ZM41.3128 0C39.1602 0 37.4729 1.29255 36.4292 2.84275C35.3724 4.40583 34.7897 6.44557 34.7897 8.58837C34.7897 10.7312 35.3724 12.7709 36.4292 14.334C37.4729 15.8799 39.1602 17.1767 41.3128 17.1767C43.4654 17.1767 45.1527 15.8842 46.1964 14.334C47.2531 12.7709 47.8359 10.7312 47.8359 8.58837C47.8359 6.44557 47.2531 4.40583 46.1964 2.84275C45.1527 1.29684 43.4654 0 41.3128 0ZM6.52307 19.3238C4.37046 19.3238 2.68316 20.6164 1.63947 22.1666C0.582728 23.7297 0 25.7694 0 27.9122C0 30.055 0.582728 32.0947 1.63947 33.6578C2.68316 35.2037 4.37046 36.5006 6.52307 36.5006C8.67568 36.5006 10.363 35.208 11.4067 33.6578C12.4634 32.0947 13.0461 30.055 13.0461 27.9122C13.0461 25.7694 12.4634 23.7297 11.4067 22.1666C10.363 20.6207 8.67568 19.3238 6.52307 19.3238ZM30.441 19.3238C25.2225 19.3238 21.3565 22.0893 18.8865 25.5203C16.4468 28.8999 15.2205 33.0953 15.2205 36.5006C15.2205 40.4684 17.634 43.2296 20.5955 44.8828C23.5091 46.5146 27.1621 47.236 30.441 47.236C33.7199 47.236 37.3728 46.5189 40.2865 44.8828C43.2436 43.2253 45.6615 40.4684 45.6615 36.5006C45.6615 33.0953 44.4352 28.8999 41.9955 25.5203C39.5298 22.085 35.6638 19.3238 30.441 19.3238ZM54.3589 19.3238C52.2063 19.3238 50.519 20.6164 49.4753 22.1666C48.4186 23.7297 47.8359 25.7694 47.8359 27.9122C47.8359 30.055 48.4186 32.0947 49.4753 33.6578C50.519 35.2037 52.2063 36.5006 54.3589 36.5006C56.5115 36.5006 58.1988 35.208 59.2425 33.6578C60.2993 32.0947 60.882 30.055 60.882 27.9122C60.882 25.7694 60.2993 23.7297 59.2425 22.1666C58.1988 20.6207 56.5115 19.3238 54.3589 19.3238Z"
-                                                        fill="#E5E5E5" />
-                                                </svg>
-                                            @endif
-                                            <span class="business-details-gallery-add__plus">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"
-                                                    fill="none" aria-hidden="true">
-                                                    <path
-                                                        d="M9.72378 19.4476C4.36181 19.4476 0 15.0857 0 9.72378C0 4.36181 4.36181 0 9.72378 0C15.0857 0 19.4476 4.36181 19.4476 9.72378C19.4476 15.0857 15.0857 19.4476 9.72378 19.4476Z"
-                                                        fill="#9D9B98" />
-                                                </svg>
-                                            </span>
-                                        </span>
-                                    @endif
-                                </span>
-                            </button>
-                            @if ($hasExistingPath)
-                                <span class="business-details-gallery-remove-spinner" x-cloak x-show="removing"
-                                    aria-hidden="true"></span>
-                                <button type="button" class="business-details-gallery-remove" @click.stop="remove({{ $i }})"
-                                    :disabled="removing || uploading" aria-label="Remove gallery image {{ $i + 1 }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none"
-                                        aria-hidden="true">
-                                        <path d="M1.2 1.2L10.8 10.8M10.8 1.2L1.2 10.8" stroke="currentColor" stroke-width="1.8"
-                                            stroke-linecap="round" />
-                                    </svg>
                                 </button>
-                            @else
                                 <button type="button" class="business-details-gallery-remove" x-cloak x-show="previewUrl"
                                     @click.stop="clearPreview()" :disabled="uploading" wire:loading.attr="disabled"
                                     wire:target="galleryUpload" aria-label="Clear selected gallery image">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none"
-                                        aria-hidden="true">
-                                        <path d="M1.2 1.2L10.8 10.8M10.8 1.2L1.2 10.8" stroke="currentColor" stroke-width="1.8"
-                                            stroke-linecap="round" />
-                                    </svg>
+                                    <img src="{{ asset('images/business-hub/icon-gallery-remove.svg') }}" width="36"
+                                        height="36" alt="" aria-hidden="true">
                                 </button>
-                            @endif
-                        </div>
+                            </div>
+                        @else
+                            <div class="business-details-gallery__slot"
+                                wire:key="business-gallery-edit-slot-{{ $i }}-{{ md5((string) ($image['path'] ?? 'slot')) }}"
+                                x-data="{
+                                    previewUrl: null,
+                                    uploading: false,
+                                    removing: false,
+                                    progress: 0,
+                                    targetProgress: 0,
+                                    progressFrame: null,
+                                    pick() {
+                                        this.progress = 0;
+                                        this.targetProgress = 0;
+                                        $wire.set('galleryReplaceIndex', {{ $hasExistingPath ? $i : 'null' }}, false);
+                                        this.$refs.galleryUploadInput.value = null;
+                                        this.$refs.galleryUploadInput.click();
+                                    },
+                                    preview(event) {
+                                        if (this.previewUrl) {
+                                            URL.revokeObjectURL(this.previewUrl);
+                                        }
+                                        const file = event.target.files[0] || null;
+                                        this.previewUrl = file ? URL.createObjectURL(file) : null;
+                                    },
+                                    clearPreview() {
+                                        if (this.uploading) {
+                                            return;
+                                        }
+                                        if (this.previewUrl) {
+                                            URL.revokeObjectURL(this.previewUrl);
+                                        }
+                                        this.previewUrl = null;
+                                        this.$refs.galleryUploadInput.value = null;
+                                        $wire.set('galleryUpload', null, false);
+                                    },
+                                    startProgress() {
+                                        this.cancelProgressFrame();
+                                        this.uploading = true;
+                                        this.progress = 1;
+                                        this.targetProgress = 1;
+                                    },
+                                    setProgress(value) {
+                                        const nextTarget = Math.max(this.targetProgress, Math.min(100, Number(value || 0)));
+                                        const startValue = this.progress;
+                                        const delta = nextTarget - startValue;
+                                
+                                        if (delta <= 0) {
+                                            return;
+                                        }
+                                
+                                        this.targetProgress = nextTarget;
+                                        this.cancelProgressFrame();
+                                
+                                        const startedAt = performance.now();
+                                        const duration = Math.min(900, Math.max(260, delta * 14));
+                                        const easeInOut = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+                                
+                                        const step = (now) => {
+                                            const elapsed = Math.min(1, (now - startedAt) / duration);
+                                            this.progress = startValue + delta * easeInOut(elapsed);
+                                
+                                            if (elapsed < 1) {
+                                                this.progressFrame = requestAnimationFrame(step);
+                                                return;
+                                            }
+                                
+                                            this.progress = nextTarget;
+                                            this.progressFrame = null;
+                                
+                                            if (this.progress >= 100 && this.targetProgress >= 100) {
+                                                setTimeout(() => {
+                                                    this.uploading = false;
+                                                    this.progress = 0;
+                                                    this.targetProgress = 0;
+                                                }, 250);
+                                            }
+                                        };
+                                
+                                        this.progressFrame = requestAnimationFrame(step);
+                                    },
+                                    finishProgress() {
+                                        this.cancelProgressFrame();
+                                        this.progress = 100;
+                                        this.targetProgress = 100;
+                                        setTimeout(() => {
+                                            this.uploading = false;
+                                            this.progress = 0;
+                                            this.targetProgress = 0;
+                                        }, 80);
+                                    },
+                                    cancelProgressFrame() {
+                                        if (this.progressFrame) {
+                                            cancelAnimationFrame(this.progressFrame);
+                                            this.progressFrame = null;
+                                        }
+                                    },
+                                    reset() {
+                                        this.cancelProgressFrame();
+                                        this.uploading = false;
+                                        this.progress = 0;
+                                        this.targetProgress = 0;
+                                    },
+                                    remove(index) {
+                                        if (this.removing) {
+                                            return;
+                                        }
+                                        this.removing = true;
+                                        setTimeout(() => $wire.removeGalleryImage(index), 240);
+                                    },
+                                }" x-on:livewire-upload-start="startProgress()"
+                                x-on:livewire-upload-progress="setProgress($event.detail.progress)"
+                                x-on:livewire-upload-finish="finishProgress()" x-on:livewire-upload-error="reset()"
+                                :class="{ 'business-details-gallery__slot--removing': removing }">
+                                <input x-ref="galleryUploadInput" type="file" class="business-details-gallery__input"
+                                    wire:model="galleryUpload" accept="image/*" @change="preview($event)">
+                                <button type="button" class="business-details-gallery__item business-details-gallery__upload-tile"
+                                    @click="pick()"
+                                    aria-label="{{ $hasUsableImage ? 'Replace gallery image ' . ($i + 1) : 'Upload gallery image ' . ($i + 1) }}">
+                                    <template x-if="previewUrl">
+                                        <span class="business-details-gallery__preview">
+                                            <img :src="previewUrl" alt="Selected gallery image">
+                                            <span class="business-details-gallery-progress" x-cloak x-show="uploading"
+                                                :style="`--progress: ${progress}`">
+                                                <span x-text="`${Math.round(progress)}%`"></span>
+                                            </span>
+                                        </span>
+                                    </template>
+                                    <span x-show="!previewUrl" class="business-details-gallery__current">
+                                        @if ($hasUsableImage)
+                                            <img src="{{ $image['url'] }}" data-fallback-src="{{ $image['fallback_url'] ?? '' }}"
+                                                decoding="async" alt="Business gallery image {{ $i + 1 }}"
+                                                onerror="if (this.dataset.fallbackSrc && this.src !== this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; this.removeAttribute('data-fallback-src'); return; } this.hidden = true; this.nextElementSibling.hidden = false;">
+                                            <span class="business-details-gallery-add" hidden aria-hidden="true">
+                                                @if ($isSpaceGallery)
+                                                    <x-business-hub.settings.business-details.space-gallery-placeholder />
+                                                @else
+                                                    <img class="business-details-gallery-paw"
+                                                        src="{{ asset('images/business-hub/icon-gallery-paw.svg') }}"
+                                                        width="40" height="32" alt="" aria-hidden="true">
+                                                @endif
+                                            </span>
+                                        @endif
+                                    </span>
+                                </button>
+                                @if ($hasExistingPath)
+                                    <span class="business-details-gallery-remove-spinner" x-cloak x-show="removing"
+                                        aria-hidden="true"></span>
+                                    <button type="button" class="business-details-gallery-remove" @click.stop="remove({{ $i }})"
+                                        :disabled="removing || uploading" aria-label="Remove gallery image {{ $i + 1 }}">
+                                        <img src="{{ asset('images/business-hub/icon-gallery-remove.svg') }}" width="36" height="36"
+                                            alt="" aria-hidden="true">
+                                    </button>
+                                    @if (!empty($image['uploaded']))
+                                        <span class="business-details-gallery-caption">
+                                            Uploaded · {{ $image['uploaded'] }}
+                                        </span>
+                                    @elseif (!empty($image['path']))
+                                        <span class="business-details-gallery-caption">Uploaded</span>
+                                    @endif
+                                @else
+                                    <button type="button" class="business-details-gallery-remove" x-cloak x-show="previewUrl"
+                                        @click.stop="clearPreview()" :disabled="uploading" wire:loading.attr="disabled"
+                                        wire:target="galleryUpload" aria-label="Clear selected gallery image">
+                                        <img src="{{ asset('images/business-hub/icon-gallery-remove.svg') }}" width="36" height="36"
+                                            alt="" aria-hidden="true">
+                                    </button>
+                                @endif
+                            </div>
+                        @endif
                     @endif
                 @endfor
             </div>
@@ -1287,14 +1434,10 @@ new class extends Component {
                 <span class="business-details-avatar-upload__error">{{ $message }}</span>
             @enderror
         </div>
-        <div class="business-details-gallery business-details-fade-panel" x-show="editingSection !== 'gallery'">
+        <div class="business-details-gallery business-details-fade-panel" x-show="!isEditing('gallery')">
             @foreach ($gallery as $i => $image)
                 @php
-                    $hasUsableImage =
-                        $image &&
-                        ($image['is_image'] ?? false) &&
-                        ($image['available'] ?? true) &&
-                        !empty($image['url']);
+                    $hasUsableImage = $image && ($image['is_image'] ?? false) && ($image['available'] ?? true) && !empty($image['url']);
                 @endphp
                 <div class="business-details-gallery__item">
                     @if ($hasUsableImage)
@@ -1305,12 +1448,9 @@ new class extends Component {
                             @if ($isSpaceGallery)
                                 <x-business-hub.settings.business-details.space-gallery-placeholder />
                             @else
-                                <svg class="business-details-gallery-paw" xmlns="http://www.w3.org/2000/svg" width="61" height="48"
-                                    viewBox="0 0 61 48" fill="none">
-                                    <path fill-rule="evenodd" clip-rule="evenodd"
-                                        d="M19.5692 0C17.4166 0 15.7293 1.29255 14.6856 2.84275C13.6289 4.40583 13.0461 6.44557 13.0461 8.58837C13.0461 10.7312 13.6289 12.7709 14.6856 14.334C15.7293 15.8799 17.4166 17.1767 19.5692 17.1767C21.7218 17.1767 23.4091 15.8842 24.4528 14.334C25.5096 12.7709 26.0923 10.7312 26.0923 8.58837C26.0923 6.44557 25.5096 4.40583 24.4528 2.84275C23.4091 1.29684 21.7218 0 19.5692 0ZM41.3128 0C39.1602 0 37.4729 1.29255 36.4292 2.84275C35.3724 4.40583 34.7897 6.44557 34.7897 8.58837C34.7897 10.7312 35.3724 12.7709 36.4292 14.334C37.4729 15.8799 39.1602 17.1767 41.3128 17.1767C43.4654 17.1767 45.1527 15.8842 46.1964 14.334C47.2531 12.7709 47.8359 10.7312 47.8359 8.58837C47.8359 6.44557 47.2531 4.40583 46.1964 2.84275C45.1527 1.29684 43.4654 0 41.3128 0ZM6.52307 19.3238C4.37046 19.3238 2.68316 20.6164 1.63947 22.1666C0.582728 23.7297 0 25.7694 0 27.9122C0 30.055 0.582728 32.0947 1.63947 33.6578C2.68316 35.2037 4.37046 36.5006 6.52307 36.5006C8.67568 36.5006 10.363 35.208 11.4067 33.6578C12.4634 32.0947 13.0461 30.055 13.0461 27.9122C13.0461 25.7694 12.4634 23.7297 11.4067 22.1666C10.363 20.6207 8.67568 19.3238 6.52307 19.3238ZM30.441 19.3238C25.2225 19.3238 21.3565 22.0893 18.8865 25.5203C16.4468 28.8999 15.2205 33.0953 15.2205 36.5006C15.2205 40.4684 17.634 43.2296 20.5955 44.8828C23.5091 46.5146 27.1621 47.236 30.441 47.236C33.7199 47.236 37.3728 46.5189 40.2865 44.8828C43.2436 43.2253 45.6615 40.4684 45.6615 36.5006C45.6615 33.0953 44.4352 28.8999 41.9955 25.5203C39.5298 22.085 35.6638 19.3238 30.441 19.3238ZM54.3589 19.3238C52.2063 19.3238 50.519 20.6164 49.4753 22.1666C48.4186 23.7297 47.8359 25.7694 47.8359 27.9122C47.8359 30.055 48.4186 32.0947 49.4753 33.6578C50.519 35.2037 52.2063 36.5006 54.3589 36.5006C56.5115 36.5006 58.1988 35.208 59.2425 33.6578C60.2993 32.0947 60.882 30.055 60.882 27.9122C60.882 25.7694 60.2993 23.7297 59.2425 22.1666C58.1988 20.6207 56.5115 19.3238 54.3589 19.3238Z"
-                                        fill="#E5E5E5" />
-                                </svg>
+                                <img class="business-details-gallery-paw"
+                                    src="{{ asset('images/business-hub/icon-gallery-paw.svg') }}" width="40" height="32"
+                                    alt="" aria-hidden="true">
                             @endif
                         </span>
                     @else
@@ -1318,12 +1458,9 @@ new class extends Component {
                             @if ($isSpaceGallery)
                                 <x-business-hub.settings.business-details.space-gallery-placeholder />
                             @else
-                                <svg class="business-details-gallery-paw" xmlns="http://www.w3.org/2000/svg" width="61" height="48"
-                                    viewBox="0 0 61 48" fill="none">
-                                    <path fill-rule="evenodd" clip-rule="evenodd"
-                                        d="M19.5692 0C17.4166 0 15.7293 1.29255 14.6856 2.84275C13.6289 4.40583 13.0461 6.44557 13.0461 8.58837C13.0461 10.7312 13.6289 12.7709 14.6856 14.334C15.7293 15.8799 17.4166 17.1767 19.5692 17.1767C21.7218 17.1767 23.4091 15.8842 24.4528 14.334C25.5096 12.7709 26.0923 10.7312 26.0923 8.58837C26.0923 6.44557 25.5096 4.40583 24.4528 2.84275C23.4091 1.29684 21.7218 0 19.5692 0ZM41.3128 0C39.1602 0 37.4729 1.29255 36.4292 2.84275C35.3724 4.40583 34.7897 6.44557 34.7897 8.58837C34.7897 10.7312 35.3724 12.7709 36.4292 14.334C37.4729 15.8799 39.1602 17.1767 41.3128 17.1767C43.4654 17.1767 45.1527 15.8842 46.1964 14.334C47.2531 12.7709 47.8359 10.7312 47.8359 8.58837C47.8359 6.44557 47.2531 4.40583 46.1964 2.84275C45.1527 1.29684 43.4654 0 41.3128 0ZM6.52307 19.3238C4.37046 19.3238 2.68316 20.6164 1.63947 22.1666C0.582728 23.7297 0 25.7694 0 27.9122C0 30.055 0.582728 32.0947 1.63947 33.6578C2.68316 35.2037 4.37046 36.5006 6.52307 36.5006C8.67568 36.5006 10.363 35.208 11.4067 33.6578C12.4634 32.0947 13.0461 30.055 13.0461 27.9122C13.0461 25.7694 12.4634 23.7297 11.4067 22.1666C10.363 20.6207 8.67568 19.3238 6.52307 19.3238ZM30.441 19.3238C25.2225 19.3238 21.3565 22.0893 18.8865 25.5203C16.4468 28.8999 15.2205 33.0953 15.2205 36.5006C15.2205 40.4684 17.634 43.2296 20.5955 44.8828C23.5091 46.5146 27.1621 47.236 30.441 47.236C33.7199 47.236 37.3728 46.5189 40.2865 44.8828C43.2436 43.2253 45.6615 40.4684 45.6615 36.5006C45.6615 33.0953 44.4352 28.8999 41.9955 25.5203C39.5298 22.085 35.6638 19.3238 30.441 19.3238ZM54.3589 19.3238C52.2063 19.3238 50.519 20.6164 49.4753 22.1666C48.4186 23.7297 47.8359 25.7694 47.8359 27.9122C47.8359 30.055 48.4186 32.0947 49.4753 33.6578C50.519 35.2037 52.2063 36.5006 54.3589 36.5006C56.5115 36.5006 58.1988 35.208 59.2425 33.6578C60.2993 32.0947 60.882 30.055 60.882 27.9122C60.882 25.7694 60.2993 23.7297 59.2425 22.1666C58.1988 20.6207 56.5115 19.3238 54.3589 19.3238Z"
-                                        fill="#E5E5E5" />
-                                </svg>
+                                <img class="business-details-gallery-paw"
+                                    src="{{ asset('images/business-hub/icon-gallery-paw.svg') }}" width="40" height="32"
+                                    alt="" aria-hidden="true">
                             @endif
                         </span>
                     @endif
@@ -1338,40 +1475,47 @@ new class extends Component {
                             alt="Business gallery image {{ $i + 1 }}"
                             onerror="if (this.dataset.fallbackSrc && this.src !== this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; this.removeAttribute('data-fallback-src'); return; } this.hidden = true; this.nextElementSibling.hidden = false;">
                         <span class="business-details-gallery-placeholder" hidden aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="61" height="48" viewBox="0 0 61 48" fill="none">
-                                <path fill-rule="evenodd" clip-rule="evenodd"
-                                    d="M19.5733 0C17.4202 0 15.7326 1.29282 14.6886 2.84334C13.6317 4.40674 13.0488 6.4469 13.0488 8.59015C13.0488 10.7334 13.6317 12.7735 14.6886 14.337C15.7326 15.8832 17.4202 17.1803 19.5733 17.1803C21.7263 17.1803 23.414 15.8875 24.4579 14.337C25.5148 12.7735 26.0977 10.7334 26.0977 8.59015C26.0977 6.4469 25.5148 4.40674 24.4579 2.84334C23.414 1.29711 21.7263 0 19.5733 0ZM41.3213 0C39.1683 0 37.4806 1.29282 36.4367 2.84334C35.3798 4.40674 34.7969 6.4469 34.7969 8.59015C34.7969 10.7334 35.3798 12.7735 36.4367 14.337C37.4806 15.8832 39.1683 17.1803 41.3213 17.1803C43.4744 17.1803 45.162 15.8875 46.2059 14.337C47.2629 12.7735 47.8457 10.7334 47.8457 8.59015C47.8457 6.4469 47.2629 4.40674 46.2059 2.84334C45.162 1.29711 43.4744 0 41.3213 0ZM6.52442 19.3278C4.37136 19.3278 2.68371 20.6206 1.6398 22.1712C0.582848 23.7346 0 25.7747 0 27.918C0 30.0612 0.582848 32.1014 1.6398 33.6648C2.68371 35.211 4.37136 36.5081 6.52442 36.5081C8.67748 36.5081 10.3651 35.2153 11.409 33.6648C12.466 32.1014 13.0488 30.0612 13.0488 27.918C13.0488 25.7747 12.466 23.7346 11.409 22.1712C10.3651 20.6249 8.67748 19.3278 6.52442 19.3278ZM30.4473 19.3278C25.2278 19.3278 21.361 22.0939 18.8904 25.5256C16.4502 28.9058 15.2236 33.1021 15.2236 36.5081C15.2236 40.4768 17.6377 43.2385 20.5998 44.8921C23.514 46.5242 27.1677 47.2458 30.4473 47.2458C33.7269 47.2458 37.3806 46.5285 40.2948 44.8921C43.2526 43.2342 45.6709 40.4768 45.6709 36.5081C45.6709 33.1021 44.4443 28.9058 42.0042 25.5256C39.538 22.0896 35.6712 19.3278 30.4473 19.3278ZM54.3702 19.3278C52.2171 19.3278 50.5295 20.6206 49.4855 22.1712C48.4286 23.7346 47.8457 25.7747 47.8457 27.918C47.8457 30.0612 48.4286 32.1014 49.4855 33.6648C50.5295 35.211 52.2171 36.5081 54.3702 36.5081C56.5232 36.5081 58.2109 35.2153 59.2548 33.6648C60.3117 32.1014 60.8946 30.0612 60.8946 27.918C60.8946 25.7747 60.3117 23.7346 59.2548 22.1712C58.2109 20.6249 56.5232 19.3278 54.3702 19.3278Z"
-                                    fill="#E5E5E5" />
-                            </svg>
+                            <img class="business-details-gallery-paw"
+                                src="{{ asset('images/business-hub/icon-gallery-paw.svg') }}" width="40" height="32" alt=""
+                                aria-hidden="true">
                         </span>
                     @else
                         <span class="business-details-gallery-placeholder" aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="61" height="48" viewBox="0 0 61 48" fill="none">
-                                <path fill-rule="evenodd" clip-rule="evenodd"
-                                    d="M19.5733 0C17.4202 0 15.7326 1.29282 14.6886 2.84334C13.6317 4.40674 13.0488 6.4469 13.0488 8.59015C13.0488 10.7334 13.6317 12.7735 14.6886 14.337C15.7326 15.8832 17.4202 17.1803 19.5733 17.1803C21.7263 17.1803 23.414 15.8875 24.4579 14.337C25.5148 12.7735 26.0977 10.7334 26.0977 8.59015C26.0977 6.4469 25.5148 4.40674 24.4579 2.84334C23.414 1.29711 21.7263 0 19.5733 0ZM41.3213 0C39.1683 0 37.4806 1.29282 36.4367 2.84334C35.3798 4.40674 34.7969 6.4469 34.7969 8.59015C34.7969 10.7334 35.3798 12.7735 36.4367 14.337C37.4806 15.8832 39.1683 17.1803 41.3213 17.1803C43.4744 17.1803 45.162 15.8875 46.2059 14.337C47.2629 12.7735 47.8457 10.7334 47.8457 8.59015C47.8457 6.4469 47.2629 4.40674 46.2059 2.84334C45.162 1.29711 43.4744 0 41.3213 0ZM6.52442 19.3278C4.37136 19.3278 2.68371 20.6206 1.6398 22.1712C0.582848 23.7346 0 25.7747 0 27.918C0 30.0612 0.582848 32.1014 1.6398 33.6648C2.68371 35.211 4.37136 36.5081 6.52442 36.5081C8.67748 36.5081 10.3651 35.2153 11.409 33.6648C12.466 32.1014 13.0488 30.0612 13.0488 27.918C13.0488 25.7747 12.466 23.7346 11.409 22.1712C10.3651 20.6249 8.67748 19.3278 6.52442 19.3278ZM30.4473 19.3278C25.2278 19.3278 21.361 22.0939 18.8904 25.5256C16.4502 28.9058 15.2236 33.1021 15.2236 36.5081C15.2236 40.4768 17.6377 43.2385 20.5998 44.8921C23.514 46.5242 27.1677 47.2458 30.4473 47.2458C33.7269 47.2458 37.3806 46.5285 40.2948 44.8921C43.2526 43.2342 45.6709 40.4768 45.6709 36.5081C45.6709 33.1021 44.4443 28.9058 42.0042 25.5256C39.538 22.0896 35.6712 19.3278 30.4473 19.3278ZM54.3702 19.3278C52.2171 19.3278 50.5295 20.6206 49.4855 22.1712C48.4286 23.7346 47.8457 25.7747 47.8457 27.918C47.8457 30.0612 48.4286 32.1014 49.4855 33.6648C50.5295 35.211 52.2171 36.5081 54.3702 36.5081C56.5232 36.5081 58.2109 35.2153 59.2548 33.6648C60.3117 32.1014 60.8946 30.0612 60.8946 27.918C60.8946 25.7747 60.3117 23.7346 59.2548 22.1712C58.2109 20.6249 56.5232 19.3278 54.3702 19.3278Z"
-                                    fill="#E5E5E5" />
-                            </svg>
+                            <img class="business-details-gallery-paw"
+                                src="{{ asset('images/business-hub/icon-gallery-paw.svg') }}" width="40" height="32" alt=""
+                                aria-hidden="true">
                         </span>
                     @endif
                 </div>
             @empty
-                @foreach ([] as $i)
+                @for ($i = 0; $i < 4; $i++)
                     <div class="business-details-gallery__item">
                         <span class="business-details-gallery-placeholder" aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="61" height="48" viewBox="0 0 61 48" fill="none">
-                                <path fill-rule="evenodd" clip-rule="evenodd"
-                                    d="M19.5733 0C17.4202 0 15.7326 1.29282 14.6886 2.84334C13.6317 4.40674 13.0488 6.4469 13.0488 8.59015C13.0488 10.7334 13.6317 12.7735 14.6886 14.337C15.7326 15.8832 17.4202 17.1803 19.5733 17.1803C21.7263 17.1803 23.414 15.8875 24.4579 14.337C25.5148 12.7735 26.0977 10.7334 26.0977 8.59015C26.0977 6.4469 25.5148 4.40674 24.4579 2.84334C23.414 1.29711 21.7263 0 19.5733 0ZM41.3213 0C39.1683 0 37.4806 1.29282 36.4367 2.84334C35.3798 4.40674 34.7969 6.4469 34.7969 8.59015C34.7969 10.7334 35.3798 12.7735 36.4367 14.337C37.4806 15.8832 39.1683 17.1803 41.3213 17.1803C43.4744 17.1803 45.162 15.8875 46.2059 14.337C47.2629 12.7735 47.8457 10.7334 47.8457 8.59015C47.8457 6.4469 47.2629 4.40674 46.2059 2.84334C45.162 1.29711 43.4744 0 41.3213 0ZM6.52442 19.3278C4.37136 19.3278 2.68371 20.6206 1.6398 22.1712C0.582848 23.7346 0 25.7747 0 27.918C0 30.0612 0.582848 32.1014 1.6398 33.6648C2.68371 35.211 4.37136 36.5081 6.52442 36.5081C8.67748 36.5081 10.3651 35.2153 11.409 33.6648C12.466 32.1014 13.0488 30.0612 13.0488 27.918C13.0488 25.7747 12.466 23.7346 11.409 22.1712C10.3651 20.6249 8.67748 19.3278 6.52442 19.3278ZM30.4473 19.3278C25.2278 19.3278 21.361 22.0939 18.8904 25.5256C16.4502 28.9058 15.2236 33.1021 15.2236 36.5081C15.2236 40.4768 17.6377 43.2385 20.5998 44.8921C23.514 46.5242 27.1677 47.2458 30.4473 47.2458C33.7269 47.2458 37.3806 46.5285 40.2948 44.8921C43.2526 43.2342 45.6709 40.4768 45.6709 36.5081C45.6709 33.1021 44.4443 28.9058 42.0042 25.5256C39.538 22.0896 35.6712 19.3278 30.4473 19.3278ZM54.3702 19.3278C52.2171 19.3278 50.5295 20.6206 49.4855 22.1712C48.4286 23.7346 47.8457 25.7747 47.8457 27.918C47.8457 30.0612 48.4286 32.1014 49.4855 33.6648C50.5295 35.211 52.2171 36.5081 54.3702 36.5081C56.5232 36.5081 58.2109 35.2153 59.2548 33.6648C60.3117 32.1014 60.8946 30.0612 60.8946 27.918C60.8946 25.7747 60.3117 23.7346 59.2548 22.1712C58.2109 20.6249 56.5232 19.3278 54.3702 19.3278Z"
-                                    fill="#E5E5E5" />
-                            </svg>
+                            <img class="business-details-gallery-paw"
+                                src="{{ asset('images/business-hub/icon-gallery-paw.svg') }}" width="40" height="32" alt=""
+                                aria-hidden="true">
                         </span>
                     </div>
-                @endforeach
+                @endfor
             @endforelse
         </div>
     </section>
 
-    <section class="business-details-block">
-        <x-business-hub.settings.business-details.section-title title="Payout Details" section="payout"
+    <div class="business-details-save-bar" x-cloak x-show="editingSection === 'all'">
+        <strong>1 unsaved changes</strong>
+        <div class="business-details-save-bar__actions" x-data="{ saving: false }">
+            <button type="button" class="business-details-save-bar__cancel" @click="cancelEdit()">Cancel</button>
+            <button type="button" class="business-details-save-bar__submit"
+                @click="saving = true; Promise.resolve($wire.call('saveAllDetails')).then(() => editingSection = $wire.editingSection).finally(() => saving = false)"
+                :disabled="saving">
+                <span class="business-details-btn-spinner" x-cloak x-show="saving" aria-hidden="true"></span>
+                <span>Save Changes</span>
+            </button>
+        </div>
+    </div>
+
+    <section class="business-details-block" x-cloak x-show="editingSection !== 'all'">
+        <x-business-hub.settings.business-details.section-title title="Payout details" section="payout"
             :is-editing="$editingSection === 'payout'" save-action="savePayoutDetails" />
         <div @class([
             'business-details-card',
@@ -1402,20 +1546,70 @@ new class extends Component {
             </div>
             <div class="business-details-toggle-panel" x-show="editingSection !== 'payout'">
                 <div class="business-details-edit-grid business-details-edit-grid--four">
-                    <x-business-hub.settings.business-details.field label="Account Holder Name"
+                    <x-business-hub.settings.business-details.field label="Account holder"
                         :value="$payoutDetails['account_holder_name'] ?? null" placeholder="Not provided" />
-                    <x-business-hub.settings.business-details.field label="Account Number"
-                        :value="$payoutDetails['account_number'] ?? null" placeholder="Not provided" />
-                    <x-business-hub.settings.business-details.field label="Sort Code"
+                    <x-business-hub.settings.business-details.field label="Account number"
+                        :value="!empty($payoutDetails['account_number']) ? '•••• ' . substr((string) $payoutDetails['account_number'], -4) : null" placeholder="Not provided" />
+                    <x-business-hub.settings.business-details.field label="Sort code"
                         :value="$payoutDetails['sort_code'] ?? null" placeholder="Not provided" />
-                    <x-business-hub.settings.business-details.field label="IBAN" :value="$payoutDetails['iban'] ?? null"
-                        placeholder="Not provided" />
+                    <div class="business-details-field">
+                        <span>Status</span>
+                        <p class="business-details-payout-status">
+                            <img src="{{ asset('images/business-hub/icon-verified-check.svg') }}" width="12" height="12"
+                                alt="" aria-hidden="true">
+                            Verified
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="business-details-block">
+    <section class="business-details-verification" x-cloak x-show="editingSection !== 'all'">
+        <div class="business-details-verification__heading">
+            <h3>Verification status</h3>
+        </div>
+        <div class="business-details-verification__summary">
+            <div>
+                <span>Identity verified</span>
+                <p>Provider passed third-party verification at onboarding</p>
+            </div>
+            <div class="business-details-verification__status">
+                <span>Status</span>
+                <strong>
+                    <img src="{{ asset('images/business-hub/icon-verified-check.svg') }}" width="12" height="12" alt=""
+                        aria-hidden="true">
+                    Verified
+                </strong>
+            </div>
+        </div>
+        <div class="business-details-verification__provider">
+            <div class="business-details-verification__provider-intro">
+                <strong>Third-party verification system</strong>
+                <span>Documents and identity files are held externally.</span>
+            </div>
+            <div class="business-details-verification__meta">
+                <p>
+                    <span>Verified</span>
+                    {{ $profile?->created_at?->format('d M Y') ?? '12 Jan 2023' }}
+                </p>
+                <p>
+                    <span>Type</span>
+                    {{ strtolower((string) ($profile?->user_type ?? 'groomer')) === 'space' ? 'Space Provider' : 'Freelance Groomer' }}
+                </p>
+                <p>
+                    <span>Result</span>
+                    <em class="business-details-verification__pass">Pass</em>
+                </p>
+                <p>
+                    <span>Reference</span>
+                    VRF-{{ $profile?->created_at?->format('Y') ?? '2023' }}-{{ str_pad((string) ($profile?->id ?? 142), 5, '0', STR_PAD_LEFT) }}
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="business-details-block business-details-block--legacy-verification" hidden>
         <x-business-hub.settings.business-details.section-title title="Business ID" :tone="$businessIdHasIssue ? 'warning' : 'success'" section="business-id" :is-editing="$editingSection === 'business-id'"
             save-action="saveBusinessIdDetails" />
         <div @class([
@@ -1592,7 +1786,7 @@ new class extends Component {
         </div>
     </section>
 
-    <section class="business-details-block">
+    <section class="business-details-block business-details-block--legacy-verification" hidden>
         <x-business-hub.settings.business-details.section-title title="Insurance Details" :tone="$insuranceHasIssue ? 'warning' : 'success'" section="insurance" :is-editing="$editingSection === 'insurance'"
             save-action="saveInsuranceDetails" />
         <div @class([
@@ -1860,37 +2054,44 @@ new class extends Component {
         }
 
         .business-details-alert__icon {
-            width: 24px;
-            height: 24px;
-            transform: rotate(45deg);
-            aspect-ratio: 1/1;
+            width: 18px;
+            height: 18px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 2px;
-            background: #B4CCDD;
             flex: 0 0 auto;
-            padding: 4px;
+            padding: 0;
+            border-radius: 0;
+            background: transparent;
+            transform: none;
         }
 
+        .business-details-alert__icon img,
         .business-details-alert__icon svg {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transform: rotate(-45deg);
+            width: 18px;
+            height: 18px;
+            display: block;
+            transform: none;
         }
 
         .business-details-alert__close {
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            width: 18px;
+            height: 18px;
             margin-left: auto;
             padding: 0;
             border: 0;
             background: transparent;
             cursor: pointer;
+        }
+
+        .business-details-alert__close img,
+        .business-details-alert__close svg {
+            width: 11px;
+            height: 11px;
+            display: block;
         }
 
         .business-details-block {
@@ -1903,7 +2104,6 @@ new class extends Component {
             justify-content: space-between;
             gap: 0.75rem;
             margin-bottom: 1.5rem;
-
         }
 
         .business-details-section-title h3 {
@@ -2059,7 +2259,6 @@ new class extends Component {
         .business-details-input-field textarea:focus {
             border-color: #C9DDA0;
         }
-
 
         .business-details-card {
             border-radius: 8px;
@@ -2400,57 +2599,74 @@ new class extends Component {
             object-fit: cover;
         }
 
+        .business-details-avatar img.business-details-paw {
+            width: 28px;
+            height: 22px;
+            border-radius: 0;
+            object-fit: contain;
+        }
+
         .business-details-avatar-upload {
-            width: 300px;
-            height: 300px;
+            position: relative;
+            width: 250px;
+            height: 250px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 1rem;
-            border: 1px solid #E2E2E2;
+            gap: 0.75rem;
+            border: 2px dashed #E2E2E2;
             border-radius: 999px;
             margin-top: 2.5rem;
             margin-left: 2.5rem;
             background: #FFFFFF;
             box-sizing: border-box;
+            overflow: hidden;
         }
 
-        .business-details-avatar-upload__icon {
-            position: relative;
-            width: 88px;
-            height: 88px;
-            border-radius: 999px;
-        }
-
-        .business-details-avatar-upload__icon svg,
-        .business-details-avatar-upload__icon img {
-            width: 100%;
-            height: 100%;
-            display: block;
-            border-radius: 999px;
-        }
-
-        .business-details-avatar-upload__icon img {
-            object-fit: cover;
-        }
-
-        .business-details-avatar-upload__plus {
+        .business-details-avatar-upload__hit {
             position: absolute;
-            top: 1px;
-            right: -2px;
-            width: 28px;
-            height: 28px;
-            display: inline-flex;
+            inset: 0;
+            z-index: 1;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .business-details-avatar-upload__preview,
+        .business-details-avatar-upload__empty {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            gap: 0.75rem;
+            pointer-events: none;
+        }
+
+        .business-details-avatar-upload__preview {
+            width: 100%;
+            height: 100%;
+        }
+
+        .business-details-avatar-upload__preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             border-radius: 999px;
-            background: #9D9B98;
-            color: #FFFFFF;
-            font-family: Lato;
-            font-size: 24px;
-            font-weight: 700;
-            line-height: 1;
+        }
+
+        .business-details-avatar-upload__cloud {
+            display: inline-flex;
+            width: 37px;
+            height: 34px;
+        }
+
+        .business-details-avatar-upload__cloud svg {
+            width: 37px;
+            height: 34px;
+            display: block;
         }
 
         .business-details-avatar-upload__copy {
@@ -2459,29 +2675,27 @@ new class extends Component {
             text-align: center;
             color: #3B3731;
             font-family: Lato;
-            font-size: 14px;
+            font-size: 12px;
             font-style: normal;
             font-weight: 600;
             line-height: normal;
         }
 
-
-        .business-details-avatar-upload__button {
-            min-width: 178px;
-            height: 52px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.65rem;
-            border: 0;
-            border-radius: 999px;
-            background: #FFC97A;
-            color: #FFFFFF;
-            font-family: Lato;
-            font-size: 18px;
+        .business-details-avatar-upload__copy em {
             font-style: normal;
-            font-weight: 600;
-            line-height: normal;
+            color: #FFC97A;
+        }
+
+        .business-details-avatar-upload__browse {
+            position: relative;
+            z-index: 3;
+            pointer-events: auto;
+            border: 0;
+            background: transparent;
+            padding: 0;
+            color: #FFC97A;
+            font: inherit;
+            text-decoration: underline;
             cursor: pointer;
         }
 
@@ -2490,13 +2704,19 @@ new class extends Component {
         }
 
         .business-details-avatar-upload__button-progress {
-            width: 92px;
+            position: absolute;
+            left: 50%;
+            bottom: 28px;
+            transform: translateX(-50%);
+            width: 110px;
             display: inline-grid;
             grid-template-columns: 1fr auto;
             align-items: center;
             gap: 0.45rem;
+            color: #3B3731;
             font-size: 13px;
             line-height: 1;
+            pointer-events: none;
         }
 
         .business-details-avatar-upload__progress-bar {
@@ -2504,17 +2724,22 @@ new class extends Component {
             height: 6px;
             overflow: hidden;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.45);
+            background: rgba(59, 55, 49, 0.12);
         }
 
         .business-details-avatar-upload__progress-bar span {
             height: 100%;
             display: block;
             border-radius: inherit;
-            background: #FFFFFF;
+            background: #FFC97A;
         }
 
         .business-details-avatar-upload__error {
+            position: absolute;
+            left: 50%;
+            bottom: 16px;
+            z-index: 3;
+            transform: translateX(-50%);
             max-width: 210px;
             color: #B42318;
             text-align: center;
@@ -2523,12 +2748,19 @@ new class extends Component {
             font-style: normal;
             font-weight: 600;
             line-height: 1.3;
+            pointer-events: none;
         }
 
         .business-details-gallery__item img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .business-details-gallery__item img.business-details-gallery-paw {
+            width: 40px;
+            height: 32px;
+            object-fit: contain;
         }
 
         .business-details-profile__copy {
@@ -2538,9 +2770,9 @@ new class extends Component {
         }
 
         .business-details-gallery {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2.5rem;
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 20px;
         }
 
         .business-details-gallery__input {
@@ -2549,8 +2781,9 @@ new class extends Component {
 
         .business-details-gallery__slot {
             position: relative;
-            width: 170px;
-            height: 170px;
+            width: 100%;
+            aspect-ratio: 1;
+            height: auto;
             animation: business-details-gallery-tile-enter 0.12s ease-out both;
             transition: opacity 0.12s ease, transform 0.12s ease;
             will-change: opacity, transform;
@@ -2598,8 +2831,8 @@ new class extends Component {
 
         .business-details-gallery__item {
             position: relative;
-            width: 170px;
-            height: 170px;
+            width: 100%;
+            height: 100%;
             aspect-ratio: 1;
             display: flex;
             align-items: center;
@@ -2620,6 +2853,84 @@ new class extends Component {
             color: inherit;
             cursor: pointer;
             transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+            background: #FAFAFA;
+            border-style: dashed;
+        }
+
+        .business-details-gallery__upload-tile:has(.business-details-gallery__preview),
+        .business-details-gallery__upload-tile:has(.business-details-gallery__current > img) {
+            background: #FFFFFF;
+            border-style: solid;
+        }
+
+        .business-details-gallery__dropzone {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px;
+            box-sizing: border-box;
+            text-align: center;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .business-details-gallery__dropzone>img {
+            width: 37px;
+            height: 34px;
+            display: block;
+            flex: 0 0 auto;
+            object-fit: contain;
+        }
+
+        .business-details-gallery__dropzone span {
+            display: grid;
+            gap: 0;
+        }
+
+        .business-details-gallery__dropzone small {
+            font-size: 12px;
+            font-weight: 600;
+            color: #9D9B98;
+        }
+
+        .business-details-gallery__dropzone em {
+            font-style: normal;
+            color: #FFC97A;
+        }
+
+        .business-details-gallery__dropzone u {
+            color: #FFC97A;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+            text-decoration-thickness: from-font;
+        }
+
+        .business-details-gallery-caption {
+            position: absolute;
+            left: 1px;
+            right: 1px;
+            bottom: 1px;
+            z-index: 2;
+            height: 40px;
+            display: flex;
+            align-items: flex-end;
+            padding: 0 10px 8px;
+            border-radius: 0 0 8px 8px;
+            background: linear-gradient(180deg, rgba(59, 55, 49, 0) 0%, #79756E 100%);
+            color: #FFF;
+            font-family: Lato;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: normal;
+            pointer-events: none;
+            box-sizing: border-box;
         }
 
         .business-details-gallery__upload-tile:hover {
@@ -2635,30 +2946,38 @@ new class extends Component {
 
         .business-details-gallery-remove {
             position: absolute;
-            top: -10px;
-            right: -10px;
+            top: 10px;
+            right: 10px;
             z-index: 3;
-            width: 28px;
-            height: 28px;
+            width: 36px;
+            height: 36px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             border: 0;
             border-radius: 999px;
-            background: #9D9B98;
-            color: #FFFFFF;
+            background: transparent;
+            color: #3B3731;
+            padding: 0;
             cursor: pointer;
-            transition: background-color 0.18s ease, transform 0.18s ease;
+            transition: transform 0.18s ease;
         }
 
         .business-details-gallery-remove:hover {
-            background: #9D9B98;
+            background: transparent;
             transform: scale(1.05);
         }
 
         .business-details-gallery-remove:disabled {
             cursor: wait;
             opacity: 0.65;
+        }
+
+        .business-details-gallery-remove svg,
+        .business-details-gallery-remove img {
+            width: 36px;
+            height: 36px;
+            display: block;
         }
 
         .business-details-gallery-remove-spinner {
@@ -2705,8 +3024,8 @@ new class extends Component {
         }
 
         .business-details-gallery-paw {
-            width: 61px;
-            height: 48px;
+            width: 40px;
+            height: 32px;
             display: block;
             flex: 0 0 auto;
         }
@@ -2804,30 +3123,10 @@ new class extends Component {
         }
 
         .business-details-paw {
-            color: transparent;
-            width: 42px;
-            height: 36px;
-            position: relative;
-        }
-
-        .business-details-paw::before {
-            content: "";
-            position: absolute;
-            inset: 12px 9px 0;
-            border-radius: 50% 50% 45% 45%;
-            background: #DFDFDF;
-        }
-
-        .business-details-paw::after {
-            content: "";
-            position: absolute;
-            width: 9px;
-            height: 9px;
-            left: 4px;
-            top: 8px;
-            border-radius: 999px;
-            background: #DFDFDF;
-            box-shadow: 10px -5px 0 #DFDFDF, 22px -5px 0 #DFDFDF, 32px 8px 0 #DFDFDF;
+            width: 28px;
+            height: 22px;
+            display: block;
+            flex: 0 0 auto;
         }
 
         .business-details-files {
@@ -2930,9 +3229,12 @@ new class extends Component {
 
             .business-details-grid--three,
             .business-details-grid--four,
-            .business-details-profile,
-            .business-details-gallery {
+            .business-details-profile {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .business-details-gallery {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
             }
 
             .business-details-upload-layout {
@@ -2945,9 +3247,12 @@ new class extends Component {
 
             .business-details-grid--three,
             .business-details-grid--four,
-            .business-details-profile,
-            .business-details-gallery {
+            .business-details-profile {
                 grid-template-columns: 1fr;
+            }
+
+            .business-details-gallery {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
             .business-details-avatar {
@@ -2962,6 +3267,585 @@ new class extends Component {
 
             .business-details-upload-tab {
                 padding: 0 0.85rem;
+            }
+        }
+
+        /* Settings design system (Figma 09 Business Profile - Settings). */
+        .business-details-settings {
+            padding-top: 0;
+        }
+
+        .business-details-alert {
+            width: 100%;
+            max-width: none;
+            min-height: 36px;
+            box-sizing: border-box;
+            gap: 7px;
+            margin: -20px 0 20px;
+            padding: 8px;
+            font-size: 14px;
+            line-height: 18px;
+        }
+
+        .business-details-alert strong {
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .business-details-alert__icon {
+            width: 18px;
+            height: 18px;
+            padding: 0;
+            background: transparent;
+            transform: none;
+        }
+
+        .business-details-alert__icon img,
+        .business-details-alert__icon svg {
+            width: 18px;
+            height: 18px;
+            transform: none;
+        }
+
+        .business-details-alert__close {
+            width: 18px;
+            height: 18px;
+        }
+
+        .business-details-alert__close img,
+        .business-details-alert__close svg {
+            width: 11px;
+            height: 11px;
+        }
+
+        .business-details-block {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #F6F5F5;
+            border-radius: 10px;
+            background: #FFF;
+            box-shadow: 0 0 15px 2px rgba(59, 55, 49, .10);
+            overflow: visible;
+        }
+
+        .business-details-section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin: 0 0 20px;
+        }
+
+        .business-details-section-title h3 {
+            width: auto;
+            min-width: 0;
+            padding: 0;
+            border: 0;
+            margin: 0;
+            color: #3B3731;
+            font-family: "Playfair Display";
+            font-size: 20px;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .business-details-title-actions {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            flex: 0 0 36px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .business-details-title-actions .business-details-edit,
+        .business-details-title-actions .business-details-save {
+            position: absolute;
+            inset: 0;
+        }
+
+        .business-details-title-actions .business-details-edit {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border: 0;
+            border-radius: 999px;
+            background: transparent;
+            box-shadow: none;
+            font-size: 0;
+            cursor: pointer;
+        }
+
+        .business-details-title-actions .business-details-edit svg,
+        .business-details-title-actions .business-details-edit img {
+            width: 36px;
+            height: 36px;
+            display: block;
+        }
+
+        .business-details-title-actions .business-details-save {
+            inset: 0 auto auto auto;
+            right: 0;
+            width: 126px;
+            height: 36px;
+            font-size: 14px;
+        }
+
+        .business-details-section-title:has(.business-details-edit--manage) .business-details-title-actions {
+            width: auto;
+            flex-basis: auto;
+        }
+
+        .business-details-title-actions .business-details-edit--manage {
+            position: static;
+            width: auto;
+            height: auto;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            color: #F4A340;
+            font-family: Lato;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: normal;
+        }
+
+        .business-details-card {
+            padding: 20px;
+            border: 1px solid #F3F3F3;
+            border-radius: 10px;
+            background: #FCFCFC;
+        }
+
+        .business-details-card--editing {
+            border-color: #F3F3F3;
+            background: #FCFCFC;
+        }
+
+        .business-details-card--editing.business-details-grid {
+            padding: 0;
+            border: 0;
+            background: transparent;
+        }
+
+        .business-details-label,
+        .business-details-field span,
+        .business-details-files__label {
+            display: block;
+            margin-bottom: 4px;
+            color: #9C9790;
+            font-family: Lato;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: normal;
+            text-transform: uppercase;
+        }
+
+        .business-details-field p,
+        .business-details-value {
+            margin: 0;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: normal;
+            text-transform: none;
+        }
+
+        .business-details-card--editing .business-details-label {
+            color: #9C9790;
+            font-size: 14px;
+            font-weight: 400;
+            text-transform: uppercase;
+        }
+
+        .business-details-edit-grid {
+            gap: 20px;
+        }
+
+        .business-details-card--editing .business-details-edit-grid {
+            padding: 0 1.5rem;
+        }
+
+        .business-details-edit-stack {
+            gap: 20px;
+        }
+
+        .business-details-profile__copy {
+            gap: 20px;
+        }
+
+        .business-details-input-field {
+            gap: 10px;
+        }
+
+        .business-details-input-field span {
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: normal;
+            text-transform: none;
+        }
+
+        .business-details-input-field span em {
+            font-style: normal;
+            font-weight: 600;
+            color: #9D9B98;
+        }
+
+        .business-details-input-field input,
+        .business-details-input-field textarea {
+            width: 100%;
+            min-height: 48px;
+            padding: 11px 12px;
+            border: 1px solid #DDD;
+            border-radius: 10px;
+            background: #FFF;
+            color: #3B3731;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 25px;
+            box-sizing: border-box;
+        }
+
+        .business-details-input-field textarea {
+            min-height: 96px;
+            resize: vertical;
+        }
+
+        .business-details-avatar {
+            width: 250px;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #FFC97A;
+            border-radius: 999px;
+            margin-top: 0;
+            margin-left: 0;
+            padding: 3px;
+            background: #FFFFFF;
+            box-sizing: border-box;
+        }
+
+        .business-details-avatar img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 999px;
+            object-fit: cover;
+        }
+
+        .business-details-avatar img.business-details-paw {
+            width: 28px;
+            height: 22px;
+            border-radius: 0;
+            object-fit: contain;
+        }
+
+        .business-details-avatar-upload {
+            margin-top: 0;
+            margin-left: 0;
+            border: 2px dashed #E2E2E2;
+            background: #FFF;
+        }
+
+        .business-details-avatar-upload__browse {
+            color: #FFC97A;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .business-details-profile {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 48px;
+            align-items: center;
+        }
+
+        .business-details-gallery {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .business-details-gallery__item {
+            width: 100%;
+            height: 100%;
+            border-radius: 9px;
+        }
+
+        .business-details-gallery__slot {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1;
+        }
+
+        .business-details-verification {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #F6F5F5;
+            border-radius: 10px;
+            background: #EEEEEE;
+            color: #3B3731;
+        }
+
+        .business-details-verification__heading h3 {
+            margin: 0 0 24px;
+            font-family: "Playfair Display";
+            font-size: 20px;
+            font-weight: 600;
+            line-height: normal;
+            color: #3B3731;
+        }
+
+        .business-details-verification__summary {
+            display: flex;
+            align-items: flex-start;
+            justify-content: start;
+            gap: 22.5rem;
+            margin-bottom: 24px;
+        }
+
+        .business-details-verification__summary span,
+        .business-details-verification__status span {
+            display: block;
+            color: #9C9790;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: normal;
+            text-transform: uppercase;
+        }
+
+        .business-details-verification__summary p {
+            margin: 0;
+            color: #3B3731;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .business-details-verification__status {
+            flex: 0 0 auto;
+            text-align: left;
+        }
+
+        .business-details-verification__status strong {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 2px;
+            color: #AFCD6F;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: normal;
+        }
+
+        .business-details-verification__status img {
+            width: 12px;
+            height: 12px;
+            display: block;
+            flex: 0 0 auto;
+        }
+
+        .business-details-verification__provider {
+            overflow: hidden;
+            border: 1px solid #F3F3F3;
+            border-radius: 10px;
+            background: #FCFCFC;
+        }
+
+        .business-details-verification__provider-intro {
+            padding: 20px;
+        }
+
+        .business-details-verification__provider-intro strong {
+            display: block;
+            margin-bottom: 0;
+            color: #3B3731;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: normal;
+        }
+
+        .business-details-verification__provider-intro span {
+            display: block;
+            color: #9C9790;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: normal;
+            text-transform: none;
+        }
+
+        .business-details-verification__meta {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            align-items: center;
+            gap: 16px;
+            min-height: 50px;
+            padding: 15px 20px;
+            border-top: 1px solid #F3F3F3;
+            background: #FFFFFF;
+        }
+
+        .business-details-verification__meta p {
+            margin: 0;
+            color: #3B3731;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: normal;
+            white-space: nowrap;
+        }
+
+        .business-details-verification__meta span {
+            color: #9C9A97;
+            font-size: 14px;
+            font-weight: 400;
+            text-transform: none;
+        }
+
+        .business-details-verification__pass {
+            color: #9FC356;
+            font-style: normal;
+            font-weight: 400;
+        }
+
+        .business-details-payout-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #BACF8E !important;
+            font-weight: 600 !important;
+        }
+
+        .business-details-save-bar {
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            margin: 20px 0 0;
+            padding: 19px 20px;
+            border: 0;
+            border-top: 1px solid #FFC56D;
+            border-radius: 0;
+            background: #FFFCF6;
+            box-sizing: border-box;
+        }
+
+        .business-details-save-bar>strong {
+            color: #FFAE37;
+            font-family: Lato;
+            font-size: 18px;
+            font-weight: 600;
+            line-height: normal;
+        }
+
+        .business-details-save-bar__actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .business-details-save-bar__cancel,
+        .business-details-save-bar__submit {
+            width: 138px;
+            height: 42px;
+            padding: 0;
+            border-radius: 100px;
+            font-family: Lato;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: normal;
+            cursor: pointer;
+        }
+
+        .business-details-save-bar__cancel {
+            border: 1px solid #D9D9D9;
+            background: #FFF;
+            color: #9D9B98;
+        }
+
+        .business-details-save-bar__submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 0;
+            background: #BACF8E;
+            color: #FFF;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .business-details-save-bar__submit:disabled {
+            cursor: wait;
+            opacity: .7;
+        }
+
+        .business-details-settings--editing .business-details-avatar-upload {
+            border-style: dashed;
+            border-width: 2px;
+            border-color: #E2E2E2;
+        }
+
+        @media (max-width: 991px) {
+            .business-details-profile {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .business-details-avatar,
+            .business-details-avatar-upload {
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .business-details-alert {
+                margin-top: -8px;
+            }
+
+            .business-details-avatar,
+            .business-details-avatar-upload {
+                width: 200px;
+                height: 200px;
+            }
+
+            .business-details-verification__summary {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .business-details-verification__meta {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .business-details-verification__meta p {
+                white-space: normal;
+            }
+
+            .business-details-save-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 16px;
+            }
+
+            .business-details-save-bar__actions {
+                justify-content: stretch;
+            }
+
+            .business-details-save-bar__cancel,
+            .business-details-save-bar__submit {
+                flex: 1;
             }
         }
     </style>

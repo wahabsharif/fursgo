@@ -42,16 +42,14 @@ new class extends Component {
 
 <div class="dashboard-settings">
     <section class="dashboard-settings-card">
-        <h3>General Settings</h3>
-
-        <div class="dashboard-settings-divider"></div>
+        <h3>Bookings</h3>
 
         <div class="dashboard-settings-row">
             <div class="dashboard-settings-copy">
                 <h4>Auto-Accept Bookings</h4>
                 <p>
                     Automatically confirm and add new bookings to your diary.
-                    <span>Turn off to manually review requests before they're confirmed.</span>
+                    <span>Turn off to manually review requests before they’re confirmed.</span>
                 </p>
             </div>
 
@@ -76,11 +74,20 @@ new class extends Component {
     <style>
         .dashboard-settings {
             width: 100%;
-            padding-top: 3.25rem;
+            padding: 8px;
+            margin: -8px;
+            overflow: visible;
+            box-sizing: content-box;
         }
 
         .dashboard-settings-card {
             width: 100%;
+            min-height: 144px;
+            padding: 20px;
+            border: 1px solid #F6F5F5;
+            border-radius: 10px;
+            background: #FFF;
+            box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.10);
             color: #3B3731;
         }
 
@@ -88,31 +95,25 @@ new class extends Component {
             margin: 0;
             color: #3B3731;
             font-family: "Playfair Display";
-            font-size: 28px;
+            font-size: 20px;
             font-style: normal;
             font-weight: 600;
             line-height: normal;
         }
 
-        .dashboard-settings-divider {
-            width: 100%;
-            height: 1px;
-            margin: 1.25rem 0 2.5rem;
-            background: #D8D4CF;
-        }
-
         .dashboard-settings-row {
             display: flex;
             align-items: center;
-            justify-content: start;
-            gap: 5rem;
+            justify-content: space-between;
+            gap: 2rem;
+            margin-top: 15px;
         }
 
         .dashboard-settings-copy h4 {
-            margin: 0 0 1.25rem;
+            margin: 0;
             color: #3B3731;
             font-family: Lato;
-            font-size: 18px;
+            font-size: 16px;
             font-style: normal;
             font-weight: 600;
             line-height: normal;
@@ -123,7 +124,7 @@ new class extends Component {
             max-width: none;
             color: #9D9B98;
             font-family: Lato;
-            font-size: 18px;
+            font-size: 16px;
             font-style: normal;
             font-weight: 400;
             line-height: normal;
@@ -142,8 +143,8 @@ new class extends Component {
         }
 
         .dashboard-settings-toggle {
-            width: 58px;
-            height: 32px;
+            width: 52px;
+            height: 28px;
             border: 0;
             border-radius: 9999px;
             background: #E2E2E2;
@@ -158,7 +159,7 @@ new class extends Component {
         }
 
         .dashboard-settings-toggle.is-on {
-            background: #FFC97A;
+            background: #D8E8B7;
         }
 
         .dashboard-settings-toggle:disabled {
@@ -167,8 +168,8 @@ new class extends Component {
         }
 
         .dashboard-settings-toggle span {
-            width: 25px;
-            height: 25px;
+            width: 22px;
+            height: 22px;
             border-radius: 9999px;
             background: #FFF;
             display: inline-flex;
@@ -181,7 +182,12 @@ new class extends Component {
 
         .dashboard-settings-toggle.is-on span {
             background: transparent;
-            transform: translateX(27px);
+            transform: translateX(24px);
+        }
+
+        .dashboard-settings-toggle svg {
+            width: 22px;
+            height: 22px;
         }
 
         .dashboard-settings-toggle svg {

@@ -38,7 +38,8 @@
         </div>
     </template>
 
-    <div class="active-section-header" x-show="activeSection !== 'clients' || !clientProfileOpen" x-cloak>
+    <div class="active-section-header"
+        x-show="activeSection !== 'settings' && (activeSection !== 'clients' || !clientProfileOpen)" x-cloak>
         <div class="active-section-header-stack">
             <div class="active-section-header-pane" x-cloak x-show="activeSection === 'business-hub'"
                 x-transition.opacity.duration.280ms>
@@ -575,7 +576,8 @@
     .section-container:has(.section-panel.section-active .service-form-footer),
     .section-container:has(.section-panel.section-active .clients-list-table-shell),
     .section-container:has(.section-panel.section-active .earnings-tx-card),
-    .section-container:has(.section-panel.section-active .bookings-board) {
+    .section-container:has(.section-panel.section-active .bookings-board),
+    .section-container:has(.section-panel.section-active .settings-shell) {
         overflow: visible;
     }
 
