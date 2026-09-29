@@ -13,6 +13,7 @@ $referralCodeLastUsed = $referralCode['last_used'] ?? '31 Apr 2025';
 $referralCodePrefix = strtoupper(explode('-', $referralCodeValue)[0] ?? 'JANE');
 $referralRows = $profile['referrals']['rows'] ?? [];
 $defaultReferralRow = $referralRows[0] ?? null;
+$paymentRows = $profile['payments']['rows'] ?? [];
 $transferAccounts = [
 [
 'id' => 'USR-01901',
@@ -160,9 +161,36 @@ $transferAccounts = [
         selectedPetId: @js($defaultTransferPet['id'] ?? null),
         bookingDetail: null,
         referralDetail: null,
+        paymentSelectedCount: 0,
+        paymentSelectedIds: [],
+        paymentDetail: null,
+        exportPaymentsOpen: false,
+        paymentExportFormat: 'CSV - spreadsheet compatible',
+        openPaymentExportFormat: false,
+        paymentRows: @js($paymentRows),
         disputeOpen: false,
         pets: @js($profilePets),
         transferAccounts: @js($transferAccounts),
+        selectedPayments() {
+            return this.paymentRows.filter((row) => this.paymentSelectedIds.includes(row.id));
+        },
+        paymentExportSubtitle() {
+            const count = this.paymentSelectedCount;
+            return count === 1 ? '1 transaction selected' : count + ' transactions selected';
+        },
+        paymentExportMeta(payment) {
+            const service = payment.service_short
+                || (payment.description || '')
+                    .replace(/^Groomer - /, '')
+                    .replace(/^Space Host - /, '');
+            return [service, payment.pet_name, payment.provider, payment.date].filter(Boolean).join(' · ');
+        },
+        openExportPayments() {
+            if (this.paymentSelectedCount === 0) return;
+            this.paymentExportFormat = 'CSV - spreadsheet compatible';
+            this.openPaymentExportFormat = false;
+            this.exportPaymentsOpen = true;
+        },
         currentPet() {
             return this.pets.find((p) => p.id === this.selectedPetId) || this.pets[0] || null;
         },
@@ -263,11 +291,14 @@ $transferAccounts = [
     @admin-booking-closed.window="bookingDetail = null; disputeOpen = false"
     @admin-referral-selected.window="referralDetail = $event.detail.referral || null"
     @admin-referral-closed.window="referralDetail = null"
+    @admin-payments-selection-changed.window="paymentSelectedCount = $event.detail.count || 0; paymentSelectedIds = $event.detail.ids || []"
+    @admin-payment-selected.window="paymentDetail = $event.detail.payment || null"
+    @admin-payment-closed.window="paymentDetail = null"
     @admin-dispute-opened.window="disputeOpen = true"
     @admin-dispute-closed.window="disputeOpen = false"
     x-init="
         const syncModalLock = () => {
-            const open = verifyEmailOpen || resetPasswordOpen || suspendOpen || pauseBookingsOpen || flagOpen || addCreditOpen || regenerateOpen || disableCodeOpen || referralFlagOpen || voidCreditOpen || deleteOpen || transferOpen || archiveOpen || unarchiveOpen || deletePetOpen;
+            const open = verifyEmailOpen || resetPasswordOpen || suspendOpen || pauseBookingsOpen || exportPaymentsOpen || flagOpen || addCreditOpen || regenerateOpen || disableCodeOpen || referralFlagOpen || voidCreditOpen || deleteOpen || transferOpen || archiveOpen || unarchiveOpen || deletePetOpen;
             if (open) {
                 if (!document.body.classList.contains('admin-co-modal-lock')) {
                     document.body.dataset.adminCoScrollY = String(window.scrollY);
@@ -294,6 +325,7 @@ $transferAccounts = [
         $watch('resetPasswordOpen', () => $nextTick(() => syncModalLock()));
         $watch('suspendOpen', () => $nextTick(() => syncModalLock()));
         $watch('pauseBookingsOpen', () => $nextTick(() => syncModalLock()));
+        $watch('exportPaymentsOpen', () => $nextTick(() => syncModalLock()));
         $watch('flagOpen', () => $nextTick(() => syncModalLock()));
         $watch('addCreditOpen', () => $nextTick(() => syncModalLock()));
         $watch('regenerateOpen', () => $nextTick(() => syncModalLock()));
@@ -370,7 +402,7 @@ $transferAccounts = [
     </div>
 
     {{-- Stats strip (changes with detail tab) --}}
-    <div class="admin-co-stats" x-show="detailTab !== 'pets' && detailTab !== 'bookings' && detailTab !== 'activity' && detailTab !== 'referrals'" x-cloak>
+    <div class="admin-co-stats" x-show="detailTab !== 'pets' && detailTab !== 'bookings' && detailTab !== 'activity' && detailTab !== 'referrals' && detailTab !== 'payments'" x-cloak>
         <div class="admin-co-stat">
             <p class="admin-co-stat-value">{{ $profile['stats']['spend'] }}</p>
             <p class="admin-co-stat-label">Total spend</p>
@@ -446,6 +478,25 @@ $transferAccounts = [
         </div>
     </div>
 
+    <div class="admin-co-stats" x-show="detailTab === 'payments'" x-cloak>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['payment_stats']['spent'] ?? '£652' }}</p>
+            <p class="admin-co-stat-label">Total spent</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['payment_stats']['refunded'] ?? '£35' }}</p>
+            <p class="admin-co-stat-label">Refunded</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['payment_stats']['open_refund'] ?? '1' }}</p>
+            <p class="admin-co-stat-label">Open refund</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['payment_stats']['last_payment'] ?? '09 Jul' }}</p>
+            <p class="admin-co-stat-label">Last payment</p>
+        </div>
+    </div>
+
     <div class="admin-co-stats" x-show="detailTab === 'activity'" x-cloak>
         <div class="admin-co-stat">
             <p class="admin-co-stat-value">{{ $profile['activity_stats']['total_events'] ?? '150' }}</p>
@@ -486,7 +537,7 @@ $transferAccounts = [
     <div class="admin-co-actions" x-show="detailTab !== 'activity'" x-cloak>
         <h3 class="admin-co-actions-title">Admin Actions</h3>
 
-        <div x-show="detailTab !== 'pets' && detailTab !== 'bookings' && detailTab !== 'activity' && detailTab !== 'referrals'" x-cloak>
+        <div x-show="detailTab !== 'pets' && detailTab !== 'bookings' && detailTab !== 'activity' && detailTab !== 'referrals' && detailTab !== 'payments'" x-cloak>
             <x-admin.customer.action-btn
                 variant="verify"
                 label="Send account verification email"
@@ -527,6 +578,26 @@ $transferAccounts = [
                     openDeleteReason = false;
                     deleteOpen = true;
                 " />
+        </div>
+
+        <div x-show="detailTab === 'payments' && !paymentDetail" x-cloak>
+            <x-admin.customer.action-btn
+                variant="export"
+                label="Export selected payments"
+                ::disabled="paymentSelectedCount === 0"
+                ::class="{ 'is-export-active': paymentSelectedCount > 0 }"
+                x-on:click="openExportPayments()" />
+            <x-admin.customer.action-btn
+                variant="suspend"
+                label="Pause all bookings"
+                x-on:click="openPauseBookings()" />
+        </div>
+
+        <div x-show="detailTab === 'payments' && paymentDetail" x-cloak>
+            <x-admin.customer.action-btn
+                variant="linked_booking"
+                label="Open linked booking"
+                x-on:click="$dispatch('admin-open-linked-booking', { bookingId: paymentDetail?.booking_id })" />
         </div>
 
         <div x-show="showReferralListActions()" x-cloak>
@@ -917,6 +988,104 @@ $transferAccounts = [
                             <path d="M3.15132 0.625H1.88816C1.55315 0.625 1.23186 0.756696 0.994971 0.991117C0.758083 1.22554 0.625 1.54348 0.625 1.875V14.375C0.625 14.7065 0.758083 15.0245 0.994971 15.2589C1.23186 15.4933 1.55315 15.625 1.88816 15.625H3.15132C3.48633 15.625 3.80761 15.4933 4.0445 15.2589C4.28139 15.0245 4.41447 14.7065 4.41447 14.375V1.875C4.41447 1.54348 4.28139 1.22554 4.0445 0.991117C3.80761 0.756696 3.48633 0.625 3.15132 0.625ZM11.3618 0.625H10.0987C9.76367 0.625 9.44238 0.756696 9.2055 0.991117C8.96861 1.22554 8.83553 1.54348 8.83553 1.875V14.375C8.83553 14.7065 8.96861 15.0245 9.2055 15.2589C9.44238 15.4933 9.76367 15.625 10.0987 15.625H11.3618C11.6969 15.625 12.0181 15.4933 12.255 15.2589C12.4919 15.0245 12.625 14.7065 12.625 14.375V1.875C12.625 1.54348 12.4919 1.22554 12.255 0.991117C12.0181 0.756696 11.6969 0.625 11.3618 0.625Z" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                         Suspend account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    {{-- Export selected payments modal --}}
+    <template x-teleport="body">
+        <div
+            class="admin-co-modal-backdrop"
+            :class="{ 'is-open': exportPaymentsOpen }"
+            @click.self="exportPaymentsOpen = false; openPaymentExportFormat = false">
+            <div class="admin-co-modal admin-co-verify-email-modal admin-co-export-payments-modal" role="dialog" aria-modal="true" @click.stop>
+                <div class="admin-co-modal-head admin-co-blocked-modal-head">
+                    <div>
+                        <div class="admin-co-modal-title-row">
+                            <span class="admin-co-verify-email-icon is-export-active" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 13 13" fill="none">
+                                    <path d="M6.22329 9.46679C6.13909 9.43398 6.05645 9.37703 5.97536 9.29593L3.5425 6.864C3.45212 6.77362 3.40507 6.66715 3.40136 6.54457C3.39764 6.422 3.44469 6.30965 3.5425 6.2075C3.64526 6.10474 3.75576 6.05243 3.874 6.05057C3.99286 6.04872 4.10336 6.09917 4.2055 6.20193L6.03571 8.03214V0.464292C6.03571 0.332435 6.07998 0.221935 6.1685 0.132792C6.25702 0.0436494 6.36752 -0.000612643 6.5 6.40392e-06C6.63248 0.000625451 6.74298 0.0448875 6.8315 0.132792C6.92002 0.220697 6.96429 0.331197 6.96429 0.464292V8.03214L8.7945 6.20193C8.88488 6.11155 8.99229 6.06419 9.11671 6.05986C9.24114 6.05553 9.35443 6.10474 9.45657 6.2075C9.55562 6.30965 9.60607 6.41922 9.60793 6.53622C9.60979 6.65322 9.55964 6.76248 9.4575 6.864L7.02464 9.29686C6.94417 9.37734 6.86152 9.43398 6.77671 9.46679C6.69252 9.4996 6.60029 9.516 6.5 9.516C6.39971 9.516 6.30748 9.4996 6.22329 9.46679ZM1.50057 13C1.07281 13 0.715928 12.857 0.429928 12.571C0.143928 12.285 0.000619048 11.9278 0 11.4994V9.71379C0 9.58193 0.044262 9.47174 0.132786 9.38322C0.22131 9.29469 0.33181 9.25012 0.464286 9.2495C0.596762 9.24888 0.707262 9.29345 0.795786 9.38322C0.884309 9.47298 0.928571 9.58317 0.928571 9.71379V11.4994C0.928571 11.6424 0.988 11.7737 1.10686 11.8931C1.22571 12.0126 1.35664 12.072 1.49964 12.0714H11.5004C11.6427 12.0714 11.7737 12.012 11.8931 11.8931C12.0126 11.7743 12.072 11.643 12.0714 11.4994V9.71379C12.0714 9.58193 12.1157 9.47174 12.2042 9.38322C12.2927 9.29469 12.4032 9.25012 12.5357 9.2495C12.6682 9.24888 12.7787 9.29345 12.8672 9.38322C12.9557 9.47298 13 9.58317 13 9.71379V11.4994C13 11.9272 12.857 12.2841 12.571 12.5701C12.285 12.8561 11.9278 12.9994 11.4994 13H1.50057Z" fill="#A1C25D" />
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="admin-co-modal-title">Export selected payments</h3>
+                                <p class="admin-co-modal-sub" x-text="paymentExportSubtitle()"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="admin-co-modal-close" @click="exportPaymentsOpen = false; openPaymentExportFormat = false" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8"></circle>
+                            <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="admin-co-blocked-modal-body admin-co-verify-email-body admin-co-export-payments-body">
+                    <div class="admin-co-export-payments-list">
+                        <template x-for="payment in selectedPayments()" :key="payment.id">
+                            <article class="admin-co-export-payment-item">
+                                <div class="admin-co-export-payment-copy">
+                                    <p class="admin-co-export-payment-title">
+                                        <span x-text="payment.invoice_id"></span>
+                                        <span> · </span>
+                                        <span x-text="payment.status_label"></span>
+                                    </p>
+                                    <p class="admin-co-export-payment-meta" x-text="paymentExportMeta(payment)"></p>
+                                </div>
+                                <p class="admin-co-export-payment-amount" x-text="payment.amount"></p>
+                            </article>
+                        </template>
+                    </div>
+
+                    <div class="admin-co-suspend-field admin-co-export-format-field">
+                        <label class="admin-co-suspend-label">
+                            Export format <span class="admin-co-suspend-required">*</span>
+                        </label>
+                        <div class="admin-co-dd admin-co-suspend-dd admin-co-export-format-dd" @click.outside="openPaymentExportFormat = false">
+                            <button
+                                type="button"
+                                class="admin-co-dd-trigger"
+                                :class="{ 'is-open': openPaymentExportFormat }"
+                                @click="openPaymentExportFormat = !openPaymentExportFormat">
+                                <span class="admin-co-dd-value" x-text="paymentExportFormat"></span>
+                                <svg class="admin-co-dd-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+                                    <path d="M1 1.5L6 6.5L11 1.5" stroke="#9C9A97" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <div class="admin-co-dd-menu" x-show="openPaymentExportFormat" x-cloak>
+                                <button
+                                    type="button"
+                                    class="admin-co-dd-option"
+                                    :class="{ 'is-active': paymentExportFormat === 'CSV - spreadsheet compatible' }"
+                                    @click="paymentExportFormat = 'CSV - spreadsheet compatible'; openPaymentExportFormat = false">
+                                    CSV - spreadsheet compatible
+                                </button>
+                                <button
+                                    type="button"
+                                    class="admin-co-dd-option"
+                                    :class="{ 'is-active': paymentExportFormat === 'PDF - printable summary' }"
+                                    @click="paymentExportFormat = 'PDF - printable summary'; openPaymentExportFormat = false">
+                                    PDF - printable summary
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-co-blocked-modal-foot is-confirm">
+                    <button type="button" class="admin-co-form-btn is-cancel" @click="exportPaymentsOpen = false; openPaymentExportFormat = false">Cancel</button>
+                    <button
+                        type="button"
+                        class="admin-co-form-btn is-revoke"
+                        @click="exportPaymentsOpen = false; openPaymentExportFormat = false">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+                            <path d="M6.22329 9.46679C6.13909 9.43398 6.05645 9.37703 5.97536 9.29593L3.5425 6.864C3.45212 6.77362 3.40507 6.66715 3.40136 6.54457C3.39764 6.422 3.44469 6.30965 3.5425 6.2075C3.64526 6.10474 3.75576 6.05243 3.874 6.05057C3.99286 6.04872 4.10336 6.09917 4.2055 6.20193L6.03571 8.03214V0.464292C6.03571 0.332435 6.07998 0.221935 6.1685 0.132792C6.25702 0.0436494 6.36752 -0.000612643 6.5 6.40392e-06C6.63248 0.000625451 6.74298 0.0448875 6.8315 0.132792C6.92002 0.220697 6.96429 0.331197 6.96429 0.464292V8.03214L8.7945 6.20193C8.88488 6.11155 8.99229 6.06419 9.11671 6.05986C9.24114 6.05553 9.35443 6.10474 9.45657 6.2075C9.55562 6.30965 9.60607 6.41922 9.60793 6.53622C9.60979 6.65322 9.55964 6.76248 9.4575 6.864L7.02464 9.29686C6.94417 9.37734 6.86152 9.43398 6.77671 9.46679C6.69252 9.4996 6.60029 9.516 6.5 9.516C6.39971 9.516 6.30748 9.4996 6.22329 9.46679ZM1.50057 13C1.07281 13 0.715928 12.857 0.429928 12.571C0.143928 12.285 0.000619048 11.9278 0 11.4994V9.71379C0 9.58193 0.044262 9.47174 0.132786 9.38322C0.22131 9.29469 0.33181 9.25012 0.464286 9.2495C0.596762 9.24888 0.707262 9.29345 0.795786 9.38322C0.884309 9.47298 0.928571 9.58317 0.928571 9.71379V11.4994C0.928571 11.6424 0.988 11.7737 1.10686 11.8931C1.22571 12.0126 1.35664 12.072 1.49964 12.0714H11.5004C11.6427 12.0714 11.7737 12.012 11.8931 11.8931C12.0126 11.7743 12.072 11.643 12.0714 11.4994V9.71379C12.0714 9.58193 12.1157 9.47174 12.2042 9.38322C12.2927 9.29469 12.4032 9.25012 12.5357 9.2495C12.6682 9.24888 12.7787 9.29345 12.8672 9.38322C12.9557 9.47298 13 9.58317 13 9.71379V11.4994C13 11.9272 12.857 12.2841 12.571 12.5701C12.285 12.8561 11.9278 12.9994 11.4994 13H1.50057Z" fill="currentColor" />
+                        </svg>
+                        Export
                     </button>
                 </div>
             </div>

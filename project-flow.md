@@ -170,6 +170,7 @@ Volt entry: `resources/views/livewire/business-hub.blade.php`, nested under `liv
 
 - Login: `/admin/login`; middleware `auth.admin`.
 - Overview: `/admin` with Alpine tabs — components under `resources/views/components/admin/` and `resources/views/admin/tabs/`.
+- Pet owner detail tabs: overview, pets, bookings, payments (list + detail by status), support (placeholder), referrals, activity — under `resources/views/components/admin/customer/`.
 
 ## Codebase notes
 
