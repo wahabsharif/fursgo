@@ -47,6 +47,168 @@ $janeProfile = [
 'earned' => '£18',
 'balance' => '£12',
 ],
+'payment_stats' => [
+'spent' => '£652',
+'refunded' => '£35',
+'open_refund' => '1',
+'last_payment' => '09 Jul',
+],
+'payments' => [
+'filters' => [
+'all' => 14,
+'processed' => 4,
+'credits' => 1,
+'refunded' => 3,
+'open_refund' => 1,
+'failed' => 1,
+],
+'rows' => [
+[
+'id' => 'pay-1',
+'invoice_id' => 'INV-0563-B12',
+'description' => 'Groomer - Nail Trim',
+'provider' => 'Pawfect Salon',
+'provider_type' => 'groomer',
+'note' => null,
+'booking_id' => 'GS-0563-B12',
+'date' => '10 Jun 2025',
+'month' => 'June',
+'amount' => '£55.00',
+'amount_tone' => 'default',
+'method' => 'Visa **** 4562',
+'status' => 'processed',
+'status_label' => 'Processed',
+],
+[
+'id' => 'pay-2',
+'invoice_id' => 'INV-0563-B11',
+'description' => 'Space Host - Half-day',
+'provider' => 'Furs & Co. Studio',
+'provider_type' => 'space',
+'note' => null,
+'booking_id' => 'FG-465-655',
+'date' => '05 Apr 2025',
+'month' => 'April',
+'amount' => '£45.00',
+'amount_tone' => 'default',
+'method' => 'PayPal',
+'status' => 'processed',
+'status_label' => 'Processed',
+],
+[
+'id' => 'pay-3',
+'invoice_id' => 'INV-0563-B10',
+'description' => 'Groomer - Full Groom',
+'provider' => 'Pawfect Salon',
+'provider_type' => 'groomer',
+'note' => 'Code NY123 used',
+'booking_id' => 'FG-465-654',
+'date' => '02 Apr 2025',
+'month' => 'April',
+'amount' => '£15.00',
+'amount_tone' => 'default',
+'method' => 'Apple Pay',
+'status' => 'processed',
+'status_label' => 'Processed',
+],
+[
+'id' => 'pay-4',
+'invoice_id' => 'INV-0563-B09',
+'description' => 'Referral credit',
+'provider' => 'Welcome credit',
+'provider_type' => 'credit',
+'note' => null,
+'booking_id' => '—',
+'date' => '01 Apr 2025',
+'month' => 'April',
+'amount' => '+ £10.00',
+'amount_tone' => 'credit',
+'method' => '—',
+'status' => 'credits',
+'status_label' => 'Credits',
+],
+[
+'id' => 'pay-5',
+'invoice_id' => 'INV-0562-B08',
+'description' => 'Groomer - Full Groom',
+'provider' => 'Pawfect Salon',
+'provider_type' => 'groomer',
+'note' => null,
+'booking_id' => 'FG-465-653',
+'date' => '28 Mar 2025',
+'month' => 'March',
+'amount' => '£20.00',
+'amount_tone' => 'default',
+'method' => 'Visa **** 4525',
+'status' => 'processed',
+'status_label' => 'Processed',
+],
+[
+'id' => 'pay-6',
+'invoice_id' => 'INV-0563-B13',
+'description' => 'Space Host - Half-day',
+'provider' => 'Furs & Co. Studio',
+'provider_type' => 'space',
+'note' => null,
+'booking_id' => 'SP-0563-B12',
+'date' => '07 Jun 2025',
+'month' => 'June',
+'amount' => '- £35.00',
+'amount_tone' => 'refund',
+'method' => 'Visa **** 4562',
+'status' => 'refunded',
+'status_label' => 'Refunded',
+],
+[
+'id' => 'pay-7',
+'invoice_id' => 'INV-0563-B14',
+'description' => 'Groomer - Full Groom',
+'provider' => 'Pawfect Salon',
+'provider_type' => 'groomer',
+'note' => null,
+'booking_id' => 'GS-0563-B13',
+'date' => '07 Jun 2025',
+'month' => 'June',
+'amount' => '£90.00',
+'amount_tone' => 'default',
+'method' => 'Visa **** 4562',
+'status' => 'open_refund',
+'status_label' => 'Open refund',
+],
+[
+'id' => 'pay-8',
+'invoice_id' => 'INV-0563-B15',
+'description' => 'Groomer - Full Groom',
+'provider' => 'Furs & Co. Studio',
+'provider_type' => 'groomer',
+'note' => 'Card declined',
+'booking_id' => 'GS-0563-B12',
+'date' => '07 Jun 2025',
+'month' => 'June',
+'amount' => '£55.00',
+'amount_tone' => 'default',
+'method' => 'PayPal',
+'status' => 'failed',
+'status_label' => 'Failed',
+],
+[
+'id' => 'pay-9',
+'invoice_id' => 'INV-0561-B04',
+'description' => 'Space Host - Half-day',
+'provider' => 'Furs & Co. Studio',
+'provider_type' => 'space',
+'note' => null,
+'booking_id' => 'FG-465-649',
+'date' => '14 Feb 2025',
+'month' => 'February',
+'amount' => '- £20.00',
+'amount_tone' => 'refund',
+'method' => 'PayPal',
+'status' => 'refunded',
+'status_label' => 'Refunded',
+],
+],
+],
 'referrals' => [
 'filter_all' => 14,
 'balance' => [
@@ -846,16 +1008,18 @@ $customerProfiles[$customer['id']] = array_merge($janeProfile, [
                 <x-admin.customer.activity :profile="$profile" />
             </div>
 
+            <div x-show="detailTab === 'payments'" x-cloak>
+                <x-admin.customer.payments :profile="$profile" />
+            </div>
+
             <div x-show="detailTab === 'referrals'" x-cloak>
                 <x-admin.customer.referrals :profile="$profile" />
             </div>
 
-            @foreach (['payments' => 'Payments', 'support' => 'Support'] as $tabKey => $tabLabel)
-            <div class="admin-co-placeholder" x-show="detailTab === '{{ $tabKey }}'" x-cloak>
-                <h2 class="admin-page-title mb-0">{{ $tabLabel }}</h2>
+            <div class="admin-co-placeholder" x-show="detailTab === 'support'" x-cloak>
+                <h2 class="admin-page-title mb-0">Support</h2>
                 <p class="admin-section-label mb-0">This section will be built next.</p>
             </div>
-            @endforeach
         </div>
     </div>
     @endforeach

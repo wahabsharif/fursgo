@@ -230,7 +230,7 @@ $roleBlocks[] = ['key' => 'space', 'data' => $spaceCompliance];
         </section>
 
         {{-- Recent Activity --}}
-        <section class="admin-card admin-co-panel admin-bp-comp-panel">
+        <section class="admin-card admin-co-panel admin-bp-comp-panel compliance-activity">
             <x-admin.customer.section-header title="Recent Activity">
                 <button type="button" class="admin-co-link-btn" @click="switchDetailTab('activity')">
                     <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">

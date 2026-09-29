@@ -1572,7 +1572,7 @@
 .admin-po-status {
     display: inline-flex;
     align-items: center;
-    padding: 6px 12px;
+    padding: 10px 12px;
     border-radius: 55px;
     border: 1px solid transparent;
     font-family: Lato, sans-serif;
@@ -1690,6 +1690,36 @@
     border-radius: 96px;
     border: 1px solid #9c9a97;
     background: #f5f5f5;
+}
+
+.admin-po-status.is-processed {
+    color: #a7c569;
+    border-color: #d8e8b7;
+    background: #f4f8ec;
+}
+
+.admin-po-status.is-credits {
+    color: #a1c25d;
+    border-color: #d8e8b7;
+    background: #fbfff4;
+}
+
+.admin-po-status.is-refunded {
+    color: #7dafd2;
+    border-color: #cbdce8;
+    background: #f1f5f8;
+}
+
+.admin-po-status.is-open_refund {
+    color: #ffaf3b;
+    border-color: #ffc97a;
+    background: #fef0dc;
+}
+
+.admin-po-status.is-failed {
+    color: #fe6f56;
+    border-color: #ffa899;
+    background: #fee8e4;
 }
 
 .admin-po-verified {
@@ -2269,8 +2299,8 @@
     border-radius: 10px;
     border: 1px solid transparent;
     font-family: Lato, sans-serif;
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 400;
     text-align: left;
     cursor: pointer;
     transition: opacity 0.15s ease;
@@ -2314,6 +2344,25 @@
     color: #659fc9;
 }
 
+.admin-co-action.is-export {
+    background: #f5f5f5;
+    color: #9c9a97;
+}
+
+.admin-co-action.is-export:disabled {
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+.admin-co-action.is-export.is-export-active:not(:disabled) {
+    background: #f4f8ec;
+    color: #a1c25d;
+}
+
+.admin-co-action.is-export.is-export-active:not(:disabled) .admin-co-action-icon svg path {
+    fill: #a1c25d;
+}
+
 .admin-co-action.is-suspend,
 .admin-co-action.is-view-dispute,
 .admin-co-action.is-disable-code {
@@ -2321,9 +2370,17 @@
     color: #ffaf3b;
 }
 
+.admin-co-action.is-linked_booking{
+    background: #F1F5F8;
+}
+
 .admin-co-action.is-flag {
     background: #fde9df;
     color: #ff7f3c;
+}
+
+.admin-co-action.is-linked_booking {
+    color: #7DAFD2;
 }
 
 .admin-co-action.is-delete,
@@ -2429,6 +2486,11 @@
     border: none;
     padding: 16px 18px;
     background: #fafafa;
+}
+
+.admin-card.admin-co-panel.compliance-activity {
+    padding: 0;
+    background: none;
 }
 
 /* First overview panel sits after the head ? no card chrome */
@@ -3199,9 +3261,9 @@
 }
 
 .admin-co-form-btn.is-add-note {
-    background: #eaf2ff;
-    color: #4a7fd4;
-    border: none;
+    background: #f1f5f8;
+    color: #649fc9;
+    border: 1px solid #649fc9;
 }
 
 .admin-co-note-actions {
@@ -6275,6 +6337,54 @@ body.admin-co-modal-lock {
 .admin-po-filter.is-refunded.is-active {
     background: #a3bccd;
     border-color: #a3bccd;
+    color: #fff;
+}
+
+.admin-po-filter.is-processed {
+    color: #a7c569;
+    border-color: #d8e8b7;
+    background: #fbfff4;
+}
+
+.admin-po-filter.is-processed.is-active {
+    background: #a7c569;
+    border-color: #a7c569;
+    color: #fff;
+}
+
+.admin-po-filter.is-credits {
+    color: #a1c25d;
+    border-color: #d8e8b7;
+    background: #f4f8ec;
+}
+
+.admin-po-filter.is-credits.is-active {
+    background: #a1c25d;
+    border-color: #a1c25d;
+    color: #fff;
+}
+
+.admin-po-filter.is-open-refund {
+    color: #ffaf3b;
+    border-color: #ffc97a;
+    background: #fef0dc;
+}
+
+.admin-po-filter.is-open-refund.is-active {
+    background: #ffc97a;
+    border-color: #ffc97a;
+    color: #fff;
+}
+
+.admin-po-filter.is-failed {
+    color: #fe6f56;
+    border-color: #ffa899;
+    background: #fee8e4;
+}
+
+.admin-po-filter.is-failed.is-active {
+    background: #fe6f56;
+    border-color: #fe6f56;
     color: #fff;
 }
 
@@ -10022,5 +10132,816 @@ body.admin-co-modal-lock {
 @media (max-width: 575.98px) {
     .admin-bp-edit-business-row {
         grid-template-columns: 1fr;
+    }
+}
+
+/* Customer payments tab */
+.admin-btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: 1px solid rgba(59, 55, 49, 0.15);
+    border-radius: 10px;
+    background: #fff;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.admin-btn-outline:hover {
+    background: #fafafa;
+}
+
+.admin-co-pay-head-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.admin-co-payments {
+    min-width: 0;
+}
+
+.admin-co-payments .admin-co-overview-head {
+    margin-bottom: 4px;
+}
+
+.admin-po-toolbar.admin-co-pay-toolbar {
+    margin: 18px 0;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.admin-co-pay-toolbar .admin-po-filters {
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.admin-co-pay-toolbar .admin-po-tools {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    margin-left: auto;
+}
+
+.admin-co-pay-toolbar .admin-po-search,
+.admin-co-pay-toolbar .admin-po-tool-btn {
+    border-radius: 55px;
+}
+
+.admin-card.admin-co-panel.admin-co-pay-table-panel {
+    padding: 0;
+    background: none;
+    box-shadow: none;
+}
+
+.admin-co-pay-table-card {
+    border: none;
+    background: transparent;
+    overflow: visible;
+}
+
+.admin-co-pay-table-wrap {
+    overflow: visible;
+}
+
+.admin-co-pay-selection-count {
+    margin: 0 0 10px;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.admin-co-pay-table.admin-po-table {
+    width: 100%;
+    min-width: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: auto;
+}
+
+.admin-co-pay-table .admin-po-check-col {
+    width: 36px;
+    padding-left: 12px;
+    padding-right: 8px;
+}
+
+.admin-co-pay-table th:nth-child(3),
+.admin-co-pay-table td:nth-child(3) {
+    width: auto;
+    min-width: 0;
+}
+
+.admin-co-pay-table th:nth-child(2),
+.admin-co-pay-table td:nth-child(2),
+.admin-co-pay-table th:nth-child(4),
+.admin-co-pay-table td:nth-child(4),
+.admin-co-pay-table th:nth-child(5),
+.admin-co-pay-table td:nth-child(5),
+.admin-co-pay-table th:nth-child(6),
+.admin-co-pay-table td:nth-child(6),
+.admin-co-pay-table th:nth-child(7),
+.admin-co-pay-table td:nth-child(7),
+.admin-co-pay-table th:nth-child(8),
+.admin-co-pay-table td:nth-child(8) {
+    white-space: nowrap;
+    width: 1%;
+}
+
+.admin-co-pay-table .admin-po-check {
+    width: 14px;
+    height: 14px;
+    border-radius: 1px;
+    border: 1px solid rgba(156, 154, 151, 0.5);
+    background: #fff;
+}
+
+.admin-co-pay-table .admin-po-check:checked {
+    border-color: rgba(156, 154, 151, 0.5);
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'%3E%3Crect x='2' y='2' width='10' height='10' rx='2' fill='%23FFC97A'/%3E%3C/svg%3E");
+    background-size: 14px 14px;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.admin-co-pay-table thead th {
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    padding: 14px 12px;
+    background: #fafafa;
+    border-top: 1px solid #ecebeb;
+    border-bottom: 1px solid #ecebeb;
+    vertical-align: middle;
+    text-align: left;
+}
+
+.admin-co-pay-table thead th:first-child {
+    border-left: 1px solid #ecebeb;
+    border-radius: 10px 0 0 10px;
+}
+
+.admin-co-pay-table thead th:last-child {
+    border-right: 1px solid #ecebeb;
+    border-radius: 0 10px 10px 0;
+}
+
+.admin-co-pay-table tbody td {
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    vertical-align: middle;
+    padding: 14px 12px;
+    background: transparent;
+    border-bottom: 1px solid #ecebeb;
+}
+
+.admin-co-pay-month-row td {
+    padding: 18px 16px 8px;
+    border-bottom: none;
+    background: transparent;
+}
+
+.admin-co-pay-month {
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    text-transform: uppercase;
+}
+
+.admin-co-pay-invoice {
+    white-space: nowrap;
+}
+
+.admin-co-pay-table .admin-po-status {
+    display: inline-flex;
+}
+
+.admin-co-pay-desc {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.admin-co-pay-desc-title {
+    color: #3b3731;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.admin-co-pay-desc-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #9c9a97;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.admin-co-pay-desc-meta svg {
+    flex-shrink: 0;
+}
+
+.admin-co-pay-desc-note {
+    color: #9c9a97;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.admin-co-pay-amount {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.admin-co-pay-amount.is-credit {
+    color: #a1c25d;
+}
+
+.admin-co-pay-amount.is-refund {
+    color: #3b3731;
+}
+
+.admin-co-pay-table tbody tr.admin-co-pay-row:hover td,
+.admin-co-pay-table tbody tr.admin-co-pay-row.is-selected td {
+    background: rgba(255, 201, 122, 0.1);
+    border-bottom-color: transparent;
+}
+
+.admin-co-pay-table tbody tr.admin-co-pay-row:hover td:first-child,
+.admin-co-pay-table tbody tr.admin-co-pay-row.is-selected td:first-child {
+    border-radius: 10px 0 0 10px;
+}
+
+.admin-co-pay-table tbody tr.admin-co-pay-row:hover td:last-child,
+.admin-co-pay-table tbody tr.admin-co-pay-row.is-selected td:last-child {
+    border-radius: 0 10px 10px 0;
+}
+
+.admin-co-pay-footer {
+    margin-top: 16px;
+}
+
+.admin-co-pay-footer .admin-table-count {
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 767.98px) {
+    .admin-po-toolbar.admin-co-pay-toolbar {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .admin-co-pay-toolbar .admin-po-tools {
+        width: auto;
+        margin-left: auto;
+    }
+
+    .admin-co-pay-toolbar .admin-po-search {
+        width: auto;
+        min-width: 160px;
+        flex: 0 1 auto;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .admin-po-toolbar.admin-co-pay-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-co-pay-toolbar .admin-po-tools {
+        width: 100%;
+        margin-left: 0;
+        flex-wrap: wrap;
+    }
+
+    .admin-co-pay-toolbar .admin-po-search {
+        flex: 1;
+        min-width: 0;
+        width: 100%;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .admin-co-pay-head-actions {
+        width: 100%;
+    }
+
+    .admin-co-pay-head-actions .admin-btn-outline,
+    .admin-co-pay-head-actions .admin-btn-dark {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+.admin-co-export-payments-modal {
+    max-width: 520px;
+    overflow: visible;
+}
+
+.admin-co-export-payments-modal .admin-co-export-payments-body {
+    overflow: visible;
+}
+
+.admin-co-export-payments-body {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.admin-co-export-payments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+.admin-co-export-payment-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+    border: 1px solid #ecebeb;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.admin-co-export-payment-copy {
+    min-width: 0;
+}
+
+.admin-co-export-payment-title {
+    margin: 0 0 4px;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.admin-co-export-payment-meta {
+    margin: 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.35;
+}
+
+.admin-co-export-payment-amount {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.admin-co-export-format-field {
+    position: relative;
+    z-index: 5;
+    margin-top: 0;
+}
+
+.admin-co-export-format-dd {
+    width: 100%;
+    min-width: 0;
+}
+
+.admin-co-export-format-dd .admin-co-dd-trigger {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 14px;
+    border: 1px solid #e7e6e6;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.admin-co-export-format-dd .admin-co-dd-trigger.is-open {
+    border-color: rgba(59, 55, 49, 0.28);
+}
+
+.admin-co-export-format-dd .admin-co-dd-menu {
+    top: calc(100% + 6px);
+    z-index: 40;
+    padding: 4px;
+    border: 1px solid #e7e6e6;
+    border-radius: 8px;
+    background: #f7f7f7;
+    box-shadow: 0 8px 20px rgba(59, 55, 49, 0.08);
+}
+
+.admin-co-export-format-dd .admin-co-dd-option {
+    min-height: 40px;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #3b3731;
+    font-size: 14px;
+}
+
+.admin-co-export-format-dd .admin-co-dd-option:hover,
+.admin-co-export-format-dd .admin-co-dd-option.is-active {
+    background: #ececeb;
+}
+
+.admin-co-verify-email-icon.is-export-active {
+    color: #a1c25d;
+}
+
+/* Payment detail */
+.admin-co-pay-detail {
+    width: 100%;
+}
+
+.admin-co-pay-detail-head-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-co-pay-detail-body {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    margin: 28px 0 0;
+}
+
+.admin-co-pay-detail-badge {
+    width: fit-content;
+}
+
+.admin-co-pay-detail-summary {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.35fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.admin-co-pay-detail-summary-main {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.admin-co-pay-detail-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-co-pay-detail-summary-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+}
+
+.admin-co-pay-detail-summary-text {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.35;
+}
+
+.admin-co-pay-detail-summary-sep {
+    margin: 0 4px;
+    color: #9c9a97;
+}
+
+.admin-co-pay-detail-summary-side {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 16px;
+    align-items: start;
+    padding: 18px 22px;
+    border-radius: 10px;
+    border: 1px solid rgba(156, 154, 151, 0.1);
+    background: #fafafa;
+}
+
+.admin-co-pay-detail-summary-label {
+    margin: 0 0 4px;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.admin-co-pay-detail-summary-amount {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.admin-co-pay-detail-summary-amount.is-credit,
+.admin-co-pay-detail-summary-amount.is-refund,
+.admin-co-pay-detail-hero-amount.is-credit,
+.admin-co-pay-detail-hero-amount.is-refund {
+    color: #649fc9;
+}
+
+.admin-co-pay-detail-summary-status {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.admin-co-pay-detail-summary-status.is-processed {
+    color: #A1C25D;
+}
+
+.admin-co-pay-detail-summary-status.is-open_refund {
+    color: #ffaf3b;
+}
+
+.admin-co-pay-detail-summary-status.is-refunded {
+    color: #649fc9;
+}
+
+.admin-co-pay-detail-summary-status.is-failed {
+    color: #fe6f56;
+}
+
+.admin-co-pay-detail-summary-note {
+    margin: 4px 0 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.35;
+}
+
+.admin-co-pay-detail-sep {
+    width: 100%;
+    height: 1px;
+    background: #ecebeb;
+}
+
+.admin-co-pay-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.admin-co-pay-detail-card,
+.admin-co-pay-detail-breakdown,
+.admin-co-pay-detail-status-panel {
+    padding: 22px;
+}
+
+.admin-co-pay-detail-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    padding: 8px 0 18px;
+}
+
+.admin-co-pay-detail-hero-icon {
+    display: inline-flex;
+}
+
+.admin-co-pay-detail-hero-amount {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.admin-co-pay-detail-hero-sub {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.35;
+}
+
+.admin-co-pay-detail-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.admin-co-pay-detail-rows {
+    margin: 0;
+}
+
+.admin-co-pay-detail-rows .admin-co-details-row dd.is-processed,
+.admin-co-pay-detail-rows .admin-co-details-row dd.is-status.is-processed {
+    color: #a7c569;
+    font-weight: 600;
+}
+
+.admin-co-pay-detail-rows .admin-co-details-row dd.is-open_refund,
+.admin-co-pay-detail-rows .admin-co-details-row dd.is-status.is-open_refund {
+    color: #ffaf3b;
+    font-weight: 600;
+}
+
+.admin-co-pay-detail-rows .admin-co-details-row dd.is-refunded,
+.admin-co-pay-detail-rows .admin-co-details-row dd.is-status.is-refunded {
+    color: #649fc9;
+    font-weight: 600;
+}
+
+.admin-co-pay-detail-rows .admin-co-details-row dd.is-failed,
+.admin-co-pay-detail-rows .admin-co-details-row dd.is-status.is-failed {
+    color: #fe6f56;
+    font-weight: 600;
+}
+
+.admin-co-pay-detail-rows .admin-co-details-row.is-discount dd {
+    color: #fe6f56;
+}
+
+.admin-co-pay-detail-total-row {
+    margin-top: 4px;
+    padding-top: 10px;
+}
+
+.admin-co-pay-detail-total-row dt,
+.admin-co-pay-detail-total-row dd {
+    font-weight: 700;
+    color: #3b3731;
+}
+
+.admin-co-pay-detail-status-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.admin-co-pay-detail-status-head .admin-co-section-title {
+    margin: 0;
+}
+
+.admin-co-pay-detail-callout {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+}
+
+.admin-co-pay-detail-callout.is-processed {
+    border: 1px solid #a7c569;
+    background: #f4f8ec;
+}
+
+.admin-co-pay-detail-callout.is-open_refund {
+    border: 1px solid #ffaf3b;
+    background: #fdf2e2;
+}
+
+.admin-co-pay-detail-callout.is-refunded {
+    border: 1px solid #649fc9;
+    background: #f1f5f8;
+}
+
+.admin-co-pay-detail-callout.is-failed {
+    border: 1px solid #fe6f56;
+    background: #fee8e4;
+}
+
+.admin-co-pay-detail-callout-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.admin-co-pay-detail-callout-title {
+    margin: 0 0 4px;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.admin-co-pay-detail-callout-body {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+.admin-co-pay-detail-callout.is-processed .admin-co-pay-detail-callout-title,
+.admin-co-pay-detail-callout.is-processed .admin-co-pay-detail-callout-body {
+    color: #6e8d2e;
+}
+
+.admin-co-pay-detail-callout.is-open_refund .admin-co-pay-detail-callout-title,
+.admin-co-pay-detail-callout.is-open_refund .admin-co-pay-detail-callout-body {
+    color: #ffaf3b;
+}
+
+.admin-co-pay-detail-callout.is-refunded .admin-co-pay-detail-callout-title,
+.admin-co-pay-detail-callout.is-refunded .admin-co-pay-detail-callout-body {
+    color: #649fc9;
+}
+
+.admin-co-pay-detail-callout.is-failed .admin-co-pay-detail-callout-title,
+.admin-co-pay-detail-callout.is-failed .admin-co-pay-detail-callout-body {
+    color: #fe6f56;
+}
+
+.admin-co-pay-detail-timeline {
+    margin-top: 0;
+}
+
+.admin-co-pay-activity .admin-co-activity-dot.is-green {
+    background: #a1c25d;
+}
+
+.admin-co-pay-activity .admin-co-activity-dot.is-blue {
+    background: #649fc9;
+}
+
+.admin-co-pay-activity .admin-co-activity-dot.is-gray {
+    background: rgba(156, 154, 151, 0.5);
+}
+
+.admin-co-pay-activity .admin-co-activity-dot.is-orange {
+    background: #ffaf3b;
+}
+
+.admin-co-pay-activity .admin-co-activity-dot.is-red {
+    background: #fe6f56;
+}
+
+.admin-co-pay-table tbody tr.admin-co-pay-row {
+    cursor: pointer;
+}
+
+@media (max-width: 1100px) {
+    .admin-co-pay-detail-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-co-pay-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .admin-co-pay-detail-head-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .admin-co-pay-detail-head-actions .admin-co-ref-download-btn,
+    .admin-co-pay-detail-head-actions .admin-btn-dark {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .admin-co-pay-detail-summary-side {
+        grid-template-columns: 1fr 1fr;
     }
 }
