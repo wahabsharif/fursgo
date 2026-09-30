@@ -164,6 +164,9 @@ $transferAccounts = [
         paymentSelectedCount: 0,
         paymentSelectedIds: [],
         paymentDetail: null,
+        supportSelectedCount: 0,
+        supportSelectedIds: [],
+        supportDetail: null,
         exportPaymentsOpen: false,
         paymentExportFormat: 'CSV - spreadsheet compatible',
         openPaymentExportFormat: false,
@@ -292,6 +295,9 @@ $transferAccounts = [
     @admin-referral-selected.window="referralDetail = $event.detail.referral || null"
     @admin-referral-closed.window="referralDetail = null"
     @admin-payments-selection-changed.window="paymentSelectedCount = $event.detail.count || 0; paymentSelectedIds = $event.detail.ids || []"
+    @admin-support-selection-changed.window="supportSelectedCount = $event.detail.count || 0; supportSelectedIds = $event.detail.ids || []"
+    @admin-support-selected.window="supportDetail = $event.detail.ticket || null"
+    @admin-support-closed.window="supportDetail = null"
     @admin-payment-selected.window="paymentDetail = $event.detail.payment || null"
     @admin-payment-closed.window="paymentDetail = null"
     @admin-dispute-opened.window="disputeOpen = true"
@@ -402,7 +408,7 @@ $transferAccounts = [
     </div>
 
     {{-- Stats strip (changes with detail tab) --}}
-    <div class="admin-co-stats" x-show="detailTab !== 'pets' && detailTab !== 'bookings' && detailTab !== 'activity' && detailTab !== 'referrals' && detailTab !== 'payments'" x-cloak>
+    <div class="admin-co-stats" x-show="detailTab !== 'pets' && detailTab !== 'bookings' && detailTab !== 'activity' && detailTab !== 'referrals' && detailTab !== 'payments' && detailTab !== 'support'" x-cloak>
         <div class="admin-co-stat">
             <p class="admin-co-stat-value">{{ $profile['stats']['spend'] }}</p>
             <p class="admin-co-stat-label">Total spend</p>
@@ -497,6 +503,25 @@ $transferAccounts = [
         </div>
     </div>
 
+    <div class="admin-co-stats" x-show="detailTab === 'support'" x-cloak>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['support_stats']['total'] ?? '3' }}</p>
+            <p class="admin-co-stat-label">Total tickets</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['support_stats']['open'] ?? '2' }}</p>
+            <p class="admin-co-stat-label">Open</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['support_stats']['resolved'] ?? '1' }}</p>
+            <p class="admin-co-stat-label">Resolved</p>
+        </div>
+        <div class="admin-co-stat">
+            <p class="admin-co-stat-value">{{ $profile['support_stats']['last_ticket'] ?? '14d ago' }}</p>
+            <p class="admin-co-stat-label">Last ticket</p>
+        </div>
+    </div>
+
     <div class="admin-co-stats" x-show="detailTab === 'activity'" x-cloak>
         <div class="admin-co-stat">
             <p class="admin-co-stat-value">{{ $profile['activity_stats']['total_events'] ?? '150' }}</p>
@@ -537,7 +562,7 @@ $transferAccounts = [
     <div class="admin-co-actions" x-show="detailTab !== 'activity'" x-cloak>
         <h3 class="admin-co-actions-title">Admin Actions</h3>
 
-        <div x-show="detailTab !== 'pets' && detailTab !== 'bookings' && detailTab !== 'activity' && detailTab !== 'referrals' && detailTab !== 'payments'" x-cloak>
+        <div x-show="detailTab !== 'pets' && detailTab !== 'bookings' && detailTab !== 'activity' && detailTab !== 'referrals' && detailTab !== 'payments' && detailTab !== 'support'" x-cloak>
             <x-admin.customer.action-btn
                 variant="verify"
                 label="Send account verification email"
@@ -591,6 +616,35 @@ $transferAccounts = [
                 variant="suspend"
                 label="Pause all bookings"
                 x-on:click="openPauseBookings()" />
+        </div>
+
+        <div x-show="detailTab === 'support' && !supportDetail" x-cloak>
+            <x-admin.customer.action-btn
+                variant="export"
+                label="Export selected support tickets"
+                ::disabled="supportSelectedCount === 0"
+                ::class="{ 'is-export-active': supportSelectedCount > 0 }" />
+            <x-admin.customer.action-btn
+                variant="raise-ticket"
+                label="Raise ticket on behalf" />
+        </div>
+
+        <div x-show="detailTab === 'support' && supportDetail" x-cloak>
+            <x-admin.customer.action-btn
+                variant="mark-resolved"
+                label="Mark as resolved" />
+            <x-admin.customer.action-btn
+                variant="open-dispute"
+                label="Open dispute" />
+            <x-admin.customer.action-btn
+                variant="merge-ticket"
+                label="Merge with another ticket" />
+            <x-admin.customer.action-btn
+                variant="reassign-ticket"
+                label="Reassign ticket" />
+            <x-admin.customer.action-btn
+                variant="close-ticket"
+                label="Close ticket" />
         </div>
 
         <div x-show="detailTab === 'payments' && paymentDetail" x-cloak>
