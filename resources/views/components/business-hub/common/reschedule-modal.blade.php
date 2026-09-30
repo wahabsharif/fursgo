@@ -14,37 +14,17 @@
         $reschedulePetName = $reschedulePet->name ?? 'N/A';
         $reschedulePetType = $reschedulePet->pet_type ?? 'N/A';
         $reschedulePetBreed = $reschedulePet->breed ?? null;
-        $reschedulePetMeta =
-            $reschedulePetType !== 'N/A'
-                ? ($reschedulePetBreed
-                    ? $reschedulePetType . ' (' . $reschedulePetBreed . ')'
-                    : $reschedulePetType)
-                : ($reschedulePetBreed ?:
-                'N/A');
+        $reschedulePetMeta = $reschedulePetType !== 'N/A' ? ($reschedulePetBreed ? $reschedulePetType . ' (' . $reschedulePetBreed . ')' : $reschedulePetType) : ($reschedulePetBreed ?: 'N/A');
         $reschedulePetPhotoRaw = trim((string) ($reschedulePet->photo ?? ''));
         $reschedulePetPhoto = null;
         if ($reschedulePetPhotoRaw !== '') {
-            $isAbsolute =
-                str_starts_with($reschedulePetPhotoRaw, 'http://') ||
-                str_starts_with($reschedulePetPhotoRaw, 'https://') ||
-                str_starts_with($reschedulePetPhotoRaw, 'data:') ||
-                str_starts_with($reschedulePetPhotoRaw, '/');
-            $reschedulePetPhoto = $isAbsolute
-                ? $reschedulePetPhotoRaw
-                : asset('storage/' . ltrim($reschedulePetPhotoRaw, '/'));
+            $isAbsolute = str_starts_with($reschedulePetPhotoRaw, 'http://') || str_starts_with($reschedulePetPhotoRaw, 'https://') || str_starts_with($reschedulePetPhotoRaw, 'data:') || str_starts_with($reschedulePetPhotoRaw, '/');
+            $reschedulePetPhoto = $isAbsolute ? $reschedulePetPhotoRaw : asset('storage/' . ltrim($reschedulePetPhotoRaw, '/'));
         }
-        $originalDateObj = $rescheduleBooking->date
-            ? new DateTimeImmutable((string) $rescheduleBooking->date)
-            : null;
+        $originalDateObj = $rescheduleBooking->date ? new DateTimeImmutable((string) $rescheduleBooking->date) : null;
         $rescheduleDateCard = $originalDateObj ? $originalDateObj->format('d/m/Y') : 'N/A';
-        $rescheduleDateObj = $rescheduleSelectedDate
-            ? new DateTimeImmutable($rescheduleSelectedDate)
-            : ($originalDateObj ?:
-            null);
-        $calendarBase = $rescheduleCalendarMonth
-            ? new DateTimeImmutable($rescheduleCalendarMonth)
-            : ($rescheduleDateObj ?:
-            new DateTimeImmutable(date('Y-m-01')));
+        $rescheduleDateObj = $rescheduleSelectedDate ? new DateTimeImmutable($rescheduleSelectedDate) : ($originalDateObj ?: null);
+        $calendarBase = $rescheduleCalendarMonth ? new DateTimeImmutable($rescheduleCalendarMonth) : ($rescheduleDateObj ?: new DateTimeImmutable(date('Y-m-01')));
         $rescheduleMonthTitle = $calendarBase->format('F Y');
         $rescheduleYear = (int) $calendarBase->format('Y');
         $rescheduleMonth = (int) $calendarBase->format('m');
@@ -53,12 +33,7 @@
             ->filter(fn($b) => $b->date && $b->booking_status !== 'cancelled')
             ->groupBy(fn($b) => date('Y-m', strtotime((string) $b->date)))
             ->map(function ($rows) {
-                return $rows
-                    ->map(fn($b) => (int) date('j', strtotime((string) $b->date)))
-                    ->unique()
-                    ->sort()
-                    ->values()
-                    ->all();
+                return $rows->map(fn($b) => (int) date('j', strtotime((string) $b->date)))->unique()->sort()->values()->all();
             })
             ->all();
         $rescheduleAvailability = ['09:00 AM', '11:00 AM', '12:00 PM', '16:00 PM', '20:00 PM'];
@@ -114,14 +89,16 @@
                     asked to approve the change.</p>
 
                 <div class="reschedule-summary">
-                    <div class="reschedule-pet-avatar">
+                    <div class="reschedule-pet-avatar" data-bh-avatar>
                         <img src="{{ asset('images/business-hub/icon-reschedule-avatar-ring.svg') }}" alt="" width="95"
                             height="95" class="reschedule-pet-avatar-ring">
                         @if ($reschedulePetPhoto)
                             <img src="{{ $reschedulePetPhoto }}" alt="{{ $reschedulePetName }}" width="85" height="85"
-                                class="reschedule-pet-photo">
+                                class="reschedule-pet-photo"
+                                onerror="window.bhAvatarFallback && window.bhAvatarFallback(this)">
+                            <span class="reschedule-pet-photo is-fallback" data-bh-avatar-fallback hidden>{{ \App\Support\BusinessHubAvatar::initials($reschedulePetName) }}</span>
                         @else
-                            <span class="reschedule-pet-photo is-fallback">{{ strtoupper(substr((string) $reschedulePetName, 0, 1)) }}</span>
+                            <span class="reschedule-pet-photo is-fallback" data-bh-avatar-fallback>{{ \App\Support\BusinessHubAvatar::initials($reschedulePetName) }}</span>
                         @endif
                     </div>
                     <div class="reschedule-summary-body">
@@ -439,10 +416,18 @@
         justify-content: center;
         border-radius: 104px;
         background: #fff;
-        color: #3B3731;
-        font-weight: 700;
-        font-family: Lato;
+        color: #FDFDFD;
+        text-align: center;
+        font-weight: 800;
+        font-style: normal;
+        font-family: Lato, sans-serif;
+        font-size: 28px;
+        line-height: normal;
         overflow: hidden;
+    }
+
+    .reschedule-pet-photo.is-fallback {
+        background: var(--bh-avatar-bg, #FFC97A);
     }
 
     .reschedule-summary-item {

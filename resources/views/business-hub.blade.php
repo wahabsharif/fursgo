@@ -21,8 +21,9 @@
     x-data="{ tabsLoading: false, navLoading: false, navLoadingTimeout: null, activeBookingFilter: @js($dashboardNav['active_booking_status']), serviceFormOpen: false, isEditingService: false, serviceFormTitle: @js($addServiceTitle), activeServiceMenu: @js($dashboardNav['active_service_menu']), activeEarningsMenu: @js($dashboardNav['active_earnings_menu']), clientProfileOpen: false, showWelcome: @js($dashboardActiveSection === 'business-hub') }"
     x-effect="if (activeSection !== 'business-hub') showWelcome = false"
     x-on:bookings-tabs-loading-start.window="tabsLoading = true"
-    x-on:bookings-tabs-loading-end.window="tabsLoading = false"
-    x-on:booking-status-changed.window="tabsLoading = false; activeBookingFilter = $event.detail.status || ''"
+    x-on:bookings-tabs-loading-end.window="(() => { const desired = window.__businessHubDesiredBookingStatus; if (desired !== undefined && desired !== null && activeBookingFilter !== desired) { return; } if (desired !== undefined && desired !== null) { window.__businessHubDesiredBookingStatus = undefined; } if (window.__bhBookingIntentTimeout) { clearTimeout(window.__bhBookingIntentTimeout); window.__bhBookingIntentTimeout = null; } tabsLoading = false; })()"
+    x-on:booking-status-intent.window="window.__businessHubDesiredBookingStatus = $event.detail?.status ?? ''; activeBookingFilter = window.__businessHubDesiredBookingStatus; tabsLoading = true; if (window.__bhBookingIntentTimeout) clearTimeout(window.__bhBookingIntentTimeout); window.__bhBookingIntentTimeout = setTimeout(() => { if (window.__businessHubDesiredBookingStatus !== undefined) { window.__businessHubDesiredBookingStatus = undefined; tabsLoading = false; } }, 2500)"
+    x-on:booking-status-changed.window="(() => { const incoming = $event.detail?.status || ''; const desired = window.__businessHubDesiredBookingStatus; if (desired !== undefined && desired !== null && incoming !== desired) { return; } if (desired !== undefined && desired !== null) { window.__businessHubDesiredBookingStatus = undefined; } if (window.__bhBookingIntentTimeout) { clearTimeout(window.__bhBookingIntentTimeout); window.__bhBookingIntentTimeout = null; } tabsLoading = false; activeBookingFilter = incoming; })()"
     x-on:nav-list-loading-start.window="navLoading = true; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; } if (!$event.detail?.persistent) { navLoadingTimeout = setTimeout(() => { navLoading = false; navLoadingTimeout = null; }, 350); }"
     x-on:nav-list-loading-end.window="navLoading = false; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; }"
     x-on:client-profile-visible.window="clientProfileOpen = !!$event.detail?.visible"
@@ -227,7 +228,8 @@
             </div>
         </template>
         <template x-if="mountedSections.includes('bookings')">
-            <div class="section-panel" :class="{ 'section-active': activeSection === 'bookings' }">
+            <div class="section-panel"
+                :class="{ 'section-active': activeSection === 'bookings', 'is-booking-tabs-loading': activeSection === 'bookings' && tabsLoading }">
                 <x-business-hub.bookings />
             </div>
         </template>
@@ -601,6 +603,12 @@
         position: relative;
         visibility: visible;
         z-index: 1;
+    }
+
+    /* Hide stale "All Bookings" paint while the requested status is still applying */
+    .section-panel.section-active.is-booking-tabs-loading {
+        opacity: 0;
+        pointer-events: none;
     }
 
     @media (prefers-reduced-motion: reduce) {

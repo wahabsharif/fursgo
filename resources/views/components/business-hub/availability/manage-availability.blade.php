@@ -114,7 +114,15 @@
             name: $event.detail.name,
             job_title: $event.detail.job_title || '',
             image_url: $event.detail.image_url || null,
-            initial: $event.detail.initial || 'N',
+            imageFailed: false,
+            initial: (() => {
+                const name = String($event.detail.name || '').trim();
+                const parts = name.split(/\s+/).filter(Boolean);
+                if ($event.detail.initial) return $event.detail.initial;
+                if (!parts.length) return '??';
+                if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+                return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+            })(),
             staff_payload: $event.detail.staff_payload || null,
         };
         extraStaff.push(payload);
@@ -129,7 +137,7 @@
             <div class="ma-staff-list">
                 @foreach ($staffMembers as $staff)
                     @php
-                        $initial = mb_strtoupper(mb_substr(trim((string) $staff->name), 0, 1)) ?: 'N';
+                        $initial = \App\Support\BusinessHubAvatar::initials($staff->name);
                         $rawImage = trim((string) ($staff->image ?? ''));
                         $imageUrl = null;
                         if ($rawImage !== '') {
@@ -140,11 +148,13 @@
                         data-staff-id="{{ $staff->id }}" data-staff-name="{{ $staff->name }}"
                         data-staff-job-title="{{ $staff->job_title }}"
                         data-staff-payload="{{ json_encode($maStaffPayload($staff)) }}">
-                        <span class="ma-staff-avatar">
+                        <span class="ma-staff-avatar {{ $imageUrl ? 'has-photo' : 'is-fallback' }}" data-bh-avatar>
                             @if ($imageUrl)
-                                <img src="{{ $imageUrl }}" alt="{{ $staff->name }}">
+                                <img src="{{ $imageUrl }}" alt="{{ $staff->name }}"
+                                    onerror="window.bhAvatarFallback && window.bhAvatarFallback(this)">
+                                <span data-bh-avatar-fallback hidden>{{ $initial }}</span>
                             @else
-                                {{ $initial }}
+                                <span data-bh-avatar-fallback>{{ $initial }}</span>
                             @endif
                         </span>
                         <span class="ma-staff-pill__meta">
@@ -158,11 +168,13 @@
                     <button type="button" class="ma-staff-pill" :data-staff-id="staff.id" :data-staff-name="staff.name"
                         :data-staff-job-title="staff.job_title"
                         :data-staff-payload="staff.staff_payload ? JSON.stringify(staff.staff_payload) : ''">
-                        <span class="ma-staff-avatar">
-                            <template x-if="staff.image_url">
-                                <img :src="staff.image_url" :alt="staff.name">
+                        <span class="ma-staff-avatar" data-bh-avatar
+                            :class="{ 'has-photo': !!staff.image_url && !staff.imageFailed, 'is-fallback': !staff.image_url || staff.imageFailed }">
+                            <template x-if="staff.image_url && !staff.imageFailed">
+                                <img :src="staff.image_url" :alt="staff.name"
+                                    x-on:error="staff.imageFailed = true">
                             </template>
-                            <template x-if="!staff.image_url">
+                            <template x-if="!staff.image_url || staff.imageFailed">
                                 <span x-text="staff.initial"></span>
                             </template>
                         </span>
@@ -463,10 +475,14 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: #d9d9d9;
-        color: #fff;
+        background: var(--bh-avatar-bg, #FFC97A);
+        color: #FDFDFD;
+        text-align: center;
+        font-family: Lato, sans-serif;
         font-size: 14px;
-        font-weight: 700;
+        font-style: normal;
+        font-weight: 800;
+        line-height: normal;
         flex-shrink: 0;
         overflow: hidden;
     }

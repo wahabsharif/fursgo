@@ -46,7 +46,7 @@ new class extends Component {
             name: $staff->name,
             job_title: $staff->job_title ?? '',
             image_url: null,
-            initial: mb_strtoupper(mb_substr(trim((string) $staff->name), 0, 1)) ?: 'N',
+            initial: \App\Support\BusinessHubAvatar::initials($staff->name ?? ''),
             staff_payload: [
                 'workingHours' => $defaultWorkingHours,
                 'holiday' => ['from' => '', 'to' => '', 'reason' => ''],

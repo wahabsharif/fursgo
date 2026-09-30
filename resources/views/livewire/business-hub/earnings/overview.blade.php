@@ -124,11 +124,7 @@ new class extends Component {
 
     private function clientInitialsFromName(?string $name): string
     {
-        if (!filled($name)) {
-            return '??';
-        }
-
-        return Str::upper(Str::substr(Str::of($name)->explode(' ')->map(fn(string $part) => Str::substr($part, 0, 1))->join(''), 0, 2));
+        return \App\Support\BusinessHubAvatar::initials($name);
     }
 
     private function usersHaveProfileImage(): bool
@@ -807,7 +803,7 @@ new class extends Component {
                 return [
                     'display_name' => $displayName,
                     'photo' => $avatar['photo'],
-                    'initial' => Str::upper(Str::substr(trim($initialSource), 0, 1) ?: '?'),
+                    'initial' => \App\Support\BusinessHubAvatar::initials($initialSource),
                     'client_type' => $clientType,
                     'client_type_label' => match ($clientType) {
                         'repeat' => 'Repeat Client',
@@ -1781,7 +1777,7 @@ new class extends Component {
             width: 100%;
             height: 100%;
             border-radius: 999px;
-            background: #FBAC83;
+            background: var(--bh-avatar-bg, #FFC97A);
             color: #FDFDFD;
             text-align: center;
             font-family: Lato, sans-serif;
@@ -2188,7 +2184,7 @@ new class extends Component {
             display: inline-flex;
             flex: 0 0 44px;
             overflow: hidden;
-            background: #E7EEF3;
+            background: var(--bh-avatar-bg, #FFC97A);
         }
 
         .earnings-receipt-modal__avatar img {
@@ -2201,10 +2197,13 @@ new class extends Component {
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #3B3731;
+            color: #FDFDFD;
+            text-align: center;
             font-family: Lato, sans-serif;
             font-size: 18px;
-            font-weight: 600;
+            font-style: normal;
+            font-weight: 800;
+            line-height: normal;
         }
 
         .earnings-receipt-modal__name,
@@ -2483,15 +2482,14 @@ new class extends Component {
                         <div class="earnings-recent-list">
                             @forelse ($this->recentBookings as $booking)
                                 <div class="earnings-recent-item">
-                                    <div class="earnings-recent-avatar-wrap">
+                                    <div class="earnings-recent-avatar-wrap {{ filled($booking['photo']) ? 'has-photo' : 'is-fallback' }}" data-bh-avatar>
                                         @if (filled($booking['photo']))
                                             <img class="earnings-recent-avatar" src="{{ $booking['photo'] }}"
                                                 alt="{{ $booking['display_name'] }}"
-                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
-                                            <span
-                                                class="earnings-recent-avatar-initials is-hidden">{{ $booking['initial'] }}</span>
+                                                onerror="window.bhAvatarFallback && window.bhAvatarFallback(this)">
+                                            <span class="earnings-recent-avatar-initials" data-bh-avatar-fallback hidden>{{ $booking['initial'] }}</span>
                                         @else
-                                            <span class="earnings-recent-avatar-initials">{{ $booking['initial'] }}</span>
+                                            <span class="earnings-recent-avatar-initials" data-bh-avatar-fallback>{{ $booking['initial'] }}</span>
                                         @endif
                                     </div>
                                     <div class="earnings-recent-meta">

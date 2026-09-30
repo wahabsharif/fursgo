@@ -143,7 +143,7 @@
             <!-- Bookings -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="const onBookings = activeSection === 'bookings'; if (onBookings && activeBookingStatus === '') { bookingsOpen = !bookingsOpen; return; } startNavLoading(); if (!onBookings) { closeMenus('bookings'); activeSection = 'bookings'; } bookingsOpen = true; activeBookingStatus = ''; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-filter-reset'); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: '' } }))"
+                    @click.prevent="const onBookings = activeSection === 'bookings'; if (onBookings && activeBookingStatus === '') { bookingsOpen = !bookingsOpen; return; } startNavLoading(); if (!onBookings) { closeMenus('bookings'); } bookingsOpen = true; activeBookingStatus = ''; window.dispatchEvent(new CustomEvent('booking-status-intent', { detail: { status: '' } })); window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: '' } })); activeSection = 'bookings'; $nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => window.Livewire?.dispatch('booking-filter-reset'))))"
                     :class="{ 'active': activeSection === 'bookings' }" class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14" fill="none">
                         <path
@@ -164,7 +164,7 @@
                                 <span class="booking-status-dot pending"></span>
                                 <button type="button" class="booking-status-trigger pending"
                                     :class="{ 'is-active': activeBookingStatus === 'pending' }"
-                                    @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'pending'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'pending' }); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'pending' } }))">
+                                    @click="bookingsOpen = true; activeBookingStatus = 'pending'; window.dispatchEvent(new CustomEvent('booking-status-intent', { detail: { status: 'pending' } })); window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'pending' } })); activeSection = 'bookings'; $nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => window.Livewire?.dispatch('booking-status-selected', { status: 'pending' }))))">
                                     Pending Requests <span class="booking-status-count"
                                         x-text="`(${bookingCounts.pending})`">({{ $pendingCount }})</span>
                                 </button>
@@ -173,7 +173,7 @@
                                 <span class="booking-status-dot confirmed"></span>
                                 <button type="button" class="booking-status-trigger confirmed"
                                     :class="{ 'is-active': activeBookingStatus === 'confirmed' }"
-                                    @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'confirmed'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'confirmed' }); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'confirmed' } }))">
+                                    @click="bookingsOpen = true; activeBookingStatus = 'confirmed'; window.dispatchEvent(new CustomEvent('booking-status-intent', { detail: { status: 'confirmed' } })); window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'confirmed' } })); activeSection = 'bookings'; $nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => window.Livewire?.dispatch('booking-status-selected', { status: 'confirmed' }))))">
                                     Confirmed Bookings <span class="booking-status-count"
                                         x-text="`(${bookingCounts.confirmed})`">({{ $confirmedCount }})</span>
                                 </button>
@@ -182,7 +182,7 @@
                                 <span class="booking-status-dot completed"></span>
                                 <button type="button" class="booking-status-trigger completed"
                                     :class="{ 'is-active': activeBookingStatus === 'completed' }"
-                                    @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'completed'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'completed' }); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'completed' } }))">
+                                    @click="bookingsOpen = true; activeBookingStatus = 'completed'; window.dispatchEvent(new CustomEvent('booking-status-intent', { detail: { status: 'completed' } })); window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'completed' } })); activeSection = 'bookings'; $nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => window.Livewire?.dispatch('booking-status-selected', { status: 'completed' }))))">
                                     Completed Bookings <span class="booking-status-count"
                                         x-text="`(${bookingCounts.completed})`">({{ $completedCount }})</span>
                                 </button>
@@ -191,7 +191,7 @@
                                 <span class="booking-status-dot cancelled"></span>
                                 <button type="button" class="booking-status-trigger cancelled"
                                     :class="{ 'is-active': activeBookingStatus === 'cancelled' }"
-                                    @click="activeSection = 'bookings'; bookingsOpen = true; activeBookingStatus = 'cancelled'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.Livewire?.dispatch('booking-status-selected', { status: 'cancelled' }); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'cancelled' } }))">
+                                    @click="bookingsOpen = true; activeBookingStatus = 'cancelled'; window.dispatchEvent(new CustomEvent('booking-status-intent', { detail: { status: 'cancelled' } })); window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'cancelled' } })); activeSection = 'bookings'; $nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => window.Livewire?.dispatch('booking-status-selected', { status: 'cancelled' }))))">
                                     Cancelled Bookings <span class="booking-status-count"
                                         x-text="`(${bookingCounts.cancelled})`">({{ $cancelledCount }})</span>
                                 </button>

@@ -68,11 +68,13 @@
                 <img class="client-profile-shape is-right" src="{{ asset('images/business-hub/profile-card-shape-right.svg') }}" alt="">
 
                 <div class="client-profile-hero-inner">
-                    <div class="client-profile-avatar-wrap">
+                    <div class="client-profile-avatar-wrap {{ $meta['avatar_url'] ? 'has-photo' : 'is-fallback' }}" data-bh-avatar>
                         @if ($meta['avatar_url'])
-                            <img src="{{ $meta['avatar_url'] }}" alt="{{ $meta['name'] }}" class="client-profile-avatar-img" />
+                            <img src="{{ $meta['avatar_url'] }}" alt="{{ $meta['name'] }}" class="client-profile-avatar-img"
+                                onerror="window.bhAvatarFallback && window.bhAvatarFallback(this)" />
+                            <span class="client-profile-avatar-fallback" data-bh-avatar-fallback hidden>{{ $meta['initials'] }}</span>
                         @else
-                            <span class="client-profile-avatar-fallback">{{ $meta['initials'] }}</span>
+                            <span class="client-profile-avatar-fallback" data-bh-avatar-fallback>{{ $meta['initials'] }}</span>
                         @endif
                     </div>
 
@@ -526,30 +528,48 @@
             width: 110px;
             height: 110px;
             box-sizing: border-box;
-            padding: 6.6px;
             border-radius: 999px;
-            background: #FFC97A;
             flex-shrink: 0;
             display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .client-profile-avatar-wrap.has-photo {
+            background: #fff;
+            border: 1px solid var(--bh-avatar-ring, var(--bh-avatar-bg, #FFC97A));
+            padding: 1px;
+            overflow: visible;
+        }
+
+        .client-profile-avatar-wrap.is-fallback {
+            background: var(--bh-avatar-bg, #FFC97A);
+            border: 0;
+            padding: 0;
         }
 
         .client-profile-avatar-wrap .client-profile-avatar-img,
         .client-profile-avatar-wrap .client-profile-avatar-fallback {
-            width: 96.8px;
-            height: 96.8px;
+            width: 100%;
+            height: 100%;
             border-radius: 999px;
             object-fit: cover;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #FDFDFD;
-            font-family: Lato;
+            text-align: center;
+            font-family: Lato, sans-serif;
             font-size: 28px;
+            font-style: normal;
             font-weight: 800;
+            line-height: normal;
         }
 
         .client-profile-avatar-fallback {
-            background: #FBAC83;
+            background: var(--bh-avatar-bg, #FFC97A);
         }
 
         .client-profile-identity {

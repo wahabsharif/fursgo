@@ -18,15 +18,20 @@
             <div class="booking-details-drawer-card" x-bind:class="details.statusClass">
                 <div class="booking-details-client-row">
                     <div class="booking-details-client">
-                        <div class="booking-details-avatar-wrap">
-                            <svg x-show="isSpace" class="booking-details-avatar-ring" width="50" height="50"
-                                viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                <circle cx="18" cy="18" r="17.5" fill="white" stroke="#FFA899" />
+                        <div class="booking-details-avatar-wrap" data-bh-avatar
+                            x-bind:class="{ 'has-photo': details.ownerImageUrl && !details.ownerImageFailed, 'is-fallback': !details.ownerImageUrl || details.ownerImageFailed }">
+                            <svg x-show="details.ownerImageUrl && !details.ownerImageFailed"
+                                class="booking-details-avatar-ring" width="50" height="50" viewBox="0 0 60 60"
+                                fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <circle cx="30" cy="30" r="29.5" fill="white"
+                                    stroke="var(--bh-avatar-ring, var(--bh-avatar-bg, #FFC97A))" />
                             </svg>
-                            <img x-show="details.ownerImageUrl" x-bind:src="details.ownerImageUrl" alt=""
-                                class="booking-details-avatar">
-                            <span x-show="!details.ownerImageUrl" class="booking-details-avatar is-fallback"
-                                aria-hidden="true" x-text="details.ownerInitial"></span>
+                            <img x-show="details.ownerImageUrl && !details.ownerImageFailed"
+                                x-bind:src="details.ownerImageUrl" alt="" class="booking-details-avatar"
+                                x-on:error="details.ownerImageFailed = true">
+                            <span x-show="!details.ownerImageUrl || details.ownerImageFailed"
+                                class="booking-details-avatar is-fallback" aria-hidden="true"
+                                x-text="details.ownerInitial"></span>
                         </div>
                         <div class="booking-details-client-copy">
                             <div class="booking-details-client-name-row">
@@ -79,11 +84,19 @@
 
                 <div class="booking-details-pet-card" x-show="!isSpace">
                     <div class="booking-details-pet-main">
-                        <div class="booking-details-pet-avatar-wrap">
-                            <img x-show="details.petPhotoUrl" x-bind:src="details.petPhotoUrl" alt=""
-                                class="booking-details-pet-avatar">
-                            <span x-show="!details.petPhotoUrl" class="booking-details-pet-avatar is-fallback"
-                                aria-hidden="true" x-text="details.petInitial"></span>
+                        <div class="booking-details-pet-avatar-wrap" data-bh-avatar
+                            x-bind:class="{ 'has-photo': details.petPhotoUrl && !details.petImageFailed, 'is-fallback': !details.petPhotoUrl || details.petImageFailed }">
+                            <svg x-show="details.petPhotoUrl && !details.petImageFailed"
+                                class="booking-details-avatar-ring" width="50" height="50" viewBox="0 0 60 60"
+                                fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <circle cx="30" cy="30" r="29.5" fill="white"
+                                    stroke="var(--bh-avatar-ring, var(--bh-avatar-bg, #FFC97A))" />
+                            </svg>
+                            <img x-show="details.petPhotoUrl && !details.petImageFailed" x-bind:src="details.petPhotoUrl"
+                                alt="" class="booking-details-pet-avatar" x-on:error="details.petImageFailed = true">
+                            <span x-show="!details.petPhotoUrl || details.petImageFailed"
+                                class="booking-details-pet-avatar is-fallback" aria-hidden="true"
+                                x-text="details.petInitial"></span>
                         </div>
                         <div>
                             <div class="booking-details-pet-name-row">
@@ -263,38 +276,48 @@
     .booking-details-avatar-ring {
         position: absolute;
         inset: 0;
-        width: 50px;
-        height: 50px;
+        width: 50px !important;
+        height: 50px !important;
+        max-width: none;
         display: block;
         pointer-events: none;
         z-index: 0;
         overflow: visible;
-    }
-
-    .booking-details-drawer-layer.is-space .booking-details-avatar-ring circle {
-        stroke: #FFA899;
+        color: var(--bh-avatar-ring, var(--bh-avatar-bg, #FFC97A));
     }
 
     .booking-details-avatar {
-        position: relative;
+        position: absolute !important;
+        top: 2px;
+        left: 2px;
         z-index: 1;
-        width: 45px;
-        height: 45px;
-        margin: 2.5px;
+        width: calc(100% - 4px) !important;
+        height: calc(100% - 4px) !important;
+        max-width: none !important;
+        margin: 0 !important;
         border-radius: 999px;
-        object-fit: cover;
+        object-fit: cover !important;
+        object-position: center;
         display: block;
     }
 
     .booking-details-avatar.is-fallback {
+        position: relative !important;
+        inset: auto;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: #F1F1F1;
-        color: #3B3731;
-        font-family: Lato;
+        background: var(--bh-avatar-bg, #FFC97A);
+        color: #FDFDFD;
+        text-align: center;
+        font-family: Lato, sans-serif;
         font-size: 16px;
-        font-weight: 600;
+        font-style: normal;
+        font-weight: 800;
+        line-height: normal;
     }
 
     .booking-details-client-copy {
@@ -513,29 +536,44 @@
     }
 
     .booking-details-pet-avatar-wrap {
+        position: relative;
         width: 50px;
         height: 50px;
         flex-shrink: 0;
     }
 
     .booking-details-pet-avatar {
-        width: 46px;
-        height: 46px;
-        margin: 2px;
+        position: absolute !important;
+        top: 2px;
+        left: 2px;
+        z-index: 1;
+        width: calc(100% - 4px) !important;
+        height: calc(100% - 4px) !important;
+        max-width: none !important;
+        margin: 0 !important;
         border-radius: 999px;
-        object-fit: cover;
+        object-fit: cover !important;
+        object-position: center;
         display: block;
     }
 
     .booking-details-pet-avatar.is-fallback {
+        position: relative !important;
+        inset: auto;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: #FFF;
-        color: #3B3731;
-        font-family: Lato;
+        background: var(--bh-avatar-bg, #FFC97A);
+        color: #FDFDFD;
+        text-align: center;
+        font-family: Lato, sans-serif;
         font-size: 15px;
-        font-weight: 600;
+        font-style: normal;
+        font-weight: 800;
+        line-height: normal;
     }
 
     .booking-details-pet-name-row {

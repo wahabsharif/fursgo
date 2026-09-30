@@ -151,8 +151,9 @@ new class extends Component {
             'id' => (int) $booking->id,
             'idLabel' => $bookingIdLabel,
             'ownerName' => $ownerName,
-            'ownerInitial' => strtoupper(substr($ownerName, 0, 1)),
+            'ownerInitial' => \App\Support\BusinessHubAvatar::initials($ownerName),
             'ownerImageUrl' => $ownerImageUrl,
+            'ownerImageFailed' => false,
             'petSummary' => $petSummary,
             'clientSince' => $isSpace ? $this->clientSinceLabel($booking) : '',
             'isSpace' => $isSpace,
@@ -166,8 +167,9 @@ new class extends Component {
             'addOns' => number_format($addOns, 2),
             'total' => number_format($total, 2),
             'petName' => $petName,
-            'petInitial' => strtoupper(substr($petName, 0, 1)),
+            'petInitial' => \App\Support\BusinessHubAvatar::initials($petName),
             'petPhotoUrl' => $petPhotoUrl,
+            'petImageFailed' => false,
             'petTypeBreed' => $petTypeBreed,
             'petSex' => $petSex,
             'petWeight' => $petWeight,
@@ -211,12 +213,20 @@ new class extends Component {
                 } [status] || 'is-default';
                 const amount = row.amount || '0.00';
 
+                const initialsFrom = (value) => {
+                    const parts = String(value || '').trim().split(/\s+/).filter(Boolean);
+                    if (!parts.length) return '??';
+                    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+                    return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+                };
+
                 return {
                     id,
                     idLabel: row.idLabel || ('FG-' + String(id).padStart(5, '0')),
                     ownerName,
-                    ownerInitial: ownerName.charAt(0).toUpperCase(),
+                    ownerInitial: initialsFrom(ownerName),
                     ownerImageUrl: row.ownerImageUrl || '',
+                    ownerImageFailed: false,
                     petSummary: [petName, petType].filter(Boolean).join(' · ') || 'N/A',
                     clientSince: row.clientSince || '',
                     isSpace: this.isSpace,
@@ -230,8 +240,9 @@ new class extends Component {
                     addOns: '0.00',
                     total: amount,
                     petName,
-                    petInitial: petName.charAt(0).toUpperCase(),
+                    petInitial: initialsFrom(petName),
                     petPhotoUrl: row.petPhotoUrl || '',
+                    petImageFailed: false,
                     petTypeBreed: petType,
                     petSex: 'N/A',
                     petWeight: 'N/A',
@@ -262,7 +273,11 @@ new class extends Component {
                     if (req !== this.requestId || !this.open || !full) {
                         return;
                     }
-                    this.details = full;
+                    this.details = {
+                        ...full,
+                        ownerImageFailed: false,
+                        petImageFailed: false,
+                    };
                     if (typeof full.isSpace === 'boolean') {
                         this.isSpace = full.isSpace;
                     }

@@ -83,11 +83,13 @@
                 alt="" width="121" height="148" />
 
             <div class="client-pet-profile-card__main">
-                <div class="client-pet-profile-card__avatar">
+                <div class="client-pet-profile-card__avatar {{ $photoUrl ? 'has-photo' : 'is-fallback' }}" data-bh-avatar>
                     @if ($photoUrl)
-                        <img src="{{ $photoUrl }}" alt="{{ $pet->name }}" width="97" height="97" />
+                        <img src="{{ $photoUrl }}" alt="{{ $pet->name }}" width="97" height="97"
+                            onerror="window.bhAvatarFallback && window.bhAvatarFallback(this)" />
+                        <span data-bh-avatar-fallback hidden>{{ \App\Support\BusinessHubAvatar::initials($pet->name) }}</span>
                     @else
-                        <span>{{ Str::upper(Str::substr((string) $pet->name, 0, 1)) }}</span>
+                        <span data-bh-avatar-fallback>{{ \App\Support\BusinessHubAvatar::initials($pet->name) }}</span>
                     @endif
                 </div>
 
@@ -915,17 +917,26 @@
             height: 110px;
             box-sizing: border-box;
             border-radius: 50%;
-            border: 6.6px solid #FFC97A;
-            background: #fff;
+            border: 0;
+            background: var(--bh-avatar-bg, #FFC97A);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             overflow: hidden;
-            color: #3B3731;
-            font-family: 'Playfair Display', serif;
+            color: #FDFDFD;
+            text-align: center;
+            font-family: Lato, sans-serif;
             font-size: 28px;
-            font-weight: 600;
+            font-style: normal;
+            font-weight: 800;
+            line-height: normal;
+        }
+
+        .client-pet-profile-card__avatar.has-photo {
+            background: #fff;
+            border: 1px solid var(--bh-avatar-ring, var(--bh-avatar-bg, #FFC97A));
+            padding: 1px;
         }
 
         .client-pet-medication-view .client-pet-profile-card__avatar img {

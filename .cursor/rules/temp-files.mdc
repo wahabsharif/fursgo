@@ -1,0 +1,12 @@
+---
+description: Auto-delete agent-created temporary debug/probe files; never leave them in the repo
+alwaysApply: true
+---
+
+# Temporary files
+
+- Do **not** leave throwaway scripts, probes, or dumps in the repo.
+- Prefer one-off Shell/`php -r` for checks. If a temp file is required, use a name starting with `_tmp_` (e.g. `_tmp_probe.php`) at the repo root.
+- **Delete every agent-created temp file in the same turn** once it has been used — before ending the response. Do not wait for the user to ask.
+- Also remove leftover `_tmp_*` files found at the repo root when they are clearly agent leftovers from the current or prior work.
+- Never commit `_tmp_*` files, scratch dumps, or similar throwaways.

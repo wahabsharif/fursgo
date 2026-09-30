@@ -2,6 +2,7 @@
 
 use App\Models\Booking;
 use App\Models\GroomerSpacerProfile;
+use App\Support\BusinessHubAvatar;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -11,11 +12,34 @@ use Livewire\Volt\Component;
 new class extends Component {
     public $activeTab = 'overview';
     public ?string $activeModal = null;
+    public ?int $detailsBookingId = null;
     public $showAllCards = [
         'todays' => false,
         'pending' => false,
         'upcoming' => false,
     ];
+
+    /**
+     * @param  \App\Models\Booking|object  $booking
+     * @return list<array{name: string, photo: ?string}>
+     */
+    private function bookingPetAvatars($booking): array
+    {
+        $pets = $this->bookingPets($booking);
+        if ($pets->isEmpty()) {
+            return [['name' => 'Pet', 'photo' => null]];
+        }
+
+        return $pets
+            ->map(
+                fn($pet) => [
+                    'name' => trim((string) ($pet->name ?? '')) ?: 'Pet',
+                    'photo' => BusinessHubAvatar::mediaUrl($pet->photo ?? null),
+                ],
+            )
+            ->values()
+            ->all();
+    }
 
     public function openCardModal(string $card): void
     {
@@ -23,15 +47,17 @@ new class extends Component {
             return;
         }
         $this->activeModal = $card;
-        $this->showAllCards[$card] = true;
+        $this->showAllCards = [...$this->showAllCards, $card => true];
+        unset($this->todaysBookings, $this->pendingRequests, $this->upcomingBookings);
     }
 
     public function closeCardModal(): void
     {
         if ($this->activeModal && array_key_exists($this->activeModal, $this->showAllCards)) {
-            $this->showAllCards[$this->activeModal] = false;
+            $this->showAllCards = [...$this->showAllCards, $this->activeModal => false];
         }
         $this->activeModal = null;
+        unset($this->todaysBookings, $this->pendingRequests, $this->upcomingBookings);
     }
 
     private function visitTypeLabel(string $visitType): string
@@ -68,7 +94,11 @@ new class extends Component {
 
     private function bookingPets($booking): Collection
     {
-        return $booking->relationLoaded('pets') ? $booking->pets : $booking->pets()->get();
+        if ($booking instanceof Booking) {
+            return $booking->relationLoaded('pets') ? $booking->pets : $booking->pets()->get();
+        }
+
+        return collect(data_get($booking, 'pets', []));
     }
 
     private function resolveBookingPetType($booking): string
@@ -135,8 +165,7 @@ new class extends Component {
             ->map(
                 fn($b) => [
                     'id' => 'FG-' . str_pad($b->id, 5, '0', STR_PAD_LEFT),
-                    'pet_image' => $b->pets->first()?->photo ?? 'https://i.pravatar.cc/150?img=12',
-                    'pet_images' => $b->pets->pluck('photo')->filter()->values()->all(),
+                    'pet_avatars' => $this->bookingPetAvatars($b),
                     'service_type' => $this->visitTypeBadgeLabel($b),
                     'date' => $b->date?->format('d/m/Y'),
                     'time' => $b->time,
@@ -166,8 +195,7 @@ new class extends Component {
             ->map(
                 fn($b) => [
                     'id' => 'FG-' . str_pad($b->id, 5, '0', STR_PAD_LEFT),
-                    'pet_image' => $b->pets->first()?->photo ?? 'https://i.pravatar.cc/150?img=15',
-                    'pet_images' => $b->pets->pluck('photo')->filter()->values()->all(),
+                    'pet_avatars' => $this->bookingPetAvatars($b),
                     'pet_type' => $this->resolveBookingPetType($b),
                     'weight' => $this->resolveBookingPetWeight($b),
                     'service_type' => $this->visitTypeBadgeLabel($b),
@@ -199,8 +227,7 @@ new class extends Component {
                 fn($b) => [
                     'id' => 'FG-' . str_pad($b->id, 5, '0', STR_PAD_LEFT),
                     'status' => ucfirst($b->booking_status),
-                    'pet_image' => $b->pets->first()?->photo ?? 'https://i.pravatar.cc/150?img=20',
-                    'pet_images' => $b->pets->pluck('photo')->filter()->values()->all(),
+                    'pet_avatars' => $this->bookingPetAvatars($b),
                     'pet_count' => $b->pets->count(),
                     'pets' => ($b->pets->count() > 1 ? $b->pets->map(fn($p) => $this->resolvePetType($p)) : $b->pets->map(fn($p) => $this->resolvePetType($p) . ($p->breed ? ' (' . $p->breed . ')' : '')))->unique()->values()->toArray(),
                     'pet_type' => $this->resolveBookingPetType($b),
@@ -350,9 +377,33 @@ new class extends Component {
         $this->dispatch('request-accepted', requestId: $bookingId);
     }
 
-    public function viewDetails($bookingId)
+    public function viewDetails($bookingId): void
     {
-        $this->dispatch('view-details', bookingId: $bookingId);
+        $bookingId = (int) $bookingId;
+        unset($this->detailsBooking);
+
+        $exists = $this->bookingsQuery()->pending()->whereDate('date', '>=', today())->whereKey($bookingId)->exists();
+
+        $this->detailsBookingId = $exists ? $bookingId : null;
+    }
+
+    public function closeDetailsModal(): void
+    {
+        unset($this->detailsBooking);
+        $this->detailsBookingId = null;
+    }
+
+    #[Computed]
+    public function detailsBooking(): ?Booking
+    {
+        if (!$this->detailsBookingId) {
+            return null;
+        }
+
+        return $this->bookingsQuery()
+            ->with(['petOwner', 'pets'])
+            ->pending()
+            ->find($this->detailsBookingId);
     }
 
     #[Computed]
@@ -406,7 +457,7 @@ new class extends Component {
 
 <div x-data="{ activeTab: @entangle('activeTab') }" class="business-hub-container"
     wire:loading.class="business-hub-container--navigating"
-    wire:target="openCardModal,closeCardModal,acceptRequest,viewDetails">
+    wire:target="openCardModal,closeCardModal,acceptRequest,viewDetails,closeDetailsModal">
     @php
         $activeColor = auth()->check() && auth()->user()->user_type === 'space' ? '#FFA899' : '#FFC97A';
         $lightColor = auth()->check() && auth()->user()->user_type === 'space' ? '#FFE8E4' : '#FFF8EB';
@@ -415,7 +466,7 @@ new class extends Component {
     @endphp
 
     <div class="business-hub-step-loading-bar" wire:loading
-        wire:target="openCardModal,closeCardModal,acceptRequest,viewDetails" aria-hidden="true">
+        wire:target="openCardModal,closeCardModal,acceptRequest,viewDetails,closeDetailsModal" aria-hidden="true">
         <span class="business-hub-step-loading-bar__sweep"></span>
     </div>
 
@@ -651,11 +702,25 @@ new class extends Component {
         .pet-avatar-stack .pet-avatar-large {
             width: 40px;
             height: 40px;
-            padding: 2px;
-            border: 2px solid #FFC97A;
+            padding: 0;
+            border: 0;
             border-radius: 50%;
             object-fit: cover;
             background: #fff;
+            box-sizing: border-box;
+        }
+
+        .pet-avatar-stack .bh-avatar.pet-avatar-large.has-photo {
+            border: 0;
+            padding: 0;
+            background: transparent;
+            overflow: visible;
+        }
+
+        .pet-avatar-stack .bh-avatar.pet-avatar-large.is-fallback {
+            background: var(--bh-avatar-bg, #FFC97A);
+            border: 0;
+            padding: 0;
         }
 
         .pet-avatar-stack .pet-avatar-large+.pet-avatar-large {
@@ -1146,6 +1211,21 @@ new class extends Component {
             transition: background-color 0.2s ease;
         }
 
+        /* Flex modal body would otherwise shrink these (overflow:hidden → min-height:0) and clip details */
+        .card-modal-body .upcoming-booking-item {
+            flex-shrink: 0;
+            margin-bottom: 0;
+        }
+
+        .card-modal-body .booking-body {
+            flex-wrap: wrap;
+            row-gap: 0.75rem;
+        }
+
+        .card-modal-body .booking-body-divider {
+            flex-shrink: 0;
+        }
+
         .upcoming-bookings .upcoming-booking-item:last-child {
             margin-bottom: 0;
         }
@@ -1520,8 +1600,8 @@ new class extends Component {
                     <div class="booking-item">
                         <div class="booking-header">
                             <div class="pet-avatar-stack">
-                                @foreach (!empty($booking['pet_images']) ? $booking['pet_images'] : [$booking['pet_image']] as $petImage)
-                                    <img src="{{ $petImage }}" alt="Pet" class="pet-avatar-large">
+                                @foreach ($booking['pet_avatars'] ?? [] as $petAvatar)
+                                    <x-business-hub.common.avatar :name="$petAvatar['name']" :src="$petAvatar['photo']" class="pet-avatar-large" :size="40" :font-size="16" />
                                 @endforeach
                             </div>
                             <span
@@ -1668,9 +1748,9 @@ new class extends Component {
                         <div>
                             <div class="pet-avatar-wrap">
                                 <div class="pet-avatar-stack">
-                                    @foreach (!empty($request['pet_images']) ? $request['pet_images'] : [$request['pet_image']] as $petImage)
+                                    @foreach ($request['pet_avatars'] ?? [] as $petAvatar)
                                         <div class="pet-avatar-dot-wrap">
-                                            <img src="{{ $petImage }}" alt="Pet" class="pet-avatar-large">
+                                            <x-business-hub.common.avatar :name="$petAvatar['name']" :src="$petAvatar['photo']" class="pet-avatar-large" :size="40" :font-size="16" />
                                             <svg class="avatar-status-dot" xmlns="http://www.w3.org/2000/svg" width="10"
                                                 height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
                                                 <circle cx="5" cy="5" r="5" fill="#C9DDA0" />
@@ -1741,16 +1821,16 @@ new class extends Component {
                             </div>
                         </div>
                         <div class="request-actions">
-                            <button wire:click="acceptRequest('{{ $request['booking_id'] }}')" class="btn-accept">Accept
+                            <button type="button" wire:click="acceptRequest({{ (int) $request['booking_id'] }})" class="btn-accept">Accept
                                 Request</button>
-                            <button wire:click="viewDetails('{{ $request['booking_id'] }}')" class="btn-view">View
+                            <button type="button" wire:click="viewDetails({{ (int) $request['booking_id'] }})" class="btn-view">View
                                 details</button>
                         </div>
                     </div>
                 @endforeach
             </div>
             <button type="button"
-                @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'bookings'; window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'pending' } })); $nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => window.Livewire?.dispatch('booking-status-selected', { status: 'pending' }))))"
+                @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); window.dispatchEvent(new CustomEvent('booking-status-intent', { detail: { status: 'pending' } })); window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'bookings', active_booking_status: 'pending' } })); activeSection = 'bookings'; $nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => window.Livewire?.dispatch('booking-status-selected', { status: 'pending' }))))"
                 class="view-all-link">View All</button>
         </div>
     </div>
@@ -1779,13 +1859,10 @@ new class extends Component {
                         </div>
                         <div class="booking-body">
                             @if ($isSpaceAccount)
-                                @php
-                                    $petImages = !empty($booking['pet_images']) ? $booking['pet_images'] : [$booking['pet_image']];
-                                @endphp
                                 <div class="pet-section">
                                     <div class="pet-avatar-stack">
-                                        @foreach ($petImages as $petImage)
-                                            <img src="{{ $petImage }}" alt="Pet" class="pet-avatar-large">
+                                        @foreach ($booking['pet_avatars'] ?? [] as $petAvatar)
+                                            <x-business-hub.common.avatar :name="$petAvatar['name']" :src="$petAvatar['photo']" class="pet-avatar-large" :size="40" :font-size="16" />
                                         @endforeach
                                     </div>
                                 </div>
@@ -1865,12 +1942,9 @@ new class extends Component {
                                 </div>
                             @else
                                 <div class="pet-section">
-                                    @php
-                                        $petImages = !empty($booking['pet_images']) ? $booking['pet_images'] : [$booking['pet_image']];
-                                    @endphp
                                     <div class="pet-avatar-stack">
-                                        @foreach ($petImages as $petImage)
-                                            <img src="{{ $petImage }}" alt="Pet" class="pet-avatar-large">
+                                        @foreach ($booking['pet_avatars'] ?? [] as $petAvatar)
+                                            <x-business-hub.common.avatar :name="$petAvatar['name']" :src="$petAvatar['photo']" class="pet-avatar-large" :size="40" :font-size="16" />
                                         @endforeach
                                     </div>
 
@@ -2060,6 +2134,10 @@ new class extends Component {
         </div>
     </div>
 
+    <div wire:key="pending-detail-{{ $this->detailsBookingId ?? 'closed' }}">
+        <x-business-hub.common.pending-request-modal :booking="$this->detailsBooking" />
+    </div>
+
     @if ($activeModal)
         @teleport('body')
             <div class="card-modal-backdrop" wire:click="closeCardModal" wire:keydown.escape.window="closeCardModal">
@@ -2085,8 +2163,8 @@ new class extends Component {
                                     <div class="booking-item">
                                         <div class="booking-header">
                                             <div class="pet-avatar-stack">
-                                                @foreach (!empty($booking['pet_images']) ? $booking['pet_images'] : [$booking['pet_image']] as $petImage)
-                                                    <img src="{{ $petImage }}" alt="Pet" class="pet-avatar-large">
+                                                @foreach ($booking['pet_avatars'] ?? [] as $petAvatar)
+                                                    <x-business-hub.common.avatar :name="$petAvatar['name']" :src="$petAvatar['photo']" class="pet-avatar-large" :size="40" :font-size="16" />
                                                 @endforeach
                                             </div>
                                             <span
@@ -2151,9 +2229,9 @@ new class extends Component {
                                         <div>
                                             <div class="pet-avatar-wrap">
                                                 <div class="pet-avatar-stack">
-                                                    @foreach (!empty($request['pet_images']) ? $request['pet_images'] : [$request['pet_image']] as $petImage)
+                                                    @foreach ($request['pet_avatars'] ?? [] as $petAvatar)
                                                         <div class="pet-avatar-dot-wrap">
-                                                            <img src="{{ $petImage }}" alt="Pet" class="pet-avatar-large">
+                                                            <x-business-hub.common.avatar :name="$petAvatar['name']" :src="$petAvatar['photo']" class="pet-avatar-large" :size="40" :font-size="16" />
                                                             <svg class="avatar-status-dot" xmlns="http://www.w3.org/2000/svg" width="10"
                                                                 height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
                                                                 <circle cx="5" cy="5" r="5" fill="#C9DDA0" />
@@ -2224,9 +2302,9 @@ new class extends Component {
                                             </div>
                                         </div>
                                         <div class="request-actions">
-                                            <button wire:click="acceptRequest('{{ $request['booking_id'] }}')" class="btn-accept">Accept
+                                            <button type="button" wire:click="acceptRequest({{ (int) $request['booking_id'] }})" class="btn-accept">Accept
                                                 Request</button>
-                                            <button wire:click="viewDetails('{{ $request['booking_id'] }}')" class="btn-view">View
+                                            <button type="button" wire:click="viewDetails({{ (int) $request['booking_id'] }})" class="btn-view">View
                                                 details</button>
                                         </div>
                                     </div>
@@ -2253,8 +2331,8 @@ new class extends Component {
                                             @if ($isSpaceAccount)
                                                 <div class="pet-section">
                                                     <div class="pet-avatar-stack">
-                                                        @foreach (!empty($booking['pet_images']) ? $booking['pet_images'] : [$booking['pet_image']] as $petImage)
-                                                            <img src="{{ $petImage }}" alt="Pet" class="pet-avatar-large">
+                                                        @foreach ($booking['pet_avatars'] ?? [] as $petAvatar)
+                                                            <x-business-hub.common.avatar :name="$petAvatar['name']" :src="$petAvatar['photo']" class="pet-avatar-large" :size="40" :font-size="16" />
                                                         @endforeach
                                                     </div>
                                                 </div>
@@ -2336,8 +2414,8 @@ new class extends Component {
                                             @else
                                                 <div class="pet-section">
                                                     <div class="pet-avatar-stack">
-                                                        @foreach (!empty($booking['pet_images']) ? $booking['pet_images'] : [$booking['pet_image']] as $petImage)
-                                                            <img src="{{ $petImage }}" alt="Pet" class="pet-avatar-large">
+                                                        @foreach ($booking['pet_avatars'] ?? [] as $petAvatar)
+                                                            <x-business-hub.common.avatar :name="$petAvatar['name']" :src="$petAvatar['photo']" class="pet-avatar-large" :size="40" :font-size="16" />
                                                         @endforeach
                                                     </div>
                                                     <div class="pet-info">

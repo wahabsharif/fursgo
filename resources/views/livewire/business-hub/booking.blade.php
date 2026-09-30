@@ -1447,7 +1447,7 @@ new class extends Component {
             $cancelledPetLabel = trim($cancelledPetName . ($cancelledPetType !== '' ? ' ' . $cancelledPetType : ''));
             $cancelledOwnerPhotoRaw = trim((string) ($cancelledBooking->petOwner?->profile_image ?? ''));
             $cancelledOwnerPhotoUrl = $cancelledOwnerPhotoRaw === '' ? null : (str_starts_with($cancelledOwnerPhotoRaw, 'http://') || str_starts_with($cancelledOwnerPhotoRaw, 'https://') || str_starts_with($cancelledOwnerPhotoRaw, 'data:') || str_starts_with($cancelledOwnerPhotoRaw, '/') ? $cancelledOwnerPhotoRaw : asset('storage/' . ltrim($cancelledOwnerPhotoRaw, '/')));
-            $cancelledOwnerInitial = strtoupper(substr((string) $cancelledOwnerName, 0, 1)) ?: 'U';
+            $cancelledOwnerInitial = \App\Support\BusinessHubAvatar::initials($cancelledOwnerName);
             $cancelledServiceAmount = (float) $cancelledBooking->amount;
             $cancelledExtraAddOnsRaw = $cancelledBooking->extra_add_ons;
             $cancelledExtraAddOns = collect(is_array($cancelledExtraAddOnsRaw) ? $cancelledExtraAddOnsRaw : [])
@@ -1506,11 +1506,13 @@ new class extends Component {
                     </div>
 
                     <div class="cancelled-booking-modal-customer">
-                        <span class="cancelled-booking-modal-avatar">
+                        <span class="cancelled-booking-modal-avatar {{ $cancelledOwnerPhotoUrl ? 'has-photo' : 'is-fallback' }}" data-bh-avatar>
                             @if ($cancelledOwnerPhotoUrl)
-                                <img src="{{ $cancelledOwnerPhotoUrl }}" alt="" width="44" height="44">
+                                <img src="{{ $cancelledOwnerPhotoUrl }}" alt="" width="44" height="44"
+                                    onerror="window.bhAvatarFallback && window.bhAvatarFallback(this)">
+                                <span data-bh-avatar-fallback hidden>{{ $cancelledOwnerInitial }}</span>
                             @else
-                                <span>{{ $cancelledOwnerInitial }}</span>
+                                <span data-bh-avatar-fallback>{{ $cancelledOwnerInitial }}</span>
                             @endif
                         </span>
                         <div>
@@ -2247,11 +2249,14 @@ new class extends Component {
         flex-shrink: 0;
         overflow: hidden;
         border-radius: 144px;
-        background: #F6F5F5;
-        color: #3B3731;
-        font-family: Lato;
+        background: var(--bh-avatar-bg, #FFC97A);
+        color: #FDFDFD;
+        text-align: center;
+        font-family: Lato, sans-serif;
         font-size: 16px;
-        font-weight: 600;
+        font-style: normal;
+        font-weight: 800;
+        line-height: normal;
     }
 
     .cancelled-booking-modal-avatar img {

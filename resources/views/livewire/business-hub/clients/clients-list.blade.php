@@ -154,26 +154,12 @@ new class extends Component {
 
     private function clientInitialsFromName(?string $name): string
     {
-        if (!filled($name)) {
-            return '??';
-        }
-
-        return Str::upper(Str::substr(Str::of($name)->explode(' ')->map(fn(string $part) => Str::substr($part, 0, 1))->implode(''), 0, 2));
+        return \App\Support\BusinessHubAvatar::initials($name);
     }
 
     public function mediaUrl(?string $path): ?string
     {
-        $raw = trim((string) $path);
-
-        if ($raw === '') {
-            return null;
-        }
-
-        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://') || str_starts_with($raw, 'data:') || str_starts_with($raw, '/')) {
-            return $raw;
-        }
-
-        return asset('storage/' . ltrim($raw, '/'));
+        return \App\Support\BusinessHubAvatar::mediaUrl($path);
     }
 
     private function clientTypeFromCompleted(int $completedCount): string
@@ -198,18 +184,14 @@ new class extends Component {
         };
     }
 
-    public function petFallbackColor(int $seed): string
-    {
-        $palette = ['#FBAC83', '#FFD88C', '#C9DDA0'];
-
-        return $palette[$seed % count($palette)];
-    }
-
     public function clientAvatarFallbackColor(int $seed): string
     {
-        $palette = ['#FFC97A', '#CBDCE8', '#FBAC83'];
+        return \App\Support\BusinessHubAvatar::background();
+    }
 
-        return $palette[$seed % count($palette)];
+    public function petFallbackColor(int $seed): string
+    {
+        return \App\Support\BusinessHubAvatar::background();
     }
 
     #[Computed]
@@ -1213,7 +1195,7 @@ new class extends Component {
         return [
             'meta' => [
                 'name' => $client?->name ?? 'Unknown',
-                'initials' => $client ? Str::upper(Str::substr($client->initials(), 0, 2)) : '??',
+                'initials' => $client ? \App\Support\BusinessHubAvatar::initials($client->name) : '??',
                 'is_verified' => filled($client?->email_verified_at),
                 'location' => trim((string) ($client?->address ?? '')) ?: 'Not set',
                 'client_since' => $clientSince ?? '—',
@@ -1711,13 +1693,14 @@ new class extends Component {
                             <td class="clients-name-col">
                                 <div class="clients-name-cell">
                                     @if ($avatarUrl)
-                                        <span class="clients-avatar-wrap has-photo" aria-hidden="true">
-                                            <img class="clients-avatar-img" src="{{ $avatarUrl }}" alt="" />
+                                        <span class="clients-avatar-wrap has-photo" data-bh-avatar aria-hidden="true">
+                                            <img class="clients-avatar-img" src="{{ $avatarUrl }}" alt=""
+                                                onerror="window.bhAvatarFallback && window.bhAvatarFallback(this)">
+                                            <span class="clients-avatar" data-bh-avatar-fallback hidden>{{ $client['initials'] }}</span>
                                         </span>
                                     @else
-                                        <span class="clients-avatar-wrap is-initials" aria-hidden="true"
-                                            style="background: {{ $this->clientAvatarFallbackColor((int) $client['id']) }}">
-                                            <span class="clients-avatar">{{ $client['initials'] }}</span>
+                                        <span class="clients-avatar-wrap is-initials is-fallback" data-bh-avatar aria-hidden="true">
+                                            <span class="clients-avatar" data-bh-avatar-fallback>{{ $client['initials'] }}</span>
                                         </span>
                                     @endif
                                     <div class="clients-name-meta">
@@ -1738,16 +1721,16 @@ new class extends Component {
                                             $extraPets = max(0, $client['pets']->count() - 1);
                                             $petName = trim((string) ($firstPet->name ?? '')) ?: '—';
                                             $petPhotoUrl = $this->mediaUrl($firstPet->photo ?? null);
-                                            $petInitial = Str::upper(Str::substr($petName, 0, 1)) ?: 'P';
-                                            $petColor = $this->petFallbackColor((int) ($firstPet->id ?? $client['id']));
+                                            $petInitial = \App\Support\BusinessHubAvatar::initials($petName);
                                         @endphp
                                         <div class="clients-pet-cell">
-                                            <span class="clients-pet-avatar" aria-hidden="true">
+                                            <span class="clients-pet-avatar {{ $petPhotoUrl ? 'has-photo' : 'is-fallback' }}" data-bh-avatar aria-hidden="true">
                                                 @if ($petPhotoUrl)
-                                                    <img src="{{ $petPhotoUrl }}" alt="" />
+                                                    <img src="{{ $petPhotoUrl }}" alt=""
+                                                        onerror="window.bhAvatarFallback && window.bhAvatarFallback(this)">
+                                                    <span class="clients-pet-avatar-fallback" data-bh-avatar-fallback hidden>{{ $petInitial }}</span>
                                                 @else
-                                                    <span class="clients-pet-avatar-fallback"
-                                                        style="background: {{ $petColor }}">{{ $petInitial }}</span>
+                                                    <span class="clients-pet-avatar-fallback" data-bh-avatar-fallback>{{ $petInitial }}</span>
                                                 @endif
                                             </span>
                                             <span class="clients-pet-label">
@@ -2371,7 +2354,7 @@ new class extends Component {
 
         .clients-avatar-wrap.has-photo {
             background: #FFF;
-            border: 1px solid #FFC97A;
+            border: 1px solid var(--bh-avatar-ring, var(--bh-avatar-bg, #FFC97A));
             padding: 1px;
         }
 
@@ -2480,9 +2463,12 @@ new class extends Component {
             align-items: center;
             justify-content: center;
             color: #FDFDFD;
-            font-family: Lato;
+            text-align: center;
+            font-family: Lato, sans-serif;
             font-size: 10px;
+            font-style: normal;
             font-weight: 800;
+            line-height: normal;
         }
 
         .clients-pet-label {

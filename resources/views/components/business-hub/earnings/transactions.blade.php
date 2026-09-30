@@ -867,16 +867,27 @@
                 const avatar = modal.querySelector('[data-receipt-avatar]');
                 if (avatar) {
                     avatar.textContent = '';
+                    avatar.classList.add('earnings-receipt-modal__avatar');
+                    avatar.setAttribute('data-bh-avatar', '');
+                    const initial = document.createElement('span');
+                    initial.setAttribute('data-bh-avatar-fallback', '');
+                    initial.textContent = receipt.owner_initial || '??';
+
                     if (receipt.owner_photo_url) {
+                        avatar.classList.add('has-photo');
+                        avatar.classList.remove('is-fallback');
                         const img = document.createElement('img');
                         img.src = receipt.owner_photo_url;
                         img.alt = '';
                         img.width = 44;
                         img.height = 44;
+                        img.onerror = () => window.bhAvatarFallback && window.bhAvatarFallback(img);
+                        initial.hidden = true;
                         avatar.appendChild(img);
+                        avatar.appendChild(initial);
                     } else {
-                        const initial = document.createElement('span');
-                        initial.textContent = receipt.owner_initial || '?';
+                        avatar.classList.remove('has-photo');
+                        avatar.classList.add('is-fallback');
                         avatar.appendChild(initial);
                     }
                 }

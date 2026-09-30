@@ -30,8 +30,8 @@
 
         $ownerPhotoUrl = $resolvePhotoUrl($booking->petOwner?->profile_image ?? null);
         $petPhotoUrl = $resolvePhotoUrl($firstPet?->photo ?? null);
-        $ownerInitial = strtoupper(substr((string) $billedToName, 0, 1));
-        $petInitial = strtoupper(substr((string) $petName, 0, 1));
+        $ownerInitial = \App\Support\BusinessHubAvatar::initials($billedToName);
+        $petInitial = \App\Support\BusinessHubAvatar::initials($petName);
 
         $issuer = Auth::guard('groomer_spacer')->user();
         $issuerName = trim((string) ($issuer?->full_name ?? ''));
@@ -185,11 +185,13 @@
                         </div>
 
                         <div class="client-history-modal__person">
-                            <span class="client-history-modal__avatar">
+                            <span class="client-history-modal__avatar {{ $ownerPhotoUrl ? 'has-photo' : 'is-fallback' }}" data-bh-avatar>
                                 @if ($ownerPhotoUrl)
-                                    <img src="{{ $ownerPhotoUrl }}" alt="" width="44" height="44">
+                                    <img src="{{ $ownerPhotoUrl }}" alt="" width="44" height="44"
+                                        onerror="window.bhAvatarFallback && window.bhAvatarFallback(this)">
+                                    <span data-bh-avatar-fallback hidden>{{ $ownerInitial }}</span>
                                 @else
-                                    <span>{{ $ownerInitial }}</span>
+                                    <span data-bh-avatar-fallback>{{ $ownerInitial }}</span>
                                 @endif
                             </span>
                             <span>
@@ -280,31 +282,31 @@
 
                     <div class="invoice-preview-people">
                         <div class="invoice-preview-person">
-                            <span class="invoice-preview-avatar">
-                                @if ($isSpaceUser)
-                                    <svg class="invoice-preview-avatar-ring" width="36" height="36" viewBox="0 0 36 36" fill="none"
-                                        xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                        <circle cx="18" cy="18" r="17.5" fill="white" stroke="#FFA899" />
-                                    </svg>
-                                @else
-                                    <img src="{{ asset('images/business-hub/icon-invoice-avatar-ring.svg') }}" alt="" width="36"
-                                        height="36" class="invoice-preview-avatar-ring">
-                                @endif
+                            <span class="invoice-preview-avatar {{ $ownerPhotoUrl ? 'has-photo' : 'is-fallback' }}" data-bh-avatar>
                                 @if ($ownerPhotoUrl)
-                                    <img src="{{ $ownerPhotoUrl }}" alt="" width="32" height="32" class="invoice-preview-avatar-photo">
+                                    <svg class="invoice-preview-avatar-ring" data-bh-avatar-ring width="36" height="36" viewBox="0 0 60 60" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <circle cx="30" cy="30" r="29.5" fill="white"
+                                            stroke="var(--bh-avatar-ring, var(--bh-avatar-bg, #FFC97A))" />
+                                    </svg>
+                                    <img src="{{ $ownerPhotoUrl }}" alt="" width="32" height="32" class="invoice-preview-avatar-photo"
+                                        onerror="window.bhAvatarFallback && window.bhAvatarFallback(this)">
+                                    <span class="invoice-preview-avatar-fallback" data-bh-avatar-fallback hidden>{{ $ownerInitial }}</span>
                                 @else
-                                    <span class="invoice-preview-avatar-fallback">{{ $ownerInitial }}</span>
+                                    <span class="invoice-preview-avatar-fallback" data-bh-avatar-fallback>{{ $ownerInitial }}</span>
                                 @endif
                             </span>
                             <span class="invoice-preview-person-name">{{ $billedToName }}</span>
                         </div>
                         <div class="invoice-preview-people-end">
                             @unless ($isSpaceUser)
-                                <span class="invoice-preview-pet-chip">
+                                <span class="invoice-preview-pet-chip" data-bh-avatar>
                                     @if ($petPhotoUrl)
-                                        <img src="{{ $petPhotoUrl }}" alt="" width="24" height="24">
+                                        <img src="{{ $petPhotoUrl }}" alt="" width="24" height="24"
+                                            onerror="window.bhAvatarFallback && window.bhAvatarFallback(this)">
+                                        <span class="invoice-preview-pet-fallback" data-bh-avatar-fallback hidden>{{ $petInitial }}</span>
                                     @else
-                                        <span class="invoice-preview-pet-fallback">{{ $petInitial }}</span>
+                                        <span class="invoice-preview-pet-fallback" data-bh-avatar-fallback>{{ $petInitial }}</span>
                                     @endif
                                     <span>{{ $petName }}</span>
                                 </span>
@@ -934,11 +936,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #F2F6F9;
-            color: #3B3731;
-            font-family: Lato;
+            background: var(--bh-avatar-bg, #FFC97A);
+            color: #FDFDFD;
+            text-align: center;
+            font-family: Lato, sans-serif;
             font-size: 12px;
-            font-weight: 600;
+            font-style: normal;
+            font-weight: 800;
+            line-height: normal;
         }
 
         .invoice-preview-pet-chip {
@@ -1272,7 +1277,7 @@
             display: inline-flex;
             flex: 0 0 44px;
             overflow: hidden;
-            background: #E7EEF3;
+            background: var(--bh-avatar-bg, #FFC97A);
         }
 
         .client-history-modal__avatar img {
@@ -1285,10 +1290,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #3B3731;
-            font-family: Lato;
+            color: #FDFDFD;
+            text-align: center;
+            font-family: Lato, sans-serif;
             font-size: 18px;
-            font-weight: 600;
+            font-style: normal;
+            font-weight: 800;
+            line-height: normal;
         }
 
         .client-history-modal__name,
