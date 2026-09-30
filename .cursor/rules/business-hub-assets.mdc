@@ -1,0 +1,13 @@
+---
+description: Reuse existing Business Hub image assets; do not add duplicate icon folders
+globs: resources/views/**/business-hub/**,public/images/business-hub/**
+alwaysApply: false
+---
+
+# Business Hub assets
+
+- Prefer existing files under `public/images/business-hub/` (e.g. `icon-reschedule-*`, `icon-space-booking-*`, `icon-pet-*`, `icon-decline-*`, `icon-booking-*`).
+- Do **not** create feature subfolders that duplicate the same icons (e.g. `pending-detail/`).
+- Only add a new SVG when no suitable icon already exists; place it flat in `public/images/business-hub/` with an `icon-*.svg` name.
+- For time/clock UI, use `icon-space-booking-clock.svg` (thin stroke). Avoid filled-hand clock variants that look thick at 16px.
+- Global `img { width: 100% }` stretches icons — always pin icon width/height in the component CSS.
