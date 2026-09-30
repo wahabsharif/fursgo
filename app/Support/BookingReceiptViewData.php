@@ -145,7 +145,7 @@ class BookingReceiptViewData
             'booking_id_label' => 'FG-' . str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT),
             'date_label' => optional($booking->date)->format('d/m/Y') ?? 'N/A',
             'owner_name' => $ownerName,
-            'owner_initial' => strtoupper(substr((string) $ownerName, 0, 1)) ?: '?',
+            'owner_initial' => \App\Support\BusinessHubAvatar::initials($ownerName),
             'owner_photo_url' => $ownerPhotoUrl,
             'pet_name' => $petName,
             'pet_type' => $petType,

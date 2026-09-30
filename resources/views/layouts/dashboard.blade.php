@@ -37,6 +37,232 @@
     @endif
     @if ($isDashboardHub)
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        @php
+            $bhAvatarBg = \App\Support\BusinessHubAvatar::background();
+        @endphp
+        <style>
+            :root {
+                --bh-avatar-bg: {{ $bhAvatarBg }};
+                --bh-avatar-ring: {{ $bhAvatarBg }};
+            }
+
+            .bh-avatar {
+                --bh-avatar-size: 42px;
+                --bh-avatar-font: 20px;
+                position: relative;
+                box-sizing: border-box;
+                width: var(--bh-avatar-size);
+                height: var(--bh-avatar-size);
+                border-radius: 999px;
+                overflow: hidden;
+                display: inline-block;
+                flex-shrink: 0;
+                vertical-align: middle;
+            }
+
+            .bh-avatar.has-photo {
+                background: #fff;
+                overflow: visible;
+            }
+
+            .bh-avatar.is-fallback {
+                background: var(--bh-avatar-bg, #FFC97A);
+                overflow: hidden;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .bh-avatar__ring {
+                position: absolute;
+                inset: 0;
+                width: 100% !important;
+                height: 100% !important;
+                max-width: none;
+                color: var(--bh-avatar-ring, var(--bh-avatar-bg, #FFC97A));
+                pointer-events: none;
+                z-index: 0;
+            }
+
+            .bh-avatar__ring circle {
+                fill: #fff;
+                stroke: currentColor;
+            }
+
+            .bh-avatar.is-fallback .bh-avatar__ring,
+            .bh-avatar__ring[hidden] {
+                display: none !important;
+            }
+
+            .bh-avatar__photo,
+            .bh-avatar.has-photo>img.bh-avatar__photo {
+                position: absolute !important;
+                top: 2px;
+                left: 2px;
+                right: auto;
+                bottom: auto;
+                z-index: 1;
+                box-sizing: border-box;
+                width: calc(100% - 4px) !important;
+                height: calc(100% - 4px) !important;
+                max-width: none !important;
+                margin: 0 !important;
+                border-radius: 999px;
+                object-fit: cover !important;
+                object-position: center;
+                display: block;
+            }
+
+            .bh-avatar__initials {
+                position: relative;
+                z-index: 1;
+                width: 100%;
+                height: 100%;
+                border-radius: 999px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                color: #FDFDFD;
+                text-align: center;
+                font-family: Lato, sans-serif;
+                font-size: var(--bh-avatar-font);
+                font-style: normal;
+                font-weight: 800;
+                line-height: normal;
+                letter-spacing: 0;
+            }
+
+            .bh-avatar img[hidden],
+            .bh-avatar [data-bh-avatar-fallback][hidden],
+            [data-bh-avatar]>img[hidden],
+            [data-bh-avatar] [data-bh-avatar-fallback][hidden] {
+                display: none !important;
+            }
+
+            /* Photo ring for wrappers without an inline SVG ring */
+            [data-bh-avatar].has-photo:not(.bh-avatar):not(:has(> [data-bh-avatar-ring])) {
+                background: #fff !important;
+                border: 1px solid var(--bh-avatar-ring, var(--bh-avatar-bg, #FFC97A)) !important;
+                padding: 1px !important;
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+
+            [data-bh-avatar].has-photo:not(.bh-avatar):not(:has(> [data-bh-avatar-ring]))>img {
+                width: 100% !important;
+                height: 100% !important;
+                max-width: none !important;
+                border-radius: inherit;
+                object-fit: cover !important;
+                object-position: center;
+                display: block;
+            }
+
+            /* Component / SVG-ring avatars: ring drawn by SVG under the photo */
+            .bh-avatar.has-photo,
+            [data-bh-avatar].has-photo:has(> [data-bh-avatar-ring]) {
+                background: transparent !important;
+                border: 0 !important;
+                padding: 0 !important;
+            }
+
+            [data-bh-avatar].has-photo:has(> [data-bh-avatar-ring]) {
+                position: relative;
+                overflow: visible;
+            }
+
+            [data-bh-avatar].has-photo:has(> [data-bh-avatar-ring])>[data-bh-avatar-ring],
+            [data-bh-avatar].has-photo:has(> [data-bh-avatar-ring])>.bh-avatar__ring {
+                position: absolute;
+                inset: 0;
+                width: 100% !important;
+                height: 100% !important;
+                max-width: none;
+                z-index: 0;
+                pointer-events: none;
+                color: var(--bh-avatar-ring, var(--bh-avatar-bg, #FFC97A));
+            }
+
+            [data-bh-avatar].has-photo:has(> [data-bh-avatar-ring])>img.bh-avatar__photo,
+            [data-bh-avatar].has-photo:has(> [data-bh-avatar-ring])>img:not([data-bh-avatar-ring]) {
+                position: absolute !important;
+                top: 2px;
+                left: 2px;
+                right: auto;
+                bottom: auto;
+                z-index: 1;
+                width: calc(100% - 4px) !important;
+                height: calc(100% - 4px) !important;
+                max-width: none !important;
+                margin: 0 !important;
+                border-radius: 999px;
+                object-fit: cover !important;
+                object-position: center;
+                display: block;
+            }
+
+            [data-bh-avatar].is-fallback,
+            [data-bh-avatar].is-initials {
+                border: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* Unify existing hub fallbacks to logged-in accent + initials typography */
+            .clients-avatar-wrap.is-initials,
+            .clients-avatar-wrap.is-fallback,
+            .clients-pet-avatar-fallback,
+            .client-profile-avatar-fallback,
+            .pending-detail-avatar.is-fallback,
+            .pending-detail-pet-avatar.is-fallback,
+            .booking-details-avatar.is-fallback,
+            .booking-details-pet-avatar.is-fallback,
+            .earnings-recent-avatar-initials,
+            .earnings-receipt-modal__avatar span,
+            .invoice-preview-avatar-fallback,
+            .client-history-modal__avatar span,
+            .cancelled-booking-modal-avatar.is-fallback,
+            .ma-staff-avatar.is-fallback,
+            .client-pet-card__avatar.is-fallback,
+            .client-pet-profile-card__avatar.is-fallback {
+                background: var(--bh-avatar-bg, #FFC97A) !important;
+                color: #FDFDFD !important;
+                text-align: center;
+                font-family: Lato, sans-serif !important;
+                font-style: normal;
+                font-weight: 800 !important;
+                line-height: normal;
+            }
+        </style>
+        <script>
+            window.bhAvatarFallback = function(img) {
+                if (!img || img.dataset.bhAvatarFailed === '1') {
+                    return;
+                }
+                img.dataset.bhAvatarFailed = '1';
+                img.hidden = true;
+                img.removeAttribute('src');
+                img.alt = '';
+
+                const root = img.closest('[data-bh-avatar]');
+                if (!root) {
+                    return;
+                }
+
+                root.classList.remove('has-photo');
+                root.classList.add('is-fallback');
+                root.setAttribute('aria-hidden', 'true');
+
+                const ring = root.querySelector('[data-bh-avatar-ring]');
+                if (ring) {
+                    ring.hidden = true;
+                }
+
+                const fallback = root.querySelector('[data-bh-avatar-fallback]');
+                if (fallback) {
+                    fallback.hidden = false;
+                }
+            };
+        </script>
     @endif
     @if ($dashboardNavView === 'business-verification')
         <link rel="preload" as="image" href="{{ asset('images/logo/logo.svg') }}">

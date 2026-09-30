@@ -156,6 +156,8 @@ Single Volt pages; section state in session (not separate routes).
 
 - Sections: `business-hub`, `bookings`, `availability`, `manage-availability`, `services`, `clients`, `earnings`, `settings`
 - Booking filters: `pending` | `confirmed` | `completed` | `cancelled`
+- Overview Pending Requests “View details” opens `pending-request-modal` (Livewire `detailsBookingId`)
+- Avatar placeholders (no photo / broken image): initials via `App\Support\BusinessHubAvatar` / `x-business-hub.common.avatar` + `window.bhAvatarFallback`; text `#FDFDFD` Lato 800; bg groomer `#FFC97A`, space `#FFA899` (`--bh-avatar-bg` / `--bh-avatar-ring`). Photo available: white circle ring with same accent stroke.
 - Service menus: `services`, `add-ons`, `pet-preferences`, `service-area`
 - Earnings menus: `overview`, `transactions`, `pay-outs`, `invoices`
 - Settings menus: `general`, `business-details`, `service-policies`
