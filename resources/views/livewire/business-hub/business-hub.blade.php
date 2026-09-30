@@ -273,18 +273,13 @@ new class extends Component {
         $now = now();
         $startOfMonth = $now->copy()->startOfMonth();
 
+        // Chart Y-axis is 0–250; use completed revenue only so demo confirmed rows don't flatten the wave.
         $weekBuckets = [1 => 0.0, 2 => 0.0, 3 => 0.0, 4 => 0.0];
-        $monthlySales = $this->bookingsQuery()
-            ->whereIn('booking_status', ['confirmed', 'completed'])
-            ->whereYear('date', $now->year)
-            ->whereMonth('date', $now->month)
-            ->selectRaw('CEIL(DAY(date) / 7) as week_bucket, COALESCE(SUM(amount), 0) as total')
-            ->groupBy('week_bucket')
-            ->pluck('total', 'week_bucket');
+        $monthlySales = $this->bookingsQuery()->where('booking_status', 'completed')->whereYear('date', $now->year)->whereMonth('date', $now->month)->selectRaw('CEIL(DAY(date) / 7) as week_bucket, COALESCE(SUM(amount), 0) as total')->groupBy('week_bucket')->pluck('total', 'week_bucket');
 
         foreach ($monthlySales as $weekIndex => $total) {
             $weekIndex = max(1, min(4, (int) $weekIndex));
-            $weekBuckets[$weekIndex] = (float) $total;
+            $weekBuckets[$weekIndex] += (float) $total;
         }
 
         $monthNumber = $startOfMonth->format('m');

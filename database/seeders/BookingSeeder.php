@@ -72,8 +72,8 @@ class BookingSeeder extends Seeder
                     ['time' => '10:00 - 11:00', 'date' => today()->addDays(3)->toDateString(), 'service' => 'Full Groom', 'amount' => 65.0, 'visit_type' => 'Garden / Shed', 'booking_status' => 'pending', 'pet_indices' => [1, 2]],
                     ['time' => '14:30 - 15:30', 'date' => today()->addDays(5)->toDateString(), 'service' => 'Nail Trim', 'amount' => 25.0, 'visit_type' => 'salon', 'booking_status' => 'pending', 'pet_indices' => [0]],
                     ['time' => '09:00 - 10:00', 'date' => today()->addDays(7)->toDateString(), 'service' => 'Full Groom', 'amount' => 80.0, 'visit_type' => 'Garden / Shed', 'booking_status' => 'confirmed', 'pet_indices' => [0, 1]],
-                    ['time' => '13:00 - 14:00', 'date' => today()->subDays(7)->toDateString(), 'service' => 'Bath & Brush', 'amount' => 45.0, 'visit_type' => 'salon', 'booking_status' => 'completed', 'pet_indices' => [0]],
-                    ['time' => '17:00 - 18:00', 'date' => today()->subDays(3)->toDateString(), 'service' => 'Bath & Brush', 'amount' => 52.0, 'visit_type' => 'salon', 'booking_status' => 'completed', 'pet_indices' => [0, 1]],
+                    ['time' => '13:00 - 14:00', 'date' => today()->subMonth()->startOfMonth()->addDays(12)->toDateString(), 'service' => 'Bath & Brush', 'amount' => 45.0, 'visit_type' => 'salon', 'booking_status' => 'completed', 'pet_indices' => [0]],
+                    ['time' => '17:00 - 18:00', 'date' => today()->subMonth()->startOfMonth()->addDays(20)->toDateString(), 'service' => 'Bath & Brush', 'amount' => 52.0, 'visit_type' => 'salon', 'booking_status' => 'completed', 'pet_indices' => [0, 1]],
                 ],
             ],
             [
@@ -87,7 +87,7 @@ class BookingSeeder extends Seeder
                 ],
                 'bookings' => [
                     ['time' => '11:00 - 12:00', 'date' => today()->addDays(2)->toDateString(), 'service' => 'Full Groom', 'amount' => 70.0, 'visit_type' => 'salon', 'booking_status' => 'confirmed', 'pet_indices' => [0]],
-                    ['time' => '15:00 - 16:00', 'date' => today()->subDays(14)->toDateString(), 'service' => 'Bath & Brush', 'amount' => 42.0, 'visit_type' => 'salon', 'booking_status' => 'completed', 'pet_indices' => [0]],
+                    ['time' => '15:00 - 16:00', 'date' => today()->subMonth()->startOfMonth()->addDays(8)->toDateString(), 'service' => 'Bath & Brush', 'amount' => 42.0, 'visit_type' => 'salon', 'booking_status' => 'completed', 'pet_indices' => [0]],
                     ['time' => '10:30 - 11:30', 'date' => today()->subDays(45)->toDateString(), 'service' => 'Nail Trim', 'amount' => 24.0, 'visit_type' => 'home_visit', 'booking_status' => 'completed', 'pet_indices' => [0]],
                 ],
             ],
@@ -101,7 +101,7 @@ class BookingSeeder extends Seeder
                     ['name' => 'Whiskers', 'pet_type' => 'Cat', 'breed' => 'British Shorthair', 'sex' => 'male', 'birthday' => '2021-11-05', 'weight' => 5.1, 'photo' => 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=600&q=80', 'notes' => 'Indoor only.'],
                 ],
                 'bookings' => [
-                    ['time' => '13:30 - 14:30', 'date' => today()->subDays(5)->toDateString(), 'service' => 'Full Groom', 'amount' => 55.0, 'visit_type' => 'salon', 'booking_status' => 'completed', 'pet_indices' => [0]],
+                    ['time' => '13:30 - 14:30', 'date' => today()->subMonth()->startOfMonth()->addDays(16)->toDateString(), 'service' => 'Full Groom', 'amount' => 55.0, 'visit_type' => 'salon', 'booking_status' => 'completed', 'pet_indices' => [0]],
                 ],
             ],
             [
@@ -116,8 +116,8 @@ class BookingSeeder extends Seeder
                 ],
                 'bookings' => [
                     ['time' => '09:30 - 10:30', 'date' => today()->addDays(4)->toDateString(), 'service' => 'Full Groom', 'amount' => 88.0, 'visit_type' => 'Garden / Shed', 'booking_status' => 'confirmed', 'pet_indices' => [0, 1]],
-                    ['time' => '16:30 - 17:30', 'date' => today()->subDays(10)->toDateString(), 'service' => 'Deshedding Treatment', 'amount' => 68.0, 'visit_type' => 'salon', 'booking_status' => 'completed', 'pet_indices' => [1]],
-                    ['time' => '12:00 - 13:00', 'date' => today()->subDays(28)->toDateString(), 'service' => 'Bath & Brush', 'amount' => 48.0, 'visit_type' => 'salon', 'booking_status' => 'completed', 'pet_indices' => [0]],
+                    ['time' => '16:30 - 17:30', 'date' => today()->subMonth()->startOfMonth()->addDays(22)->toDateString(), 'service' => 'Deshedding Treatment', 'amount' => 68.0, 'visit_type' => 'salon', 'booking_status' => 'completed', 'pet_indices' => [1]],
+                    ['time' => '12:00 - 13:00', 'date' => today()->subMonths(2)->startOfMonth()->addDays(6)->toDateString(), 'service' => 'Bath & Brush', 'amount' => 48.0, 'visit_type' => 'salon', 'booking_status' => 'completed', 'pet_indices' => [0]],
                     ['time' => '14:00 - 15:00', 'date' => today()->subDays(55)->toDateString(), 'service' => 'Nail Trim', 'amount' => 26.0, 'visit_type' => 'home_visit', 'booking_status' => 'completed', 'pet_indices' => [0, 1]],
                 ],
             ],
@@ -145,7 +145,7 @@ class BookingSeeder extends Seeder
                     ['name' => 'Milo', 'pet_type' => 'Cat', 'breed' => 'Maine Coon', 'sex' => 'male', 'birthday' => '2017-04-09', 'weight' => 7.4, 'photo' => 'https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=600&q=80', 'notes' => 'Long coat.'],
                 ],
                 'bookings' => [
-                    ['time' => '10:00 - 11:00', 'date' => today()->subDays(2)->toDateString(), 'service' => 'De-matting', 'amount' => 58.0, 'visit_type' => 'salon', 'booking_status' => 'completed', 'pet_indices' => [0]],
+                    ['time' => '10:00 - 11:00', 'date' => today()->subMonth()->startOfMonth()->addDays(3)->toDateString(), 'service' => 'De-matting', 'amount' => 58.0, 'visit_type' => 'salon', 'booking_status' => 'completed', 'pet_indices' => [0]],
                 ],
             ],
             [
@@ -260,13 +260,10 @@ class BookingSeeder extends Seeder
                 ['service' => 'Nail Trim', 'amount' => 25.0],
             ];
 
-        $startOfWeek = today()->copy()->startOfWeek();
-        $lastWeek = today()->copy()->subWeek()->startOfWeek();
         $lastMonth = today()->copy()->subMonth()->startOfMonth()->addDays(9);
-        $thisMonthEarlier = today()->copy()->startOfMonth();
-        if ($thisMonthEarlier->greaterThanOrEqualTo(today())) {
-            $thisMonthEarlier = today()->copy()->subDays(2);
-        }
+        // Keep completed demo rows out of the current month so Weekly Revenue chart seed owns that shape.
+        $priorMonthMid = today()->copy()->subMonth()->startOfMonth()->addDays(14);
+        $twoMonthsAgo = today()->copy()->subMonths(2)->startOfMonth()->addDays(8);
 
         $slots = [
             ['time' => '08:15 - 09:15', 'date' => today()->toDateString(), 'booking_status' => 'confirmed', 'service' => $services[0]['service'], 'amount' => $services[0]['amount'], 'pet_indices' => [0]],
@@ -274,10 +271,9 @@ class BookingSeeder extends Seeder
             ['time' => '16:15 - 17:15', 'date' => today()->toDateString(), 'booking_status' => 'pending', 'service' => $services[2]['service'], 'amount' => $services[2]['amount'], 'pet_indices' => [0]],
             ['time' => '10:15 - 11:15', 'date' => today()->addDays(2)->toDateString(), 'booking_status' => 'pending', 'service' => $services[0]['service'], 'amount' => $services[0]['amount'], 'pet_indices' => [0]],
             ['time' => '11:15 - 12:15', 'date' => today()->addDays(4)->toDateString(), 'booking_status' => 'confirmed', 'service' => $services[1]['service'], 'amount' => $services[1]['amount'], 'pet_indices' => [0]],
-            ['time' => '09:15 - 10:15', 'date' => $startOfWeek->toDateString(), 'booking_status' => 'completed', 'service' => $services[0]['service'], 'amount' => $services[0]['amount'], 'pet_indices' => [0], 'created_days_ago' => max(1, (int) today()->diffInDays($startOfWeek))],
-            ['time' => '12:15 - 13:15', 'date' => $lastWeek->toDateString(), 'booking_status' => 'completed', 'service' => $services[1]['service'], 'amount' => $services[1]['amount'], 'pet_indices' => [0], 'created_days_ago' => max(1, (int) today()->diffInDays($lastWeek))],
+            ['time' => '12:15 - 13:15', 'date' => $twoMonthsAgo->toDateString(), 'booking_status' => 'completed', 'service' => $services[1]['service'], 'amount' => $services[1]['amount'], 'pet_indices' => [0], 'created_days_ago' => max(1, (int) today()->diffInDays($twoMonthsAgo))],
             ['time' => '15:15 - 16:15', 'date' => $lastMonth->toDateString(), 'booking_status' => 'completed', 'service' => $services[2]['service'], 'amount' => $services[2]['amount'], 'pet_indices' => [0], 'created_days_ago' => max(1, (int) today()->diffInDays($lastMonth))],
-            ['time' => '18:15 - 19:15', 'date' => $thisMonthEarlier->toDateString(), 'booking_status' => 'completed', 'service' => $services[0]['service'], 'amount' => $services[0]['amount'], 'pet_indices' => [0], 'created_days_ago' => max(1, (int) today()->diffInDays($thisMonthEarlier))],
+            ['time' => '18:15 - 19:15', 'date' => $priorMonthMid->toDateString(), 'booking_status' => 'completed', 'service' => $services[0]['service'], 'amount' => $services[0]['amount'], 'pet_indices' => [0], 'created_days_ago' => max(1, (int) today()->diffInDays($priorMonthMid))],
         ];
 
         $serviceAddOns = $isSpace
@@ -306,6 +302,73 @@ class BookingSeeder extends Seeder
                 serviceAddOns: $serviceAddOns,
                 staffRoster: ['Emma Wilson', 'Oliver Brown'],
                 completedRatings: [4.5, 4.8, 5.0],
+                refundStatuses: ['Processed'],
+                discountSamples: [0.0],
+            );
+        }
+
+        $this->seedWeeklyRevenueChart(
+            spacerId: $spacerId,
+            ownerId: $owner->id,
+            pets: $pets,
+            isSpace: $isSpace,
+            serviceAddOns: $serviceAddOns,
+        );
+    }
+
+    /**
+     * Completed bookings for the current month shaped to the Overview Weekly Revenue chart
+     * (Chart.js Y scale 0–250 → smooth wave instead of a flat clipped square).
+     *
+     * @param  Collection<int, PetDetail>  $pets
+     * @param  array<string, array<int, array<string, mixed>>>  $serviceAddOns
+     */
+    private function seedWeeklyRevenueChart(
+        int $spacerId,
+        int $ownerId,
+        Collection $pets,
+        bool $isSpace,
+        array $serviceAddOns,
+    ): void {
+        // Design-like curve within the chart's £0–£250 Y-axis.
+        $weekTargets = [
+            1 => 55.0,
+            2 => 195.0,
+            3 => 105.0,
+            4 => 230.0,
+        ];
+
+        $visitType = $isSpace ? 'Garden / Shed' : 'salon';
+        $service = $isSpace ? 'Hourly' : 'Full Groom';
+        $monthStart = today()->copy()->startOfMonth();
+
+        foreach ($weekTargets as $week => $amount) {
+            // Mid-point of CEIL(DAY/7) buckets 1–4 (days 4, 11, 18, 25).
+            $day = min(($week - 1) * 7 + 4, $monthStart->daysInMonth);
+            $date = $monthStart->copy()->day($day);
+
+            if ($date->greaterThan(today())) {
+                continue;
+            }
+
+            $this->seedBooking(
+                ownerId: $ownerId,
+                spacerId: $spacerId,
+                pets: $pets,
+                bookingData: [
+                    'time' => sprintf('%02d:00 - %02d:00', 9 + $week, 10 + $week),
+                    'date' => $date->toDateString(),
+                    'service' => $service,
+                    'amount' => $amount,
+                    'visit_type' => $visitType,
+                    'booking_status' => 'completed',
+                    'pet_indices' => [0],
+                    'acquisition_source' => 'hub_weekly_revenue',
+                    'created_days_ago' => max(1, (int) today()->diffInDays($date)),
+                ],
+                serviceAddOns: $serviceAddOns,
+                staffRoster: ['Emma Wilson', 'Oliver Brown'],
+                completedRatings: [4.8, 5.0],
                 refundStatuses: ['Processed'],
                 discountSamples: [0.0],
             );
@@ -473,7 +536,7 @@ class BookingSeeder extends Seeder
 
                     $ownerBag = $owners[($week + $weekday + $slotIndex) % count($owners)];
                     $date = today()->subWeeks($week)->startOfWeek()->addDays($weekday === 0 ? 6 : $weekday - 1);
-                    if ($date->greaterThan(today())) {
+                    if ($date->greaterThan(today()) || $date->isSameMonth(today())) {
                         continue;
                     }
 
@@ -614,7 +677,7 @@ class BookingSeeder extends Seeder
 
                     $ownerBag = $owners[($week + $weekday + $slotIndex) % count($owners)];
                     $date = today()->subWeeks($week)->startOfWeek()->addDays($weekday === 0 ? 6 : $weekday - 1);
-                    if ($date->greaterThan(today())) {
+                    if ($date->greaterThan(today()) || $date->isSameMonth(today())) {
                         continue;
                     }
 
@@ -705,7 +768,7 @@ class BookingSeeder extends Seeder
         );
 
         $sources = ['direct_profile', 'platform_search', 'promotion_link'];
-        if ($hubSlot) {
+        if ($hubSlot && $acquisitionSource === null) {
             $acquisitionSource = 'hub_overview';
         } elseif ($acquisitionSource === null) {
             $acquisitionSource = $sources[array_rand($sources)];
