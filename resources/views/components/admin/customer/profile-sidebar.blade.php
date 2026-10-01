@@ -632,19 +632,24 @@ $transferAccounts = [
         <div x-show="detailTab === 'support' && supportDetail" x-cloak>
             <x-admin.customer.action-btn
                 variant="mark-resolved"
-                label="Mark as resolved" />
+                label="Mark as resolved"
+                x-on:click="$dispatch('admin-support-resolve-open')" />
             <x-admin.customer.action-btn
                 variant="open-dispute"
-                label="Open dispute" />
+                label="Open dispute"
+                x-on:click="$dispatch('admin-support-dispute-open')" />
             <x-admin.customer.action-btn
                 variant="merge-ticket"
-                label="Merge with another ticket" />
+                label="Merge with another ticket"
+                x-on:click="$dispatch('admin-support-merge-open')" />
             <x-admin.customer.action-btn
                 variant="reassign-ticket"
-                label="Reassign ticket" />
+                label="Reassign ticket"
+                x-on:click="$dispatch('admin-support-reassign-open')" />
             <x-admin.customer.action-btn
                 variant="close-ticket"
-                label="Close ticket" />
+                label="Close ticket"
+                x-on:click="$dispatch('admin-support-close-ticket-open')" />
         </div>
 
         <div x-show="detailTab === 'payments' && paymentDetail" x-cloak>

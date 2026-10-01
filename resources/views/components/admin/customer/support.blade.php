@@ -151,6 +151,247 @@ $rowIds = $rows->pluck('id')->values()->all();
         selectedTicket: null,
         rowIds: @js($rowIds),
         replyText: '',
+        linkModalOpen: false,
+        resolveModalOpen: false,
+        resolveSummary: '',
+        resolveNotify: 'send',
+        openResolveNotify: false,
+        disputeModalOpen: false,
+        disputeSuccessOpen: false,
+        disputeCategory: 'Service not delivered as agreed',
+        disputeAssignee: 'Michelle M (me)',
+        disputeNote: '',
+        openDisputeCategory: false,
+        openDisputeAssignee: false,
+        mergeModalOpen: false,
+        mergeSearch: 'SPRT-004',
+        mergeSelectedId: 'm-1',
+        mergeCandidates: [
+            {
+                id: 'm-1',
+                ticket_id: 'SPRT-00419',
+                title: 'SPRT-00419 · Support ticket',
+                meta: 'Opened 12 days ago · Booking · Assigned: Ben M',
+            },
+            {
+                id: 'm-2',
+                ticket_id: 'SPRT-00415',
+                title: 'SPRT-00415 · Support ticket',
+                meta: 'Opened 14 days ago · Payment · Assigned: Michelle M',
+            },
+        ],
+        reassignModalOpen: false,
+        reassignMemberId: 'michelle',
+        reassignNote: '',
+        reassignMembers: [
+            {
+                id: 'michelle',
+                name: 'Michelle M',
+                initials: 'MM',
+                tone: 'green',
+                role: 'Super admin',
+                meta: '2 open support tickets',
+            },
+            {
+                id: 'ben',
+                name: 'Ben M',
+                initials: 'BM',
+                tone: 'blue',
+                role: 'Super admin',
+                meta: 'currently assigned',
+            },
+        ],
+        closeTicketModalOpen: false,
+        closeTicketReason: '',
+        closeTicketNote: '',
+        closeTicketNotify: 'none',
+        openCloseTicketReason: false,
+        openCloseTicketNotify: false,
+        linkRecordType: 'booking',
+        linkSearch: '',
+        linkSelectedId: 'bk-1',
+        linkResults: {
+            booking: [
+                {
+                    id: 'bk-1',
+                    code: 'FG-0563',
+                    icon: 'disputed',
+                    title: 'FG-0563-B12 · DS-00063 · Disputed',
+                    meta: 'Full groom · Pawfect Salon · 09 Jul 2025',
+                    note: 'Linking this booking will also surface its associated payment (INV-0563-B12), dispute (DSP-00063), and the related chat thread with Pawfect Salon in the linked records section.',
+                },
+                {
+                    id: 'bk-2',
+                    code: 'FG-0565',
+                    icon: 'completed',
+                    title: 'FG-0565-B12 · DS-00063 · Completed',
+                    meta: 'Half-day · Canine Corner · 10 Jul 2025',
+                    note: 'Linking this booking will surface its associated payment and related chat thread in the linked records section.',
+                },
+            ],
+            payment: [
+                {
+                    id: 'pay-1',
+                    code: 'INV-0563',
+                    icon: 'invoice',
+                    title: 'INV-0563-B12 · £55.00 · Processed',
+                    meta: 'Visa **** 4563 · 09 Jul 2025',
+                    note: 'Linking this payment will also surface its associated booking in the linked records section.',
+                },
+                {
+                    id: 'pay-2',
+                    code: 'INV-0560',
+                    icon: 'invoice',
+                    title: 'INV-0560-B08 · £42.00 · Processed',
+                    meta: 'Visa **** 4563 · 02 Jul 2025',
+                    note: 'Linking this payment will also surface its associated booking in the linked records section.',
+                },
+            ],
+            dispute: [
+                {
+                    id: 'dsp-1',
+                    code: 'DSP-00063',
+                    icon: 'dispute',
+                    title: 'DSP-00063 · Open dispute',
+                    meta: 'Booking FG-0563-B12 · Raised 08 Jul 2025',
+                    note: 'Linking this dispute will also surface its associated booking and payment in the linked records section.',
+                },
+            ],
+            chat: [
+                {
+                    id: 'chat-1',
+                    code: 'CHAT-0565',
+                    icon: 'chat',
+                    title: 'The Garden Grooming Spot · Chloe D.',
+                    meta: 'Booking FG-0565-B12 · 8 messages',
+                    note: 'Linking this chat thread will surface it alongside related booking records.',
+                },
+            ],
+        },
+        get linkTypeLabel() {
+            return ({ booking: 'bookings', payment: 'payments', dispute: 'disputes', chat: 'chat threads' })[this.linkRecordType] || 'records';
+        },
+        get linkTypeSingular() {
+            return ({ booking: 'booking', payment: 'invoice', dispute: 'dispute', chat: 'chat' })[this.linkRecordType] || 'record';
+        },
+        get filteredLinkResults() {
+            const rows = this.linkResults[this.linkRecordType] || [];
+            const q = (this.linkSearch || '').trim().toLowerCase();
+            if (!q) return rows;
+            return rows.filter((r) => [r.title, r.meta].some((v) => String(v || '').toLowerCase().includes(q)));
+        },
+        get selectedLinkResult() {
+            const rows = this.linkResults[this.linkRecordType] || [];
+            return rows.find((r) => r.id === this.linkSelectedId) || null;
+        },
+        openLinkModal() {
+            this.linkModalOpen = true;
+            this.linkRecordType = 'booking';
+            this.linkSearch = '';
+            this.linkSelectedId = 'bk-1';
+        },
+        closeLinkModal() {
+            this.linkModalOpen = false;
+        },
+        openResolveModal() {
+            this.resolveModalOpen = true;
+            this.resolveSummary = '';
+            this.resolveNotify = 'send';
+            this.openResolveNotify = false;
+        },
+        closeResolveModal() {
+            this.resolveModalOpen = false;
+            this.openResolveNotify = false;
+        },
+        openDisputeModal() {
+            this.disputeModalOpen = true;
+            this.disputeCategory = 'Service not delivered as agreed';
+            this.disputeAssignee = 'Michelle M (me)';
+            this.disputeNote = '';
+            this.openDisputeCategory = false;
+            this.openDisputeAssignee = false;
+        },
+        closeDisputeModal() {
+            this.disputeModalOpen = false;
+            this.openDisputeCategory = false;
+            this.openDisputeAssignee = false;
+        },
+        confirmDispute() {
+            this.disputeModalOpen = false;
+            this.openDisputeCategory = false;
+            this.openDisputeAssignee = false;
+            this.disputeSuccessOpen = true;
+        },
+        closeDisputeSuccess() {
+            this.disputeSuccessOpen = false;
+        },
+        openMergeModal() {
+            this.mergeModalOpen = true;
+            this.mergeSearch = 'SPRT-004';
+            this.mergeSelectedId = 'm-1';
+        },
+        closeMergeModal() {
+            this.mergeModalOpen = false;
+        },
+        get filteredMergeResults() {
+            const q = (this.mergeSearch || '').trim().toLowerCase();
+            const currentId = this.selectedTicket?.ticket_id;
+            return (this.mergeCandidates || []).filter((row) => {
+                if (currentId && row.ticket_id === currentId) {
+                    return false;
+                }
+                if (!q) {
+                    return true;
+                }
+                return [row.ticket_id, row.title, row.meta].some((v) => String(v || '').toLowerCase().includes(q));
+            });
+        },
+        get selectedMergeResult() {
+            return (this.mergeCandidates || []).find((r) => r.id === this.mergeSelectedId) || null;
+        },
+        openReassignModal() {
+            this.reassignModalOpen = true;
+            this.reassignMemberId = 'michelle';
+            this.reassignNote = '';
+        },
+        closeReassignModal() {
+            this.reassignModalOpen = false;
+        },
+        openCloseTicketModal() {
+            this.closeTicketModalOpen = true;
+            this.closeTicketReason = '';
+            this.closeTicketNote = '';
+            this.closeTicketNotify = 'none';
+            this.openCloseTicketReason = false;
+            this.openCloseTicketNotify = false;
+        },
+        closeCloseTicketModal() {
+            this.closeTicketModalOpen = false;
+            this.openCloseTicketReason = false;
+            this.openCloseTicketNotify = false;
+        },
+        setLinkRecordType(type) {
+            this.linkRecordType = type;
+            const first = (this.linkResults[type] || [])[0];
+            this.linkSelectedId = first ? first.id : null;
+            this.linkSearch = '';
+        },
+        closeTicket() {
+            this.selectedTicket = null;
+            this.linkModalOpen = false;
+            this.resolveModalOpen = false;
+            this.openResolveNotify = false;
+            this.disputeModalOpen = false;
+            this.disputeSuccessOpen = false;
+            this.mergeModalOpen = false;
+            this.reassignModalOpen = false;
+            this.closeTicketModalOpen = false;
+            this.openCloseTicketReason = false;
+            this.openCloseTicketNotify = false;
+            this.openDisputeCategory = false;
+            this.openDisputeAssignee = false;
+            this.$dispatch('admin-support-closed');
+        },
         get allSelected() {
             return this.rowIds.length > 0 && this.selectedIds.length === this.rowIds.length;
         },
@@ -195,13 +436,26 @@ $rowIds = $rows->pluck('id')->values()->all();
             this.$dispatch('admin-support-selected', { ticket: row });
             window.scrollTo({ top: 0, behavior: 'smooth' });
         },
-        closeTicket() {
-            this.selectedTicket = null;
-            this.$dispatch('admin-support-closed');
-        },
     }"
     x-init="syncSelection()"
-    @admin-support-close-request.window="closeTicket()">
+    @admin-support-close-request.window="closeTicket()"
+    @admin-support-resolve-open.window="openResolveModal()"
+    @admin-support-dispute-open.window="openDisputeModal()"
+    @admin-support-merge-open.window="openMergeModal()"
+    @admin-support-reassign-open.window="openReassignModal()"
+    @admin-support-close-ticket-open.window="openCloseTicketModal()"
+    x-effect="
+        if (linkModalOpen || resolveModalOpen || disputeModalOpen || disputeSuccessOpen || mergeModalOpen || reassignModalOpen || closeTicketModalOpen) {
+            if (!document.body.classList.contains('admin-co-modal-lock')) {
+                document.body.dataset.adminModalScrollY = String(window.scrollY || 0);
+                document.body.classList.add('admin-co-modal-lock');
+            }
+        } else if (document.body.classList.contains('admin-co-modal-lock')) {
+            const y = Number(document.body.dataset.adminModalScrollY || 0);
+            document.body.classList.remove('admin-co-modal-lock');
+            window.scrollTo(0, y);
+        }
+    ">
     <div class="admin-co-support-list" x-show="!selectedTicket" x-cloak>
         <div class="admin-co-overview-head">
             <h2 class="admin-page-title mb-0">Support</h2>

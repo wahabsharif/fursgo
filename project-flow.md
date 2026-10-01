@@ -173,7 +173,7 @@ Volt entry: `resources/views/livewire/business-hub.blade.php`, nested under `liv
 - Login: `/admin/login`; middleware `auth.admin`.
 - Overview: `/admin` with Alpine tabs — components under `resources/views/components/admin/` and `resources/views/admin/tabs/`.
 - Business provider detail tabs: Overview, Profile (public profile / gallery / business details / notes / activity + Services · Policies · Reviews subnav; dual Groomer/Space Host via sidebar `viewAs` — space subnav active `#FFA899`, active status pills `#EAF3DE`/`#A7C569`), Activity, Account, Compliance; Bookings / Payouts / Support still placeholders.
-- Pet owner detail tabs: overview, pets, bookings, payments (list + detail by status), support (ticket list → click opens ticket detail with submission / linked records / thread / notes / details+activity; sidebar switches list actions ↔ ticket actions), referrals, activity — under `resources/views/components/admin/customer/`.
+- Pet owner detail tabs: overview, pets, bookings, payments (list + detail by status), support (ticket list → detail with submission / linked records + Add link / Mark as resolved / Open dispute (+ success) / Merge / Reassign / Close ticket modals / thread / notes / details+activity; sidebar switches list actions ↔ ticket actions), referrals, activity — under `resources/views/components/admin/customer/`.
 
 ## Codebase notes
 
