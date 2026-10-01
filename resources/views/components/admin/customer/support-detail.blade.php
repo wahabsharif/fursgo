@@ -213,7 +213,9 @@ $firstName = explode(' ', trim($customerName))[0] ?: $customerName;
                             <button type="button" class="admin-co-support-linked-action">View full chat →</button>
                         </div>
                         <div class="admin-co-support-chat-preview">
-                            <p class="admin-co-support-chat-preview-text" x-text="selectedTicket.detail?.linked?.chat?.preview"></p>
+                            <p class="admin-co-support-chat-preview-text">
+                                <span class="admin-co-support-chat-preview-name" x-text="selectedTicket.detail?.linked?.chat?.preview_name || ''"></span><span x-show="selectedTicket.detail?.linked?.chat?.preview_name" x-cloak>: </span><span class="admin-co-support-chat-preview-body" x-text="selectedTicket.detail?.linked?.chat?.preview_message || selectedTicket.detail?.linked?.chat?.preview || ''"></span>
+                            </p>
                             <span class="admin-co-support-chat-preview-time" x-text="selectedTicket.detail?.linked?.chat?.preview_time"></span>
                         </div>
                     </div>

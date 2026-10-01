@@ -10674,6 +10674,160 @@ body.admin-co-modal-lock {
     margin-bottom: 20px;
 }
 
+.admin-co-support-submission-head {
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.admin-co-support-submission-head .admin-co-section-title {
+    margin-bottom: 0;
+}
+
+.admin-co-support-submission-head .admin-co-support-desc-meta {
+    flex-shrink: 0;
+    max-width: 55%;
+}
+
+.admin-co-support-attachments-empty {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.35;
+}
+
+.attachment-svg-background {
+    padding: 5px;
+    border-radius: 5px;
+    background: #f6f6f6;
+}
+
+.admin-co-support-attachments-empty svg {
+    flex-shrink: 0;
+}
+
+.admin-co-support-linked-empty {
+    margin: 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.admin-co-support-linked-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 28px 24px 32px;
+    text-align: center;
+}
+
+.admin-co-support-linked-empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 4px;
+    border-radius: 49px;
+    border: 1px solid #E4E4E4;
+    background: #F9F9F9;
+}
+
+.admin-co-support-linked-empty-title {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.admin-co-support-linked-empty-copy {
+    margin: 0;
+    max-width: 420px;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+.admin-co-support-linked-suggest-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: -16px -18px 16px;
+    padding: 12px 18px;
+    border-bottom: 1px solid #f3e4c8;
+    background: #fff7eb;
+    color: #ffaf3b;
+    font-family: Lato, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.admin-co-support-linked-suggest-banner svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.admin-co-support-linked-card.is-suggested {
+    background: none;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.admin-co-support-linked-card.is-suggested .admin-co-support-linked-title {
+    font-weight: 600;
+}
+
+.admin-co-support-linked-card.is-suggested .admin-co-support-linked-meta {
+    font-weight: 400;
+}
+
+.admin-co-support-linked-suggest-label {
+    color: #ffaf3b;
+    font-weight: 400;
+}
+
+.admin-co-support-linked-suggest-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.admin-co-support-linked-suggest-btn {
+    min-height: 32px;
+    padding: 6px 14px;
+    border-radius: 55px;
+    font-family: Lato, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+    background: #fff;
+}
+
+.admin-co-support-linked-suggest-btn.is-confirm {
+    border: 1px solid #a7c569;
+    color: #a7c569;
+    background: #f4f8ec;
+}
+
+.admin-co-support-linked-suggest-btn.is-dismiss {
+    border: 1px solid #e4e4e4;
+    color: #787775;
+}
+
 .admin-co-support-submission-grid {
     display: grid;
     grid-template-columns: minmax(220px, 0.85fr) minmax(0, 1.35fr);
@@ -10838,15 +10992,19 @@ body.admin-co-modal-lock {
 
 .admin-co-support-linked.admin-card.admin-co-panel {
     border-radius: 10px;
-    border: 1px solid #e4e4e4;
-    background: #fdfdfd;
+    border: 1px solid #E4E4E4;
+    background: #FDFDFD;
     overflow: hidden;
 }
 
 .admin-co-support-linked .admin-co-section-head {
     margin: 0 -18px 16px;
     padding: 0 18px 16px;
-    border-bottom: 1px solid #e4e4e4;
+    border-bottom: 1px solid #E4E4E4;
+}
+
+.admin-co-support-linked .admin-co-section-head .admin-co-section-title {
+    margin-bottom: 0;
 }
 
 .admin-co-support-linked-block + .admin-co-support-linked-block {
@@ -11009,6 +11167,14 @@ body.admin-co-modal-lock {
     text-overflow: ellipsis;
 }
 
+.admin-co-support-chat-preview-name {
+    font-weight: 600;
+}
+
+.admin-co-support-chat-preview-body {
+    font-weight: 400;
+}
+
 .admin-co-support-chat-preview-time {
     flex-shrink: 0;
     color: #9c9a97;
@@ -11050,6 +11216,10 @@ body.admin-co-modal-lock {
     flex-direction: column;
     gap: 18px;
     padding: 20px 18px;
+}
+
+.admin-co-support-thread.is-preview .admin-co-support-thread-feed {
+    padding-bottom: 8px;
 }
 
 .admin-co-support-msg {

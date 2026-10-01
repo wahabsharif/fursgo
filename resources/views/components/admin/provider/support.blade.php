@@ -1,9 +1,9 @@
 @props(['profile'])
 
 @php
-$customerName = $profile['name'] ?? 'Jane Doe';
-$customerEmail = $profile['email'] ?? 'janed@gmail.com';
-$customerAvatar = $profile['avatar'] ?? asset('images/profile_image.png');
+$providerName = $profile['name'] ?? 'Pawfect Grooming';
+$providerEmail = $profile['email'] ?? 'sarah.w@pawfect.co.uk';
+$providerAvatar = $profile['avatar'] ?? asset('images/profile_image.png');
 $support = $profile['support'] ?? [];
 $rawRows = $support['rows'] ?? [];
 $filters = $support['filters'] ?? [
@@ -17,20 +17,20 @@ $filters = $support['filters'] ?? [
 
 $defaultNotes = [
     [
-        'text' => 'Customer confirmed groomer was 20 minutes late and nail trim was not completed. Offering partial refund pending provider response.',
+        'text' => 'Provider appealed the account flag. Reviewed recent bookings and client complaints — no policy breach found so far. Keeping ticket open pending compliance check.',
         'author' => 'Michelle M',
         'time' => '18 Apr 2025',
         'tag' => 'Internal only',
     ],
     [
-        'text' => 'Followed up with Pawfect Salon. Awaiting confirmation of service timeline before closing.',
+        'text' => 'Flagged for review after a client complaint was escalated. Waiting on compliance to confirm whether the flag can be cleared.',
         'author' => 'Ben M',
         'time' => '22 Mar 2025',
         'tag' => 'Internal only',
     ],
 ];
 
-$buildTicketDetail = function (array $row) use ($customerName, $customerEmail, $customerAvatar, $defaultNotes): array {
+$buildTicketDetail = function (array $row) use ($providerName, $providerEmail, $providerAvatar, $defaultNotes): array {
     if (! empty($row['detail'])) {
         return $row['detail'];
     }
@@ -42,22 +42,27 @@ $buildTicketDetail = function (array $row) use ($customerName, $customerEmail, $
     $opened = $row['opened'] ?? '—';
     $status = $row['status'] ?? 'open';
     $statusLabel = $row['status_label'] ?? ucfirst(str_replace('_', ' ', $status));
-    $bookingRef = $row['booking_ref'] ?? 'FG-0565-B12';
+    $bookingRef = $row['booking_ref'] ?? '—';
+    $linkedState = $row['linked_state'] ?? match ($row['id'] ?? '') {
+        'tkt-2' => 'populated',
+        'tkt-3' => 'empty',
+        'tkt-4' => 'suggested',
+        default => 'na',
+    };
 
     return [
         'subject' => $subject,
         'category' => $category,
         'booking_ref' => $bookingRef,
-        'submitted_meta' => 'Submitted via customer website · ' . $opened . ' · 09:15',
-        'description' => "My groomer arrived 20 minutes late with no prior communication. The nail trim that was included and paid for in my booking was not completed — the groomer told me they had 'run out of time'. I paid for the full service including add-ons and I did not receive what I paid for. I took Biscuit to another groomer the next day for the nail trim and had to pay again. I am requesting a full refund of £55.00 for failure to deliver the agreed service.\n\nI have attached a screenshot showing the booking time and a photo of Biscuit's nails taken after the appointment.",
-        'attachments' => [
-            ['name' => 'screenshot_booking_time.jpg', 'size' => '1.2 MB'],
-            ['name' => 'Biscuit_nails_uncut.jpg', 'size' => '1.2 MB'],
-        ],
+        'submitted_meta' => 'Submitted via Business Website · 14 days ago · 09:15',
+        'description' => "I received a notification that my account has been flagged for review. I don't understand why — I have completed all my bookings on time and have no unresolved complaints. I have been a provider for over 2 years with a 4.8 rating. I'd like to appeal this decision and understand what triggered the flag.",
+        'attachments' => [],
+        'linked_state' => $linkedState,
+        'linked_count' => 3,
         'linked' => [
             'booking' => [
-                'id' => $bookingRef === 'FG-0565-B12' ? 'GS-0563-B12' : $bookingRef,
-                'title' => ($bookingRef === 'FG-0565-B12' ? 'GS-0563-B12' : $bookingRef) . ' · Full Groom',
+                'id' => 'GS-0563-B12',
+                'title' => 'GS-0563-B12 · Full Groom',
                 'meta' => 'Pawfect Salon · 09 Jul 2025 · £55.00 · Confirmed',
             ],
             'payment' => [
@@ -68,75 +73,52 @@ $buildTicketDetail = function (array $row) use ($customerName, $customerEmail, $
             'chat' => [
                 'business' => 'The Garden Grooming Spot',
                 'person' => 'Chloe D.',
-                'avatar' => $customerAvatar,
-                'tags' => ['Groomer · SE12', 'Booking ' . $bookingRef, '8 messages'],
-                'preview_name' => 'Jane Doe',
+                'avatar' => $providerAvatar,
+                'tags' => ['Groomer · SE12', 'Booking FG-0565-B12', '8 messages'],
+                'preview_name' => $providerName,
                 'preview_message' => 'That\'s not good enough. I paid for the full service including the nail trim. I want a refund...',
                 'preview_time' => '3d ago',
             ],
         ],
         'thread' => [
             'count' => 4,
-            'status_line' => 'Awaiting admin reply — ticket status: waiting on customer',
+            'status_line' => 'Admin reviewing — no action needed from provider',
             'messages' => [
-                [
-                    'side' => 'customer',
-                    'author' => $customerName . ' (Customer)',
-                    'meta' => '13 days ago · 08:55',
-                    'time' => '08:55',
-                    'text' => 'Hi — my groomer arrived late and skipped the nail trim I paid for. Please help with a refund.',
-                    'avatar' => $customerAvatar,
-                ],
                 [
                     'side' => 'admin',
                     'author' => 'Ben M (admin reply)',
                     'meta' => '13 days ago · 09:30',
-                    'time' => '09:30',
-                    'text' => 'Sorry to hear that. I\'ve opened this ticket and contacted the provider for their side of the story. I\'ll update you shortly.',
+                    'time' => '12:35',
+                    'text' => "Hi {$providerName},\n\nWe've reviewed your account activity as part of a routine compliance check. No action is needed from you at this time — we'll update this ticket once the review is complete.\n\nKind Regards,\nFursGo Team",
                     'initials' => 'BM',
-                ],
-                [
-                    'side' => 'customer',
-                    'author' => $customerName . ' (Customer)',
-                    'meta' => '12 days ago · 14:10',
-                    'time' => '14:10',
-                    'text' => 'Thank you. I\'ve attached the booking screenshot and a photo from after the session.',
-                    'avatar' => $customerAvatar,
-                ],
-                [
-                    'side' => 'admin',
-                    'author' => $assigned . ' (admin reply)',
-                    'meta' => '1 day ago · 13:02',
-                    'time' => '13:02',
-                    'text' => 'Thanks for the attachments. We\'re reviewing with the groomer and will confirm next steps on the refund.',
-                    'initials' => collect(explode(' ', $assigned))->map(fn ($p) => strtoupper(substr($p, 0, 1)))->implode(''),
                 ],
             ],
         ],
         'notes' => $defaultNotes,
         'details' => [
             ['label' => 'Support ID', 'value' => $ticketId, 'muted' => true],
-            ['label' => 'Opened by', 'value' => $customerName . ' (customer)'],
-            ['label' => 'Channel', 'value' => 'Website support form'],
+            ['label' => 'Opened by', 'value' => $providerName],
+            ['label' => 'Channel', 'value' => 'Business Website'],
             ['label' => 'Category', 'value' => $category],
-            ['label' => 'Priority', 'value' => 'Normal'],
+            ['label' => 'Priority', 'value' => 'Low'],
             ['label' => 'Status', 'value' => $statusLabel],
             ['label' => 'Assigned to', 'value' => $assigned],
             ['label' => 'Opened', 'value' => $opened . ' · 09:14', 'muted' => true],
             ['label' => 'Last reply', 'value' => '1 day ago · 13:02', 'muted' => true],
         ],
         'activity' => [
-            ['type' => 'open', 'title' => 'Ticket opened by customer via website form', 'time' => '18 Apr 2025 · 09:14'],
+            ['type' => 'open', 'title' => 'Ticket opened by provider via Business Website', 'time' => '18 Apr 2025 · 09:14'],
             ['type' => 'pass', 'title' => 'Assigned to ' . $assigned, 'time' => '18 Apr 2025 · 09:20'],
-            ['type' => 'dispute', 'title' => 'Customer attached booking evidence', 'time' => '18 Apr 2025 · 14:10'],
-            ['type' => 'password', 'title' => 'Admin reply sent to ' . $customerEmail, 'time' => '19 Apr 2025 · 13:02'],
+            ['type' => 'dispute', 'title' => 'Provider appealed account flag', 'time' => '18 Apr 2025 · 14:10'],
+            ['type' => 'password', 'title' => 'Admin reply sent to ' . $providerEmail, 'time' => '19 Apr 2025 · 13:02'],
         ],
-        'reply_to' => $customerEmail,
+        'reply_to' => $providerEmail,
     ];
 };
 
 $rows = collect($rawRows)->map(function ($row) use ($buildTicketDetail) {
     $row['detail'] = $buildTicketDetail($row);
+
     return $row;
 });
 $groupedRows = $rows->groupBy(fn ($row) => $row['month'] ?? 'Other');
@@ -150,249 +132,8 @@ $rowIds = $rows->pluck('id')->values()->all();
         supportSearch: '',
         selectedIds: [],
         selectedTicket: null,
-        rowIds: @js($rowIds),
         replyText: '',
-        linkModalOpen: false,
-        resolveModalOpen: false,
-        resolveSummary: '',
-        resolveNotify: 'send',
-        openResolveNotify: false,
-        disputeModalOpen: false,
-        disputeSuccessOpen: false,
-        disputeCategory: 'Service not delivered as agreed',
-        disputeAssignee: 'Michelle M (me)',
-        disputeNote: '',
-        openDisputeCategory: false,
-        openDisputeAssignee: false,
-        mergeModalOpen: false,
-        mergeSearch: 'SPRT-004',
-        mergeSelectedId: 'm-1',
-        mergeCandidates: [
-            {
-                id: 'm-1',
-                ticket_id: 'SPRT-00419',
-                title: 'SPRT-00419 · Support ticket',
-                meta: 'Opened 12 days ago · Booking · Assigned: Ben M',
-            },
-            {
-                id: 'm-2',
-                ticket_id: 'SPRT-00415',
-                title: 'SPRT-00415 · Support ticket',
-                meta: 'Opened 14 days ago · Payment · Assigned: Michelle M',
-            },
-        ],
-        reassignModalOpen: false,
-        reassignMemberId: 'michelle',
-        reassignNote: '',
-        reassignMembers: [
-            {
-                id: 'michelle',
-                name: 'Michelle M',
-                initials: 'MM',
-                tone: 'green',
-                role: 'Super admin',
-                meta: '2 open support tickets',
-            },
-            {
-                id: 'ben',
-                name: 'Ben M',
-                initials: 'BM',
-                tone: 'blue',
-                role: 'Super admin',
-                meta: 'currently assigned',
-            },
-        ],
-        closeTicketModalOpen: false,
-        closeTicketReason: '',
-        closeTicketNote: '',
-        closeTicketNotify: 'none',
-        openCloseTicketReason: false,
-        openCloseTicketNotify: false,
-        linkRecordType: 'booking',
-        linkSearch: '',
-        linkSelectedId: 'bk-1',
-        linkResults: {
-            booking: [
-                {
-                    id: 'bk-1',
-                    code: 'FG-0563',
-                    icon: 'disputed',
-                    title: 'FG-0563-B12 · DS-00063 · Disputed',
-                    meta: 'Full groom · Pawfect Salon · 09 Jul 2025',
-                    note: 'Linking this booking will also surface its associated payment (INV-0563-B12), dispute (DSP-00063), and the related chat thread with Pawfect Salon in the linked records section.',
-                },
-                {
-                    id: 'bk-2',
-                    code: 'FG-0565',
-                    icon: 'completed',
-                    title: 'FG-0565-B12 · DS-00063 · Completed',
-                    meta: 'Half-day · Canine Corner · 10 Jul 2025',
-                    note: 'Linking this booking will surface its associated payment and related chat thread in the linked records section.',
-                },
-            ],
-            payment: [
-                {
-                    id: 'pay-1',
-                    code: 'INV-0563',
-                    icon: 'invoice',
-                    title: 'INV-0563-B12 · £55.00 · Processed',
-                    meta: 'Visa **** 4563 · 09 Jul 2025',
-                    note: 'Linking this payment will also surface its associated booking in the linked records section.',
-                },
-                {
-                    id: 'pay-2',
-                    code: 'INV-0560',
-                    icon: 'invoice',
-                    title: 'INV-0560-B08 · £42.00 · Processed',
-                    meta: 'Visa **** 4563 · 02 Jul 2025',
-                    note: 'Linking this payment will also surface its associated booking in the linked records section.',
-                },
-            ],
-            dispute: [
-                {
-                    id: 'dsp-1',
-                    code: 'DSP-00063',
-                    icon: 'dispute',
-                    title: 'DSP-00063 · Open dispute',
-                    meta: 'Booking FG-0563-B12 · Raised 08 Jul 2025',
-                    note: 'Linking this dispute will also surface its associated booking and payment in the linked records section.',
-                },
-            ],
-            chat: [
-                {
-                    id: 'chat-1',
-                    code: 'CHAT-0565',
-                    icon: 'chat',
-                    title: 'The Garden Grooming Spot · Chloe D.',
-                    meta: 'Booking FG-0565-B12 · 8 messages',
-                    note: 'Linking this chat thread will surface it alongside related booking records.',
-                },
-            ],
-        },
-        get linkTypeLabel() {
-            return ({ booking: 'bookings', payment: 'payments', dispute: 'disputes', chat: 'chat threads' })[this.linkRecordType] || 'records';
-        },
-        get linkTypeSingular() {
-            return ({ booking: 'booking', payment: 'invoice', dispute: 'dispute', chat: 'chat' })[this.linkRecordType] || 'record';
-        },
-        get filteredLinkResults() {
-            const rows = this.linkResults[this.linkRecordType] || [];
-            const q = (this.linkSearch || '').trim().toLowerCase();
-            if (!q) return rows;
-            return rows.filter((r) => [r.title, r.meta].some((v) => String(v || '').toLowerCase().includes(q)));
-        },
-        get selectedLinkResult() {
-            const rows = this.linkResults[this.linkRecordType] || [];
-            return rows.find((r) => r.id === this.linkSelectedId) || null;
-        },
-        openLinkModal() {
-            this.linkModalOpen = true;
-            this.linkRecordType = 'booking';
-            this.linkSearch = '';
-            this.linkSelectedId = 'bk-1';
-        },
-        closeLinkModal() {
-            this.linkModalOpen = false;
-        },
-        openResolveModal() {
-            this.resolveModalOpen = true;
-            this.resolveSummary = '';
-            this.resolveNotify = 'send';
-            this.openResolveNotify = false;
-        },
-        closeResolveModal() {
-            this.resolveModalOpen = false;
-            this.openResolveNotify = false;
-        },
-        openDisputeModal() {
-            this.disputeModalOpen = true;
-            this.disputeCategory = 'Service not delivered as agreed';
-            this.disputeAssignee = 'Michelle M (me)';
-            this.disputeNote = '';
-            this.openDisputeCategory = false;
-            this.openDisputeAssignee = false;
-        },
-        closeDisputeModal() {
-            this.disputeModalOpen = false;
-            this.openDisputeCategory = false;
-            this.openDisputeAssignee = false;
-        },
-        confirmDispute() {
-            this.disputeModalOpen = false;
-            this.openDisputeCategory = false;
-            this.openDisputeAssignee = false;
-            this.disputeSuccessOpen = true;
-        },
-        closeDisputeSuccess() {
-            this.disputeSuccessOpen = false;
-        },
-        openMergeModal() {
-            this.mergeModalOpen = true;
-            this.mergeSearch = 'SPRT-004';
-            this.mergeSelectedId = 'm-1';
-        },
-        closeMergeModal() {
-            this.mergeModalOpen = false;
-        },
-        get filteredMergeResults() {
-            const q = (this.mergeSearch || '').trim().toLowerCase();
-            const currentId = this.selectedTicket?.ticket_id;
-            return (this.mergeCandidates || []).filter((row) => {
-                if (currentId && row.ticket_id === currentId) {
-                    return false;
-                }
-                if (!q) {
-                    return true;
-                }
-                return [row.ticket_id, row.title, row.meta].some((v) => String(v || '').toLowerCase().includes(q));
-            });
-        },
-        get selectedMergeResult() {
-            return (this.mergeCandidates || []).find((r) => r.id === this.mergeSelectedId) || null;
-        },
-        openReassignModal() {
-            this.reassignModalOpen = true;
-            this.reassignMemberId = 'michelle';
-            this.reassignNote = '';
-        },
-        closeReassignModal() {
-            this.reassignModalOpen = false;
-        },
-        openCloseTicketModal() {
-            this.closeTicketModalOpen = true;
-            this.closeTicketReason = '';
-            this.closeTicketNote = '';
-            this.closeTicketNotify = 'none';
-            this.openCloseTicketReason = false;
-            this.openCloseTicketNotify = false;
-        },
-        closeCloseTicketModal() {
-            this.closeTicketModalOpen = false;
-            this.openCloseTicketReason = false;
-            this.openCloseTicketNotify = false;
-        },
-        setLinkRecordType(type) {
-            this.linkRecordType = type;
-            const first = (this.linkResults[type] || [])[0];
-            this.linkSelectedId = first ? first.id : null;
-            this.linkSearch = '';
-        },
-        closeTicket() {
-            this.selectedTicket = null;
-            this.linkModalOpen = false;
-            this.resolveModalOpen = false;
-            this.openResolveNotify = false;
-            this.disputeModalOpen = false;
-            this.disputeSuccessOpen = false;
-            this.mergeModalOpen = false;
-            this.reassignModalOpen = false;
-            this.closeTicketModalOpen = false;
-            this.openCloseTicketReason = false;
-            this.openCloseTicketNotify = false;
-            this.openDisputeCategory = false;
-            this.openDisputeAssignee = false;
-            this.$dispatch('admin-support-closed');
-        },
+        rowIds: @js($rowIds),
         get allSelected() {
             return this.rowIds.length > 0 && this.selectedIds.length === this.rowIds.length;
         },
@@ -405,17 +146,9 @@ $rowIds = $rows->pluck('id')->values()->all();
             } else {
                 this.selectedIds = [...this.selectedIds, id];
             }
-            this.syncSelection();
         },
         toggleAll() {
             this.selectedIds = this.allSelected ? [] : [...this.rowIds];
-            this.syncSelection();
-        },
-        syncSelection() {
-            this.$dispatch('admin-support-selection-changed', {
-                count: this.selectedIds.length,
-                ids: this.selectedIds,
-            });
         },
         matchesTicket(status, ticketId, subject, category, assigned) {
             const statusOk = this.supportFilter === 'all' || this.supportFilter === status;
@@ -434,29 +167,13 @@ $rowIds = $rows->pluck('id')->values()->all();
         openTicket(row) {
             this.selectedTicket = row;
             this.replyText = '';
-            this.$dispatch('admin-support-selected', { ticket: row });
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+        closeTicket() {
+            this.selectedTicket = null;
+            this.replyText = '';
         },
     }"
-    x-init="syncSelection()"
-    @admin-support-close-request.window="closeTicket()"
-    @admin-support-resolve-open.window="openResolveModal()"
-    @admin-support-dispute-open.window="openDisputeModal()"
-    @admin-support-merge-open.window="openMergeModal()"
-    @admin-support-reassign-open.window="openReassignModal()"
-    @admin-support-close-ticket-open.window="openCloseTicketModal()"
-    x-effect="
-        if (linkModalOpen || resolveModalOpen || disputeModalOpen || disputeSuccessOpen || mergeModalOpen || reassignModalOpen || closeTicketModalOpen) {
-            if (!document.body.classList.contains('admin-co-modal-lock')) {
-                document.body.dataset.adminModalScrollY = String(window.scrollY || 0);
-                document.body.classList.add('admin-co-modal-lock');
-            }
-        } else if (document.body.classList.contains('admin-co-modal-lock')) {
-            const y = Number(document.body.dataset.adminModalScrollY || 0);
-            document.body.classList.remove('admin-co-modal-lock');
-            window.scrollTo(0, y);
-        }
-    ">
+    @admin-support-close-request.window="closeTicket()">
     <div class="admin-co-support-list" x-show="!selectedTicket" x-cloak>
         <div class="admin-co-overview-head">
             <h2 class="admin-page-title mb-0">Support</h2>
@@ -648,7 +365,7 @@ $rowIds = $rows->pluck('id')->values()->all();
                 </div>
             </div>
             <div class="admin-po-table-footer admin-co-pay-footer">
-                <p class="admin-table-count">SHOWING 1–{{ min(8, $rows->count()) }} OF {{ $filters['all'] }} SUPPORT TICKETS</p>
+                <p class="admin-table-count">SHOWING 1–{{ min(8, $rows->count()) }} OF 10 SUPPORT TICKETS</p>
                 <nav class="admin-po-pagination" aria-label="Support ticket pagination">
                     <button type="button" class="admin-po-page-arrow" aria-label="Previous page" disabled>
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
@@ -660,20 +377,20 @@ $rowIds = $rows->pluck('id')->values()->all();
                     <button type="button" class="admin-po-page">2</button>
                     <button type="button" class="admin-po-page-arrow" aria-label="Next page">
                         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40" fill="none">
-                            <g filter="url(#filter0_d_support_page_next)">
+                            <g filter="url(#filter0_d_provider_support_page_next)">
                                 <circle cx="20" cy="16" r="16" fill="white" />
                             </g>
                             <path d="M18 21L23.0343 15.9657L18.0845 11.016" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                             <defs>
-                                <filter id="filter0_d_support_page_next" x="0" y="0" width="40" height="40" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                <filter id="filter0_d_provider_support_page_next" x="0" y="0" width="40" height="40" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
                                     <feFlood flood-opacity="0" result="BackgroundImageFix" />
                                     <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
                                     <feOffset dy="4" />
                                     <feGaussianBlur stdDeviation="2" />
                                     <feComposite in2="hardAlpha" operator="out" />
                                     <feColorMatrix type="matrix" values="0 0 0 0 0.231373 0 0 0 0 0.215686 0 0 0 0 0.192157 0 0 0 0.1 0" />
-                                    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_support_page_next" />
-                                    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_support_page_next" result="shape" />
+                                    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_provider_support_page_next" />
+                                    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_provider_support_page_next" result="shape" />
                                 </filter>
                             </defs>
                         </svg>
@@ -683,5 +400,5 @@ $rowIds = $rows->pluck('id')->values()->all();
         </section>
     </div>
 
-    <x-admin.customer.support-detail :profile="$profile" />
+    <x-admin.provider.support-detail :profile="$profile" />
 </div>

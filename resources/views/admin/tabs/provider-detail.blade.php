@@ -723,6 +723,129 @@ $pawfectProfile = [
             ],
         ],
     ],
+    'support' => [
+        'filters' => [
+            'all' => 14,
+            'open' => 1,
+            'in_progress' => 3,
+            'resolved' => 4,
+            'closed' => 1,
+            'reopened' => 1,
+        ],
+        'rows' => [
+            [
+                'id' => 'tkt-1',
+                'ticket_id' => 'SPRT-00412',
+                'subject' => 'My account has been flagged — I believe this is incorrect',
+                'category' => 'App/Technical',
+                'status' => 'open',
+                'status_label' => 'Open',
+                'opened' => '2 days ago',
+                'assigned' => 'Michelle M',
+                'month' => 'April',
+                'booking_ref' => '—',
+            ],
+            [
+                'id' => 'tkt-2',
+                'ticket_id' => 'SPRT-00413',
+                'subject' => 'Payout not received — week ending 03 Jun',
+                'category' => 'Payment',
+                'status' => 'in_progress',
+                'status_label' => 'In progress',
+                'opened' => '3 days ago',
+                'assigned' => 'Ben M',
+                'month' => 'April',
+            ],
+            [
+                'id' => 'tkt-3',
+                'ticket_id' => 'SPRT-00401',
+                'subject' => 'Unable to upload insurance documents in app',
+                'category' => 'App/Technical',
+                'status' => 'in_progress',
+                'status_label' => 'In progress',
+                'opened' => '5 days ago',
+                'assigned' => 'Michelle M',
+                'month' => 'April',
+            ],
+            [
+                'id' => 'tkt-4',
+                'ticket_id' => 'SPRT-00388',
+                'subject' => 'Client no-show — requesting booking fee retention',
+                'category' => 'Booking',
+                'status' => 'resolved',
+                'status_label' => 'Resolved',
+                'opened' => '2 weeks ago',
+                'assigned' => 'Michelle M',
+                'month' => 'April',
+            ],
+            [
+                'id' => 'tkt-5',
+                'ticket_id' => 'SPRT-00372',
+                'subject' => 'Account flagged for review after client complaint',
+                'category' => 'Account',
+                'status' => 'resolved',
+                'status_label' => 'Resolved',
+                'opened' => '3 weeks ago',
+                'assigned' => 'Ben M',
+                'month' => 'February',
+            ],
+            [
+                'id' => 'tkt-6',
+                'ticket_id' => 'SPRT-00355',
+                'subject' => "Can't update my service area postcode coverage",
+                'category' => 'Other',
+                'status' => 'reopened',
+                'status_label' => 'Re-opened',
+                'opened' => '2 months ago',
+                'assigned' => 'Michelle M',
+                'month' => 'February',
+            ],
+            [
+                'id' => 'tkt-7',
+                'ticket_id' => 'SPRT-00341',
+                'subject' => 'Need help changing availability for Bank Holiday',
+                'category' => 'Booking',
+                'status' => 'in_progress',
+                'status_label' => 'In progress',
+                'opened' => '1 month ago',
+                'assigned' => 'Ben M',
+                'month' => 'February',
+            ],
+            [
+                'id' => 'tkt-8',
+                'ticket_id' => 'SPRT-00320',
+                'subject' => 'Promo listing fee charged twice in March',
+                'category' => 'Payment',
+                'status' => 'resolved',
+                'status_label' => 'Resolved',
+                'opened' => '20/05/24',
+                'assigned' => 'Michelle M',
+                'month' => '2024',
+            ],
+            [
+                'id' => 'tkt-9',
+                'ticket_id' => 'SPRT-00305',
+                'subject' => 'App crashes when opening earnings dashboard',
+                'category' => 'App/Technical',
+                'status' => 'closed',
+                'status_label' => 'Closed',
+                'opened' => '12/04/24',
+                'assigned' => 'Ben M',
+                'month' => '2024',
+            ],
+            [
+                'id' => 'tkt-10',
+                'ticket_id' => 'SPRT-00291',
+                'subject' => 'How do I add a second salon location?',
+                'category' => 'Account',
+                'status' => 'resolved',
+                'status_label' => 'Resolved',
+                'opened' => '03/03/24',
+                'assigned' => 'Michelle M',
+                'month' => '2024',
+            ],
+        ],
+    ],
     'groomer' => [
         'name' => 'Pawfect Grooming',
         'type' => 'groomer',
@@ -1011,7 +1134,11 @@ foreach ($providers as $provider) {
                 <x-admin.provider.compliance :profile="$profile" />
             </div>
 
-            @foreach (['bookings' => 'Bookings', 'payouts' => 'Payouts', 'support' => 'Support'] as $tabKey => $tabLabel)
+            <div x-show="detailTab === 'support'" x-cloak>
+                <x-admin.provider.support :profile="$profile" />
+            </div>
+
+            @foreach (['bookings' => 'Bookings', 'payouts' => 'Payouts'] as $tabKey => $tabLabel)
             <div class="admin-co-placeholder" x-show="detailTab === '{{ $tabKey }}'" x-cloak>
                 <h2 class="admin-page-title mb-0">{{ $tabLabel }}</h2>
                 <p class="admin-section-label mb-0">This section will be built next.</p>
