@@ -2666,6 +2666,33 @@ new class extends Component {
         border-bottom: none;
     }
 
+    .bookings-table tbody tr:not(.bookings-empty-row) td {
+        position: relative;
+        z-index: 0;
+    }
+
+    .bookings-table tbody tr:not(.bookings-empty-row):hover td::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        bottom: 10px;
+        left: 0;
+        right: 0;
+        background: #FFFAF2;
+        pointer-events: none;
+        z-index: -1;
+    }
+
+    .bookings-table tbody tr:not(.bookings-empty-row):hover td:first-child::before {
+        left: 6px;
+        border-radius: 5px 0 0 5px;
+    }
+
+    .bookings-table tbody tr:not(.bookings-empty-row):hover td:last-child::before {
+        right: 6px;
+        border-radius: 0 5px 5px 0;
+    }
+
     .bookings-table-body tr {
         animation: bookings-row-enter 220ms ease-out both;
     }

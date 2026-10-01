@@ -199,7 +199,6 @@
             height: 28px;
             padding: 0 6px;
             border-radius: 5px;
-            background: #FAF8F4;
             color: #3B3731;
             font-family: Lato;
             font-size: 14px;
@@ -207,6 +206,10 @@
             font-weight: 500;
             line-height: normal;
             white-space: nowrap;
+        }
+
+        .more-action-tooltip:hover .more-action-tooltip-inner {
+            background: #FAF8F4;
         }
 
         .more-action-wrapper {
