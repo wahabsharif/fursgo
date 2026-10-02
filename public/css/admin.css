@@ -6397,6 +6397,42 @@ body.admin-co-modal-lock {
     color: #fff;
 }
 
+.admin-po-filter.is-paid {
+    color: #a7c569;
+    border-color: #d8e8b7;
+    background: #f4f8ec;
+}
+
+.admin-po-filter.is-paid.is-active {
+    background: #a7c569;
+    border-color: #a7c569;
+    color: #fff;
+}
+
+.admin-po-filter.is-inv-refunded {
+    color: #fe6f56;
+    border-color: #ffa899;
+    background: #fee8e4;
+}
+
+.admin-po-filter.is-inv-refunded.is-active {
+    background: #fe6f56;
+    border-color: #fe6f56;
+    color: #fff;
+}
+
+.admin-po-filter.is-tx-refunded {
+    color: #ffaf3b;
+    border-color: #ffc97a;
+    background: #fef0dc;
+}
+
+.admin-po-filter.is-tx-refunded.is-active {
+    background: #ffaf3b;
+    border-color: #ffaf3b;
+    color: #fff;
+}
+
 .admin-co-bk-list {
     display: flex;
     flex-direction: column;
@@ -10406,7 +10442,7 @@ body.admin-co-modal-lock {
 }
 
 .admin-co-pay-footer {
-    margin-top: 16px;
+    margin-top: 0px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -11757,13 +11793,6 @@ body.admin-co-modal-lock {
     font-size: 18px;
     font-weight: 700;
     line-height: 1.25;
-}
-
-.admin-co-pay-detail-summary-amount.is-credit,
-.admin-co-pay-detail-summary-amount.is-refund,
-.admin-co-pay-detail-hero-amount.is-credit,
-.admin-co-pay-detail-hero-amount.is-refund {
-    color: #649fc9;
 }
 
 .admin-co-pay-detail-summary-status {
@@ -13399,4 +13428,1057 @@ body.admin-co-modal-lock {
 .admin-co-support-close-modal .admin-btn-dark:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+/* Business provider · Payouts / Earnings overview */
+.admin-bp-payouts {
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+}
+
+.admin-bp-payouts-subnav {
+    align-self: center;
+}
+
+.admin-bp-payouts-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+}
+
+.admin-bp-payouts-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.admin-bp-payouts-metric-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 118px;
+    padding: 18px 20px;
+    border-radius: 10px;
+    border: 1px solid #e4e4e4;
+    background: #fdfdfd;
+}
+
+.admin-bp-payouts-metric-title {
+    margin: 0;
+    color: #3B3731;
+    font-family: Lato, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.35;
+}
+
+.admin-bp-payouts-metric-value {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+.admin-bp-payouts-metric-note {
+    color: #3B3731;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.35;
+}
+
+.admin-bp-payouts-chart-panel.admin-card.admin-co-panel,
+.admin-bp-payouts-booking-panel.admin-card.admin-co-panel {
+    border-radius: 10px;
+    border: none;
+    background: #fafafa;
+    box-shadow: none;
+}
+
+.admin-bp-payouts-chart-head,
+.admin-bp-payouts-booking-head {
+    margin-bottom: 50px;
+}
+
+.admin-bp-payouts-chart-head .admin-co-section-title,
+.admin-bp-payouts-booking-head .admin-co-section-title {
+    margin-bottom: 0;
+}
+
+.admin-bp-payouts-chart-ranges {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.admin-bp-payouts-range {
+    padding: 0;
+    border: none;
+    background: none;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+    cursor: pointer;
+}
+
+.admin-bp-payouts-range.is-active {
+    color: #3b3731;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.admin-bp-payouts-chart {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 10px;
+    align-items: end;
+    min-height: 220px;
+    padding: 28px 4px 0;
+}
+
+.admin-bp-payouts-bar-col {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.admin-bp-payouts-bar-track {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: 100%;
+    height: 200px;
+}
+
+.admin-bp-payouts-bar-stack {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 70%;
+    max-width: 36px;
+    min-height: 30px;
+}
+
+.admin-bp-payouts-bar {
+    display: block;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 8px;
+    border-radius: 8px 8px 4px 4px;
+    background: #fef0dc;
+}
+
+.admin-bp-payouts-bar.is-active {
+    background: #ffc97a;
+}
+
+.admin-bp-payouts-bar-label {
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+.admin-bp-payouts-bar-col.is-active .admin-bp-payouts-bar-label {
+    color: #3b3731;
+    font-weight: 600;
+}
+
+.admin-bp-payouts-bar-tip {
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: flex-start;
+    justify-content: center;
+    width: 36px;
+    height: 22px;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.admin-bp-payouts-bar-tip svg {
+    display: block;
+    width: 36px;
+    height: 22px;
+}
+
+.admin-bp-payouts-bar-tip-value {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 17px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.admin-bp-payouts-growth {
+    margin: 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.admin-bp-payouts-booking-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-bp-payouts-booking-row {
+    display: grid;
+    grid-template-columns: 110px minmax(0, 1fr) 48px 88px;
+    align-items: center;
+    gap: 16px;
+    padding: 5px 0;
+    border-bottom: 1px solid #ecebeb;
+}
+
+.admin-bp-payouts-booking-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.admin-bp-payouts-booking-row:first-child {
+    padding-top: 0;
+}
+
+.admin-bp-payouts-booking-label {
+    color: #9C9A97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.admin-bp-payouts-progress {
+    width: 100%;
+    height: 10px;
+    border-radius: 100px;
+    background: #f4f4f4;
+    overflow: hidden;
+}
+
+.admin-bp-payouts-progress-fill {
+    display: block;
+    height: 100%;
+    border-radius: 100px 0 0 100px;
+    background: #fbac83;
+}
+
+.admin-bp-payouts-progress-fill.is-orange {
+    background: #fbac83;
+}
+
+.admin-bp-payouts-progress-fill.is-blue {
+    background: #cbdce8;
+}
+
+.admin-bp-payouts-progress-fill.is-coral {
+    background: #ffa899;
+}
+
+/* Space Host payouts accents */
+.admin-bp-payouts.is-space-view .admin-bp-profile-subnav-btn.is-active {
+    background: #ffa899;
+    color: #fff;
+}
+
+.admin-bp-payouts.is-space-view .admin-bp-payouts-bar {
+    background: #FFE9E5;
+}
+
+.admin-bp-payouts.is-space-view .admin-bp-payouts-bar.is-active {
+    background: #ffa899;
+}
+
+.admin-bp-payouts.is-space-view .admin-bp-payouts-progress-fill.is-orange,
+.admin-bp-payouts.is-space-view .admin-bp-payouts-progress-fill.is-coral {
+    background: #ffa899;
+}
+
+.admin-bp-payouts-bank-panel.admin-card.admin-co-panel {
+    border-radius: 10px;
+    border: none;
+    background: #fafafa;
+    box-shadow: none;
+}
+
+.admin-bp-payouts-bank {
+    margin: 0;
+}
+
+.admin-bp-payouts-bank .admin-co-details-row dd.is-verified {
+    color: #a7c569;
+}
+
+.admin-bp-payouts-booking-percent,
+.admin-bp-payouts-booking-amount {
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+    text-align: right;
+}
+
+.admin-bp-payouts-booking-amount {
+    font-weight: 600;
+}
+
+@media (max-width: 1100px) {
+    .admin-bp-payouts-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767.98px) {
+    .admin-bp-payouts-subnav {
+        align-self: stretch;
+        justify-content: flex-start;
+        overflow-x: auto;
+    }
+
+    .admin-bp-payouts-metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-bp-payouts-chart {
+        gap: 6px;
+        overflow-x: auto;
+        grid-template-columns: repeat(12, minmax(36px, 1fr));
+    }
+
+    .admin-bp-payouts-booking-row {
+        grid-template-columns: 90px minmax(0, 1fr);
+        gap: 10px 12px;
+    }
+
+    .admin-bp-payouts-booking-percent {
+        grid-column: 1;
+    }
+
+    .admin-bp-payouts-booking-amount {
+        grid-column: 2;
+        justify-self: end;
+    }
+
+    .admin-bp-tx-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-bp-tx-toolbar .admin-po-tools {
+        margin-left: 0;
+        flex-wrap: wrap;
+    }
+
+    .admin-bp-tx-detail-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 14px 16px;
+    }
+
+    .admin-bp-tx-detail-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-bp-tx-detail-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+}
+
+/* Provider payouts — Transactions */
+.admin-bp-tx {
+    margin-top: 8px;
+}
+
+.admin-bp-tx-toolbar {
+    margin: 18px 0;
+}
+
+.admin-bp-tx-toolbar .admin-po-filters {
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.admin-bp-tx-toolbar .admin-po-tools {
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+.admin-bp-tx-toolbar .admin-po-search,
+.admin-bp-tx-toolbar .admin-po-tool-btn {
+    border-radius: 55px;
+}
+
+.admin-bp-tx-table-card {
+    border-radius: 10px;
+    border: 1px solid #ecebeb;
+    background: #fff;
+    overflow: hidden;
+}
+
+.admin-bp-tx-table-card .admin-co-pay-table-wrap {
+    overflow-x: auto;
+}
+
+.admin-bp-tx-footer {
+    margin-top: 16px;
+}
+
+.admin-bp-tx-table.admin-po-table {
+    width: 100%;
+    min-width: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: auto;
+}
+
+.admin-bp-tx-table thead th {
+    padding: 14px 12px;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+    text-align: left;
+    border-bottom: 1px solid #ecebeb;
+    background: #fff;
+    white-space: nowrap;
+}
+
+.admin-bp-tx-table tbody td {
+    padding: 14px 12px;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.35;
+    border-bottom: 1px solid #ecebeb;
+    vertical-align: middle;
+}
+
+.admin-bp-tx-row.is-open td {
+    border-bottom-color: transparent;
+}
+
+.admin-bp-tx-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-bp-tx-client {
+    color: #3b3731;
+}
+
+.admin-bp-tx-pet {
+    color: #9c9a97;
+    font-weight: 400;
+}
+
+.admin-bp-tx-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    border-radius: 96px;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    white-space: nowrap;
+}
+
+.admin-bp-tx-status.is-paid {
+    border: 1px solid #d8e8b7;
+    background: #f4f8ec;
+    color: #a7c569;
+}
+
+.admin-bp-tx-status.is-failed {
+    border: 1px solid #ffa899;
+    background: #fee8e4;
+    color: #fe6f56;
+}
+
+.admin-bp-tx-status.is-refunded {
+    border: 1px solid #ffc97a;
+    background: #fef0dc;
+    color: #ffaf3b;
+}
+
+.admin-bp-tx-view-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #3b3731;
+}
+
+.admin-bp-tx-view-btn:hover {
+    opacity: 0.75;
+}
+
+.admin-bp-tx-detail-row > td {
+    padding: 0 12px 16px;
+    border-bottom: 1px solid #ecebeb;
+    background: #fff;
+}
+
+.admin-bp-tx-detail-card {
+    border-radius: 10px;
+    border: 1px solid #ecebeb;
+    background: #fff;
+    padding: 18px 20px 20px;
+}
+
+.admin-bp-tx-detail-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.admin-bp-tx-detail-top-main {
+    min-width: 0;
+}
+
+.admin-bp-tx-detail-id-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.admin-bp-tx-booking-id {
+    color: #659FC9;
+    font-family: Lato, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.admin-bp-tx-detail-meta {
+    margin: 10px 0 0;
+    color: #3B3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.35;
+}
+
+.admin-bp-tx-detail-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+}
+
+.admin-bp-tx-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px 20px;
+    margin-bottom: 16px;
+}
+
+.admin-bp-tx-detail-label {
+    margin: 0 0 6px;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.admin-bp-tx-detail-value {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.admin-bp-tx-detail-value.is-paid,
+.admin-bp-tx-detail-value.is-failed,
+.admin-bp-tx-detail-value.is-refunded {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.admin-bp-tx-detail-value.is-paid {
+    color: #a7c569;
+}
+
+.admin-bp-tx-detail-value.is-failed {
+    color: #fe6f56;
+}
+
+.admin-bp-tx-detail-value.is-refunded {
+    color: #ffb13f;
+}
+
+.admin-bp-tx-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+
+.admin-bp-tx-breakdown {
+    border-radius: 10px;
+    background: #fafafa;
+    padding: 14px 16px;
+}
+
+.admin-bp-tx-breakdown-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 5px;
+}
+
+.admin-bp-tx-breakdown-copy {
+    min-width: 0;
+}
+
+.admin-bp-tx-breakdown-label {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.35;
+}
+
+.admin-bp-tx-breakdown-label-suffix {
+    color: #9c9a97;
+    font-weight: 400;
+}
+
+.admin-bp-tx-breakdown-note {
+    margin: 4px 0 0;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.35;
+    margin-left: 15px;
+}
+
+.admin-bp-tx-breakdown-value {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+
+.admin-bp-tx-breakdown-total {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 1px solid #ecebeb;
+}
+
+.admin-bp-tx-breakdown-total-label,
+.admin-bp-tx-breakdown-total-value {
+    margin: 0;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.admin-bp-tx-breakdown-total-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.admin-bp-tx-breakdown-total-note {
+    margin: 0;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.admin-bp-tx-breakdown-total-note.is-failed {
+    color: #fe6f56;
+}
+
+.admin-bp-tx-refund-summary {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-bp-tx-refund-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.admin-bp-tx-refund-label {
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.35;
+}
+
+.admin-bp-tx-refund-value {
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+
+.admin-bp-tx-refund-value.is-credit {
+    color: #a7c569;
+}
+
+.admin-bp-tx-refund-value.is-debit {
+    color: #fe6f56;
+}
+
+.admin-bp-tx-refund-value.is-net {
+    color: #3b3731;
+    font-weight: 700;
+}
+
+/* Provider payouts — Payouts list tab */
+.admin-bp-po {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.admin-bp-po-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.admin-bp-po-details-panel.admin-card.admin-co-panel {
+    border-radius: 10px;
+    border: 1px solid #ecebeb;
+    background: #fafafa;
+    box-shadow: none;
+}
+
+.admin-bp-po-details {
+    margin: 0;
+}
+
+.admin-bp-po-details .admin-co-details-row dd.is-verified {
+    color: #a7c569;
+}
+
+.admin-bp-po-verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #a7c569;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.35;
+}
+
+.admin-bp-po-table-card {
+    border-radius: 10px;
+    border: 1px solid #ecebeb;
+    background: #fff;
+    overflow: hidden;
+}
+
+.admin-bp-po-table-card .admin-co-pay-table-wrap {
+    overflow-x: auto;
+}
+
+.admin-bp-po-table.admin-po-table {
+    width: 100%;
+    min-width: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: auto;
+}
+
+.admin-bp-po-table thead th {
+    padding: 14px 12px;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+    text-align: left;
+    background: #fff;
+    white-space: nowrap;
+}
+
+.admin-bp-po-table tbody td {
+    padding: 14px 12px;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.35;
+    border-bottom: 1px solid #ecebeb;
+    vertical-align: middle;
+}
+
+.admin-bp-po-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-bp-po-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    border-radius: 96px;
+    text-align: center;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    white-space: nowrap;
+}
+
+.admin-bp-po-status.is-completed {
+    border: 1px solid #d8e8b7;
+    background: #f4f8ec;
+    color: #a7c569;
+}
+
+.admin-bp-po-status.is-on-hold {
+    border: 1px solid #ffc97a;
+    background: #fef0dc;
+    color: #ffaf3b;
+}
+
+.admin-bp-po-invoice-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.admin-bp-po-invoice-btn:hover {
+    opacity: 0.75;
+}
+
+.admin-bp-po-footer {
+    margin-top: 0;
+}
+
+@media (max-width: 1100px) {
+    .admin-bp-po-metrics {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .admin-bp-po-metrics {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Provider payouts — Invoices tab */
+.admin-bp-inv-toolbar {
+    margin: 18px 0;
+}
+
+.admin-bp-inv-toolbar .admin-po-filters {
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.admin-bp-inv-toolbar .admin-po-tools {
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+.admin-bp-inv-toolbar .admin-po-search,
+.admin-bp-inv-toolbar .admin-po-tool-btn {
+    border-radius: 55px;
+}
+
+.admin-bp-inv-table-card {
+    border: none;
+    background: transparent;
+    overflow: visible;
+}
+
+.admin-bp-inv-table-card .admin-co-pay-table-wrap {
+    overflow-x: auto;
+}
+
+.admin-bp-inv-table.admin-po-table {
+    width: 100%;
+    min-width: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: auto;
+}
+
+.admin-bp-inv-table thead th {
+    height: 50px;
+    padding: 0 12px;
+    color: #9c9a97;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: left;
+    vertical-align: middle;
+    white-space: nowrap;
+    background: #fafafa;
+    border-top: 1px solid #ecebeb;
+    border-bottom: 1px solid #ecebeb;
+}
+
+.admin-bp-inv-table thead th:first-child {
+    border-left: 1px solid #ecebeb;
+    border-radius: 10px 0 0 10px;
+}
+
+.admin-bp-inv-table thead th:last-child {
+    border-right: 1px solid #ecebeb;
+    border-radius: 0 10px 10px 0;
+}
+
+.admin-bp-inv-table tbody td {
+    padding: 14px 12px;
+    color: #3b3731;
+    font-family: Lato, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.35;
+    border-bottom: 1px solid #ecebeb;
+    vertical-align: middle;
+}
+
+.admin-bp-inv-table tbody tr.admin-co-pay-month-row td {
+    border-bottom: none;
+    padding-top: 16px;
+    padding-bottom: 6px;
+    background: #fff;
+}
+
+.admin-bp-inv-table tbody tr.admin-bp-inv-row {
+    cursor: pointer;
+}
+
+.admin-bp-inv-table tbody tr.admin-bp-inv-row:hover td,
+.admin-bp-inv-table tbody tr.admin-bp-inv-row.is-selected td {
+    background: #fdf8f3;
+}
+
+.admin-bp-inv-table td.is-refund-total {
+    color: #fe6f56;
+    font-weight: 600;
+}
+
+.admin-bp-inv-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    border-radius: 96px;
+    text-align: center;
+    font-family: Lato, sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    white-space: nowrap;
+}
+
+.admin-bp-inv-status.is-paid {
+    border: 1px solid #d8e8b7;
+    background: #f4f8ec;
+    color: #a7c569;
+}
+
+.admin-bp-inv-status.is-disputed {
+    border: 1px solid #ffc97a;
+    background: #fef0dc;
+    color: #ffaf3b;
+}
+
+.admin-bp-inv-status.is-refunded {
+    border: 1px solid #ffa899;
+    background: #fee8e4;
+    color: #fe6f56;
+}
+
+.admin-bp-inv-footer {
+    margin-top: 16px;
+}
+
+@media (max-width: 767.98px) {
+    .admin-bp-inv-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-bp-inv-toolbar .admin-po-tools {
+        margin-left: 0;
+        flex-wrap: wrap;
+    }
 }

@@ -467,6 +467,67 @@ $pawfectProfile = [
         ['label' => 'Payout hold', 'value' => 'None', 'muted' => true],
         ['label' => 'Bank account', 'value' => '**** **** **** 4821'],
     ],
+    'payouts' => [
+        'metrics' => [
+            ['title' => 'Total earned', 'value' => '£652.00', 'note' => 'All time'],
+            ['title' => 'Pending payout', 'value' => '£157.00', 'note' => 'Next pay cycle: 10 Jun 2025'],
+            ['title' => 'On Hold', 'value' => '£52.00', 'note' => '1 open dispute'],
+            ['title' => 'Refunded total', 'value' => '£70', 'note' => '2 refunds issued'],
+        ],
+        'monthly' => [
+            ['label' => 'Jan', 'value' => 90],
+            ['label' => 'Feb', 'value' => 120],
+            ['label' => 'Mar', 'value' => 140],
+            ['label' => 'Apr', 'value' => 110],
+            ['label' => 'May', 'value' => 160],
+            ['label' => 'Jun', 'value' => 250, 'active' => true, 'display' => '£250'],
+            ['label' => 'Jul', 'value' => 130],
+            ['label' => 'Aug', 'value' => 100],
+            ['label' => 'Sep', 'value' => 150],
+            ['label' => 'Oct', 'value' => 125],
+            ['label' => 'Nov', 'value' => 95],
+            ['label' => 'Dec', 'value' => 80],
+        ],
+        'booking_details' => [
+            ['label' => 'Full Groom', 'percent' => 60, 'amount' => '£452.00', 'tone' => 'orange'],
+            ['label' => 'Add-ons', 'percent' => 30, 'amount' => '£178.00', 'tone' => 'orange'],
+            ['label' => 'Pet', 'percent' => 10, 'amount' => '£52.00', 'tone' => 'blue'],
+        ],
+        'growth_note' => '+18% growth over last 12 weeks',
+        'transactions' => [
+            'filters' => [
+                'all' => 14,
+                'paid' => 9,
+                'refunded' => 1,
+                'failed' => 1,
+            ],
+        ],
+        'payouts_tab' => [
+            'summary' => [
+                ['title' => 'Pending payout', 'value' => '£157.00', 'note' => 'Awaiting processing'],
+                ['title' => 'Total paid out', 'value' => '£591.00', 'note' => 'All time'],
+                ['title' => 'Next payout', 'value' => '26 Mar', 'note' => 'Payout cycle: Weekly'],
+            ],
+            'details' => [
+                ['label' => 'Account holder', 'value' => 'Pawfect Grooming'],
+                ['label' => 'Bank', 'value' => 'Barclays'],
+                ['label' => 'Account number', 'value' => '•••• 4821'],
+                ['label' => 'Sort code', 'value' => '40 - 00 - 42'],
+                ['label' => 'Payout frequency', 'value' => 'Weekly · every Tuesday'],
+                ['label' => 'Next payout', 'value' => '26 Mar 2025 · £1,054 pending'],
+                ['label' => 'Bank verified', 'value' => 'Verified', 'verified' => true],
+            ],
+            'total' => 14,
+        ],
+        'invoices' => [
+            'filters' => [
+                'all' => 15,
+                'paid' => 12,
+                'disputed' => 1,
+                'refunded' => 2,
+            ],
+        ],
+    ],
     'notes' => [
         [
             'text' => 'Provider flagged for late arrivals on 3 bookings this month. Monitoring performance before next review cycle.',
@@ -1035,11 +1096,21 @@ foreach ($providers as $provider) {
         wire:key="provider-detail-{{ $profileId }}"
         x-show="selectedProviderId === '{{ $profileId }}'"
         x-cloak
-        @admin-provider-opened.window="if ($event.detail && $event.detail.id === '{{ $profileId }}') viewAs = @js($defaultView)"
+        @admin-provider-opened.window="if ($event.detail && $event.detail.id === '{{ $profileId }}') { selectedPayment = null; viewAs = @js($defaultView); }"
         x-data="{
             viewAs: @js($defaultView),
             dual: @js($isDual),
             profileSubTab: 'profile',
+            payoutsSubTab: 'overview',
+            chartRange: 'month',
+            selectedPayment: null,
+            openPayment(row) {
+                this.selectedPayment = row;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+            closePayment() {
+                this.selectedPayment = null;
+            },
             editBusinessOpen: false,
             editEmail: @js($profile['edit_business']['email'] ?? $profile['email'] ?? ''),
             editPhone: @js($profile['edit_business']['phone'] ?? $profile['phone'] ?? ''),
@@ -1138,7 +1209,11 @@ foreach ($providers as $provider) {
                 <x-admin.provider.support :profile="$profile" />
             </div>
 
-            @foreach (['bookings' => 'Bookings', 'payouts' => 'Payouts'] as $tabKey => $tabLabel)
+            <div x-show="detailTab === 'payouts'" x-cloak>
+                <x-admin.provider.payouts :profile="$profile" />
+            </div>
+
+            @foreach (['bookings' => 'Bookings'] as $tabKey => $tabLabel)
             <div class="admin-co-placeholder" x-show="detailTab === '{{ $tabKey }}'" x-cloak>
                 <h2 class="admin-page-title mb-0">{{ $tabLabel }}</h2>
                 <p class="admin-section-label mb-0">This section will be built next.</p>

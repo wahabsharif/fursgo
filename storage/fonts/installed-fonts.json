@@ -1,13 +1,13 @@
 {
     "lato": {
-        "normal": "C:\\wahab-sharif\\GitHub\\fursgo\\storage\\fonts\/lato_normal_ffe0f6031e25cdb04871481cf0160e6f",
-        "bold": "C:\\wahab-sharif\\GitHub\\fursgo\\storage\\fonts\/lato_bold_ad7d7ea11fdd0cee6ed223fe1e1b88e6",
-        "italic": "C:\\wahab-sharif\\GitHub\\fursgo\\storage\\fonts\/lato_italic_b2e66f470786aa09779f24546a058210",
-        "bold_italic": "lato_bold_italic_6142227c78f21167429bb56e562f0abf"
+        "normal": "D:\\fursgo_laravel\\fursgo\\storage\\fonts\/lato_normal_41ae85f2b6de3f8deae4a1fdff4a8813",
+        "bold": "D:\\fursgo_laravel\\fursgo\\storage\\fonts\/lato_bold_acdd78ac86e8016a58ef2ae2b643325b",
+        "italic": "D:\\fursgo_laravel\\fursgo\\storage\\fonts\/lato_italic_f5e5a0d9182eb77bdc7bdbbd010a969e",
+        "bold_italic": "lato_bold_italic_165129d7a1d439f7addb2a32a40dc222"
     },
     "playfair display": {
-        "italic": "playfair_display_italic_198a837a854b2e217042a3af36ab2dbb",
-        "normal": "C:\\wahab-sharif\\GitHub\\fursgo\\storage\\fonts\/playfair_display_normal_d4dbef3e46f2370d639f482ab46a79dc",
-        "bold": "C:\\wahab-sharif\\GitHub\\fursgo\\storage\\fonts\/playfair_display_bold_d56368ca86888f2ffbf3c243ca8e92be"
+        "italic": "playfair_display_italic_7e03b4015958c841ee60cb0f7bebaa33",
+        "normal": "D:\\fursgo_laravel\\fursgo\\storage\\fonts\/playfair_display_normal_a2b3026019da5b4dca5ef18514c5e49f",
+        "bold": "D:\\fursgo_laravel\\fursgo\\storage\\fonts\/playfair_display_bold_d48dcecf57b276f4f05dba19a47ce0f6"
     }
 }

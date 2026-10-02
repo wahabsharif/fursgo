@@ -8,7 +8,7 @@ $customerId = $profile['id'] ?? 'USR-01452';
 <div class="admin-co-pay-detail" x-show="selectedPayment" x-cloak>
     <div class="admin-co-overview-head">
         <div class="admin-co-bk-detail-title-row">
-            <button type="button" class="admin-co-bk-detail-back" @click="closePayment()" aria-label="Back to payments">
+            <button type="button" class="admin-co-bk-detail-back" @click="closePayment()" aria-label="Back">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
                     <g filter="url(#filter0_d_pay_detail_back)">
                         <circle cx="10" cy="10" r="10" transform="matrix(-1 0 0 1 24 0)" fill="white" />
@@ -29,7 +29,8 @@ $customerId = $profile['id'] ?? 'USR-01452';
                 </svg>
             </button>
             <h2 class="admin-page-title mb-0">
-                Payment <span x-text="selectedPayment?.invoice_id"></span>
+                <span x-text="selectedPayment?.heading_prefix || 'Payment'"></span>
+                <span x-text="selectedPayment?.invoice_id"></span>
             </h2>
         </div>
         <div class="admin-co-pay-detail-head-actions">
@@ -60,9 +61,8 @@ $customerId = $profile['id'] ?? 'USR-01452';
                 <div class="admin-co-pay-detail-summary-main">
                     <div class="admin-co-pay-detail-summary-item">
                         <span class="admin-co-pay-detail-summary-icon" aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                <path d="M1.5 3.5H10.5V9.5C10.5 10.0523 10.0523 10.5 9.5 10.5H2.5C1.94772 10.5 1.5 10.0523 1.5 9.5V3.5Z" stroke="#3B3731" stroke-width="0.9" />
-                                <path d="M1.5 5H10.5M4 1.5V3.5M8 1.5V3.5" stroke="#3B3731" stroke-width="0.9" stroke-linecap="round" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="10" viewBox="0 0 12 10" fill="none">
+                                <path d="M11.375 4.875C11.375 2.75381 11.375 1.69294 10.7304 1.03425C10.0858 0.375562 9.04905 0.375 6.975 0.375H4.775C2.70095 0.375 1.66365 0.375 1.0196 1.03425C0.37555 1.6935 0.375 2.75381 0.375 4.875C0.375 6.99619 0.375 8.05706 1.0196 8.71575C1.6642 9.37444 2.70095 9.375 4.775 9.375H6.975C9.04905 9.375 10.0863 9.375 10.7304 8.71575C11.0901 8.34844 11.2491 7.85625 11.3189 7.125M4.775 7.125H2.575M6.975 7.125H6.15M0.375 3.75H3.125M11.375 3.75H5.325" stroke="#3B3731" stroke-width="0.75" stroke-linecap="round" />
                             </svg>
                         </span>
                         <p class="admin-co-pay-detail-summary-text" x-text="selectedPayment.detail?.charge_label"></p>
@@ -70,8 +70,9 @@ $customerId = $profile['id'] ?? 'USR-01452';
                     <div class="admin-co-pay-detail-summary-item">
                         <span class="admin-co-pay-detail-summary-icon" aria-hidden="true">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                <rect x="1" y="2" width="10" height="9" rx="1.5" stroke="#3B3731" stroke-width="0.9" />
-                                <path d="M1 5H11M4 1V3M8 1V3" stroke="#3B3731" stroke-width="0.9" stroke-linecap="round" />
+                                <path d="M0.375 5.60001C0.375 3.52596 0.375 2.48866 1.0196 1.84461C1.6642 1.20056 2.70095 1.20001 4.775 1.20001H6.975C9.04905 1.20001 10.0863 1.20001 10.7304 1.84461C11.3744 2.48921 11.375 3.52596 11.375 5.60001V6.70001C11.375 8.77406 11.375 9.81136 10.7304 10.4554C10.0858 11.0995 9.04905 11.1 6.975 11.1H4.775C2.70095 11.1 1.66365 11.1 1.0196 10.4554C0.37555 9.81081 0.375 8.77406 0.375 6.70001V5.60001Z" stroke="#3B3731" stroke-width="0.75" />
+                                <path d="M3.1249 1.2V0.375M8.6249 1.2V0.375M0.649902 3.95H11.0999" stroke="#3B3731" stroke-width="0.75" stroke-linecap="round" />
+                                <path d="M9.1752 8.35001C9.1752 8.49588 9.11725 8.63577 9.0141 8.73892C8.91096 8.84206 8.77106 8.90001 8.6252 8.90001C8.47933 8.90001 8.33943 8.84206 8.23629 8.73892C8.13314 8.63577 8.0752 8.49588 8.0752 8.35001C8.0752 8.20414 8.13314 8.06424 8.23629 7.9611C8.33943 7.85795 8.47933 7.80001 8.6252 7.80001C8.77106 7.80001 8.91096 7.85795 9.0141 7.9611C9.11725 8.06424 9.1752 8.20414 9.1752 8.35001ZM9.1752 6.15001C9.1752 6.29588 9.11725 6.43577 9.0141 6.53891C8.91096 6.64206 8.77106 6.70001 8.6252 6.70001C8.47933 6.70001 8.33943 6.64206 8.23629 6.53891C8.13314 6.43577 8.0752 6.29588 8.0752 6.15001C8.0752 6.00414 8.13314 5.86424 8.23629 5.7611C8.33943 5.65795 8.47933 5.60001 8.6252 5.60001C8.77106 5.60001 8.91096 5.65795 9.0141 5.7611C9.11725 5.86424 9.1752 6.00414 9.1752 6.15001ZM6.4252 8.35001C6.4252 8.49588 6.36725 8.63577 6.2641 8.73892C6.16096 8.84206 6.02106 8.90001 5.8752 8.90001C5.72933 8.90001 5.58943 8.84206 5.48629 8.73892C5.38314 8.63577 5.3252 8.49588 5.3252 8.35001C5.3252 8.20414 5.38314 8.06424 5.48629 7.9611C5.58943 7.85795 5.72933 7.80001 5.8752 7.80001C6.02106 7.80001 6.16096 7.85795 6.2641 7.9611C6.36725 8.06424 6.4252 8.20414 6.4252 8.35001ZM6.4252 6.15001C6.4252 6.29588 6.36725 6.43577 6.2641 6.53891C6.16096 6.64206 6.02106 6.70001 5.8752 6.70001C5.72933 6.70001 5.58943 6.64206 5.48629 6.53891C5.38314 6.43577 5.3252 6.29588 5.3252 6.15001C5.3252 6.00414 5.38314 5.86424 5.48629 5.7611C5.58943 5.65795 5.72933 5.60001 5.8752 5.60001C6.02106 5.60001 6.16096 5.65795 6.2641 5.7611C6.36725 5.86424 6.4252 6.00414 6.4252 6.15001ZM3.6752 8.35001C3.6752 8.49588 3.61725 8.63577 3.5141 8.73892C3.41096 8.84206 3.27106 8.90001 3.1252 8.90001C2.97933 8.90001 2.83943 8.84206 2.73629 8.73892C2.63314 8.63577 2.5752 8.49588 2.5752 8.35001C2.5752 8.20414 2.63314 8.06424 2.73629 7.9611C2.83943 7.85795 2.97933 7.80001 3.1252 7.80001C3.27106 7.80001 3.41096 7.85795 3.5141 7.9611C3.61725 8.06424 3.6752 8.20414 3.6752 8.35001ZM3.6752 6.15001C3.6752 6.29588 3.61725 6.43577 3.5141 6.53891C3.41096 6.64206 3.27106 6.70001 3.1252 6.70001C2.97933 6.70001 2.83943 6.64206 2.73629 6.53891C2.63314 6.43577 2.5752 6.29588 2.5752 6.15001C2.5752 6.00414 2.63314 5.86424 2.73629 5.7611C2.83943 5.65795 2.97933 5.60001 3.1252 5.60001C3.27106 5.60001 3.41096 5.65795 3.5141 5.7611C3.61725 5.86424 3.6752 6.00414 3.6752 6.15001Z" fill="#3B3731" />
                             </svg>
                         </span>
                         <p class="admin-co-pay-detail-summary-text" x-text="selectedPayment.detail?.summary_date || selectedPayment.date"></p>
@@ -79,21 +80,20 @@ $customerId = $profile['id'] ?? 'USR-01452';
                     <div class="admin-co-pay-detail-summary-item">
                         <span class="admin-co-pay-detail-summary-icon" aria-hidden="true">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14" fill="none">
-                                <circle cx="6" cy="3.5" r="2.75" stroke="#3B3731" stroke-width="0.9" />
-                                <path d="M1 12.5C1 9.6 3.1 7.5 6 7.5C8.9 7.5 11 9.6 11 12.5" stroke="#3B3731" stroke-width="0.9" stroke-linecap="round" />
+                                <path d="M5.88623 0.375C7.64583 0.375151 9.07178 1.80197 9.07178 3.56152C9.07157 5.32091 7.6457 6.74692 5.88623 6.74707C4.12663 6.74707 2.69991 5.321 2.69971 3.56152C2.69971 1.80187 4.12651 0.375 5.88623 0.375Z" stroke="#3B3731" stroke-width="0.75" />
+                                <path d="M0.382936 12.9496C0.27502 10.7913 1.22469 6.79849 5.88668 6.79849C6.92629 6.79849 8.55504 6.89064 9.77132 8.19379C10.3059 8.74835 11.375 10.4759 11.375 12.9496" stroke="#3B3731" stroke-width="0.75" stroke-linecap="round" />
                             </svg>
                         </span>
                         <p class="admin-co-pay-detail-summary-text">
-                            <span>{{ $customerName }}</span>
+                            <span x-text="selectedPayment?.customer_name || @js($customerName)"></span>
                             <span class="admin-co-pay-detail-summary-sep">·</span>
-                            <span>{{ $customerId }}</span>
+                            <span x-text="selectedPayment?.customer_id || @js($customerId)"></span>
                         </p>
                     </div>
                     <div class="admin-co-pay-detail-summary-item">
                         <span class="admin-co-pay-detail-summary-icon" aria-hidden="true">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                <path d="M2 3.5H10V9.5H2V3.5Z" stroke="#3B3731" stroke-width="0.9" />
-                                <path d="M4 1.5V3.5M8 1.5V3.5M2 5.5H10" stroke="#3B3731" stroke-width="0.9" stroke-linecap="round" />
+                                <path d="M3.81322 7.93872L7.93828 3.81317M5.18824 1.75039L5.50656 1.38184C6.15131 0.737108 7.02574 0.374936 7.93749 0.375C8.84924 0.375064 9.72362 0.737361 10.3683 1.38219C11.0129 2.02701 11.3751 2.90155 11.375 3.81341C11.3749 4.72527 11.0127 5.59976 10.3679 6.24449L10.0008 6.56353M6.56326 10.0015L6.29032 10.3687C5.63787 11.0134 4.75761 11.375 3.84038 11.375C2.92315 11.375 2.04289 11.0134 1.39044 10.3687C1.06877 10.0508 0.813372 9.67227 0.639064 9.25498C0.464756 8.83768 0.375 8.38993 0.375 7.93768C0.375 7.48544 0.464756 7.03769 0.639064 6.62039C0.813372 6.2031 1.06877 5.82455 1.39044 5.50671L1.7507 5.18835" stroke="#3B3731" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </span>
                         <p class="admin-co-pay-detail-summary-text">
@@ -157,10 +157,10 @@ $customerId = $profile['id'] ?? 'USR-01452';
                             </template>
                             <template x-if="(selectedPayment.detail?.variant || selectedPayment.status) === 'refunded'">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
-                                    <rect width="48" height="48" rx="24" fill="#FEF0DC" />
-                                    <rect x="12.5" y="12.5" width="23" height="23" rx="11.5" fill="#FEF0DC" stroke="#FFAF3B" />
-                                    <path d="M23.0917 29.0041H26.3647C28.1723 29.0041 29.6377 27.5387 29.6377 25.7311C29.6377 23.9234 28.1723 22.4581 26.3647 22.4581H19.0005" stroke="#FFAF3B" stroke-linecap="round" />
-                                    <path d="M21.4551 24.9128L19.0002 22.4579L21.4582 20" stroke="#FFAF3B" stroke-linecap="round" />
+                                    <rect width="48" height="48" rx="24" fill="#F1F5F8" />
+                                    <rect x="12.5" y="12.5" width="23" height="23" rx="11.5" fill="#F1F5F8" stroke="#649FC9" />
+                                    <path d="M23.0922 29.0041H26.3652C28.1728 29.0041 29.6382 27.5387 29.6382 25.7311C29.6382 23.9234 28.1728 22.4581 26.3652 22.4581H19.001" stroke="#649FC9" stroke-linecap="round" />
+                                    <path d="M21.4551 24.9128L19.0002 22.4579L21.4582 20" stroke="#649FC9" stroke-linecap="round" />
                                 </svg>
                             </template>
                             <template x-if="(selectedPayment.detail?.variant || selectedPayment.status) === 'failed'">

@@ -116,7 +116,7 @@ $spacePack = $profile['space'] ?? null;
                 role="tab"
                 :class="{ 'is-active': viewAs === 'groomer' }"
                 :aria-selected="viewAs === 'groomer'"
-                @click="viewAs = 'groomer'"
+                @click="selectedPayment = null; viewAs = 'groomer'"
             >Groomer</button>
             <button
                 type="button"
@@ -124,7 +124,7 @@ $spacePack = $profile['space'] ?? null;
                 role="tab"
                 :class="{ 'is-active': viewAs === 'space' }"
                 :aria-selected="viewAs === 'space'"
-                @click="viewAs = 'space'"
+                @click="selectedPayment = null; viewAs = 'space'"
             >Space Host</button>
         </div>
         <p class="admin-bp-viewing-caption">Switch between this users Groomer &amp; Space profiles</p>
