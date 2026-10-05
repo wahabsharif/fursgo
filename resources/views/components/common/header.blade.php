@@ -1,4 +1,4 @@
-@props(['variant' => 'default', 'dashboardNavView' => 'hub'])
+@props(['variant' => 'default', 'dashboardNavView' => 'hub', 'forceBusinessPublic' => false])
 
 @php
     use App\Models\GroomerSpacerProfile;
@@ -22,7 +22,7 @@
     $isHelpCentreRoute = request()->routeIs('help-and-support', 'help-and-support-search-legacy');
     $isBusinessVerificationRoute = request()->routeIs('business-verification', 'business-verification.*');
     $isBusinessAuthRoute = request()->routeIs(['login-groomer-space', 'signup-groomer-space', 'business-verification', 'business-verification.*']);
-    $isBusinessSiteRoute = $isBusinessLandingRoute || $isBusinessHomepageRoute || $isBusinessAuthRoute || ($isHelpCentreRoute && (HelpCentre::audience() === HelpCentre::AUDIENCE_BUSINESS || BusinessPageShell::prefersBusinessChrome()));
+    $isBusinessSiteRoute = (bool) $forceBusinessPublic || $isBusinessLandingRoute || $isBusinessHomepageRoute || $isBusinessAuthRoute || ($isHelpCentreRoute && (HelpCentre::audience() === HelpCentre::AUDIENCE_BUSINESS || BusinessPageShell::prefersBusinessChrome()));
     $isForGroomersHostsActive = $isBusinessHomepageRoute || $isBusinessLandingRoute;
     $dashboardLogoHref = $isBusinessVerificationRoute ? route('business-verification') : ($isMarketingHubRoute ? route('marketing-hub') : route('business-hub'));
     $businessHomepageUrl = route('business-homepage-groomer-space-owner');

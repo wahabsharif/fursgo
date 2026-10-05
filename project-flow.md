@@ -78,6 +78,7 @@ Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/vie
 | Checkout shells                            | `checkout.booking-groomer`, `checkout.booking-space`, `checkout.booking-groomer-space` | `checkout.*`                            |
 | Groomer/space unavailability URLs          | `groomer.unavailability` / `space.unavailability`                                      | various                                 |
 | Overlay demos                              | cookies / rating blade files                                                           | cookies*, rating*                       |
+| 404                                        | `resources/views/errors/404.blade.php` (business public chrome)                        | —                                       |
 
 ### Pet owner (`web` or web-or-groomer middleware)
 
