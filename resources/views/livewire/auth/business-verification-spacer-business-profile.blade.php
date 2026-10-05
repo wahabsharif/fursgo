@@ -963,6 +963,10 @@
         z-index: 1;
     }
 
+    .addon-picker-plus:disabled {
+        cursor: not-allowed;
+    }
+
     .addon-picker-plus-icon,
     .addon-picker-plus-spinner {
         position: absolute;

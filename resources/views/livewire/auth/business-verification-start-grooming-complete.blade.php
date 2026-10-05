@@ -24,15 +24,24 @@
 
 <style>
     .vq-start-grooming-complete {
-        max-width: 1340px;
+        width: 1240px;
+        max-width: 100%;
+        min-height: 620px;
         margin: 0 auto;
         padding: 4rem 1.5rem;
         display: flex;
         flex-direction: column;
         align-items: center;
+        justify-content: center;
         text-align: center;
         background: #FBFBFB;
         box-sizing: border-box;
+    }
+
+    @media (max-width: 768px) {
+        .vq-start-grooming-complete {
+            min-height: 480px;
+        }
     }
 
     .vq-start-grooming-complete>svg {
@@ -48,7 +57,6 @@
         font-weight: 900;
         line-height: normal;
         margin-bottom: 1rem;
-
     }
 
     .vq-sge-lead {

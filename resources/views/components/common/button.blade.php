@@ -22,23 +22,9 @@
 
     $hasLoading = filled($resolvedLoadingTarget);
     $buttonLabel = filled($label) ? $label : $slot;
-    $resolvedBoxShadow = (!$disabled && $shadow) ? $boxShadow : 'none';
+    $resolvedBoxShadow = !$disabled && $shadow ? $boxShadow : 'none';
 
-    $baseStyle = implode(
-        '; ',
-        array_filter([
-            "--common-btn-bg: {$bgColor}",
-            "--common-btn-text: {$textColor}",
-            "--common-btn-border: {$border}",
-            "width: {$width}",
-            "height: {$height}",
-            "border: {$border}",
-            "background-color: {$bgColor}",
-            "color: {$textColor}",
-            "border-radius: {$borderRadius}",
-            "box-shadow: {$resolvedBoxShadow}",
-        ]),
-    );
+    $baseStyle = implode('; ', array_filter(["--common-btn-bg: {$bgColor}", "--common-btn-text: {$textColor}", "--common-btn-border: {$border}", "width: {$width}", "height: {$height}", "border: {$border}", "background-color: {$bgColor}", "color: {$textColor}", "border-radius: {$borderRadius}", "box-shadow: {$resolvedBoxShadow}"]));
 
     $customStyle = trim((string) $attributes->get('style', ''));
     $buttonStyle = $customStyle !== '' ? "{$baseStyle}; {$customStyle}" : $baseStyle;
@@ -83,7 +69,7 @@
 
         .common-btn:disabled,
         .common-btn.common-btn--disabled {
-            cursor: not-allowed;
+            cursor: not-allowed !important;
             box-shadow: none;
         }
 
