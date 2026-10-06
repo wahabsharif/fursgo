@@ -2,12 +2,13 @@
 
 @php
 $clientsTab = $profile['clients_tab'] ?? [];
-$fallbackAvatar = $profile['avatar'] ?? asset('images/profile_image.png');
+$clientAvatar = asset('images/profile_image.png');
+$fallbackAvatar = $clientAvatar;
 $clientDetailDemo = [
 'name' => 'Jane Doe',
 'location_id' => 'London, Uk - USER-01452',
 'since' => 'Client since 02 Feb 2024',
-'avatar' => $fallbackAvatar,
+'avatar' => $clientAvatar,
 'stats' => [
 ['value' => '2', 'label' => 'Upcoming'],
 ['value' => '15', 'label' => 'Completed'],
