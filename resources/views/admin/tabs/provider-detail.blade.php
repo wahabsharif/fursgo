@@ -1,6 +1,31 @@
 @php
 $fallbackAvatar = asset('images/profile_image.png');
 $spaceAvatar = asset('images/admin/provider/gallery/space/1.jpg');
+$clientDetailDemo = [
+    'name' => 'Jane Doe',
+    'location_id' => 'London, Uk - USER-01452',
+    'since' => 'Client since 02 Feb 2024',
+    'avatar' => $fallbackAvatar,
+    'stats' => [
+        ['value' => '2', 'label' => 'Upcoming'],
+        ['value' => '15', 'label' => 'Completed'],
+        ['value' => '£252', 'label' => 'Total paid'],
+        ['value' => '4.8', 'label' => 'Avg. rating', 'star' => true],
+    ],
+    'recent_bookings' => [
+        ['id' => 'FG-0563-B12', 'service' => 'Full Groom', 'date' => '10/06/2025', 'status' => 'Completed', 'amount' => '£55.00'],
+        ['id' => 'FG-0563-B12', 'service' => 'Full Groom', 'date' => '10/06/2025', 'status' => 'Completed', 'amount' => '£55.00'],
+    ],
+    'review' => [
+        'author_name' => 'Jane Doe',
+        'author_id' => 'USER-01452',
+        'stars' => 5,
+        'ago' => '2 wk ago',
+        'body' => "I booked this groomer through FursGo for my anxious little cockapoo and honestly couldn't be happier....",
+        'footer_service' => 'Full Groom',
+        'footer_booking' => 'FG-0563-B12',
+    ],
+];
 
 $groomerServices = [
     [
@@ -282,6 +307,148 @@ $spaceDefaults = [
     'gallery_extra' => 0,
 ];
 
+$spaceBookingsTab = [
+    'metrics' => [
+        ['title' => 'Confirmed', 'value' => '50', 'note' => 'Upcoming'],
+        ['title' => 'Completed', 'value' => '142', 'note' => 'All time'],
+        ['title' => 'Pending', 'value' => '9', 'note' => 'Awaiting response'],
+        ['title' => 'Cancelled', 'value' => '3', 'note' => 'All time'],
+    ],
+    'filters' => [
+        'all' => 14,
+        'completed' => 9,
+        'confirmed' => 2,
+        'disputed' => 1,
+        'cancelled' => 1,
+        'refunded' => 1,
+    ],
+    'total' => 14,
+    'rows' => [
+        [
+            'id' => 'FG-0563-B12',
+            'owner' => 'Sarah Q.',
+            'service' => 'Half-Day',
+            'location' => 'Garden/Shed',
+            'date' => '01/02/2023',
+            'time' => '11:00 - 12:00',
+            'status' => 'completed',
+            'status_label' => 'Completed',
+            'amount' => '£150.00',
+            'meta_line' => 'Sarah Q · 01 February 2023 · 12:00 - 15:00',
+            'summary_service' => 'Half-Day',
+            'summary_location' => 'Garden/Shed',
+            'payment_method_short' => 'Debit/Credit Card',
+            'charge_status' => 'Paid',
+            'charge_tone' => 'paid',
+            'detail' => [
+                'service' => 'Half-Day',
+                'addons' => 'Storage Locker, Deep Clean',
+                'pet' => 'Biscuit (Golden Retriever)',
+                'space' => 'Garden/Shed',
+                'location_name' => 'The Garden Grooming Spot',
+                'location_address' => "14 Coldhabour Lane, London, SE2 9NR",
+                'datetime' => '02 Apr 2025 · 12:00 PM - 15:00 PM',
+                'duration' => '3 Hours',
+                'notes' => 'N/A',
+                'price_lines' => [
+                    ['label' => 'Half-Day', 'value' => '£40.00'],
+                    ['label' => 'Storage Locker (add-on)', 'value' => '£10.00', 'muted' => true],
+                    ['label' => 'Deep Clean (add-on)', 'value' => '£10.00', 'muted' => true],
+                    ['label' => 'Discount applied (NEWYR25)', 'value' => '-£5.00', 'muted' => true],
+                ],
+                'total_label' => 'Total charged to customer',
+                'total' => '£55.00',
+                'payment_method' => 'Visa ···· 4529',
+                'payment_status' => 'Paid',
+                'payment_tone' => 'paid',
+                'provider_payout' => 'Paid',
+                'payout_tone' => 'paid',
+                'timeline' => [
+                    ['tone' => 'pass', 'title' => 'Booking marked completed by space host', 'time' => '18 Apr 2025 · 11:32'],
+                    ['tone' => 'pass', 'title' => 'Booking confirmed by space host', 'time' => '05 Mar 2025 · 21:50'],
+                    ['tone' => 'flag', 'title' => 'Service booked by customer', 'time' => '01 Dec 2024 · 18:55'],
+                ],
+            ],
+        ],
+        ['id' => 'FG-0563-B12', 'owner' => 'Zack W.', 'service' => 'Full-Day', 'location' => 'Garden/Shed', 'date' => '01/02/2023', 'time' => '11:00 - 12:00', 'status' => 'confirmed', 'status_label' => 'Confirmed', 'amount' => '£80.00'],
+        ['id' => 'FG-0563-B12', 'owner' => 'Fran K.', 'service' => 'Hourly', 'location' => 'Garden/Shed', 'date' => '01/02/2023', 'time' => '11:00 - 12:00', 'status' => 'disputed', 'status_label' => 'Disputed', 'amount' => '£150.00'],
+        ['id' => 'FG-0563-B12', 'owner' => 'Dan I.', 'service' => 'Hourly', 'location' => 'Garden/Shed', 'date' => '01/02/2023', 'time' => '11:00 - 12:00', 'status' => 'cancelled', 'status_label' => 'Cancelled', 'amount' => '£50.00'],
+        ['id' => 'FG-0563-B12', 'owner' => 'Dev P.', 'service' => 'Full-Day', 'location' => 'Garden/Shed', 'date' => '01/02/2023', 'time' => '11:00 - 12:00', 'status' => 'refunded', 'status_label' => 'Refunded', 'amount' => '£50.00'],
+        ['id' => 'FG-0563-B12', 'owner' => 'Quincy Y.', 'service' => 'Hourly', 'location' => 'Garden/Shed', 'date' => '01/02/2023', 'time' => '11:00 - 12:00', 'status' => 'completed', 'status_label' => 'Completed', 'amount' => '£50.00'],
+        ['id' => 'FG-0563-B12', 'owner' => 'Jared H.', 'service' => 'Half-Day', 'location' => 'Garden/Shed', 'date' => '01/02/2023', 'time' => '11:00 - 12:00', 'status' => 'confirmed', 'status_label' => 'Confirmed', 'amount' => '£150.00'],
+        ['id' => 'FG-0563-B12', 'owner' => 'Luna H.', 'service' => 'Full-Day', 'location' => 'Garden/Shed', 'date' => '01/02/2023', 'time' => '11:00 - 12:00', 'status' => 'disputed', 'status_label' => 'Disputed', 'amount' => '£80.00'],
+        ['id' => 'FG-0563-B12', 'owner' => 'David G.', 'service' => 'Hourly', 'location' => 'Garden/Shed', 'date' => '01/02/2023', 'time' => '11:00 - 12:00', 'status' => 'completed', 'status_label' => 'Completed', 'amount' => '£50.00'],
+        ['id' => 'FG-0563-B12', 'owner' => 'Adeyo U.', 'service' => 'Full-Day', 'location' => 'Garden/Shed', 'date' => '01/02/2023', 'time' => '11:00 - 12:00', 'status' => 'completed', 'status_label' => 'Completed', 'amount' => '£50.00'],
+        ['id' => 'FG-0563-B12', 'owner' => 'Lisa H.', 'service' => 'Half-Day', 'location' => 'Garden/Shed', 'date' => '01/02/2023', 'time' => '11:00 - 12:00', 'status' => 'completed', 'status_label' => 'Completed', 'amount' => '£150.00'],
+        ['id' => 'FG-0563-B12', 'owner' => 'Hans W.', 'service' => 'Hourly', 'location' => 'Garden/Shed', 'date' => '01/02/2023', 'time' => '11:00 - 12:00', 'status' => 'completed', 'status_label' => 'Completed', 'amount' => '£50.00'],
+        ['id' => 'FG-0563-B12', 'owner' => 'Kelly Z.', 'service' => 'Hourly', 'location' => 'Garden/Shed', 'date' => '01/02/2023', 'time' => '11:00 - 12:00', 'status' => 'completed', 'status_label' => 'Completed', 'amount' => '£80.00'],
+        ['id' => 'FG-0563-B12', 'owner' => 'Charlie X.', 'service' => 'Hourly', 'location' => 'Garden/Shed', 'date' => '01/02/2023', 'time' => '11:00 - 12:00', 'status' => 'completed', 'status_label' => 'Completed', 'amount' => '£50.00'],
+        ['id' => 'FG-0563-B12', 'owner' => 'Sarah D.', 'service' => 'Half-Day', 'location' => 'Garden/Shed', 'date' => '01/02/2023', 'time' => '11:00 - 12:00', 'status' => 'completed', 'status_label' => 'Completed', 'amount' => '£150.00'],
+        ['id' => 'FG-0563-B12', 'owner' => 'Walter E.', 'service' => 'Hourly', 'location' => 'Garden/Shed', 'date' => '01/02/2023', 'time' => '11:00 - 12:00', 'status' => 'completed', 'status_label' => 'Completed', 'amount' => '£50.00'],
+        ['id' => 'FG-0563-B12', 'owner' => 'Faraz S.', 'service' => 'Full-Day', 'location' => 'Garden/Shed', 'date' => '01/02/2023', 'time' => '11:00 - 12:00', 'status' => 'completed', 'status_label' => 'Completed', 'amount' => '£80.00'],
+    ],
+];
+
+$spaceAvailability = [
+    'schedule_date' => 'Thursday, 2nd Feb 2025',
+    'working_hours_label' => 'Working hours: 07:00 - 14:00',
+    'calendar_label' => 'Thursday, 2nd Feb',
+    'active_day' => 2,
+    'calendar_days' => [
+        [1, 2, 3, 4, 5, 6, 7],
+        [8, 9, 10, 11, 12, 13, 14],
+        [15, 16, 17, 18, 19, 20, 21],
+        [22, 23, 24, 25, 26, 27, 28],
+        [29, 30, 31, null, null, null, null],
+    ],
+    'slots' => [
+        ['time' => '08:00', 'id' => 'FG-0563-B12', 'service' => 'Full-Day', 'client' => 'Jane Doe', 'range' => '08:00 - 16:00', 'location' => 'Garden/Shed', 'active' => true],
+        ['time' => '10:45', 'id' => 'FG-0563-B12', 'service' => 'Half-Day', 'client' => 'Sarah Q', 'range' => '12:00 - 15:00', 'location' => 'Garden/Shed', 'active' => false],
+        ['time' => '14:30', 'id' => 'FG-0563-B12', 'service' => 'Hourly', 'client' => 'Jane Doe', 'range' => '14:30 - 15:30', 'location' => 'Garden/Shed', 'active' => false],
+    ],
+    'week_hours' => [
+        ['day' => 'Monday', 'hours' => '07:00 AM - 14:00 PM', 'status' => 'available', 'status_label' => 'Available'],
+        ['day' => 'Tuesday', 'hours' => '07:00 AM - 14:00 PM', 'status' => 'available', 'status_label' => 'Available'],
+        ['day' => 'Wednesday', 'hours' => '07:00 AM - 14:00 PM', 'status' => 'available', 'status_label' => 'Available'],
+        ['day' => 'Thursday', 'hours' => '07:00 AM - 14:00 PM', 'status' => 'available', 'status_label' => 'Available'],
+        ['day' => 'Friday', 'hours' => '07:00 AM - 14:00 PM', 'status' => 'available', 'status_label' => 'Available'],
+        ['day' => 'Saturday', 'hours' => '—', 'status' => null, 'status_label' => '—'],
+        ['day' => 'Sunday', 'hours' => '—', 'status' => null, 'status_label' => '—'],
+    ],
+    'time_off' => [
+        ['range' => '17 Feb 2025 - 02 Mar 2025', 'reason' => 'Annual Leave', 'duration' => '13 days', 'status' => 'upcoming', 'status_label' => 'Upcoming'],
+        ['range' => '17 Feb 2025 - 02 Mar 2025', 'reason' => 'Personal', 'duration' => '13 days', 'status' => 'past', 'status_label' => 'Past'],
+        ['range' => '17 Feb 2025 - 02 Mar 2025', 'reason' => 'Annual Leave', 'duration' => '13 days', 'status' => 'past', 'status_label' => 'Past'],
+        ['range' => '17 Feb 2025 - 02 Mar 2025', 'reason' => 'Annual Leave', 'duration' => '13 days', 'status' => 'past', 'status_label' => 'Past'],
+    ],
+    'intake' => [
+        ['label' => 'Pause new bookings', 'value' => 'Not active'],
+        ['label' => 'Last status change', 'value' => 'Never paused'],
+        ['label' => 'Booking accepted today', 'value' => '3'],
+    ],
+    'timeline' => [
+        ['tone' => 'pass', 'title' => 'Booking marked completed by space host', 'time' => '18 Apr 2025 · 11:32'],
+        ['tone' => 'pass', 'title' => 'Booking confirmed by space host', 'time' => '05 Mar 2025 · 21:50'],
+        ['tone' => 'flag', 'title' => 'Service booked by customer', 'time' => '01 Dec 2024 · 18:55'],
+    ],
+];
+
+$spaceClientsTab = [
+    'total' => 14,
+    'showing' => 5,
+    'rows' => [
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => asset('images/admin/customer-overview/avatar-jane.png')],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => asset('images/profile_modal_image2.jpg')],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'initials' => 'JD'],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => asset('images/profile_modal_image3.jpg')],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => asset('images/profile_modal_image2.jpg')],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => asset('images/profile_modal_image2.jpg')],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'initials' => 'JD'],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => asset('images/profile_modal_image3.jpg')],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => asset('images/profile_modal_image2.jpg')],
+    ],
+];
+
 // Dual-role demo: Pawfect has both Groomer + Space Host profiles
 $pawfectProfile = [
     'id' => 'PRV-001',
@@ -460,6 +627,249 @@ $pawfectProfile = [
         ['id' => 'GS-0499-B03', 'service' => 'Nail Trim', 'customer' => 'Tom Harris', 'user_no' => 'USR-01488', 'date' => '28 Jul 2025', 'amount' => '£25.00', 'status' => 'disputed', 'status_label' => 'Disputed'],
         ['id' => 'GS-0521-B17', 'service' => 'Bath & Brush', 'customer' => 'Alex Rivera', 'user_no' => 'USR-01519', 'date' => '15 Jul 2025', 'amount' => '£35.00', 'status' => 'cancelled', 'status_label' => 'Cancelled'],
         ['id' => 'GS-0388-B21', 'service' => 'Puppy Intro', 'customer' => 'Mia Brooks', 'user_no' => 'USR-01622', 'date' => '02 Jul 2025', 'amount' => '£40.00', 'status' => 'refunded', 'status_label' => 'Refunded'],
+    ],
+    'bookings_tab' => [
+        'metrics' => [
+            ['title' => 'Confirmed', 'value' => '50', 'note' => 'Upcoming'],
+            ['title' => 'Completed', 'value' => '142', 'note' => 'All time'],
+            ['title' => 'Pending', 'value' => '9', 'note' => 'Awaiting response'],
+            ['title' => 'Cancelled', 'value' => '3', 'note' => 'All time'],
+        ],
+        'filters' => [
+            'all' => 14,
+            'completed' => 9,
+            'confirmed' => 2,
+            'disputed' => 1,
+            'cancelled' => 1,
+            'refunded' => 1,
+        ],
+        'total' => 14,
+        'rows' => [
+            [
+                'id' => 'FG-0563-B12',
+                'owner' => 'Sarah Q.',
+                'pet' => 'Biscuit · Golden Retriever',
+                'service' => 'Full Groom',
+                'location' => 'Home visit',
+                'date' => '01/02/2023',
+                'date_long' => '01 February 2023',
+                'time' => '11:00 - 12:00',
+                'status' => 'completed',
+                'status_label' => 'Completed',
+                'amount' => '£50.00',
+                'meta_line' => 'Sarah Q · Biscuit (Golden Retriever) · 01 February 2023 · 11:00 - 12:00',
+                'summary_service' => 'Full Groom',
+                'summary_location' => 'Home visits',
+                'payment_method_short' => 'Debit/Credit Card',
+                'charge_status' => 'Paid',
+                'charge_tone' => 'paid',
+                'detail' => [
+                    'service' => 'Bath & Brush',
+                    'addons' => 'Ear cleaning, de-shed treatment',
+                    'pet' => 'Biscuit (Golden Retriever)',
+                    'groomer' => 'Pawfect Salon',
+                    'location_name' => 'Home visits',
+                    'location_address' => "14 Coldhabour Lane\nLondon, SE2 9NR",
+                    'datetime' => '02 Apr 2025 · 10:00 AM',
+                    'duration' => '60 Minutes',
+                    'notes' => 'Please be gentle - biscuit is anxious on the grooming table.',
+                    'price_lines' => [
+                        ['label' => 'Bath & Brush', 'value' => '£40.00'],
+                        ['label' => 'Ear-cleaning (add-on)', 'value' => '£10.00', 'muted' => true],
+                        ['label' => 'De-shed treatment (add-on)', 'value' => '£10.00', 'muted' => true],
+                        ['label' => 'Discount applied (NEWYR25)', 'value' => '-£5.00', 'muted' => true],
+                    ],
+                    'total_label' => 'Total charged to customer',
+                    'total' => '£55.00',
+                    'payment_method' => 'Visa ···· 4529',
+                    'payment_status' => 'Paid',
+                    'payment_tone' => 'paid',
+                    'groomer_payout' => 'Paid',
+                    'payout_tone' => 'paid',
+                    'timeline' => [
+                        ['tone' => 'pass', 'title' => 'Booking marked completed by groomer', 'time' => '18 Apr 2025 · 11:32'],
+                        ['tone' => 'pass', 'title' => 'Booking confirmed by groomer', 'time' => '05 Mar 2025 · 21:50'],
+                        ['tone' => 'flag', 'title' => 'Service booked by customer', 'time' => '01 Dec 2024 · 18:55'],
+                    ],
+                ],
+            ],
+            [
+                'id' => 'FG-0564-B08',
+                'owner' => 'Dev E.',
+                'pet' => 'Surf · Red-Ear',
+                'service' => 'Nail Trim',
+                'location' => 'Salon',
+                'date' => '02/02/2023',
+                'time' => '09:30 - 10:00',
+                'status' => 'confirmed',
+                'status_label' => 'Confirmed',
+                'amount' => '£25.00',
+            ],
+            [
+                'id' => 'FG-0565-B21',
+                'owner' => 'Priya K.',
+                'pet' => 'Maisy · Rabbit',
+                'service' => 'Bath & Tidy',
+                'location' => 'Space host',
+                'date' => '03/02/2023',
+                'time' => '14:00 - 15:00',
+                'status' => 'disputed',
+                'status_label' => 'Disputed',
+                'amount' => '£45.00',
+            ],
+            [
+                'id' => 'FG-0566-B03',
+                'owner' => 'Tom H.',
+                'pet' => 'Spike · British Shorthair',
+                'service' => 'Nail Trim',
+                'location' => 'Salon',
+                'date' => '04/02/2023',
+                'time' => '10:00 - 10:30',
+                'status' => 'confirmed',
+                'status_label' => 'Confirmed',
+                'amount' => '£25.00',
+            ],
+            [
+                'id' => 'FG-0567-B15',
+                'owner' => 'Mia B.',
+                'pet' => 'Luna · Cockapoo',
+                'service' => 'Puppy Intro',
+                'location' => 'Home studio',
+                'date' => '05/02/2023',
+                'time' => '10:00 - 11:00',
+                'status' => 'cancelled',
+                'status_label' => 'Cancelled',
+                'amount' => '£40.00',
+            ],
+            [
+                'id' => 'FG-0568-B19',
+                'owner' => 'Jane D.',
+                'pet' => 'Bella · Rabbit',
+                'service' => 'Full Groom',
+                'location' => 'Salon',
+                'date' => '06/02/2023',
+                'time' => '16:00 - 17:00',
+                'status' => 'refunded',
+                'status_label' => 'Refunded',
+                'amount' => '£55.00',
+            ],
+            [
+                'id' => 'FG-0569-B04',
+                'owner' => 'Alex R.',
+                'pet' => 'Milo · Labrador',
+                'service' => 'Bath & Brush',
+                'location' => 'Home visit',
+                'date' => '07/02/2023',
+                'time' => '13:00 - 14:00',
+                'status' => 'completed',
+                'status_label' => 'Completed',
+                'amount' => '£45.00',
+            ],
+            [
+                'id' => 'FG-0570-B11',
+                'owner' => 'Chris N.',
+                'pet' => 'Otto · Beagle',
+                'service' => 'Full Groom',
+                'location' => 'Home visit',
+                'date' => '08/02/2023',
+                'time' => '11:00 - 12:30',
+                'status' => 'completed',
+                'status_label' => 'Completed',
+                'amount' => '£60.00',
+            ],
+            [
+                'id' => 'FG-0571-B22',
+                'owner' => 'Emily W.',
+                'pet' => 'Nala · Maine Coon',
+                'service' => 'Bath & Tidy',
+                'location' => 'Salon',
+                'date' => '09/02/2023',
+                'time' => '15:00 - 16:00',
+                'status' => 'completed',
+                'status_label' => 'Completed',
+                'amount' => '£48.00',
+            ],
+            [
+                'id' => 'FG-0572-B07',
+                'owner' => 'James T.',
+                'pet' => 'Rocky · Staffordshire',
+                'service' => 'Nail Trim',
+                'location' => 'Home studio',
+                'date' => '10/02/2023',
+                'time' => '09:00 - 09:30',
+                'status' => 'completed',
+                'status_label' => 'Completed',
+                'amount' => '£22.00',
+            ],
+            [
+                'id' => 'FG-0573-B18',
+                'owner' => 'Nicole S.',
+                'pet' => 'Coco · Poodle',
+                'service' => 'Full Groom',
+                'location' => 'Salon',
+                'date' => '11/02/2023',
+                'time' => '12:00 - 13:30',
+                'status' => 'completed',
+                'status_label' => 'Completed',
+                'amount' => '£65.00',
+            ],
+            [
+                'id' => 'FG-0574-B09',
+                'owner' => 'Sam P.',
+                'pet' => 'Mochi · Cat',
+                'service' => 'Bath & Brush',
+                'location' => 'Space host',
+                'date' => '12/02/2023',
+                'time' => '14:30 - 15:30',
+                'status' => 'completed',
+                'status_label' => 'Completed',
+                'amount' => '£42.00',
+            ],
+            [
+                'id' => 'FG-0575-B16',
+                'owner' => 'Olivia C.',
+                'pet' => 'Buddy · Cocker Spaniel',
+                'service' => 'Full Groom',
+                'location' => 'Home visit',
+                'date' => '13/02/2023',
+                'time' => '10:30 - 12:00',
+                'status' => 'completed',
+                'status_label' => 'Completed',
+                'amount' => '£58.00',
+            ],
+            [
+                'id' => 'FG-0576-B02',
+                'owner' => 'Sarah Q.',
+                'pet' => 'Biscuit · Golden Retriever',
+                'service' => 'Full Groom',
+                'location' => 'Home visit',
+                'date' => '14/02/2023',
+                'time' => '11:00 - 12:00',
+                'status' => 'completed',
+                'status_label' => 'Completed',
+                'amount' => '£50.00',
+            ],
+        ],
+    ],
+    'availability' => [
+        'schedule_date' => 'Thursday, 2nd Feb 2025',
+        'working_hours_label' => 'Working hours: 07:00 - 14:00',
+        'calendar_label' => 'Thursday, 2nd Feb',
+        'active_day' => 2,
+    ],
+    'clients_tab' => [
+        'total' => 14,
+        'rows' => [
+            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $fallbackAvatar, 'detail' => $clientDetailDemo],
+            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $fallbackAvatar, 'detail' => $clientDetailDemo],
+            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'initials' => 'JD', 'detail' => $clientDetailDemo],
+            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $fallbackAvatar, 'detail' => $clientDetailDemo],
+            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $fallbackAvatar, 'detail' => $clientDetailDemo],
+            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $fallbackAvatar, 'detail' => $clientDetailDemo],
+            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'initials' => 'JD', 'detail' => $clientDetailDemo],
+            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $fallbackAvatar, 'detail' => $clientDetailDemo],
+            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $fallbackAvatar, 'detail' => $clientDetailDemo],
+        ],
     ],
     'payout' => [
         ['label' => 'Last payout', 'value' => '03 Jun 2025 · £890'],
@@ -1007,6 +1417,10 @@ $pawfectProfile = [
     ]),
 ];
 
+$pawfectProfile['space_bookings_tab'] = $spaceBookingsTab;
+$pawfectProfile['space_availability'] = $spaceAvailability;
+$pawfectProfile['space_clients_tab'] = $spaceClientsTab;
+
 $providerProfiles = [];
 foreach ($providers as $provider) {
     if ($provider['id'] === 'PRV-001') {
@@ -1102,6 +1516,7 @@ foreach ($providers as $provider) {
             dual: @js($isDual),
             profileSubTab: 'profile',
             payoutsSubTab: 'overview',
+            bookingsSubTab: 'bookings',
             chartRange: 'month',
             selectedPayment: null,
             openPayment(row) {
@@ -1213,12 +1628,9 @@ foreach ($providers as $provider) {
                 <x-admin.provider.payouts :profile="$profile" />
             </div>
 
-            @foreach (['bookings' => 'Bookings'] as $tabKey => $tabLabel)
-            <div class="admin-co-placeholder" x-show="detailTab === '{{ $tabKey }}'" x-cloak>
-                <h2 class="admin-page-title mb-0">{{ $tabLabel }}</h2>
-                <p class="admin-section-label mb-0">This section will be built next.</p>
+            <div x-show="detailTab === 'bookings'" x-cloak>
+                <x-admin.provider.bookings :profile="$profile" />
             </div>
-            @endforeach
         </div>
     </div>
     @endforeach
