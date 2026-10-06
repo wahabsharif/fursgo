@@ -433,19 +433,20 @@ $spaceAvailability = [
     ],
 ];
 
+$clientAvatar = asset('images/profile_image.png');
 $spaceClientsTab = [
     'total' => 14,
     'showing' => 5,
     'rows' => [
-        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => asset('images/admin/customer-overview/avatar-jane.png')],
-        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => asset('images/profile_modal_image2.jpg')],
-        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'initials' => 'JD'],
-        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => asset('images/profile_modal_image3.jpg')],
-        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => asset('images/profile_modal_image2.jpg')],
-        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => asset('images/profile_modal_image2.jpg')],
-        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'initials' => 'JD'],
-        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => asset('images/profile_modal_image3.jpg')],
-        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => asset('images/profile_modal_image2.jpg')],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $clientAvatar, 'detail' => $clientDetailDemo],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $clientAvatar, 'detail' => $clientDetailDemo],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'initials' => 'JD', 'detail' => $clientDetailDemo],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $clientAvatar, 'detail' => $clientDetailDemo],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $clientAvatar, 'detail' => $clientDetailDemo],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $clientAvatar, 'detail' => $clientDetailDemo],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'initials' => 'JD', 'detail' => $clientDetailDemo],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $clientAvatar, 'detail' => $clientDetailDemo],
+        ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $clientAvatar, 'detail' => $clientDetailDemo],
     ],
 ];
 
@@ -860,15 +861,15 @@ $pawfectProfile = [
     'clients_tab' => [
         'total' => 14,
         'rows' => [
-            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $fallbackAvatar, 'detail' => $clientDetailDemo],
-            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $fallbackAvatar, 'detail' => $clientDetailDemo],
+            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $clientAvatar, 'detail' => $clientDetailDemo],
+            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $clientAvatar, 'detail' => $clientDetailDemo],
             ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'initials' => 'JD', 'detail' => $clientDetailDemo],
-            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $fallbackAvatar, 'detail' => $clientDetailDemo],
-            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $fallbackAvatar, 'detail' => $clientDetailDemo],
-            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $fallbackAvatar, 'detail' => $clientDetailDemo],
+            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $clientAvatar, 'detail' => $clientDetailDemo],
+            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $clientAvatar, 'detail' => $clientDetailDemo],
+            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $clientAvatar, 'detail' => $clientDetailDemo],
             ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'initials' => 'JD', 'detail' => $clientDetailDemo],
-            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $fallbackAvatar, 'detail' => $clientDetailDemo],
-            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $fallbackAvatar, 'detail' => $clientDetailDemo],
+            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $clientAvatar, 'detail' => $clientDetailDemo],
+            ['name' => 'Sam P', 'meta' => '+2 pets • Since 02 Feb 2022', 'bookings' => '2', 'paid' => '£50.00', 'last_booked' => '18/12/2023', 'avatar' => $clientAvatar, 'detail' => $clientDetailDemo],
         ],
     ],
     'payout' => [
