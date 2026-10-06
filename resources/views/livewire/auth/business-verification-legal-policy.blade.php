@@ -1,11 +1,14 @@
 <div class="legal-policy-wrap" wire:key="business-verification-legal-policy">
     <h1 class="business-basics-title">Legal &amp; Policy Agreements</h1>
     <form wire:submit="submitLegalPolicy" x-data="{
-        accepted: @entangle('legal_terms_accepted'),
         expanded: false,
         animating: false,
-        collapsedMax() {
-            return Math.min(window.innerHeight * 0.52, 32 * 16);
+        collapsedViewportHeight() {
+            const viewport = this.$refs.viewport;
+            if (!viewport) {
+                return 280;
+            }
+            return viewport.getBoundingClientRect().height;
         },
         toggleAgreements() {
             if (this.animating) {
@@ -19,7 +22,7 @@
             const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             const collapsing = this.expanded;
             const from = viewport.getBoundingClientRect().height;
-            const to = collapsing ? this.collapsedMax() : inner.scrollHeight;
+            const to = collapsing ? this.collapsedViewportHeight() : inner.scrollHeight;
             this.expanded = !collapsing;
             if (reduceMotion || Math.abs(from - to) < 1) {
                 viewport.style.height = collapsing ? '' : 'auto';
@@ -60,6 +63,21 @@
         },
     }">
         <div class="legal-agreements-content-card" :class="{ 'legal-agreements-content-card--expanded': expanded }">
+            <div class="legal-agreements-card-head">
+                <h2 class="legal-agreements-card-title">Legal Agreements</h2>
+                <a href="{{ $this->legalAgreementsPdfUrl() }}" class="legal-agreements-download-link"
+                    data-download-legal-pdf @click.stop>
+                    Download Documents
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21" viewBox="0 0 18 21" fill="none"
+                        aria-hidden="true">
+                        <path
+                            d="M0.75 16.584V18.1673C0.75 18.5872 0.90165 18.99 1.17159 19.2869C1.44153 19.5838 1.80764 19.7507 2.18939 19.7507H15.1439C15.5257 19.7507 15.8918 19.5838 16.1617 19.2869C16.4317 18.99 16.5833 18.5872 16.5833 18.1673V16.584"
+                            stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M8.66663 0.750651V13.8132M12.9848 9.45898L8.66663 14.209L4.34845 9.45898"
+                            stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </a>
+            </div>
             <div class="legal-agreements-viewport" :class="{ 'is-expanded': expanded }" x-ref="viewport"
                 @click="toggleAgreements()" @keydown.enter.prevent="toggleAgreements()"
                 @transitionend="onAgreementsTransitionEnd($event)" tabindex="0" role="region"
@@ -72,8 +90,9 @@
         </div>
 
         <div class="legal-policy-checkbox-list">
-            <label class="legal-policy-checkbox-item" :class="{ 'is-selected': accepted }">
-                <input type="checkbox" x-model="accepted">
+            <label class="legal-policy-checkbox-item"
+                @class(['is-selected' => $legal_terms_accepted])>
+                <input type="checkbox" wire:model.live="legal_terms_accepted">
                 <span class="legal-policy-checkbox-box" aria-hidden="true"></span>
                 <span class="legal-policy-checkbox-label">I confirm I have read and agree to all FursGo policies
                     listed above.</span>
@@ -84,29 +103,13 @@
         </div>
 
         <div class="legal-policy-actions">
-            <div>
-                <a href="{{ $this->legalAgreementsPdfUrl() }}" data-download-legal-pdf>Download Document
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21" viewBox="0 0 18 21" fill="none">
-                        <path
-                            d="M0.75 16.584V18.1673C0.75 18.5872 0.90165 18.99 1.17159 19.2869C1.44153 19.5838 1.80764 19.7507 2.18939 19.7507H15.1439C15.5257 19.7507 15.8918 19.5838 16.1617 19.2869C16.4317 18.99 16.5833 18.5872 16.5833 18.1673V16.584"
-                            stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                        <path d="M8.66663 0.750651V13.8132M12.9848 9.45898L8.66663 14.209L4.34845 9.45898"
-                            stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </a>
-            </div>
-            <div class="legal-policy-action-btns">
-                <button type="button" class="legal-policy-btn legal-policy-btn--outline"
-                    wire:click="goBackFromBuildProfile">
-                    Decline
-                </button>
-                <button type="submit" class="legal-policy-btn legal-policy-btn--continue legal-policy-btn--continue-active"
-                    wire:loading.attr="disabled" wire:target="submitLegalPolicy">
-                    <span wire:loading.remove wire:target="submitLegalPolicy">Agree &amp; Continue</span>
-                    <span class="legal-policy-btn__spinner" wire:loading wire:target="submitLegalPolicy"
-                        aria-hidden="true"></span>
-                </button>
-            </div>
+            <button type="submit"
+                class="legal-policy-btn legal-policy-btn--continue {{ $legal_terms_accepted ? 'legal-policy-btn--continue-active' : 'legal-policy-btn--continue-muted' }}"
+                @disabled(!$legal_terms_accepted) wire:loading.attr="disabled" wire:target="submitLegalPolicy">
+                <span wire:loading.remove wire:target="submitLegalPolicy">Agree &amp; Continue</span>
+                <span class="legal-policy-btn__spinner" wire:loading wire:target="submitLegalPolicy"
+                    aria-hidden="true"></span>
+            </button>
         </div>
     </form>
 </div>
@@ -124,11 +127,69 @@
 
     .legal-agreements-content-card {
         position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 715px;
+        height: 511px;
         border-radius: 10px;
-        border: 1px solid #E5E5E5;
-        background: #fff;
-        box-shadow: 0 1px 3px rgba(59, 55, 49, 0.06);
+        border: 1px solid #E2E2E2;
+        background: #FAFAFA;
         overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    .legal-agreements-content-card--expanded {
+        height: auto;
+        max-height: none;
+    }
+
+    .legal-agreements-card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-shrink: 0;
+        padding: 3.25rem 3rem 1.5rem;
+        background: #FAFAFA;
+    }
+
+    .legal-agreements-card-title {
+        margin: 0;
+        color: #3B3731;
+        font-family: "Playfair Display", serif;
+        font-size: 24px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .legal-agreements-download-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        flex-shrink: 0;
+        color: #3B3731;
+        font-family: Lato, sans-serif;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        text-decoration: none;
+        transition: color 0.15s ease;
+    }
+
+    .legal-agreements-download-link:hover {
+        color: #f6a623;
+    }
+
+    .legal-agreements-download-link svg {
+        flex-shrink: 0;
+    }
+
+    /* Hide duplicate heading inside scrollable document (toolbar title is canonical). */
+    .legal-policy-wrap .legal-agreements-section>h2:first-child {
+        display: none;
     }
 
     /* Bottom fade: visible when collapsed, fades out on expand */
@@ -157,50 +218,55 @@
     .legal-agreements-viewport {
         position: relative;
         z-index: 0;
+        flex: 1 1 auto;
+        min-height: 0;
         box-sizing: border-box;
-        max-height: min(52vh, 32rem);
         overflow-y: auto;
         background: #FAFAFA;
         scrollbar-width: thin;
-        scrollbar-color: #E3E3E3 #ffffff;
+        scrollbar-color: #E3E3E3 #FAFAFA;
         cursor: pointer;
     }
 
+    .legal-agreements-viewport.is-expanded {
+        flex: 1 1 auto;
+        overflow-y: visible;
+    }
+
     .legal-agreements-viewport:hover:not(.is-expanded) {
-        box-shadow: inset 0 0 0 1px rgba(59, 55, 49, 0.08);
+        box-shadow: inset 0 0 0 1px rgba(59, 55, 49, 0.06);
     }
 
     .legal-agreements-container {
-        padding: 3rem;
+        padding: 2rem 3rem 3rem;
         background: #FAFAFA;
     }
 
     .legal-agreements-viewport::-webkit-scrollbar {
-        width: 8px;
+        width: 6px;
     }
 
     .legal-agreements-viewport::-webkit-scrollbar-track {
         background: #FAFAFA;
-        border-radius: 4px;
+        border-radius: 96px;
     }
 
     .legal-agreements-viewport::-webkit-scrollbar-thumb {
         background: #E3E3E3;
-        border-radius: 4px;
-        border: 2px solid #ffffff;
+        border-radius: 96px;
     }
 
     .legal-agreements-viewport::-webkit-scrollbar-thumb:hover {
-        background: #E3E3E3;
+        background: #d4d4d4;
     }
 
     .legal-agreements-viewport::-webkit-scrollbar-corner {
-        background: #ffffff;
+        background: #FAFAFA;
     }
 
     .legal-agreements-section>h2 {
         color: #3B3731;
-        font-family: "Playfair Display";
+        font-family: "Playfair Display", serif;
         font-size: 24px;
         font-style: normal;
         font-weight: 600;
@@ -220,7 +286,7 @@
     .legal-agreements-section-title {
         margin: 2rem 0 1rem 0;
         color: #3B3731;
-        font-family: Lato;
+        font-family: Lato, sans-serif;
         font-size: 20px;
         font-style: normal;
         font-weight: 600;
@@ -230,16 +296,16 @@
     }
 
     .legal-agreements-body {
-        color: #4b5563;
-        font-family: Lato;
-        font-size: 0.875rem;
-        line-height: 1.65;
+        color: #3B3731;
+        font-family: Lato, sans-serif;
+        font-size: 18px;
+        line-height: normal;
     }
 
     .legal-agreements-body p {
         margin: 0 0 0.85rem;
         color: #3B3731;
-        font-family: Lato;
+        font-family: Lato, sans-serif;
         font-size: 18px;
         font-style: normal;
         font-weight: 400;
@@ -247,28 +313,23 @@
     }
 
     .legal-policy-checkbox-list {
-        margin-top: 3rem;
+        margin-top: 2.5rem;
         width: 100%;
         display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 1.1rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
     }
 
     .legal-policy-checkbox-item {
         position: relative;
         display: flex;
-        align-items: center;
-        justify-content: center;
+        align-items: flex-start;
+        justify-content: flex-start;
         text-align: left;
         gap: 0.85rem;
         margin: 0;
         cursor: pointer;
-        color: #9d9b98;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 400;
-        line-height: 1.45;
         user-select: none;
         -webkit-user-select: none;
     }
@@ -290,49 +351,30 @@
         flex-shrink: 0;
         width: 20px;
         height: 20px;
-        margin-top: 0.1rem;
-        border-radius: 999px;
-        border: 1px solid #d4d4d4;
+        margin-top: 0.15rem;
+        border-radius: 100px;
+        border: 1px solid #FFD88C;
         background: #fff;
         position: relative;
         transition: border-color 0.15s ease;
     }
 
-    .legal-policy-checkbox-item input:checked+.legal-policy-checkbox-box {
-        border-color: #FFD88C;
-    }
-
-    .legal-policy-checkbox-item input:checked+.legal-policy-checkbox-box::after {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 15px;
-        height: 15px;
-        border-radius: 999px;
-        transform: translate(-50%, -50%);
-        background: #FFD88C;
-    }
-
-    .legal-policy-checkbox-item.is-selected .legal-policy-checkbox-box {
-        border-color: #FFD88C;
-    }
-
+    .legal-policy-checkbox-item input:checked+.legal-policy-checkbox-box::after,
     .legal-policy-checkbox-item.is-selected .legal-policy-checkbox-box::after {
         content: "";
         position: absolute;
         top: 50%;
         left: 50%;
-        width: 15px;
-        height: 15px;
-        border-radius: 999px;
+        width: 13.333px;
+        height: 13.333px;
+        border-radius: 100px;
         transform: translate(-50%, -50%);
         background: #FFD88C;
     }
 
     .legal-policy-checkbox-label {
-        color: #3b3731;
-        font-family: Lato;
+        color: #3B3731;
+        font-family: Lato, sans-serif;
         font-size: 18px;
         font-style: normal;
         font-weight: 400;
@@ -342,47 +384,14 @@
     }
 
     .legal-policy-checkbox-item:not(.is-selected) .legal-policy-checkbox-label {
-        color: #9d9b98;
+        color: #3B3731;
     }
 
     .legal-policy-actions {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-end;
         align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
         margin-top: 2rem;
-    }
-
-    .legal-policy-actions>div:first-child>a {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 1.5rem;
-        width: 281px;
-        height: 48px;
-        border-radius: 96px;
-        border: 1px solid rgba(59, 55, 49, 0.10);
-        box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.10);
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        transition: all 0.3s ease;
-    }
-
-    .legal-policy-actions>div:first-child>a:hover {
-        border: 1px solid #FFC97A;
-    }
-
-    .legal-policy-action-btns {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        flex-wrap: wrap;
     }
 
     .legal-policy-btn {
@@ -392,7 +401,7 @@
         min-height: 48px;
         padding: 0 1.25rem;
         border-radius: 96px;
-        font-family: Lato;
+        font-family: Lato, sans-serif;
         font-size: 16px;
         font-weight: 600;
         line-height: normal;
@@ -402,46 +411,15 @@
         box-sizing: border-box;
     }
 
-    .legal-policy-btn--secondary {
-        background: #fff;
-        color: #3B3731;
-        border: 1px solid #FFC97A;
-    }
-
-    .legal-policy-btn--secondary:hover {
-        background: #FFFAF2;
-    }
-
-    .legal-policy-btn--outline {
-        background: transparent;
-        color: #3B3731;
-        border: 1px solid #9D9B98;
-        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
-        transition:
-            box-shadow 0.25s ease,
-            border-color 0.25s ease,
-            background-color 0.25s ease,
-            transform 0.25s ease;
-    }
-
-    .legal-policy-btn--outline:hover {
-        box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.10);
-        border-color: #7d7b78;
-        background-color: rgba(59, 55, 49, 0.02);
-        transform: translateY(-1px);
-    }
-
-    .legal-policy-btn--outline:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
-        transition-duration: 0.12s;
-    }
-
     .legal-policy-btn--continue {
-        width: 170px;
+        width: auto;
+        min-width: 167px;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        white-space: nowrap;
         font-weight: 600;
         box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.10);
-        transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+        transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
     }
 
     .legal-policy-btn--continue-active {
@@ -457,8 +435,8 @@
 
     .legal-policy-btn--continue-muted,
     .legal-policy-btn--continue:disabled {
-        background: #e5e7eb;
-        color: #9ca3af;
+        background: #E5E7EB;
+        color: #9CA3AF;
         border: none;
         box-shadow: none;
         cursor: not-allowed;
@@ -489,6 +467,22 @@
 
     .legal-policy-checkbox-label a:hover {
         color: #f6a623;
+    }
+
+    @media (max-width: 768px) {
+        .legal-agreements-card-head {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 1.75rem 1.25rem 0;
+        }
+
+        .legal-agreements-container {
+            padding: 1.25rem 1.25rem 2rem;
+        }
+
+        .legal-agreements-content-card {
+            height: min(511px, 70vh);
+        }
     }
 </style>
 

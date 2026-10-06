@@ -2721,7 +2721,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
     public function isLegalPolicyContinueEnabled(): bool
     {
-        return true;
+        return $this->legal_terms_accepted;
     }
 
     public function toggleLegalAgreementsExpanded(): void
@@ -2736,7 +2736,9 @@ new #[Layout('layouts.dashboard')] class extends Component {
             return;
         }
 
-        $this->legal_terms_accepted = true;
+        $this->validate([
+            'legal_terms_accepted' => ['accepted'],
+        ]);
 
         $user->update(['legal_policy_agreements' => true]);
 
@@ -5221,6 +5223,15 @@ new #[Layout('layouts.dashboard')] class extends Component {
         display: none !important;
     }
 
+    /* Disabled primary / form actions: show not-allowed across Verify & Qualify flow */
+    .dashboard-shell--business-verification .business-verification-page button:disabled,
+    .dashboard-shell--business-verification .business-verification-page .common-btn:disabled,
+    .dashboard-shell--business-verification .business-verification-page .common-btn.common-btn--disabled,
+    .dashboard-shell--business-verification .business-verification-page .legal-policy-btn:disabled,
+    .dashboard-shell--business-verification .business-verification-page .legal-policy-btn--continue-muted {
+        cursor: not-allowed !important;
+    }
+
     .verification-wrapper {
         display: flex;
         gap: 10rem;
@@ -5472,18 +5483,22 @@ new #[Layout('layouts.dashboard')] class extends Component {
         margin-bottom: 3rem;
     }
 
+    /* Shared full-bleed panel size: 1240 × 620 across similar VQ screens */
+    .business-verification-page--background-checks,
+    .business-verification-page--status {
+        width: 1240px;
+        max-width: 100%;
+        min-height: 620px;
+        margin-left: auto;
+        margin-right: auto;
+        box-sizing: border-box;
+    }
+
     .business-verification-page--background-checks {
         background: #FBFBFB;
     }
 
-    .business-verification-page--status {
-        width: 100%;
-        max-width: 1320px;
-        min-height: 620px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
+    .business-verification-page--background-checks .verification-wrapper,
     .business-verification-page--status .verification-wrapper {
         min-height: 620px;
         align-items: center;
@@ -5504,15 +5519,21 @@ new #[Layout('layouts.dashboard')] class extends Component {
 
     @media (max-width: 768px) {
 
+        .business-verification-page--background-checks,
         .business-verification-page--status,
+        .business-verification-page--background-checks .verification-wrapper,
         .business-verification-page--status .verification-wrapper {
             min-height: 480px;
         }
     }
 
     .vq-background-checks {
-        width: 100%;
+        width: 1240px;
+        max-width: 100%;
         min-height: 620px;
+        margin-left: auto;
+        margin-right: auto;
+        box-sizing: border-box;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -5686,10 +5707,6 @@ new #[Layout('layouts.dashboard')] class extends Component {
         gap: 1rem;
     }
 
-    .verification-form-actions {
-        margin-top: 2rem;
-    }
-
     .verification-status-card--pending .verification-approved-status,
     .verification-status-card--rejected .verification-approved-status {
         color: #3B3731;
@@ -5723,8 +5740,7 @@ new #[Layout('layouts.dashboard')] class extends Component {
     .verification-form>div:nth-child(1) {
         border-radius: 10px;
         background: #FBFBFB;
-        padding: 4rem;
-        width: 100%;
+        padding: 2rem 4rem 0;
         height: auto;
         box-sizing: border-box;
     }
@@ -6191,7 +6207,6 @@ new #[Layout('layouts.dashboard')] class extends Component {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-top: 2rem;
     }
 
     .business-owner-id-help {

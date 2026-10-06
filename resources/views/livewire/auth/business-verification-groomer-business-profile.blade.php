@@ -718,7 +718,7 @@
     }
 
     .addon-picker-plus:disabled {
-        cursor: wait;
+        cursor: not-allowed;
     }
 
     .addon-picker-plus-icon,
