@@ -14654,11 +14654,18 @@ body.admin-co-modal-lock {
 
 .admin-bp-bookings-footer {
     margin-top: 18px;
+    grid-template-columns: 1fr auto;
 }
 
 .admin-bp-bookings-footer .admin-table-count {
     text-transform: uppercase;
     letter-spacing: 0.02em;
+}
+
+.admin-bp-bookings-footer .admin-po-pagination {
+    grid-column: auto;
+    justify-self: end;
+    margin-left: auto;
 }
 
 .admin-bp-bookings-placeholder {
@@ -15467,11 +15474,18 @@ body.admin-co-modal-lock {
 
 .admin-bp-clients-footer {
     margin-top: 0;
+    grid-template-columns: 1fr auto;
 }
 
 .admin-bp-clients-footer .admin-table-count {
     text-transform: uppercase;
     letter-spacing: 0.02em;
+}
+
+.admin-bp-clients-footer .admin-po-pagination {
+    grid-column: auto;
+    justify-self: end;
+    margin-left: auto;
 }
 
 .admin-bp-client-modal {
