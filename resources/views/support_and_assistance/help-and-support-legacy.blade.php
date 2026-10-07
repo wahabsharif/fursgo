@@ -3,7 +3,7 @@
 @section('title', 'Fursgo - Help & Support')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/company_information.css') }}">
+    <link rel="stylesheet" href="/css/help-support.css">
     <style>
         #request-submitted-modal .modal-content.size {
             width: 645px;
@@ -318,6 +318,6 @@
 @endsection
 
 @push('script')
-    <script src="{{ asset('js/help-common.js') }}"></script>
-    <script src="{{ asset('js/help-support.js') }}"></script>
+    <script src="/js/help-common.js"></script>
+    <script src="/js/help-support.js"></script>
 @endpush

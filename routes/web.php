@@ -75,11 +75,13 @@ Route::middleware([SetBusinessPageWebShell::class])->group(function () {
     Route::get('/support-and-assistance/search', fn() => VoltPage::render('help.search'))->name('search');
     Route::get('/search-results', fn() => VoltPage::render('search.results'))->name('search-results');
 });
-Route::redirect('/business/support-and-assistance/help-and-support', '/support-and-assistance/help-and-support');
+Route::redirect('/business/support-and-assistance/help-and-support', '/support_and_assistance/help_and_support');
 Route::redirect('/business/support-and-assistance/search', '/support-and-assistance/search');
 Route::redirect('/business/business-homepage-groomer-space-owner', '/business-homepage-groomer-space-owner');
 
-Route::get('/support-and-assistance/help-and-support', function () {
+Route::redirect('/support-and-assistance/help-and-support', '/support_and_assistance/help_and_support');
+
+Route::get('/support_and_assistance/help_and_support', function () {
     // Previous Livewire Help Centre (kept intact — switch back by uncommenting below):
     // BusinessPageShell::applyFromRequest();
     // $component = BusinessPageShell::resolveComponent('help.support-business-hub', 'help.support');
