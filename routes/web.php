@@ -131,6 +131,14 @@ Route::get('/my_bookings', fn() => VoltPage::render('my-bookings.index'))
 Route::get('/my_bookings/my_bookings.php', fn() => VoltPage::render('my-bookings.index'))
     ->name('my-bookings.php');
 
+// Messages (imported static page from D:\fursgo\messages_notification — custom PHP URL parity)
+Route::get('/messages_notification/messages.php', function () {
+    return view('messages_notification.messages-legacy');
+})->name('messages_notification.messages.php');
+Route::get('/messages_notification/messages', function () {
+    return view('messages_notification.messages-legacy');
+})->name('messages_notification.messages');
+
 Route::get('/my-account/pet-owner-profile', fn() => VoltPage::render('account.profile'))
     ->middleware([EnsureWebOrGroomerSpacerAuthenticated::class])
     ->name('pet-owner-profile');

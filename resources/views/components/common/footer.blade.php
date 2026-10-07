@@ -34,7 +34,7 @@
     </style>
 @endif
 
-<footer class="mt-5 mb-5{{ $variant === 'dashboard' ? ' dashboard-footer' : '' }}" @unless ($variant === 'dashboard')
+<footer class="mt-5 mb-5{{ $variant === 'dashboard' ? ' dashboard-footer' : '' }} footer" @unless ($variant === 'dashboard')
 style="padding: 6rem;" @endunless>
     <section class="section">
         <div class="{{ $variant === 'dashboard' ? 'container-fluid' : 'container' }}">

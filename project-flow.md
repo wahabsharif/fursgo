@@ -78,6 +78,7 @@ Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/vie
 | Checkout shells                            | `checkout.booking-groomer`, `checkout.booking-space`, `checkout.booking-groomer-space` | `checkout.*`                            |
 | Groomer/space unavailability URLs          | `groomer.unavailability` / `space.unavailability`                                      | various                                 |
 | Overlay demos                              | cookies / rating blade files                                                           | cookies*, rating*                       |
+| `/messages_notification/messages.php` (+ `/messages`) | Imported static Messages (`messages_notification.messages-legacy`)              | `messages_notification.messages*`       |
 
 ### Pet owner (`web` or web-or-groomer middleware)
 
@@ -180,6 +181,7 @@ Volt entry: `resources/views/livewire/business-hub.blade.php`, nested under `liv
 - Primary UI lives in Volt under `resources/views/livewire/`.
 - `web.php` keeps underscore/hyphen URL aliases and redirects for legacy parity.
 - Help & Support serves legacy static views; older Volt help components remain (see comments in `web.php`).
+- Messages serves imported static view from `D:\fursgo\messages_notification` (`messages.css` + `messages-page.js`); aliases keep `/messages_notification/messages` links working.
 - GET requests to Livewire `/update` paths redirect to referer (`bootstrap/app.php` exception handler).
 - Profile switch (`business-hub/switch`) only allows profiles with the same email.
 - Controllers: `BookingController`, `PetDetailController`, `SearchController`, `BookingInvoicePdfController`, `AccountDataExportController`, `LegalAgreementsPdfController`, `GroomerSpacerPrivateFileController`.
