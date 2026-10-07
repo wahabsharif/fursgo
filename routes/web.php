@@ -139,6 +139,14 @@ Route::get('/messages_notification/messages', function () {
     return view('messages_notification.messages-legacy');
 })->name('messages_notification.messages');
 
+// Notifications (imported static page from D:\\fursgo\\messages_notification — custom PHP URL parity)
+Route::get('/messages_notification/notifications.php', function () {
+    return view('messages_notification.notifications-legacy');
+})->name('messages_notification.notifications.php');
+Route::get('/messages_notification/notifications', function () {
+    return view('messages_notification.notifications-legacy');
+})->name('messages_notification.notifications');
+
 Route::get('/my-account/pet-owner-profile', fn() => VoltPage::render('account.profile'))
     ->middleware([EnsureWebOrGroomerSpacerAuthenticated::class])
     ->name('pet-owner-profile');
