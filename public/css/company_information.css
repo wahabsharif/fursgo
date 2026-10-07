@@ -227,12 +227,6 @@ body {
     color: #ffc97a !important;
 }
 
-/* Tab content */
-.tab-panels {
-    width: 70%;
-    margin-left: 15%;
-}
-
 /* Make the panel scrollable and smooth when jumping to top */
 .tab-panels {
     scroll-behavior: smooth;

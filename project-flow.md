@@ -8,7 +8,8 @@ Pet grooming marketplace (UK-oriented):
 - **Providers** (`groomer_spacer` guard / `GroomerSpacerProfile`) complete business verification, then run **Business Hub** + **Marketing Hub**.
 - **Admins** (`User` with `user_type=admin`) use `/admin`.
 
-## Stack & run
+## Stack & runh
+
 
 | Item        | Detail                                                          |
 | ----------- | --------------------------------------------------------------- |
@@ -19,7 +20,11 @@ Pet grooming marketplace (UK-oriented):
 | Run         | `composer run dev` → `php artisan serve --no-reload`            |
 | Local reset | Non-prod only: `GET /seed` (migrate:fresh --seed), `GET /clear` |
 
+
+
+
 ## Directory map
+
 
 | Path                          | Purpose                                                                               |
 | ----------------------------- | ------------------------------------------------------------------------------------- |
@@ -37,16 +42,19 @@ Pet grooming marketplace (UK-oriented):
 | `database/seeders/`           | Including `DevUserSeeder`                                                             |
 | `public/`                     | CSS, images, fonts, icons                                                             |
 
+
 Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/views/livewire/{dot.path}.blade.php`.
 
 ## Auth & roles
 
 **Guards** (`config/auth.php`):
 
+
 | Guard            | Provider / model       | Use                        |
 | ---------------- | ---------------------- | -------------------------- |
 | `web`            | `User`                 | Pet owners (+ admin users) |
 | `groomer_spacer` | `GroomerSpacerProfile` | Groomers / space owners    |
+
 
 **Middleware aliases** (`bootstrap/app.php`):
 
@@ -63,24 +71,34 @@ Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/vie
 - Provider types on profile: `GroomerSpacerProfile.user_type` (e.g. groomer vs `space`).
 - DB table / FK spelling: `goormer_spacer_profiles`, often `goormer_spacer_id`.
 
+
+
 ## Route map (by actor)
+
+
 
 ### Public
 
-| Route                                      | Volt / view                                                                            | Name                                    |
-| ------------------------------------------ | -------------------------------------------------------------------------------------- | --------------------------------------- |
-| `/`                                        | `home`                                                                                 | `home`                                  |
-| `/business-landing-page`                   | static blade                                                                           | `business-landing-page`                 |
-| `/business-homepage-groomer-space-owner`   | `business.homepage` or hub shell variant                                               | `business-homepage-groomer-space-owner` |
-| `/search-results`                          | `search.results`                                                                       | `search-results`                        |
-| `/support-and-assistance/search`           | `help.search`                                                                          | `search`                                |
-| `/support-and-assistance/help-and-support` | legacy static help                                                                     | `help-and-support`                      |
-| Checkout shells                            | `checkout.booking-groomer`, `checkout.booking-space`, `checkout.booking-groomer-space` | `checkout.*`                            |
-| Groomer/space unavailability URLs          | `groomer.unavailability` / `space.unavailability`                                      | various                                 |
-| Overlay demos                              | cookies / rating blade files                                                           | cookies*, rating*                       |
-| 404                                        | `resources/views/errors/404.blade.php` (business public chrome)                        | —                                       |
+
+| Route                                                 | Volt / view                                                                            | Name                                    |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------- |
+| `/`                                                   | `home`                                                                                 | `home`                                  |
+| `/business-landing-page`                              | static blade                                                                           | `business-landing-page`                 |
+| `/business-homepage-groomer-space-owner`              | `business.homepage` or hub shell variant                                               | `business-homepage-groomer-space-owner` |
+| `/search-results`                                     | `search.results`                                                                       | `search-results`                        |
+| `/support-and-assistance/search`                      | `help.search`                                                                          | `search`                                |
+| `/support-and-assistance/help-and-support`            | legacy static help                                                                     | `help-and-support`                      |
+| Checkout shells                                       | `checkout.booking-groomer`, `checkout.booking-space`, `checkout.booking-groomer-space` | `checkout.*`                            |
+| Groomer/space unavailability URLs                     | `groomer.unavailability` / `space.unavailability`                                      | various                                 |
+| Overlay demos                                         | cookies / rating blade files                                                           | cookies*, rating*                       |
+| 404                                                   | `resources/views/errors/404.blade.php` (business public chrome)                        | —                                       |
+| `/messages_notification/messages.php` (+ `/messages`) | Imported static Messages (`messages_notification.messages-legacy`)                     | `messages_notification.messages*`       |
+
+
+
 
 ### Pet owner (`web` or web-or-groomer middleware)
+
 
 | Route                                                | Notes                                                   |
 | ---------------------------------------------------- | ------------------------------------------------------- |
@@ -92,7 +110,11 @@ Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/vie
 | `/pet-details` GET/POST                              | Volt manager + `PetDetailController@store`              |
 | `/bookings` CRUD + accept/cancel                     | `BookingController`                                     |
 
+
+
+
 ### Provider (`groomer_spacer`)
+
 
 | Route                                                 | Notes                                                                                   |
 | ----------------------------------------------------- | --------------------------------------------------------------------------------------- |
@@ -103,16 +125,22 @@ Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/vie
 | `/marketing-hub` + `POST /marketing-hub/nav`          | Marketing                                                                               |
 | Invoice PDF/HTML                                      | `business-hub/bookings/{booking}/invoice.pdf`                                           |
 
+
+
+
 ### Admin
+
 
 | Route          | Notes                                    |
 | -------------- | ---------------------------------------- |
 | `/admin/login` | Volt `admin.auth.login`                  |
 | `/admin`       | Volt `admin.overview` (tabbed Alpine UI) |
 
+
 Auth routes: `routes/auth.php`. Admin: `routes/admin.php`.
 
 ## Core entities
+
 
 | Model                                                               | Role                                                                                                               |
 | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
@@ -128,6 +156,7 @@ Auth routes: `routes/auth.php`. Admin: `routes/admin.php`.
 | `SupportTicket` (+ attachments), `FaqCategory`, `FaqArticle`        | Help                                                                                                               |
 | `AccountSetting`, `AccountLoginSession`, `AccountBlock`             | Account security / prefs                                                                                           |
 
+
 **Booking statuses:** `pending` → `confirmed` → `completed`; or `cancelled` (`cancelled_by`, `cancellation_reason`, refund fields).
 
 ## Main flows
@@ -142,6 +171,8 @@ flowchart LR
   Hub --> Accept[AcceptCancelBooking]
   Admin[Admin_user] --> AdminUI[AdminOverview]
 ```
+
+
 
 **Owner:** signup → optional `login-signup` owner setup → add pets (`/pet-details`) → search → booking/checkout → `/bookings` lifecycle.
 
@@ -176,11 +207,15 @@ Volt entry: `resources/views/livewire/business-hub.blade.php`, nested under `liv
 - Business provider detail tabs: Overview, Profile (public profile / gallery / business details / notes / activity + Services · Policies · Reviews subnav; dual Groomer/Space Host via sidebar `viewAs` — space subnav active `#FFA899`, active status pills `#EAF3DE`/`#A7C569`), Activity, Account, Compliance, Support (ticket list → detail with submission / limited thread / linked states: populated · empty · na · suggested / shared admin notes / details+activity; no modals; sidebar stays default provider actions), Payouts (Earnings overview dual groomer/space — space accents `#FFA899` on subnav/chart/progress, space booking Full-Day·Half-Day·Hourly + bank settings; Transactions expandable cards; Payouts list; Invoices → payment-detail); Bookings (subnav Bookings · Availability · Clients — Bookings: metric cards + status filters + table Owner/Pet · Service/Location · Date/Time + export; row/eye opens booking detail with summary card · details · price breakdown · activity timeline; Availability: day schedule + calendar · working week hours · time off · booking intake status · activity timeline; Clients: table with avatar/initials · bookings · paid · last booked + export/pagination; eye opens client profile modal — stats · recent bookings · recent review + view full customer profile).
 - Pet owner detail tabs: overview, pets, bookings, payments (list + detail by status), support (ticket list → detail with submission / linked records + Add link / Mark as resolved / Open dispute (+ success) / Merge / Reassign / Close ticket modals / thread / notes / details+activity; sidebar switches list actions ↔ ticket actions), referrals, activity — under `resources/views/components/admin/customer/`.
 
+
+
 ## Codebase notes
 
 - Primary UI lives in Volt under `resources/views/livewire/`.
 - `web.php` keeps underscore/hyphen URL aliases and redirects for legacy parity.
 - Help & Support serves legacy static views; older Volt help components remain (see comments in `web.php`).
+- Messages serves imported static view from `D:\fursgo\messages_notification` (`messages.css` + `messages-page.js`); aliases keep `/messages_notification/messages` links working.
 - GET requests to Livewire `/update` paths redirect to referer (`bootstrap/app.php` exception handler).
 - Profile switch (`business-hub/switch`) only allows profiles with the same email.
 - Controllers: `BookingController`, `PetDetailController`, `SearchController`, `BookingInvoicePdfController`, `AccountDataExportController`, `LegalAgreementsPdfController`, `GroomerSpacerPrivateFileController`.
+

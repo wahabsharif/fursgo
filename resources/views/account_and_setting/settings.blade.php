@@ -1,4 +1,4 @@
-    <div class="container mb-5 mt-5">
+<div class="container mb-5 mt-5">
         <div class="row">
             <div class="col-lg-1"></div>
             <div class="col-lg-10">
@@ -76,8 +76,8 @@
                                     <div class="custom-select">
                                         <div class="select-trigger full-width">
                                             <span class="selected-text">English (United Kingdom)</span>
-                                            <svg width="16" height="16" viewBox="0 0 24 24">
-                                                <path d="M6 9l6 6 6-6" fill="none" stroke="#666" stroke-width="2"></path>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8" fill="none">
+                                                <path d="M13.5105 0.5L6.95017 7.06033L0.499971 0.610127" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
                                         </div>
 
@@ -94,8 +94,8 @@
                                     <div class="custom-select">
                                         <div class="select-trigger full-width">
                                             <span class="selected-text">Europe/London</span>
-                                            <svg width="16" height="16" viewBox="0 0 24 24">
-                                                <path d="M6 9l6 6 6-6" fill="none" stroke="#666" stroke-width="2"></path>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8" fill="none">
+                                                <path d="M13.5105 0.5L6.95017 7.06033L0.499971 0.610127" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
                                         </div>
 
@@ -112,8 +112,8 @@
                                     <div class="custom-select">
                                         <div class="select-trigger full-width">
                                             <span class="selected-text">£ - GBP</span>
-                                            <svg width="16" height="16" viewBox="0 0 24 24">
-                                                <path d="M6 9l6 6 6-6" fill="none" stroke="#666" stroke-width="2"></path>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="8" viewBox="0 0 15 8" fill="none">
+                                                <path d="M13.5105 0.5L6.95017 7.06033L0.499971 0.610127" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
                                         </div>
 
@@ -133,7 +133,7 @@
 
 
                                 <div class="toggle-button-content d-flex align-items-center justify-content-between mt-5">
-                                    <div class="d-flex flex-column gap-25">
+                                    <div class="d-flex flex-column gap-20">
                                         <p class="bold-font">Booking Updates</p>
                                         <p style="color: #9D9B98">Notify me when a booking is confirmed or changed.</p>
                                     </div>
@@ -150,7 +150,7 @@
                                 </div>
 
                                 <div class="toggle-button-content d-flex align-items-center justify-content-between mt-5">
-                                    <div class="d-flex flex-column gap-25">
+                                    <div class="d-flex flex-column gap-20">
                                         <p class="bold-font">Groomer Messages Zone</p>
                                         <p style="color: #9D9B98">Get alerts when groomers send you a message.</p>
                                     </div>
@@ -167,7 +167,7 @@
                                 </div>
 
                                 <div class="toggle-button-content d-flex align-items-center justify-content-between mt-5">
-                                    <div class="d-flex flex-column gap-25">
+                                    <div class="d-flex flex-column gap-20">
                                         <p class="bold-font">Space Owners Messages Zone</p>
                                         <p style="color: #9D9B98">Get alerts when space owners send you a message.</p>
                                     </div>
@@ -184,7 +184,7 @@
                                 </div>
 
                                 <div class="toggle-button-content d-flex align-items-center justify-content-between mt-5">
-                                    <div class="d-flex flex-column gap-25">
+                                    <div class="d-flex flex-column gap-20">
                                         <p class="bold-font">Promotions & Offers</p>
                                         <p style="color: #9D9B98">Receive special deals and exclusive discounts.</p>
                                     </div>
@@ -201,7 +201,7 @@
                                 </div>
 
                                 <div class="toggle-button-content d-flex align-items-center justify-content-between mt-5">
-                                    <div class="d-flex flex-column gap-25">
+                                    <div class="d-flex flex-column gap-20">
                                         <p class="bold-font">Reminder Alerts</p>
                                         <p style="color: #9D9B98">Send reminders 24 hours before my booking.</p>
                                     </div>
@@ -227,7 +227,7 @@
 
                                     <div class="d-flex align-items-center justify-content-between gap-25">
                                         <p style="color: #9D9B98">Last updated 2 days ago.</p>
-                                        <a class="link-tag cursor" data-modal-open="update_password_modal">Update Password</a>
+                                        <a class="updated-password link-tag cursor" data-modal-open="update_password_modal">Update Password</a>
                                     </div>
                                 </div>
 
@@ -236,114 +236,124 @@
 
                                 <div class="modal" id="update_password_modal">
                                     <div class="modal-content size">
-                                        <div class="container">
-                                            <div class="row">
-                                                <div class="d-flex align-items-center justify-content-between mt-2">
-                                                    <h1 class="fs-18-pf-display-700">Update password</h1>
-                                                    <svg class="cursor" data-modal-close xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                                        <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
-                                                        <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                        <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                        <div class="row">
+                                            <div class="d-flex align-items-center justify-content-between mt-2">
+                                                <h1 class="fs-18-pf-display-700">Update password</h1>
+                                                <svg class="cursor" data-modal-close xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                                    <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                                                    <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                    <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                </svg>
+                                            </div>
+                                            <span class="fs-12-400-f-color text-light mt-1 mb-1">Choose a new password to keep your account secure.</span>
+                                            <!-- <div class="col-lg-3">
+                                                <div class="d-flex align-items-center justify-content-end cursor modal-cross mt-3">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none">
+                                                        <circle cx="18" cy="18" r="17.5" stroke="#3B3731" />
+                                                        <path d="M12.8 24.0008L24 12.8008M12.8 12.8008L24 24.0008" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
                                                     </svg>
                                                 </div>
-                                                <span class="fs-12-400-f-color text-light mt-1 mb-1">Choose a new password to keep your account secure.</span>
-                                                <!-- <div class="col-lg-3">
-                                                    <div class="d-flex align-items-center justify-content-end cursor modal-cross mt-3">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none">
-                                                            <circle cx="18" cy="18" r="17.5" stroke="#3B3731" />
-                                                            <path d="M12.8 24.0008L24 12.8008M12.8 12.8008L24 24.0008" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
-                                                        </svg>
+                                            </div> -->
+                                            <div class="col-lg-12">
+                                                <form id="updatePasswordForm">
+                                                    <div class="form-field mt-4">
+                                                        <label class="fs-12-600-f-color">Current password</label>
+                                                        <div class="input-wrapper">
+                                                            <input type="password" id="current_password" value="12345678">
+                                                        </div>
                                                     </div>
-                                                </div> -->
-                                                <div class="col-lg-12">
-                                                    <form id="updatePasswordForm">
-                                                        <div class="form-field mt-5">
-                                                            <label class="fs-12-600-f-color">Current password</label>
-                                                            <div class="input-wrapper">
-                                                                <input type="password" id="current_password" value="12345678">
-                                                            </div>
+
+                                                    <div class="form-field mt-4">
+                                                        <label class="fs-12-600-f-color">New password</label>
+                                                        <div class="input-wrapper">
+                                                            <input type="password" id="new_password" value="12345678">
                                                         </div>
+                                                    </div>
 
-                                                        <div class="form-field mt-4">
-                                                            <label class="fs-12-600-f-color">New password</label>
-                                                            <div class="input-wrapper">
-                                                                <input type="password" id="new_password" value="12345678">
-                                                            </div>
+                                                    <div class="password-requirements mt-4">
+                                                        <h4 class="fs-12-600-f-color">Password requirements</h4>
+                                                        <ul>
+                                                            <li>At least 8 characters</li>
+                                                            <li>Includes a capital letter</li>
+                                                            <li>Includes a number or symbol</li>
+                                                        </ul>
+                                                    </div>
+                                                    <style>
+                                                        #current_password {
+                                                            color: #9D9B98;
+                                                        }
+
+                                                        .password-requirements ul {
+                                                            margin: 0;
+                                                            padding-left: 18px;
+                                                            list-style: disc;
+                                                        }
+
+                                                        .password-requirements li {
+                                                            color: #9D9B98;
+                                                            font-family: Lato;
+                                                            font-size: 12px;
+                                                            font-style: normal;
+                                                            font-weight: 400;
+                                                            line-height: normal;
+                                                        }
+
+                                                        .close-btn {
+                                                            width: 170px;
+                                                            height: 36px;
+                                                            border-radius: 96px;
+                                                            border: 1px solid #E2E2E2;
+                                                            background: #FFF;
+                                                        }
+
+                                                        .form-field input {
+                                                            padding: 10px 44px 10px 14px;
+                                                        }
+
+                                                        .form-field .input-wrapper {
+                                                            width: 100%;
+                                                            height: 36px;
+                                                        }
+
+                                                        #update_password_modal .form-field label {
+                                                            font-size: 12px;
+                                                        }
+
+                                                        .deactivate.small-link-tag {
+                                                            color: #3B3731;
+                                                            text-align: center;
+                                                            font-family: Lato;
+                                                            font-size: 16px;
+                                                            font-style: normal;
+                                                            font-weight: 600;
+                                                            line-height: normal;
+                                                            text-underline-offset: 4px;
+                                                            text-decoration: underline;
+                                                        }
+
+                                                        .update-btn {
+                                                            color: #FFF;
+                                                            width: 170px;
+                                                            height: 36px;
+                                                            border-radius: 75px;
+                                                            background: #FFC97A;
+                                                            border: none;
+                                                        }
+                                                    </style>
+                                                    <div class="form-field mt-4">
+                                                        <label class="fs-12-600-f-color">Confirm password</label>
+                                                        <div class="input-wrapper">
+                                                            <input type="password" id="owner_name" value="12345678">
                                                         </div>
-
-                                                        <div class="password-requirements mt-4">
-                                                            <h4 class="fs-12-600-f-color">Password requirements</h4>
-                                                            <ul>
-                                                                <li>At least 8 characters</li>
-                                                                <li>Includes a capital letter</li>
-                                                                <li>Includes a number or symbol</li>
-                                                            </ul>
-                                                        </div>
-                                                        <style>
-                                                            #current_password {
-                                                                color: #9D9B98;
-                                                            }
-
-                                                            .password-requirements ul {
-                                                                margin: 0;
-                                                                padding-left: 18px;
-                                                                list-style: disc;
-                                                            }
-
-                                                            .password-requirements li {
-                                                                color: #9D9B98;
-                                                                font-family: Lato;
-                                                                font-size: 12px;
-                                                                font-style: normal;
-                                                                font-weight: 400;
-                                                                line-height: normal;
-                                                            }
-
-                                                            .close-btn {
-                                                                width: 170px;
-                                                                height: 36px;
-                                                                border-radius: 96px;
-                                                                border: 1px solid #E2E2E2;
-                                                                background: #FFF;
-                                                            }
-
-                                                            .form-field input {
-                                                                padding: 10px 44px 10px 14px;
-                                                            }
-
-                                                            .form-field .input-wrapper {
-                                                                width: 360px;
-                                                                height: 36px;
-                                                            }
-
-                                                            .form-field label {
-                                                                font-size: 12px;
-                                                            }
-
-                                                            .update-btn {
-                                                                color: #FFF;
-                                                                width: 170px;
-                                                                height: 36px;
-                                                                border-radius: 75px;
-                                                                background: #FFC97A;
-                                                                border: none;
-                                                            }
-                                                        </style>
-                                                        <div class="form-field mt-4">
-                                                            <label class="fs-12-600-f-color">Confirm password</label>
-                                                            <div class="input-wrapper">
-                                                                <input type="password" id="owner_name" value="12345678">
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-buttons d-flex justify-content-between align-items-center mt-5">
-                                                            <button type="button" class="close-btn fs-16-400 text-light cursor" data-modal-close>Cancel</button>
-                                                            <button id="submitRequestBtn" class="update-btn fs-16-600 btn-active-bg text-center cursor">Update Password</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                                <div class="col-lg-2"></div>
-
+                                                    </div>
+                                                    <div class="modal-buttons d-flex justify-content-between align-items-center mt-5">
+                                                        <button type="button" class="close-btn fs-16-400 text-light cursor" data-modal-close>Cancel</button>
+                                                        <button id="submitRequestBtn" class="update-btn fs-16-600 btn-active-bg text-center cursor">Update Password</button>
+                                                    </div>
+                                                </form>
                                             </div>
+                                            <div class="col-lg-2"></div>
+
                                         </div>
                                     </div>
                                 </div>
@@ -423,7 +433,6 @@
                                                 data-modal-open="device_sign_out_modal">Sign out</a>
 
                                         </div>
-                                        <div class="section-divider" style="background-color: #E2E2E2"></div>
                                         <div class="logged-devices d-flex align-items-center justify-content-between mt-3">
                                             <div class="d-flex align-items-center gap-20">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="21" height="17" viewBox="0 0 21 17" fill="none">
@@ -437,7 +446,6 @@
                                                 data-last-active="28/08/2025, 18:52 GMT"
                                                 data-modal-open="device_sign_out_modal">Sign out</a>
                                         </div>
-                                        <div class="section-divider" style="background-color: #E2E2E2"></div>
                                         <div class="logged-devices d-flex align-items-center justify-content-between mt-3">
                                             <div class="d-flex align-items-center gap-20">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="23" height="26" viewBox="0 0 23 26" fill="none">
@@ -451,7 +459,6 @@
                                                 data-last-active="28/08/2025, 18:52 GMT"
                                                 data-modal-open="device_sign_out_modal">Sign out</a>
                                         </div>
-                                        <div class="section-divider" style="background-color: #E2E2E2"></div>
                                     </div>
                                 </div>
 
@@ -460,29 +467,27 @@
 
                                 <div class="modal" id="device_sign_out_modal">
                                     <div class="modal-content size">
-                                        <div class="container">
-                                            <div class="row mt-2">
-                                                <!-- <div class="col-lg-1"></div> -->
-                                                <div class="col-lg-12">
-                                                    <div class="d-flex align-items-center justify-content-between">
-                                                        <svg class="mt-4" xmlns="http://www.w3.org/2000/svg" width="16" height="20" viewBox="0 0 16 20" fill="none">
-                                                            <path d="M0 10C0 10.1326 0.0526785 10.2598 0.146447 10.3536C0.240215 10.4473 0.367392 10.5 0.5 10.5H9.293L6.646 13.146C6.59951 13.1924 6.56262 13.2475 6.53744 13.3082C6.51225 13.3689 6.49927 13.4339 6.49922 13.4996C6.49913 13.6323 6.55175 13.7596 6.6455 13.8535C6.73925 13.9474 6.86646 14.0002 6.99915 14.0003C7.13183 14.0004 7.25911 13.9478 7.353 13.854L10.853 10.354C10.9467 10.2602 10.9994 10.1331 10.9994 10.0005C10.9994 9.86792 10.9467 9.74076 10.853 9.647L7.353 6.147C7.2587 6.05592 7.1324 6.00552 7.0013 6.00666C6.8702 6.0078 6.74479 6.06039 6.65209 6.15309C6.55939 6.24579 6.5068 6.3712 6.50566 6.5023C6.50452 6.6334 6.55492 6.7597 6.646 6.854L9.293 9.5H0.5C0.367392 9.5 0.240215 9.55268 0.146447 9.64645C0.0526785 9.74021 0 9.86739 0 10ZM13.5 0H2.5C1.83696 0 1.20107 0.263392 0.732233 0.732233C0.263392 1.20107 0 1.83696 0 2.5V6.5C0 6.63261 0.0526785 6.75979 0.146447 6.85355C0.240215 6.94732 0.367392 7 0.5 7C0.632608 7 0.759785 6.94732 0.853553 6.85355C0.947321 6.75979 1 6.63261 1 6.5V2.5C1 2.10218 1.15804 1.72064 1.43934 1.43934C1.72064 1.15804 2.10218 1 2.5 1H13.5C13.8978 1 14.2794 1.15804 14.5607 1.43934C14.842 1.72064 15 2.10218 15 2.5V17.5C15 17.8978 14.842 18.2794 14.5607 18.5607C14.2794 18.842 13.8978 19 13.5 19H2.5C2.10218 19 1.72064 18.842 1.43934 18.5607C1.15804 18.2794 1 17.8978 1 17.5V13.5C1 13.3674 0.947321 13.2402 0.853553 13.1464C0.759785 13.0527 0.632608 13 0.5 13C0.367392 13 0.240215 13.0527 0.146447 13.1464C0.0526785 13.2402 0 13.3674 0 13.5V17.5C0 18.163 0.263392 18.7989 0.732233 19.2678C1.20107 19.7366 1.83696 20 2.5 20H13.5C14.163 20 14.7989 19.7366 15.2678 19.2678C15.7366 18.7989 16 18.163 16 17.5V2.5C16 1.83696 15.7366 1.20107 15.2678 0.732233C14.7989 0.263392 14.163 0 13.5 0Z" fill="black" />
-                                                        </svg>
-                                                        <svg class="cursor" data-modal-close xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
-                                                            <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                            <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                        </svg>
-                                                    </div>
+                                        <div class="row mt-2">
+                                            <!-- <div class="col-lg-1"></div> -->
+                                            <div class="col-lg-12">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <svg class="mt-4" xmlns="http://www.w3.org/2000/svg" width="16" height="20" viewBox="0 0 16 20" fill="none">
+                                                        <path d="M0 10C0 10.1326 0.0526785 10.2598 0.146447 10.3536C0.240215 10.4473 0.367392 10.5 0.5 10.5H9.293L6.646 13.146C6.59951 13.1924 6.56262 13.2475 6.53744 13.3082C6.51225 13.3689 6.49927 13.4339 6.49922 13.4996C6.49913 13.6323 6.55175 13.7596 6.6455 13.8535C6.73925 13.9474 6.86646 14.0002 6.99915 14.0003C7.13183 14.0004 7.25911 13.9478 7.353 13.854L10.853 10.354C10.9467 10.2602 10.9994 10.1331 10.9994 10.0005C10.9994 9.86792 10.9467 9.74076 10.853 9.647L7.353 6.147C7.2587 6.05592 7.1324 6.00552 7.0013 6.00666C6.8702 6.0078 6.74479 6.06039 6.65209 6.15309C6.55939 6.24579 6.5068 6.3712 6.50566 6.5023C6.50452 6.6334 6.55492 6.7597 6.646 6.854L9.293 9.5H0.5C0.367392 9.5 0.240215 9.55268 0.146447 9.64645C0.0526785 9.74021 0 9.86739 0 10ZM13.5 0H2.5C1.83696 0 1.20107 0.263392 0.732233 0.732233C0.263392 1.20107 0 1.83696 0 2.5V6.5C0 6.63261 0.0526785 6.75979 0.146447 6.85355C0.240215 6.94732 0.367392 7 0.5 7C0.632608 7 0.759785 6.94732 0.853553 6.85355C0.947321 6.75979 1 6.63261 1 6.5V2.5C1 2.10218 1.15804 1.72064 1.43934 1.43934C1.72064 1.15804 2.10218 1 2.5 1H13.5C13.8978 1 14.2794 1.15804 14.5607 1.43934C14.842 1.72064 15 2.10218 15 2.5V17.5C15 17.8978 14.842 18.2794 14.5607 18.5607C14.2794 18.842 13.8978 19 13.5 19H2.5C2.10218 19 1.72064 18.842 1.43934 18.5607C1.15804 18.2794 1 17.8978 1 17.5V13.5C1 13.3674 0.947321 13.2402 0.853553 13.1464C0.759785 13.0527 0.632608 13 0.5 13C0.367392 13 0.240215 13.0527 0.146447 13.1464C0.0526785 13.2402 0 13.3674 0 13.5V17.5C0 18.163 0.263392 18.7989 0.732233 19.2678C1.20107 19.7366 1.83696 20 2.5 20H13.5C14.163 20 14.7989 19.7366 15.2678 19.2678C15.7366 18.7989 16 18.163 16 17.5V2.5C16 1.83696 15.7366 1.20107 15.2678 0.732233C14.7989 0.263392 14.163 0 13.5 0Z" fill="black" />
+                                                    </svg>
+                                                    <svg class="cursor" data-modal-close xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                                        <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                                                        <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                        <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                    </svg>
                                                 </div>
-                                                <div class="col-lg-12">
-                                                    <h3 id="signout-title" class="fs-18-pf-display-700 mt-4 mb-2">Sign out of iPhone?</h3>
-                                                    <span id="signout-description" class="fs-12-400-f-color text-light">This ends your session on iPhone. Last active 28/08/2025, 18:52 GMT — you'll need to sign in again on that device.</span>
-                                                </div>
-                                                <div class="modal-buttons d-flex justify-content-between align-items-center mt-4">
-                                                    <button type="button" class="close-btn fs-16-400 text-light cursor" data-modal-close>Cancel</button>
-                                                    <button class="update-btn fs-16-600 btn-active-bg text-center cursor" data-modal-close>Sign Out</button>
-                                                </div>
+                                            </div>
+                                            <div class="col-lg-12">
+                                                <h3 id="signout-title" class="fs-18-pf-display-700 mt-4 mb-2">Sign out of iPhone?</h3>
+                                                <span id="signout-description" class="fs-12-400-f-color text-light">This ends your session on iPhone. Last active 28/08/2025, 18:52 GMT — you'll need to sign in again on that device.</span>
+                                            </div>
+                                            <div class="modal-buttons d-flex justify-content-between align-items-center mt-4">
+                                                <button type="button" class="close-btn fs-16-400 text-light cursor" data-modal-close>Cancel</button>
+                                                <button class="update-btn fs-16-600 btn-active-bg text-center cursor" data-modal-close>Sign Out</button>
                                             </div>
                                         </div>
                                     </div>
@@ -512,7 +517,7 @@
 
                                     <div class="d-flex align-items-center justify-content-between gap-25">
                                         <p style="color: #9D9B98">This action will permanently delete your account.</p>
-                                        <a data-modal-open="deactivate_account_modal" class="small-link-tag cursor">Deactivate Account</a>
+                                        <a data-modal-open="deactivate_account_modal" class="deactivate small-link-tag cursor">Deactivate Account</a>
                                     </div>
                                 </div>
 
@@ -663,300 +668,302 @@
 
                                 <h1 class="large-font">Payments</h1>
 
-                                <p class="normal-font-bold mt-5">Saved payment methods</p>
+                                <div class="card-div mt-4">
 
-                                <div class="card-edit-details cursor d-flex align-items-center justify-content-between mt-4">
-                                    <div class="card-details active d-flex align-items-center justify-content-between gap-20">
+                                    <p class="fs-18-600">Saved payment methods</p>
+
+                                    <p class="fs-18-400 muted-color mt-3">Your default card is charged automatically for new bookings.</span>
+
+                                    <div class="card-details active cursor d-flex align-items-center justify-content-between mt-4">
                                         <div class="d-flex align-items-center gap-10">
-                                            <div style="width: 62px;">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="62" height="20" viewBox="0 0 62 20" fill="none">
-                                                    <path d="M32.0649 6.39377C32.0295 9.17985 34.5505 10.7345 36.4495 11.6589C38.4005 12.6073 39.0559 13.2155 39.0481 14.0637C39.0336 15.3617 37.4918 15.9346 36.0491 15.9568C33.5321 15.9958 32.0685 15.278 30.9051 14.7351L29.9983 18.9735C31.1657 19.5108 33.3272 19.9794 35.5686 20C40.8301 20 44.2724 17.4055 44.291 13.3829C44.3116 8.27769 37.222 7.99511 37.2705 5.71321C37.2872 5.02129 37.9481 4.28292 39.3964 4.09518C40.1133 4.00034 42.0922 3.92776 44.3358 4.95984L45.2164 0.859098C44.0098 0.420235 42.4591 0 40.5284 0C35.5761 0 32.093 2.6298 32.0649 6.39377ZM53.678 0.35322C52.7172 0.35322 51.9076 0.91305 51.5462 1.77215L44.0304 19.6988H49.2881L50.3343 16.8104H56.7591L57.366 19.6988H62L57.9562 0.35322H53.678ZM54.4135 5.57918L55.9308 12.8437H51.7753L54.4135 5.57918ZM25.6903 0.353462L21.546 19.6986H26.5561L30.6985 0.352978L25.6903 0.353462ZM18.2786 0.353462L13.0638 13.5206L10.9544 2.32472C10.7069 1.0749 9.7294 0.35322 8.64391 0.35322H0.119398L0 0.914984C1.75005 1.29433 3.73841 1.90618 4.94305 2.56084C5.68027 2.96076 5.89048 3.31035 6.13267 4.26066L10.128 19.6988H15.4225L23.5397 0.35322L18.2786 0.353462Z" fill="url(#paint0_linear_5_657)" />
-                                                    <defs>
-                                                        <linearGradient id="paint0_linear_5_657" x1="2850.39" y1="60.12" x2="2908.22" y2="-1993.91" gradientUnits="userSpaceOnUse">
-                                                            <stop stop-color="#222357" />
-                                                            <stop offset="1" stop-color="#254AA5" />
-                                                        </linearGradient>
-                                                    </defs>
+                                            <div>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="65" height="34" viewBox="0 0 65 34" fill="none">
+                                                    <rect width="65" height="34" rx="5" fill="#222357" />
+                                                    <path transform="translate(-25 -21)" d="M58.2042 35.4756C58.1808 37.4259 59.8479 38.5142 61.1037 39.1612C62.3939 39.8251 62.8273 40.2509 62.8222 40.8446C62.8125 41.7532 61.793 42.1542 60.8389 42.1698C59.1744 42.1971 58.2066 41.6946 57.4372 41.3146L56.8376 44.2814C57.6095 44.6576 59.0389 44.9856 60.5212 45C64.0006 45 66.2769 43.1839 66.2892 40.3681C66.3028 36.7944 61.6146 36.5966 61.6466 34.9992C61.6577 34.5149 62.0947 33.998 63.0525 33.8666C63.5265 33.8002 64.8352 33.7494 66.3188 34.4719L66.9012 31.6014C66.1033 31.2942 65.0778 31 63.801 31C60.5262 31 58.2228 32.8409 58.2042 35.4756ZM72.4967 31.2473C71.8614 31.2473 71.326 31.6391 71.087 32.2405L66.1169 44.7892H69.5937L70.2856 42.7673H74.5342L74.9356 44.7892H78L75.3259 31.2473H72.4967ZM72.9831 34.9054L73.9865 39.9906H71.2385L72.9831 34.9054ZM53.9887 31.2474L51.2481 44.789H54.5613L57.3006 31.2471L53.9887 31.2474ZM49.0875 31.2474L45.639 40.4644L44.244 32.6273C44.0803 31.7524 43.434 31.2473 42.7161 31.2473H37.079L37 31.6405C38.1573 31.906 39.4722 32.3343 40.2688 32.7926C40.7563 33.0725 40.8953 33.3172 41.0555 33.9825L43.6976 44.7892H47.1988L52.5665 31.2473L49.0875 31.2474Z" fill="white" />
                                                 </svg>
                                             </div>
-                                            <p class="dark-color-font">Visa ending in 7890 | <span class="simple-light-font"> Exp. date 06/27</span></p>
-                                        </div>
-                                        <button class="dark-color-font default-selection">Default</button>
-                                    </div>
-                                    <a class="small-link-tag"
-                                        data-modal-open="payment_modal"
-                                        data-mode="edit"
-                                        data-card="visa"
-                                        data-last4="7890"
-                                        data-exp="06/27">Edit</a>
-                                </div>
-                                <div class="card-edit-details cursor d-flex align-items-center justify-content-between mt-4">
-                                    <div class="card-details d-flex align-items-center justify-content-between gap-20">
-                                        <div class="d-flex align-items-center gap-10">
-                                            <div style="width: 62px;">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="33" height="20" viewBox="0 0 33 20" fill="none">
-                                                    <path d="M11.7742 2.13867H20.501V17.8609H11.7742V2.13867Z" fill="#FF5F00" />
-                                                    <path d="M12.3284 10C12.3284 6.8056 13.8243 3.97221 16.1237 2.13884C14.4339 0.805527 12.3007 0 9.97359 0C4.46029 0 0 4.47216 0 10C0 15.5278 4.46029 20 9.97347 20C12.3006 20 14.4338 19.1945 16.1237 17.861C13.8243 16.0555 12.3284 13.1944 12.3284 10Z" fill="#EB001B" />
-                                                    <path d="M32.2751 10C32.2751 15.5277 27.8148 20 22.3017 20C19.9745 20 17.8414 19.1945 16.1514 17.861C18.4786 16.0278 19.9469 13.1944 19.9469 10C19.9469 6.8056 18.4508 3.97221 16.1514 2.13884C17.8412 0.805527 19.9745 0 22.3017 0C27.8148 0 32.2751 4.49999 32.2751 10Z" fill="#F79E1B" />
-                                                </svg>
+                                            <div class="d-flex flex-column gap-5">
+                                                <p class="dark-color-font">Visa ending in 7890 &nbsp; <span class="default-selection cursor">Default</span> </p>
+                                                <p class="simple-light-font"> Exp. date 06/27</p>
                                             </div>
-                                            <p class="dark-color-font">Mastercard ending in 4589 | <span class="simple-light-font"> Exp. date 07/30</span></p>
                                         </div>
+
+                                        <a class="small-link-tag"
+                                            data-modal-open="payment_modal"
+                                            data-mode="edit"
+                                            data-card="visa"
+                                            data-last4="7890"
+                                            data-exp="06/27">Edit</a>
                                     </div>
-                                    <a class="small-link-tag"
-                                        data-modal-open="payment_modal"
-                                        data-mode="edit"
-                                        data-card="mastercard"
-                                        data-last4="4589"
-                                        data-exp="07/30">Edit</a>
+
+                                    <div class="card-details cursor d-flex align-items-center justify-content-between mt-4">
+                                        <div class="d-flex align-items-center justify-content-between gap-20">
+                                            <div class="d-flex align-items-center gap-10">
+                                                <div>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="65" height="34" viewBox="0 0 65 34" fill="none">
+                                                        <rect width="65" height="34" rx="5" fill="#3B3731" />
+                                                        <path d="M27.7742 9.13867H36.501V24.8609H27.7742V9.13867Z" fill="#FF5F00" />
+                                                        <path d="M28.3284 17C28.3284 13.8056 29.8243 10.9722 32.1237 9.13884C30.4339 7.80553 28.3007 7 25.9736 7C20.4603 7 16 11.4722 16 17C16 22.5278 20.4603 27 25.9735 27C28.3006 27 30.4338 26.1945 32.1237 24.861C29.8243 23.0555 28.3284 20.1944 28.3284 17Z" fill="#EB001B" />
+                                                        <path d="M48.2751 17C48.2751 22.5277 43.8148 27 38.3017 27C35.9745 27 33.8414 26.1945 32.1514 24.861C34.4786 23.0278 35.9469 20.1944 35.9469 17C35.9469 13.8056 34.4508 10.9722 32.1514 9.13884C33.8412 7.80553 35.9745 7 38.3017 7C43.8148 7 48.2751 11.5 48.2751 17Z" fill="#F79E1B" />
+                                                    </svg>
+                                                </div>
+                                                <div class="d-flex flex-column gap-5">
+                                                    <p class="dark-color-font">Mastercard ending in 4589</p>
+                                                    <p class="simple-light-font"> Exp. date 07/30</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <a class="small-link-tag"
+                                            data-modal-open="payment_modal"
+                                            data-mode="edit"
+                                            data-card="mastercard"
+                                            data-last4="4589"
+                                            data-exp="07/30"> <span class="fs-16-600 text-f-color">Set as default</span> &nbsp;&nbsp;&nbsp; Edit</a>
+                                    </div>
+
+                                    <button class="add-payment-btn mt-4" data-modal-open="payment_modal">+ Add payment method</button>
+
                                 </div>
 
-                                <button class="btn-custom btn-active-bg mt-4" data-modal-open="payment_modal">+ Add payment method</button>
+
 
                                 <!-- Add Payment Method Modal  -->
 
                                 <div class="modal" id="payment_modal">
                                     <div class="modal-content size">
-                                        <div class="container">
-                                            <div class="row">
-                                                <div class="d-flex align-items-center justify-content-between mt-2">
-                                                    <h1 class="fs-18-pf-display-700 modal-title">Add payment method</h1>
-                                                    <svg class="cursor" data-modal-close xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                                        <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
-                                                        <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                        <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                        <div class="row">
+                                            <div class="d-flex align-items-center justify-content-between mt-2">
+                                                <h1 class="fs-18-pf-display-700 modal-title">Add payment method</h1>
+                                                <svg class="cursor" data-modal-close xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                                    <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                                                    <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                    <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                </svg>
+                                            </div>
+                                            <span id="subtitle" class="fs-12-400-f-color text-light mt-1 mb-1">Card details are stored securely and never shown in full.</span>
+                                            <div id="edit_card" class="mt-3" style="display:none; margin-left: 10px; width: 410px;align-items:center; gap:14px; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:20px 18px;">
+                                                <div id="edit_card_icon"></div>
+                                                <div class="d-flex flex-column gap-5">
+                                                    <p id="edit_card_text" class="dark-color-font">Visa ending in 7890</p>
+                                                    <p id="edit_card_exp" class="simple-light-font">Exp. date 06/27</p>
+                                                </div>
+                                            </div>
+                                            <!-- <div class="col-lg-3">
+                                                <div class="d-flex align-items-center justify-content-end cursor modal-cross mt-3">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none">
+                                                        <circle cx="18" cy="18" r="17.5" stroke="#3B3731" />
+                                                        <path d="M12.8 24.0008L24 12.8008M12.8 12.8008L24 24.0008" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
                                                     </svg>
                                                 </div>
-                                                <span id="subtitle" class="fs-12-400-f-color text-light mt-1 mb-1">Card details are stored securely and never shown in full.</span>
-                                                <div id="edit_card" class="mt-3" style="display:none; margin-left: 10px; width: auto;align-items:center; gap:14px; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:20px 18px;">
-                                                    <div id="edit_card_icon">
+                                            </div> -->
+                                            <div class="col-lg-12">
+                                                <form id="add_payment_form">
+                                                    <div class="row">
+                                                        <div class="col-lg-12">
+                                                            <div class="form-field mt-4">
+                                                                <label class="fs-12-600-f-color">Card number</label>
+                                                                <div class="input-wrapper">
+                                                                    <input type="text" id="card_number" placeholder="0000 0000 0000 0000" maxlength="19" inputmode="numeric">
+                                                                </div>
+                                                            </div>
+                                                        </div>
 
-
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="62" height="20" viewBox="0 0 62 20" fill="none">
-                                                            <path d="M32.0649 6.39377C32.0295 9.17985 34.5505 10.7345 36.4495 11.6589C38.4005 12.6073 39.0559 13.2155 39.0481 14.0637C39.0336 15.3617 37.4918 15.9346 36.0491 15.9568C33.5321 15.9958 32.0685 15.278 30.9051 14.7351L29.9983 18.9735C31.1657 19.5108 33.3272 19.9794 35.5686 20C40.8301 20 44.2724 17.4055 44.291 13.3829C44.3116 8.27769 37.222 7.99511 37.2705 5.71321C37.2872 5.02129 37.9481 4.28292 39.3964 4.09518C40.1133 4.00034 42.0922 3.92776 44.3358 4.95984L45.2164 0.859098C44.0098 0.420235 42.4591 0 40.5284 0C35.5761 0 32.093 2.6298 32.0649 6.39377ZM53.678 0.35322C52.7172 0.35322 51.9076 0.91305 51.5462 1.77215L44.0304 19.6988H49.2881L50.3343 16.8104H56.7591L57.366 19.6988H62L57.9562 0.35322H53.678ZM54.4135 5.57918L55.9308 12.8437H51.7753L54.4135 5.57918ZM25.6903 0.353462L21.546 19.6986H26.5561L30.6985 0.352978L25.6903 0.353462ZM18.2786 0.353462L13.0638 13.5206L10.9544 2.32472C10.7069 1.0749 9.7294 0.35322 8.64391 0.35322H0.119398L0 0.914984C1.75005 1.29433 3.73841 1.90618 4.94305 2.56084C5.68027 2.96076 5.89048 3.31035 6.13267 4.26066L10.128 19.6988H15.4225L23.5397 0.35322L18.2786 0.353462Z" fill="url(#paint0_linear_5_657)"></path>
-                                                            <defs>
-                                                                <linearGradient id="paint0_linear_5_657" x1="2850.39" y1="60.12" x2="2908.22" y2="-1993.91" gradientUnits="userSpaceOnUse">
-                                                                    <stop stop-color="#222357"></stop>
-                                                                    <stop offset="1" stop-color="#254AA5"></stop>
-                                                                </linearGradient>
-                                                            </defs>
-                                                        </svg>
+                                                        <div class="col-lg-6">
+                                                            <div class="form-field mt-4">
+                                                                <label class="fs-12-600-f-color">Expiry</label>
+                                                                <div class="input-wrapper w-auto">
+                                                                    <input type="text" id="expiry" placeholder="MM/YY" maxlength="5" inputmode="numeric">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <div class="form-field mt-4">
+                                                                <label class="fs-12-600-f-color">CVC</label>
+                                                                <div class="input-wrapper w-auto">
+                                                                    <input type="password" id="cvc" placeholder="123" maxlength="4" inputmode="numeric">
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
 
-
-                                                    <span id="edit_card_text" class="fs-14-600-f-color">Visa ending in 7890</span>
-                                                    <span style="color:#3b3731; font-size:14px;">|</span>
-                                                    <span id="edit_card_exp" class="fs-14-400-f-color text-light">Exp. date 06/27</span>
-                                                </div>
-                                                <!-- <div class="col-lg-3">
-                                                    <div class="d-flex align-items-center justify-content-end cursor modal-cross mt-3">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none">
-                                                            <circle cx="18" cy="18" r="17.5" stroke="#3B3731" />
-                                                            <path d="M12.8 24.0008L24 12.8008M12.8 12.8008L24 24.0008" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
-                                                        </svg>
+                                                    <div class="form-field mt-4">
+                                                        <label class="fs-12-600-f-color">Name on card</label>
+                                                        <div class="input-wrapper">
+                                                            <input type="text" id="card_name" value="John Doe">
+                                                        </div>
                                                     </div>
-                                                </div> -->
-                                                <div class="col-lg-12">
-                                                    <form id="add_payment_form">
-                                                        <div class="row">
-                                                            <div class="col-lg-12">
-                                                                <div class="form-field mt-4">
-                                                                    <label class="fs-12-600-f-color">Card number</label>
-                                                                    <div class="input-wrapper">
-                                                                        <input type="text" id="card_number" placeholder="0000 0000 0000 0000" maxlength="19" inputmode="numeric">
-                                                                    </div>
-                                                                </div>
-                                                            </div>
 
-                                                            <div class="col-lg-6">
-                                                                <div class="form-field mt-4">
-                                                                    <label class="fs-12-600-f-color">Expiry</label>
-                                                                    <div class="input-wrapper w-auto">
-                                                                        <input type="text" id="expiry" placeholder="MM/YY" maxlength="5" inputmode="numeric">
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-lg-6">
-                                                                <div class="form-field mt-4">
-                                                                    <label class="fs-12-600-f-color">CVC</label>
-                                                                    <div class="input-wrapper w-auto">
-                                                                        <input type="password" id="cvc" placeholder="123" maxlength="4" inputmode="numeric">
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                    <style>
+                                                        .custom-radio-label {
+                                                            display: inline-flex;
+                                                            align-items: center;
+                                                            gap: 10px;
+                                                            cursor: pointer;
+                                                            user-select: none;
+                                                            color: #3B3731;
+                                                            font-family: Lato;
+                                                            font-size: 14px;
+                                                            font-style: normal;
+                                                            font-weight: 400;
+                                                            line-height: normal;
+                                                        }
 
-                                                        <div class="form-field mt-4">
-                                                            <label class="fs-12-600-f-color">Name on card</label>
-                                                            <div class="input-wrapper">
-                                                                <input type="text" id="card_name" value="John Doe">
-                                                            </div>
-                                                        </div>
+                                                        .custom-radio-label input[type="checkbox"] {
+                                                            display: none;
+                                                        }
 
-                                                        <style>
-                                                            .custom-radio-label {
-                                                                display: inline-flex;
-                                                                align-items: center;
-                                                                gap: 10px;
-                                                                cursor: pointer;
-                                                                user-select: none;
-                                                            }
+                                                        .custom-radio-circle {
+                                                            width: 22px;
+                                                            height: 22px;
+                                                            border-radius: 50%;
+                                                            border: 1px solid #FFD88C;
+                                                            flex-shrink: 0;
+                                                            transition: border-color 0.15s;
+                                                            position: relative;
+                                                        }
 
-                                                            .custom-radio-label input[type="checkbox"] {
-                                                                display: none;
-                                                            }
+                                                        .custom-radio-circle::after {
+                                                            content: '';
+                                                            width: 13px;
+                                                            height: 13px;
+                                                            border-radius: 50%;
+                                                            background: #FFD88C;
+                                                            opacity: 0;
+                                                            transition: opacity 0.15s;
+                                                            position: absolute;
+                                                            top: 50%;
+                                                            left: 50%;
+                                                            transform: translate(-50%, -50%);
+                                                        }
 
-                                                            .custom-radio-circle {
-                                                                width: 22px;
-                                                                height: 22px;
-                                                                border-radius: 50%;
-                                                                border: 1px solid #FFD88C;
-                                                                flex-shrink: 0;
-                                                                transition: border-color 0.15s;
-                                                                position: relative;
-                                                            }
+                                                        .custom-radio-label input[type="checkbox"]:checked+.custom-radio-circle {
+                                                            border-color: #FFD88C;
+                                                            background: #FFF;
+                                                        }
 
-                                                            .custom-radio-circle::after {
-                                                                content: '';
-                                                                width: 13px;
-                                                                height: 13px;
-                                                                border-radius: 50%;
-                                                                background: #FFD88C;
-                                                                opacity: 0;
-                                                                transition: opacity 0.15s;
-                                                                position: absolute;
-                                                                top: 50%;
-                                                                left: 50%;
-                                                                transform: translate(-50%, -50%);
-                                                            }
+                                                        .custom-radio-label input[type="checkbox"]:checked+.custom-radio-circle::after {
+                                                            opacity: 1;
+                                                        }
 
-                                                            .custom-radio-label input[type="checkbox"]:checked+.custom-radio-circle {
-                                                                border-color: #FFD88C;
-                                                                background: #FFF;
-                                                            }
+                                                        #remove_card {
+                                                            color: #FF6E6E;
+                                                            font-family: Lato;
+                                                            font-size: 14px;
+                                                            font-style: normal;
+                                                            font-weight: 700;
+                                                            line-height: normal;
+                                                            text-decoration-line: underline;
+                                                            text-decoration-style: solid;
+                                                            text-decoration-skip-ink: auto;
+                                                            text-decoration-thickness: auto;
+                                                            text-underline-offset: 4px;
+                                                            text-underline-position: from-font;
+                                                            display: block;
+                                                        }
+                                                    </style>
 
-                                                            .custom-radio-label input[type="checkbox"]:checked+.custom-radio-circle::after {
-                                                                opacity: 1;
-                                                            }
+                                                    <label class="custom-radio-label fs-14-400-f-color mt-4">
+                                                        <input type="checkbox" name="payment_default">
+                                                        <span class="custom-radio-circle"></span>
+                                                        Set as default payment method
+                                                    </label>
 
-                                                            #remove_card {
-                                                                color: #FF6E6E;
-                                                                font-family: Lato;
-                                                                font-size: 14px;
-                                                                font-style: normal;
-                                                                font-weight: 700;
-                                                                line-height: normal;
-                                                                text-decoration-line: underline;
-                                                                text-decoration-style: solid;
-                                                                text-decoration-skip-ink: auto;
-                                                                text-decoration-thickness: auto;
-                                                                text-underline-offset: 4px;
-                                                                text-underline-position: from-font;
-                                                                display: block;
-                                                            }
-                                                        </style>
+                                                    <span id="remove_card" class="mt-3 mb-5 cursor">Remove card</span>
 
-                                                        <label class="custom-radio-label fs-14-400-f-color mt-5">
-                                                            <input type="checkbox" name="payment_default">
-                                                            <span class="custom-radio-circle"></span>
-                                                            Set as default payment method
-                                                        </label>
+                                                    <div class="modal-buttons d-flex justify-content-between align-items-center mt-4">
+                                                        <button type="button" class="close-btn fs-16-400 text-light cursor" data-modal-close>Cancel</button>
+                                                        <button id="add_payment_btn" class="update-btn fs-16-600 btn-active-bg text-center cursor" style="background-color: #C9DDA0">+ Add payment</button>
+                                                    </div>
+                                                </form>
+                                            </div>
 
-                                                        <span id="remove_card" class="mt-3 mb-5 cursor">Remove card</span>
+                                            <script>
+                                                document.querySelectorAll('[data-modal-open="payment_modal"]').forEach(btn => {
+                                                    btn.addEventListener('click', function() {
 
-                                                        <div class="modal-buttons d-flex justify-content-between align-items-center mt-4">
-                                                            <button type="button" class="close-btn fs-16-400 text-light cursor" data-modal-close>Cancel</button>
-                                                            <button id="add_payment_btn" class="update-btn fs-16-600 btn-active-bg text-center cursor" style="background-color: #C9DDA0">+ Add payment</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
+                                                        const modal = document.getElementById('payment_modal');
 
-                                                <script>
-                                                    document.querySelectorAll('[data-modal-open="payment_modal"]').forEach(btn => {
-                                                        btn.addEventListener('click', function() {
+                                                        const mode = this.dataset.mode;
 
-                                                            const modal = document.getElementById('payment_modal');
+                                                        const title = modal.querySelector('.modal-title');
+                                                        const submitBtn = modal.querySelector('#add_payment_btn');
+                                                        const subtitle = modal.querySelector('#subtitle');
+                                                        const edit_card = modal.querySelector('#edit_card');
+                                                        const remove_card = modal.querySelector('#remove_card');
 
-                                                            const mode = this.dataset.mode;
+                                                        const visaSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="65" height="34" viewBox="0 0 65 34" fill="none">
+                                                <rect width="65" height="34" rx="5" fill="#222357" />
+                                                <path transform="translate(-25 -21)" d="M58.2042 35.4756C58.1808 37.4259 59.8479 38.5142 61.1037 39.1612C62.3939 39.8251 62.8273 40.2509 62.8222 40.8446C62.8125 41.7532 61.793 42.1542 60.8389 42.1698C59.1744 42.1971 58.2066 41.6946 57.4372 41.3146L56.8376 44.2814C57.6095 44.6576 59.0389 44.9856 60.5212 45C64.0006 45 66.2769 43.1839 66.2892 40.3681C66.3028 36.7944 61.6146 36.5966 61.6466 34.9992C61.6577 34.5149 62.0947 33.998 63.0525 33.8666C63.5265 33.8002 64.8352 33.7494 66.3188 34.4719L66.9012 31.6014C66.1033 31.2942 65.0778 31 63.801 31C60.5262 31 58.2228 32.8409 58.2042 35.4756ZM72.4967 31.2473C71.8614 31.2473 71.326 31.6391 71.087 32.2405L66.1169 44.7892H69.5937L70.2856 42.7673H74.5342L74.9356 44.7892H78L75.3259 31.2473H72.4967ZM72.9831 34.9054L73.9865 39.9906H71.2385L72.9831 34.9054ZM53.9887 31.2474L51.2481 44.789H54.5613L57.3006 31.2471L53.9887 31.2474ZM49.0875 31.2474L45.639 40.4644L44.244 32.6273C44.0803 31.7524 43.434 31.2473 42.7161 31.2473H37.079L37 31.6405C38.1573 31.906 39.4722 32.3343 40.2688 32.7926C40.7563 33.0725 40.8953 33.3172 41.0555 33.9825L43.6976 44.7892H47.1988L52.5665 31.2473L49.0875 31.2474Z" fill="white" />
+                                            </svg>`;
+                                                        const mastercardSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="65" height="34" viewBox="0 0 65 34" fill="none">
+                                                <rect width="65" height="34" rx="5" fill="#3B3731" />
+                                                <path d="M27.7742 9.13867H36.501V24.8609H27.7742V9.13867Z" fill="#FF5F00" />
+                                                <path d="M28.3284 17C28.3284 13.8056 29.8243 10.9722 32.1237 9.13884C30.4339 7.80553 28.3007 7 25.9736 7C20.4603 7 16 11.4722 16 17C16 22.5278 20.4603 27 25.9735 27C28.3006 27 30.4338 26.1945 32.1237 24.861C29.8243 23.0555 28.3284 20.1944 28.3284 17Z" fill="#EB001B" />
+                                                <path d="M48.2751 17C48.2751 22.5277 43.8148 27 38.3017 27C35.9745 27 33.8414 26.1945 32.1514 24.861C34.4786 23.0278 35.9469 20.1944 35.9469 17C35.9469 13.8056 34.4508 10.9722 32.1514 9.13884C33.8412 7.80553 35.9745 7 38.3017 7C43.8148 7 48.2751 11.5 48.2751 17Z" fill="#F79E1B" />
+                                            </svg>`;
 
-                                                            const title = modal.querySelector('.modal-title');
-                                                            const submitBtn = modal.querySelector('#add_payment_btn');
-                                                            const subtitle = modal.querySelector('#subtitle');
-                                                            const edit_card = modal.querySelector('#edit_card');
-                                                            const remove_card = modal.querySelector('#remove_card');
+                                                        if (mode === 'edit') {
 
-                                                            const visaSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="62" height="20" viewBox="0 0 62 20" fill="none">
-                                                        <path d="M32.0649 6.39377C32.0295 9.17985 34.5505 10.7345 36.4495 11.6589C38.4005 12.6073 39.0559 13.2155 39.0481 14.0637C39.0336 15.3617 37.4918 15.9346 36.0491 15.9568C33.5321 15.9958 32.0685 15.278 30.9051 14.7351L29.9983 18.9735C31.1657 19.5108 33.3272 19.9794 35.5686 20C40.8301 20 44.2724 17.4055 44.291 13.3829C44.3116 8.27769 37.222 7.99511 37.2705 5.71321C37.2872 5.02129 37.9481 4.28292 39.3964 4.09518C40.1133 4.00034 42.0922 3.92776 44.3358 4.95984L45.2164 0.859098C44.0098 0.420235 42.4591 0 40.5284 0C35.5761 0 32.093 2.6298 32.0649 6.39377ZM53.678 0.35322C52.7172 0.35322 51.9076 0.91305 51.5462 1.77215L44.0304 19.6988H49.2881L50.3343 16.8104H56.7591L57.366 19.6988H62L57.9562 0.35322H53.678ZM54.4135 5.57918L55.9308 12.8437H51.7753L54.4135 5.57918ZM25.6903 0.353462L21.546 19.6986H26.5561L30.6985 0.352978L25.6903 0.353462ZM18.2786 0.353462L13.0638 13.5206L10.9544 2.32472C10.7069 1.0749 9.7294 0.35322 8.64391 0.35322H0.119398L0 0.914984C1.75005 1.29433 3.73841 1.90618 4.94305 2.56084C5.68027 2.96076 5.89048 3.31035 6.13267 4.26066L10.128 19.6988H15.4225L23.5397 0.35322L18.2786 0.353462Z" fill="url(#paint0_linear_5_657)"></path>
-                                                        <defs>
-                                                            <linearGradient id="paint0_linear_5_657" x1="2850.39" y1="60.12" x2="2908.22" y2="-1993.91" gradientUnits="userSpaceOnUse">
-                                                                <stop stop-color="#222357"></stop>
-                                                                <stop offset="1" stop-color="#254AA5"></stop>
-                                                            </linearGradient>
-                                                        </defs>
-                                                    </svg>`;
-                                                            const mastercardSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="33" height="20" viewBox="0 0 33 20" fill="none">
-                                                    <path d="M11.7742 2.13867H20.501V17.8609H11.7742V2.13867Z" fill="#FF5F00"></path>
-                                                    <path d="M12.3284 10C12.3284 6.8056 13.8243 3.97221 16.1237 2.13884C14.4339 0.805527 12.3007 0 9.97359 0C4.46029 0 0 4.47216 0 10C0 15.5278 4.46029 20 9.97347 20C12.3006 20 14.4338 19.1945 16.1237 17.861C13.8243 16.0555 12.3284 13.1944 12.3284 10Z" fill="#EB001B"></path>
-                                                    <path d="M32.2751 10C32.2751 15.5277 27.8148 20 22.3017 20C19.9745 20 17.8414 19.1945 16.1514 17.861C18.4786 16.0278 19.9469 13.1944 19.9469 10C19.9469 6.8056 18.4508 3.97221 16.1514 2.13884C17.8412 0.805527 19.9745 0 22.3017 0C27.8148 0 32.2751 4.49999 32.2751 10Z" fill="#F79E1B"></path>
-                                                </svg>`;
+                                                            title.textContent = 'Edit payment method';
+                                                            submitBtn.textContent = 'Save changes';
 
-                                                            if (mode === 'edit') {
+                                                            document.getElementById('card_name').value = 'John Doe';
+                                                            document.getElementById('expiry').value = this.dataset.exp;
+                                                            subtitle.style.display = 'none';
+                                                            remove_card.style.display = 'block';
+                                                            edit_card.style.display = 'inline-flex';
 
-                                                                title.textContent = 'Edit payment method';
-                                                                submitBtn.textContent = 'Save changes';
+                                                            const cardLabel = this.dataset.card.charAt(0).toUpperCase() + this.dataset.card.slice(1);
 
-                                                                document.getElementById('card_name').value = 'John Doe';
-                                                                document.getElementById('expiry').value = this.dataset.exp;
-                                                                subtitle.style.display = 'none';
-                                                                remove_card.style.display = 'block';
-                                                                edit_card.style.display = 'inline-flex';
+                                                            document.getElementById('edit_card_text').textContent =
+                                                                `${cardLabel} ending in ${this.dataset.last4}`;
 
-                                                                document.getElementById('edit_card_text').textContent =
-                                                                    `${this.dataset.card.charAt(0).toUpperCase() + this.dataset.card.slice(1)} ending in ${this.dataset.last4}`;
+                                                            document.getElementById('edit_card_exp').textContent =
+                                                                `Exp. date ${this.dataset.exp}`;
 
-                                                                document.getElementById('edit_card_exp').textContent =
-                                                                    `Exp. date ${this.dataset.exp}`;
+                                                            document.getElementById('edit_card_icon').innerHTML =
+                                                                this.dataset.card === 'mastercard' ?
+                                                                mastercardSvg :
+                                                                visaSvg;
 
-                                                                document.getElementById('edit_card_icon').innerHTML =
-                                                                    this.dataset.card === 'mastercard' ?
-                                                                    mastercardSvg :
-                                                                    visaSvg;
-                                                            } else {
-                                                                title.textContent = 'Add payment method';
-                                                                submitBtn.textContent = '+ Add payment';
-
-                                                                document.getElementById('add_payment_form').reset();
-                                                                edit_card.style.display = 'none';
-                                                                subtitle.style.display = 'block';
-                                                                remove_card.style.display = 'none';
-
-                                                            }
-                                                        });
-                                                    });
-
-                                                    // Card number: groups of 4 digits separated by spaces
-                                                    document.getElementById('card_number').addEventListener('input', function(e) {
-                                                        let value = this.value.replace(/\D/g, '').slice(0, 16);
-                                                        this.value = value.match(/.{1,4}/g)?.join(' ') || value;
-                                                    });
-
-                                                    // Expiry: auto-insert slash after MM
-                                                    document.getElementById('expiry').addEventListener('input', function(e) {
-                                                        let value = this.value.replace(/\D/g, '').slice(0, 4);
-                                                        if (value.length >= 3) {
-                                                            this.value = value.slice(0, 2) + '/' + value.slice(2);
+                                                            remove_card.dataset.card = this.dataset.card;
+                                                            remove_card.dataset.last4 = this.dataset.last4;
+                                                            remove_card.dataset.exp = this.dataset.exp;
                                                         } else {
-                                                            this.value = value;
+                                                            title.textContent = 'Add payment method';
+                                                            submitBtn.textContent = '+ Add payment';
+
+                                                            document.getElementById('add_payment_form').reset();
+                                                            edit_card.style.display = 'none';
+                                                            subtitle.style.display = 'block';
+                                                            remove_card.style.display = 'none';
+
                                                         }
                                                     });
+                                                });
 
-                                                    // CVC: numbers only, max 3
-                                                    document.getElementById('cvc').addEventListener('input', function(e) {
-                                                        this.value = this.value.replace(/\D/g, '').slice(0, 3);
-                                                    });
-                                                </script>
+                                                // Card number: groups of 4 digits separated by spaces
+                                                document.getElementById('card_number').addEventListener('input', function(e) {
+                                                    let value = this.value.replace(/\D/g, '').slice(0, 16);
+                                                    this.value = value.match(/.{1,4}/g)?.join(' ') || value;
+                                                });
 
-                                            </div>
+                                                // Expiry: auto-insert slash after MM
+                                                document.getElementById('expiry').addEventListener('input', function(e) {
+                                                    let value = this.value.replace(/\D/g, '').slice(0, 4);
+                                                    if (value.length >= 3) {
+                                                        this.value = value.slice(0, 2) + '/' + value.slice(2);
+                                                    } else {
+                                                        this.value = value;
+                                                    }
+                                                });
+
+                                                // CVC: numbers only, max 3
+                                                document.getElementById('cvc').addEventListener('input', function(e) {
+                                                    this.value = this.value.replace(/\D/g, '').slice(0, 3);
+                                                });
+                                            </script>
+
                                         </div>
                                     </div>
                                 </div>
@@ -968,41 +975,32 @@
 
                                 <div class="modal" id="remove_card_alert_modal">
                                     <div class="modal-content size">
-                                        <div class="container">
-                                            <div class="row">
-                                                <div class="d-flex align-items-center justify-content-between mt-2">
-                                                    <svg class="mt-4" xmlns="http://www.w3.org/2000/svg" width="18" height="20" viewBox="0 0 18 20" fill="none">
-                                                        <path d="M3.36343 20C2.78743 20 2.29714 19.8005 1.89257 19.4014C1.488 19.0023 1.28571 18.5191 1.28571 17.9518V2.24477H0V0.976538H5.14286V0H12.8571V0.976538H18V2.24477H16.7143V17.9518C16.7143 18.5352 16.5163 19.0226 16.1203 19.4141C15.7243 19.8055 15.2297 20.0008 14.6366 20H3.36343ZM15.4286 2.24477H2.57143V17.9518C2.57143 18.1792 2.64557 18.3661 2.79386 18.5124C2.94214 18.6586 3.132 18.7318 3.36343 18.7318H14.6379C14.835 18.7318 15.0163 18.6506 15.1817 18.4883C15.3471 18.3259 15.4294 18.1467 15.4286 17.9505V2.24477ZM6.18171 16.1953H7.46743V4.78123H6.18171V16.1953ZM10.5326 16.1953H11.8183V4.78123H10.5326V16.1953Z" fill="#FF6E6E" />
-                                                    </svg>
-                                                    <svg class="cursor" data-modal-close xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                                        <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
-                                                        <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                        <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                    </svg>
-                                                </div>
-                                                <h1 class="fs-18-pf-display-700 mt-4">Remove this card?</h1>
-                                                <span class="fs-12-400-f-color text-light mt-2 mb-1">You'll need another payment method before your next booking.</span>
-                                                <div id="edit_card" class="mt-3" style="margin-left: 10px; width: 360px;align-items:center; gap:14px; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:20px 18px;">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="62" height="20" viewBox="0 0 62 20" fill="none">
-                                                        <path d="M32.0649 6.39377C32.0295 9.17985 34.5505 10.7345 36.4495 11.6589C38.4005 12.6073 39.0559 13.2155 39.0481 14.0637C39.0336 15.3617 37.4918 15.9346 36.0491 15.9568C33.5321 15.9958 32.0685 15.278 30.9051 14.7351L29.9983 18.9735C31.1657 19.5108 33.3272 19.9794 35.5686 20C40.8301 20 44.2724 17.4055 44.291 13.3829C44.3116 8.27769 37.222 7.99511 37.2705 5.71321C37.2872 5.02129 37.9481 4.28292 39.3964 4.09518C40.1133 4.00034 42.0922 3.92776 44.3358 4.95984L45.2164 0.859098C44.0098 0.420235 42.4591 0 40.5284 0C35.5761 0 32.093 2.6298 32.0649 6.39377ZM53.678 0.35322C52.7172 0.35322 51.9076 0.91305 51.5462 1.77215L44.0304 19.6988H49.2881L50.3343 16.8104H56.7591L57.366 19.6988H62L57.9562 0.35322H53.678ZM54.4135 5.57918L55.9308 12.8437H51.7753L54.4135 5.57918ZM25.6903 0.353462L21.546 19.6986H26.5561L30.6985 0.352978L25.6903 0.353462ZM18.2786 0.353462L13.0638 13.5206L10.9544 2.32472C10.7069 1.0749 9.7294 0.35322 8.64391 0.35322H0.119398L0 0.914984C1.75005 1.29433 3.73841 1.90618 4.94305 2.56084C5.68027 2.96076 5.89048 3.31035 6.13267 4.26066L10.128 19.6988H15.4225L23.5397 0.35322L18.2786 0.353462Z" fill="url(#paint0_linear_5_657)"></path>
-                                                        <defs>
-                                                            <linearGradient id="paint0_linear_5_657" x1="2850.39" y1="60.12" x2="2908.22" y2="-1993.91" gradientUnits="userSpaceOnUse">
-                                                                <stop stop-color="#222357"></stop>
-                                                                <stop offset="1" stop-color="#254AA5"></stop>
-                                                            </linearGradient>
-                                                        </defs>
-                                                    </svg>
-                                                    <del><span class="fs-14-600-f-color">Visa ending in 7890</span></del>
-                                                    <span style="color:#3b3731; font-size:14px;">|</span>
-                                                    <span class="fs-14-400-f-color text-light"><del>Exp. date 06/27</del></span>
-                                                </div>
-
-                                                <div class="modal-buttons d-flex justify-content-between align-items-center mt-4">
-                                                    <button type="button" class="close-btn fs-16-400 text-light cursor" data-modal-close>Cancel</button>
-                                                    <button class="update-btn fs-16-600 btn-active-bg text-center cursor" id="confirm_remove_card" style="background-color:#FF6E6E">Remove card</button>
-                                                </div>
-
+                                        <div class="row">
+                                            <div class="d-flex align-items-center justify-content-between mt-2">
+                                                <svg class="mt-4" xmlns="http://www.w3.org/2000/svg" width="18" height="20" viewBox="0 0 18 20" fill="none">
+                                                    <path d="M3.36343 20C2.78743 20 2.29714 19.8005 1.89257 19.4014C1.488 19.0023 1.28571 18.5191 1.28571 17.9518V2.24477H0V0.976538H5.14286V0H12.8571V0.976538H18V2.24477H16.7143V17.9518C16.7143 18.5352 16.5163 19.0226 16.1203 19.4141C15.7243 19.8055 15.2297 20.0008 14.6366 20H3.36343ZM15.4286 2.24477H2.57143V17.9518C2.57143 18.1792 2.64557 18.3661 2.79386 18.5124C2.94214 18.6586 3.132 18.7318 3.36343 18.7318H14.6379C14.835 18.7318 15.0163 18.6506 15.1817 18.4883C15.3471 18.3259 15.4294 18.1467 15.4286 17.9505V2.24477ZM6.18171 16.1953H7.46743V4.78123H6.18171V16.1953ZM10.5326 16.1953H11.8183V4.78123H10.5326V16.1953Z" fill="#FF6E6E" />
+                                                </svg>
+                                                <svg class="cursor" data-modal-close xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                                    <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                                                    <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                    <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                </svg>
                                             </div>
+                                            <h1 class="fs-18-pf-display-700 mt-4">Remove this card?</h1>
+                                            <span class="fs-12-400-f-color text-light mt-2 mb-1">You'll need another payment method before your next booking.</span>
+                                            <div id="remove_card_preview" class="mt-3 d-flex align-items-center" style="margin-left: 10px; width: 410px;align-items:center; gap:14px; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:20px 18px;">
+                                                <div id="remove_card_icon"></div>
+                                                <div class="d-flex flex-column gap-5">
+                                                    <p class="dark-color-font"><del id="remove_card_text">Visa ending in 7890</del></p>
+                                                    <p class="simple-light-font"><del id="remove_card_exp">Exp. date 06/27</del></p>
+                                                </div>
+                                            </div>
+
+                                            <div class="modal-buttons d-flex justify-content-between align-items-center mt-4">
+                                                <button type="button" class="close-btn fs-16-400 text-light cursor" data-modal-close>Cancel</button>
+                                                <button class="update-btn fs-16-600 btn-active-bg text-center cursor" id="confirm_remove_card" style="background-color:#FF6E6E">Remove card</button>
+                                            </div>
+
                                         </div>
                                     </div>
                                 </div>
@@ -1028,9 +1026,9 @@
 
                                                     <div class="d-flex flex-column align-items-center gap-5 justify-content-center">
                                                         <h2 class="fs-18-pf-display-700">Card removed</h2>
-                                                        <span class="fs-12-400-f-color text-light text-center">Visa ending in 7890 is no longer saved <br> to your account.</span>
+                                                        <span id="card_removed_text" class="fs-12-400-f-color text-light text-center">Visa ending in 7890 is no longer saved <br> to your account.</span>
 
-                                                        <button class="update-btn fs-16-600 btn-active-bg text-center cursor mt-4" style="background: #3B3731;" data-modal-close>Return to homepage</button>
+                                                        <button class="update-btn fs-16-600 btn-active-bg text-center cursor mt-4" style="background: #3B3731;" data-modal-close>Return to payments</button>
                                                     </div>
 
                                                 </div>
@@ -1122,397 +1120,150 @@
                                     });
                                 </script>
 
-                                <p class="bold-font mt-5">Payment History</p>
+                                <div class="payment-history">
+                                    <p class="fs-18-600 mt-5">Payment History <span class="payment-history-count">(24)</span></p>
 
-                                <table class="custom-table text-center mt-4">
-                                    <thead class="simple-font" style="color: #000;">
-                                        <tr>
-                                            <th scope="col">Date</th>
-                                            <th scope="col">Space</th>
-                                            <th scope="col">Service Type</th>
-                                            <th scope="col">Pet</th>
-                                            <th scope="col">Amount</th>
-                                            <th scope="col">View</th>
-                                            <th scope="col">Download</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="simple-font">
-                                        <tr>
-                                            <td>06/11/25</td>
-                                            <td>Home visits</td>
-                                            <td><span class="dark-color-font">Full Groom</span>
-                                                <br>
-                                                Claire Smith
-                                            </td>
-                                            <td><span class="dark-color-font">Bella</span>
-                                                <br>
-                                                Rabbit
-                                            </td>
-                                            <td>£76.00</td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
-                                                    <path d="M9.49609 15C11.4291 15 12.9961 13.433 12.9961 11.5C12.9961 9.567 11.4291 8 9.49609 8C7.5631 8 5.99609 9.567 5.99609 11.5C5.99609 13.433 7.5631 15 9.49609 15Z" stroke="black" />
-                                                    <path d="M18.4961 11.5C18.4961 11.5 17.4961 3.5 9.49609 3.5C1.49609 3.5 0.496094 11.5 0.496094 11.5" stroke="black" />
-                                                </svg></td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19" fill="none">
-                                                    <path d="M0.5 15.5V17C0.5 17.3978 0.643751 17.7794 0.899456 18.0607C1.15516 18.342 1.50207 18.5 1.86372 18.5H14.1365C14.4982 18.5 14.8451 18.342 15.1008 18.0607C15.3565 17.7794 15.5 17.3978 15.5 17V15.5" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M8 0.5V12.875M12.0909 8.75L8 13.25L3.90909 8.75" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg></td>
-                                        </tr>
-                                        <tr>
-                                            <td>06/11/25</td>
-                                            <td>Garden/ Shed</td>
-                                            <td><span class="dark-color-font">Nail Trim</span>
-                                                <br>
-                                                Dev Emile
-                                            </td>
-                                            <td><span class="dark-color-font">Louis</span>
-                                                <br>
-                                                Dog
-                                            </td>
-                                            <td>£24.00</td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
-                                                    <path d="M9.49609 15C11.4291 15 12.9961 13.433 12.9961 11.5C12.9961 9.567 11.4291 8 9.49609 8C7.5631 8 5.99609 9.567 5.99609 11.5C5.99609 13.433 7.5631 15 9.49609 15Z" stroke="black" />
-                                                    <path d="M18.4961 11.5C18.4961 11.5 17.4961 3.5 9.49609 3.5C1.49609 3.5 0.496094 11.5 0.496094 11.5" stroke="black" />
-                                                </svg></td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19" fill="none">
-                                                    <path d="M0.5 15.5V17C0.5 17.3978 0.643751 17.7794 0.899456 18.0607C1.15516 18.342 1.50207 18.5 1.86372 18.5H14.1365C14.4982 18.5 14.8451 18.342 15.1008 18.0607C15.3565 17.7794 15.5 17.3978 15.5 17V15.5" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M8 0.5V12.875M12.0909 8.75L8 13.25L3.90909 8.75" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg></td>
-                                        </tr>
-                                        <tr>
-                                            <td>06/11/25</td>
-                                            <td>Home visits</td>
-                                            <td><span class="dark-color-font">Full Groom</span>
-                                                <br>
-                                                Claire Smith
-                                            </td>
-                                            <td><span class="dark-color-font">Bella</span>
-                                                <br>
-                                                Rabbit
-                                            </td>
-                                            <td>£76.00</td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
-                                                    <path d="M9.49609 15C11.4291 15 12.9961 13.433 12.9961 11.5C12.9961 9.567 11.4291 8 9.49609 8C7.5631 8 5.99609 9.567 5.99609 11.5C5.99609 13.433 7.5631 15 9.49609 15Z" stroke="black" />
-                                                    <path d="M18.4961 11.5C18.4961 11.5 17.4961 3.5 9.49609 3.5C1.49609 3.5 0.496094 11.5 0.496094 11.5" stroke="black" />
-                                                </svg></td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19" fill="none">
-                                                    <path d="M0.5 15.5V17C0.5 17.3978 0.643751 17.7794 0.899456 18.0607C1.15516 18.342 1.50207 18.5 1.86372 18.5H14.1365C14.4982 18.5 14.8451 18.342 15.1008 18.0607C15.3565 17.7794 15.5 17.3978 15.5 17V15.5" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M8 0.5V12.875M12.0909 8.75L8 13.25L3.90909 8.75" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg></td>
-                                        </tr>
-                                        <tr>
-                                            <td>06/11/25</td>
-                                            <td>Garden/ Shed</td>
-                                            <td><span class="dark-color-font">Nail Trim</span>
-                                                <br>
-                                                Dev Emile
-                                            </td>
-                                            <td><span class="dark-color-font">Louis</span>
-                                                <br>
-                                                Dog
-                                            </td>
-                                            <td>£24.00</td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
-                                                    <path d="M9.49609 15C11.4291 15 12.9961 13.433 12.9961 11.5C12.9961 9.567 11.4291 8 9.49609 8C7.5631 8 5.99609 9.567 5.99609 11.5C5.99609 13.433 7.5631 15 9.49609 15Z" stroke="black" />
-                                                    <path d="M18.4961 11.5C18.4961 11.5 17.4961 3.5 9.49609 3.5C1.49609 3.5 0.496094 11.5 0.496094 11.5" stroke="black" />
-                                                </svg></td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19" fill="none">
-                                                    <path d="M0.5 15.5V17C0.5 17.3978 0.643751 17.7794 0.899456 18.0607C1.15516 18.342 1.50207 18.5 1.86372 18.5H14.1365C14.4982 18.5 14.8451 18.342 15.1008 18.0607C15.3565 17.7794 15.5 17.3978 15.5 17V15.5" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M8 0.5V12.875M12.0909 8.75L8 13.25L3.90909 8.75" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg></td>
-                                        </tr>
-                                        <tr>
-                                            <td>06/11/25</td>
-                                            <td>Home visits</td>
-                                            <td><span class="dark-color-font">Full Groom</span>
-                                                <br>
-                                                Claire Smith
-                                            </td>
-                                            <td><span class="dark-color-font">Bella</span>
-                                                <br>
-                                                Rabbit
-                                            </td>
-                                            <td>£76.00</td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
-                                                    <path d="M9.49609 15C11.4291 15 12.9961 13.433 12.9961 11.5C12.9961 9.567 11.4291 8 9.49609 8C7.5631 8 5.99609 9.567 5.99609 11.5C5.99609 13.433 7.5631 15 9.49609 15Z" stroke="black" />
-                                                    <path d="M18.4961 11.5C18.4961 11.5 17.4961 3.5 9.49609 3.5C1.49609 3.5 0.496094 11.5 0.496094 11.5" stroke="black" />
-                                                </svg></td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19" fill="none">
-                                                    <path d="M0.5 15.5V17C0.5 17.3978 0.643751 17.7794 0.899456 18.0607C1.15516 18.342 1.50207 18.5 1.86372 18.5H14.1365C14.4982 18.5 14.8451 18.342 15.1008 18.0607C15.3565 17.7794 15.5 17.3978 15.5 17V15.5" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M8 0.5V12.875M12.0909 8.75L8 13.25L3.90909 8.75" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg></td>
-                                        </tr>
-                                        <tr>
-                                            <td>06/11/25</td>
-                                            <td>Garden/ Shed</td>
-                                            <td><span class="dark-color-font">Nail Trim</span>
-                                                <br>
-                                                Dev Emile
-                                            </td>
-                                            <td><span class="dark-color-font">Louis</span>
-                                                <br>
-                                                Dog
-                                            </td>
-                                            <td>£24.00</td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
-                                                    <path d="M9.49609 15C11.4291 15 12.9961 13.433 12.9961 11.5C12.9961 9.567 11.4291 8 9.49609 8C7.5631 8 5.99609 9.567 5.99609 11.5C5.99609 13.433 7.5631 15 9.49609 15Z" stroke="black" />
-                                                    <path d="M18.4961 11.5C18.4961 11.5 17.4961 3.5 9.49609 3.5C1.49609 3.5 0.496094 11.5 0.496094 11.5" stroke="black" />
-                                                </svg></td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19" fill="none">
-                                                    <path d="M0.5 15.5V17C0.5 17.3978 0.643751 17.7794 0.899456 18.0607C1.15516 18.342 1.50207 18.5 1.86372 18.5H14.1365C14.4982 18.5 14.8451 18.342 15.1008 18.0607C15.3565 17.7794 15.5 17.3978 15.5 17V15.5" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M8 0.5V12.875M12.0909 8.75L8 13.25L3.90909 8.75" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg></td>
-                                        </tr>
-                                        <tr>
-                                            <td>06/11/25</td>
-                                            <td>Home visits</td>
-                                            <td><span class="dark-color-font">Full Groom</span>
-                                                <br>
-                                                Claire Smith
-                                            </td>
-                                            <td><span class="dark-color-font">Bella</span>
-                                                <br>
-                                                Rabbit
-                                            </td>
-                                            <td>£76.00</td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
-                                                    <path d="M9.49609 15C11.4291 15 12.9961 13.433 12.9961 11.5C12.9961 9.567 11.4291 8 9.49609 8C7.5631 8 5.99609 9.567 5.99609 11.5C5.99609 13.433 7.5631 15 9.49609 15Z" stroke="black" />
-                                                    <path d="M18.4961 11.5C18.4961 11.5 17.4961 3.5 9.49609 3.5C1.49609 3.5 0.496094 11.5 0.496094 11.5" stroke="black" />
-                                                </svg></td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19" fill="none">
-                                                    <path d="M0.5 15.5V17C0.5 17.3978 0.643751 17.7794 0.899456 18.0607C1.15516 18.342 1.50207 18.5 1.86372 18.5H14.1365C14.4982 18.5 14.8451 18.342 15.1008 18.0607C15.3565 17.7794 15.5 17.3978 15.5 17V15.5" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M8 0.5V12.875M12.0909 8.75L8 13.25L3.90909 8.75" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg></td>
-                                        </tr>
-                                        <tr>
-                                            <td>06/11/25</td>
-                                            <td>Garden/ Shed</td>
-                                            <td><span class="dark-color-font">Nail Trim</span>
-                                                <br>
-                                                Dev Emile
-                                            </td>
-                                            <td><span class="dark-color-font">Louis</span>
-                                                <br>
-                                                Dog
-                                            </td>
-                                            <td>£24.00</td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
-                                                    <path d="M9.49609 15C11.4291 15 12.9961 13.433 12.9961 11.5C12.9961 9.567 11.4291 8 9.49609 8C7.5631 8 5.99609 9.567 5.99609 11.5C5.99609 13.433 7.5631 15 9.49609 15Z" stroke="black" />
-                                                    <path d="M18.4961 11.5C18.4961 11.5 17.4961 3.5 9.49609 3.5C1.49609 3.5 0.496094 11.5 0.496094 11.5" stroke="black" />
-                                                </svg></td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19" fill="none">
-                                                    <path d="M0.5 15.5V17C0.5 17.3978 0.643751 17.7794 0.899456 18.0607C1.15516 18.342 1.50207 18.5 1.86372 18.5H14.1365C14.4982 18.5 14.8451 18.342 15.1008 18.0607C15.3565 17.7794 15.5 17.3978 15.5 17V15.5" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M8 0.5V12.875M12.0909 8.75L8 13.25L3.90909 8.75" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg></td>
-                                        </tr>
-                                        <tr>
-                                            <td>06/11/25</td>
-                                            <td>Home visits</td>
-                                            <td><span class="dark-color-font">Full Groom</span>
-                                                <br>
-                                                Claire Smith
-                                            </td>
-                                            <td><span class="dark-color-font">Bella</span>
-                                                <br>
-                                                Rabbit
-                                            </td>
-                                            <td>£76.00</td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
-                                                    <path d="M9.49609 15C11.4291 15 12.9961 13.433 12.9961 11.5C12.9961 9.567 11.4291 8 9.49609 8C7.5631 8 5.99609 9.567 5.99609 11.5C5.99609 13.433 7.5631 15 9.49609 15Z" stroke="black" />
-                                                    <path d="M18.4961 11.5C18.4961 11.5 17.4961 3.5 9.49609 3.5C1.49609 3.5 0.496094 11.5 0.496094 11.5" stroke="black" />
-                                                </svg></td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19" fill="none">
-                                                    <path d="M0.5 15.5V17C0.5 17.3978 0.643751 17.7794 0.899456 18.0607C1.15516 18.342 1.50207 18.5 1.86372 18.5H14.1365C14.4982 18.5 14.8451 18.342 15.1008 18.0607C15.3565 17.7794 15.5 17.3978 15.5 17V15.5" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M8 0.5V12.875M12.0909 8.75L8 13.25L3.90909 8.75" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg></td>
-                                        </tr>
-                                        <tr>
-                                            <td>06/11/25</td>
-                                            <td>Garden/ Shed</td>
-                                            <td><span class="dark-color-font">Nail Trim</span>
-                                                <br>
-                                                Dev Emile
-                                            </td>
-                                            <td><span class="dark-color-font">Louis</span>
-                                                <br>
-                                                Dog
-                                            </td>
-                                            <td>£24.00</td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
-                                                    <path d="M9.49609 15C11.4291 15 12.9961 13.433 12.9961 11.5C12.9961 9.567 11.4291 8 9.49609 8C7.5631 8 5.99609 9.567 5.99609 11.5C5.99609 13.433 7.5631 15 9.49609 15Z" stroke="black" />
-                                                    <path d="M18.4961 11.5C18.4961 11.5 17.4961 3.5 9.49609 3.5C1.49609 3.5 0.496094 11.5 0.496094 11.5" stroke="black" />
-                                                </svg></td>
-                                            <td><svg data-modal-open="invoice_modal" class="cursor" xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19" fill="none">
-                                                    <path d="M0.5 15.5V17C0.5 17.3978 0.643751 17.7794 0.899456 18.0607C1.15516 18.342 1.50207 18.5 1.86372 18.5H14.1365C14.4982 18.5 14.8451 18.342 15.1008 18.0607C15.3565 17.7794 15.5 17.3978 15.5 17V15.5" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M8 0.5V12.875M12.0909 8.75L8 13.25L3.90909 8.75" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                    <div class="payment-history-filters">
+                                        <button type="button" class="payment-filter-pill active" data-filter="all">All</button>
+                                        <button type="button" class="payment-filter-pill" data-filter="grooming">Grooming</button>
+                                        <button type="button" class="payment-filter-pill" data-filter="spaces">Spaces</button>
+                                    </div>
 
-                                <!-- Modal  -->
+                                    <?php
+                                    $paymentHistory = [
+                                        [
+                                            'month' => 'JUNE 2025',
+                                            'items' => [
+                                                ['name' => 'Furs & Co. Studio', 'date' => '11 Jun 2025', 'ref' => 'FG-10294', 'status' => 'Paid', 'amount' => '£75.00', 'type' => 'spaces'],
+                                                ['name' => "Paws'n'Tails & Sarah's Grooming Studio", 'date' => '11 Jun 2025', 'ref' => 'FG-10294', 'status' => 'Refunded', 'amount' => '£75.00', 'type' => 'grooming spaces'],
+                                                ['name' => "Sarah's Grooming Studio", 'date' => '11 Jun 2025', 'ref' => 'FG-10294', 'status' => 'Pending', 'amount' => '£75.00', 'type' => 'grooming'],
+                                                ['name' => "Sarah's Grooming Studio", 'date' => '11 Jun 2025', 'ref' => 'FG-10294', 'status' => 'Failed', 'amount' => '£75.00', 'type' => 'grooming'],
+                                                ['name' => "Sarah's Grooming Studio", 'date' => '11 Jun 2025', 'ref' => 'FG-10294', 'status' => 'Paid', 'amount' => '£75.00', 'type' => 'grooming'],
+                                            ],
+                                        ],
+                                        [
+                                            'month' => 'MAY 2025',
+                                            'items' => [
+                                                ['name' => "Sarah's Grooming Studio", 'date' => '11 Jun 2025', 'ref' => 'FG-10294', 'status' => 'Paid', 'amount' => '£75.00', 'type' => 'grooming'],
+                                                ['name' => 'Furs & Co. Studio', 'date' => '11 Jun 2025', 'ref' => 'FG-10294', 'status' => 'Paid', 'amount' => '£75.00', 'type' => 'spaces'],
+                                                ['name' => "Sarah's Grooming Studio", 'date' => '11 Jun 2025', 'ref' => 'FG-10294', 'status' => 'Paid', 'amount' => '£75.00', 'type' => 'grooming'],
+                                            ],
+                                        ],
+                                        [
+                                            'month' => 'FEB 2024',
+                                            'items' => [
+                                                ['name' => "Sarah's Grooming Studio", 'date' => '11 Jun 2025', 'ref' => 'FG-10294', 'status' => 'Paid', 'amount' => '£75.00', 'type' => 'grooming'],
+                                                ['name' => "Sarah's Grooming Studio", 'date' => '11 Jun 2025', 'ref' => 'FG-10294', 'status' => 'Paid', 'amount' => '£75.00', 'type' => 'grooming'],
+                                            ],
+                                        ],
+                                    ];
+                                    ?>
 
-                                <div class="modal" id="invoice_modal">
-                                    <div class="modal-content size">
-                                        <div class="modal-head d-flex align-items-center justify-content-between">
-                                            <h1 class="invoice-font">Invoice</h1>
-                                            <div class="cursor modal-cross" data-modal-close>
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none">
-                                                    <circle cx="18" cy="18" r="17.5" stroke="#3B3731" />
-                                                    <path d="M12.8 23.9998L24 12.7998M12.8 12.7998L24 23.9998" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" />
-                                                </svg>
+                                    <div class="payment-history-list">
+                                        <?php foreach ($paymentHistory as $group): ?>
+                                            <div class="payment-history-group">
+                                                <p class="payment-history-month"><?= htmlspecialchars($group['month']) ?></p>
+                                                <?php foreach ($group['items'] as $item):
+                                                    $statusClass = strtolower($item['status']);
+                                                    $showSpaceIcon = strpos($item['type'], 'spaces') !== false;
+                                                    $showGroomerIcon = strpos($item['type'], 'grooming') !== false;
+                                                    $isCombinedIcon = $showSpaceIcon && $showGroomerIcon;
+                                                ?>
+                                                    <div class="payment-row mt-3" data-type="<?= htmlspecialchars($item['type']) ?>"
+                                                        data-modal-open="<?= $isCombinedIcon ? 'invoice_combined_modal' : ($showSpaceIcon ? 'invoice_spaces_modal' : 'invoice_grooming_modal') ?>">
+                                                        <div class="payment-row-icon<?= $isCombinedIcon ? ' payment-row-icon--combined' : '' ?>">
+                                                            <?php if ($isCombinedIcon): ?>
+                                                                <span class="payment-badge payment-badge--space" aria-hidden="true">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="9 9 18 19" fill="none">
+                                                                        <path d="M18.3308 9.10679C18.1762 9.03682 18.0105 9 17.8374 9C17.6643 9 17.4986 9.03682 17.344 9.10679L10.4103 12.0489C9.60022 12.3913 8.99633 13.1904 9.00002 14.1551C9.01843 17.8079 10.5208 24.4912 16.8653 27.5291C17.4802 27.8236 18.1946 27.8236 18.8095 27.5291C25.154 24.4912 26.6564 17.8079 26.6748 14.1551C26.6785 13.1904 26.0746 12.3913 25.2645 12.0489L18.3308 9.10679Z" fill="#CBDCE8" />
+                                                                        <path d="M22.6358 14.1133L18.8479 18.1379L22.6358 14.1133ZM17.1652 17.9414C15.9909 18.3922 15.052 18.315 14.1131 17.9428C14.3498 20.9935 15.7722 22.1663 17.6685 22.636C17.6685 22.636 19.097 21.6256 19.303 19.2302C19.3252 18.9708 19.3361 18.8415 19.2826 18.6952C19.2286 18.5489 19.1226 18.4442 18.9109 18.2345C18.5624 17.8898 18.3887 17.7174 18.1818 17.6739C17.9748 17.6313 17.705 17.7345 17.1652 17.9414Z" fill="#CBDCE8" />
+                                                                        <path d="M22.6358 14.1133L18.8479 18.1379M17.1652 17.9414C15.9909 18.3922 15.052 18.315 14.1131 17.9428C14.3498 20.9935 15.7722 22.1663 17.6685 22.636C17.6685 22.636 19.097 21.6256 19.303 19.2302C19.3252 18.9708 19.3361 18.8415 19.2826 18.6952C19.2286 18.5489 19.1226 18.4442 18.9109 18.2345C18.5624 17.8898 18.3887 17.7174 18.1818 17.6739C17.9748 17.6313 17.705 17.7345 17.1652 17.9414Z" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
+                                                                        <path d="M14.8235 20.4806C14.8235 20.4806 16.0072 20.7097 17.1909 19.7959L14.8235 20.4806Z" fill="#CBDCE8" />
+                                                                        <path d="M14.8235 20.4806C14.8235 20.4806 16.0072 20.7097 17.1909 19.7959" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
+                                                                        <path d="M16.7169 16.1251C16.7169 16.282 16.6546 16.4326 16.5436 16.5436C16.4326 16.6546 16.282 16.7169 16.1251 16.7169C15.9681 16.7169 15.8175 16.6546 15.7066 16.5436C15.5956 16.4326 15.5332 16.282 15.5332 16.1251C15.5332 15.9681 15.5956 15.8175 15.7066 15.7066C15.8175 15.5956 15.9681 15.5332 16.1251 15.5332C16.282 15.5332 16.4326 15.5956 16.5436 15.7066C16.6546 15.8175 16.7169 15.9681 16.7169 16.1251Z" fill="#CBDCE8" stroke="white" />
+                                                                        <path d="M17.9006 14.5874V14.6348V14.5874Z" fill="#CBDCE8" />
+                                                                        <path d="M17.9006 14.5874V14.6348" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
+                                                                    </svg>
+                                                                </span>
+                                                                <span class="payment-badge payment-badge--groomer" aria-hidden="true">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="9 9 18 19" fill="none">
+                                                                        <ellipse cx="18.9076" cy="18.535" rx="5.40322" ry="5.08531" fill="white" />
+                                                                        <path d="M18.6587 9.10679C18.5111 9.03682 18.3529 9 18.1876 9C18.0224 9 17.8642 9.03682 17.7165 9.10679L11.0965 12.0489C10.3231 12.3913 9.7465 13.1904 9.75002 14.1551C9.76759 17.8079 11.202 24.4912 17.2595 27.5291C17.8466 27.8236 18.5286 27.8236 19.1158 27.5291C25.1733 24.4912 26.6077 17.8079 26.6252 14.1551C26.6287 13.1904 26.0522 12.3913 25.2787 12.0489L18.6587 9.10679ZM14.8442 19.5386C15.013 19.5828 15.1923 19.6049 15.3751 19.6049C16.6161 19.6049 17.6251 18.5481 17.6251 17.2482V14.8916H19.179C19.6044 14.8916 19.9947 15.142 20.1845 15.5434L20.4377 16.0699H22.6877C22.9971 16.0699 23.2502 16.335 23.2502 16.6591V17.8374C23.2502 19.4649 21.9916 20.7832 20.4377 20.7832H18.7501V22.6501C18.7501 22.9189 18.5427 23.1398 18.2825 23.1398C18.2193 23.1398 18.156 23.1251 18.0997 23.0993L14.6298 21.5417C14.3977 21.4386 14.2501 21.1993 14.2501 20.9378C14.2501 20.8347 14.2712 20.7353 14.3169 20.6433L14.8442 19.5386ZM14.8126 14.8916H16.5001V17.2482C16.5001 17.9 15.9974 18.4265 15.3751 18.4265C14.7528 18.4265 14.2501 17.9 14.2501 17.2482V15.4808C14.2501 15.1567 14.5032 14.8916 14.8126 14.8916ZM19.3126 16.6591C19.3126 16.5028 19.2534 16.353 19.1479 16.2425C19.0424 16.132 18.8993 16.0699 18.7501 16.0699C18.6009 16.0699 18.4579 16.132 18.3524 16.2425C18.2469 16.353 18.1876 16.5028 18.1876 16.6591C18.1876 16.8153 18.2469 16.9652 18.3524 17.0757C18.4579 17.1862 18.6009 17.2482 18.7501 17.2482C18.8993 17.2482 19.0424 17.1862 19.1479 17.0757C19.2534 16.9652 19.3126 16.8153 19.3126 16.6591Z" fill="#C9DDA0" />
+                                                                    </svg>
+                                                                </span>
+                                                            <?php elseif ($showSpaceIcon): ?>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+                                                                    <circle cx="18" cy="18" r="18" fill="white" />
+                                                                    <path d="M18.3308 9.10679C18.1762 9.03682 18.0105 9 17.8374 9C17.6643 9 17.4986 9.03682 17.344 9.10679L10.4103 12.0489C9.60022 12.3913 8.99633 13.1904 9.00002 14.1551C9.01843 17.8079 10.5208 24.4912 16.8653 27.5291C17.4802 27.8236 18.1946 27.8236 18.8095 27.5291C25.154 24.4912 26.6564 17.8079 26.6748 14.1551C26.6785 13.1904 26.0746 12.3913 25.2645 12.0489L18.3308 9.10679Z" fill="#CBDCE8" />
+                                                                    <path d="M22.6358 14.1133L18.8479 18.1379L22.6358 14.1133ZM17.1652 17.9414C15.9909 18.3922 15.052 18.315 14.1131 17.9428C14.3498 20.9935 15.7722 22.1663 17.6685 22.636C17.6685 22.636 19.097 21.6256 19.303 19.2302C19.3252 18.9708 19.3361 18.8415 19.2826 18.6952C19.2286 18.5489 19.1226 18.4442 18.9109 18.2345C18.5624 17.8898 18.3887 17.7174 18.1818 17.6739C17.9748 17.6313 17.705 17.7345 17.1652 17.9414Z" fill="#CBDCE8" />
+                                                                    <path d="M22.6358 14.1133L18.8479 18.1379M17.1652 17.9414C15.9909 18.3922 15.052 18.315 14.1131 17.9428C14.3498 20.9935 15.7722 22.1663 17.6685 22.636C17.6685 22.636 19.097 21.6256 19.303 19.2302C19.3252 18.9708 19.3361 18.8415 19.2826 18.6952C19.2286 18.5489 19.1226 18.4442 18.9109 18.2345C18.5624 17.8898 18.3887 17.7174 18.1818 17.6739C17.9748 17.6313 17.705 17.7345 17.1652 17.9414Z" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
+                                                                    <path d="M14.8235 20.4806C14.8235 20.4806 16.0072 20.7097 17.1909 19.7959L14.8235 20.4806Z" fill="#CBDCE8" />
+                                                                    <path d="M14.8235 20.4806C14.8235 20.4806 16.0072 20.7097 17.1909 19.7959" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
+                                                                    <path d="M16.7169 16.1251C16.7169 16.282 16.6546 16.4326 16.5436 16.5436C16.4326 16.6546 16.282 16.7169 16.1251 16.7169C15.9681 16.7169 15.8175 16.6546 15.7066 16.5436C15.5956 16.4326 15.5332 16.282 15.5332 16.1251C15.5332 15.9681 15.5956 15.8175 15.7066 15.7066C15.8175 15.5956 15.9681 15.5332 16.1251 15.5332C16.282 15.5332 16.4326 15.5956 16.5436 15.7066C16.6546 15.8175 16.7169 15.9681 16.7169 16.1251Z" fill="#CBDCE8" stroke="white" />
+                                                                    <path d="M17.9006 14.5874V14.6348V14.5874Z" fill="#CBDCE8" />
+                                                                    <path d="M17.9006 14.5874V14.6348" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
+                                                                </svg>
+                                                            <?php elseif ($showGroomerIcon): ?>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+                                                                    <circle cx="18" cy="18" r="18" fill="white" />
+                                                                    <ellipse cx="18.9076" cy="18.535" rx="5.40322" ry="5.08531" fill="white" />
+                                                                    <path d="M18.6587 9.10679C18.5111 9.03682 18.3529 9 18.1876 9C18.0224 9 17.8642 9.03682 17.7165 9.10679L11.0965 12.0489C10.3231 12.3913 9.7465 13.1904 9.75002 14.1551C9.76759 17.8079 11.202 24.4912 17.2595 27.5291C17.8466 27.8236 18.5286 27.8236 19.1158 27.5291C25.1733 24.4912 26.6077 17.8079 26.6252 14.1551C26.6287 13.1904 26.0522 12.3913 25.2787 12.0489L18.6587 9.10679ZM14.8442 19.5386C15.013 19.5828 15.1923 19.6049 15.3751 19.6049C16.6161 19.6049 17.6251 18.5481 17.6251 17.2482V14.8916H19.179C19.6044 14.8916 19.9947 15.142 20.1845 15.5434L20.4377 16.0699H22.6877C22.9971 16.0699 23.2502 16.335 23.2502 16.6591V17.8374C23.2502 19.4649 21.9916 20.7832 20.4377 20.7832H18.7501V22.6501C18.7501 22.9189 18.5427 23.1398 18.2825 23.1398C18.2193 23.1398 18.156 23.1251 18.0997 23.0993L14.6298 21.5417C14.3977 21.4386 14.2501 21.1993 14.2501 20.9378C14.2501 20.8347 14.2712 20.7353 14.3169 20.6433L14.8442 19.5386ZM14.8126 14.8916H16.5001V17.2482C16.5001 17.9 15.9974 18.4265 15.3751 18.4265C14.7528 18.4265 14.2501 17.9 14.2501 17.2482V15.4808C14.2501 15.1567 14.5032 14.8916 14.8126 14.8916ZM19.3126 16.6591C19.3126 16.5028 19.2534 16.353 19.1479 16.2425C19.0424 16.132 18.8993 16.0699 18.7501 16.0699C18.6009 16.0699 18.4579 16.132 18.3524 16.2425C18.2469 16.353 18.1876 16.5028 18.1876 16.6591C18.1876 16.8153 18.2469 16.9652 18.3524 17.0757C18.4579 17.1862 18.6009 17.2482 18.7501 17.2482C18.8993 17.2482 19.0424 17.1862 19.1479 17.0757C19.2534 16.9652 19.3126 16.8153 19.3126 16.6591Z" fill="#C9DDA0" />
+                                                                </svg>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                        <div class="payment-row-info">
+                                                            <p class="payment-row-name"><?= htmlspecialchars($item['name']) ?></p>
+                                                            <p class="payment-row-meta"><?= htmlspecialchars($item['date']) ?> - <?= htmlspecialchars($item['ref']) ?></p>
+                                                        </div>
+                                                        <div class="payment-row-status <?= $statusClass ?>">
+                                                            <span class="dot"></span>
+                                                            <?= htmlspecialchars($item['status']) ?>
+                                                        </div>
+                                                        <p class="payment-row-amount"><?= htmlspecialchars($item['amount']) ?></p>
+                                                        <div class="payment-row-download" aria-hidden="true">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+                                                                <rect x="0.5" y="0.5" width="31" height="31" rx="9.5" fill="white" stroke="#F0F0F0" />
+                                                                <path d="M10 20.5V21.75C10 22.0815 10.1197 22.3995 10.3328 22.6339C10.5459 22.8683 10.835 23 11.1364 23H21.3636C21.665 23 21.9541 22.8683 22.1672 22.6339C22.3803 22.3995 22.5 22.0815 22.5 21.75V20.5" stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
+                                                                <path d="M16.2499 8V18.3125M19.659 14.875L16.2499 18.625L12.8408 14.875" stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+                                                <?php endforeach; ?>
                                             </div>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="invoice-reference d-flex align-items-center justify-content-between">
-                                                <p class="medium-font-bold">Booking reference: FG-10294</p>
-                                                <div>
-                                                    <p class="medium-light-font" style="color: #9D9B98;">
-                                                        02/12/2025
-                                                        &nbsp;&nbsp;
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="19" viewBox="0 0 16 19" fill="none">
-                                                            <path d="M0.5 15.5V17C0.5 17.3978 0.643668 17.7794 0.8994 18.0607C1.15513 18.342 1.50198 18.5 1.86364 18.5H14.1364C14.498 18.5 14.8449 18.342 15.1006 18.0607C15.3563 17.7794 15.5 17.3978 15.5 17V15.5" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                            <path d="M7.99997 0.5V12.875M12.0909 8.75L7.99997 13.25L3.90906 8.75" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                        </svg>
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            <div class="section-divider mt-3" style="background-color: #E2E2E2"></div>
-
-                                            <div class="name-svg d-flex align-items-center gap-20 mt-3">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="36" viewBox="0 0 32 36" fill="none">
-                                                    <ellipse cx="17.3668" cy="18.0807" rx="10.2458" ry="9.64315" fill="white" />
-                                                    <path d="M16.8932 0.202494C16.6132 0.0698256 16.3132 0 15.9998 0C15.6865 0 15.3865 0.0698256 15.1065 0.202494L2.55333 5.78156C1.08668 6.43094 -0.00663626 7.94615 3.03229e-05 9.77559C0.0333633 16.7023 2.75333 29.3756 14.2399 35.1362C15.3532 35.6949 16.6465 35.6949 17.7598 35.1362C29.2463 29.3756 31.9663 16.7023 31.9996 9.77559C32.0063 7.94615 30.913 6.43094 29.4463 5.78156L16.8932 0.202494ZM9.65991 19.9841C9.97991 20.0679 10.3199 20.1098 10.6666 20.1098C13.0199 20.1098 14.9332 18.1058 14.9332 15.6409V11.1721H17.8798C18.6865 11.1721 19.4265 11.6469 19.7865 12.408L20.2665 13.4065H24.5331C25.1197 13.4065 25.5997 13.9093 25.5997 14.5237V16.7581C25.5997 19.8444 23.2131 22.3442 20.2665 22.3442H17.0665V25.8844C17.0665 26.3941 16.6732 26.813 16.1798 26.813C16.0598 26.813 15.9398 26.7851 15.8332 26.7362L9.25325 23.7826C8.81326 23.5871 8.53326 23.1332 8.53326 22.6375C8.53326 22.4419 8.57326 22.2534 8.65993 22.0789L9.65991 19.9841ZM9.59992 11.1721H12.7999V15.6409C12.7999 16.8769 11.8466 17.8754 10.6666 17.8754C9.48658 17.8754 8.53326 16.8769 8.53326 15.6409V12.2893C8.53326 11.6748 9.01326 11.1721 9.59992 11.1721ZM18.1331 14.5237C18.1331 14.2274 18.0208 13.9433 17.8207 13.7337C17.6207 13.5242 17.3494 13.4065 17.0665 13.4065C16.7836 13.4065 16.5123 13.5242 16.3123 13.7337C16.1122 13.9433 15.9998 14.2274 15.9998 14.5237C15.9998 14.82 16.1122 15.1042 16.3123 15.3137C16.5123 15.5232 16.7836 15.6409 17.0665 15.6409C17.3494 15.6409 17.6207 15.5232 17.8207 15.3137C18.0208 15.1042 18.1331 14.82 18.1331 14.5237Z" fill="#E2E2E2" />
-                                                </svg>
-                                                <div>
-                                                    <p class="medium-font-bold">Sarah’s Grooming Studio</p>
-                                                    <p class="medium-light-font" style="color: #9D9B98;">Sarah W.</p>
-                                                </div>
-                                            </div>
-
-                                            <div class="section-title d-flex align-items-center gap-10 mt-3">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="13" viewBox="0 0 12 13" fill="none">
-                                                    <path d="M3.79476 8.7133C4.74967 9.66821 7.07214 8.89426 8.98195 6.98414C10.8921 5.07433 11.666 2.75186 10.7111 1.79695M6.60447 1.14832L7.03668 1.58084M5.09171 2.66138L5.52393 3.09359M3.79446 4.39054L4.22667 4.82276M3.36224 6.55192L3.79446 6.98414M8.98195 0.5L9.41417 0.932215M8.54974 3.0939L9.41417 3.95833M7.03699 4.60696L7.90142 5.47139M5.30782 5.9036L6.17225 6.76803" stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M3.79454 10.0107C4.15265 9.65258 4.15265 9.07196 3.79454 8.71385C3.43643 8.35574 2.85581 8.35574 2.4977 8.71385L0.768577 10.443C0.410465 10.8011 0.410464 11.3817 0.768577 11.7398C1.12669 12.0979 1.7073 12.0979 2.06542 11.7398L3.79454 10.0107Z" stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                                <p class="medium-light-font" style="color: #9D9B98;">Service</p>
-                                            </div>
-
-                                            <div class="serivce-name-price mt-1">
-                                                <div class="service-name d-flex justify-content-between mt">
-                                                    <p class="medium-light-font">Full Groom <br> <span class="simple-light-font">Bella</span></p>
-                                                    <p class="medium-light-font" style="color: #9D9B98;">£48</p>
-                                                </div>
-                                            </div>
-
-                                            <div class="section-divider mt-3" style="background-color: #E2E2E2"></div>
-
-                                            <div class="section-title mt-3">
-                                                <p class="medium-font-bold">Extras & Add-ons</p>
-                                            </div>
-
-                                            <div class="serivce-name-price mt-3">
-                                                <div class="d-flex align-items-center justify-content-between">
-                                                    <p class="medium-light-font">Fast-Dry Service (express grooming)</p>
-                                                    <p class="medium-light-font">£8</p>
-                                                </div>
-                                                <div class="d-flex align-items-center justify-content-between">
-                                                    <p class="medium-light-font">Hypoallergenic Shampoo Upgrade</p>
-                                                    <p class="medium-light-font">£20</p>
-                                                </div>
-                                                <div class="d-flex align-items-center justify-content-between">
-                                                    <p class="medium-light-font">Anti-Itch Treatment</p>
-                                                    <p class="medium-light-font">£10</p>
-                                                </div>
-                                            </div>
-
-                                            <div class="section-divider mt-3" style="background-color: #E2E2E2"></div>
-
-                                            <div class="name-svg d-flex align-items-center gap-20 mt-3">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="36" viewBox="0 0 32 36" fill="none">
-                                                    <ellipse cx="17.3668" cy="18.0807" rx="10.2458" ry="9.64315" fill="white" />
-                                                    <path d="M16.8932 0.202494C16.6132 0.0698256 16.3132 0 15.9998 0C15.6865 0 15.3865 0.0698256 15.1065 0.202494L2.55333 5.78156C1.08668 6.43094 -0.00663626 7.94615 3.03229e-05 9.77559C0.0333633 16.7023 2.75333 29.3756 14.2399 35.1362C15.3532 35.6949 16.6465 35.6949 17.7598 35.1362C29.2463 29.3756 31.9663 16.7023 31.9996 9.77559C32.0063 7.94615 30.913 6.43094 29.4463 5.78156L16.8932 0.202494ZM9.65991 19.9841C9.97991 20.0679 10.3199 20.1098 10.6666 20.1098C13.0199 20.1098 14.9332 18.1058 14.9332 15.6409V11.1721H17.8798C18.6865 11.1721 19.4265 11.6469 19.7865 12.408L20.2665 13.4065H24.5331C25.1197 13.4065 25.5997 13.9093 25.5997 14.5237V16.7581C25.5997 19.8444 23.2131 22.3442 20.2665 22.3442H17.0665V25.8844C17.0665 26.3941 16.6732 26.813 16.1798 26.813C16.0598 26.813 15.9398 26.7851 15.8332 26.7362L9.25325 23.7826C8.81326 23.5871 8.53326 23.1332 8.53326 22.6375C8.53326 22.4419 8.57326 22.2534 8.65993 22.0789L9.65991 19.9841ZM9.59992 11.1721H12.7999V15.6409C12.7999 16.8769 11.8466 17.8754 10.6666 17.8754C9.48658 17.8754 8.53326 16.8769 8.53326 15.6409V12.2893C8.53326 11.6748 9.01326 11.1721 9.59992 11.1721ZM18.1331 14.5237C18.1331 14.2274 18.0208 13.9433 17.8207 13.7337C17.6207 13.5242 17.3494 13.4065 17.0665 13.4065C16.7836 13.4065 16.5123 13.5242 16.3123 13.7337C16.1122 13.9433 15.9998 14.2274 15.9998 14.5237C15.9998 14.82 16.1122 15.1042 16.3123 15.3137C16.5123 15.5232 16.7836 15.6409 17.0665 15.6409C17.3494 15.6409 17.6207 15.5232 17.8207 15.3137C18.0208 15.1042 18.1331 14.82 18.1331 14.5237Z" fill="#E2E2E2" />
-                                                </svg>
-                                                <div>
-                                                    <p class="medium-font-bold">Sarah’s Grooming Studio</p>
-                                                    <p class="medium-light-font">Hosted by <span style="color: #9D9B98;">Dev É.</span></p>
-                                                </div>
-                                            </div>
-
-                                            <div class="section-title d-flex align-items-center gap-10 mt-3">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="11" viewBox="0 0 14 11" fill="none">
-                                                    <path d="M11.5364 10.6626V3.37408C11.5364 3.35658 11.5378 3.33945 11.5405 3.32267L9.5699 1.64223C9.15083 1.28539 8.86131 1.03945 8.61569 0.879105C8.37852 0.724329 8.21914 0.674815 8.06668 0.674815C7.91435 0.674815 7.75596 0.72451 7.51905 0.879105C7.27339 1.03947 6.98309 1.28519 6.56347 1.64223L4.59145 3.32267C4.59416 3.33951 4.59698 3.35651 4.59698 3.37408V10.6626C4.59668 10.8487 4.43829 11 4.24295 11C4.04774 10.9999 3.88923 10.8486 3.88893 10.6626V3.92104L3.52384 4.23341C3.37809 4.35762 3.15356 4.34465 3.02323 4.20573C2.89342 4.06691 2.90557 3.85405 3.05089 3.72994L6.09051 1.14007H6.0919C6.49749 0.794967 6.82596 0.513638 7.11801 0.32291C7.41889 0.126502 7.71759 1.97996e-07 8.06668 0C8.41573 0 8.71438 0.126494 9.01535 0.32291C9.30759 0.513684 9.63742 0.794839 10.0429 1.14007L13.0825 3.72994C13.2278 3.85405 13.2399 4.06691 13.1101 4.20573C12.9798 4.34465 12.7553 4.35762 12.6095 4.23341L12.2444 3.92104V10.6626C12.2441 10.8486 12.0856 10.9999 11.8904 11C11.6951 11 11.5367 10.8487 11.5364 10.6626Z" fill="#9D9B98" />
-                                                    <path d="M1.60528 5.86768C1.60528 5.61318 1.53289 5.39481 1.42988 5.24738C1.32684 5.10005 1.20713 5.03813 1.1 5.03813C0.992933 5.03822 0.873087 5.10016 0.770116 5.24738C0.667196 5.39481 0.59472 5.61331 0.59472 5.86768C0.594815 6.12214 0.667069 6.34065 0.770116 6.48798C0.873069 6.63512 0.992961 6.6959 1.1 6.69599C1.20704 6.69599 1.32689 6.63506 1.42988 6.48798C1.53293 6.34065 1.60519 6.12214 1.60528 5.86768ZM2.2 5.86768C2.19991 6.24679 2.09349 6.60246 1.90612 6.87037C1.71859 7.13851 1.43629 7.33373 1.1 7.33373C0.763946 7.33364 0.482531 7.13828 0.295037 6.87037C0.107651 6.60245 9.37987e-05 6.24681 0 5.86768C0 5.48837 0.107569 5.13178 0.295037 4.86375C0.482531 4.59592 0.764013 4.40048 1.1 4.40039C1.43624 4.40039 1.71859 4.59567 1.90612 4.86375C2.09359 5.13178 2.2 5.48837 2.2 5.86768Z" fill="#9D9B98" />
-                                                    <path d="M0.733337 10.6559V6.94334C0.733337 6.7535 0.8975 6.59961 1.1 6.59961C1.30251 6.59961 1.46667 6.7535 1.46667 6.94334V10.6559C1.46652 10.8456 1.30241 10.9996 1.1 10.9996C0.897595 10.9996 0.733492 10.8456 0.733337 10.6559Z" fill="#9D9B98" />
-                                                    <path d="M9.37895 8.19656C9.37895 7.89715 9.37764 7.70705 9.35859 7.56773C9.34094 7.43857 9.3139 7.40496 9.29753 7.38882C9.28118 7.37274 9.24726 7.34483 9.11571 7.32741C8.97402 7.30865 8.77989 7.30872 8.47525 7.30872H7.85107C7.54643 7.30872 7.35229 7.30865 7.21061 7.32741C7.07906 7.34483 7.04513 7.37274 7.02878 7.38882C7.01241 7.40497 6.98538 7.43857 6.96772 7.56773C6.94868 7.70705 6.94737 7.89715 6.94737 8.19656V10.3167H9.37895V8.19656ZM8.78869 4.7787C8.98023 4.77885 9.13577 4.93206 9.13606 5.12049C9.13606 5.30916 8.98041 5.46213 8.78869 5.46227H7.53762C7.3459 5.46213 7.19025 5.30916 7.19025 5.12049C7.19055 4.93206 7.34608 4.77885 7.53762 4.7787H8.78869ZM8.78869 2.93359L8.85789 2.94027C9.01647 2.97193 9.13606 3.11002 9.13606 3.27538C9.13606 3.44074 9.01647 3.57883 8.85789 3.61049L8.78869 3.61717H7.53762C7.3459 3.61702 7.19025 3.46405 7.19025 3.27538C7.19025 3.08671 7.3459 2.93374 7.53762 2.93359H8.78869ZM10.0737 10.3167H12.8526C13.0445 10.3167 13.2 10.4697 13.2 10.6585C13.1997 10.847 13.0443 11.0003 12.8526 11.0003H0.347368C0.155703 11.0003 0.000292572 10.847 0 10.6585C0 10.4697 0.155522 10.3167 0.347368 10.3167H6.25263V8.19656C6.25263 7.91661 6.25176 7.67231 6.27841 7.47694C6.3065 7.27152 6.37083 7.06966 6.53758 6.90552C6.70443 6.74135 6.90951 6.67815 7.11834 6.65051C7.31708 6.62423 7.56618 6.62515 7.85107 6.62515H8.47525C8.76014 6.62515 9.00924 6.62423 9.20798 6.65051C9.41681 6.67815 9.62188 6.74135 9.78873 6.90552C9.95548 7.06966 10.0198 7.27152 10.0479 7.47694C10.0746 7.67231 10.0737 7.91661 10.0737 8.19656V10.3167Z" fill="#9D9B98" />
-                                                </svg>
-                                                <p class="medium-light-font" style="color: #9D9B98;">Space</p>
-                                            </div>
-
-                                            <div class="serivce-name-price mt-1">
-                                                <div class="service-name d-flex justify-content-between">
-                                                    <p class="medium-light-font">Garden / Shed <br> Half-Day (14:30 - 18:30)</p>
-                                                    <p class="medium-light-font">£80</p>
-                                                </div>
-                                            </div>
-
-                                            <div class="section-divider mt-3" style="background-color: #E2E2E2"></div>
-
-                                            <div class="section-title mt-3">
-                                                <p class="medium-font-bold">Add-on Service</p>
-                                            </div>
-
-                                            <div class="serivce-name-price mt-3">
-                                                <div class="d-flex align-items-center justify-content-between">
-                                                    <p class="medium-light-font">Storage Locker</p>
-                                                    <p class="medium-light-font">£5</p>
-                                                </div>
-                                                <div class="d-flex align-items-center justify-content-between">
-                                                    <p class="medium-light-font">Deep Clean</p>
-                                                    <p class="medium-light-font">£10</p>
-                                                </div>
-                                            </div>
-
-                                            <div class="section-divider mt-3" style="background-color: #E2E2E2"></div>
-
-                                            <div class="d-flex align-items-center justify-content-between mt-3">
-                                                <p style="color: #9D9B98;">Service:</p>
-                                                <p>£48.00</p>
-                                            </div>
-
-                                            <div class="d-flex align-items-center justify-content-between mt-3">
-                                                <p style="color: #9D9B98;">Extras & Add-ons:</p>
-                                                <p>£38.00</p>
-                                            </div>
-
-                                            <div class="d-flex align-items-center justify-content-between mt-3">
-                                                <p style="color: #9D9B98;">Space:</p>
-                                                <p>£80.00</p>
-                                            </div>
-
-                                            <div class="d-flex align-items-center justify-content-between mt-3">
-                                                <p style="color: #9D9B98;">Add-ons Services:</p>
-                                                <p>£15.00</p>
-                                            </div>
-
-                                            <div class="d-flex align-items-center justify-content-between mt-3">
-                                                <p style="color: #9D9B98;">Promo discount:</p>
-                                                <p>- £25.00</p>
-                                            </div>
-
-                                            <div class="section-divider mt-3" style="background-color: #E2E2E2"></div>
-
-                                            <div class="d-flex align-items-center justify-content-between mt-3">
-                                                <p class="medium-font-bold">Total:</p>
-                                                <p class="medium-font-bold">£158.00</p>
-                                            </div>
-
-                                        </div>
+                                        <?php endforeach; ?>
                                     </div>
                                 </div>
 
-                                <!-- Modal  -->
+                                <script>
+                                    (function() {
+                                        const filters = document.querySelectorAll('.payment-filter-pill');
+                                        const rows = document.querySelectorAll('.payment-row');
+                                        const groups = document.querySelectorAll('.payment-history-group');
+
+                                        filters.forEach(function(btn) {
+                                            btn.addEventListener('click', function() {
+                                                const filter = btn.getAttribute('data-filter');
+
+                                                filters.forEach(function(item) {
+                                                    item.classList.toggle('active', item === btn);
+                                                });
+
+                                                rows.forEach(function(row) {
+                                                    const types = (row.getAttribute('data-type') || '').split(' ');
+                                                    const show = filter === 'all' || types.indexOf(filter) !== -1;
+                                                    row.hidden = !show;
+                                                });
+
+                                                groups.forEach(function(group) {
+                                                    const visible = group.querySelector('.payment-row:not([hidden])');
+                                                    group.hidden = !visible;
+                                                });
+                                            });
+                                        });
+                                    })();
+                                </script>
+
+                                @include('account_and_setting.invoice-modals')
 
                                 <div class="d-flex justify-content-center mt-4">
                                     <button class="normal-font-bold btn-custom btn-no-bg">Load More</button>
@@ -1524,20 +1275,22 @@
 
                                 <h1 class="large-font">Privacy & Permissions</h1>
 
-                                <div class="toggle-button-content d-flex align-items-center justify-content-between mt-5">
-                                    <div class="d-flex flex-column gap-25">
-                                        <p class="bold-font">Profile Visibility</p>
-                                        <p style="color: #9D9B98">Your profile is visible to groomers you interact with.</p>
-                                    </div>
-                                    <div>
-                                        <div class="toggle-switch on" id="toggle">
-                                            <div class="toggle-circle">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" viewBox="0 0 27 27" fill="none">
-                                                    <path d="M13.3333 0C6 0 0 6 0 13.3333C0 20.6667 6 26.6667 13.3333 26.6667C20.6667 26.6667 26.6667 20.6667 26.6667 13.3333C26.6667 6 20.6667 0 13.3333 0ZM11.2222 19.4444C10.9154 19.7513 10.4179 19.7513 10.1111 19.4444L4.94065 14.274C4.42115 13.7545 4.42115 12.9122 4.94066 12.3927C5.45965 11.8737 6.30093 11.8731 6.82065 12.3914L10.6667 16.2267L19.84 7.05334C20.3623 6.53105 21.2095 6.53255 21.73 7.05668C22.2478 7.5782 22.2463 8.42032 21.7267 8.94001L11.2222 19.4444Z" fill="white" />
-                                                </svg>
-                                            </div>
+                                <div class="profile-option mt-5">
+                                    <div class="toggle-button-content d-flex align-items-center justify-content-between">
+                                        <div class="d-flex flex-column gap-25">
+                                            <p class="bold-font">Profile Visibility</p>
+                                            <p style="color: #9D9B98">Your profile is visible to groomers you interact with.</p>
                                         </div>
+                                        <div>
+                                            <div class="toggle-switch on" id="toggle">
+                                                <div class="toggle-circle">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" viewBox="0 0 27 27" fill="none">
+                                                        <path d="M13.3333 0C6 0 0 6 0 13.3333C0 20.6667 6 26.6667 13.3333 26.6667C20.6667 26.6667 26.6667 20.6667 26.6667 13.3333C26.6667 6 20.6667 0 13.3333 0ZM11.2222 19.4444C10.9154 19.7513 10.4179 19.7513 10.1111 19.4444L4.94065 14.274C4.42115 13.7545 4.42115 12.9122 4.94066 12.3927C5.45965 11.8737 6.30093 11.8731 6.82065 12.3914L10.6667 16.2267L19.84 7.05334C20.3623 6.53105 21.2095 6.53255 21.73 7.05668C22.2478 7.5782 22.2463 8.42032 21.7267 8.94001L11.2222 19.4444Z" fill="white" />
+                                                    </svg>
+                                                </div>
+                                            </div>
 
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1643,98 +1396,100 @@
                                     </div>
                                 </div>
 
-                                <div class="section-divider mt-5" style="background-color: #E2E2E2"></div>
+                                <div class="block-users-div mt-5 mb-5">
 
-                                <div class="toggle-button-content d-flex align-items-center justify-content-between mt-5 mb-5">
-                                    <div class="d-flex flex-column gap-25">
-                                        <p class="bold-font">Blocked Users</p>
-                                        <p style="color: #9D9B98">You can block groomers/hosts or customers anytime from their profiles.</p>
-                                    </div>
-                                </div>
-
-                                <div class="block-user-card d-flex align-items-center justify-content-between mt-4">
-                                    <div class="image-text d-flex align-items-center gap-10">
-                                        <img src="{{ asset('images/block_user_1.png') }}" class="rounded-circle" alt="">
-                                        <div>
-                                            <p class="dark-color-font">The Garden Grooming Spot</p>
-                                            <span class="light-color-font">Chloe D.</span>
+                                    <div class="toggle-button-content d-flex align-items-center justify-content-between">
+                                        <div class="d-flex flex-column gap-25">
+                                            <p class="bold-font">Blocked Users</p>
+                                            <p style="color: #9D9B98">You can block groomers/hosts or customers anytime from their profiles.</p>
                                         </div>
                                     </div>
-                                    <div>
-                                        <a class="small-link-tag cursor unblock-trigger"
-                                            data-modal-open="unblock_users_account_modal"
-                                            data-name="The Garden Grooming Spot"
-                                            data-subname="Chloe D."
-                                            data-image="{{ asset('images/block_user_1.png') }}">Unblock</a>
-                                    </div>
-                                </div>
 
-                                <div class="block-user-card d-flex align-items-center justify-content-between mt-4">
-                                    <div class="image-text d-flex align-items-center gap-10">
-                                        <img src="{{ asset('images/block_user_2.png') }}" class="rounded-circle" alt="">
+                                    <div class="block-user-card d-flex align-items-center justify-content-between mt-4">
+                                        <div class="image-text d-flex align-items-center gap-10">
+                                            <img src="{{ asset('images/block_user_1.png') }}" class="rounded-circle" alt="">
+                                            <div>
+                                                <p class="dark-color-font">The Garden Grooming Spot</p>
+                                                <span class="light-color-font">Chloe D.</span>
+                                            </div>
+                                        </div>
                                         <div>
-                                            <p class="dark-color-font">Sarah W.</p>
-                                            <span class="light-color-font">Sarah’s Grooming Studio</span>
+                                            <a class="small-link-tag cursor unblock-trigger"
+                                                data-modal-open="unblock_users_account_modal"
+                                                data-name="The Garden Grooming Spot"
+                                                data-subname="Chloe D."
+                                                data-image="{{ asset('images/block_user_1.png') }}">Unblock</a>
                                         </div>
                                     </div>
-                                    <div>
-                                        <a class="small-link-tag cursor unblock-trigger"
-                                            data-modal-open="unblock_users_account_modal"
-                                            data-name="Sarah W."
-                                            data-subname="Sarah’s Grooming Studio"
-                                            data-image="{{ asset('images/block_user_2.png') }}">Unblock</a>
-                                    </div>
-                                </div>
 
-                                <div class="block-user-card d-flex align-items-center justify-content-between mt-4">
-                                    <div class="image-text d-flex align-items-center gap-10">
-                                        <img src="{{ asset('images/block_user_3.png') }}" class="rounded-circle" alt="">
+                                    <div class="block-user-card d-flex align-items-center justify-content-between mt-4">
+                                        <div class="image-text d-flex align-items-center gap-10">
+                                            <img src="{{ asset('images/block_user_2.png') }}" class="rounded-circle" alt="">
+                                            <div>
+                                                <p class="dark-color-font">Sarah W.</p>
+                                                <span class="light-color-font">Sarah’s Grooming Studio</span>
+                                            </div>
+                                        </div>
                                         <div>
-                                            <p class="dark-color-font">Furs & Co. Studio</p>
-                                            <span class="light-color-font">Hosted by Dev É.</span>
+                                            <a class="small-link-tag cursor unblock-trigger"
+                                                data-modal-open="unblock_users_account_modal"
+                                                data-name="Sarah W."
+                                                data-subname="Sarah’s Grooming Studio"
+                                                data-image="{{ asset('images/block_user_2.png') }}">Unblock</a>
                                         </div>
                                     </div>
-                                    <div>
-                                        <a class="small-link-tag cursor unblock-trigger"
-                                            data-modal-open="unblock_users_account_modal"
-                                            data-name="Furs & Co. Studio."
-                                            data-subname="Hosted by Dev É."
-                                            data-image="{{ asset('images/block_user_3.png') }}">Unblock</a>
-                                    </div>
-                                </div>
 
-                                <div class="block-user-card d-flex align-items-center justify-content-between mt-4">
-                                    <div class="image-text d-flex align-items-center gap-10">
-                                        <img src="{{ asset('images/block_user_4.png') }}" class="rounded-circle" alt="">
+                                    <div class="block-user-card d-flex align-items-center justify-content-between mt-4">
+                                        <div class="image-text d-flex align-items-center gap-10">
+                                            <img src="{{ asset('images/block_user_3.png') }}" class="rounded-circle" alt="">
+                                            <div>
+                                                <p class="dark-color-font">Furs & Co. Studio</p>
+                                                <span class="light-color-font">Hosted by Dev É.</span>
+                                            </div>
+                                        </div>
                                         <div>
-                                            <p class="dark-color-font">Katie Z.</p>
-                                            <span class="light-color-font">Includes other accounts they may have or create.</span>
+                                            <a class="small-link-tag cursor unblock-trigger"
+                                                data-modal-open="unblock_users_account_modal"
+                                                data-name="Furs & Co. Studio."
+                                                data-subname="Hosted by Dev É."
+                                                data-image="{{ asset('images/block_user_3.png') }}">Unblock</a>
                                         </div>
                                     </div>
-                                    <div>
-                                        <a class="small-link-tag cursor unblock-trigger"
-                                            data-modal-open="unblock_users_account_modal"
-                                            data-name="Katie Z."
-                                            data-subname="Includes other accounts they may have or create."
-                                            data-image="{{ asset('images/block_user_4.png') }}">Unblock</a>
-                                    </div>
-                                </div>
 
-                                <div class="block-user-card d-flex align-items-center justify-content-between mt-4">
-                                    <div class="image-text d-flex align-items-center gap-10">
-                                        <img src="{{ asset('images/block_user_5.png') }}" class="rounded-circle" alt="">
+                                    <div class="block-user-card d-flex align-items-center justify-content-between mt-4">
+                                        <div class="image-text d-flex align-items-center gap-10">
+                                            <img src="{{ asset('images/block_user_4.png') }}" class="rounded-circle" alt="">
+                                            <div>
+                                                <p class="dark-color-font">Katie Z.</p>
+                                                <span class="light-color-font">Includes other accounts they may have or create.</span>
+                                            </div>
+                                        </div>
                                         <div>
-                                            <p class="dark-color-font">Lorem Ipsum</p>
-                                            <span class="light-color-font">Includes other accounts they may have or create.</span>
+                                            <a class="small-link-tag cursor unblock-trigger"
+                                                data-modal-open="unblock_users_account_modal"
+                                                data-name="Katie Z."
+                                                data-subname="Includes other accounts they may have or create."
+                                                data-image="{{ asset('images/block_user_4.png') }}">Unblock</a>
                                         </div>
                                     </div>
-                                    <div>
-                                        <a class="small-link-tag cursor unblock-trigger"
-                                            data-modal-open="unblock_users_account_modal"
-                                            data-name="Lorem Ipsum."
-                                            data-subname="Includes other accounts they may have or create."
-                                            data-image="{{ asset('images/block_user_5.png') }}">Unblock</a>
+
+                                    <div class="block-user-card d-flex align-items-center justify-content-between mt-4">
+                                        <div class="image-text d-flex align-items-center gap-10">
+                                            <img src="{{ asset('images/block_user_5.png') }}" class="rounded-circle" alt="">
+                                            <div>
+                                                <p class="dark-color-font">Lorem Ipsum</p>
+                                                <span class="light-color-font">Includes other accounts they may have or create.</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <a class="small-link-tag cursor unblock-trigger"
+                                                data-modal-open="unblock_users_account_modal"
+                                                data-name="Lorem Ipsum."
+                                                data-subname="Includes other accounts they may have or create."
+                                                data-image="{{ asset('images/block_user_5.png') }}">Unblock</a>
+                                        </div>
                                     </div>
+
                                 </div>
 
                             </div>
@@ -1743,21 +1498,27 @@
 
                             <div class="modal" id="unblock_users_account_modal">
                                 <div class="modal-content size">
-                                    <div class="container">
-                                        <div class="row mt-2">
-                                            <!-- <div class="col-lg-1"></div> -->
-                                            <div class="col-lg-12">
-                                                <div class="d-flex align-items-center justify-content-between">
-                                                    <h4 class="fs-18-pf-display-700">Unblock <span id="unblock_name">Provider</span></h4>
-                                                    <svg class="cursor" data-modal-close xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                                        <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
-                                                        <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                        <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                    </svg>
-                                                </div>
+                                    <div class="row mt-2">
+                                        <!-- <div class="col-lg-1"></div> -->
+                                        <div class="col-lg-12">
+                                            <div class="d-flex align-items-center justify-content-between" style="padding:5px 20px;">
+                                                <h4 class="fs-18-400">Unblock <span id="unblock_name">Provider</span></h4>
+                                                <svg class="cursor" data-modal-close xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                                    <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                                                    <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                    <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                </svg>
                                             </div>
-                                            <div class="col-lg-12">
-                                                <div class="mt-3" style="display:inline-flex; align-items:center; gap:12px; border:1px solid #E2E2E2; border-radius:10px; padding:12px 16px; min-width:100%;">
+                                        </div>
+                                        <div class="col-lg-12">
+
+                                            <div style="padding:5px 20px;">
+
+                                                <p class="fs-12-400-f-color mt-4">
+                                                    You are about to unblock the following provider. You will be able to book with this provider again immediately.
+                                                </p>
+
+                                                <div class="mt-3" style="display:inline-flex; align-items:center; gap:12px;min-width:100%;border-radius: 5px;border: 1px solid #FFF;background: #FFF;padding:10px;">
 
                                                     <div style="width:44px; height:44px; border-radius:50%; overflow:hidden; flex-shrink:0;">
                                                         <img id="unblock_image" src="" style="width:100%; height:100%; object-fit:cover;">
@@ -1769,20 +1530,27 @@
                                                     </div>
 
                                                 </div>
-                                                <br>
-                                                <p class="fs-12-400-f-color text-light mt-3" id="unblock_description"></p>
 
                                             </div>
-                                            <div class="modal-buttons d-flex justify-content-between align-items-center mt-4">
-                                                <button type="button" class="close-btn fs-16-400 text-light cursor" data-modal-close>Cancel</button>
-                                                <button class="update-btn fs-16-600 btn-active-bg text-center cursor" id="unblockConfirmBtn" style="background-color:#3B3731">Unblock</button>
+
+                                            <div class="section-divider"></div>
+
+                                            <div class="modal-buttons d-flex justify-content-end align-items-center gap-10 mt-3" style="padding:0 20px 20px 20px;">
+                                                <button type="button" class="modal-footer-btn close-btn fs-16-400 cursor" data-modal-close>Cancel - keep blocked</button>
+                                                <button type="button" class="modal-footer-btn update-btn fs-16-600 text-center cursor" id="unblockConfirmBtn">Yes, unblock provider</button>
                                             </div>
+
                                         </div>
+
+
                                     </div>
+
                                 </div>
                             </div>
 
                             <script>
+                                let pendingUnblockCard = null;
+
                                 document.querySelectorAll('.unblock-trigger').forEach(btn => {
 
                                     btn.addEventListener('click', function() {
@@ -1790,6 +1558,8 @@
                                         const name = this.dataset.name;
                                         const subname = this.dataset.subname;
                                         const image = this.dataset.image;
+
+                                        pendingUnblockCard = this.closest('.block-user-card');
 
                                         // Title
                                         document.getElementById('unblock_name').textContent = name;
@@ -1799,12 +1569,39 @@
                                         document.getElementById('unblock_subname').textContent = subname;
                                         document.getElementById('unblock_image').src = image;
 
-                                        // Description
-                                        document.getElementById('unblock_description').textContent =
-                                            `${name} will be able to message you and book your services again.`;
-
                                     });
 
+                                });
+
+                                document.getElementById('unblockConfirmBtn').addEventListener('click', function() {
+                                    if (pendingUnblockCard) {
+                                        pendingUnblockCard.remove();
+                                        pendingUnblockCard = null;
+                                    }
+
+                                    const modal = document.getElementById('unblock_users_account_modal');
+                                    if (modal) {
+                                        modal.style.display = 'none';
+                                        if (typeof window.syncBodyScrollLock === 'function') {
+                                            window.syncBodyScrollLock();
+                                        }
+                                    }
+
+                                    // Stay on Privacy & Permissions
+                                    const privacyTab = document.querySelector('[data-tab="privacy_and_permissions"]');
+                                    const privacyPanel = document.getElementById('privacy_and_permissions');
+                                    if (privacyTab && privacyPanel) {
+                                        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+                                        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                                        privacyTab.classList.add('active');
+                                        privacyPanel.classList.add('active');
+                                    }
+                                });
+
+                                document.querySelectorAll('#unblock_users_account_modal [data-modal-close]').forEach(btn => {
+                                    btn.addEventListener('click', function() {
+                                        pendingUnblockCard = null;
+                                    });
                                 });
                             </script>
 
@@ -1877,116 +1674,425 @@
                                     </div>
                                 </div>
 
-                                <div class="account-linking-card d-flex align-items-center justify-content-between mt-4">
+                                <div class="account-linking-card connected d-flex align-items-center justify-content-between mt-4"
+                                    data-provider="Facebook"
+                                    data-connect-label="Connect your Facebook Account"
+                                    data-connected-label="Facebook Connected"
+                                    data-icon="{{ asset('images/social_media/facebook.png') }}">
                                     <div class="image-text d-flex align-items-center gap-10">
                                         <div class="border-and-bg" style="border: none;">
                                             <img src="{{ asset('images/social_media/facebook.png') }}" class="social-icons" alt="">
                                         </div>
                                         <div>
-                                            <p style="color:#9D9B98">Facebook Connected</p>
+                                            <p class="fs-16-600 account-linking-title">Facebook Connected</p>
                                         </div>
                                     </div>
-                                    <div>
-                                        <a href="#" class="small-link-tag cursor" data-modal-open="unlink_facebook_modal">Unlink</a>
+                                    <div class="account-linking-action">
+                                        <a href="#" class="small-link-tag button-background-color cursor unlink-account-trigger"
+                                            data-modal-open="unlink_account_modal">Unlink</a>
                                     </div>
                                 </div>
 
-                                <div class="modal" id="unlink_facebook_modal">
+                                <div class="modal" id="unlink_account_modal">
+                                    <div class="modal-content size">
+                                        <div class="row mt-2">
+                                            <div class="col-lg-12">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <h3 class="fs-18-pf-display-700 mb-0" id="unlink_account_title">Unlink Facebook?</h3>
+                                                    <svg class="cursor" data-modal-close xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                                        <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                                                        <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                        <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-12">
+                                                <div class="unlink-account-pill d-flex align-items-center gap-10 mt-4">
+                                                    <img id="unlink_account_icon" src="{{ asset('images/social_media/facebook.png') }}" class="social-icons" alt="">
+                                                    <div>
+                                                        <p class="fs-12-400-f-color mb-0">Verity Eve</p>
+                                                        <p class="fs-12-400-f-color text-light mb-0">veve@gmail.com</p>
+                                                    </div>
+                                                </div>
+                                                <span class="fs-12-400-f-color text-light d-block mt-4" id="unlink_account_message">You won't be able to sign in with Facebook anymore. You can re-link it anytime from Account Linking.</span>
+                                            </div>
+                                            <div class="modal-buttons d-flex justify-content-between align-items-center mt-4">
+                                                <button type="button" class="close-btn fs-16-400 text-light cursor" data-modal-close>Cancel</button>
+                                                <button type="button" class="update-btn fs-16-600 text-center cursor" style="background-color:#FF6E6E" id="unlinkAccountConfirmBtn">Unlink</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="account-linking-card connected d-flex align-items-center justify-content-between mt-4"
+                                    data-provider="Google"
+                                    data-connect-label="Connect your Google Account"
+                                    data-connected-label="Google Connected"
+                                    data-icon="{{ asset('images/social_media/google.png') }}">
+                                    <div class="image-text d-flex align-items-center gap-10">
+                                        <div class="border-and-bg">
+                                            <img src="{{ asset('images/social_media/google.png') }}" class="social-icons" alt="">
+                                        </div>
+                                        <div>
+                                            <p class="fs-16-600 account-linking-title">Google Connected</p>
+                                        </div>
+                                    </div>
+                                    <div class="account-linking-action">
+                                        <a href="#" class="small-link-tag button-background-color cursor unlink-account-trigger"
+                                            data-modal-open="unlink_account_modal">Unlink</a>
+                                    </div>
+                                </div>
+
+                                <div class="account-linking-card d-flex align-items-center justify-content-between mt-4"
+                                    data-provider="LinkedIn"
+                                    data-connect-label="Connect your LinkedIn Account"
+                                    data-connected-label="LinkedIn Connected"
+                                    data-icon="{{ asset('images/social_media/linkedin.png') }}">
+                                    <div class="image-text d-flex align-items-center gap-10">
+                                        <div class="border-and-bg">
+                                            <img src="{{ asset('images/social_media/linkedin.png') }}" class="social-icons" alt="">
+                                        </div>
+                                        <div>
+                                            <p class="fs-16-600 account-linking-title">Connect your LinkedIn Account</p>
+                                        </div>
+                                    </div>
+                                    <div class="account-linking-action">
+                                        <a href="#" class="small-link-tag link-background-color cursor link-account-trigger"
+                                            data-modal-open="link_account_modal"
+                                            data-provider="LinkedIn"
+                                            data-connected-label="LinkedIn Connected">Link</a>
+                                    </div>
+                                </div>
+
+                                <div class="account-linking-card d-flex align-items-center justify-content-between mt-4"
+                                    data-provider="X"
+                                    data-connect-label="Connect your X Account"
+                                    data-connected-label="X Connected"
+                                    data-icon="{{ asset('images/social_media/twitter.png') }}">
+                                    <div class="image-text d-flex align-items-center gap-10">
+                                        <div class="border-and-bg">
+                                            <img src="{{ asset('images/social_media/twitter.png') }}" class="social-icons" alt="">
+                                        </div>
+                                        <div>
+                                            <p class="fs-16-600 account-linking-title">Connect your X Account</p>
+                                        </div>
+                                    </div>
+                                    <div class="account-linking-action">
+                                        <a href="#" class="small-link-tag link-background-color cursor link-account-trigger"
+                                            data-modal-open="link_account_modal"
+                                            data-provider="X"
+                                            data-connected-label="X Connected">Link</a>
+                                    </div>
+                                </div>
+
+                                <div class="account-linking-card d-flex align-items-center justify-content-between mt-4"
+                                    data-provider="Apple"
+                                    data-connect-label="Connect your Apple Account"
+                                    data-connected-label="Apple Connected"
+                                    data-icon="{{ asset('images/social_media/apple.png') }}">
+                                    <div class="image-text d-flex align-items-center gap-10">
+                                        <div class="border-and-bg">
+                                            <img src="{{ asset('images/social_media/apple.png') }}" class="social-icons" alt="">
+                                        </div>
+                                        <div>
+                                            <p class="fs-16-600 account-linking-title">Connect your Apple Account</p>
+                                        </div>
+                                    </div>
+                                    <div class="account-linking-action">
+                                        <a href="#" class="small-link-tag link-background-color cursor link-account-trigger"
+                                            data-modal-open="link_account_modal"
+                                            data-provider="Apple"
+                                            data-connected-label="Apple Connected">Link</a>
+                                    </div>
+                                </div>
+
+                                <!-- Link Account Modal -->
+                                <div class="modal" id="link_account_modal">
+                                    <div class="modal-content size">
+                                        <div class="row mt-2">
+                                            <div class="col-lg-12">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <h3 class="fs-18-pf-display-700 mb-0" id="link_account_title">Link your Facebook account</h3>
+                                                    <svg class="cursor" id="linkAccountCloseBtn" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                                        <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                                                        <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                        <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-12 mt-4">
+                                                <p class="fs-12-400-f-color text-light mb-3">FursGo will be able to:</p>
+                                                <div class="link-permissions-list">
+                                                    <div class="link-permission-item">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="10" viewBox="0 0 12 10" fill="none">
+                                                            <path d="M0.75 6.20455L3.25 8.75L10.75 0.75" stroke="#A2C35D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                        </svg>
+                                                        <span class="fs-12-400-f-color">See your name and profile photo</span>
+                                                    </div>
+                                                    <div class="link-permission-item">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="10" viewBox="0 0 12 10" fill="none">
+                                                            <path d="M0.75 6.20455L3.25 8.75L10.75 0.75" stroke="#A2C35D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                        </svg>
+                                                        <span class="fs-12-400-f-color">Use your email address to sign you in</span>
+                                                    </div>
+                                                </div>
+                                                <div class="link-privacy-note">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="21" viewBox="0 0 15 16" fill="none">
+                                                        <path d="M2.61765 3.5V2.40909C2.61765 0.903091 3.20071 0.5 4.5 0.5C5.79929 0.5 6.38235 0.903091 6.38235 2.40909V3.5M0.5 7.75455V5.24545C0.5 4.63455 0.5 4.32909 0.602588 4.09618C0.692741 3.89072 0.836725 3.72364 1.01388 3.61891C1.21529 3.50055 1.47882 3.50055 2.00588 3.50055H6.99412C7.52118 3.50055 7.78471 3.50055 7.98612 3.61891C8.1632 3.7235 8.30718 3.89038 8.39741 4.09564C8.5 4.32909 8.5 4.63455 8.5 5.24545V7.75455C8.5 8.36545 8.5 8.67091 8.39741 8.90436C8.30718 9.10962 8.1632 9.2765 7.98612 9.38109C7.78471 9.5 7.52118 9.5 6.99412 9.5H2.00588C1.47882 9.5 1.21529 9.5 1.01388 9.38109C0.836797 9.2765 0.692821 9.10962 0.602588 8.90436C0.5 8.67146 0.5 8.366 0.5 7.75455Z" stroke="#9D9B98" stroke-linecap="round" stroke-linejoin="round" />
+                                                    </svg>
+                                                    <span id="link_account_privacy">FursGo never posts to Facebook and can't see your password.</span>
+                                                </div>
+                                            </div>
+                                            <div class="modal-buttons d-flex justify-content-between align-items-center mt-4">
+                                                <button type="button" class="close-btn fs-16-400 text-light cursor" id="linkAccountCancelBtn">Cancel</button>
+                                                <button type="button" class="update-btn fs-16-600 text-center cursor link-continue-btn" id="linkAccountContinueBtn">Continue</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Account Linked Success Modal -->
+                                <div class="modal" id="account_linked_modal">
+                                    <div class="modal-content size">
+                                        <div class="row mt-2">
+                                            <div class="col-lg-12">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <h3 class="fs-18-pf-display-700 mb-0" id="account_linked_title">Facebook linked</h3>
+                                                    <svg class="cursor" data-modal-close xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                                        <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                                                        <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                        <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-12 mt-3">
+                                                <p class="fs-12-400-f-color text-light mb-3" id="account_linked_subtitle">You can now sign in to FursGo with Facebook.</p>
+                                                <div class="linked-account-card">
+                                                    <div class="d-flex align-items-center gap-10">
+                                                        <div class="linked-account-avatar">VE</div>
+                                                        <div>
+                                                            <p class="fs-14-600-f-color mb-0">Verity Eve</p>
+                                                            <p class="fs-12-400-f-color text-light mb-0">veve@gmail.com</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="linked-account-status">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="10" viewBox="0 0 12 10" fill="none">
+                                                            <path d="M0.75 6.20455L3.25 8.75L10.75 0.75" stroke="#A2C35D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                        </svg>
+                                                        Connected
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-buttons d-flex justify-content-center align-items-center mt-4">
+                                                <button type="button" class="update-btn fs-16-600 text-center cursor linked-done-btn" id="accountLinkedDoneBtn">Done</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Linking didn't finish Modal -->
+                                <div class="modal" id="link_incomplete_modal">
                                     <div class="modal-content size">
                                         <div class="container">
                                             <div class="row mt-2">
                                                 <div class="col-lg-12">
-                                                    <div class="d-flex align-items-center justify-content-between">
-                                                        <h3 class="fs-18-pf-display-700 mb-0">Unlink Facebook?</h3>
-                                                        <svg class="cursor" data-modal-close xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
-                                                            <path d="M13.1465 13.24L10.0001 10.0936L13.0937 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                            <path d="M7.09375 13.24L10.2402 10.0936L7.14657 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-12">
-                                                    <div class="unlink-account-pill d-flex align-items-center gap-10 mt-4">
-                                                        <img src="{{ asset('images/social_media/facebook.png') }}" class="social-icons" alt="Facebook">
-                                                        <div>
-                                                            <p class="normal-font-bold mb-0">Facebook</p>
-                                                            <p class="fs-12-400-f-color text-light mb-0">username@example.com</p>
+                                                    <div class="link-incomplete-content">
+                                                        <div class="link-incomplete-icon">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none">
+                                                                <path d="M22 30H22.016M22 14V24M42 22C42 10.954 33.046 2 22 2C10.954 2 2 10.954 2 22C2 33.046 10.954 42 22 42C33.046 42 42 33.046 42 22Z" stroke="#FF6E6E" stroke-width="4" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
+                                                            </svg>
                                                         </div>
+                                                        <h3 class="fs-18-pf-display-700">Linking didn't finish</h3>
+                                                        <p class="fs-12-400-f-color text-light link-incomplete-message" id="link_incomplete_message">
+                                                            You cancelled before finishing, or LinkedIn didn't respond. Nothing was linked — you can try again anytime.
+                                                        </p>
                                                     </div>
-                                                    <span class="fs-12-400-f-color text-light d-block mt-4">You won't be able to sign in with Facebook anymore. You can re-link it anytime from Account Linking.</span>
                                                 </div>
-                                                <div class="modal-buttons d-flex justify-content-between align-items-center mt-4">
-                                                    <button type="button" class="close-btn fs-16-400 text-light cursor" data-modal-close>Cancel</button>
-                                                    <button type="button" class="update-btn fs-16-600 text-center cursor" style="background-color:#FF6E6E" data-modal-close>Unlink</button>
+                                                <div class="modal-buttons d-flex justify-content-center align-items-center mt-4">
+                                                    <button type="button" class="update-btn fs-16-600 text-center cursor link-incomplete-done-btn" id="linkIncompleteDoneBtn">Done</button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="account-linking-card d-flex align-items-center justify-content-between mt-4">
-                                    <div class="image-text d-flex align-items-center gap-10">
-                                        <div class="border-and-bg">
-                                            <img src="{{ asset('images/social_media/google.png') }}" class="social-icons" alt="">
-                                        </div>
-                                        <div>
-                                            <p>Connect your Google Account</p>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <a href="" class="small-link-tag">Unlink</a>
-                                    </div>
-                                </div>
+                                <script>
+                                    (function() {
+                                        let pendingLinkCard = null;
+                                        let pendingUnlinkCard = null;
+                                        let pendingProvider = 'Facebook';
+                                        let pendingConnectedLabel = 'Facebook Connected';
 
-                                <div class="section-divider mt-4" style="background-color: #E2E2E2"></div>
+                                        function setAccountTabActive() {
+                                            const accountTab = document.querySelector('[data-tab="account_linking"]');
+                                            const accountPanel = document.getElementById('account_linking');
+                                            if (!accountTab || !accountPanel) return;
 
-                                <div class="account-linking-card d-flex align-items-center justify-content-between mt-4">
-                                    <div class="image-text d-flex align-items-center gap-10">
-                                        <div class="border-and-bg">
-                                            <img src="{{ asset('images/social_media/linkedin.png') }}" class="social-icons" alt="">
-                                        </div>
-                                        <div>
-                                            <p>Connect your LinkedIn Account</p>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <a href="" class="small-link-tag">Unlink</a>
-                                    </div>
-                                </div>
+                                            document.querySelectorAll('.tab-btn').forEach(function(t) {
+                                                t.classList.remove('active');
+                                            });
+                                            document.querySelectorAll('.tab-panel').forEach(function(p) {
+                                                p.classList.remove('active');
+                                            });
+                                            accountTab.classList.add('active');
+                                            accountPanel.classList.add('active');
+                                        }
 
-                                <div class="section-divider mt-4" style="background-color: #E2E2E2"></div>
+                                        function markCardConnected(card, provider, connectedLabel) {
+                                            card.classList.add('connected');
 
-                                <div class="account-linking-card d-flex align-items-center justify-content-between mt-4">
-                                    <div class="image-text d-flex align-items-center gap-10">
-                                        <div class="border-and-bg">
-                                            <img src="{{ asset('images/social_media/twitter.png') }}" class="social-icons" alt="">
-                                        </div>
-                                        <div>
-                                            <p>Connect your X Account</p>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <a href="" class="small-link-tag">Unlink</a>
-                                    </div>
-                                </div>
+                                            const title = card.querySelector('.account-linking-title');
+                                            if (title) title.textContent = connectedLabel;
 
-                                <div class="section-divider mt-4" style="background-color: #E2E2E2"></div>
+                                            const actionWrap = card.querySelector('.account-linking-action');
+                                            if (actionWrap) {
+                                                actionWrap.innerHTML =
+                                                    '<a href="#" class="small-link-tag button-background-color cursor unlink-account-trigger" data-modal-open="unlink_account_modal">Unlink</a>';
+                                            }
+                                        }
 
-                                <div class="account-linking-card d-flex align-items-center justify-content-between mt-4">
-                                    <div class="image-text d-flex align-items-center gap-10">
-                                        <div class="border-and-bg">
-                                            <img src="{{ asset('images/social_media/apple.png') }}" class="social-icons" alt="">
-                                        </div>
-                                        <div>
-                                            <p>Connect your Apple Account</p>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <a href="" class="small-link-tag">Unlink</a>
-                                    </div>
-                                </div>
+                                        function markCardDisconnected(card) {
+                                            const provider = card.dataset.provider || 'Account';
+                                            const connectLabel = card.dataset.connectLabel || ('Connect your ' + provider + ' Account');
+                                            const connectedLabel = card.dataset.connectedLabel || (provider + ' Connected');
 
-                                <div class="section-divider mt-4" style="background-color: #E2E2E2"></div>
+                                            card.classList.remove('connected');
+
+                                            const title = card.querySelector('.account-linking-title');
+                                            if (title) title.textContent = connectLabel;
+
+                                            const actionWrap = card.querySelector('.account-linking-action');
+                                            if (actionWrap) {
+                                                actionWrap.innerHTML =
+                                                    '<a href="#" class="small-link-tag link-background-color cursor link-account-trigger" ' +
+                                                    'data-modal-open="link_account_modal" ' +
+                                                    'data-provider="' + provider + '" ' +
+                                                    'data-connected-label="' + connectedLabel + '">Link</a>';
+                                            }
+                                        }
+
+                                        // Use delegation so Link/Unlink still work after cards are swapped
+                                        document.getElementById('account_linking').addEventListener('click', function(e) {
+                                            const linkBtn = e.target.closest('.link-account-trigger');
+                                            if (linkBtn) {
+                                                e.preventDefault();
+                                                pendingLinkCard = linkBtn.closest('.account-linking-card');
+                                                pendingProvider = linkBtn.dataset.provider || pendingLinkCard.dataset.provider || 'Facebook';
+                                                pendingConnectedLabel = linkBtn.dataset.connectedLabel ||
+                                                    pendingLinkCard.dataset.connectedLabel ||
+                                                    (pendingProvider + ' Connected');
+
+                                                document.getElementById('link_account_title').textContent = 'Link your ' + pendingProvider + ' account';
+                                                document.getElementById('link_account_privacy').textContent =
+                                                    "FursGo never posts to " + pendingProvider + " and can't see your password.";
+                                                return;
+                                            }
+
+                                            const unlinkBtn = e.target.closest('.unlink-account-trigger');
+                                            if (unlinkBtn) {
+                                                e.preventDefault();
+                                                pendingUnlinkCard = unlinkBtn.closest('.account-linking-card');
+                                                const provider = pendingUnlinkCard.dataset.provider || 'Account';
+                                                const icon = pendingUnlinkCard.dataset.icon || '';
+
+                                                document.getElementById('unlink_account_title').textContent = 'Unlink ' + provider + '?';
+                                                document.getElementById('unlink_account_message').textContent =
+                                                    "You won't be able to sign in with " + provider + " anymore. You can re-link it anytime from Account Linking.";
+
+                                                const iconEl = document.getElementById('unlink_account_icon');
+                                                if (iconEl && icon) {
+                                                    iconEl.src = icon;
+                                                    iconEl.alt = provider;
+                                                }
+                                            }
+                                        });
+
+                                        document.getElementById('linkAccountContinueBtn').addEventListener('click', function(e) {
+                                            e.preventDefault();
+                                            const linkModal = document.getElementById('link_account_modal');
+                                            const linkedModal = document.getElementById('account_linked_modal');
+
+                                            document.getElementById('account_linked_title').textContent = pendingProvider + ' linked';
+                                            document.getElementById('account_linked_subtitle').textContent =
+                                                'You can now sign in to FursGo with ' + pendingProvider + '.';
+
+                                            if (linkModal) linkModal.style.display = 'none';
+                                            if (linkedModal) linkedModal.style.display = 'flex';
+                                            if (typeof window.syncBodyScrollLock === 'function') {
+                                                window.syncBodyScrollLock();
+                                            }
+                                        });
+
+                                        function openLinkIncompleteModal() {
+                                            const linkModal = document.getElementById('link_account_modal');
+                                            const incompleteModal = document.getElementById('link_incomplete_modal');
+
+                                            document.getElementById('link_incomplete_message').textContent =
+                                                'You cancelled before finishing, or ' + pendingProvider +
+                                                " didn't respond. Nothing was linked — you can try again anytime.";
+
+                                            if (linkModal) linkModal.style.display = 'none';
+                                            if (incompleteModal) incompleteModal.style.display = 'flex';
+                                            if (typeof window.syncBodyScrollLock === 'function') {
+                                                window.syncBodyScrollLock();
+                                            }
+                                        }
+
+                                        document.getElementById('linkAccountCancelBtn').addEventListener('click', function(e) {
+                                            e.preventDefault();
+                                            openLinkIncompleteModal();
+                                        });
+
+                                        document.getElementById('linkAccountCloseBtn').addEventListener('click', function(e) {
+                                            e.preventDefault();
+                                            openLinkIncompleteModal();
+                                        });
+
+                                        document.getElementById('linkIncompleteDoneBtn').addEventListener('click', function(e) {
+                                            e.preventDefault();
+                                            pendingLinkCard = null;
+
+                                            const incompleteModal = document.getElementById('link_incomplete_modal');
+                                            if (incompleteModal) incompleteModal.style.display = 'none';
+                                            if (typeof window.syncBodyScrollLock === 'function') {
+                                                window.syncBodyScrollLock();
+                                            }
+                                            setAccountTabActive();
+                                        });
+
+                                        document.getElementById('accountLinkedDoneBtn').addEventListener('click', function(e) {
+                                            e.preventDefault();
+
+                                            if (pendingLinkCard) {
+                                                markCardConnected(pendingLinkCard, pendingProvider, pendingConnectedLabel);
+                                                pendingLinkCard = null;
+                                            }
+
+                                            const linkedModal = document.getElementById('account_linked_modal');
+                                            if (linkedModal) linkedModal.style.display = 'none';
+                                            if (typeof window.syncBodyScrollLock === 'function') {
+                                                window.syncBodyScrollLock();
+                                            }
+                                            setAccountTabActive();
+                                        });
+
+                                        document.getElementById('unlinkAccountConfirmBtn').addEventListener('click', function(e) {
+                                            e.preventDefault();
+
+                                            if (pendingUnlinkCard) {
+                                                markCardDisconnected(pendingUnlinkCard);
+                                                pendingUnlinkCard = null;
+                                            }
+
+                                            const unlinkModal = document.getElementById('unlink_account_modal');
+                                            if (unlinkModal) unlinkModal.style.display = 'none';
+                                            if (typeof window.syncBodyScrollLock === 'function') {
+                                                window.syncBodyScrollLock();
+                                            }
+                                            setAccountTabActive();
+                                        });
+                                    })();
+                                </script>
 
                             </div>
 
@@ -1999,7 +2105,7 @@
 
                                     <div class="d-flex align-items-center justify-content-between gap-25">
                                         <p style="color: #9D9B98">Download a copy of your account data.</p>
-                                        <a href="" class="small-link-tag">Download Account Data</a>
+                                        <a href="{{ route('account-settings.download-data') }}" class="download-account-data small-link-tag">Download Account Data</a>
                                     </div>
                                 </div>
 
@@ -2008,7 +2114,7 @@
 
                                     <div class="d-flex align-items-center justify-content-between gap-25">
                                         <p style="color: #9D9B98">Remove all stored personal data.</p>
-                                        <a class="small-link-tag cursor" data-modal-open="delete_data_modal" id="deleteDataTrigger">
+                                        <a class="delete-account-data small-link-tag cursor" data-modal-open="delete_data_modal" id="deleteDataTrigger">
                                             Delete Personal Data
                                         </a>
                                     </div>
