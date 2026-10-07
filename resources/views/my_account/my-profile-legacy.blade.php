@@ -62,7 +62,7 @@
                             </svg>
                             Edit Profile
                         </a>
-                        <a href="{{ rtrim(asset(''), '/') }}/my_bookings/my_bookings.php" class="profile-card__btn profile-card__btn--primary">
+                        <a href="{{ rtrim(asset(''), '/') }}/my_bookings" class="profile-card__btn profile-card__btn--primary">
                             View Bookings
                         </a>
                     </div>
@@ -135,7 +135,7 @@
                             <div class="overview-section">
                                 <div class="overview-section__head">
                                     <h3>Upcoming bookings</h3>
-                                    <a href="{{ rtrim(asset(''), '/') }}/my_bookings/my_bookings.php" class="overview-link">View Bookings →</a>
+                                    <a href="{{ rtrim(asset(''), '/') }}/my_bookings" class="overview-link">View Bookings →</a>
                                 </div>
 
                                 <div class="upcoming-list">
@@ -1056,4 +1056,3 @@
     <script src="{{ asset('js/my_account/my_reviews.js') }}"></script>
     <script src="{{ asset('js/my_account/my_rewards.js') }}"></script>
 @endpush
-

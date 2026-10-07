@@ -104,10 +104,10 @@ $favSpaceFeatures = '
                         <p class="fav-card__quote">"Hands down the best groomer we've tried. The studio is spotless..."</p>
                         <div class="fav-card__price-row">
                             <p class="fav-card__price">From <strong>£38</strong></p>
-                            <a class="fav-card__go" href="{{ rtrim(asset(''), '/') }}/profiles/groomer/groomer_profile.php" aria-label="View profile"><?= $favArrow ?></a>
+                            <a class="fav-card__go" href="{{ rtrim(asset(''), '/') }}/profiles/groomer/groomer_profile" aria-label="View profile"><?= $favArrow ?></a>
                         </div>
                     </div>
-                    <a class="fav-card__cta fav-card__cta--book" href="{{ rtrim(asset(''), '/') }}/profiles/groomer/groomer_profile.php#booking-sidebar"><?= $favBookIcon ?> Book Again</a>
+                    <a class="fav-card__cta fav-card__cta--book" href="{{ rtrim(asset(''), '/') }}/profiles/groomer/groomer_profile#booking-sidebar"><?= $favBookIcon ?> Book Again</a>
                     <div class="fav-card__confirm" hidden>
                         <div>
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="22" viewBox="0 0 24 22" fill="none">
@@ -151,10 +151,10 @@ $favSpaceFeatures = '
                         <p class="fav-card__quote">"Such a calming experience for my anxious pup. Cathy is amazing!"</p>
                         <div class="fav-card__price-row">
                             <p class="fav-card__price">From <strong>£42</strong></p>
-                            <a class="fav-card__go" href="{{ rtrim(asset(''), '/') }}/profiles/groomer/groomer_profile.php" aria-label="View profile"><?= $favArrow ?></a>
+                            <a class="fav-card__go" href="{{ rtrim(asset(''), '/') }}/profiles/groomer/groomer_profile" aria-label="View profile"><?= $favArrow ?></a>
                         </div>
                     </div>
-                    <a class="fav-card__cta fav-card__cta--view" href="{{ rtrim(asset(''), '/') }}/profiles/groomer/groomer_profile.php"><?= $favArrow ?> View Profile</a>
+                    <a class="fav-card__cta fav-card__cta--view" href="{{ rtrim(asset(''), '/') }}/profiles/groomer/groomer_profile"><?= $favArrow ?> View Profile</a>
                     <div class="fav-card__confirm" hidden>
                         <div>
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="22" viewBox="0 0 24 22" fill="none">
@@ -197,10 +197,10 @@ $favSpaceFeatures = '
                         <p class="fav-card__quote">"Comes to our door and my dog looks fabulous every time."</p>
                         <div class="fav-card__price-row">
                             <p class="fav-card__price">From <strong>£45</strong></p>
-                            <a class="fav-card__go" href="{{ rtrim(asset(''), '/') }}/profiles/groomer/groomer_profile.php" aria-label="View profile"><?= $favArrow ?></a>
+                            <a class="fav-card__go" href="{{ rtrim(asset(''), '/') }}/profiles/groomer/groomer_profile" aria-label="View profile"><?= $favArrow ?></a>
                         </div>
                     </div>
-                    <a class="fav-card__cta fav-card__cta--book" href="{{ rtrim(asset(''), '/') }}/profiles/groomer/groomer_profile.php#booking-sidebar"><?= $favBookIcon ?> Book Again</a>
+                    <a class="fav-card__cta fav-card__cta--book" href="{{ rtrim(asset(''), '/') }}/profiles/groomer/groomer_profile#booking-sidebar"><?= $favBookIcon ?> Book Again</a>
                     <div class="fav-card__confirm" hidden>
                         <div>
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="22" viewBox="0 0 24 22" fill="none">
@@ -243,10 +243,10 @@ $favSpaceFeatures = '
                         <p class="fav-card__quote">"Reliable home visits — my dog settles quickly with Ken."</p>
                         <div class="fav-card__price-row">
                             <p class="fav-card__price">From <strong>£40</strong></p>
-                            <a class="fav-card__go" href="{{ rtrim(asset(''), '/') }}/profiles/groomer/groomer_profile.php" aria-label="View profile"><?= $favArrow ?></a>
+                            <a class="fav-card__go" href="{{ rtrim(asset(''), '/') }}/profiles/groomer/groomer_profile" aria-label="View profile"><?= $favArrow ?></a>
                         </div>
                     </div>
-                    <a class="fav-card__cta fav-card__cta--view" href="{{ rtrim(asset(''), '/') }}/profiles/groomer/groomer_profile.php"><?= $favArrow ?> View Profile</a>
+                    <a class="fav-card__cta fav-card__cta--view" href="{{ rtrim(asset(''), '/') }}/profiles/groomer/groomer_profile"><?= $favArrow ?> View Profile</a>
                     <div class="fav-card__confirm" hidden>
                         <div>
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="22" viewBox="0 0 24 22" fill="none">
@@ -310,10 +310,10 @@ $favSpaceFeatures = '
                         <?= $favSpaceFeatures ?>
                         <div class="fav-card__price-row">
                             <p class="fav-card__price">From <strong>£28</strong> / hour</p>
-                            <a class="fav-card__go" href="{{ rtrim(asset(''), '/') }}/profiles/space/space_profile.php" aria-label="View profile"><?= $favArrow ?></a>
+                            <a class="fav-card__go" href="{{ rtrim(asset(''), '/') }}/profiles/space/space_profile" aria-label="View profile"><?= $favArrow ?></a>
                         </div>
                     </div>
-                    <a class="fav-card__cta fav-card__cta--book" href="{{ rtrim(asset(''), '/') }}/profiles/space/space_profile.php"><?= $favBookIcon ?> Book Again</a>
+                    <a class="fav-card__cta fav-card__cta--book" href="{{ rtrim(asset(''), '/') }}/profiles/space/space_profile"><?= $favBookIcon ?> Book Again</a>
                     <div class="fav-card__confirm" hidden>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="22" viewBox="0 0 24 22" fill="none">
                             <path d="M20.5981 21H2.6817C2.3907 20.9999 2.1047 20.9244 1.85164 20.7807C1.59858 20.6371 1.38712 20.4302 1.23792 20.1804C1.08872 19.9306 1.00688 19.6463 1.00042 19.3554C0.993947 19.0645 1.06306 18.7768 1.20101 18.5206L10.1587 1.88463C10.7942 0.705125 12.4856 0.705125 13.1211 1.88463L22.0788 18.5206C22.2168 18.7768 22.2859 19.0645 22.2794 19.3554C22.2729 19.6463 22.1911 19.9306 22.0419 20.1804C21.8927 20.4302 21.6812 20.6371 21.4282 20.7807C21.1751 20.9244 20.8891 20.9999 20.5981 21Z" stroke="#FF6E6E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -355,10 +355,10 @@ $favSpaceFeatures = '
                         <?= $favSpaceFeatures ?>
                         <div class="fav-card__price-row">
                             <p class="fav-card__price">From <strong>£22</strong> / hour</p>
-                            <a class="fav-card__go" href="{{ rtrim(asset(''), '/') }}/profiles/space/space_profile.php" aria-label="View profile"><?= $favArrow ?></a>
+                            <a class="fav-card__go" href="{{ rtrim(asset(''), '/') }}/profiles/space/space_profile" aria-label="View profile"><?= $favArrow ?></a>
                         </div>
                     </div>
-                    <a class="fav-card__cta fav-card__cta--view" href="{{ rtrim(asset(''), '/') }}/profiles/space/space_profile.php"><?= $favArrow ?> View Profile</a>
+                    <a class="fav-card__cta fav-card__cta--view" href="{{ rtrim(asset(''), '/') }}/profiles/space/space_profile"><?= $favArrow ?> View Profile</a>
                     <div class="fav-card__confirm" hidden>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="22" viewBox="0 0 24 22" fill="none">
                             <path d="M20.5981 21H2.6817C2.3907 20.9999 2.1047 20.9244 1.85164 20.7807C1.59858 20.6371 1.38712 20.4302 1.23792 20.1804C1.08872 19.9306 1.00688 19.6463 1.00042 19.3554C0.993947 19.0645 1.06306 18.7768 1.20101 18.5206L10.1587 1.88463C10.7942 0.705125 12.4856 0.705125 13.1211 1.88463L22.0788 18.5206C22.2168 18.7768 22.2859 19.0645 22.2794 19.3554C22.2729 19.6463 22.1911 19.9306 22.0419 20.1804C21.8927 20.4302 21.6812 20.6371 21.4282 20.7807C21.1751 20.9244 20.8891 20.9999 20.5981 21Z" stroke="#FF6E6E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -400,10 +400,10 @@ $favSpaceFeatures = '
                         <?= $favSpaceFeatures ?>
                         <div class="fav-card__price-row">
                             <p class="fav-card__price">From <strong>£35</strong> / hour</p>
-                            <a class="fav-card__go" href="{{ rtrim(asset(''), '/') }}/profiles/space/space_profile.php" aria-label="View profile"><?= $favArrow ?></a>
+                            <a class="fav-card__go" href="{{ rtrim(asset(''), '/') }}/profiles/space/space_profile" aria-label="View profile"><?= $favArrow ?></a>
                         </div>
                     </div>
-                    <a class="fav-card__cta fav-card__cta--book" href="{{ rtrim(asset(''), '/') }}/profiles/space/space_profile.php"><?= $favBookIcon ?> Book Again</a>
+                    <a class="fav-card__cta fav-card__cta--book" href="{{ rtrim(asset(''), '/') }}/profiles/space/space_profile"><?= $favBookIcon ?> Book Again</a>
                     <div class="fav-card__confirm" hidden>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="22" viewBox="0 0 24 22" fill="none">
                             <path d="M20.5981 21H2.6817C2.3907 20.9999 2.1047 20.9244 1.85164 20.7807C1.59858 20.6371 1.38712 20.4302 1.23792 20.1804C1.08872 19.9306 1.00688 19.6463 1.00042 19.3554C0.993947 19.0645 1.06306 18.7768 1.20101 18.5206L10.1587 1.88463C10.7942 0.705125 12.4856 0.705125 13.1211 1.88463L22.0788 18.5206C22.2168 18.7768 22.2859 19.0645 22.2794 19.3554C22.2729 19.6463 22.1911 19.9306 22.0419 20.1804C21.8927 20.4302 21.6812 20.6371 21.4282 20.7807C21.1751 20.9244 20.8891 20.9999 20.5981 21Z" stroke="#FF6E6E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />

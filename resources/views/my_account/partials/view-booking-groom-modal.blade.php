@@ -184,15 +184,15 @@
                                         </div>
 
                                         <div class="bd-footer">
-                                            <a href="{{ rtrim(asset(''), '/') }}/my_bookings/cancelled_bookings.php" class="bd-cancel-link">Cancel Booking</a>
+                                            <a href="{{ rtrim(asset(''), '/') }}/my_bookings/cancelled_bookings" class="bd-cancel-link">Cancel Booking</a>
                                             <div class="bd-footer-actions">
-                                                <a href="{{ rtrim(asset(''), '/') }}/messages_notification/messages.php" class="bd-btn bd-btn-message">
+                                                <a href="{{ rtrim(asset(''), '/') }}/messages_notification/messages" class="bd-btn bd-btn-message">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 16 15" fill="none">
                                                         <path d="M8 0.5C12.2044 0.5 15.5 3.48321 15.5 7.03223C15.5 10.4703 12.4072 13.3772 8.3916 13.5557L8 13.5645H7.99902C7.251 13.5661 6.50584 13.4687 5.7832 13.2744L5.59766 13.2246L5.42676 13.3115C5.00713 13.5247 4.13103 13.9084 2.72363 14.2393L2.08691 14.377C1.99742 14.3948 1.9071 14.4082 1.81738 14.4248C1.85085 14.3352 1.88498 14.2458 1.91602 14.1553L1.91895 14.1455C2.17667 13.3938 2.38924 12.5229 2.46777 11.7012L2.49023 11.4678L2.3252 11.3008C1.18119 10.1487 0.500003 8.65476 0.5 7.03223C0.5 3.48321 3.79561 0.5 8 0.5Z" stroke="#3B3731" />
                                                     </svg>
                                                     Message groomer
                                                 </a>
-                                                <a href="{{ rtrim(asset(''), '/') }}/my_bookings/change_groomer_booking.php" class="bd-btn bd-btn-change">
+                                                <a href="{{ rtrim(asset(''), '/') }}/my_bookings/change_groomer_booking" class="bd-btn bd-btn-change">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                                                         <path d="M2.23096 15.4953V12.6124H5.11378" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
                                                         <path d="M15.3656 6.62252C15.6715 8.25452 15.4269 9.94189 14.6702 11.4199C13.9135 12.8978 12.6875 14.0827 11.1846 14.7887C9.68175 15.4946 7.98704 15.6817 6.3664 15.3204C4.74575 14.9592 3.2909 14.0701 2.23013 12.7927M0.628303 9.37748C0.322432 7.74548 0.567036 6.05811 1.32373 4.58014C2.08043 3.10218 3.3064 1.91725 4.80927 1.2113C6.31214 0.505355 8.00686 0.318331 9.6275 0.679579C11.2481 1.04083 12.703 1.9299 13.7638 3.2073" stroke="white" stroke-linecap="round" stroke-linejoin="round" />
@@ -205,4 +205,3 @@
                                     </div>
                                 </div>
                             </div>
-

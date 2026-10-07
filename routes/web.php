@@ -128,29 +128,18 @@ Route::get('/checkout_booking_groomer_space', fn() => VoltPage::render('checkout
 // My Bookings (design shell — custom PHP URL parity)
 Route::get('/my_bookings', fn() => VoltPage::render('my-bookings.index'))
     ->name('my-bookings');
-Route::get('/my_bookings/my_bookings.php', fn() => VoltPage::render('my-bookings.index'))
-    ->name('my-bookings.php');
 
 // Messages (imported static page from D:\fursgo\messages_notification — custom PHP URL parity)
-Route::get('/messages_notification/messages.php', function () {
-    return view('messages_notification.messages-legacy');
-})->name('messages_notification.messages.php');
 Route::get('/messages_notification/messages', function () {
     return view('messages_notification.messages-legacy');
 })->name('messages_notification.messages');
 
 // Notifications (imported static page from D:\\fursgo\\messages_notification — custom PHP URL parity)
-Route::get('/messages_notification/notifications.php', function () {
-    return view('messages_notification.notifications-legacy');
-})->name('messages_notification.notifications.php');
 Route::get('/messages_notification/notifications', function () {
     return view('messages_notification.notifications-legacy');
 })->name('messages_notification.notifications');
 
 // My Account profile (imported static page from D:\\fursgo\\my_account — custom PHP URL parity)
-Route::get('/my_account/my_profile.php', function () {
-    return view('my_account.my-profile-legacy');
-})->name('my_account.my_profile.php');
 Route::get('/my_account/my_profile', function () {
     return view('my_account.my-profile-legacy');
 })->name('my_account.my_profile');

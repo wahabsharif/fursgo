@@ -616,7 +616,7 @@
       );
       bookingLink.href =
         detail.bookingUrl ||
-        `${config.baseUrl || ""}my_bookings/my_bookings.php`;
+        `${config.baseUrl || ""}my_bookings`;
     }
 
     if (bookingIcon) {
