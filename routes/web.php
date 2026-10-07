@@ -147,6 +147,14 @@ Route::get('/messages_notification/notifications', function () {
     return view('messages_notification.notifications-legacy');
 })->name('messages_notification.notifications');
 
+// My Account profile (imported static page from D:\\fursgo\\my_account — custom PHP URL parity)
+Route::get('/my_account/my_profile.php', function () {
+    return view('my_account.my-profile-legacy');
+})->name('my_account.my_profile.php');
+Route::get('/my_account/my_profile', function () {
+    return view('my_account.my-profile-legacy');
+})->name('my_account.my_profile');
+
 Route::get('/my-account/pet-owner-profile', fn() => VoltPage::render('account.profile'))
     ->middleware([EnsureWebOrGroomerSpacerAuthenticated::class])
     ->name('pet-owner-profile');
