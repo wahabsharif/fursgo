@@ -706,7 +706,7 @@
       if (btn && !btn.disabled) {
         // alert('Payment processing demo — booking confirmed!');
         window.location.href =
-          baseUrl + "/booking-groomer/booking_groomer_confirmed.php";
+          baseUrl + "/booking-groomer/booking_groomer_confirmed";
       }
     });
 

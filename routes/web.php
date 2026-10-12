@@ -75,11 +75,13 @@ Route::middleware([SetBusinessPageWebShell::class])->group(function () {
     Route::get('/support-and-assistance/search', fn() => VoltPage::render('help.search'))->name('search');
     Route::get('/search-results', fn() => VoltPage::render('search.results'))->name('search-results');
 });
-Route::redirect('/business/support-and-assistance/help-and-support', '/support-and-assistance/help-and-support');
+Route::redirect('/business/support-and-assistance/help-and-support', '/support_and_assistance/help_and_support');
 Route::redirect('/business/support-and-assistance/search', '/support-and-assistance/search');
 Route::redirect('/business/business-homepage-groomer-space-owner', '/business-homepage-groomer-space-owner');
 
-Route::get('/support-and-assistance/help-and-support', function () {
+Route::redirect('/support-and-assistance/help-and-support', '/support_and_assistance/help_and_support');
+
+Route::get('/support_and_assistance/help_and_support', function () {
     // Previous Livewire Help Centre (kept intact — switch back by uncommenting below):
     // BusinessPageShell::applyFromRequest();
     // $component = BusinessPageShell::resolveComponent('help.support-business-hub', 'help.support');
@@ -128,8 +130,21 @@ Route::get('/checkout_booking_groomer_space', fn() => VoltPage::render('checkout
 // My Bookings (design shell — custom PHP URL parity)
 Route::get('/my_bookings', fn() => VoltPage::render('my-bookings.index'))
     ->name('my-bookings');
-Route::get('/my_bookings/my_bookings.php', fn() => VoltPage::render('my-bookings.index'))
-    ->name('my-bookings.php');
+
+// Messages (imported static page from D:\fursgo\messages_notification — custom PHP URL parity)
+Route::get('/messages_notification/messages', function () {
+    return view('messages_notification.messages-legacy');
+})->name('messages_notification.messages');
+
+// Notifications (imported static page from D:\\fursgo\\messages_notification — custom PHP URL parity)
+Route::get('/messages_notification/notifications', function () {
+    return view('messages_notification.notifications-legacy');
+})->name('messages_notification.notifications');
+
+// My Account profile (imported static page from D:\\fursgo\\my_account — custom PHP URL parity)
+Route::get('/my_account/my_profile', function () {
+    return view('my_account.my-profile-legacy');
+})->name('my_account.my_profile');
 
 Route::get('/my-account/pet-owner-profile', fn() => VoltPage::render('account.profile'))
     ->middleware([EnsureWebOrGroomerSpacerAuthenticated::class])

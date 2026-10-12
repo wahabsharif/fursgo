@@ -768,7 +768,7 @@
       if (btn && !btn.disabled) {
         // alert('Payment processing demo — booking confirmed!');
         window.location.href =
-          baseUrl + "booking-space/confirmation.php";
+          baseUrl + "booking-space/confirmation";
       }
     });
 

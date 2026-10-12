@@ -129,7 +129,7 @@
                 closeRequestModal();
 
                 const path = window.location.pathname || '';
-                if (path.includes('help-and-support') || path.includes('help_and_support.php')) {
+                if (path.includes('help-and-support') || path.includes('help_and_support')) {
                     e.preventDefault();
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
