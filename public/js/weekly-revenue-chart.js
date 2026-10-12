@@ -1,58 +1,16 @@
 (function () {
-    const AXIS_COLOR = "#D9D5CF";
-    const TICK_COLOR = "#9B958C";
-    const Y_TICKS = [0, 100, 150, 200, 250];
-    const Y_MIN = 0;
-    const Y_MAX = 250;
-    const CORNER_RAD = 4;
-    const FILL_GAP = 12;
+    const GROOMER_FILL = "#FFFAF2";
+    const SPACE_FILL = "#FFF5F3";
     const CHART_JS_SRC =
         "https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js";
 
-    const roundedAreaClipPlugin = {
-        id: "weeklyRevenueRoundedAreaClip",
-        beforeDatasetsDraw(chart) {
-            if (chart.canvas?.id !== "weeklyRevenueChart") return;
-
-            const { ctx, chartArea } = chart;
-            if (!chartArea) return;
-
-            const left = chartArea.left + FILL_GAP;
-            const top = chartArea.top;
-            const right = chartArea.right;
-            const bottom = chartArea.bottom - FILL_GAP;
-            const r = Math.min(
-                CORNER_RAD,
-                (right - left) / 2,
-                (bottom - top) / 2,
-            );
-
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(left + r, top);
-            ctx.arcTo(right, top, right, bottom, r);
-            ctx.arcTo(right, bottom, left, bottom, r);
-            ctx.arcTo(left, bottom, left, top, r);
-            ctx.arcTo(left, top, right, top, r);
-            ctx.closePath();
-            ctx.clip();
-        },
-        afterDatasetsDraw(chart) {
-            if (chart.canvas?.id !== "weeklyRevenueChart") return;
-            chart.ctx.restore();
-        },
-    };
-
-    function registerChartPlugin() {
-        if (
-            typeof Chart === "undefined" ||
-            window.__weeklyRevenueRoundedPluginRegistered
-        ) {
-            return;
+    function resolveAreaFill(lineColor) {
+        const color = (lineColor || "").trim().toLowerCase();
+        if (color === "#ffa899" || color.includes("255, 168, 153")) {
+            return SPACE_FILL;
         }
 
-        Chart.register(roundedAreaClipPlugin);
-        window.__weeklyRevenueRoundedPluginRegistered = true;
+        return GROOMER_FILL;
     }
 
     function initWeeklyRevenueChart(canvas) {
@@ -74,9 +32,8 @@
             return false;
         }
 
-        registerChartPlugin();
-
-        const fillColor = (canvas.dataset.fill || "").trim() || "#FFC97A";
+        const lineColor = (canvas.dataset.fill || "").trim() || "#FFC97A";
+        const areaFill = resolveAreaFill(lineColor);
         const ctx = canvas.getContext("2d");
 
         if (window.__weeklyRevenueChartInstance) {
@@ -92,13 +49,16 @@
                     {
                         data: values,
                         fill: "origin",
-                        backgroundColor: fillColor,
-                        borderColor: "transparent",
-                        borderWidth: 0,
-                        pointRadius: 0,
-                        pointHoverRadius: 0,
-                        pointHitRadius: 8,
-                        tension: 0.6,
+                        backgroundColor: areaFill,
+                        borderColor: lineColor,
+                        borderWidth: 2,
+                        pointRadius: 4.5,
+                        pointHoverRadius: 5.5,
+                        pointBackgroundColor: lineColor,
+                        pointBorderColor: "#fff",
+                        pointBorderWidth: 3,
+                        pointHitRadius: 10,
+                        tension: 0.35,
                         cubicInterpolationMode: "default",
                     },
                 ],
@@ -107,23 +67,15 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: {
-                    duration: 1100,
+                    duration: 900,
                     easing: "easeOutCubic",
-                },
-                animations: {
-                    tension: {
-                        duration: 1200,
-                        easing: "easeOutQuart",
-                        from: 0.18,
-                        to: 0.6,
-                    },
                 },
                 layout: {
                     padding: {
-                        left: 12,
+                        left: 2,
                         right: 8,
                         top: 10,
-                        bottom: 18,
+                        bottom: 0,
                     },
                 },
                 interaction: {
@@ -152,50 +104,32 @@
                             display: false,
                         },
                         border: {
-                            display: true,
-                            color: AXIS_COLOR,
+                            display: false,
                         },
                         ticks: {
-                            color: TICK_COLOR,
+                            color: "#9D9B98",
                             autoSkip: false,
                             maxRotation: 0,
-                            padding: 6,
-                            align: "inner",
+                            padding: 10,
                             font: {
-                                family: "Lato, sans-serif",
-                                size: 12,
-                                weight: 500,
+                                family: "Lato",
+                                size: 14,
+                                style: "normal",
+                                weight: 600,
+                                lineHeight: "normal",
                             },
                         },
                     },
                     y: {
-                        min: Y_MIN,
-                        max: Y_MAX,
+                        beginAtZero: true,
+                        display: false,
                         grid: {
                             display: false,
                         },
                         border: {
-                            display: true,
-                            color: AXIS_COLOR,
+                            display: false,
                         },
-                        afterBuildTicks: (scale) => {
-                            scale.ticks = Y_TICKS.map((value) => ({ value }));
-                        },
-                        ticks: {
-                            color: TICK_COLOR,
-                            autoSkip: false,
-                            padding: 4,
-                            font: {
-                                family: "Lato, sans-serif",
-                                size: 11,
-                                weight: 500,
-                            },
-                            callback(v) {
-                                const n = Number(v);
-                                if (!Y_TICKS.includes(n)) return "";
-                                return n === 0 ? "0" : "£" + n;
-                            },
-                        },
+                        grace: "8%",
                     },
                 },
             },
@@ -227,9 +161,25 @@
         return true;
     }
 
+    function whenLatoReady(callback) {
+        if (!document.fonts || !document.fonts.load) {
+            callback();
+            return;
+        }
+
+        Promise.all([
+            document.fonts.load("600 14px Lato"),
+            document.fonts.load("normal 14px Lato"),
+        ])
+            .catch(() => {})
+            .finally(callback);
+    }
+
     function mountWeeklyRevenueChart(canvas) {
         ensureChartJsReady(() => {
-            initWeeklyRevenueChart(canvas);
+            whenLatoReady(() => {
+                initWeeklyRevenueChart(canvas);
+            });
         });
     }
 
@@ -256,21 +206,23 @@
 
     function scheduleWeeklyRevenueChartInit() {
         ensureChartJsReady(() => {
-            let attempt = 0;
-            const maxAttempts = 40;
+            whenLatoReady(() => {
+                let attempt = 0;
+                const maxAttempts = 40;
 
-            const tryInit = () => {
-                const didInit = initWeeklyRevenueChart();
-                if (didInit || attempt >= maxAttempts) {
-                    return;
-                }
+                const tryInit = () => {
+                    const didInit = initWeeklyRevenueChart();
+                    if (didInit || attempt >= maxAttempts) {
+                        return;
+                    }
 
-                attempt += 1;
-                setTimeout(tryInit, 100);
-            };
+                    attempt += 1;
+                    setTimeout(tryInit, 100);
+                };
 
-            requestAnimationFrame(() => {
-                setTimeout(tryInit, 0);
+                requestAnimationFrame(() => {
+                    setTimeout(tryInit, 0);
+                });
             });
         });
     }

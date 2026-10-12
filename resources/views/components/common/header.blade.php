@@ -1412,8 +1412,12 @@
                 transition: background-color 0.2s ease;
             }
 
-            .profile-business-item.is-active,
-            .profile-business-item:hover {
+            .profile-business-item.is-active {
+                background: transparent;
+            }
+
+            .profile-business-item:hover,
+            .profile-business-item:focus-visible {
                 border-radius: 10px;
                 background: var(--profile-item-active-bg);
             }

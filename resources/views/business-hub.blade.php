@@ -13,6 +13,7 @@
         $welcomeFirstName = $nameParts[0] ?? (trim((string) $gsp->full_name) !== '' ? trim((string) $gsp->full_name) : 'there');
     }
     $welcomeBackTitle = 'Welcome back, ' . $welcomeFirstName . ' 👋';
+    $welcomeBackDate = now()->format('l, j F');
     $servicesUserType = strtolower((string) ($gsp->user_type ?? data_get(auth()->user(), 'user_type', '')));
     $addServiceTitle = $servicesUserType === 'space' ? 'Hourly' : 'Full Groom';
 @endphp
@@ -42,10 +43,20 @@
     <div class="active-section-header"
         x-show="activeSection !== 'settings' && (activeSection !== 'clients' || !clientProfileOpen)" x-cloak>
         <div class="active-section-header-stack">
-            <div class="active-section-header-pane" x-cloak x-show="activeSection === 'business-hub'"
-                x-transition.opacity.duration.280ms>
-                <h2 class="active-section-header-welcome"
-                    x-text="showWelcome ? @js($welcomeBackTitle) : 'Business Hub'"></h2>
+            <div class="active-section-header-pane active-section-header-overview" x-cloak
+                x-show="activeSection === 'business-hub'" x-transition.opacity.duration.280ms>
+                <div class="active-section-header-overview-copy">
+                    <h2 class="active-section-header-welcome"
+                        x-text="showWelcome ? @js($welcomeBackTitle) : 'Business Hub'"></h2>
+                    <p class="active-section-header-overview-date" x-show="showWelcome" x-cloak>{{ $welcomeBackDate }}</p>
+                </div>
+                <button type="button" class="availability-header-pill overview-manage-availability-pill" x-show="showWelcome"
+                    x-cloak
+                    @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'manage-availability'">
+                    <img src="{{ asset('images/business-hub/icon-manage-availability.svg') }}" alt="" width="12"
+                        height="12" />
+                    Manage availability
+                </button>
             </div>
 
             <div class="active-section-header-pane" x-cloak x-show="activeSection === 'bookings'"
@@ -314,6 +325,55 @@
 
     .active-section-header h2.active-section-header-welcome {
         text-transform: none;
+    }
+
+    .active-section-header-overview {
+        width: 100%;
+        max-width: 1030px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0;
+        min-height: 55px;
+    }
+
+    .dashboard-content-wrapper:has(.bh-overview) .active-section-header {
+        margin-bottom: 20px;
+    }
+
+    .active-section-header-overview-copy {
+        min-width: 0;
+    }
+
+    .active-section-header-overview-date {
+        margin: 0.2rem 0 0;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400 !important;
+        line-height: 20px;
+        text-transform: none;
+    }
+
+    .overview-manage-availability-pill {
+        width: 213px;
+        min-width: 213px;
+        height: 48px;
+        padding: 0 20px;
+        gap: 10px;
+        font-size: 18px;
+        font-weight: 400;
+        flex-shrink: 0;
+        align-self: flex-start;
+        margin-top: 0;
+        box-sizing: border-box;
+    }
+
+    .active-section-header-overview-copy h2.active-section-header-welcome {
+        margin: 0;
+        line-height: 1.15;
     }
 
     .active-section-header p,

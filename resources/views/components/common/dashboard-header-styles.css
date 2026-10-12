@@ -464,6 +464,11 @@
 }
 
 .profile-business-item.is-active {
+    background: transparent;
+}
+
+.profile-business-item:hover,
+.profile-business-item:focus-visible {
     background: #fffbf4;
 }
 

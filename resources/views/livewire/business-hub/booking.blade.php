@@ -356,6 +356,12 @@ new class extends Component {
         $this->dispatch('decline-modal-closed');
     }
 
+    public function openRescheduleFromDecline(int $bookingId): void
+    {
+        $this->closeDeclineModal();
+        $this->openRescheduleModal($bookingId);
+    }
+
     private function declinedByLabel(): string
     {
         $user = Auth::guard('groomer_spacer')->user() ?? Auth::user();
@@ -386,7 +392,7 @@ new class extends Component {
 
         $timeRaw = trim((string) $booking->time);
         if (preg_match('/(\d{1,2}:\d{2})/', $timeRaw, $mStart)) {
-            $this->rescheduleSelectedTime = date('h:i A', strtotime($mStart[1]));
+            $this->rescheduleSelectedTime = date('H:i', strtotime($mStart[1]));
         }
 
         if (str_contains($timeRaw, '-')) {
@@ -496,7 +502,7 @@ new class extends Component {
         }
 
         /** @var Booking $booking */
-        $start = DateTime::createFromFormat('H:i A', $this->rescheduleSelectedTime) ?: DateTime::createFromFormat('h:i A', $this->rescheduleSelectedTime);
+        $start = DateTime::createFromFormat('H:i', $this->rescheduleSelectedTime) ?: DateTime::createFromFormat('H:i A', $this->rescheduleSelectedTime) ?: DateTime::createFromFormat('h:i A', $this->rescheduleSelectedTime);
         if (!$start) {
             return;
         }
@@ -520,7 +526,7 @@ new class extends Component {
             $this->rescheduleSelectedDate = $selectedDate;
         }
 
-        if (is_string($selectedTime) && preg_match('/^\d{2}:\d{2}\s(?:AM|PM)$/', $selectedTime)) {
+        if (is_string($selectedTime) && (preg_match('/^\d{1,2}:\d{2}$/', $selectedTime) || preg_match('/^\d{1,2}:\d{2}\s(?:AM|PM)$/i', $selectedTime))) {
             $this->rescheduleSelectedTime = $selectedTime;
         }
 

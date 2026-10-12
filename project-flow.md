@@ -157,7 +157,9 @@ Single Volt pages; section state in session (not separate routes).
 
 - Sections: `business-hub`, `bookings`, `availability`, `manage-availability`, `services`, `clients`, `earnings`, `settings`
 - Booking filters: `pending` | `confirmed` | `completed` | `cancelled`
-- Overview Pending Requests “View details” opens `pending-request-modal` (Livewire `detailsBookingId`)
+- Overview dashboard: welcome + date + Manage availability; metric cards (Earned today / Next appointment / New review); Today’s schedule + Weekly revenue (Mon–Sun) + Pending Requests; groomer `#FFC97A` / space `#FFA899` visit badges
+- Pending “View details” opens Booking Request modal (`pending-request-modal`); Accept → Booking Confirmed modal; Decline → decline modal (reason + Reschedule/Decline); Reschedule modal proposes new date/time cards
+- Profile switcher: checkmark on active business; yellow `#fffbf4` highlight is hover/focus only
 - Avatar placeholders (no photo / broken image): initials via `App\Support\BusinessHubAvatar` / `x-business-hub.common.avatar` + `window.bhAvatarFallback`; text `#FDFDFD` Lato 800; bg groomer `#FFC97A`, space `#FFA899` (`--bh-avatar-bg` / `--bh-avatar-ring`). Photo available: white circle ring with same accent stroke.
 - Service menus: `services`, `add-ons`, `pet-preferences`, `service-area`
 - Earnings menus: `overview`, `transactions`, `pay-outs`, `invoices`
