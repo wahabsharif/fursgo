@@ -6,9 +6,10 @@
     $dashboardNav = MarketingHubNav::fromSession();
     $dashboardActiveSection = $dashboardNav['active_section'];
 
+    $spacerUser = auth('groomer_spacer')->user() ?? auth()->user();
     $activeBgColor = '#FFC97A';
     $activeShadow = '0 0 10px 0 rgba(255, 216, 140, 0.70)';
-    if (auth()->check() && strtolower((string) auth()->user()->user_type) === 'space') {
+    if (strtolower((string) ($spacerUser?->user_type ?? '')) === 'space') {
         $activeBgColor = '#FFA899';
         $activeShadow = '0 0 10px 0 rgba(255, 168, 153, 0.70)';
     }
@@ -23,11 +24,9 @@
     <style>
         :root {
             --sidebar-active-bg:
-                {{ $activeBgColor }}
-            ;
+                {{ $activeBgColor }};
             --sidebar-active-shadow:
-                {{ $activeShadow }}
-            ;
+                {{ $activeShadow }};
         }
 
         .dashboard-wrapper {

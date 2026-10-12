@@ -143,7 +143,7 @@ class MarketingHubStats
 
         $periodBookings = (clone $active)
             ->whereBetween('date', [$start, $end])
-            ->get(['id', 'pet_owner_id', 'service', 'time', 'date', 'discount', 'acquisition_source', 'rating']);
+            ->get(['id', 'pet_owner_id', 'service', 'time', 'date', 'discount', 'acquisition_source', 'rating', 'extra_add_ons']);
 
         $profileViews = (int) (auth('groomer_spacer')->user()?->profile_visit ?? 0);
 
@@ -182,7 +182,8 @@ class MarketingHubStats
         $isSpaceUser = strtolower((string) (auth('groomer_spacer')->user()?->user_type ?? '')) === 'space';
 
         $serviceBreakdown = self::serviceBreakdown($periodBookings, $isSpaceUser);
-        $petsBreakdown = self::petsBreakdown($spacerId, $start, $end);
+        $petsBreakdown = $isSpaceUser ? [] : self::petsBreakdown($spacerId, $start, $end);
+        $addonsBreakdown = $isSpaceUser ? self::addonsBreakdown($periodBookings) : [];
         $sourcesBreakdown = self::sourcesBreakdown($periodBookings);
         $peakByDay = self::peakBookingsByDay($spacerId, $start, $end);
 
@@ -204,6 +205,8 @@ class MarketingHubStats
             $topPet = collect($petsBreakdown)->sortByDesc('pct')->first();
             $popularPet = self::popularDisplayName((string) ($topPet['name'] ?? '—'));
         }
+
+        $popularAddon = $addonsBreakdown[0]['name'] ?? '—';
 
         return [
             'period' => $period,
@@ -242,6 +245,11 @@ class MarketingHubStats
                 'legend' => $petsBreakdown,
                 'values' => array_column($petsBreakdown, 'pct'),
             ],
+            'addons' => [
+                'popular' => $popularAddon,
+                'legend' => $addonsBreakdown,
+                'values' => array_column($addonsBreakdown, 'pct'),
+            ],
             'bookings_from' => $sourcesBreakdown,
             'peak_bookings' => $peakByDay,
             'time_labels' => array_column(self::TIME_SLOTS, 'label'),
@@ -277,6 +285,11 @@ class MarketingHubStats
                 'values' => [],
             ],
             'pets' => [
+                'popular' => '—',
+                'legend' => [],
+                'values' => [],
+            ],
+            'addons' => [
                 'popular' => '—',
                 'legend' => [],
                 'values' => [],
@@ -352,11 +365,11 @@ class MarketingHubStats
         $serviceLower = strtolower(trim((string) $service));
 
         if (preg_match('/full[\s_-]*day|fullday/', $serviceLower)) {
-            return 'Full-Day';
+            return 'Full Day';
         }
 
         if (preg_match('/half[\s_-]*day/', $serviceLower)) {
-            return 'Half-Day';
+            return 'Half-day';
         }
 
         if (str_contains($serviceLower, 'hour')) {
@@ -374,11 +387,11 @@ class MarketingHubStats
             }
 
             if ($diff >= 7 * 60) {
-                return 'Full-Day';
+                return 'Full Day';
             }
 
             if ($diff >= 3 * 60) {
-                return 'Half-Day';
+                return 'Half-day';
             }
         }
 
@@ -442,6 +455,81 @@ class MarketingHubStats
             '—' => '—',
             default => $name,
         };
+    }
+
+    /**
+     * @param  Collection<int, Booking>  $periodBookings
+     * @return list<array{name: string, pct: int, color: string}>
+     */
+    private static function addonsBreakdown($periodBookings): array
+    {
+        $counts = [];
+
+        foreach ($periodBookings as $booking) {
+            $addons = is_array($booking->extra_add_ons) ? $booking->extra_add_ons : [];
+            $seen = [];
+
+            foreach ($addons as $item) {
+                $label = trim((string) (is_array($item) ? ($item['label'] ?? '') : ''));
+                if ($label === '') {
+                    continue;
+                }
+
+                $name = self::addOnDisplayName($label);
+                if (isset($seen[$name])) {
+                    continue;
+                }
+
+                $seen[$name] = true;
+                $counts[$name] = ($counts[$name] ?? 0) + 1;
+            }
+        }
+
+        if ($counts === []) {
+            return [];
+        }
+
+        arsort($counts);
+        $top = array_slice($counts, 0, 3, true);
+        $topTotal = max(array_sum($top), 1);
+        $rows = [];
+        $assigned = 0;
+        $index = 0;
+        $last = count($top) - 1;
+
+        foreach ($top as $name => $count) {
+            $pct = $index === $last
+                ? max(0, 100 - $assigned)
+                : (int) round(($count / $topTotal) * 100);
+            $assigned += $pct;
+            $rows[] = [
+                'name' => (string) $name,
+                'pct' => $pct,
+                'color' => self::PET_COLORS[$index] ?? '#FBAC83',
+            ];
+            $index++;
+        }
+
+        return $rows;
+    }
+
+    private static function addOnDisplayName(string $label): string
+    {
+        $key = strtolower($label);
+
+        if (str_contains($key, 'locker')) {
+            return 'Lockers';
+        }
+
+        if (str_contains($key, 'after') && str_contains($key, 'hour')) {
+            return 'After-hours Access';
+        }
+
+        if (str_contains($key, 'deep') && str_contains($key, 'clean')) {
+            return 'Deep Clean';
+        }
+
+        return $label;
     }
 
     /**

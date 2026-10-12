@@ -165,7 +165,7 @@ Single Volt pages; section state in session (not separate routes).
 - Earnings menus: `overview`, `transactions`, `pay-outs`, `invoices`
 - Settings menus: `general`, `business-details`, `service-policies`
 
-**MarketingHubNav:** parallel session nav for marketing hub Volt.
+**MarketingHubNav:** parallel session nav for marketing hub Volt. Overview matches the hub frames: period tabs, KPI cards, tip, peak booking times, top promo, and the acquisition bar. Groomers show service + pet donuts (sidebar/header accent `#FFC97A`). Space hosts show rental types (Full Day / Half-day / Hourly) and add-ons (Lockers / After-hours Access / Deep Clean) with accent `#FFA899`.
 
 **Shells:** `SetBusinessPageWebShell` vs `SetBusinessPageBusinessHubShell` / `BusinessPageShell::resolveComponent(...)` for shared pages with dual chrome.
 

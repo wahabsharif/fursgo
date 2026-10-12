@@ -9,11 +9,16 @@
     $statsPeriodOptions = $statsPeriodOptions ?? \App\Support\MarketingHubStats::periodOptions();
     $serviceColors = \App\Support\MarketingHubStats::SERVICE_COLORS;
     $petColors = \App\Support\MarketingHubStats::PET_COLORS;
+    $secondDonut = $isSpaceUser
+        ? ($mh['addons'] ?? ['popular' => '—', 'legend' => [], 'values' => []])
+        : ($mh['pets'] ?? ['popular' => '—', 'legend' => [], 'values' => []]);
+    $secondDonutTitle = $isSpaceUser ? 'Most popular add-on' : 'Most popular pets';
+    $secondDonutEmpty = $isSpaceUser ? 'No add-on data yet' : 'No pet data yet';
     $mhChartData = [
         'peakBookings' => $mh['peak_bookings'],
         'timeLabels' => $mh['time_labels'],
         'services' => $mh['services']['values'],
-        'pets' => $isSpaceUser ? [] : $mh['pets']['values'],
+        'pets' => $secondDonut['values'] ?? [],
         'serviceColors' => $serviceColors,
         'petColors' => $petColors,
     ];
@@ -219,37 +224,34 @@
                             </div>
                         </article>
 
-                        @unless ($isSpaceUser)
-                            <article class="mh-panel-card mh-panel-card--donut mh-anim-item" style="--i: 7">
-                                <div class="mh-panel-card-head">
-                                    <h3 class="mh-panel-title">Most popular pets</h3>
-                                    <p class="mh-panel-highlight">{{ $mh['pets']['popular'] ?? '—' }}</p>
+                        <article class="mh-panel-card mh-panel-card--donut mh-anim-item" style="--i: 7">
+                            <div class="mh-panel-card-head">
+                                <h3 class="mh-panel-title">{{ $secondDonutTitle }}</h3>
+                                <p class="mh-panel-highlight">{{ $secondDonut['popular'] ?? '—' }}</p>
+                            </div>
+                            <div class="mh-donut-row">
+                                <div class="mh-chart-wrap mh-chart-wrap--donut">
+                                    <canvas id="mhPetsChart" data-values='@json($secondDonut['values'] ?? [])'
+                                        aria-label="{{ $secondDonutTitle }} chart"></canvas>
                                 </div>
-                                <div class="mh-donut-row">
-                                    <div class="mh-chart-wrap mh-chart-wrap--donut">
-                                        <canvas id="mhPetsChart" data-values='@json($mh['pets']['values'])'
-                                            aria-label="Most popular pets chart"></canvas>
-                                    </div>
-                                    <ul class="mh-legend">
-                                        @forelse ($mh['pets']['legend'] as $i => $item)
-                                            <li>
-                                                <span class="mh-legend-dot"
-                                                    style="background:{{ $item['color'] ?? ($petColors[$i] ?? '#9AC1DD') }}"></span>
-                                                <span class="mh-legend-name">{{ $item['name'] }}</span>
-                                                <span class="mh-legend-pct">{{ $item['pct'] }}%</span>
-                                            </li>
-                                        @empty
-                                            <li>
-                                                <span class="mh-legend-name">No pet data yet</span>
-                                            </li>
-                                        @endforelse
-                                    </ul>
-                                </div>
-                            </article>
-                        @endunless
+                                <ul class="mh-legend">
+                                    @forelse ($secondDonut['legend'] ?? [] as $i => $item)
+                                        <li>
+                                            <span class="mh-legend-dot"
+                                                style="background:{{ $item['color'] ?? ($petColors[$i] ?? '#9AC1DD') }}"></span>
+                                            <span class="mh-legend-name">{{ $item['name'] }}</span>
+                                            <span class="mh-legend-pct">{{ $item['pct'] }}%</span>
+                                        </li>
+                                    @empty
+                                        <li>
+                                            <span class="mh-legend-name">{{ $secondDonutEmpty }}</span>
+                                        </li>
+                                    @endforelse
+                                </ul>
+                            </div>
+                        </article>
 
-                        <article class="mh-panel-card mh-panel-card--promo mh-anim-item"
-                            style="--i: {{ $isSpaceUser ? 7 : 8 }}">
+                        <article class="mh-panel-card mh-panel-card--promo mh-anim-item" style="--i: 8">
                             <h3 class="mh-panel-title">Top promo code</h3>
                             <div class="mh-top-promo-row">
                                 <div class="mh-top-promo-code">{{ $mh['services']['top_promo'] }}</div>
@@ -264,8 +266,7 @@
                     </div>
                 </div>
 
-                <article class="mh-panel-card mh-panel-card--sources mh-anim-item"
-                    style="--i: {{ $isSpaceUser ? 8 : 9 }}">
+                <article class="mh-panel-card mh-panel-card--sources mh-anim-item" style="--i: 9">
                     <div class="mh-panel-card-head">
                         <h3 class="mh-panel-title">Most popular services</h3>
                         <p class="mh-panel-caption">{{ $mh['period_caption'] ?? 'The last 3 months' }}</p>
@@ -809,7 +810,7 @@
         padding: 12px 16px 12px 20px;
         min-height: 50px;
         border-radius: 10px;
-        border: 1px solid #A1BF63;
+        border: 0;
         background: rgba(216, 232, 183, 0.2);
         text-align: left;
         box-sizing: border-box;
@@ -887,7 +888,6 @@
         background: #fff;
         border: 1px solid #E2E2E2;
         border-radius: 10px;
-        box-shadow: 0px 4px 15px 5px rgba(0, 0, 0, 0.02);
         padding: 20px;
         min-width: 0;
         box-sizing: border-box;
