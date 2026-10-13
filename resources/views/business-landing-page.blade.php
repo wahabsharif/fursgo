@@ -197,7 +197,6 @@
         /* Zigzag Effect */
         .offset-down {
             margin-top: 60px;
-
         }
 
         .blp-card-content {
@@ -283,8 +282,6 @@
                         </p>
                     </div>
 
-
-
                     <div class="blp-features-grid">
                         <div class="blp-feature-item">
                             <div class="blp-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="33"
@@ -301,7 +298,7 @@
                                     <path d="M8.81195 2.94973V0.5M26.4555 2.94973V0.5M0.872375 11.1155H34.395"
                                         stroke="#3B3731" stroke-linecap="round" />
                                 </svg></div>
-                            <h3>Set Your Schedule & Your Rates</h3>
+                            <h3>Set Your Schedule<br /> & Your Rates</h3>
                             <p class="blp-des">Decide when you're available and what your services are worth.</p>
                         </div>
 
@@ -341,7 +338,7 @@
                                         d="M6.37407 29.8756C5.20066 31.049 3.29779 31.0482 2.12438 29.8748C0.951208 28.7013 0.951056 26.7993 2.12438 25.626L6.03245 21.7179C7.2058 20.5448 9.10792 20.5448 10.2813 21.7179C11.4546 22.8912 11.4553 24.7942 10.2821 25.9676L6.37407 29.8756Z"
                                         fill="#FFC97A" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg></div>
-                            <h3>Offer the Services That Suit You</h3>
+                            <h3>Offer the Services<br /> That Suit You</h3>
                             <p class="blp-des">From full grooming to bath & brush and add-ons — shape your service menu
                                 around
                                 your skills.</p>

@@ -19,7 +19,7 @@
 @endphp
 
 <section class="dashboard-content-wrapper"
-    x-data="{ tabsLoading: false, navLoading: false, navLoadingTimeout: null, activeBookingFilter: @js($dashboardNav['active_booking_status']), serviceFormOpen: false, isEditingService: false, serviceFormTitle: @js($addServiceTitle), activeServiceMenu: @js($dashboardNav['active_service_menu']), activeEarningsMenu: @js($dashboardNav['active_earnings_menu']), clientProfileOpen: false, showWelcome: @js($dashboardActiveSection === 'business-hub') }"
+    x-data="{ tabsLoading: false, navLoading: false, navLoadingTimeout: null, overviewLoading: false, activeBookingFilter: @js($dashboardNav['active_booking_status']), serviceFormOpen: false, isEditingService: false, serviceFormTitle: @js($addServiceTitle), activeServiceMenu: @js($dashboardNav['active_service_menu']), activeEarningsMenu: @js($dashboardNav['active_earnings_menu']), clientProfileOpen: false, showWelcome: @js($dashboardActiveSection === 'business-hub') }"
     x-effect="if (activeSection !== 'business-hub') showWelcome = false"
     x-on:bookings-tabs-loading-start.window="tabsLoading = true"
     x-on:bookings-tabs-loading-end.window="(() => { const desired = window.__businessHubDesiredBookingStatus; if (desired !== undefined && desired !== null && activeBookingFilter !== desired) { return; } if (desired !== undefined && desired !== null) { window.__businessHubDesiredBookingStatus = undefined; } if (window.__bhBookingIntentTimeout) { clearTimeout(window.__bhBookingIntentTimeout); window.__bhBookingIntentTimeout = null; } tabsLoading = false; })()"
@@ -27,6 +27,7 @@
     x-on:booking-status-changed.window="(() => { const incoming = $event.detail?.status || ''; const desired = window.__businessHubDesiredBookingStatus; if (desired !== undefined && desired !== null && incoming !== desired) { return; } if (desired !== undefined && desired !== null) { window.__businessHubDesiredBookingStatus = undefined; } if (window.__bhBookingIntentTimeout) { clearTimeout(window.__bhBookingIntentTimeout); window.__bhBookingIntentTimeout = null; } tabsLoading = false; activeBookingFilter = incoming; })()"
     x-on:nav-list-loading-start.window="navLoading = true; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; } if (!$event.detail?.persistent) { navLoadingTimeout = setTimeout(() => { navLoading = false; navLoadingTimeout = null; }, 350); }"
     x-on:nav-list-loading-end.window="navLoading = false; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; }"
+    x-on:bh-overview-loading.window="overviewLoading = !!$event.detail?.active"
     x-on:client-profile-visible.window="clientProfileOpen = !!$event.detail?.visible"
     x-on:service-form-opened.window="serviceFormOpen = true; isEditingService = !!$event.detail?.editing; if ($event.detail?.title) serviceFormTitle = $event.detail.title; if (!isEditingService && $event.detail?.menu === 'add-ons') serviceFormTitle = 'Add-ons'; if (!isEditingService && $event.detail?.menu === 'services') serviceFormTitle = @js($addServiceTitle)"
     x-on:service-form-title-changed.window="const next = ($event.detail?.title || '').trim(); const fallback = activeServiceMenu === 'add-ons' ? 'Add-ons' : (activeServiceMenu === 'service-area' ? 'Add Service Area' : @js($addServiceTitle)); serviceFormTitle = next || fallback"
@@ -35,7 +36,7 @@
     x-on:services-menu-selected.window="activeServiceMenu = $event.detail?.menu || 'services'; serviceFormOpen = false; isEditingService = false"
     x-on:earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'">
     <template x-teleport=".dashboard-wrapper > main">
-        <div class="active-section-loading-bar" x-cloak x-show="tabsLoading || navLoading" aria-hidden="true">
+        <div class="active-section-loading-bar" x-cloak x-show="tabsLoading || navLoading || overviewLoading" aria-hidden="true">
             <span class="active-section-loading-bar__sweep"></span>
         </div>
     </template>

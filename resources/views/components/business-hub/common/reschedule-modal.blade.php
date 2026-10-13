@@ -428,6 +428,7 @@
     }
 
     .reschedule-month-nav {
+        margin-top: 5px;
         width: 32px;
         height: 32px;
         padding: 0;

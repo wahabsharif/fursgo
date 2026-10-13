@@ -957,10 +957,18 @@ new class extends Component {
     wire:loading.class="business-hub-container--navigating"
     wire:target="openCardModal,closeCardModal,acceptRequest,viewDetails,closeDetailsModal,closeConfirmedModal,openDeclineFromOverview,closeDeclineModal,confirmDeclineBooking,openRescheduleFromDecline,openRescheduleModal,closeRescheduleModal,confirmRescheduleBookingFromClient,replyToLatestReview">
 
-    <div class="business-hub-step-loading-bar" wire:loading
-        wire:target="openCardModal,closeCardModal,acceptRequest,viewDetails,closeDetailsModal,closeConfirmedModal,openDeclineFromOverview,closeDeclineModal,confirmDeclineBooking,openRescheduleFromDecline,openRescheduleModal,closeRescheduleModal,confirmRescheduleBookingFromClient,replyToLatestReview" aria-hidden="true">
-        <span class="business-hub-step-loading-bar__sweep"></span>
-    </div>
+    <div class="bh-overview-loading-bridge" wire:loading.class="is-loading"
+        wire:target="openCardModal,closeCardModal,acceptRequest,viewDetails,closeDetailsModal,closeConfirmedModal,openDeclineFromOverview,closeDeclineModal,confirmDeclineBooking,openRescheduleFromDecline,openRescheduleModal,closeRescheduleModal,confirmRescheduleBookingFromClient,replyToLatestReview"
+        x-data
+        x-init="let active = false;
+        const sync = () => {
+            const next = $el.classList.contains('is-loading');
+            if (next === active) return;
+            active = next;
+            window.dispatchEvent(new CustomEvent('bh-overview-loading', { detail: { active } }));
+        };
+        new MutationObserver(sync).observe($el, { attributes: true, attributeFilter: ['class'] });"
+        aria-hidden="true"></div>
 
     <style>
         :root {
@@ -991,49 +999,8 @@ new class extends Component {
             cursor: wait;
         }
 
-        .business-hub-step-loading-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            overflow: hidden;
-            background: rgba(232, 228, 222, 0.85);
-            z-index: 5;
-            border-radius: 2px;
-            pointer-events: none;
-        }
-
-        .business-hub-step-loading-bar__sweep {
-            position: absolute;
-            top: 0;
-            left: -42%;
-            height: 100%;
-            width: 42%;
-            border-radius: 2px;
-            background: linear-gradient(90deg, #FFC97A 0%, #f6a623 45%, #FFC97A 100%);
-            box-shadow: 0 0 12px rgba(246, 166, 35, 0.45);
-            will-change: left;
-            animation: bh-step-load-sweep 1.1s linear infinite;
-        }
-
-        @keyframes bh-step-load-sweep {
-            0% {
-                left: -42%;
-            }
-
-            100% {
-                left: 100%;
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .business-hub-step-loading-bar__sweep {
-                animation: none;
-                left: 0;
-                width: 100%;
-                opacity: 0.85;
-            }
+        .bh-overview-loading-bridge {
+            display: none;
         }
 
         /* Dashboard Cards */

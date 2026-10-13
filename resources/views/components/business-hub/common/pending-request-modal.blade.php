@@ -257,7 +257,7 @@
         }
 
         .bh-request-subtitle {
-            margin: 12px 0 0;
+            margin: 20px 0 0;
             color: #9D9B98;
             font-size: 16px;
             font-weight: 400;

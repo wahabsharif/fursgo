@@ -9,9 +9,7 @@
     $statsPeriodOptions = $statsPeriodOptions ?? \App\Support\MarketingHubStats::periodOptions();
     $serviceColors = \App\Support\MarketingHubStats::SERVICE_COLORS;
     $petColors = \App\Support\MarketingHubStats::PET_COLORS;
-    $secondDonut = $isSpaceUser
-        ? ($mh['addons'] ?? ['popular' => '—', 'legend' => [], 'values' => []])
-        : ($mh['pets'] ?? ['popular' => '—', 'legend' => [], 'values' => []]);
+    $secondDonut = $isSpaceUser ? $mh['addons'] ?? ['popular' => '—', 'legend' => [], 'values' => []] : $mh['pets'] ?? ['popular' => '—', 'legend' => [], 'values' => []];
     $secondDonutTitle = $isSpaceUser ? 'Most popular add-on' : 'Most popular pets';
     $secondDonutEmpty = $isSpaceUser ? 'No add-on data yet' : 'No pet data yet';
     $mhChartData = [
@@ -32,6 +30,11 @@
     <div class="active-section-header" x-cloak x-data="{ navLoading: false, navLoadingTimeout: null }"
         x-on:nav-list-loading-start.window="navLoading = true; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; } if (!$event.detail?.persistent) { navLoadingTimeout = setTimeout(() => { navLoading = false; navLoadingTimeout = null; }, 350); }"
         x-on:nav-list-loading-end.window="navLoading = false; if (navLoadingTimeout) { clearTimeout(navLoadingTimeout); navLoadingTimeout = null; }">
+        <div class="active-section-loading-bar" x-cloak x-show="navLoading" wire:loading.class="is-loading"
+            wire:target="openCreatePromo,openEditPromo,cancelPromoForm,savePromo,setStatsPeriod" aria-hidden="true">
+            <span class="active-section-loading-bar__sweep"></span>
+        </div>
+
         <template x-if="activeSection === 'marketing-hub'">
             <div class="mh-overview-header">
                 <div>
@@ -70,18 +73,13 @@
                 <h2>Promo Creation</h2>
             </div>
         </template>
-
-        <div class="active-section-loading-bar" x-cloak x-show="navLoading" wire:loading.class="is-loading"
-            wire:target="openCreatePromo,openEditPromo,cancelPromoForm,savePromo,setStatsPeriod" aria-hidden="true">
-            <span class="active-section-loading-bar__sweep"></span>
-        </div>
     </div>
 
     <div class="marketing-hub-panels">
         <div x-show="activeSection === 'marketing-hub'" x-cloak x-transition:enter="mh-panel-enter"
             x-transition:enter-start="mh-panel-enter-start" x-transition:enter-end="mh-panel-enter-end"
             x-transition:leave="mh-panel-leave" x-transition:leave-start="mh-panel-leave-start"
-            x-transition:leave-end="mh-panel-leave-end"             x-data="{ ready: false, tipOpen: true, insightOpen: true, lastSection: null }"
+            x-transition:leave-end="mh-panel-leave-end" x-data="{ ready: false, tipOpen: true, insightOpen: true, lastSection: null }"
             x-effect="
                 if (activeSection === 'marketing-hub') {
                     if (lastSection && lastSection !== 'marketing-hub') {
@@ -297,7 +295,7 @@
             </div>
         </div>
 
-                <div x-show="activeSection === 'promo-creation'" x-cloak x-transition:enter="mh-panel-enter"
+        <div x-show="activeSection === 'promo-creation'" x-cloak x-transition:enter="mh-panel-enter"
             x-transition:enter-start="mh-panel-enter-start" x-transition:enter-end="mh-panel-enter-end"
             x-transition:leave="mh-panel-leave" x-transition:leave-start="mh-panel-leave-start"
             x-transition:leave-end="mh-panel-leave-end">
@@ -516,7 +514,7 @@
         position: absolute;
         left: 0;
         right: 0;
-        bottom: -6px;
+        top: -6px;
         height: 4px;
         overflow: hidden;
         z-index: 10;
@@ -821,7 +819,7 @@
         display: block;
     }
 
-    .mh-tips-banner > img:first-child {
+    .mh-tips-banner>img:first-child {
         width: 11.25px;
         height: 16.25px;
     }
@@ -1611,7 +1609,6 @@
         justify-content: center;
         gap: 0.35rem;
     }
-
 
     .mh-kpi-row--promo {
         grid-template-columns: repeat(3, minmax(0, 1fr));

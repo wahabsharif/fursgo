@@ -62,7 +62,7 @@
                 </button>
 
                 <div class="bh-confirmed-success" aria-hidden="true">
-                    <img src="{{ $iconBase }}/icon-confirmed-success.png" alt="" width="45" height="45">
+                    <img src="{{ $iconBase }}/icon-confirmed-success.svg" alt="" width="45" height="45">
                 </div>
 
                 <header class="bh-confirmed-header">
@@ -71,7 +71,7 @@
                 </header>
 
                 <div class="bh-confirmed-card">
-                    <div class="bh-confirmed-card-top">
+                    <div class="bh-confirmed-card-main">
                         @if ($avatarSrc)
                             <span class="bh-confirmed-avatar has-photo" aria-hidden="true">
                                 <img src="{{ $avatarSrc }}" alt="" width="34" height="34" loading="lazy" decoding="async"
@@ -83,29 +83,30 @@
                                 <span class="bh-confirmed-avatar__initials">{{ $avatarInitials }}</span>
                             </span>
                         @endif
-                        <div class="bh-confirmed-card-copy">
-                            <p class="bh-confirmed-names">
-                                <strong>{{ $petsLabel }} ·</strong>
-                                <span>{{ $ownerShort }}</span>
+
+                        <div class="bh-confirmed-card-body">
+                            @if ($visitBadge)
+                                <span class="bh-confirmed-badge">{{ $visitBadge }}</span>
+                            @endif
+                            <p class="bh-confirmed-names{{ $visitBadge ? ' has-badge' : '' }}">
+                                <strong>{{ $petsLabel }} ·</strong><span> {{ $ownerShort }}</span>
                             </p>
+
                             <div class="bh-confirmed-meta">
                                 <span>
-                                    <img src="{{ $iconBase }}/icon-reschedule-service.svg" alt="" width="12" height="12">
+                                    <img src="{{ $iconBase }}/icon-confirmed-service.svg" alt="" width="12" height="12">
                                     {{ $serviceLabel }}
                                 </span>
                                 <span>
-                                    <img src="{{ $iconBase }}/icon-reschedule-date.svg" alt="" width="12" height="12">
+                                    <img src="{{ $iconBase }}/icon-confirmed-date.svg" alt="" width="12" height="12">
                                     {{ $dateLabel }}
                                 </span>
                                 <span>
-                                    <img src="{{ $iconBase }}/icon-space-booking-clock.svg" alt="" width="12" height="12">
+                                    <img src="{{ $iconBase }}/icon-confirmed-clock.svg" alt="" width="12" height="12">
                                     {{ $timeLabel }}
                                 </span>
                             </div>
                         </div>
-                        @if ($visitBadge)
-                            <span class="bh-confirmed-badge">{{ $visitBadge }}</span>
-                        @endif
                     </div>
 
                     <div class="bh-confirmed-divider" aria-hidden="true"></div>
@@ -151,6 +152,7 @@
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 10px 20px 2px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
         }
 
         .bh-confirmed-close {
@@ -179,6 +181,7 @@
             display: flex;
             justify-content: center;
             margin: 0 0 20px;
+            flex-shrink: 0;
         }
 
         .bh-confirmed-success img {
@@ -190,6 +193,7 @@
         .bh-confirmed-header {
             text-align: center;
             margin-bottom: 20px;
+            flex-shrink: 0;
         }
 
         .bh-confirmed-header h2 {
@@ -219,9 +223,10 @@
             border-radius: 5px;
             padding: 20px;
             margin-bottom: 20px;
+            flex-shrink: 0;
         }
 
-        .bh-confirmed-card-top {
+        .bh-confirmed-card-main {
             display: flex;
             align-items: flex-start;
             gap: 10px;
@@ -236,7 +241,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: #E2E2E2;
+            background: var(--bh-avatar-bg, #FFC97A);
         }
 
         .bh-confirmed-avatar.has-photo {
@@ -251,21 +256,32 @@
         }
 
         .bh-confirmed-avatar__initials {
-            color: #3B3731;
+            color: #FDFDFD;
+            font-family: Lato, sans-serif;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 800;
             line-height: 1;
         }
 
-        .bh-confirmed-card-copy {
+        .bh-confirmed-card-body {
+            position: relative;
             min-width: 0;
             flex: 1;
+            padding-top: 3px;
         }
 
         .bh-confirmed-names {
-            margin: 0 0 10px;
+            margin: 0;
             font-size: 14px;
             line-height: normal;
+            text-box-edge: cap alphabetic;
+            text-box-trim: trim-both;
+            min-width: 0;
+            padding-right: 0;
+        }
+
+        .bh-confirmed-names.has-badge {
+            padding-right: 110px;
         }
 
         .bh-confirmed-names strong {
@@ -279,6 +295,9 @@
         }
 
         .bh-confirmed-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -290,11 +309,13 @@
             font-size: 14px;
             font-weight: 500;
             white-space: nowrap;
-            flex-shrink: 0;
             line-height: normal;
+            text-box-edge: cap alphabetic;
+            text-box-trim: trim-both;
         }
 
-        .business-hub-container.is-space .bh-confirmed-badge {
+        .business-hub-container.is-space .bh-confirmed-badge,
+        body:has(.business-hub-container.is-space) .bh-confirmed-badge {
             background: rgba(255, 168, 153, 0.15);
             color: #FFA899;
         }
@@ -303,6 +324,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
+            margin-top: 10px;
             color: #9D9B98;
             font-size: 14px;
             line-height: normal;
@@ -312,6 +334,8 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            text-box-edge: cap alphabetic;
+            text-box-trim: trim-both;
         }
 
         .bh-confirmed-meta img {
@@ -336,6 +360,8 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            text-box-edge: cap alphabetic;
+            text-box-trim: trim-both;
         }
 
         .bh-confirmed-notified::before {
@@ -354,7 +380,7 @@
 
         .bh-confirmed-message,
         .bh-confirmed-done {
-            flex: 1;
+            flex: 1 1 0;
             height: 42px;
             border-radius: 75px;
             font-family: Lato, sans-serif;
