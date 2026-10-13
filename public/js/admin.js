@@ -16,6 +16,7 @@ function adminPortal(tabs, initialTab, loadedTabs) {
         ],
         setTab(id) {
             this.tab = id;
+            this.syncWebsiteContentBg(id);
             const isNew = !this.loadedTabs.includes(id);
             startAdminLoading(isNew);
 
@@ -37,11 +38,20 @@ function adminPortal(tabs, initialTab, loadedTabs) {
                 });
             }
         },
+        syncWebsiteContentBg(id) {
+            const active = id || (this.$wire && this.$wire.activeTab ? this.$wire.activeTab : this.tab);
+            document.body.classList.toggle('is-website-content', active === 'website-content');
+        },
         setPeriod(id) {
             this.period = id;
         },
         init() {
+            this.syncWebsiteContentBg(this.tab);
             this.$nextTick(() => {
+                this.syncWebsiteContentBg(this.$wire?.activeTab || this.tab);
+                if (this.$wire) {
+                    this.$watch('$wire.activeTab', (value) => this.syncWebsiteContentBg(value));
+                }
                 window.requestAnimationFrame(() => {
                     refreshAdminSignupGrowthChart();
                 });
