@@ -7,6 +7,8 @@ function adminPortal(tabs, initialTab, loadedTabs) {
         tab: initialTab || ((tabs[0] && tabs[0].id) ? tabs[0].id : 'overview'),
         tabs: tabs || [],
         loadedTabs: Array.isArray(loadedTabs) && loadedTabs.length ? loadedTabs.slice() : ['overview'],
+        accountPage: null,
+        accountMenuOpen: false,
         period: 'monthly',
         periods: [
             { id: 'today', label: 'Today' },
@@ -15,6 +17,8 @@ function adminPortal(tabs, initialTab, loadedTabs) {
             { id: 'yearly', label: 'Yearly' },
         ],
         setTab(id) {
+            this.accountPage = null;
+            this.accountMenuOpen = false;
             this.tab = id;
             this.syncWebsiteContentBg(id);
             const isNew = !this.loadedTabs.includes(id);
@@ -38,9 +42,15 @@ function adminPortal(tabs, initialTab, loadedTabs) {
                 });
             }
         },
+        openAccountPage(page) {
+            this.accountPage = page;
+            this.accountMenuOpen = false;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
         syncWebsiteContentBg(id) {
             const active = id || (this.$wire && this.$wire.activeTab ? this.$wire.activeTab : this.tab);
             document.body.classList.toggle('is-website-content', active === 'website-content');
+            document.body.classList.toggle('is-settings-team', active === 'settings-team');
         },
         setPeriod(id) {
             this.period = id;

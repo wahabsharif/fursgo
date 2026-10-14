@@ -105,17 +105,27 @@ new #[Layout('layouts.admin')] #[Title('Fursgo Admin')]
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
-                    @foreach ($adminTabPanels as $tabId => $view)
-                        @if (in_array($tabId, $loadedTabs, true))
-                            <div
-                                wire:key="admin-tab-{{ $tabId }}"
-                                class="admin-tab-panel"
-                                @if ($activeTab !== $tabId) style="display: none;" @endif
-                            >
-                                @include($view)
-                            </div>
-                        @endif
-                    @endforeach
+                    <div x-show="accountPage === null">
+                        @foreach ($adminTabPanels as $tabId => $view)
+                            @if (in_array($tabId, $loadedTabs, true))
+                                <div
+                                    wire:key="admin-tab-{{ $tabId }}"
+                                    class="admin-tab-panel"
+                                    @if ($activeTab !== $tabId) style="display: none;" @endif
+                                >
+                                    @include($view)
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+
+                    <div x-show="accountPage === 'profile'" x-cloak>
+                        @include('admin.account.profile')
+                    </div>
+
+                    <div x-show="accountPage === 'notifications'" x-cloak>
+                        @include('admin.account.notifications')
+                    </div>
                 </div>
             </div>
         </div>
