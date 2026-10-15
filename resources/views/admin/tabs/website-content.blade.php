@@ -84,13 +84,15 @@ $testimonials = [
 [
 'name' => 'Sarah M.',
 'when' => '1 day ago',
+'dateSubmitted' => '01/05/2025',
 'quote' => 'The easiest booking I\'ve ever made! My dog looked amazing and the groomer was so kind.',
 'rating' => 5,
-'avatar' => 'images/profile_image.png',
+'avatar' => asset('images/testimonial-1.png'),
 ],
 [
 'name' => 'Sarah M.',
 'when' => '1 day ago',
+'dateSubmitted' => '01/05/2025',
 'quote' => 'The easiest booking I\'ve ever made! My dog looked amazing and the groomer was so kind.',
 'rating' => 5,
 'avatar' => null,
@@ -98,6 +100,48 @@ $testimonials = [
 ];
 
 $cities = ['London', 'Manchester', 'Birmingham', 'Leeds', 'Bristol', 'Edinburgh'];
+
+$legalDocuments = [
+    [
+        'group' => 'Refund Policy',
+        'title' => 'FursGo Refund Policy (24-Hour Window)',
+        'subheading' => 'FursGo Refund Policy',
+        'version' => 'v3.2',
+        'description' => "As a service provider on FursGo, I confirm that I will handle all animals with care, patience, and respect for their wellbeing.\n\nI agree to:\n• Treat all pets humanely and avoid causing unnecessary stress, injury, or discomfort.",
+        'summary' => 'FursGo offers customers a refund window of up to 24 hours after a booking is made, provided the service has not yet taken place.',
+        'checkboxText' => 'I acknowledge and agree to follow the FursGo 24-Hour Refund Policy.',
+        'fileName' => 'business_id.pdf',
+        'fileMeta' => '60 KB of 120 KB',
+        'reAccept' => false,
+        'updated' => 'Last updated 12 Jan 2026',
+    ],
+    [
+        'group' => 'Animal Welfare Statement',
+        'title' => 'Animal Welfare Statement',
+        'subheading' => 'Animal Welfare Statement',
+        'version' => 'v3.2',
+        'description' => 'As a service provider on FursGo, I confirm that I will handle all animals with care, patience, and respect for their wellbeing.',
+        'summary' => 'As a service provider on FursGo, I confirm that I will handle all animals with care, patience, and respect for their wellbeing.',
+        'checkboxText' => 'I acknowledge and agree to the FursGo Animal Welfare Statement.',
+        'fileName' => 'business_id.pdf',
+        'fileMeta' => '60 KB of 120 KB',
+        'reAccept' => false,
+        'updated' => 'Last updated 12 Jan 2026',
+    ],
+    [
+        'group' => 'Compliance Declaration',
+        'title' => 'FursGo Compliance Declaration',
+        'subheading' => 'FursGo Compliance Declaration',
+        'version' => 'v3.2',
+        'description' => 'By operating on the FursGo platform, I confirm that my business complies with all relevant local laws, regulations, and professional standards applicable to pet care.',
+        'summary' => 'By operating on the FursGo platform, I confirm that my business complies with all relevant local laws, regulations, and professional standards applicable to pet care.',
+        'checkboxText' => 'I acknowledge and agree to the FursGo Compliance Declaration.',
+        'fileName' => 'business_id.pdf',
+        'fileMeta' => '60 KB of 120 KB',
+        'reAccept' => false,
+        'updated' => 'Last updated 12 Jan 2026',
+    ],
+];
 
 $versionHistory = [
 ['text' => 'Ben M published Hero Section update', 'when' => '18 Apr 2025 · 14:32'],
@@ -110,6 +154,94 @@ $versionHistory = [
     x-data="{
         section: 'homepage',
         editingOpen: false,
+        wcModal: null,
+        heroHeadline: 'Book trusted pet grooming in minutes!',
+        heroRatingCopy: 'All groomers are ID-verified and insured through Fursgo Protect.',
+        heroHeadlineDraft: '',
+        heroRatingCopyDraft: '',
+        heroPhotoUrl: @js(asset('images/hero_section.png')),
+        heroPhotoName: 'FursGo_Banner.jpeg',
+        heroPhotoDraftUrl: '',
+        heroPhotoDraftName: '',
+        featureHeadline: 'Groom from anywhere. Book from anywhere. Earn from anywhere.',
+        featureHeadlineDraft: '',
+        featureItems: @js($featureItems),
+        featureItemIndex: null,
+        featureTitleDraft: '',
+        featureDescDraft: '',
+        featurePhotoUrl: @js(asset('images/pet_details_2.png')),
+        featurePhotoName: 'FursGo_Banner.jpeg',
+        featurePhotoDraftUrl: '',
+        featurePhotoDraftName: '',
+        testimonialIntro: 'Loved by Pet Parents',
+        testimonialDesc: 'Your pet\'s safety comes first. Every groomer is background-checked, insured, and trained in animal handling.',
+        testimonialTrust: 'All payments and messages are protected through Fursgo.',
+        testimonialIntroDraft: '',
+        testimonialDescDraft: '',
+        testimonialTrustDraft: '',
+        testimonials: @js($testimonials),
+        testimonialEditIndex: null,
+        testimonialNameDraft: '',
+        testimonialDateDraft: '',
+        testimonialPhotoDraftUrl: '',
+        testimonialPhotoDraftName: '',
+        pendingTestimonial: null,
+        banner3Title: 'Our Mission',
+        banner3Desc: 'To create a harmonious grooming community — where pets receive gentle, timely care; owners enjoy convenience and peace of mind; groomers find flexible, rewarding opportunities; space owners foster meaningful connections; and Fetchers enable smooth, stress-free journeys.',
+        banner3Cta: 'About Us',
+        banner3TitleDraft: '',
+        banner3DescDraft: '',
+        banner3CtaDraft: '',
+        banner3PhotoUrl: @js(asset('images/our_mission.png')),
+        banner3PhotoName: 'FursGo_Banner.jpeg',
+        banner3PhotoDraftUrl: '',
+        banner3PhotoDraftName: '',
+        serviceMapTitle: 'Fursgo across the UK',
+        serviceMapDesc: 'Now serving pet owners across the UK.',
+        serviceMapTitleDraft: '',
+        serviceMapDescDraft: '',
+        cities: @js($cities),
+        cityNameDraft: '',
+        footerCtaHeadline: 'Join thousands of happy pets & owners.',
+        footerCtaSubtext: 'Join Fursgo to grow your business with verified bookings and loyal clients.',
+        footerCtaHeadlineDraft: '',
+        footerCtaSubtextDraft: '',
+        staticOpen: false,
+        staticId: 'mission',
+        staticTargets: [
+            { id: 'mission', label: 'Our Mission (About us)', url: 'fursgo.com/our_mission' },
+            { id: 'contact', label: 'Contact Us', url: 'fursgo.com/contact_us' },
+            { id: 'company', label: 'Company Information', url: 'fursgo.com/company_information' }
+        ],
+        contactPageHeadline: 'Contact Us',
+        contactPageHeadlineDraft: '',
+        contactAppStoreLabel: 'Available Soon',
+        contactAppStoreLink: '',
+        contactAppStoreLabelDraft: '',
+        contactAppStoreLinkDraft: '',
+        groomersBannerEyebrow: 'Loved by Pet Parents',
+        groomersBannerHeadline: @js($groomersBanner['headline']),
+        groomersBannerDesc: @js(implode(' ', $groomersBanner['description'])),
+        groomersBannerPrimaryCta: 'Start your Profile',
+        groomersBannerPrimaryLink: 'fursgo.com/business/signup',
+        groomersBannerSecondaryCta: 'Learn More',
+        groomersBannerSecondaryLink: 'fursgo.com/our_mission',
+        groomersBannerEyebrowDraft: '',
+        groomersBannerHeadlineDraft: '',
+        groomersBannerDescDraft: '',
+        groomersBannerPrimaryCtaDraft: '',
+        groomersBannerPrimaryLinkDraft: '',
+        groomersBannerSecondaryCtaDraft: '',
+        groomersBannerSecondaryLinkDraft: '',
+        legalDocuments: @js($legalDocuments),
+        legalEditIndex: null,
+        legalTitleDraft: '',
+        legalSubheadingDraft: '',
+        legalDescDraft: '',
+        legalCheckboxDraft: '',
+        legalFileNameDraft: '',
+        legalFileMetaDraft: '',
+        legalReAcceptDraft: false,
         editingId: 'customer',
         targets: @js($editingTargets),
         get editingLabel() {
@@ -120,12 +252,407 @@ $versionHistory = [
             const t = this.targets.find(x => x.id === this.editingId);
             return t ? t.url : '';
         },
+        get staticTarget() {
+            return this.staticTargets.find(item => item.id === this.staticId) || this.staticTargets[0];
+        },
+        get staticModalSubtitle() {
+            return 'Static Pages - ' + (this.staticTarget ? this.staticTarget.label : '');
+        },
+        get legalModalSubtitle() {
+            if (this.legalEditIndex === null) return '';
+            const doc = this.legalDocuments[this.legalEditIndex];
+            return doc ? doc.group : '';
+        },
         selectEditing(id) {
             this.editingId = id;
             this.editingOpen = false;
+        },
+        selectStatic(id) {
+            this.staticId = id;
+            this.staticOpen = false;
+        },
+        closeWcModal() {
+            this.wcModal = null;
+            this.featureItemIndex = null;
+            this.testimonialEditIndex = null;
+            this.pendingTestimonial = null;
+            this.legalEditIndex = null;
+        },
+        openHeroEditor() {
+            this.heroHeadlineDraft = this.heroHeadline;
+            this.heroRatingCopyDraft = this.heroRatingCopy;
+            this.wcModal = 'hero-text';
+            this.$nextTick(() => this.$refs.heroHeadlineInput && this.$refs.heroHeadlineInput.focus());
+        },
+        saveHeroEditor() {
+            if (!this.heroHeadlineDraft.trim()) {
+                this.$refs.heroHeadlineInput.focus();
+                return;
+            }
+            this.heroHeadline = this.heroHeadlineDraft.trim();
+            this.heroRatingCopy = this.heroRatingCopyDraft.trim();
+            this.closeWcModal();
+        },
+        openHeroPhotoEditor() {
+            this.heroPhotoDraftUrl = this.heroPhotoUrl;
+            this.heroPhotoDraftName = this.heroPhotoName;
+            this.wcModal = 'hero-photo';
+        },
+        onHeroPhotoSelected(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (this.heroPhotoDraftUrl && this.heroPhotoDraftUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(this.heroPhotoDraftUrl);
+            }
+            this.heroPhotoDraftUrl = URL.createObjectURL(file);
+            this.heroPhotoDraftName = file.name;
+            event.target.value = '';
+        },
+        saveHeroPhotoEditor() {
+            this.heroPhotoUrl = this.heroPhotoDraftUrl;
+            this.heroPhotoName = this.heroPhotoDraftName;
+            this.closeWcModal();
+        },
+        openFeatureHeadlineEditor() {
+            this.featureHeadlineDraft = this.featureHeadline;
+            this.wcModal = 'feature-headline';
+            this.$nextTick(() => this.$refs.featureHeadlineInput && this.$refs.featureHeadlineInput.focus());
+        },
+        saveFeatureHeadlineEditor() {
+            if (!this.featureHeadlineDraft.trim()) {
+                this.$refs.featureHeadlineInput.focus();
+                return;
+            }
+            this.featureHeadline = this.featureHeadlineDraft.trim();
+            this.closeWcModal();
+        },
+        openFeatureItemEditor(index) {
+            const item = this.featureItems[index];
+            if (!item) return;
+            this.featureItemIndex = index;
+            this.featureTitleDraft = item.title;
+            this.featureDescDraft = item.desc;
+            this.wcModal = 'feature-item';
+            this.$nextTick(() => this.$refs.featureTitleInput && this.$refs.featureTitleInput.focus());
+        },
+        saveFeatureItemEditor() {
+            if (!this.featureTitleDraft.trim()) {
+                this.$refs.featureTitleInput.focus();
+                return;
+            }
+            if (this.featureItemIndex === null) return;
+            this.featureItems[this.featureItemIndex].title = this.featureTitleDraft.trim();
+            this.featureItems[this.featureItemIndex].desc = this.featureDescDraft.trim();
+            this.closeWcModal();
+        },
+        openFeaturePhotoEditor() {
+            this.featurePhotoDraftUrl = this.featurePhotoUrl;
+            this.featurePhotoDraftName = this.featurePhotoName;
+            this.wcModal = 'feature-photo';
+        },
+        onFeaturePhotoSelected(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (this.featurePhotoDraftUrl && this.featurePhotoDraftUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(this.featurePhotoDraftUrl);
+            }
+            this.featurePhotoDraftUrl = URL.createObjectURL(file);
+            this.featurePhotoDraftName = file.name;
+            event.target.value = '';
+        },
+        saveFeaturePhotoEditor() {
+            this.featurePhotoUrl = this.featurePhotoDraftUrl;
+            this.featurePhotoName = this.featurePhotoDraftName;
+            this.closeWcModal();
+        },
+        openTestimonialTextEditor() {
+            this.testimonialIntroDraft = this.testimonialIntro;
+            this.testimonialDescDraft = this.testimonialDesc;
+            this.testimonialTrustDraft = this.testimonialTrust;
+            this.wcModal = 'testimonial-text';
+            this.$nextTick(() => this.$refs.testimonialIntroInput && this.$refs.testimonialIntroInput.focus());
+        },
+        saveTestimonialTextEditor() {
+            if (!this.testimonialIntroDraft.trim()) {
+                this.$refs.testimonialIntroInput.focus();
+                return;
+            }
+            this.testimonialIntro = this.testimonialIntroDraft.trim();
+            this.testimonialDesc = this.testimonialDescDraft.trim();
+            this.testimonialTrust = this.testimonialTrustDraft.trim();
+            this.closeWcModal();
+        },
+        openAddTestimonial() {
+            this.testimonialEditIndex = null;
+            this.pendingTestimonial = null;
+            this.testimonialNameDraft = '';
+            this.testimonialDateDraft = '';
+            this.wcModal = 'testimonial-add';
+            this.$nextTick(() => this.$refs.testimonialNameInput && this.$refs.testimonialNameInput.focus());
+        },
+        openEditTestimonial(index) {
+            const item = this.testimonials[index];
+            if (!item) return;
+            this.testimonialEditIndex = index;
+            this.pendingTestimonial = null;
+            this.testimonialNameDraft = item.name;
+            this.testimonialDateDraft = item.dateSubmitted || '';
+            this.wcModal = 'testimonial-add';
+            this.$nextTick(() => this.$refs.testimonialNameInput && this.$refs.testimonialNameInput.focus());
+        },
+        saveTestimonialMeta() {
+            if (!this.testimonialNameDraft.trim()) {
+                this.$refs.testimonialNameInput.focus();
+                return;
+            }
+            if (!this.testimonialDateDraft.trim()) {
+                this.$refs.testimonialDateInput.focus();
+                return;
+            }
+
+            const name = this.testimonialNameDraft.trim();
+            const dateSubmitted = this.testimonialDateDraft.trim();
+
+            if (this.testimonialEditIndex !== null) {
+                this.testimonials[this.testimonialEditIndex].name = name;
+                this.testimonials[this.testimonialEditIndex].dateSubmitted = dateSubmitted;
+                this.testimonials[this.testimonialEditIndex].when = dateSubmitted;
+                this.testimonialPhotoDraftUrl = this.testimonials[this.testimonialEditIndex].avatar || '';
+                this.testimonialPhotoDraftName = this.testimonials[this.testimonialEditIndex].avatar ? 'FursGo_Banner.jpeg' : '';
+                this.wcModal = 'testimonial-photo';
+                return;
+            }
+
+            this.pendingTestimonial = {
+                name,
+                when: dateSubmitted,
+                dateSubmitted,
+                quote: 'The easiest booking I\'ve ever made! My dog looked amazing and the groomer was so kind.',
+                rating: 5,
+                avatar: null,
+            };
+            this.testimonialPhotoDraftUrl = @js(asset('images/testimonial-1.png'));
+            this.testimonialPhotoDraftName = 'FursGo_Banner.jpeg';
+            this.wcModal = 'testimonial-photo';
+        },
+        onTestimonialPhotoSelected(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (this.testimonialPhotoDraftUrl && this.testimonialPhotoDraftUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(this.testimonialPhotoDraftUrl);
+            }
+            this.testimonialPhotoDraftUrl = URL.createObjectURL(file);
+            this.testimonialPhotoDraftName = file.name;
+            event.target.value = '';
+        },
+        saveTestimonialPhoto() {
+            if (this.testimonialEditIndex !== null) {
+                this.testimonials[this.testimonialEditIndex].avatar = this.testimonialPhotoDraftUrl || null;
+                this.closeWcModal();
+                return;
+            }
+
+            if (!this.pendingTestimonial) {
+                this.closeWcModal();
+                return;
+            }
+
+            this.pendingTestimonial.avatar = this.testimonialPhotoDraftUrl || null;
+            this.testimonials.push(this.pendingTestimonial);
+            this.closeWcModal();
+        },
+        openBanner3Editor() {
+            this.banner3TitleDraft = this.banner3Title;
+            this.banner3DescDraft = this.banner3Desc;
+            this.banner3CtaDraft = this.banner3Cta;
+            this.wcModal = 'banner3-text';
+            this.$nextTick(() => this.$refs.banner3TitleInput && this.$refs.banner3TitleInput.focus());
+        },
+        saveBanner3Editor() {
+            if (!this.banner3TitleDraft.trim()) {
+                this.$refs.banner3TitleInput.focus();
+                return;
+            }
+            if (!this.banner3CtaDraft.trim()) {
+                this.$refs.banner3CtaInput.focus();
+                return;
+            }
+            this.banner3Title = this.banner3TitleDraft.trim();
+            this.banner3Desc = this.banner3DescDraft.trim();
+            this.banner3Cta = this.banner3CtaDraft.trim();
+            this.closeWcModal();
+        },
+        openBanner3PhotoEditor() {
+            this.banner3PhotoDraftUrl = this.banner3PhotoUrl;
+            this.banner3PhotoDraftName = this.banner3PhotoName;
+            this.wcModal = 'banner3-photo';
+        },
+        onBanner3PhotoSelected(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (this.banner3PhotoDraftUrl && this.banner3PhotoDraftUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(this.banner3PhotoDraftUrl);
+            }
+            this.banner3PhotoDraftUrl = URL.createObjectURL(file);
+            this.banner3PhotoDraftName = file.name;
+            event.target.value = '';
+        },
+        saveBanner3PhotoEditor() {
+            this.banner3PhotoUrl = this.banner3PhotoDraftUrl;
+            this.banner3PhotoName = this.banner3PhotoDraftName;
+            this.closeWcModal();
+        },
+        openServiceMapEditor() {
+            this.serviceMapTitleDraft = this.serviceMapTitle;
+            this.serviceMapDescDraft = this.serviceMapDesc;
+            this.wcModal = 'service-map-text';
+            this.$nextTick(() => this.$refs.serviceMapTitleInput && this.$refs.serviceMapTitleInput.focus());
+        },
+        saveServiceMapEditor() {
+            if (!this.serviceMapTitleDraft.trim()) {
+                this.$refs.serviceMapTitleInput.focus();
+                return;
+            }
+            this.serviceMapTitle = this.serviceMapTitleDraft.trim();
+            this.serviceMapDesc = this.serviceMapDescDraft.trim();
+            this.closeWcModal();
+        },
+        openAddCity() {
+            this.cityNameDraft = '';
+            this.wcModal = 'add-city';
+            this.$nextTick(() => this.$refs.cityNameInput && this.$refs.cityNameInput.focus());
+        },
+        saveAddCity() {
+            const name = this.cityNameDraft.trim();
+            if (!name) {
+                this.$refs.cityNameInput.focus();
+                return;
+            }
+            if (!this.cities.some(c => c.toLowerCase() === name.toLowerCase())) {
+                this.cities.push(name);
+            }
+            this.closeWcModal();
+        },
+        removeCity(index) {
+            this.cities.splice(index, 1);
+        },
+        openFooterCtaEditor() {
+            this.footerCtaHeadlineDraft = this.footerCtaHeadline;
+            this.footerCtaSubtextDraft = this.footerCtaSubtext;
+            this.wcModal = 'footer-cta';
+            this.$nextTick(() => this.$refs.footerCtaHeadlineInput && this.$refs.footerCtaHeadlineInput.focus());
+        },
+        saveFooterCtaEditor() {
+            if (!this.footerCtaHeadlineDraft.trim()) {
+                this.$refs.footerCtaHeadlineInput.focus();
+                return;
+            }
+            if (!this.footerCtaSubtextDraft.trim()) {
+                this.$refs.footerCtaSubtextInput.focus();
+                return;
+            }
+            this.footerCtaHeadline = this.footerCtaHeadlineDraft.trim();
+            this.footerCtaSubtext = this.footerCtaSubtextDraft.trim();
+            this.closeWcModal();
+        },
+        openContactPageBannerEditor() {
+            this.contactPageHeadlineDraft = this.contactPageHeadline;
+            this.wcModal = 'contact-page-banner';
+            this.$nextTick(() => this.$refs.contactPageHeadlineInput && this.$refs.contactPageHeadlineInput.focus());
+        },
+        saveContactPageBannerEditor() {
+            if (!this.contactPageHeadlineDraft.trim()) {
+                this.$refs.contactPageHeadlineInput.focus();
+                return;
+            }
+            this.contactPageHeadline = this.contactPageHeadlineDraft.trim();
+            this.closeWcModal();
+        },
+        openContactBanner1Editor() {
+            this.contactAppStoreLabelDraft = this.contactAppStoreLabel;
+            this.contactAppStoreLinkDraft = this.contactAppStoreLink;
+            this.wcModal = 'contact-banner1';
+            this.$nextTick(() => this.$refs.contactAppStoreLabelInput && this.$refs.contactAppStoreLabelInput.focus());
+        },
+        saveContactBanner1Editor() {
+            this.contactAppStoreLabel = this.contactAppStoreLabelDraft.trim();
+            this.contactAppStoreLink = this.contactAppStoreLinkDraft.trim();
+            this.closeWcModal();
+        },
+        openGroomersPageBannerEditor() {
+            this.groomersBannerEyebrowDraft = this.groomersBannerEyebrow;
+            this.groomersBannerHeadlineDraft = this.groomersBannerHeadline;
+            this.groomersBannerDescDraft = this.groomersBannerDesc;
+            this.groomersBannerPrimaryCtaDraft = this.groomersBannerPrimaryCta;
+            this.groomersBannerPrimaryLinkDraft = this.groomersBannerPrimaryLink;
+            this.groomersBannerSecondaryCtaDraft = this.groomersBannerSecondaryCta;
+            this.groomersBannerSecondaryLinkDraft = this.groomersBannerSecondaryLink;
+            this.wcModal = 'groomers-page-banner';
+            this.$nextTick(() => this.$refs.groomersBannerHeadlineInput && this.$refs.groomersBannerHeadlineInput.focus());
+        },
+        saveGroomersPageBannerEditor() {
+            if (!this.groomersBannerHeadlineDraft.trim()) {
+                this.$refs.groomersBannerHeadlineInput.focus();
+                return;
+            }
+            if (!this.groomersBannerDescDraft.trim()) {
+                this.$refs.groomersBannerDescInput.focus();
+                return;
+            }
+            this.groomersBannerEyebrow = this.groomersBannerEyebrowDraft.trim();
+            this.groomersBannerHeadline = this.groomersBannerHeadlineDraft.trim();
+            this.groomersBannerDesc = this.groomersBannerDescDraft.trim();
+            this.groomersBannerPrimaryCta = this.groomersBannerPrimaryCtaDraft.trim();
+            this.groomersBannerPrimaryLink = this.groomersBannerPrimaryLinkDraft.trim();
+            this.groomersBannerSecondaryCta = this.groomersBannerSecondaryCtaDraft.trim();
+            this.groomersBannerSecondaryLink = this.groomersBannerSecondaryLinkDraft.trim();
+            this.closeWcModal();
+        },
+        openLegalDocumentEditor(index) {
+            const doc = this.legalDocuments[index];
+            if (!doc) return;
+            this.legalEditIndex = index;
+            this.legalTitleDraft = doc.title;
+            this.legalSubheadingDraft = doc.subheading;
+            this.legalDescDraft = doc.description;
+            this.legalCheckboxDraft = doc.checkboxText;
+            this.legalFileNameDraft = doc.fileName || '';
+            this.legalFileMetaDraft = doc.fileMeta || '';
+            this.legalReAcceptDraft = !!doc.reAccept;
+            this.wcModal = 'legal-document';
+            this.$nextTick(() => this.$refs.legalTitleInput && this.$refs.legalTitleInput.focus());
+        },
+        onLegalFileSelected(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            this.legalFileNameDraft = file.name;
+            const kb = Math.max(1, Math.round(file.size / 1024));
+            this.legalFileMetaDraft = kb + ' KB of ' + kb + ' KB';
+            event.target.value = '';
+        },
+        clearLegalFile() {
+            this.legalFileNameDraft = '';
+            this.legalFileMetaDraft = '';
+        },
+        saveLegalDocumentEditor() {
+            if (!this.legalDescDraft.trim()) {
+                this.$refs.legalDescInput.focus();
+                return;
+            }
+            if (this.legalEditIndex === null) return;
+            const doc = this.legalDocuments[this.legalEditIndex];
+            doc.title = this.legalTitleDraft.trim();
+            doc.subheading = this.legalSubheadingDraft.trim();
+            doc.description = this.legalDescDraft.trim();
+            doc.summary = this.legalDescDraft.trim().split('\n')[0] || doc.summary;
+            doc.checkboxText = this.legalCheckboxDraft.trim();
+            doc.fileName = this.legalFileNameDraft;
+            doc.fileMeta = this.legalFileMetaDraft;
+            doc.reAccept = this.legalReAcceptDraft;
+            this.closeWcModal();
         }
     }"
-    @keydown.escape.window="editingOpen = false">
+    @keydown.escape.window="editingOpen = false; staticOpen = false; closeWcModal()">
     <div class="admin-wc-separator" aria-hidden="true"></div>
 
     <div class="admin-po-sections-bar admin-wc-sections-bar">
@@ -209,7 +736,7 @@ $versionHistory = [
                         <h2 class="admin-wc-card-title">Hero Section</h2>
                         <p class="admin-wc-card-sub">Headline shown above the search widget</p>
                     </div>
-                    <button type="button" class="admin-wc-edit-link">
+                    <button type="button" class="admin-wc-edit-link" @click="openHeroEditor()" aria-haspopup="dialog">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 16 15" fill="none">
                             <path d="M9.80882 2.49568L12.2794 4.90732M8.16176 13.75H14.75M1.57353 10.5345L0.75 13.75L4.04412 12.9461L13.5855 3.63237C13.8943 3.33087 14.0678 2.922 14.0678 2.49568C14.0678 2.06936 13.8943 1.6605 13.5855 1.359L13.4439 1.22073C13.135 0.919322 12.7162 0.75 12.2794 0.75C11.8427 0.75 11.4238 0.919322 11.1149 1.22073L1.57353 10.5345Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
@@ -218,7 +745,7 @@ $versionHistory = [
                 </div>
 
                 <div class="admin-wc-preview admin-wc-hero-preview">
-                    <p class="admin-wc-preview-headline">Book trusted pet grooming in minutes!</p>
+                    <p class="admin-wc-preview-headline" x-text="heroHeadline"></p>
                 </div>
 
                 <div class="admin-wc-trust-row">
@@ -229,7 +756,7 @@ $versionHistory = [
                         </svg>
                         <div class="admin-wc-trust-copy">
                             <p>4.9 average rating from 5,000 + pet owners.</p>
-                            <p>All groomers are ID-verified and insured through Fursgo Protect.</p>
+                            <p x-text="heroRatingCopy"></p>
                         </div>
                     </div>
                     <span class="admin-wc-auto">
@@ -247,7 +774,7 @@ $versionHistory = [
                         <h2 class="admin-wc-card-title">Hero Photo</h2>
                         <p class="admin-wc-card-sub">Custom photo uploaded</p>
                     </div>
-                    <button type="button" class="admin-wc-edit-link">
+                    <button type="button" class="admin-wc-edit-link" @click="openHeroPhotoEditor()" aria-haspopup="dialog">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 16 15" fill="none">
                             <path d="M9.80882 2.49568L12.2794 4.90732M8.16176 13.75H14.75M1.57353 10.5345L0.75 13.75L4.04412 12.9461L13.5855 3.63237C13.8943 3.33087 14.0678 2.922 14.0678 2.49568C14.0678 2.06936 13.8943 1.6605 13.5855 1.359L13.4439 1.22073C13.135 0.919322 12.7162 0.75 12.2794 0.75C11.8427 0.75 11.4238 0.919322 11.1149 1.22073L1.57353 10.5345Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
@@ -255,7 +782,7 @@ $versionHistory = [
                     </button>
                 </div>
                 <img
-                    src="{{ asset('images/hero_section.png') }}"
+                    :src="heroPhotoUrl"
                     alt="Hero photo preview"
                     class="admin-wc-thumb admin-wc-thumb-lg"
                     width="160"
@@ -269,7 +796,7 @@ $versionHistory = [
                         <h2 class="admin-wc-card-title">Feature Highlight</h2>
                         <p class="admin-wc-card-sub">Lorem ipsum dolor sit amet</p>
                     </div>
-                    <button type="button" class="admin-wc-edit-link">
+                    <button type="button" class="admin-wc-edit-link" @click="openFeatureHeadlineEditor()" aria-haspopup="dialog">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 16 15" fill="none">
                             <path d="M9.80882 2.49568L12.2794 4.90732M8.16176 13.75H14.75M1.57353 10.5345L0.75 13.75L4.04412 12.9461L13.5855 3.63237C13.8943 3.33087 14.0678 2.922 14.0678 2.49568C14.0678 2.06936 13.8943 1.6605 13.5855 1.359L13.4439 1.22073C13.135 0.919322 12.7162 0.75 12.2794 0.75C11.8427 0.75 11.4238 0.919322 11.1149 1.22073L1.57353 10.5345Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
@@ -278,30 +805,30 @@ $versionHistory = [
                 </div>
 
                 <div class="admin-wc-preview admin-wc-hero-preview">
-                    <p class="admin-wc-preview-headline">Groom from anywhere. Book from anywhere. Earn from anywhere.</p>
+                    <p class="admin-wc-preview-headline" x-text="featureHeadline"></p>
                 </div>
 
                 <ul class="admin-wc-list">
-                    @foreach ($featureItems as $item)
-                    <li class="admin-wc-list-item">
-                        <span class="admin-wc-check" aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30" fill="none">
-                                <circle cx="15" cy="15" r="14.5" fill="white" stroke="#F6F6F6" />
-                                <path d="M15 5.00012C9.5 5.00012 5 9.50012 5 15.0001C5 20.5001 9.5 25.0001 15 25.0001C20.5 25.0001 25 20.5001 25 15.0001C25 9.50012 20.5 5.00012 15 5.00012ZM13 20.0001L8 15.0001L9.41 13.5901L13 17.1701L20.59 9.58012L22 11.0001L13 20.0001Z" fill="#D8E8B7" />
-                            </svg>
-                        </span>
-                        <div class="admin-wc-list-copy">
-                            <p class="admin-wc-list-title">{{ $item['title'] }}</p>
-                            <p class="admin-wc-list-desc">{{ $item['desc'] }}</p>
-                        </div>
-                        <button type="button" class="admin-wc-icon-btn" aria-label="Edit {{ $item['title'] }}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-                                <path d="M6.90909 1.43188H2.11869C1.75569 1.43188 1.40756 1.57609 1.15088 1.83276C0.8942 2.08944 0.75 2.43757 0.75 2.80057V12.3814C0.75 12.7444 0.8942 13.0925 1.15088 13.3492C1.40756 13.6059 1.75569 13.7501 2.11869 13.7501H11.6995C12.0625 13.7501 12.4106 13.6059 12.6673 13.3492C12.924 13.0925 13.0682 12.7444 13.0682 12.3814V7.59097" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M11.2717 1.1752C11.544 0.902948 11.9132 0.75 12.2983 0.75C12.6833 0.75 13.0525 0.902948 13.3248 1.1752C13.597 1.44744 13.75 1.81669 13.75 2.20171C13.75 2.58673 13.597 2.95598 13.3248 3.22823L7.15679 9.39689C6.99429 9.55925 6.79354 9.6781 6.57304 9.74249L4.60692 10.3173C4.54804 10.3345 4.48562 10.3355 4.4262 10.3203C4.36678 10.3051 4.31254 10.2742 4.26916 10.2308C4.22579 10.1874 4.19487 10.1332 4.17965 10.0738C4.16443 10.0143 4.16546 9.95193 4.18263 9.89304L4.75748 7.92692C4.82217 7.7066 4.94125 7.50609 5.10376 7.34386L11.2717 1.1752Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </button>
-                    </li>
-                    @endforeach
+                    <template x-for="(item, index) in featureItems" :key="index">
+                        <li class="admin-wc-list-item">
+                            <span class="admin-wc-check" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30" fill="none">
+                                    <circle cx="15" cy="15" r="14.5" fill="white" stroke="#F6F6F6" />
+                                    <path d="M15 5.00012C9.5 5.00012 5 9.50012 5 15.0001C5 20.5001 9.5 25.0001 15 25.0001C20.5 25.0001 25 20.5001 25 15.0001C25 9.50012 20.5 5.00012 15 5.00012ZM13 20.0001L8 15.0001L9.41 13.5901L13 17.1701L20.59 9.58012L22 11.0001L13 20.0001Z" fill="#D8E8B7" />
+                                </svg>
+                            </span>
+                            <div class="admin-wc-list-copy">
+                                <p class="admin-wc-list-title" x-text="item.title"></p>
+                                <p class="admin-wc-list-desc" x-text="item.desc"></p>
+                            </div>
+                            <button type="button" class="admin-wc-icon-btn" @click="openFeatureItemEditor(index)" :aria-label="'Edit ' + item.title" aria-haspopup="dialog">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                                    <path d="M6.90909 1.43188H2.11869C1.75569 1.43188 1.40756 1.57609 1.15088 1.83276C0.8942 2.08944 0.75 2.43757 0.75 2.80057V12.3814C0.75 12.7444 0.8942 13.0925 1.15088 13.3492C1.40756 13.6059 1.75569 13.7501 2.11869 13.7501H11.6995C12.0625 13.7501 12.4106 13.6059 12.6673 13.3492C12.924 13.0925 13.0682 12.7444 13.0682 12.3814V7.59097" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M11.2717 1.1752C11.544 0.902948 11.9132 0.75 12.2983 0.75C12.6833 0.75 13.0525 0.902948 13.3248 1.1752C13.597 1.44744 13.75 1.81669 13.75 2.20171C13.75 2.58673 13.597 2.95598 13.3248 3.22823L7.15679 9.39689C6.99429 9.55925 6.79354 9.6781 6.57304 9.74249L4.60692 10.3173C4.54804 10.3345 4.48562 10.3355 4.4262 10.3203C4.36678 10.3051 4.31254 10.2742 4.26916 10.2308C4.22579 10.1874 4.19487 10.1332 4.17965 10.0738C4.16443 10.0143 4.16546 9.95193 4.18263 9.89304L4.75748 7.92692C4.82217 7.7066 4.94125 7.50609 5.10376 7.34386L11.2717 1.1752Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </li>
+                    </template>
                 </ul>
 
                 <div class="admin-wc-divider"></div>
@@ -311,7 +838,7 @@ $versionHistory = [
                         <h2 class="admin-wc-card-title">Banner Photo</h2>
                         <p class="admin-wc-card-sub">Custom photo uploaded</p>
                     </div>
-                    <button type="button" class="admin-wc-edit-link">
+                    <button type="button" class="admin-wc-edit-link" @click="openFeaturePhotoEditor()" aria-haspopup="dialog">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 16 15" fill="none">
                             <path d="M9.80882 2.49568L12.2794 4.90732M8.16176 13.75H14.75M1.57353 10.5345L0.75 13.75L4.04412 12.9461L13.5855 3.63237C13.8943 3.33087 14.0678 2.922 14.0678 2.49568C14.0678 2.06936 13.8943 1.6605 13.5855 1.359L13.4439 1.22073C13.135 0.919322 12.7162 0.75 12.2794 0.75C11.8427 0.75 11.4238 0.919322 11.1149 1.22073L1.57353 10.5345Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
@@ -319,7 +846,7 @@ $versionHistory = [
                     </button>
                 </div>
                 <img
-                    src="{{ asset('images/pet_details_2.png') }}"
+                    :src="featurePhotoUrl"
                     alt="Banner photo preview"
                     class="admin-wc-thumb"
                     width="96"
@@ -428,7 +955,7 @@ $versionHistory = [
                         <h2 class="admin-wc-card-title">Testimonials</h2>
                         <p class="admin-wc-card-sub">5 published · 0 pending review</p>
                     </div>
-                    <button type="button" class="admin-wc-edit-link">
+                    <button type="button" class="admin-wc-edit-link" @click="openTestimonialTextEditor()" aria-haspopup="dialog">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
                             <path d="M6.90909 1.43188H2.11869C1.75569 1.43188 1.40756 1.57609 1.15088 1.83276C0.8942 2.08944 0.75 2.43757 0.75 2.80057V12.3814C0.75 12.7444 0.8942 13.0925 1.15088 13.3492C1.40756 13.6059 1.75569 13.7501 2.11869 13.7501H11.6995C12.0625 13.7501 12.4106 13.6059 12.6673 13.3492C12.924 13.0925 13.0682 12.7444 13.0682 12.3814V7.59097" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                             <path d="M11.2717 1.1752C11.544 0.902948 11.9132 0.75 12.2983 0.75C12.6833 0.75 13.0525 0.902948 13.3248 1.1752C13.597 1.44744 13.75 1.81669 13.75 2.20171C13.75 2.58673 13.597 2.95598 13.3248 3.22823L7.15679 9.39689C6.99429 9.55925 6.79354 9.6781 6.57304 9.74249L4.60692 10.3173C4.54804 10.3345 4.48562 10.3355 4.4262 10.3203C4.36678 10.3051 4.31254 10.2742 4.26916 10.2308C4.22579 10.1874 4.19487 10.1332 4.17965 10.0738C4.16443 10.0143 4.16546 9.95193 4.18263 9.89304L4.75748 7.92692C4.82217 7.7066 4.94125 7.50609 5.10376 7.34386L11.2717 1.1752Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -438,74 +965,77 @@ $versionHistory = [
                 </div>
 
                 <div class="admin-wc-preview admin-wc-hero-preview admin-wc-preview-block">
-                    <p class="admin-wc-preview-headline">Loved by Pet Parents</p>
-                    <p class="admin-wc-preview-body">Your pet's safety comes first. Every groomer is background-checked, insured, and trained in animal handling.</p>
+                    <p class="admin-wc-preview-headline" x-text="testimonialIntro"></p>
+                    <p class="admin-wc-preview-body" x-text="testimonialDesc"></p>
                 </div>
 
                 <div class="admin-wc-divider"></div>
 
                 <div class="admin-wc-subhead">
                     <p class="admin-wc-card-title mb-0">Feature Testimonial</p>
-                    <button type="button" class="admin-wc-add-link">+ Add testimonial</button>
+                    <button type="button" class="admin-wc-add-link" @click="openAddTestimonial()" aria-haspopup="dialog">+ Add testimonial</button>
                 </div>
 
                 <div class="admin-wc-testimonial-list">
-                    @foreach ($testimonials as $item)
-                    @if (! $loop->first)
-                    <div class="admin-wc-divider" aria-hidden="true"></div>
-                    @endif
-                    <article class="admin-wc-testimonial">
-                        <div class="admin-wc-testimonial-top">
-                            <div class="admin-wc-testimonial-who">
-                                @if ($item['avatar'])
-                                <span class="admin-wc-avatar-wrap">
-                                    <img src="{{ asset($item['avatar']) }}" alt="" class="admin-wc-avatar" width="40" height="40">
-                                </span>
-                                @else
-                                <span class="admin-wc-avatar-wrap is-empty" aria-hidden="true">
-                                    <span class="admin-wc-avatar-initial">{{ substr($item['name'], 0, 1) }}</span>
-                                </span>
-                                @endif
-                                <div>
-                                    <p class="admin-wc-testimonial-name">{{ $item['name'] }}</p>
-                                    <p class="admin-wc-testimonial-when">{{ $item['when'] }}</p>
+                    <template x-for="(item, index) in testimonials" :key="index">
+                        <div>
+                            <div class="admin-wc-divider" x-show="index > 0" aria-hidden="true"></div>
+                            <article class="admin-wc-testimonial">
+                                <div class="admin-wc-testimonial-top">
+                                    <div class="admin-wc-testimonial-who">
+                                        <template x-if="item.avatar">
+                                            <span class="admin-wc-avatar-wrap">
+                                                <img :src="item.avatar" alt="" class="admin-wc-avatar" width="40" height="40">
+                                            </span>
+                                        </template>
+                                        <template x-if="!item.avatar">
+                                            <span class="admin-wc-avatar-wrap is-empty" aria-hidden="true">
+                                                <span class="admin-wc-avatar-initial" x-text="item.name.charAt(0)"></span>
+                                            </span>
+                                        </template>
+                                        <div>
+                                            <p class="admin-wc-testimonial-name" x-text="item.name"></p>
+                                            <p class="admin-wc-testimonial-when" x-text="item.when"></p>
+                                        </div>
+                                    </div>
+                                    <span class="admin-po-status is-active">Published</span>
                                 </div>
-                            </div>
-                            <span class="admin-po-status is-active">Published</span>
+                                <p class="admin-wc-testimonial-quote" x-text="'“' + item.quote + '”'"></p>
+                                <div class="admin-wc-testimonial-foot">
+                                    <div class="admin-wc-stars" :aria-label="item.rating + ' out of 5 stars'">
+                                        <template x-for="star in item.rating" :key="star">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                                <path d="M7 1.2L8.7 4.6L12.5 5.15L9.75 7.75L10.4 11.5L7 9.7L3.6 11.5L4.25 7.75L1.5 5.15L5.3 4.6L7 1.2Z" fill="#FFC97A" />
+                                            </svg>
+                                        </template>
+                                        <span x-text="item.rating + ' out of 5 stars'"></span>
+                                    </div>
+                                    <div class="admin-wc-testimonial-actions">
+                                        <button type="button" class="admin-wc-square-btn" @click="openEditTestimonial(index)" aria-label="Edit testimonial" aria-haspopup="dialog">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                                                <path d="M6.90909 1.43188H2.11869C1.75569 1.43188 1.40756 1.57609 1.15088 1.83276C0.8942 2.08944 0.75 2.43757 0.75 2.80057V12.3814C0.75 12.7444 0.8942 13.0925 1.15088 13.3492C1.40756 13.6059 1.75569 13.7501 2.11869 13.7501H11.6995C12.0625 13.7501 12.4106 13.6059 12.6673 13.3492C12.924 13.0925 13.0682 12.7444 13.0682 12.3814V7.59097" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M11.2717 1.1752C11.544 0.902948 11.9132 0.75 12.2983 0.75C12.6833 0.75 13.0525 0.902948 13.3248 1.1752C13.597 1.44744 13.75 1.81669 13.75 2.20171C13.75 2.58673 13.597 2.95598 13.3248 3.22823L7.15679 9.39689C6.99429 9.55925 6.79354 9.6781 6.57304 9.74249L4.60692 10.3173C4.54804 10.3345 4.48562 10.3355 4.4262 10.3203C4.36678 10.3051 4.31254 10.2742 4.26916 10.2308C4.22579 10.1874 4.19487 10.1332 4.17965 10.0738C4.16443 10.0143 4.16546 9.95193 4.18263 9.89304L4.75748 7.92692C4.82217 7.7066 4.94125 7.50609 5.10376 7.34386L11.2717 1.1752Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                        </button>
+                                        <button type="button" class="admin-wc-square-btn" aria-label="View testimonial">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">
+                                                <path d="M1 6C1 6 3.5 1.5 8 1.5C12.5 1.5 15 6 15 6C15 6 12.5 10.5 8 10.5C3.5 10.5 1 6 1 6Z" stroke="#3B3731" stroke-width="1.2" stroke-linejoin="round" />
+                                                <circle cx="8" cy="6" r="2" stroke="#3B3731" stroke-width="1.2" />
+                                            </svg>
+                                        </button>
+                                        <button type="button" class="admin-wc-square-btn" @click="testimonials.splice(index, 1)" aria-label="Delete testimonial">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                                                <path d="M2.5 2.5L9.5 9.5M9.5 2.5L2.5 9.5" stroke="#3B3731" stroke-width="1.3" stroke-linecap="round" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </article>
                         </div>
-                        <p class="admin-wc-testimonial-quote">“{{ $item['quote'] }}”</p>
-                        <div class="admin-wc-testimonial-foot">
-                            <div class="admin-wc-stars" aria-label="{{ $item['rating'] }} out of 5 stars">
-                                @for ($i = 0; $i < $item['rating']; $i++)
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                                    <path d="M7 1.2L8.7 4.6L12.5 5.15L9.75 7.75L10.4 11.5L7 9.7L3.6 11.5L4.25 7.75L1.5 5.15L5.3 4.6L7 1.2Z" fill="#FFC97A" />
-                                    </svg>
-                                    @endfor
-                                    <span>{{ $item['rating'] }} out of 5 stars</span>
-                            </div>
-                            <div class="admin-wc-testimonial-actions">
-                                <button type="button" class="admin-wc-square-btn" aria-label="Edit testimonial">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-                                        <path d="M6.90909 1.43188H2.11869C1.75569 1.43188 1.40756 1.57609 1.15088 1.83276C0.8942 2.08944 0.75 2.43757 0.75 2.80057V12.3814C0.75 12.7444 0.8942 13.0925 1.15088 13.3492C1.40756 13.6059 1.75569 13.7501 2.11869 13.7501H11.6995C12.0625 13.7501 12.4106 13.6059 12.6673 13.3492C12.924 13.0925 13.0682 12.7444 13.0682 12.3814V7.59097" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                        <path d="M11.2717 1.1752C11.544 0.902948 11.9132 0.75 12.2983 0.75C12.6833 0.75 13.0525 0.902948 13.3248 1.1752C13.597 1.44744 13.75 1.81669 13.75 2.20171C13.75 2.58673 13.597 2.95598 13.3248 3.22823L7.15679 9.39689C6.99429 9.55925 6.79354 9.6781 6.57304 9.74249L4.60692 10.3173C4.54804 10.3345 4.48562 10.3355 4.4262 10.3203C4.36678 10.3051 4.31254 10.2742 4.26916 10.2308C4.22579 10.1874 4.19487 10.1332 4.17965 10.0738C4.16443 10.0143 4.16546 9.95193 4.18263 9.89304L4.75748 7.92692C4.82217 7.7066 4.94125 7.50609 5.10376 7.34386L11.2717 1.1752Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                </button>
-                                <button type="button" class="admin-wc-square-btn" aria-label="View testimonial">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">
-                                        <path d="M1 6C1 6 3.5 1.5 8 1.5C12.5 1.5 15 6 15 6C15 6 12.5 10.5 8 10.5C3.5 10.5 1 6 1 6Z" stroke="#3B3731" stroke-width="1.2" stroke-linejoin="round" />
-                                        <circle cx="8" cy="6" r="2" stroke="#3B3731" stroke-width="1.2" />
-                                    </svg>
-                                </button>
-                                <button type="button" class="admin-wc-square-btn" aria-label="Delete testimonial">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                                        <path d="M2.5 2.5L9.5 9.5M9.5 2.5L2.5 9.5" stroke="#3B3731" stroke-width="1.3" stroke-linecap="round" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </article>
-                    @endforeach
+                    </template>
                 </div>
+
+                <p class="admin-wc-preview-body admin-wc-testimonial-trust" x-show="testimonialTrust" x-text="testimonialTrust"></p>
 
                 <div class="admin-wc-testimonial-footer">
                     <p class="admin-table-count">SHOWING 1–13 OF 13 TESTIMONIALS</p>
@@ -534,7 +1064,7 @@ $versionHistory = [
                         <h2 class="admin-wc-card-title">Banner 3</h2>
                         <p class="admin-wc-card-sub">Lorem ipsum dolor sit amet</p>
                     </div>
-                    <button type="button" class="admin-wc-edit-link">
+                    <button type="button" class="admin-wc-edit-link" @click="openBanner3Editor()" aria-haspopup="dialog">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 16 15" fill="none">
                             <path d="M9.80882 2.49568L12.2794 4.90732M8.16176 13.75H14.75M1.57353 10.5345L0.75 13.75L4.04412 12.9461L13.5855 3.63237C13.8943 3.33087 14.0678 2.922 14.0678 2.49568C14.0678 2.06936 13.8943 1.6605 13.5855 1.359L13.4439 1.22073C13.135 0.919322 12.7162 0.75 12.2794 0.75C11.8427 0.75 11.4238 0.919322 11.1149 1.22073L1.57353 10.5345Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
@@ -543,13 +1073,13 @@ $versionHistory = [
                 </div>
 
                 <div class="admin-wc-preview admin-wc-preview-block">
-                    <p class="admin-wc-preview-headline">Our Mission</p>
-                    <p class="admin-wc-preview-body">We’re building a kinder way to care for pets — connecting owners with trusted local groomers and spaces, with transparency, safety, and love at every step.</p>
+                    <p class="admin-wc-preview-headline" x-text="banner3Title"></p>
+                    <p class="admin-wc-preview-body" x-text="banner3Desc"></p>
                 </div>
 
                 <div class="admin-wc-cta">
                     <p class="admin-wc-card-title mb-0">CTA Button</p>
-                    <p class="admin-wc-cta-value">About us</p>
+                    <p class="admin-wc-cta-value" x-text="banner3Cta"></p>
                 </div>
 
                 <div class="admin-wc-divider"></div>
@@ -559,7 +1089,7 @@ $versionHistory = [
                         <h2 class="admin-wc-card-title">Banner Photo</h2>
                         <p class="admin-wc-card-sub">Custom photo uploaded</p>
                     </div>
-                    <button type="button" class="admin-wc-edit-link">
+                    <button type="button" class="admin-wc-edit-link" @click="openBanner3PhotoEditor()" aria-haspopup="dialog">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 16 15" fill="none">
                             <path d="M9.80882 2.49568L12.2794 4.90732M8.16176 13.75H14.75M1.57353 10.5345L0.75 13.75L4.04412 12.9461L13.5855 3.63237C13.8943 3.33087 14.0678 2.922 14.0678 2.49568C14.0678 2.06936 13.8943 1.6605 13.5855 1.359L13.4439 1.22073C13.135 0.919322 12.7162 0.75 12.2794 0.75C11.8427 0.75 11.4238 0.919322 11.1149 1.22073L1.57353 10.5345Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
@@ -567,7 +1097,7 @@ $versionHistory = [
                     </button>
                 </div>
                 <img
-                    src="{{ asset('images/our_mission.png') }}"
+                    :src="banner3PhotoUrl"
                     alt="Banner 3 photo preview"
                     class="admin-wc-thumb admin-wc-thumb-lg"
                     width="160"
@@ -579,9 +1109,9 @@ $versionHistory = [
                 <div class="admin-wc-card-head">
                     <div>
                         <h2 class="admin-wc-card-title">Service Map</h2>
-                        <p class="admin-wc-card-sub">6 cities live</p>
+                        <p class="admin-wc-card-sub" x-text="cities.length + ' cities live'"></p>
                     </div>
-                    <button type="button" class="admin-wc-edit-link">
+                    <button type="button" class="admin-wc-edit-link" @click="openServiceMapEditor()" aria-haspopup="dialog">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 16 15" fill="none">
                             <path d="M9.80882 2.49568L12.2794 4.90732M8.16176 13.75H14.75M1.57353 10.5345L0.75 13.75L4.04412 12.9461L13.5855 3.63237C13.8943 3.33087 14.0678 2.922 14.0678 2.49568C14.0678 2.06936 13.8943 1.6605 13.5855 1.359L13.4439 1.22073C13.135 0.919322 12.7162 0.75 12.2794 0.75C11.8427 0.75 11.4238 0.919322 11.1149 1.22073L1.57353 10.5345Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
@@ -590,26 +1120,26 @@ $versionHistory = [
                 </div>
 
                 <div class="admin-wc-preview admin-wc-preview-block">
-                    <p class="admin-wc-preview-headline">Fursgo across the UK</p>
-                    <p class="admin-wc-preview-body">Now serving pet owners across the UK.</p>
+                    <p class="admin-wc-preview-headline" x-text="serviceMapTitle"></p>
+                    <p class="admin-wc-preview-body" x-text="serviceMapDesc"></p>
                 </div>
 
                 <div class="admin-wc-subhead">
                     <p class="admin-wc-card-title mb-0">Cities live</p>
-                    <button type="button" class="admin-wc-add-link">+ Add city</button>
+                    <button type="button" class="admin-wc-add-link" @click="openAddCity()" aria-haspopup="dialog">+ Add city</button>
                 </div>
 
                 <div class="admin-wc-city-list">
-                    @foreach ($cities as $city)
-                    <span class="admin-wc-city-chip">
-                        {{ $city }}
-                        <button type="button" class="admin-wc-city-remove" aria-label="Remove {{ $city }}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-                                <path d="M2 2L8 8M8 2L2 8" stroke="#9C9A97" stroke-width="1.3" stroke-linecap="round" />
-                            </svg>
-                        </button>
-                    </span>
-                    @endforeach
+                    <template x-for="(city, index) in cities" :key="city + '-' + index">
+                        <span class="admin-wc-city-chip">
+                            <span x-text="city"></span>
+                            <button type="button" class="admin-wc-city-remove" @click="removeCity(index)" :aria-label="'Remove ' + city">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                                    <path d="M2 2L8 8M8 2L2 8" stroke="#9C9A97" stroke-width="1.3" stroke-linecap="round" />
+                                </svg>
+                            </button>
+                        </span>
+                    </template>
                 </div>
             </section>
 
@@ -931,7 +1461,7 @@ $versionHistory = [
                     <div class="admin-wc-testimonial-top">
                         <div class="admin-wc-testimonial-who">
                             <span class="admin-wc-avatar-wrap">
-                                <img src="{{ asset($testimonials[0]['avatar']) }}" alt="" class="admin-wc-avatar" width="40" height="40">
+                                <img src="{{ $testimonials[0]['avatar'] }}" alt="" class="admin-wc-avatar" width="40" height="40">
                             </span>
                             <div>
                                 <p class="admin-wc-testimonial-name">{{ $testimonials[0]['name'] }}</p>
@@ -1093,7 +1623,7 @@ $versionHistory = [
                         <h2 class="admin-wc-card-title">Page Banner</h2>
                         <p class="admin-wc-card-sub">Headline shown</p>
                     </div>
-                    <button type="button" class="admin-wc-edit-link">
+                    <button type="button" class="admin-wc-edit-link" @click="openGroomersPageBannerEditor()" aria-haspopup="dialog">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
                             <path d="M6.90909 1.43188H2.11869C1.75569 1.43188 1.40756 1.57609 1.15088 1.83276C0.8942 2.08944 0.75 2.43757 0.75 2.80057V12.3814C0.75 12.7444 0.8942 13.0925 1.15088 13.3492C1.40756 13.6059 1.75569 13.7501 2.11869 13.7501H11.6995C12.0625 13.7501 12.4106 13.6059 12.6673 13.3492C12.924 13.0925 13.0682 12.7444 13.0682 12.3814V7.59097" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                             <path d="M11.2717 1.1752C11.544 0.902948 11.9132 0.75 12.2983 0.75C12.6833 0.75 13.0525 0.902948 13.3248 1.1752C13.597 1.44744 13.75 1.81669 13.75 2.20171C13.75 2.58673 13.597 2.95598 13.3248 3.22823L7.15679 9.39689C6.99429 9.55925 6.79354 9.6781 6.57304 9.74249L4.60692 10.3173C4.54804 10.3345 4.48562 10.3355 4.4262 10.3203C4.36678 10.3051 4.31254 10.2742 4.26916 10.2308C4.22579 10.1874 4.19487 10.1332 4.17965 10.0738C4.16443 10.0143 4.16546 9.95193 4.18263 9.89304L4.75748 7.92692C4.82217 7.7066 4.94125 7.50609 5.10376 7.34386L11.2717 1.1752Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1103,15 +1633,13 @@ $versionHistory = [
                 </div>
 
                 <div class="admin-wc-preview admin-wc-hero-preview admin-wc-preview-block">
-                    <p class="admin-wc-preview-headline">{{ $groomersBanner['headline'] }}</p>
+                    <p class="admin-wc-preview-headline" x-text="groomersBannerHeadline"></p>
                 </div>
 
                 <div class="admin-wc-cta">
                     <p class="admin-wc-card-title mb-0">Description</p>
                     <div class="admin-wc-preview admin-wc-hero-preview">
-                        @foreach ($groomersBanner['description'] as $line)
-                        <p class="admin-wc-preview-body">{{ $line }}</p>
-                        @endforeach
+                        <p class="admin-wc-preview-body" x-text="groomersBannerDesc"></p>
                     </div>
                 </div>
 
@@ -1384,23 +1912,6 @@ $versionHistory = [
     <div
         class="admin-wc-panel"
         x-show="section === 'static'"
-        x-data="{
-            staticOpen: false,
-            staticId: 'mission',
-            staticTargets: [
-                { id: 'mission', label: 'Our Mission (About us)', url: 'fursgo.com/our_mission' },
-                { id: 'contact', label: 'Contact Us', url: 'fursgo.com/contact_us' },
-                { id: 'company', label: 'Company Information', url: 'fursgo.com/company_information' }
-            ],
-            get staticTarget() {
-                return this.staticTargets.find(item => item.id === this.staticId) || this.staticTargets[0];
-            },
-            selectStatic(id) {
-                this.staticId = id;
-                this.staticOpen = false;
-            }
-        }"
-        @keydown.escape.window="staticOpen = false"
         x-cloak>
         <div class="admin-wc-head">
             <div class="admin-wc-head-top">
@@ -1467,7 +1978,7 @@ $versionHistory = [
                         <h2 class="admin-wc-card-title">Page Banner</h2>
                         <p class="admin-wc-card-sub">Headline shown</p>
                     </div>
-                    <button type="button" class="admin-wc-edit-link">
+                    <button type="button" class="admin-wc-edit-link" @click="openContactPageBannerEditor()" aria-haspopup="dialog">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 16 15" fill="none" aria-hidden="true">
                             <path d="M9.81 2.5l2.47 2.41M8.16 13.75h6.59M1.57 10.53.75 13.75l3.29-.8 9.55-9.32a1.6 1.6 0 0 0 0-2.27l-.15-.14a1.67 1.67 0 0 0-2.32 0l-9.55 9.31Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
@@ -1475,7 +1986,7 @@ $versionHistory = [
                     </button>
                 </div>
                 <div class="admin-wc-preview admin-wc-hero-preview">
-                    <p class="admin-wc-preview-headline">Contact Us</p>
+                    <p class="admin-wc-preview-headline" x-text="contactPageHeadline"></p>
                 </div>
             </section>
 
@@ -1545,7 +2056,7 @@ $versionHistory = [
                         <h2 class="admin-wc-card-title">Banner 1</h2>
                         <p class="admin-wc-card-sub">Lorem Ipsum dolor sit amet</p>
                     </div>
-                    <button type="button" class="admin-wc-edit-link">
+                    <button type="button" class="admin-wc-edit-link" @click="openContactBanner1Editor()" aria-haspopup="dialog">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 16 15" fill="none" aria-hidden="true">
                             <path d="M9.81 2.5l2.47 2.41M8.16 13.75h6.59M1.57 10.53.75 13.75l3.29-.8 9.55-9.32a1.6 1.6 0 0 0 0-2.27l-.15-.14a1.67 1.67 0 0 0-2.32 0l-9.55 9.31Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
@@ -1559,7 +2070,7 @@ $versionHistory = [
                 <div class="admin-wc-contact-store-list">
                     <div class="admin-wc-preview admin-wc-contact-store">
                         <p>App Store label</p>
-                        <span>Available soon</span>
+                        <span x-text="contactAppStoreLabel || 'Available soon'"></span>
                     </div>
                     <div class="admin-wc-preview admin-wc-contact-store">
                         <p>Google Play label</p>
@@ -2062,60 +2573,47 @@ $versionHistory = [
                 </div>
             </section>
 
-            @php
-            $legalDocuments = [
-            [
-            'group' => 'Refund Policy',
-            'title' => 'FursGo Refund Policy (24-Hour Window)',
-            'version' => 'v3.2',
-            'description' => 'FursGo offers customers a refund window of up to 24 hours after a booking is made, provided the service has not yet taken place.',
-            ],
-            [
-            'group' => 'Animal Welfare Statement',
-            'title' => 'Animal Welfare Statement',
-            'version' => 'v3.2',
-            'description' => 'As a service provider on FursGo, I confirm that I will handle all animals with care, patience, and respect for their wellbeing.',
-            ],
-            [
-            'group' => 'Compliance Declaration',
-            'title' => 'FursGo Compliance Declaration',
-            'version' => 'v3.2',
-            'description' => 'By operating on the FursGo platform, I confirm that my business complies with all relevant local laws, regulations, and professional standards applicable to pet care.',
-            ],
-            ];
-            @endphp
             <section class="admin-wc-card admin-wc-legal-documents">
                 <div>
                     <h2 class="admin-wc-card-title">Provider Legal Agreements</h2>
-                    <p class="admin-wc-card-sub">3 documents live</p>
+                    <p class="admin-wc-card-sub" x-text="legalDocuments.length + ' documents live'"></p>
                 </div>
 
                 <div class="admin-wc-legal-document-list">
-                    @foreach ($legalDocuments as $document)
-                    <div class="admin-wc-legal-document-group">
-                        <h3 class="admin-wc-legal-group-title">{{ $document['group'] }}</h3>
-                        <article class="admin-wc-legal-document">
-                            <div class="admin-wc-legal-document-main">
-                                <h4>{{ $document['title'] }} <span>{{ $document['version'] }}</span></h4>
-                                <p>{{ $document['description'] }}</p>
-                                <time datetime="2026-01-12">Last updated 12 Jan 2026</time>
-                            </div>
-                            <div class="admin-wc-legal-document-actions">
-                                <button type="button" class="admin-wc-square-btn" aria-label="Edit {{ $document['group'] }}"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-                                        <path d="M6.91 1.43H2.12A1.37 1.37 0 0 0 .75 2.8v9.58c0 .76.61 1.37 1.37 1.37h9.58c.76 0 1.37-.61 1.37-1.37V7.59M11.27 1.18a1.45 1.45 0 0 1 2.05 2.05L7.16 9.4c-.16.16-.37.28-.59.34l-1.96.58a.34.34 0 0 1-.43-.43l.58-1.96c.06-.22.18-.42.34-.58l6.17-6.17Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg></button>
-                                <button type="button" class="admin-wc-square-btn" aria-label="View {{ $document['group'] }}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">
-                                        <path d="M1 6s2.5-4.5 7-4.5S15 6 15 6s-2.5 4.5-7 4.5S1 6 1 6Z" stroke="#3B3731" stroke-width="1.2" stroke-linejoin="round" />
-                                        <circle cx="8" cy="6" r="2" stroke="#3B3731" stroke-width="1.2" />
-                                    </svg></button>
-                                <button type="button" class="admin-wc-square-btn" aria-label="Delete {{ $document['group'] }}"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                                        <path d="m2.5 2.5 7 7m0-7-7 7" stroke="#3B3731" stroke-width="1.3" stroke-linecap="round" />
-                                    </svg></button>
-                                <span class="admin-wc-company-status is-published">Published</span>
-                            </div>
-                        </article>
-                    </div>
-                    @endforeach
+                    <template x-for="(document, index) in legalDocuments" :key="document.group">
+                        <div class="admin-wc-legal-document-group">
+                            <h3 class="admin-wc-legal-group-title" x-text="document.group"></h3>
+                            <article class="admin-wc-legal-document">
+                                <div class="admin-wc-legal-document-main">
+                                    <h4>
+                                        <span x-text="document.title"></span>
+                                        <span x-text="document.version"></span>
+                                    </h4>
+                                    <p x-text="document.summary"></p>
+                                    <time datetime="2026-01-12" x-text="document.updated"></time>
+                                </div>
+                                <div class="admin-wc-legal-document-actions">
+                                    <button type="button" class="admin-wc-square-btn" @click="openLegalDocumentEditor(index)" :aria-label="'Edit ' + document.group" aria-haspopup="dialog">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                                            <path d="M6.91 1.43H2.12A1.37 1.37 0 0 0 .75 2.8v9.58c0 .76.61 1.37 1.37 1.37h9.58c.76 0 1.37-.61 1.37-1.37V7.59M11.27 1.18a1.45 1.45 0 0 1 2.05 2.05L7.16 9.4c-.16.16-.37.28-.59.34l-1.96.58a.34.34 0 0 1-.43-.43l.58-1.96c.06-.22.18-.42.34-.58l6.17-6.17Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="admin-wc-square-btn" :aria-label="'View ' + document.group">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">
+                                            <path d="M1 6s2.5-4.5 7-4.5S15 6 15 6s-2.5 4.5-7 4.5S1 6 1 6Z" stroke="#3B3731" stroke-width="1.2" stroke-linejoin="round" />
+                                            <circle cx="8" cy="6" r="2" stroke="#3B3731" stroke-width="1.2" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="admin-wc-square-btn" @click="legalDocuments.splice(index, 1)" :aria-label="'Delete ' + document.group">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                                            <path d="m2.5 2.5 7 7m0-7-7 7" stroke="#3B3731" stroke-width="1.3" stroke-linecap="round" />
+                                        </svg>
+                                    </button>
+                                    <span class="admin-wc-company-status is-published">Published</span>
+                                </div>
+                            </article>
+                        </div>
+                    </template>
                 </div>
             </section>
 
@@ -2181,7 +2679,7 @@ $versionHistory = [
                         <h2 class="admin-wc-card-title">Footer CTA Banner</h2>
                         <p class="admin-wc-card-sub">Identical on every page</p>
                     </div>
-                    <button type="button" class="admin-wc-edit-link">
+                    <button type="button" class="admin-wc-edit-link" @click="openFooterCtaEditor()" aria-haspopup="dialog">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="15" viewBox="0 0 16 15" fill="none" aria-hidden="true">
                             <path d="M9.81 2.5l2.47 2.41M8.16 13.75h6.59M1.57 10.53.75 13.75l3.29-.8 9.55-9.32a1.6 1.6 0 0 0 0-2.27l-.15-.14a1.67 1.67 0 0 0-2.32 0l-9.55 9.31Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
@@ -2189,8 +2687,8 @@ $versionHistory = [
                     </button>
                 </div>
                 <div class="admin-wc-preview admin-wc-footer-cta-preview">
-                    <p class="admin-wc-preview-headline">Join thousands of happy pets &amp; owners.</p>
-                    <p class="admin-wc-preview-body">Join Fursgo to grow your business with verified bookings and loyal clients.</p>
+                    <p class="admin-wc-preview-headline" x-text="footerCtaHeadline"></p>
+                    <p class="admin-wc-preview-body" x-text="footerCtaSubtext"></p>
                 </div>
             </section>
 
@@ -2307,4 +2805,1010 @@ $versionHistory = [
             </section>
         </div>
     </div>
+
+    <template x-teleport="body">
+        <div
+            class="admin-wc-modal-backdrop"
+            x-show="wcModal"
+            x-cloak
+            x-transition.opacity.duration.150ms
+            @click.self="closeWcModal()"
+            role="presentation">
+            {{-- Edit Hero Text --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'hero-text'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-hero-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-hero-modal-title">Edit Hero Text</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close edit hero text modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveHeroEditor()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>Headline <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="heroHeadlineInput"
+                                x-model="heroHeadlineDraft"
+                                rows="1"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+
+                        <div class="admin-wc-modal-field">
+                            <span>Rating Copy</span>
+                            <div class="admin-wc-modal-rating" aria-label="4.9 rating, auto-calculated">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+                                    <path d="M14.0674 3.20765C14.3609 2.26411 15.6391 2.26412 15.9326 3.20766L17.0309 6.73772C17.1622 7.15973 17.5387 7.44542 17.9635 7.44542H21.5175C22.4675 7.44542 22.8624 8.71491 22.0939 9.29802L19.2186 11.4797C18.8749 11.7405 18.7311 12.2027 18.8624 12.6247L19.9607 16.1548C20.2542 17.0983 19.2202 17.8829 18.4516 17.2998L15.5764 15.1181C15.2327 14.8573 14.7673 14.8573 14.4236 15.1181L11.5484 17.2998C10.7798 17.8829 9.74579 17.0983 10.0393 16.1548L11.1376 12.6247C11.2689 12.2027 11.1251 11.7405 10.7814 11.4797L7.9061 9.29802C7.13758 8.71491 7.53255 7.44542 8.4825 7.44542H12.0365C12.4613 7.44542 12.8379 7.15973 12.9691 6.73772L14.0674 3.20765Z" fill="#FFC97A" transform="translate(0 5)" />
+                                </svg>
+                                <strong>4.9</strong>
+                                <span class="admin-wc-modal-auto">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="9" height="11" viewBox="0 0 9 11" fill="none">
+                                        <path d="M2.16675 4.38889V2.72222C2.16675 2.13285 2.40087 1.56762 2.81762 1.15087C3.23437 0.734126 3.7996 0.5 4.38897 0.5C4.97834 0.5 5.54357 0.734126 5.96032 1.15087C6.37707 1.56762 6.61119 2.13285 6.61119 2.72222V4.38889" stroke="#AAAAAA" stroke-linecap="round" />
+                                        <path d="M0.5 4.38889H8.27778V9.38889C8.27778 9.68357 8.16071 9.96619 7.95234 10.1746C7.74397 10.3829 7.46135 10.5 7.16667 10.5H1.61111C1.31643 10.5 1.03381 10.3829 0.825437 10.1746C0.617063 9.96619 0.5 9.68357 0.5 9.38889V4.38889Z" stroke="#AAAAAA" stroke-linejoin="round" />
+                                        <circle cx="4.389" cy="7.44445" r="0.833333" fill="#AAAAAA" />
+                                    </svg>
+                                    Auto-calculated
+                                </span>
+                            </div>
+                            <label class="admin-wc-visually-hidden" for="admin-wc-rating-copy">Rating description</label>
+                            <textarea id="admin-wc-rating-copy" x-model="heroRatingCopyDraft" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Edit Hero Photo --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'hero-photo'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-hero-photo-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-hero-photo-modal-title">Edit Hero Photo</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close edit hero photo modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveHeroPhotoEditor()">
+                    <div class="admin-wc-modal-body">
+                        <div class="admin-wc-modal-field admin-wc-modal-image-field">
+                            <div class="admin-wc-modal-image-label-row">
+                                <span>Image <b aria-hidden="true">*</b></span>
+                                <span class="admin-wc-modal-image-hint">Recommended 1200x900px photo</span>
+                            </div>
+                            <div class="admin-wc-modal-image-frame" :class="{ 'is-empty': !heroPhotoDraftUrl }">
+                                <template x-if="heroPhotoDraftUrl">
+                                    <img :src="heroPhotoDraftUrl" alt="Hero photo preview" class="admin-wc-modal-image-preview">
+                                </template>
+                                <template x-if="!heroPhotoDraftUrl">
+                                    <div class="admin-wc-modal-image-empty">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <rect x="3" y="5" width="18" height="14" rx="2" stroke="#C4C2BF" stroke-width="1.5" />
+                                            <circle cx="8.5" cy="10" r="1.5" fill="#C4C2BF" />
+                                            <path d="M3 16L8 12L11 14.5L16 9L21 16" stroke="#C4C2BF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        <span>No image set</span>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="admin-wc-modal-image-actions">
+                                <input
+                                    id="admin-wc-hero-photo-input"
+                                    class="admin-wc-visually-hidden"
+                                    type="file"
+                                    accept="image/*"
+                                    @change="onHeroPhotoSelected($event)">
+                                <label for="admin-wc-hero-photo-input" class="admin-wc-modal-browse">Browse file</label>
+                                <span class="admin-wc-modal-file-name" x-text="heroPhotoDraftName || 'No files selected'"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Edit Feature Highlight (section headline) --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'feature-headline'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-feature-headline-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-feature-headline-modal-title">Edit Feature Highlight</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close edit feature highlight modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveFeatureHeadlineEditor()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>Headline <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="featureHeadlineInput"
+                                x-model="featureHeadlineDraft"
+                                rows="2"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Edit Feature Highlight (list item) --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'feature-item'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-feature-item-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-feature-item-modal-title">Edit Feature Highlight</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close edit feature highlight item modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveFeatureItemEditor()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>Title <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="featureTitleInput"
+                                x-model="featureTitleDraft"
+                                rows="1"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Description</span>
+                            <textarea
+                                id="admin-wc-feature-desc"
+                                x-model="featureDescDraft"
+                                rows="2"></textarea>
+                        </label>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Edit Feature Highlight Photo --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'feature-photo'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-feature-photo-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-feature-photo-modal-title">Edit Feature Highlight Photo</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close edit feature highlight photo modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveFeaturePhotoEditor()">
+                    <div class="admin-wc-modal-body">
+                        <div class="admin-wc-modal-field admin-wc-modal-image-field">
+                            <div class="admin-wc-modal-image-label-row">
+                                <span>Image <b aria-hidden="true">*</b></span>
+                                <span class="admin-wc-modal-image-hint">Recommended 1200x900px photo</span>
+                            </div>
+                            <div class="admin-wc-modal-image-frame admin-wc-modal-image-frame-checkered" :class="{ 'is-empty': !featurePhotoDraftUrl }">
+                                <template x-if="featurePhotoDraftUrl">
+                                    <img :src="featurePhotoDraftUrl" alt="Feature highlight photo preview" class="admin-wc-modal-image-preview admin-wc-modal-image-preview-contain">
+                                </template>
+                                <template x-if="!featurePhotoDraftUrl">
+                                    <div class="admin-wc-modal-image-empty">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <rect x="3" y="5" width="18" height="14" rx="2" stroke="#C4C2BF" stroke-width="1.5" />
+                                            <circle cx="8.5" cy="10" r="1.5" fill="#C4C2BF" />
+                                            <path d="M3 16L8 12L11 14.5L16 9L21 16" stroke="#C4C2BF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        <span>No image set</span>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="admin-wc-modal-image-actions">
+                                <input
+                                    id="admin-wc-feature-photo-input"
+                                    class="admin-wc-visually-hidden"
+                                    type="file"
+                                    accept="image/*"
+                                    @change="onFeaturePhotoSelected($event)">
+                                <label for="admin-wc-feature-photo-input" class="admin-wc-modal-browse">Browse file</label>
+                                <span class="admin-wc-modal-file-name" x-text="featurePhotoDraftName || 'No files selected'"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Edit Testimonial Text --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'testimonial-text'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-testimonial-text-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-testimonial-text-modal-title">Edit Testimonial Text</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close edit testimonial text modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveTestimonialTextEditor()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>Intro text <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="testimonialIntroInput"
+                                x-model="testimonialIntroDraft"
+                                rows="1"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Description</span>
+                            <textarea
+                                id="admin-wc-testimonial-desc"
+                                x-model="testimonialDescDraft"
+                                rows="3"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Trust note (below testimonials)</span>
+                            <textarea
+                                id="admin-wc-testimonial-trust"
+                                x-model="testimonialTrustDraft"
+                                rows="2"></textarea>
+                        </label>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Add / Edit Testimonial --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'testimonial-add'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-testimonial-add-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-testimonial-add-modal-title">Add Testimonial</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close add testimonial modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveTestimonialMeta()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>Customer Name <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="testimonialNameInput"
+                                x-model="testimonialNameDraft"
+                                rows="1"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Date submitted <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="testimonialDateInput"
+                                x-model="testimonialDateDraft"
+                                rows="1"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Add Testimonial Photo --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'testimonial-photo'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-testimonial-photo-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-testimonial-photo-modal-title">Add Testimonial Photo</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close add testimonial photo modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveTestimonialPhoto()">
+                    <div class="admin-wc-modal-body">
+                        <div class="admin-wc-modal-field admin-wc-modal-image-field">
+                            <div class="admin-wc-modal-image-label-row">
+                                <span>Image <b aria-hidden="true">*</b></span>
+                                <span class="admin-wc-modal-image-hint">Recommended 1200x900px photo</span>
+                            </div>
+                            <div class="admin-wc-modal-image-frame admin-wc-modal-image-frame-checkered" :class="{ 'is-empty': !testimonialPhotoDraftUrl }">
+                                <template x-if="testimonialPhotoDraftUrl">
+                                    <img :src="testimonialPhotoDraftUrl" alt="Testimonial photo preview" class="admin-wc-modal-image-preview admin-wc-modal-image-preview-contain">
+                                </template>
+                                <template x-if="!testimonialPhotoDraftUrl">
+                                    <div class="admin-wc-modal-image-empty">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <rect x="3" y="5" width="18" height="14" rx="2" stroke="#C4C2BF" stroke-width="1.5" />
+                                            <circle cx="8.5" cy="10" r="1.5" fill="#C4C2BF" />
+                                            <path d="M3 16L8 12L11 14.5L16 9L21 16" stroke="#C4C2BF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        <span>No image set</span>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="admin-wc-modal-image-actions">
+                                <input
+                                    id="admin-wc-testimonial-photo-input"
+                                    class="admin-wc-visually-hidden"
+                                    type="file"
+                                    accept="image/*"
+                                    @change="onTestimonialPhotoSelected($event)">
+                                <label for="admin-wc-testimonial-photo-input" class="admin-wc-modal-browse">Browse file</label>
+                                <span class="admin-wc-modal-file-name" x-text="testimonialPhotoDraftName || 'No files selected'"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Banner 3 --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'banner3-text'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-banner3-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-banner3-modal-title">Banner 3</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close banner 3 modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveBanner3Editor()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>Banner Title <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="banner3TitleInput"
+                                x-model="banner3TitleDraft"
+                                rows="1"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Description</span>
+                            <textarea
+                                id="admin-wc-banner3-desc"
+                                x-model="banner3DescDraft"
+                                rows="5"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>CTA button text <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="banner3CtaInput"
+                                x-model="banner3CtaDraft"
+                                rows="1"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Banner 3 Photo --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'banner3-photo'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-banner3-photo-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-banner3-photo-modal-title">Banner 3 Photo</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close banner 3 photo modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveBanner3PhotoEditor()">
+                    <div class="admin-wc-modal-body">
+                        <div class="admin-wc-modal-field admin-wc-modal-image-field">
+                            <div class="admin-wc-modal-image-label-row">
+                                <span>Image <b aria-hidden="true">*</b></span>
+                                <span class="admin-wc-modal-image-hint">Recommended 1200x900px photo</span>
+                            </div>
+                            <div class="admin-wc-modal-image-frame" :class="{ 'is-empty': !banner3PhotoDraftUrl }">
+                                <template x-if="banner3PhotoDraftUrl">
+                                    <img :src="banner3PhotoDraftUrl" alt="Banner 3 photo preview" class="admin-wc-modal-image-preview">
+                                </template>
+                                <template x-if="!banner3PhotoDraftUrl">
+                                    <div class="admin-wc-modal-image-empty">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <rect x="3" y="5" width="18" height="14" rx="2" stroke="#C4C2BF" stroke-width="1.5" />
+                                            <circle cx="8.5" cy="10" r="1.5" fill="#C4C2BF" />
+                                            <path d="M3 16L8 12L11 14.5L16 9L21 16" stroke="#C4C2BF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        <span>No image set</span>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="admin-wc-modal-image-actions">
+                                <input
+                                    id="admin-wc-banner3-photo-input"
+                                    class="admin-wc-visually-hidden"
+                                    type="file"
+                                    accept="image/*"
+                                    @change="onBanner3PhotoSelected($event)">
+                                <label for="admin-wc-banner3-photo-input" class="admin-wc-modal-browse">Browse file</label>
+                                <span class="admin-wc-modal-file-name" x-text="banner3PhotoDraftName || 'No files selected'"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Service Map Text --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'service-map-text'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-service-map-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-service-map-modal-title">Service Map Text</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close service map text modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveServiceMapEditor()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>Title <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="serviceMapTitleInput"
+                                x-model="serviceMapTitleDraft"
+                                rows="1"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Description</span>
+                            <textarea
+                                x-model="serviceMapDescDraft"
+                                rows="2"></textarea>
+                        </label>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Add City --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'add-city'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-add-city-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-add-city-modal-title">Add City</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close add city modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveAddCity()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>City Name <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="cityNameInput"
+                                x-model="cityNameDraft"
+                                rows="1"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Contact Us Page Banner --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'contact-page-banner'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-contact-page-banner-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-contact-page-banner-modal-title">Page Banner</h2>
+                        <p x-text="staticModalSubtitle"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close page banner modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveContactPageBannerEditor()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>Headline <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="contactPageHeadlineInput"
+                                x-model="contactPageHeadlineDraft"
+                                rows="1"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Contact Us Banner 1 --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'contact-banner1'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-contact-banner1-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-contact-banner1-modal-title">Banner 1</h2>
+                        <p x-text="staticModalSubtitle"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close banner 1 modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveContactBanner1Editor()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>App Store Label</span>
+                            <textarea
+                                x-ref="contactAppStoreLabelInput"
+                                x-model="contactAppStoreLabelDraft"
+                                rows="1"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Link to App</span>
+                            <textarea
+                                x-model="contactAppStoreLinkDraft"
+                                rows="1"></textarea>
+                        </label>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Provider Legal Agreements --}}
+            <section
+                class="admin-wc-modal admin-wc-modal-tall"
+                x-show="wcModal === 'legal-document'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-legal-document-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-legal-document-modal-title">Provider Legal Agreements</h2>
+                        <p x-text="legalModalSubtitle"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close legal agreement modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveLegalDocumentEditor()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>Document title</span>
+                            <textarea
+                                x-ref="legalTitleInput"
+                                x-model="legalTitleDraft"
+                                rows="1"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Sub-heading</span>
+                            <textarea x-model="legalSubheadingDraft" rows="1"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Description <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="legalDescInput"
+                                id="admin-wc-legal-desc"
+                                x-model="legalDescDraft"
+                                rows="5"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Provider checkbox text</span>
+                            <textarea x-model="legalCheckboxDraft" rows="1"></textarea>
+                        </label>
+
+                        <div class="admin-wc-modal-field">
+                            <div class="admin-wc-modal-attach">
+                                <div class="admin-wc-modal-attach-label">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                        <path d="M6.5 11.5V5.5a2 2 0 1 1 4 0v6.25a3.25 3.25 0 1 1-6.5 0V6" stroke="#9C9A97" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <span>Attach document file</span>
+                                </div>
+                                <input
+                                    id="admin-wc-legal-file-input"
+                                    class="admin-wc-visually-hidden"
+                                    type="file"
+                                    accept=".pdf,.doc,.docx,image/*"
+                                    @change="onLegalFileSelected($event)">
+                                <label for="admin-wc-legal-file-input" class="admin-wc-modal-browse">Browse File</label>
+                            </div>
+
+                            <div class="admin-wc-modal-attach-file" x-show="legalFileNameDraft" x-cloak>
+                                <div class="admin-wc-modal-attach-file-main">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                                        <rect x="5" y="3" width="18" height="22" rx="2" fill="#F36C54" />
+                                        <path d="M9 10h10M9 14h10M9 18h7" stroke="#fff" stroke-width="1.4" stroke-linecap="round" />
+                                    </svg>
+                                    <div>
+                                        <p class="admin-wc-modal-attach-file-name" x-text="legalFileNameDraft"></p>
+                                        <p class="admin-wc-modal-attach-file-meta" x-text="legalFileMetaDraft"></p>
+                                    </div>
+                                </div>
+                                <button type="button" class="admin-wc-modal-attach-remove" @click="clearLegalFile()" aria-label="Remove attached file">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                        <path d="M2.5 3.5h9M5 3.5V2.5h4v1M5.5 6v4.5M8.5 6v4.5M3.5 3.5l.5 8h6l.5-8" stroke="#9C9A97" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="admin-wc-modal-field">
+                            <span>Provider re-acceptance</span>
+                            <label class="admin-wc-modal-check">
+                                <input type="checkbox" x-model="legalReAcceptDraft">
+                                <span>Providers must re-accept this document before their next login</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- For Groomers & Hosts Page Banner --}}
+            <section
+                class="admin-wc-modal admin-wc-modal-tall"
+                x-show="wcModal === 'groomers-page-banner'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-groomers-page-banner-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-groomers-page-banner-modal-title">Page Banner</h2>
+                        <p>For Groomers &amp; Hosts</p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close page banner modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveGroomersPageBannerEditor()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>Eyebrow Text</span>
+                            <textarea x-model="groomersBannerEyebrowDraft" rows="1"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Headline <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="groomersBannerHeadlineInput"
+                                x-model="groomersBannerHeadlineDraft"
+                                rows="2"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Description <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="groomersBannerDescInput"
+                                id="admin-wc-groomers-banner-desc"
+                                x-model="groomersBannerDescDraft"
+                                rows="3"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Primary CTA button</span>
+                            <textarea x-model="groomersBannerPrimaryCtaDraft" rows="1"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Primary CTA link</span>
+                            <textarea x-model="groomersBannerPrimaryLinkDraft" rows="1"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Secondary CTA button</span>
+                            <textarea x-model="groomersBannerSecondaryCtaDraft" rows="1"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Secondary CTA link</span>
+                            <textarea x-model="groomersBannerSecondaryLinkDraft" rows="1"></textarea>
+                        </label>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Page Banner (Footer CTA) --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'footer-cta'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-footer-cta-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-footer-cta-modal-title">Page Banner</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close page banner modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveFooterCtaEditor()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>Headline <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="footerCtaHeadlineInput"
+                                x-model="footerCtaHeadlineDraft"
+                                rows="1"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
+                            <span>Subtext <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="footerCtaSubtextInput"
+                                id="admin-wc-footer-cta-subtext"
+                                x-model="footerCtaSubtextDraft"
+                                rows="2"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+        </div>
+    </template>
 </div>
