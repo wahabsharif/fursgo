@@ -25,6 +25,7 @@ class Booking extends Model
         'visit_type',
         'acquisition_source',
         'booking_status',
+        'auto_accepted',
         'cancelled_by',
         'cancellation_reason',
         'refund_status',
@@ -37,6 +38,7 @@ class Booking extends Model
         'discount' => 'decimal:2',
         'extra_add_ons' => 'array',
         'rating' => 'decimal:1',
+        'auto_accepted' => 'boolean',
     ];
 
     public function petOwner(): BelongsTo

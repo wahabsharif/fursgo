@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\GroomerSpacerProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -20,24 +21,36 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'pet_ids'        => 'required|array|min:1',
-            'pet_ids.*'      => 'exists:pet_details,id',
-            'time'           => 'required|string|max:50',
-            'date'           => 'required|date',
-            'service'        => 'required|string|max:255',
-            'amount'         => 'required|numeric|min:0',
-            'visit_type'     => 'required|string|max:64',
+            'pet_ids' => 'required|array|min:1',
+            'pet_ids.*' => 'exists:pet_details,id',
+            'time' => 'required|string|max:50',
+            'date' => 'required|date',
+            'service' => 'required|string|max:255',
+            'amount' => 'required|numeric|min:0',
+            'visit_type' => 'required|string|max:64',
+            'goormer_spacer_id' => 'sometimes|exists:goormer_spacer_profiles,id',
             'booking_status' => 'sometimes|in:pending,confirmed,completed,cancelled',
         ]);
 
+        $spacerId = isset($validated['goormer_spacer_id']) ? (int) $validated['goormer_spacer_id'] : null;
+        $autoAccept = false;
+        if ($spacerId) {
+            $autoAccept = (bool) (GroomerSpacerProfile::query()->whereKey($spacerId)->value('auto_accept_booking') ?? false);
+        }
+
+        $status = $validated['booking_status'] ?? ($autoAccept ? 'confirmed' : 'pending');
+        $autoAccepted = $autoAccept && $status === 'confirmed';
+
         $booking = Booking::create([
-            'pet_owner_id'   => Auth::id(),
-            'time'           => $validated['time'],
-            'date'           => $validated['date'],
-            'service'        => $validated['service'],
-            'amount'         => $validated['amount'],
-            'visit_type'     => $validated['visit_type'],
-            'booking_status' => $validated['booking_status'] ?? 'pending',
+            'pet_owner_id' => Auth::id(),
+            'goormer_spacer_id' => $spacerId,
+            'time' => $validated['time'],
+            'date' => $validated['date'],
+            'service' => $validated['service'],
+            'amount' => $validated['amount'],
+            'visit_type' => $validated['visit_type'],
+            'booking_status' => $status,
+            'auto_accepted' => $autoAccepted,
         ]);
 
         $booking->pets()->attach($validated['pet_ids']);
@@ -45,7 +58,7 @@ class BookingController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Booking created successfully.',
-            'data'    => $booking->load('pets'),
+            'data' => $booking->load('pets'),
         ], 201);
     }
 
@@ -57,13 +70,13 @@ class BookingController extends Controller
     public function update(Request $request, Booking $booking)
     {
         $validated = $request->validate([
-            'pet_ids'        => 'sometimes|array|min:1',
-            'pet_ids.*'      => 'exists:pet_details,id',
-            'time'           => 'sometimes|string|max:50',
-            'date'           => 'sometimes|date',
-            'service'        => 'sometimes|string|max:255',
-            'amount'         => 'sometimes|numeric|min:0',
-            'visit_type'     => 'sometimes|string|max:64',
+            'pet_ids' => 'sometimes|array|min:1',
+            'pet_ids.*' => 'exists:pet_details,id',
+            'time' => 'sometimes|string|max:50',
+            'date' => 'sometimes|date',
+            'service' => 'sometimes|string|max:255',
+            'amount' => 'sometimes|numeric|min:0',
+            'visit_type' => 'sometimes|string|max:64',
             'booking_status' => 'sometimes|in:pending,confirmed,completed,cancelled',
         ]);
 
@@ -80,7 +93,7 @@ class BookingController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Booking updated successfully.',
-            'data'    => $booking->load('pets'),
+            'data' => $booking->load('pets'),
         ]);
     }
 
@@ -97,12 +110,15 @@ class BookingController extends Controller
 
     public function accept(Booking $booking)
     {
-        $booking->update(['booking_status' => 'confirmed']);
+        $booking->update([
+            'booking_status' => 'confirmed',
+            'auto_accepted' => false,
+        ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Booking confirmed.',
-            'data'    => $booking->fresh()->load('pets'),
+            'data' => $booking->fresh()->load('pets'),
         ]);
     }
 
@@ -113,7 +129,7 @@ class BookingController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Booking cancelled.',
-            'data'    => $booking->fresh()->load('pets'),
+            'data' => $booking->fresh()->load('pets'),
         ]);
     }
 }

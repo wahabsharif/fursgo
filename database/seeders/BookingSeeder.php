@@ -266,8 +266,8 @@ class BookingSeeder extends Seeder
         $twoMonthsAgo = today()->copy()->subMonths(2)->startOfMonth()->addDays(8);
 
         $slots = [
-            ['time' => '08:15 - 09:15', 'date' => today()->toDateString(), 'booking_status' => 'confirmed', 'service' => $services[0]['service'], 'amount' => $services[0]['amount'], 'pet_indices' => [0]],
-            ['time' => '13:15 - 14:15', 'date' => today()->toDateString(), 'booking_status' => 'confirmed', 'service' => $services[1]['service'], 'amount' => $services[1]['amount'], 'pet_indices' => [0]],
+            ['time' => '08:15 - 09:15', 'date' => today()->toDateString(), 'booking_status' => 'confirmed', 'auto_accepted' => true, 'service' => $services[0]['service'], 'amount' => $services[0]['amount'], 'pet_indices' => [0]],
+            ['time' => '13:15 - 14:15', 'date' => today()->toDateString(), 'booking_status' => 'confirmed', 'auto_accepted' => true, 'service' => $services[1]['service'], 'amount' => $services[1]['amount'], 'pet_indices' => [0]],
             ['time' => '16:15 - 17:15', 'date' => today()->toDateString(), 'booking_status' => 'pending', 'service' => $services[2]['service'], 'amount' => $services[2]['amount'], 'pet_indices' => [0]],
             ['time' => '10:15 - 11:15', 'date' => today()->addDays(2)->toDateString(), 'booking_status' => 'pending', 'service' => $services[0]['service'], 'amount' => $services[0]['amount'], 'pet_indices' => [0]],
             ['time' => '11:15 - 12:15', 'date' => today()->addDays(4)->toDateString(), 'booking_status' => 'confirmed', 'service' => $services[1]['service'], 'amount' => $services[1]['amount'], 'pet_indices' => [0]],
@@ -777,6 +777,9 @@ class BookingSeeder extends Seeder
         $bookingData['pet_owner_id'] = $ownerId;
         $bookingData['goormer_spacer_id'] = $spacerId;
         $bookingData['extra_add_ons'] = $serviceAddOns[$bookingData['service']] ?? [];
+        // Only seed auto-accepted when a slot explicitly sets it (not all confirmed).
+        $bookingData['auto_accepted'] = $bookingData['booking_status'] === 'confirmed' &&
+            (bool) ($bookingData['auto_accepted'] ?? false);
         $bookingData['staff'] = in_array($bookingData['booking_status'], ['confirmed', 'completed'], true)
             ? $staffRoster[array_rand($staffRoster)]
             : null;
@@ -818,6 +821,7 @@ class BookingSeeder extends Seeder
                     'rating' => $bookingData['rating'],
                     'visit_type' => $bookingData['visit_type'],
                     'booking_status' => $bookingData['booking_status'],
+                    'auto_accepted' => $bookingData['auto_accepted'],
                     'cancelled_by' => $bookingData['cancelled_by'],
                     'refund_status' => $bookingData['refund_status'],
                 ]
@@ -841,6 +845,7 @@ class BookingSeeder extends Seeder
                     'visit_type' => $bookingData['visit_type'],
                     'acquisition_source' => $bookingData['acquisition_source'],
                     'booking_status' => $bookingData['booking_status'],
+                    'auto_accepted' => $bookingData['auto_accepted'],
                     'cancelled_by' => $bookingData['cancelled_by'],
                     'refund_status' => $bookingData['refund_status'],
                 ]
