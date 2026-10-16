@@ -13,29 +13,17 @@
         $petType = trim((string) ($pet->pet_type ?? ($pet->type ?? ($pet->species ?? ''))));
         $declinePetLabel = $petType !== '' ? $petName . ' (' . $petType . ')' : $petName;
 
-        $declineDateLabel = optional($declineBooking->date)->format($isSpaceUser ? 'D j M' : 'D j F') ?? 'N/A';
+        $declineDateLabel = optional($declineBooking->date)->format('D j F') ?? 'N/A';
         $ownerName = trim((string) ($declineBooking->petOwner->name ?? 'N/A')) ?: 'N/A';
         $ownerParts = preg_split('/\s+/', $ownerName, -1, PREG_SPLIT_NO_EMPTY) ?: [];
         $declineClient = count($ownerParts) >= 2 ? $ownerParts[0] . ' ' . mb_substr($ownerParts[1], 0, 1) . '.' : $ownerName;
 
-        $rawVisit = (string) ($declineBooking->visit_type ?? '');
-        $visitLabel = str_replace('_', ' ', strtolower(trim($rawVisit)));
-        $declineSpaceLabel = match (true) {
-            $visitLabel === '' => 'Garden/Shed',
-            str_contains($rawVisit, '/') => str_replace([' / ', ' /', '/ '], '/', $rawVisit),
-            $visitLabel === 'garden shed' || $visitLabel === 'garden/shed' => 'Garden/Shed',
-            $visitLabel === 'home' || $visitLabel === 'home visit' => 'Home Visit',
-            $visitLabel === 'salon' || $visitLabel === 'salon visit' => 'Salon',
-            $visitLabel === 'private room' => 'Private room',
-            $visitLabel === 'mobile station' => 'Mobile Station',
-            $visitLabel === 'other' => 'Other',
-            default => ucwords($visitLabel),
-        };
         $declineAmountLabel = '£' . number_format((float) $declineBooking->amount, 2);
         $declineTimeRaw = (string) $declineBooking->time;
         $declineTimeLabel = $declineTimeRaw !== '' ? $declineTimeRaw : 'N/A';
+        $spaceTimeRangeLabel = 'N/A';
         $serviceLower = strtolower(trim((string) ($declineBooking->service ?? '')));
-        $spaceServiceLabel = match (true) {
+        $spaceServiceKind = match (true) {
             (bool) preg_match('/full[\s_-]*day|fullday/', $serviceLower) => 'Full-Day',
             (bool) preg_match('/half[\s_-]*day/', $serviceLower) => 'Half-Day',
             str_contains($serviceLower, 'hour') => 'Hourly',
@@ -61,6 +49,7 @@
             return $hours . 'hr ' . $minutes . 'm';
         };
 
+        $durationMinutes = null;
         if (str_contains($declineTimeRaw, '-')) {
             $parts = preg_split('/\s*-\s*/', $declineTimeRaw, 2);
             $start = $parts[0] ?? '';
@@ -76,6 +65,7 @@
                     }
                     $durationMinutes = (int) max(0, ($endDt->getTimestamp() - $startDt->getTimestamp()) / 60);
                     $durationLabel = $formatDurationLabel($durationMinutes);
+                    $spaceTimeRangeLabel = $startDt->format('H:i') . ' - ' . $endDt->format('H:i');
 
                     if ($durationLabel !== '') {
                         $declineTimeLabel = $startDt->format('h:i A') . ' (' . $durationLabel . ')';
@@ -84,53 +74,36 @@
                     }
                 } catch (Throwable $e) {
                     $declineTimeLabel = $declineTimeRaw;
+                    $spaceTimeRangeLabel = trim((string) $mStart[1]) . ' - ' . trim((string) $mEnd[1]);
                 }
             }
         } elseif ($declineTimeRaw !== '') {
             try {
                 $startDt = new DateTimeImmutable(substr($declineTimeRaw, 0, 5));
                 $declineTimeLabel = $startDt->format('h:i A') . ' (1hr)';
+                $spaceTimeRangeLabel = $startDt->format('H:i');
             } catch (Throwable $e) {
                 // keep raw
             }
         }
 
-        if ($spaceServiceLabel === null && str_contains($declineTimeRaw, '-')) {
-            $rangeParts = preg_split('/\s*-\s*/', $declineTimeRaw, 2);
-            preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[0] ?? ''), $startMatch);
-            preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[1] ?? ''), $endMatch);
-            if (!empty($startMatch[1]) && !empty($endMatch[1])) {
-                $diff = ((int) $endMatch[1]) * 60 + (int) $endMatch[2] - (((int) $startMatch[1]) * 60 + (int) $startMatch[2]);
-                if ($diff < 0) {
-                    $diff += 24 * 60;
-                }
-                $spaceServiceLabel = $diff >= 7 * 60 ? 'Full-Day' : ($diff >= 3 * 60 ? 'Half-Day' : 'Hourly');
-            }
+        if ($spaceServiceKind === null && $durationMinutes !== null) {
+            $spaceServiceKind = $durationMinutes >= 7 * 60 ? 'Full-Day' : ($durationMinutes >= 3 * 60 ? 'Half-Day' : 'Hourly');
         }
-        if ($spaceServiceLabel === null) {
+        if ($spaceServiceKind === null) {
             $plainService = trim((string) ($declineBooking->service ?? ''));
-            $spaceServiceLabel = $plainService !== '' ? $plainService : 'Hourly';
+            $spaceServiceKind = $plainService !== '' ? $plainService : 'Hourly';
         }
 
-        $declineTimeLabelForSpace = $spaceServiceLabel;
-        if (str_contains($declineTimeRaw, '-')) {
-            $parts = preg_split('/\s*-\s*/', $declineTimeRaw, 2);
-            $start = $parts[0] ?? '';
-            preg_match('/(\d{1,2}:\d{2})/', $start, $mStartOnly);
-            if (!empty($mStartOnly[1])) {
-                try {
-                    $startDt = new DateTimeImmutable($mStartOnly[1]);
-                    $declineTimeLabelForSpace = $spaceServiceLabel . ' (' . strtoupper($startDt->format('h:ia')) . ')';
-                } catch (Throwable $e) {
-                    $declineTimeLabelForSpace = $spaceServiceLabel . ' (' . strtoupper(str_replace(' ', '', trim((string) $start))) . ')';
-                }
-            }
+        $spaceServiceDisplay = $spaceServiceKind;
+        if ($isSpaceUser && $spaceServiceKind !== 'Hourly') {
+            $hoursForLabel = $durationMinutes !== null ? max(1, (int) round($durationMinutes / 60)) : ($spaceServiceKind === 'Full-Day' ? 8 : 4);
+            $spaceServiceDisplay = $spaceServiceKind . ' (' . $hoursForLabel . ' ' . ($hoursForLabel === 1 ? 'hour' : 'hours') . ')';
         }
 
         $declineServiceLabel = trim((string) ($declineBooking->service ?? '')) ?: 'Service';
         $declineReasonOptions = \App\Support\BookingDeclineReasons::options();
         $declineReasonDefault = \App\Support\BookingDeclineReasons::default();
-        $declineBookingId = (int) $declineBooking->id;
     @endphp
     @teleport('body')
         <div class="decline-modal-overlay{{ $isSpaceUser ? ' is-space' : '' }}" x-data="{ open: false, reason: @js($declineReasonDefault) }"
@@ -143,8 +116,8 @@
                 <div class="decline-modal-icon" aria-hidden="true">
                     <img src="{{ $iconBase }}/icon-decline-success.png" alt="" width="45" height="45">
                 </div>
-                <h3 class="decline-modal-title" id="decline-modal-title">Decline Booking Request</h3>
-                <p class="decline-modal-subtitle">Are you sure you want to decline this booking request?</p>
+                <h3 class="decline-modal-title" id="decline-modal-title">Cancel Booking Request</h3>
+                <p class="decline-modal-subtitle">Are you sure you want to cancel this booking request?</p>
 
                 <div class="decline-reason">
                     <p class="decline-reason-label">Reason (shared with the client)</p>
@@ -169,14 +142,15 @@
 
                 <div class="decline-modal-details">
                     @if ($isSpaceUser)
-                        <div class="decline-modal-detail-row"><span>Client</span><strong>{{ $declineClient }}</strong></div>
-                        <div class="decline-modal-detail-row"><span>Space</span><strong>{{ $declineSpaceLabel }}</strong>
-                        </div>
                         <div class="decline-modal-detail-row">
-                            <span>Time</span><strong>{{ $declineTimeLabelForSpace }}</strong>
+                            <span>Service</span><strong>{{ $spaceServiceDisplay }}</strong>
                         </div>
                         <div class="decline-modal-detail-row"><span>Date</span><strong>{{ $declineDateLabel }}</strong>
                         </div>
+                        <div class="decline-modal-detail-row">
+                            <span>Time</span><strong>{{ $spaceTimeRangeLabel }}</strong>
+                        </div>
+                        <div class="decline-modal-detail-row"><span>Client</span><strong>{{ $declineClient }}</strong></div>
                     @else
                         <div class="decline-modal-detail-row"><span>Pet</span><strong>{{ $declinePetLabel }}</strong></div>
                         <div class="decline-modal-detail-row">
@@ -194,10 +168,8 @@
                 </div>
 
                 <div class="decline-modal-actions">
-                    <button type="button" class="decline-reschedule-btn"
-                        wire:click="openRescheduleFromDecline({{ $declineBookingId }})">
-                        <img src="{{ $iconBase }}/icon-reschedule-sync.svg" alt="" width="12.9951" height="13">
-                        Reschedule
+                    <button type="button" class="decline-keep-btn" wire:click="closeDeclineModal">
+                        Keep request
                     </button>
                     <button type="button" class="decline-confirm-btn" @click="$wire.confirmDeclineBooking(reason)"
                         wire:loading.attr="disabled" wire:target="confirmDeclineBooking">
@@ -464,7 +436,7 @@
         margin-top: 20px;
     }
 
-    .decline-reschedule-btn,
+    .decline-keep-btn,
     .decline-confirm-btn {
         flex: 1;
         height: 42px;
@@ -477,21 +449,13 @@
         font-weight: 600;
     }
 
-    .decline-reschedule-btn {
+    .decline-keep-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
         background: #FFF;
         border: 1px solid #E2E2E2;
         color: #9D9B98;
-    }
-
-    .decline-reschedule-btn img {
-        width: 12.9951px;
-        height: 13px;
-        display: block;
-        flex-shrink: 0;
     }
 
     .decline-confirm-btn {

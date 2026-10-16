@@ -3,6 +3,7 @@
 @if ($booking)
     @php
         $iconBase = asset('images/business-hub');
+        $isSpaceUser = strtolower((string) (auth('groomer_spacer')->user()?->user_type ?? '')) === 'space';
         $pets = $booking->relationLoaded('pets') ? $booking->pets : $booking->pets()->get();
 
         $created = $booking->created_at ?? now();
@@ -23,16 +24,55 @@
         $dateLabel = $booking->date?->format('D j F') ?? 'N/A';
         $timeRaw = trim((string) ($booking->time ?? ''));
         $timeLabel = $timeRaw !== '' ? $timeRaw : 'N/A';
+        $durationMinutes = null;
         $durationLabel = '1hr';
-        if ($timeRaw !== '' && !str_contains(strtolower($timeRaw), 'am') && !str_contains(strtolower($timeRaw), 'pm')) {
+        if (str_contains($timeRaw, '-')) {
+            $rangeParts = preg_split('/\s*-\s*/', $timeRaw, 2);
+            preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[0] ?? ''), $startMatch);
+            preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[1] ?? ''), $endMatch);
+            if (!empty($startMatch[1]) && !empty($endMatch[1])) {
+                $durationMinutes = ((int) $endMatch[1]) * 60 + (int) $endMatch[2] - (((int) $startMatch[1]) * 60 + (int) $startMatch[2]);
+                if ($durationMinutes < 0) {
+                    $durationMinutes += 24 * 60;
+                }
+                $hours = (int) floor($durationMinutes / 60);
+                $mins = (int) ($durationMinutes % 60);
+                $durationLabel = $mins === 0 ? $hours . 'hr' : ($hours === 0 ? $mins . 'm' : $hours . 'hr ' . $mins . 'm');
+                if ($isSpaceUser) {
+                    $timeLabel = $startMatch[1] . ':' . $startMatch[2] . ' - ' . $endMatch[1] . ':' . $endMatch[2];
+                }
+            }
+        } elseif ($timeRaw !== '' && !str_contains(strtolower($timeRaw), 'am') && !str_contains(strtolower($timeRaw), 'pm')) {
             try {
                 $start = \Carbon\Carbon::createFromFormat('H:i', substr($timeRaw, 0, 5));
-                $timeLabel = strtolower($start->format('g:ia'));
+                $timeLabel = $isSpaceUser ? $start->format('H:i') : strtolower($start->format('g:ia'));
             } catch (\Throwable) {
                 // keep raw
             }
         }
-        $dateTimeLabel = $dateLabel . ' · ' . $timeLabel . ' (' . $durationLabel . ')';
+
+        if ($isSpaceUser) {
+            $serviceLower = strtolower($serviceLabel);
+            $serviceKind = match (true) {
+                (bool) preg_match('/full[\s_-]*day|fullday/', $serviceLower) => 'Full-Day',
+                (bool) preg_match('/half[\s_-]*day/', $serviceLower) => 'Half-Day',
+                str_contains($serviceLower, 'hour') => 'Hourly',
+                default => null,
+            };
+            if ($serviceKind === null && $durationMinutes !== null) {
+                $serviceKind = $durationMinutes >= 7 * 60 ? 'Full-Day' : ($durationMinutes >= 3 * 60 ? 'Half-Day' : 'Hourly');
+            }
+            $serviceKind = $serviceKind ?: $serviceLabel;
+            if ($serviceKind !== 'Hourly' && in_array($serviceKind, ['Full-Day', 'Half-Day'], true)) {
+                $hoursForLabel = $durationMinutes !== null ? max(1, (int) round($durationMinutes / 60)) : ($serviceKind === 'Full-Day' ? 8 : 4);
+                $serviceLabel = $serviceKind . ' (' . $hoursForLabel . ' ' . ($hoursForLabel === 1 ? 'hour' : 'hours') . ')';
+            } else {
+                $serviceLabel = $serviceKind;
+            }
+            $dateTimeLabel = $dateLabel . ' · ' . $timeLabel;
+        } else {
+            $dateTimeLabel = $dateLabel . ' · ' . $timeLabel . ' (' . $durationLabel . ')';
+        }
 
         $visitRaw = str_replace('_', ' ', strtolower(trim((string) ($booking->visit_type ?? ''))));
         $locationLabel = match (true) {
@@ -40,8 +80,9 @@
             str_contains($visitRaw, 'salon') => 'Salon',
             str_contains($visitRaw, 'mobile') => 'Mobile station',
             str_contains($visitRaw, 'garden'), str_contains($visitRaw, 'shed') => 'Garden / Shed',
+            str_contains($visitRaw, 'private') => 'Private room',
             $visitRaw !== '' => ucwords($visitRaw),
-            default => 'N/A',
+            default => $isSpaceUser ? 'Garden / Shed' : 'N/A',
         };
 
         $extraAddOns = collect(is_array($booking->extra_add_ons) ? $booking->extra_add_ons : [])
@@ -71,7 +112,7 @@
     @endphp
 
     @teleport('body')
-        <div class="bh-request-overlay" wire:click.self="closeDetailsModal" wire:keydown.escape.window="closeDetailsModal"
+        <div class="bh-request-overlay{{ $isSpaceUser ? ' is-space' : '' }}" wire:click.self="closeDetailsModal" wire:keydown.escape.window="closeDetailsModal"
             x-data="{
                 init() {
                         document.documentElement.classList.add('pending-detail-open');
@@ -104,7 +145,7 @@
                             <strong>{{ $dateTimeLabel }}</strong>
                         </div>
                         <div class="bh-request-row">
-                            <span>Location</span>
+                            <span>{{ $isSpaceUser ? 'Space' : 'Location' }}</span>
                             <strong>{{ $locationLabel }}</strong>
                         </div>
                     </section>

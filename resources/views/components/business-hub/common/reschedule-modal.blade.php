@@ -10,10 +10,35 @@
 @if ($rescheduleBooking)
     @php
         $iconBase = asset('images/business-hub');
+        $isSpaceUser = strtolower((string) (auth('groomer_spacer')->user()?->user_type ?? (auth()->user()?->user_type ?? ''))) === 'space';
         $ownerName = trim((string) ($rescheduleBooking->petOwner?->name ?? 'Client')) ?: 'Client';
         $ownerParts = preg_split('/\s+/', $ownerName, -1, PREG_SPLIT_NO_EMPTY) ?: [];
         $ownerShort = count($ownerParts) >= 2 ? $ownerParts[0] . ' ' . mb_substr($ownerParts[1], 0, 1) . '.' : $ownerName;
         $serviceLabel = trim((string) ($rescheduleBooking->service ?? '')) ?: 'Service';
+        if ($isSpaceUser) {
+            $serviceLower = strtolower($serviceLabel);
+            $serviceLabel = match (true) {
+                (bool) preg_match('/full[\s_-]*day|fullday/', $serviceLower) => 'Full-Day',
+                (bool) preg_match('/half[\s_-]*day/', $serviceLower) => 'Half-Day',
+                str_contains($serviceLower, 'hour') => 'Hourly',
+                default => $serviceLabel,
+            };
+            if (in_array($serviceLabel, ['Full-Day', 'Half-Day', 'Hourly'], true) === false) {
+                $timeRaw = trim((string) ($rescheduleBooking->time ?? ''));
+                if (str_contains($timeRaw, '-')) {
+                    $rangeParts = preg_split('/\s*-\s*/', $timeRaw, 2);
+                    preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[0] ?? ''), $startMatch);
+                    preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[1] ?? ''), $endMatch);
+                    if (!empty($startMatch[1]) && !empty($endMatch[1])) {
+                        $diff = ((int) $endMatch[1]) * 60 + (int) $endMatch[2] - (((int) $startMatch[1]) * 60 + (int) $startMatch[2]);
+                        if ($diff < 0) {
+                            $diff += 24 * 60;
+                        }
+                        $serviceLabel = $diff >= 7 * 60 ? 'Full-Day' : ($diff >= 3 * 60 ? 'Half-Day' : 'Hourly');
+                    }
+                }
+            }
+        }
         $originalDateObj = $rescheduleBooking->date ? new DateTimeImmutable((string) $rescheduleBooking->date) : null;
         $scheduledLabel = $originalDateObj ? $originalDateObj->format('D, j M Y') : 'N/A';
 
@@ -43,7 +68,7 @@
         }
     @endphp
     @teleport('body')
-        <div class="reschedule-modal-overlay" wire:keydown.escape="closeRescheduleModal" x-data="reschedulePicker({
+        <div class="reschedule-modal-overlay{{ $isSpaceUser ? ' is-space' : '' }}" wire:keydown.escape="closeRescheduleModal" x-data="reschedulePicker({
             initialDate: @js($rescheduleSelectedDate),
             initialTime: @js($initialTime),
             initialMonth: @js(sprintf('%04d-%02d-01', $rescheduleYear, $rescheduleMonth)),
@@ -65,7 +90,7 @@
                     <h3 class="reschedule-modal-title" id="reschedule-modal-title">Reschedule Booking</h3>
                     <p class="reschedule-modal-subtitle">
                         Propose a new time for <strong>{{ $serviceLabel }}</strong> with
-                        <strong>{{ $ownerShort }} scheduled for {{ $scheduledLabel }}.</strong>
+                        <strong>{{ $ownerShort }}</strong> scheduled for <strong>{{ $scheduledLabel }}</strong>.
                         The customer confirms the change.
                     </p>
                 </header>
@@ -644,6 +669,8 @@
         }
     }
 
+    .reschedule-modal-overlay.is-space .reschedule-date-card.is-selected,
+    .reschedule-modal-overlay.is-space .reschedule-time-card.is-active,
     .business-hub-container.is-space .reschedule-date-card.is-selected,
     .business-hub-container.is-space .reschedule-time-card.is-active {
         border-color: #FFA899;
@@ -651,10 +678,12 @@
         color: #FFA899;
     }
 
+    .reschedule-modal-overlay.is-space .reschedule-date-card.is-selected .reschedule-date-card__dow,
     .business-hub-container.is-space .reschedule-date-card.is-selected .reschedule-date-card__dow {
         color: #FFA899;
     }
 
+    .reschedule-modal-overlay.is-space .reschedule-confirm-btn,
     .business-hub-container.is-space .reschedule-confirm-btn {
         background: #9FC7E4;
         border-color: #9FC7E4;

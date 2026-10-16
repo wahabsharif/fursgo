@@ -41,7 +41,7 @@
                 </div>
 
                 <section class="bdd-section">
-                    <h4 class="bdd-section-label">Owner</h4>
+                    <h4 class="bdd-section-label" x-text="isSpace ? 'Client' : 'Owner'"></h4>
                     <div class="bdd-owner-card">
                         <div class="bdd-owner-main">
                             <div class="bdd-avatar" data-bh-avatar
@@ -75,7 +75,8 @@
                         <div class="bdd-appt-card">
                             <span class="bdd-appt-label">Service</span>
                             <div class="bdd-appt-value">
-                                <img src="{{ $iconBase }}/icon-confirmed-service.svg" alt="" width="15" height="16" class="is-service">
+                                <img x-show="!isSpace" src="{{ $iconBase }}/icon-confirmed-service.svg" alt="" width="15" height="16" class="is-service">
+                                <img x-show="isSpace" x-cloak x-bind:src="details.serviceIconUrl || '{{ $iconBase }}/icon-space-service-1h.svg'" alt="" width="18" height="15" class="is-space-service">
                                 <strong x-text="details.serviceLabel"></strong>
                             </div>
                         </div>
@@ -94,16 +95,17 @@
                             </div>
                         </div>
                         <div class="bdd-appt-card">
-                            <span class="bdd-appt-label">Location</span>
+                            <span class="bdd-appt-label" x-text="isSpace ? 'Space' : 'Location'"></span>
                             <div class="bdd-appt-value">
-                                <img src="{{ $iconBase }}/icon-location.svg" alt="" width="12" height="16" class="is-location">
+                                <img x-show="!isSpace" src="{{ $iconBase }}/icon-location.svg" alt="" width="12" height="16" class="is-location">
+                                <img x-show="isSpace" src="{{ $iconBase }}/icon-space-shed.svg" alt="" width="17" height="14" class="is-space-type" x-cloak>
                                 <strong x-text="details.locationLabel"></strong>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <section class="bdd-section" x-show="!isSpace && (details.pets || []).length" x-cloak>
+                <section class="bdd-section" x-show="(details.pets || []).length" x-cloak>
                     <h4 class="bdd-section-label">Pet/s</h4>
                     <div class="bdd-pets">
                         <template x-for="(pet, index) in (details.pets || [])" :key="'pet-' + index">
@@ -180,13 +182,13 @@
                     </div>
                 </template>
                 <template x-if="details.status === 'confirmed'">
-                    <div class="bdd-footer-row is-confirmed">
+                    <div class="bdd-footer-row is-confirmed" x-bind:class="{ 'is-space-confirmed': isSpace }">
                         <button type="button" class="bdd-btn is-cancel" @click="runAction('cancel')">Cancel</button>
                         <button type="button" class="bdd-btn is-reschedule" @click="runAction('reschedule')">
                             <img src="{{ $iconBase }}/icon-booking-reschedule.svg" alt="" width="12" height="12">
                             <span>Reschedule</span>
                         </button>
-                        <button type="button" class="bdd-btn is-directions" @click="runAction('directions')">
+                        <button type="button" class="bdd-btn is-directions" x-show="!isSpace" x-cloak @click="runAction('directions')">
                             <img src="{{ $iconBase }}/icon-directions-pin.svg" alt="" width="9" height="12">
                             <span>Directions</span>
                         </button>
@@ -636,6 +638,11 @@
         height: 16px !important;
     }
 
+    .bdd-appt-value img.is-space-service {
+        width: 18px !important;
+        height: 15px !important;
+    }
+
     .bdd-appt-value img.is-date {
         width: 18px !important;
         height: 17px !important;
@@ -649,6 +656,21 @@
     .bdd-appt-value img.is-location {
         width: 12px !important;
         height: 16px !important;
+    }
+
+    .bdd-appt-value img.is-space-type {
+        width: 17px !important;
+        height: 14px !important;
+    }
+
+    .bdd-footer-row.is-confirmed.is-space-confirmed .bdd-btn.is-cancel {
+        flex: 1 1 0;
+        width: auto;
+        min-width: 0;
+    }
+
+    .bdd-footer-row.is-confirmed.is-space-confirmed .bdd-btn.is-reschedule {
+        flex: 1 1 0;
     }
 
     .bdd-appt-value strong {

@@ -241,25 +241,29 @@ new class extends Component {
         $petName = $petNames[0] ?? 'N/A';
         $petMore = count($petNames) > 1 ? ' +' . (count($petNames) - 1) : '';
         $petType = $firstPet?->pet_type;
-        $petLabel = $isSpace ? $this->formatSpaceVisitLabel($booking->visit_type ?? null) : trim($petName . ($petType ? ' ' . $petType : '') . $petMore);
+        $hasPets = $petNames !== [];
+        $petLabel = $hasPets ? trim($petName . ($petType ? ' ' . $petType : '') . $petMore) : ($status === 'pending' ? '-----' : 'N/A');
         $serviceLabel = $isSpace ? $spaceService : (string) ($booking->service ?: 'N/A');
         $ownerName = $this->ownerShortName($booking->petOwner);
         $previousCompleted = max(0, (int) ($completedByOwner[$booking->pet_owner_id] ?? 0) - ($status === 'completed' ? 1 : 0));
         $tier = $this->clientTierLabel($previousCompleted);
         $date = $booking->date;
+        $idPrefix = $isSpace ? 'SH-' : 'FG-';
+        $ownerPhoto = BusinessHubAvatar::mediaUrl($booking->petOwner?->profile_image ?? null);
         $petPhoto = BusinessHubAvatar::mediaUrl($firstPet?->photo ?? null);
-        $avatarName = $isSpace ? (string) ($booking->petOwner?->name ?? $petLabel) : $petName;
+        $rowPhoto = $isSpace ? $ownerPhoto : $petPhoto;
+        $avatarName = $isSpace ? (string) ($booking->petOwner?->name ?? $ownerName) : $petName;
 
         return [
             'id' => (int) $booking->id,
-            'idLabel' => $status === 'pending' ? '-----' : 'FG-' . str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT),
+            'idLabel' => $status === 'pending' ? '-----' : $idPrefix . str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT),
             'owner' => $ownerName,
             'ownerFull' => (string) ($booking->petOwner?->name ?? 'N/A'),
-            'petName' => $petName,
-            'petType' => $petType,
-            'petMore' => $petMore,
+            'petName' => $hasPets ? $petName : ($status === 'pending' ? '-----' : 'N/A'),
+            'petType' => $hasPets ? $petType : '',
+            'petMore' => $hasPets ? $petMore : '',
             'petLabel' => $petLabel,
-            'petPhoto' => $petPhoto,
+            'petPhoto' => $rowPhoto,
             'avatarName' => $avatarName,
             'visitType' => $isSpace ? $this->formatSpaceVisitLabel($booking->visit_type) : ($booking->visit_type ? ucfirst((string) $booking->visit_type) : 'N/A'),
             'serviceHtml' => $isSpace ? e($spaceService) : e($serviceLabel),
@@ -952,16 +956,15 @@ new class extends Component {
                         <span class="bh-booking-value is-strong" x-text="row.service"></span>
                     </div>
                     <div class="bh-booking-col">
-                        <span class="bh-booking-label" x-text="isSpace ? 'Space' : 'Pet'"></span>
-                        <span class="bh-booking-value" x-show="isSpace" x-text="row.petLabel"></span>
-                        <span class="bh-booking-value" x-show="!isSpace"><span class="bh-booking-pet-name"
+                        <span class="bh-booking-label">Pet</span>
+                        <span class="bh-booking-value"><span class="bh-booking-pet-name"
                                 x-text="row.petName"></span><span class="bh-booking-pet-meta"
                                 x-show="row.petType || row.petMore"
                                 x-text="' ' + (row.petType || '') + (row.petMore || '')"></span></span>
                     </div>
                     <div class="bh-booking-owner-block">
                         <div class="bh-booking-col bh-booking-owner-col">
-                            <span class="bh-booking-label">Owner</span>
+                            <span class="bh-booking-label" x-text="isSpace ? 'Client' : 'Owner'"></span>
                             <span class="bh-booking-value" x-text="row.owner"></span>
                         </div>
                         <span class="bh-client-chip" x-show="row.status !== 'pending'" x-cloak
@@ -1045,7 +1048,7 @@ new class extends Component {
     @if ($cancelledBooking)
         @php
             $isSpaceUser = $this->isSpaceUser();
-            $cancelledBookingIdLabel = 'FG-' . str_pad((string) $cancelledBooking->id, 5, '0', STR_PAD_LEFT);
+            $cancelledBookingIdLabel = ($isSpaceUser ? 'SH-' : 'FG-') . str_pad((string) $cancelledBooking->id, 5, '0', STR_PAD_LEFT);
             $cancelledDateLabel = optional($cancelledBooking->date)->format('d/m/Y') ?? 'N/A';
             $cancelledOwnerName = $cancelledBooking->petOwner?->name ?? 'N/A';
             $cancelledFirstPet = $cancelledBooking->pets->first();

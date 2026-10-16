@@ -132,9 +132,44 @@ new class extends Component {
         return ['label' => 'Regular Client', 'tone' => 'regular'];
     }
 
-    private function formatSpaceServiceLabel(?string $service, mixed $time = null): string
+    private function spaceServiceMinutes(mixed $time = null): ?int
+    {
+        $timeRaw = is_object($time) && method_exists($time, 'format') ? $time->format('H:i') : trim((string) ($time ?? ''));
+        if (!str_contains($timeRaw, '-')) {
+            return null;
+        }
+
+        $rangeParts = preg_split('/\s*-\s*/', $timeRaw, 2);
+        preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[0] ?? ''), $startMatch);
+        preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[1] ?? ''), $endMatch);
+        if (empty($startMatch[1]) || empty($endMatch[1])) {
+            return null;
+        }
+
+        $diff = ((int) $endMatch[1]) * 60 + (int) $endMatch[2] - (((int) $startMatch[1]) * 60 + (int) $startMatch[2]);
+        if ($diff < 0) {
+            $diff += 24 * 60;
+        }
+
+        return $diff;
+    }
+
+    private function spaceServiceIconUrl(string $serviceKind): string
+    {
+        $kind = strtolower(trim($serviceKind));
+        $file = match (true) {
+            str_contains($kind, 'full') => 'icon-space-service-8h.svg',
+            str_contains($kind, 'half') => 'icon-space-service-4h.svg',
+            default => 'icon-space-service-1h.svg',
+        };
+
+        return asset('images/business-hub/' . $file);
+    }
+
+    private function formatSpaceServiceLabel(?string $service, mixed $time = null, bool $withDuration = false): string
     {
         $serviceLower = strtolower(trim((string) $service));
+        $minutes = $this->spaceServiceMinutes($time);
         $label = match (true) {
             (bool) preg_match('/full[\s_-]*day|fullday/', $serviceLower) => 'Full-Day',
             (bool) preg_match('/half[\s_-]*day/', $serviceLower) => 'Half-Day',
@@ -142,28 +177,37 @@ new class extends Component {
             default => null,
         };
 
-        $timeRaw = is_object($time) && method_exists($time, 'format') ? $time->format('H:i') : trim((string) ($time ?? ''));
-
-        if ($label === null && str_contains($timeRaw, '-')) {
-            $rangeParts = preg_split('/\s*-\s*/', $timeRaw, 2);
-            preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[0] ?? ''), $startMatch);
-            preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[1] ?? ''), $endMatch);
-            if (!empty($startMatch[1]) && !empty($endMatch[1])) {
-                $diff = ((int) $endMatch[1]) * 60 + (int) $endMatch[2] - (((int) $startMatch[1]) * 60 + (int) $startMatch[2]);
-                if ($diff < 0) {
-                    $diff += 24 * 60;
-                }
-                $label = $diff >= 7 * 60 ? 'Full-Day' : ($diff >= 3 * 60 ? 'Half-Day' : 'Hourly');
-            }
+        if ($label === null && $minutes !== null) {
+            $label = $minutes >= 7 * 60 ? 'Full-Day' : ($minutes >= 3 * 60 ? 'Half-Day' : 'Hourly');
         }
 
-        if ($label !== null) {
+        if ($label === null) {
+            $plain = trim((string) $service);
+
+            return $plain !== '' ? $plain : 'N/A';
+        }
+
+        if (!$withDuration) {
             return $label;
         }
 
-        $plain = trim((string) $service);
+        $durationMinutes = $minutes;
+        if ($durationMinutes === null) {
+            $durationMinutes = match ($label) {
+                'Full-Day' => 8 * 60,
+                'Half-Day' => 4 * 60,
+                default => null,
+            };
+        }
 
-        return $plain !== '' ? $plain : 'N/A';
+        if ($durationMinutes === null || $label === 'Hourly') {
+            return $label;
+        }
+
+        $hours = max(1, (int) round($durationMinutes / 60));
+        $hourLabel = $hours === 1 ? '1 hour' : $hours . ' hours';
+
+        return $label . ' (' . $hourLabel . ')';
     }
 
     private function locationLabel(?string $visitType): string
@@ -237,7 +281,7 @@ new class extends Component {
     {
         $isSpace = $this->isSpaceUser();
         $spacerId = $this->spacerId();
-        $bookingIdLabel = 'FG-' . str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT);
+        $bookingIdLabel = ($isSpace ? 'SH-' : 'FG-') . str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT);
         $status = strtolower((string) ($booking->booking_status ?? ''));
         $statusLabel = $status !== '' ? ucfirst($status) : 'N/A';
         $statusClass = match ($status) {
@@ -268,7 +312,9 @@ new class extends Component {
         $bookingsCountLabel = $previousCompleted === 1 ? '1 booking' : $previousCompleted . ' bookings';
         $ownerMeta = $lastVisitLabel ? $bookingsCountLabel . ' · last visit ' . $lastVisitLabel : $bookingsCountLabel;
 
-        $serviceLabel = $isSpace ? $this->formatSpaceServiceLabel($booking->service, $booking->time) : ((string) ($booking->service ?: 'N/A'));
+        $serviceKind = $isSpace ? $this->formatSpaceServiceLabel($booking->service, $booking->time) : ((string) ($booking->service ?: 'N/A'));
+        $serviceLabel = $isSpace ? $this->formatSpaceServiceLabel($booking->service, $booking->time, true) : $serviceKind;
+        $serviceIconUrl = $isSpace ? $this->spaceServiceIconUrl($serviceKind) : asset('images/business-hub/icon-confirmed-service.svg');
         $dateLabel = optional($booking->date)->format('D, j M Y') ?? 'N/A';
         $timeRaw = trim((string) ($booking->time ?? ''));
         $timeLabel = $timeRaw !== '' ? $timeRaw : 'N/A';
@@ -363,6 +409,7 @@ new class extends Component {
             'clientTierTone' => $tier['tone'],
             'ownerMeta' => $ownerMeta,
             'serviceLabel' => $serviceLabel,
+            'serviceIconUrl' => $serviceIconUrl,
             'dateLabel' => $dateLabel,
             'timeLabel' => $timeLabel,
             'locationLabel' => $this->locationLabel($booking->visit_type ?? null),
@@ -370,7 +417,7 @@ new class extends Component {
             'directionsMeta' => '',
             'pets' => $pets,
             'lineItems' => $lineItems,
-            'subtotalLabel' => $serviceLabel . ' + add-ons',
+            'subtotalLabel' => $serviceKind . ' + add-ons',
             'subtotal' => number_format($subtotal, 2),
             'earnLabel' => $earnLabel,
             'earnAmount' => $earnAmount,
@@ -422,6 +469,7 @@ new class extends Component {
                     clientTierTone: 'new',
                     ownerMeta: '',
                     serviceLabel: '',
+                    serviceIconUrl: this.isSpace ? @js(asset('images/business-hub/icon-space-service-1h.svg')) : @js(asset('images/business-hub/icon-confirmed-service.svg')),
                     dateLabel: '',
                     timeLabel: '',
                     locationLabel: '',
@@ -452,6 +500,13 @@ new class extends Component {
                     cancelled: 'is-cancelled',
                 } [status] || 'is-default';
                 const amount = row.amount || '0.00';
+                const serviceLabel = row.service || 'N/A';
+                const serviceLower = String(serviceLabel).toLowerCase();
+                const spaceServiceIcon = serviceLower.includes('full') ?
+                    @js(asset('images/business-hub/icon-space-service-8h.svg')) :
+                    (serviceLower.includes('half') ?
+                        @js(asset('images/business-hub/icon-space-service-4h.svg')) :
+                        @js(asset('images/business-hub/icon-space-service-1h.svg')));
                 const initialsFrom = (value) => {
                     const parts = String(value || '').trim().split(/\s+/).filter(Boolean);
                     if (!parts.length) return '??';
@@ -462,7 +517,7 @@ new class extends Component {
                 return {
                     ...this.emptyDetails(),
                     id,
-                    idLabel: row.idLabel || ('FG-' + String(id).padStart(5, '0')),
+                    idLabel: row.idLabel || ((this.isSpace ? 'SH-' : 'FG-') + String(id).padStart(5, '0')),
                     ownerName,
                     ownerFullName: row.ownerFull || ownerName,
                     ownerInitial: initialsFrom(ownerName),
@@ -476,7 +531,8 @@ new class extends Component {
                     headerMeta: status === 'pending' ?
                         ('Requested ' + (row.date || '')) : ('Booking ' + (row.idLabel || '') + (status ? ' · ' + status.charAt(0).toUpperCase() + status.slice(1) : '')),
                     expiresLabel: status === 'pending' && row.timerLabel ? ('Expires in ' + row.timerLabel) : '',
-                    serviceLabel: row.service || 'N/A',
+                    serviceLabel,
+                    serviceIconUrl: this.isSpace ? spaceServiceIcon : @js(asset('images/business-hub/icon-confirmed-service.svg')),
                     dateLabel: row.date || 'N/A',
                     timeLabel: row.time || row.startTime || 'N/A',
                     locationLabel: row.visitType || 'N/A',

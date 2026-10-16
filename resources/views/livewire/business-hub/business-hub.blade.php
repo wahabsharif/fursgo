@@ -287,9 +287,10 @@ new class extends Component {
     {
         $pets = $this->bookingPets($booking);
         $owner = $this->ownerShortName($booking->petOwner ?? null);
+        $partyLabel = $this->isSpaceAccount() ? 'Client' : 'Owner';
 
         if ($pets->isEmpty()) {
-            return 'Owner: ' . $owner;
+            return $partyLabel . ': ' . $owner;
         }
 
         $first = $pets->first();
@@ -301,7 +302,14 @@ new class extends Component {
             $petBit .= ' +' . $extra;
         }
 
-        return $petBit . ' · Owner: ' . $owner;
+        return $petBit . ' · ' . $partyLabel . ': ' . $owner;
+    }
+
+    private function bookingIdLabel(int|string $bookingId): string
+    {
+        $prefix = $this->isSpaceAccount() ? 'SH-' : 'FG-';
+
+        return $prefix . str_pad((string) $bookingId, 5, '0', STR_PAD_LEFT);
     }
 
     public function getTodaysBookings()
@@ -315,7 +323,7 @@ new class extends Component {
             ->get()
             ->map(
                 fn($b) => [
-                    'id' => 'FG-' . str_pad($b->id, 5, '0', STR_PAD_LEFT),
+                    'id' => $this->bookingIdLabel($b->id),
                     'booking_id' => $b->id,
                     'pet_avatars' => $this->bookingPetAvatars($b),
                     'service_type' => $this->visitTypeBadgeLabel($b),
@@ -454,7 +462,7 @@ new class extends Component {
                 $petLabel = $extraPets > 0 ? $firstPet . ' +' . $extraPets : $firstPet;
 
                 return [
-                    'id' => 'FG-' . str_pad($b->id, 5, '0', STR_PAD_LEFT),
+                    'id' => $this->bookingIdLabel($b->id),
                     'booking_id' => $b->id,
                     'owner_name' => $this->ownerShortName($b->petOwner),
                     'owner_photo' => BusinessHubAvatar::mediaUrl($b->petOwner?->profile_image ?? null),
@@ -491,7 +499,7 @@ new class extends Component {
             ->get()
             ->map(
                 fn($b) => [
-                    'id' => 'FG-' . str_pad($b->id, 5, '0', STR_PAD_LEFT),
+                    'id' => $this->bookingIdLabel($b->id),
                     'status' => ucfirst($b->booking_status),
                     'pet_avatars' => $this->bookingPetAvatars($b),
                     'pet_count' => $b->pets->count(),

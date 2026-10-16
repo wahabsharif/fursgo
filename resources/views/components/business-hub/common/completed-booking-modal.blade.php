@@ -9,7 +9,7 @@
     @php
         $spacerUser = auth('groomer_spacer')->user() ?? auth()->user();
         $isSpaceUser = strtolower((string) ($spacerUser?->user_type ?? '')) === 'space';
-        $invoiceIdLabel = 'FG-' . str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT);
+        $invoiceIdLabel = ($isSpaceUser ? 'SH-' : 'FG-') . str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT);
         $issuedDateLabel = $booking->date?->format('j M Y') ?? now()->format('j M Y');
         $bookingDateLabel = $booking->date?->format('D, j M Y') ?? 'N/A';
         $billedToName = $booking->petOwner?->name ?? 'N/A';

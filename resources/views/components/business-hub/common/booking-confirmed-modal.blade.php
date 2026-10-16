@@ -3,6 +3,7 @@
 @if ($booking)
     @php
         $iconBase = asset('images/business-hub');
+        $isSpaceUser = strtolower((string) (auth('groomer_spacer')->user()?->user_type ?? '')) === 'space';
         $owner = $booking->petOwner;
         $ownerName = trim((string) ($owner?->name ?? 'Client')) ?: 'Client';
         $ownerFirst = explode(' ', $ownerName)[0] ?? $ownerName;
@@ -16,8 +17,29 @@
         $ownerShort = count($parts) >= 2 ? $parts[0] . ' ' . mb_substr($parts[1], 0, 1) . '.' : $ownerName;
 
         $serviceLabel = trim((string) ($booking->service ?? '')) ?: 'Service';
-        $dateLabel = $booking->date?->format('j M') ?? '—';
         $timeRaw = trim((string) ($booking->time ?? ''));
+        if ($isSpaceUser) {
+            $serviceLower = strtolower($serviceLabel);
+            $serviceLabel = match (true) {
+                (bool) preg_match('/full[\s_-]*day|fullday/', $serviceLower) => 'Full-Day',
+                (bool) preg_match('/half[\s_-]*day/', $serviceLower) => 'Half-Day',
+                str_contains($serviceLower, 'hour') => 'Hourly',
+                default => $serviceLabel,
+            };
+            if (!in_array($serviceLabel, ['Full-Day', 'Half-Day', 'Hourly'], true) && str_contains($timeRaw, '-')) {
+                $rangeParts = preg_split('/\s*-\s*/', $timeRaw, 2);
+                preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[0] ?? ''), $startMatch);
+                preg_match('/(\d{1,2}):(\d{2})/', (string) ($rangeParts[1] ?? ''), $endMatch);
+                if (!empty($startMatch[1]) && !empty($endMatch[1])) {
+                    $diff = ((int) $endMatch[1]) * 60 + (int) $endMatch[2] - (((int) $startMatch[1]) * 60 + (int) $startMatch[2]);
+                    if ($diff < 0) {
+                        $diff += 24 * 60;
+                    }
+                    $serviceLabel = $diff >= 7 * 60 ? 'Full-Day' : ($diff >= 3 * 60 ? 'Half-Day' : 'Hourly');
+                }
+            }
+        }
+        $dateLabel = $booking->date?->format('j M') ?? '—';
         if ($timeRaw !== '' && !str_contains($timeRaw, '-')) {
             try {
                 $start = \Carbon\Carbon::createFromFormat('H:i', substr($timeRaw, 0, 5));
@@ -27,6 +49,14 @@
             }
         } else {
             $timeLabel = $timeRaw !== '' ? $timeRaw : '—';
+            if (str_contains($timeRaw, '-')) {
+                $partsTime = preg_split('/\s*-\s*/', $timeRaw, 2);
+                preg_match('/(\d{1,2}:\d{2})/', (string) ($partsTime[0] ?? ''), $mStart);
+                preg_match('/(\d{1,2}:\d{2})/', (string) ($partsTime[1] ?? ''), $mEnd);
+                if (!empty($mStart[1]) && !empty($mEnd[1])) {
+                    $timeLabel = $mStart[1] . ' - ' . $mEnd[1];
+                }
+            }
         }
 
         $visitRaw = str_replace('_', ' ', strtolower(trim((string) ($booking->visit_type ?? ''))));
@@ -34,17 +64,27 @@
             str_contains($visitRaw, 'home') => 'Home Visits',
             str_contains($visitRaw, 'salon') => 'Salon',
             str_contains($visitRaw, 'garden'), str_contains($visitRaw, 'shed') => 'Garden/Shed',
+            str_contains($visitRaw, 'private') => 'Private room',
+            str_contains($visitRaw, 'mobile') => 'Mobile Station',
             $visitRaw !== '' => ucwords($visitRaw),
-            default => null,
+            default => $isSpaceUser ? 'Garden/Shed' : null,
         };
 
-        $avatarSrc = \App\Support\BusinessHubAvatar::mediaUrl($pets->first()?->photo ?? ($owner?->profile_image ?? null));
-        $avatarName = $firstPet !== 'Pet' ? $firstPet : $ownerName;
+        $avatarSrc = \App\Support\BusinessHubAvatar::mediaUrl($isSpaceUser ? $owner?->profile_image ?? ($pets->first()?->photo ?? null) : $pets->first()?->photo ?? ($owner?->profile_image ?? null));
+        $avatarName = $isSpaceUser ? $ownerName : ($firstPet !== 'Pet' ? $firstPet : $ownerName);
         $avatarInitials = \App\Support\BusinessHubAvatar::initials($avatarName);
+        $serviceIcon = $isSpaceUser
+            ? match (true) {
+                str_contains(strtolower($serviceLabel), 'full') => 'icon-space-service-8h.svg',
+                str_contains(strtolower($serviceLabel), 'half') => 'icon-space-service-4h.svg',
+                default => 'icon-space-service-1h.svg',
+            }
+            : 'icon-confirmed-service.svg';
+        $namesLine = $isSpaceUser ? '<strong>' . e($ownerShort) . '</strong>' : '<strong>' . e($petsLabel) . ' ·</strong><span> ' . e($ownerShort) . '</span>';
     @endphp
 
     @teleport('body')
-        <div class="bh-confirmed-overlay" wire:click.self="closeConfirmedModal"
+        <div class="bh-confirmed-overlay{{ $isSpaceUser ? ' is-space' : '' }}" wire:click.self="closeConfirmedModal"
             wire:keydown.escape.window="closeConfirmedModal"
             x-data="{
                 init() {
@@ -89,12 +129,12 @@
                                 <span class="bh-confirmed-badge">{{ $visitBadge }}</span>
                             @endif
                             <p class="bh-confirmed-names{{ $visitBadge ? ' has-badge' : '' }}">
-                                <strong>{{ $petsLabel }} ·</strong><span> {{ $ownerShort }}</span>
+                                {!! $namesLine !!}
                             </p>
 
                             <div class="bh-confirmed-meta">
                                 <span>
-                                    <img src="{{ $iconBase }}/icon-confirmed-service.svg" alt="" width="12" height="12">
+                                    <img src="{{ $iconBase }}/{{ $serviceIcon }}" alt="" width="{{ $isSpaceUser ? 18 : 12 }}" height="{{ $isSpaceUser ? 15 : 12 }}">
                                     {{ $serviceLabel }}
                                 </span>
                                 <span>
@@ -314,6 +354,7 @@
             text-box-trim: trim-both;
         }
 
+        .bh-confirmed-overlay.is-space .bh-confirmed-badge,
         .business-hub-container.is-space .bh-confirmed-badge,
         body:has(.business-hub-container.is-space) .bh-confirmed-badge {
             background: rgba(255, 168, 153, 0.15);
