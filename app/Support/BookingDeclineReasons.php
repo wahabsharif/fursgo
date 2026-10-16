@@ -12,6 +12,7 @@ class BookingDeclineReasons
         return [
             'Changes in schedule',
             'Can’t accommodate this request',
+            'Customer did not show up',
             'Other',
         ];
     }
@@ -37,6 +38,6 @@ class BookingDeclineReasons
 
     private static function straightenApostrophes(string $value): string
     {
-        return str_replace(["\u{2019}", "\u{2018}"], "'", $value);
+        return str_replace(['’', '‘'], "'", $value);
     }
 }
