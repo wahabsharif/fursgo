@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\Booking;
+use App\Models\GroomerSpacerProfile;
 use App\Support\BookingDeclineReasons;
+use App\Support\BusinessHubAvatar;
 use App\Support\BusinessHubNav;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -19,7 +21,9 @@ new class extends Component {
     public $statusCounts = [];
     public int $activeBookingsCount = 0;
     public string $activeStatus = 'all';
-    public string $pendingSort = 'latest_submitted';
+    public string $pendingSort = 'soonest_first';
+    public array $activeFilters = [];
+    public bool $autoAcceptBooking = true;
     public ?int $declineBookingId = null;
     public ?int $rescheduleBookingId = null;
     public ?int $completedBookingId = null;
@@ -32,10 +36,25 @@ new class extends Component {
     private array $allowedStatuses = ['all', 'pending', 'confirmed', 'completed', 'cancelled'];
     private array $declinableStatuses = ['pending', 'confirmed'];
     private array $reschedulableStatuses = ['pending', 'confirmed', 'completed'];
+    private array $allowedSorts = ['soonest_first', 'amount_high', 'amount_low', 'client_az'];
 
     private function spacerId(): int
     {
         return (int) (Auth::guard('groomer_spacer')->id() ?? (Auth::id() ?? 0));
+    }
+
+    private function profile(): ?GroomerSpacerProfile
+    {
+        $profile = Auth::guard('groomer_spacer')->user();
+
+        if ($profile instanceof GroomerSpacerProfile) {
+            return $profile;
+        }
+
+        $user = Auth::user();
+        $email = (string) ($user->email ?? '');
+
+        return $email !== '' ? GroomerSpacerProfile::whereEmail($email)->first() : null;
     }
 
     private function scopedBookingQuery(int $bookingId)
@@ -45,58 +64,220 @@ new class extends Component {
 
     private function applyBookingSort($query): void
     {
-        if ($this->pendingSort === 'oldest_submitted') {
-            $query->orderBy('created_at')->orderBy(self::BOOKING_ID_COLUMN);
-
-            return;
+        // On All Bookings, keep pending requests at the top before the chosen sort.
+        if ($this->activeStatus === 'all') {
+            $query->orderByRaw('CASE WHEN ' . self::BOOKING_STATUS_COLUMN . " = 'pending' THEN 0 ELSE 1 END");
         }
 
         if ($this->pendingSort === 'amount_high') {
-            $query->orderByDesc('amount')->orderByDesc('created_at')->orderByDesc(self::BOOKING_ID_COLUMN);
+            $query->orderByDesc('amount')->orderBy('date')->orderBy('time')->orderByDesc(self::BOOKING_ID_COLUMN);
 
             return;
         }
 
         if ($this->pendingSort === 'amount_low') {
-            $query->orderBy('amount')->orderByDesc('created_at')->orderByDesc(self::BOOKING_ID_COLUMN);
+            $query->orderBy('amount')->orderBy('date')->orderBy('time')->orderByDesc(self::BOOKING_ID_COLUMN);
 
             return;
         }
 
-        $query->orderByDesc('created_at')->orderByDesc(self::BOOKING_ID_COLUMN);
+        if ($this->pendingSort === 'client_az') {
+            $query->orderBy('date')->orderBy('time')->orderBy(self::BOOKING_ID_COLUMN);
+
+            return;
+        }
+
+        $query->orderBy('date')->orderBy('time')->orderBy(self::BOOKING_ID_COLUMN);
     }
 
     public function bookingSearchHaystack($booking): string
     {
         $owner = strtolower((string) ($booking->petOwner?->name ?? ''));
         $pets = strtolower($booking->pets->pluck('name')->filter()->implode(' '));
+        $service = strtolower((string) ($booking->service ?? ''));
         $id = (string) $booking->id;
         $padded = 'fg-' . str_pad($id, 5, '0', STR_PAD_LEFT);
 
-        return trim($padded . ' ' . $id . ' ' . $owner . ' ' . $pets);
+        return trim($padded . ' ' . $id . ' ' . $owner . ' ' . $pets . ' ' . $service);
     }
 
-    private function toTableRow($booking): array
+    private function ownerShortName($owner): string
+    {
+        $name = trim((string) ($owner?->name ?? 'N/A'));
+        $parts = preg_split('/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        if (count($parts) >= 2) {
+            return $parts[0] . ' ' . mb_substr($parts[1], 0, 1) . '.';
+        }
+
+        return $name !== '' ? $name : 'N/A';
+    }
+
+    private function clientTierLabel(int $previousCompleted): array
+    {
+        if ($previousCompleted <= 0) {
+            return ['label' => 'New Client', 'tone' => 'new'];
+        }
+        if ($previousCompleted === 1) {
+            return ['label' => 'Repeat Client', 'tone' => 'repeat'];
+        }
+
+        return ['label' => 'Regular Client', 'tone' => 'regular'];
+    }
+
+    private function responseTimerLabel($booking): string
+    {
+        $created = $booking->created_at ?? now();
+        $deadline = $created->copy()->addHours(48);
+        $seconds = now()->diffInSeconds($deadline, false);
+        if ($seconds <= 0) {
+            return '0m';
+        }
+        if ($seconds < 3600) {
+            return max(1, (int) ceil($seconds / 60)) . 'm';
+        }
+        if ($seconds < 86400) {
+            return max(1, (int) ceil($seconds / 3600)) . 'h';
+        }
+
+        $days = (int) floor($seconds / 86400);
+        $hours = (int) floor(($seconds % 86400) / 3600);
+
+        return $hours > 0 ? $days . 'd ' . $hours . 'h' : $days . 'd';
+    }
+
+    private function bookingStartTimeLabel($booking): string
+    {
+        $time = trim((string) ($booking->time ?? ''));
+        if ($time === '') {
+            return '--:--';
+        }
+
+        if (preg_match('/(\d{1,2}:\d{2})/', $time, $m)) {
+            $dt = DateTime::createFromFormat('H:i', $m[1]);
+
+            return $dt instanceof DateTime ? $dt->format('H:i') : $m[1];
+        }
+
+        return $time;
+    }
+
+    private function filterOptions(): array
+    {
+        if ($this->isSpaceUser()) {
+            return ['Full-Day', 'Half-Day', 'Hourly', 'Garden/Shed', 'Private room', 'Salon', 'Mobile Station'];
+        }
+
+        return ['Full Groom', 'Bath & Tidy', 'Nail Trim', 'Pet Spa', 'Face Trim Only', 'Home Visit', 'At Studio'];
+    }
+
+    private function bookingMatchesFilters($booking): bool
+    {
+        if ($this->activeFilters === []) {
+            return true;
+        }
+
+        $isSpace = $this->isSpaceUser();
+        $service = $isSpace ? $this->formatSpaceServiceLabel($booking->service, $booking->time) : (string) ($booking->service ?: '');
+        $visit = $isSpace ? $this->formatSpaceVisitLabel($booking->visit_type ?? null) : $this->formatLocationLabel($booking->visit_type ?? null);
+        $rawVisit = strtolower(str_replace('_', ' ', (string) ($booking->visit_type ?? '')));
+        $haystack = strtolower(trim($service . ' ' . $visit . ' ' . (string) ($booking->service ?? '') . ' ' . $rawVisit));
+
+        foreach ($this->activeFilters as $filter) {
+            if ($this->filterMatchesHaystack((string) $filter, $haystack, $rawVisit)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function filterMatchesHaystack(string $filter, string $haystack, string $rawVisit = ''): bool
+    {
+        $needle = strtolower(trim($filter));
+        if ($needle === '') {
+            return false;
+        }
+
+        $aliases = match ($needle) {
+            'bath & tidy', 'bath and tidy' => ['bath & tidy', 'bath and tidy', 'bath & brush', 'bath and brush'],
+            'face trim only' => ['face trim only', 'face trim'],
+            'at studio' => ['at studio', 'salon', 'studio', 'salon visit'],
+            'home visit' => ['home visit', 'home', 'homevisit'],
+            'garden/shed' => ['garden/shed', 'garden / shed', 'garden shed'],
+            'private room' => ['private room', 'private'],
+            'mobile station' => ['mobile station', 'mobile'],
+            default => [$needle],
+        };
+
+        foreach ($aliases as $alias) {
+            if (str_contains($haystack, $alias) || ($rawVisit !== '' && str_contains($rawVisit, $alias))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function formatLocationLabel(?string $visitType): string
+    {
+        $label = str_replace('_', ' ', strtolower((string) $visitType));
+        if ($label === 'home' || $label === 'home visit') {
+            return 'Home Visit';
+        }
+        if ($label === 'salon' || $label === 'salon visit') {
+            return 'Salon Visit';
+        }
+
+        return ucfirst($label ?: 'N/A');
+    }
+
+    private function toTableRow($booking, array $completedByOwner = []): array
     {
         $firstPet = $booking->pets->first();
         $isSpace = $this->isSpaceUser();
         $spaceService = $this->formatSpaceServiceLabel($booking->service, $booking->time);
+        $status = (string) $booking->booking_status;
+        $petNames = $booking->pets->pluck('name')->filter()->values()->all();
+        $petName = $petNames[0] ?? 'N/A';
+        $petMore = count($petNames) > 1 ? ' +' . (count($petNames) - 1) : '';
+        $petType = $firstPet?->pet_type;
+        $petLabel = $isSpace ? $this->formatSpaceVisitLabel($booking->visit_type ?? null) : trim($petName . ($petType ? ' ' . $petType : '') . $petMore);
+        $serviceLabel = $isSpace ? $spaceService : (string) ($booking->service ?: 'N/A');
+        $ownerName = $this->ownerShortName($booking->petOwner);
+        $previousCompleted = max(0, (int) ($completedByOwner[$booking->pet_owner_id] ?? 0) - ($status === 'completed' ? 1 : 0));
+        $tier = $this->clientTierLabel($previousCompleted);
+        $date = $booking->date;
+        $petPhoto = BusinessHubAvatar::mediaUrl($firstPet?->photo ?? null);
+        $avatarName = $isSpace ? (string) ($booking->petOwner?->name ?? $petLabel) : $petName;
 
         return [
             'id' => (int) $booking->id,
-            'idLabel' => 'FG-' . str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT),
-            'owner' => (string) ($booking->petOwner?->name ?? 'N/A'),
-            'petName' => (string) ($firstPet?->name ?? 'N/A'),
-            'petType' => $firstPet?->pet_type,
+            'idLabel' => $status === 'pending' ? '-----' : 'FG-' . str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT),
+            'owner' => $ownerName,
+            'ownerFull' => (string) ($booking->petOwner?->name ?? 'N/A'),
+            'petName' => $petName,
+            'petType' => $petType,
+            'petMore' => $petMore,
+            'petLabel' => $petLabel,
+            'petPhoto' => $petPhoto,
+            'avatarName' => $avatarName,
             'visitType' => $isSpace ? $this->formatSpaceVisitLabel($booking->visit_type) : ($booking->visit_type ? ucfirst((string) $booking->visit_type) : 'N/A'),
-            'serviceHtml' => $isSpace ? e($spaceService) : $this->formatServiceTypeLabel($booking->service),
-            'service' => $isSpace ? $spaceService : (string) ($booking->service ?: 'N/A'),
-            'date' => optional($booking->date)->format('d/m/y') ?: '',
+            'serviceHtml' => $isSpace ? e($spaceService) : e($serviceLabel),
+            'service' => $serviceLabel,
+            'date' => optional($date)->format('d/m/y') ?: '',
+            'dateMonth' => $date ? $date->format('M') : '—',
+            'dateDay' => $date ? $date->format('j') : '—',
+            'startTime' => $this->bookingStartTimeLabel($booking),
             'time' => (string) ($booking->time ?? ''),
-            'status' => (string) $booking->booking_status,
-            'statusLabel' => ucfirst((string) $booking->booking_status),
+            'status' => $status,
+            'statusLabel' => ucfirst($status),
+            'autoAccepted' => $status === 'confirmed' && (bool) ($booking->auto_accepted ?? false),
             'amount' => number_format((float) $booking->amount, 2),
+            'clientTier' => $tier['label'],
+            'clientTierTone' => $tier['tone'],
+            'timerLabel' => $status === 'pending' ? $this->responseTimerLabel($booking) : '',
             'haystack' => $this->bookingSearchHaystack($booking),
+            'filterHaystack' => strtolower(trim($serviceLabel . ' ' . (string) ($booking->visit_type ?? '') . ' ' . str_replace('_', ' ', (string) ($booking->visit_type ?? '')) . ' ' . (string) ($booking->service ?? ''))),
         ];
     }
 
@@ -188,8 +369,6 @@ new class extends Component {
 
     public function refreshBookingsAndCounts(bool $force = false, bool $refreshCounts = true): void
     {
-        // Avoid heavy polling refresh while a modal is open, so calendar
-        // interactions (day/time/month selection) stay responsive.
         if (!$force && ($this->declineBookingId !== null || $this->rescheduleBookingId !== null || $this->completedBookingId !== null || $this->cancelledBookingId !== null || $this->bookingDetailsId !== null)) {
             return;
         }
@@ -216,7 +395,7 @@ new class extends Component {
                 ->all();
         }
 
-        $bookingsQuery = Booking::with(['petOwner:id,name', 'pets:id,name,pet_type,breed'])->where(self::SPACER_ID_COLUMN, $profileId);
+        $bookingsQuery = Booking::with(['petOwner:id,name,profile_image', 'pets:id,name,pet_type,breed,photo'])->where(self::SPACER_ID_COLUMN, $profileId);
 
         if ($this->activeStatus !== 'all') {
             $bookingsQuery->where(self::BOOKING_STATUS_COLUMN, $this->activeStatus);
@@ -224,14 +403,27 @@ new class extends Component {
 
         $this->applyBookingSort($bookingsQuery);
 
-        $this->bookings = $bookingsQuery->get();
-        $this->tableRows = $this->bookings->map(fn($booking) => $this->toTableRow($booking))->values()->all();
-        $this->activeBookingsCount = $this->bookings->count();
+        $bookings = $bookingsQuery->get();
+
+        if ($this->pendingSort === 'client_az') {
+            $bookings = $bookings
+                ->sortBy(function ($booking) {
+                    $pendingRank = $this->activeStatus === 'all' && (string) $booking->booking_status !== 'pending' ? 1 : 0;
+
+                    return sprintf('%d-%s', $pendingRank, strtolower((string) ($booking->petOwner?->name ?? '')));
+                })
+                ->values();
+        }
+
+        $ownerIds = $bookings->pluck('pet_owner_id')->filter()->unique()->values();
+        $completedByOwner = $ownerIds->isEmpty() ? collect() : Booking::query()->where(self::SPACER_ID_COLUMN, $profileId)->where(self::BOOKING_STATUS_COLUMN, 'completed')->whereIn('pet_owner_id', $ownerIds)->selectRaw('pet_owner_id, COUNT(*) as total')->groupBy('pet_owner_id')->pluck('total', 'pet_owner_id');
+
+        $this->bookings = $bookings;
+        $this->tableRows = $bookings->map(fn($booking) => $this->toTableRow($booking, $completedByOwner->all()))->values()->all();
+        $this->activeBookingsCount = $bookings->count();
 
         if ($refreshCounts) {
             Cache::forget("dashboard_sidebar_booking_counts_{$profileId}");
-
-            // Keep sidebar status counters in sync without a full page refresh.
             $this->dispatch('booking-counts-updated', counts: $this->statusCounts);
         }
     }
@@ -241,6 +433,7 @@ new class extends Component {
         $this->bookings = collect();
         $this->tableRows = [];
         $this->rescheduleCalendarBookings = collect();
+        $this->autoAcceptBooking = (bool) ($this->profile()?->auto_accept_booking ?? true);
 
         $requestedStatus = strtolower((string) request()->query('booking_status', ''));
         if ($requestedStatus === '') {
@@ -249,9 +442,37 @@ new class extends Component {
 
         $this->activeStatus = in_array($requestedStatus, $this->allowedStatuses, true) ? $requestedStatus : 'all';
         $this->refreshBookingsAndCounts(force: true);
-
-        // Sync dashboard header with the initial filter (e.g. ?booking_status=pending).
         $this->dispatch('booking-status-changed', status: $this->activeStatus === 'all' ? '' : $this->activeStatus);
+    }
+
+    public function toggleAutoAcceptBooking(): void
+    {
+        $profile = $this->profile();
+        if (!$profile) {
+            return;
+        }
+
+        $this->autoAcceptBooking = !$this->autoAcceptBooking;
+        $profile->update(['auto_accept_booking' => $this->autoAcceptBooking]);
+    }
+
+    public function toggleFilter(string $filter): void
+    {
+        $filter = trim($filter);
+        if ($filter === '' || !in_array($filter, $this->filterOptions(), true)) {
+            return;
+        }
+
+        if (in_array($filter, $this->activeFilters, true)) {
+            $this->activeFilters = array_values(array_filter($this->activeFilters, fn($item) => $item !== $filter));
+        } else {
+            $this->activeFilters = [...$this->activeFilters, $filter];
+        }
+    }
+
+    public function clearFilter(string $filter): void
+    {
+        $this->activeFilters = array_values(array_filter($this->activeFilters, fn($item) => $item !== $filter));
     }
 
     public function setActiveStatus(string $status): void
@@ -263,6 +484,7 @@ new class extends Component {
 
         if ($this->activeStatus === $status) {
             $this->dispatch('bookings-tabs-loading-end');
+
             return;
         }
 
@@ -283,6 +505,7 @@ new class extends Component {
     {
         if ($this->activeStatus === 'all') {
             $this->dispatch('bookings-tabs-loading-end');
+
             return;
         }
 
@@ -305,7 +528,10 @@ new class extends Component {
             return;
         }
 
-        $booking->update(['booking_status' => 'confirmed']);
+        $booking->update([
+            'booking_status' => 'confirmed',
+            'auto_accepted' => false,
+        ]);
         $this->refreshBookingsAndCounts(force: true);
     }
 
@@ -331,6 +557,7 @@ new class extends Component {
 
         if (!$bookingExists) {
             $this->dispatch('bookings-tabs-loading-end');
+
             return;
         }
 
@@ -375,6 +602,7 @@ new class extends Component {
 
         if (!$booking) {
             $this->dispatch('bookings-tabs-loading-end');
+
             return;
         }
 
@@ -435,6 +663,7 @@ new class extends Component {
         $bookingExists = $this->scopedBookingQuery($bookingId)->where(self::BOOKING_STATUS_COLUMN, 'completed')->exists();
         if (!$bookingExists) {
             $this->dispatch('bookings-tabs-loading-end');
+
             return;
         }
 
@@ -455,6 +684,7 @@ new class extends Component {
         $bookingExists = $this->scopedBookingQuery($bookingId)->where(self::BOOKING_STATUS_COLUMN, 'cancelled')->exists();
         if (!$bookingExists) {
             $this->dispatch('bookings-tabs-loading-end');
+
             return;
         }
 
@@ -481,6 +711,42 @@ new class extends Component {
         $this->skipRender();
     }
 
+    #[On('booking-drawer-accept')]
+    public function acceptBookingFromDrawer($bookingId = null): void
+    {
+        if (is_array($bookingId)) {
+            $bookingId = $bookingId['bookingId'] ?? ($bookingId['id'] ?? null);
+        }
+        $id = $bookingId !== null && $bookingId !== '' ? (int) $bookingId : 0;
+        if ($id > 0) {
+            $this->acceptBooking($id);
+        }
+    }
+
+    #[On('booking-drawer-decline')]
+    public function declineBookingFromDrawer($bookingId = null): void
+    {
+        if (is_array($bookingId)) {
+            $bookingId = $bookingId['bookingId'] ?? ($bookingId['id'] ?? null);
+        }
+        $id = $bookingId !== null && $bookingId !== '' ? (int) $bookingId : 0;
+        if ($id > 0) {
+            $this->openDeclineModal($id);
+        }
+    }
+
+    #[On('booking-drawer-reschedule')]
+    public function rescheduleBookingFromDrawer($bookingId = null): void
+    {
+        if (is_array($bookingId)) {
+            $bookingId = $bookingId['bookingId'] ?? ($bookingId['id'] ?? null);
+        }
+        $id = $bookingId !== null && $bookingId !== '' ? (int) $bookingId : 0;
+        if ($id > 0) {
+            $this->openRescheduleModal($id);
+        }
+    }
+
     public function closeCancelledBookingModal(): void
     {
         $this->cancelledBookingId = null;
@@ -498,6 +764,7 @@ new class extends Component {
 
         if (!$booking) {
             $this->closeRescheduleModal();
+
             return;
         }
 
@@ -535,136 +802,43 @@ new class extends Component {
 
     public function setPendingSort(string $sort): void
     {
-        $allowedSorts = ['latest_submitted', 'oldest_submitted', 'amount_high', 'amount_low'];
-        if (!in_array($sort, $allowedSorts, true)) {
+        if (!in_array($sort, $this->allowedSorts, true)) {
             $this->dispatch('bookings-tabs-loading-end');
+
             return;
         }
 
         $this->pendingSort = $sort;
-        $this->refreshBookingsAndCounts(refreshCounts: false);
+        $this->refreshBookingsAndCounts(force: true, refreshCounts: false);
         $this->dispatch('bookings-tabs-loading-end');
     }
 }; ?>
 
-<section class="bookings-board" wire:poll.visible.60s="refreshBookingsForPoll" x-data="{
-    query: window.__bhBookingsSearchQuery || '',
-    visible: 10,
-    matchCount: 0,
-    observer: null,
-    isSpace: {{ $this->isSpaceUser() ? 'true' : 'false' }},
-    isGroomerService: {{ in_array($this->spacerUserType(), ['groomer', 'space'], true) ? 'true' : 'false' }},
-    rows: [],
-    init() {
-        this.readRows();
-        this.applyFilter();
-        this.$watch('query', (value) => {
-            window.__bhBookingsSearchQuery = value;
-            this.visible = 10;
-            this.applyFilter();
-        });
-        const wrap = this.$refs.tableWrap;
-        if (wrap) {
-            this.observer = new MutationObserver(() => this.applyFilter());
-            this.observer.observe(wrap, { childList: true, subtree: true });
-        }
-    },
-    destroy() {
-        this.observer?.disconnect();
-    },
-    readRows() {
-        const json = this.$refs.bookingRowsJson;
-        if (!json) {
-            this.rows = [];
-            return;
-        }
-        const raw = json.content ? json.content.textContent : json.textContent;
-        try {
-            this.rows = JSON.parse(raw || '[]');
-        } catch (error) {
-            this.rows = [];
-        }
-    },
-    get filteredRows() {
-        const q = this.query.trim().toLowerCase();
-        if (!q) {
-            return this.rows;
-        }
-        return this.rows.filter((row) => (row.haystack || '').includes(q));
-    },
-    get visibleRows() {
-        const rows = this.filteredRows;
-        return this.query.trim() !== '' ? rows : rows.slice(0, this.visible);
-    },
-    applyFilter() {
-        if (this.$root.querySelector('.bookings-table-all')) {
-            this.matchCount = this.filteredRows.length;
-            return;
-        }
-        const q = this.query.trim().toLowerCase();
-        const rows = this.$root.querySelectorAll('tr.bookings-data-row');
-        const searching = q.length > 0;
-        const limit = searching ? Number.POSITIVE_INFINITY : this.visible;
-        let matches = 0;
-        let shown = 0;
-        rows.forEach((tr) => {
-            const haystack = tr.getAttribute('data-search') || '';
-            const isMatch = !searching || haystack.includes(q);
-            if (isMatch) {
-                matches += 1;
-            }
-            const show = isMatch && shown < limit;
-            if (show) {
-                shown += 1;
-            }
-            tr.toggleAttribute('hidden', !show);
-        });
-        this.matchCount = matches;
-        this.$root.querySelectorAll('tr.bookings-empty-row').forEach((tr) => {
-            tr.toggleAttribute('hidden', matches > 0);
-        });
-    },
-    loadMore() {
-        this.visible += 10;
-        this.applyFilter();
-    },
-    openView(id) {
-        const row = this.rows.find((item) => Number(item.id) === Number(id)) || { id: Number(id) };
-        window.dispatchEvent(new CustomEvent('booking-details-open', { detail: row }));
-    },
-    get showLoadMore() {
-        if (this.query.trim() !== '') {
-            return false;
-        }
-        if (this.$root.querySelector('tr.bookings-empty-row:not([hidden])')) {
-            return false;
-        }
-        if (this.$root.querySelector('.bookings-table-all')) {
-            return this.rows.length > this.visible;
-        }
-        return this.matchCount > this.visible;
-    }
-}">
-    <template hidden x-ref="bookingRowsJson">@json($tableRows)</template>
-    <div class="bookings-board-header">
-        <label class="bookings-search">
-            <input type="text" inputmode="search" autocomplete="off" spellcheck="false" x-model="query"
-                placeholder="Search by pet, owner or booking ID ..." aria-label="Search bookings"
-                x-on:keydown.escape.prevent="query = ''" />
-            <span class="bookings-search-icon" aria-hidden="true">
-                <img src="{{ asset('images/business-hub/icon-search.svg') }}" alt="" width="16" height="16">
-            </span>
-        </label>
+@php
+    $isSpaceUser = $this->isSpaceUser();
+    $activeAccent = $isSpaceUser ? '#FFA899' : '#FFC97A';
+    $filterOptions = $this->isSpaceUser() ? ['Full-Day', 'Half-Day', 'Hourly', 'Garden/Shed', 'Private room', 'Salon', 'Mobile Station'] : ['Full Groom', 'Bath & Tidy', 'Nail Trim', 'Pet Spa', 'Face Trim Only', 'Home Visit', 'At Studio'];
+    $sortLabels = [
+        'soonest_first' => 'Soonest first',
+        'amount_high' => 'Highest Value',
+        'amount_low' => 'Lowest Value',
+        'client_az' => 'Client (A-Z)',
+    ];
+    $pendingSortKey = (string) ($this->pendingSort ?? 'soonest_first');
+    $currentSortLabel = $sortLabels[$pendingSortKey] ?? 'Soonest first';
+    $allBookingsCount = array_sum(is_array($this->statusCounts) ? $this->statusCounts : []);
+    $bookingPills = [['status' => 'all', 'label' => 'All Bookings'], ['status' => 'pending', 'label' => 'Pending'], ['status' => 'confirmed', 'label' => 'Confirmed'], ['status' => 'completed', 'label' => 'Completed'], ['status' => 'cancelled', 'label' => 'Cancelled']];
+@endphp
 
+<section class="bookings-board" style="--bh-booking-accent: {{ $activeAccent }};" wire:poll.visible.60s="refreshBookingsForPoll"
+    x-data="bhBookingsBoard()">
+    <template hidden x-ref="bookingRowsJson" wire:key="booking-rows-{{ md5(json_encode([$activeStatus, $pendingSort, count($tableRows)])) }}">@json($tableRows)</template>
+    <div class="bookings-board-header">
         <div class="booking-list-header">
             <div class="booking-pill-row">
-                @php
-                    $bookingPills = [['status' => 'all', 'label' => 'All Bookings'], ['status' => 'pending', 'label' => 'Pending'], ['status' => 'confirmed', 'label' => 'Confirmed'], ['status' => 'completed', 'label' => 'Completed'], ['status' => 'cancelled', 'label' => 'Cancelled']];
-                    $allBookingsCount = array_sum($statusCounts);
-                @endphp
                 @foreach ($bookingPills as $pill)
                     <button type="button" wire:click="setActiveStatus('{{ $pill['status'] }}')"
-                        @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
+                        @click="window.dispatchEvent(new CustomEvent('booking-status-intent', { detail: { status: @js($pill['status'] === 'all' ? '' : $pill['status']) } })); window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
                         class="booking-pill {{ $activeStatus === $pill['status'] ? 'is-active' : '' }}{{ $pill['status'] !== 'all' ? ' is-' . $pill['status'] : '' }}">
                         {{ $pill['label'] }}
                         ({{ $pill['status'] === 'all' ? $allBookingsCount : $statusCounts[$pill['status']] ?? 0 }})
@@ -672,701 +846,177 @@ new class extends Component {
                 @endforeach
             </div>
 
-            <x-business-hub.common.sort-dropdown :pending-sort="$pendingSort" />
+            <button type="button" class="bookings-auto-accept {{ $autoAcceptBooking ? 'is-on' : '' }}"
+                wire:click="toggleAutoAcceptBooking" wire:loading.attr="disabled"
+                wire:target="toggleAutoAcceptBooking"
+                aria-pressed="{{ $autoAcceptBooking ? 'true' : 'false' }}"
+                aria-label="Auto-accept {{ $autoAcceptBooking ? 'on' : 'off' }}">
+                <svg width="9" height="10" viewBox="0 0 9 10" fill="none" aria-hidden="true">
+                    <path d="M5.25 0.5L0.75 5.5H4.25L3.75 9.5L8.25 4.5H4.75L5.25 0.5Z" stroke="currentColor"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span>Auto-accept {{ $autoAcceptBooking ? 'ON' : 'OFF' }}</span>
+            </button>
+        </div>
+
+        <div class="bookings-toolbar">
+            <label class="bookings-search" :class="{ 'has-value': query.trim() !== '' }">
+                <input type="text" inputmode="search" autocomplete="off" spellcheck="false" x-model="query"
+                    placeholder="Search by pet, owner or booking ID..." aria-label="Search bookings"
+                    x-on:keydown.escape.prevent="query = ''" />
+                <span class="bookings-search-icon" aria-hidden="true">
+                    <img src="{{ asset('images/business-hub/icon-search.svg') }}" alt="" width="16" height="16">
+                </span>
+            </label>
+
+            <div class="bookings-toolbar-actions">
+                <div class="bookings-filter-dropdown" @keydown.escape.window="filterOpen = false"
+                    @click.outside="filterOpen = false">
+                    <button type="button" class="bookings-tool-btn" @click.stop="filterOpen = !filterOpen; sortOpen = false"
+                        :aria-expanded="filterOpen.toString()" aria-label="Filter bookings">
+                        <img src="{{ asset('images/business-hub/icon-booking-filter.svg') }}" alt="" width="8" height="10">
+                        <span>Filter</span>
+                    </button>
+                    <div class="bookings-filter-menu" x-cloak x-show="filterOpen" x-transition.opacity.duration.100ms>
+                        @foreach ($filterOptions as $option)
+                            <button type="button" class="bookings-filter-option"
+                                :class="{ 'is-active': activeFilters.includes(@js($option)) }"
+                                @click.stop="toggleLocalFilter(@js($option))">
+                                <span>{{ $option }}</span>
+                                <img class="bookings-menu-check" src="{{ asset('images/business-hub/icon-booking-menu-check.svg') }}" alt="" width="10" height="8" aria-hidden="true">
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="bookings-sort-dropdown" @keydown.escape.window="sortOpen = false"
+                    @click.outside="sortOpen = false">
+                    <button type="button" class="bookings-tool-btn is-sort" @click.stop="sortOpen = !sortOpen; filterOpen = false"
+                        :aria-expanded="sortOpen.toString()" aria-label="Sort bookings">
+                        <img src="{{ asset('images/business-hub/icon-booking-sort.svg') }}" alt="" width="15" height="11">
+                        <span><strong>Sort:</strong> {{ $currentSortLabel }}</span>
+                    </button>
+                    <div class="bookings-sort-menu" x-cloak x-show="sortOpen" x-transition.opacity.duration.100ms>
+                        @foreach ($sortLabels as $sortKey => $sortLabel)
+                            <button type="button" class="bookings-sort-option {{ $pendingSort === $sortKey ? 'is-active' : '' }}"
+                                wire:click="setPendingSort('{{ $sortKey }}')"
+                                @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); sortOpen = false">
+                                <span>{{ $sortLabel }}</span>
+                                <img class="bookings-menu-check" src="{{ asset('images/business-hub/icon-booking-menu-check.svg') }}" alt="" width="10" height="8" aria-hidden="true">
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bookings-filter-chips" x-cloak x-show="activeFilters.length > 0">
+            <template x-for="chip in activeFilters" :key="chip">
+                <button type="button" class="bookings-filter-chip" @click="clearLocalFilter(chip)"
+                    :aria-label="'Remove ' + chip + ' filter'">
+                    <span x-text="chip"></span>
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </template>
         </div>
     </div>
 
-    @php
-        $extractPetMeta = function ($booking) {
-            $petNames = $booking->pets->pluck('name')->filter()->values()->all();
-            $petTypes = $booking->pets->pluck('pet_type')->filter()->unique()->values()->all();
+    <div class="bookings-card-list" x-ref="tableWrap">
+        <template x-for="row in shownRows" :key="row.id">
+            <article class="bh-booking-card" :class="'is-' + row.status" @click="openCard(row)" role="button" tabindex="0"
+                @keydown.enter.prevent="openCard(row)" @keydown.space.prevent="openCard(row)">
+                <div class="bh-booking-date">
+                    <span class="bh-booking-date-month" x-text="row.dateMonth"></span>
+                    <span class="bh-booking-date-day" x-text="row.dateDay"></span>
+                    <span class="bh-booking-date-time" x-text="row.startTime"></span>
+                </div>
 
-            return [
-                'name' => $petNames[0] ?? 'N/A',
-                'type' => $petTypes[0] ?? null,
-                'more' => count($petNames) > 1 ? '+' . (count($petNames) - 1) : '',
-            ];
-        };
+                <div class="bh-booking-avatar">
+                    <span class="bh-avatar" :class="row.petPhoto ? 'has-photo' : 'is-fallback'" data-bh-avatar
+                        style="--bh-avatar-size: 56px; --bh-avatar-font: 20px;">
+                        <img class="bh-avatar__photo" x-show="row.petPhoto" :src="row.petPhoto" :alt="row.avatarName || 'Pet'"
+                            loading="lazy" decoding="async"
+                            x-on:error="window.bhAvatarFallback && window.bhAvatarFallback($event.target)">
+                        <span class="bh-avatar__initials" data-bh-avatar-fallback x-show="!row.petPhoto"
+                            x-text="avatarInitials(row.avatarName)"></span>
+                    </span>
+                </div>
 
-        $formatPendingTimeRange = function (string $raw): string {
-            if (!str_contains($raw, '-')) {
-                return $raw;
-            }
+                <div class="bh-booking-cols">
+                    <div class="bh-booking-col">
+                        <span class="bh-booking-label">Booking ID</span>
+                        <span class="bh-booking-value" x-text="row.idLabel"></span>
+                    </div>
+                    <div class="bh-booking-col">
+                        <span class="bh-booking-label">Service Type</span>
+                        <span class="bh-booking-value is-strong" x-text="row.service"></span>
+                    </div>
+                    <div class="bh-booking-col">
+                        <span class="bh-booking-label" x-text="isSpace ? 'Space' : 'Pet'"></span>
+                        <span class="bh-booking-value" x-show="isSpace" x-text="row.petLabel"></span>
+                        <span class="bh-booking-value" x-show="!isSpace"><span class="bh-booking-pet-name"
+                                x-text="row.petName"></span><span class="bh-booking-pet-meta"
+                                x-show="row.petType || row.petMore"
+                                x-text="' ' + (row.petType || '') + (row.petMore || '')"></span></span>
+                    </div>
+                    <div class="bh-booking-owner-block">
+                        <div class="bh-booking-col bh-booking-owner-col">
+                            <span class="bh-booking-label">Owner</span>
+                            <span class="bh-booking-value" x-text="row.owner"></span>
+                        </div>
+                        <span class="bh-client-chip" x-show="row.status !== 'pending'" x-cloak
+                            :class="'is-' + row.clientTierTone" x-text="row.clientTier"></span>
+                    </div>
+                </div>
 
-            $timeParts = preg_split('/\s*-\s*/', $raw, 2);
-            $startPart = $timeParts[0] ?? '';
-            $endPart = $timeParts[1] ?? '';
-            preg_match('/(\d{1,2}:\d{2})/', $startPart, $mStart);
-            preg_match('/(\d{1,2}:\d{2})/', $endPart, $mEnd);
-            if (empty($mStart[1]) || empty($mEnd[1])) {
-                return $raw;
-            }
+                <div class="bh-booking-end">
+                    <div class="bh-booking-trailing" x-show="row.status === 'pending'" x-cloak @click.stop>
+                        <div class="bh-booking-pending-actions">
+                            <div class="bh-booking-timer">
+                                <img src="{{ asset('images/business-hub/icon-booking-timer.svg') }}" alt="" width="7"
+                                    height="10">
+                                <span x-text="row.timerLabel"></span>
+                            </div>
+                            <button type="button" class="bh-booking-decline"
+                                @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start')); $wire.openDeclineModal(Number(row.id))">
+                                Decline
+                            </button>
+                            <button type="button" class="bh-booking-accept" @click="$wire.acceptBooking(Number(row.id))">
+                                <img src="{{ asset('images/business-hub/icon-request-accept-check.svg') }}" alt=""
+                                    width="12" height="8">
+                                <span>Accept</span>
+                            </button>
+                        </div>
+                    </div>
 
-            try {
-                $startDt = new DateTime($mStart[1]);
-                $endDt = new DateTime($mEnd[1]);
-                if ($endDt < $startDt) {
-                    $endDt->modify('+1 day');
-                }
+                    <div class="bh-booking-status-price">
+                        <div class="bh-status-row">
+                            <img class="bh-auto-accept-bolt"
+                                x-show="row.status === 'confirmed' && row.autoAccepted" x-cloak
+                                src="{{ asset('images/business-hub/icon-booking-auto-accept.svg') }}" alt=""
+                                width="9" height="10" aria-hidden="true">
+                            <span class="bh-status-chip" :class="'is-' + row.status" x-text="row.statusLabel"></span>
+                        </div>
+                        <span class="bh-booking-price" x-text="'£' + row.amount"></span>
+                    </div>
+                </div>
+            </article>
+        </template>
 
-                $startHHMM = $startDt->format('H:i');
-                $endHHMM = $endDt->format('H:i');
-                $startMeridiem = strtolower($startDt->format('a'));
-                $endMeridiem = strtolower($endDt->format('a'));
-                $diffMinutes = max(0, ($endDt->getTimestamp() - $startDt->getTimestamp()) / 60);
-                $hours = (int) floor($diffMinutes / 60);
-                $minutes = (int) ($diffMinutes % 60);
-                $durationLabel = $minutes === 0 ? $hours . 'hr' : $hours . 'hr ' . $minutes . 'm';
-
-                if ($startMeridiem === $endMeridiem) {
-                    return $startHHMM . ' - ' . $endHHMM . ' ' . $startMeridiem . ' (' . $durationLabel . ')';
-                }
-
-                return $startDt->format('H:i a') . ' - ' . $endDt->format('H:i a') . ' (' . $durationLabel . ')';
-            } catch (Throwable $e) {
-                return $raw;
-            }
-        };
-
-        $formatConfirmedTimeRange = function (string $raw): string {
-            if (!str_contains($raw, '-')) {
-                return $raw;
-            }
-
-            $parts = preg_split('/\s*-\s*/', $raw, 2);
-            $startPart = $parts[0] ?? '';
-            $endPart = $parts[1] ?? '';
-            preg_match('/(\d{1,2}:\d{2})/', $startPart, $mStart);
-            preg_match('/(\d{1,2}:\d{2})/', $endPart, $mEnd);
-            if (empty($mStart[1]) || empty($mEnd[1])) {
-                return $raw;
-            }
-
-            try {
-                $startDt = new DateTime($mStart[1]);
-                $endDt = new DateTime($mEnd[1]);
-                if ($endDt < $startDt) {
-                    $endDt->modify('+1 day');
-                }
-                $durationMinutes = (int) max(0, ($endDt->getTimestamp() - $startDt->getTimestamp()) / 60);
-                $durationLabel = '(' . (int) floor($durationMinutes / 60) . 'hr' . ($durationMinutes % 60 ? ' ' . $durationMinutes % 60 . 'm' : '') . ')';
-                return $startDt->format('H:i') . ' - ' . $endDt->format('H:i') . ' ' . strtolower($endDt->format('a')) . ' ' . $durationLabel;
-            } catch (Throwable $e) {
-                return $raw;
-            }
-        };
-
-        $formatLocationLabel = function (?string $visitType): string {
-            $label = str_replace('_', ' ', strtolower((string) $visitType));
-            if ($label === 'home' || $label === 'home visit') {
-                return 'Home Visit';
-            }
-            if ($label === 'salon' || $label === 'salon visit') {
-                return 'Salon Visit';
-            }
-            return ucfirst($label ?: 'N/A');
-        };
-    @endphp
-
-    <div class="bookings-table-wrap" x-ref="tableWrap">
-        <div class="bookings-table-card">
-            <div class="bookings-table-scroll">
-                @if ($activeStatus === 'pending')
-                    @php
-                        $isSpaceUser = $this->isSpaceUser();
-                    @endphp
-                    <table class="bookings-table booking-list-table{{ $isSpaceUser ? ' is-space' : '' }}">
-                        <thead>
-                            <tr>
-                                <th>Booking ID</th>
-                                <th>{{ $isSpaceUser ? 'Submitted at' : 'Submitted' }}</th>
-                                <th>{{ $isSpaceUser ? 'Client' : 'Owner' }}</th>
-                                <th>{{ $isSpaceUser ? 'Space' : 'Pet' }}</th>
-                                <th>{{ $isSpaceUser ? 'Service type' : 'Service Type' }}</th>
-                                <th class="booking-details-col">Booking Details</th>
-                                <th>Payment</th>
-                                <th class="action-col">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody wire:key="bookings-table-pending" class="bookings-table-body">
-                            @php
-                                $pendingBookings = $bookings->where('booking_status', 'pending')->values();
-                                if ($pendingSort === 'oldest_submitted') {
-                                    $pendingBookings = $pendingBookings->sortBy('created_at')->values();
-                                } elseif ($pendingSort === 'amount_high') {
-                                    $pendingBookings = $pendingBookings->sortByDesc(fn($b) => (float) $b->amount)->values();
-                                } elseif ($pendingSort === 'amount_low') {
-                                    $pendingBookings = $pendingBookings->sortBy(fn($b) => (float) $b->amount)->values();
-                                } else {
-                                    $pendingBookings = $pendingBookings->sortByDesc('created_at')->values();
-                                }
-                            @endphp
-                            @php
-                                $visiblePendingBookings = $pendingBookings;
-                            @endphp
-                            @foreach ($visiblePendingBookings as $booking)
-                                @php
-                                    $petNames = $booking->pets->pluck('name')->filter()->values()->all();
-                                    $petTypes = $booking->pets->pluck('pet_type')->filter()->unique()->values()->all();
-
-                                    $petName = $petNames[0] ?? 'N/A';
-                                    $petMore = count($petNames) > 1 ? '+' . (count($petNames) - 1) : '';
-                                    $petType = $petTypes[0] ?? null;
-
-                                    // "Submitted at" should reflect when the booking row was created.
-                                    $submittedDate = optional($booking->created_at)->format('d/m/y');
-                                    $submittedTime = optional($booking->created_at)->format('H:i');
-
-                                    // Booking Details keep using your booking date/time fields.
-                                    $bookingDetailsDate = optional($booking->date)->format('d/m/y');
-                                    $bookingDetailsTimeRaw = (string) $booking->time;
-
-                                    // Example output: "08:00 - 09:00 am (1hr)"
-                                    // `booking->time` is usually stored like "08:00 - 09:00".
-                                    $bookingDetailsTime = $bookingDetailsTimeRaw;
-                                    if (str_contains($bookingDetailsTimeRaw, '-')) {
-                                        $timeParts = preg_split('/\s*-\s*/', $bookingDetailsTimeRaw, 2);
-                                        $startPart = $timeParts[0] ?? '';
-                                        $endPart = $timeParts[1] ?? '';
-
-                                        preg_match('/(\d{1,2}:\d{2})/', $startPart, $mStart);
-                                        preg_match('/(\d{1,2}:\d{2})/', $endPart, $mEnd);
-
-                                        if (!empty($mStart[1]) && !empty($mEnd[1])) {
-                                            $startTimeStr = $mStart[1];
-                                            $endTimeStr = $mEnd[1];
-
-                                            try {
-                                                $startDt = new DateTime($startTimeStr);
-                                                $endDt = new DateTime($endTimeStr);
-
-                                                // If end is earlier than start, assume it rolls over (rare for groom slots).
-                                                if ($endDt < $startDt) {
-                                                    $endDt->modify('+1 day');
-                                                }
-
-                                                $startHHMM = $startDt->format('H:i');
-                                                $endHHMM = $endDt->format('H:i');
-
-                                                $startMeridiem = strtolower($startDt->format('a'));
-                                                $endMeridiem = strtolower($endDt->format('a'));
-
-                                                $diffMinutes = max(0, ($endDt->getTimestamp() - $startDt->getTimestamp()) / 60);
-                                                $hours = (int) floor($diffMinutes / 60);
-                                                $minutes = (int) ($diffMinutes % 60);
-
-                                                if ($minutes === 0) {
-                                                    $durationLabel = $hours . 'hr';
-                                                } else {
-                                                    $durationLabel = $hours . 'hr ' . $minutes . 'm';
-                                                }
-
-                                                if ($isSpaceUser) {
-                                                    $bookingDetailsTime = $startHHMM . ' - ' . $endHHMM . ' (' . $durationLabel . ')';
-                                                } elseif ($startMeridiem === $endMeridiem) {
-                                                    $bookingDetailsTime = $startHHMM . ' - ' . $endHHMM . ' ' . $startMeridiem . ' (' . $durationLabel . ')';
-                                                } else {
-                                                    $bookingDetailsTime = $startDt->format('H:i a') . ' - ' . $endDt->format('H:i a') . ' (' . $durationLabel . ')';
-                                                }
-                                            } catch (Throwable $e) {
-                                                // Keep raw value on parse failure.
-                                                $bookingDetailsTime = $bookingDetailsTimeRaw;
-                                            }
-                                        }
-                                    }
-                                    $bookingDetailsTimeDisplay = $bookingDetailsTime;
-                                @endphp
-
-                                <tr wire:key="booking-pending-row-{{ $booking->id }}" class="bookings-data-row"
-                                    data-search="{{ $this->bookingSearchHaystack($booking) }}" @if ($loop->index >= 10) hidden @endif>
-                                    <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
-                                    <td>
-                                        <div class="submitted-at">
-                                            @if ($isSpaceUser)
-                                                <div class="submitted-time">{{ $submittedTime }}</div>
-                                                <div class="submitted-date">{{ $submittedDate }}</div>
-                                            @else
-                                                <div class="submitted-date">{{ $submittedDate }}</div>
-                                                <div class="submitted-time">{{ $submittedTime }}</div>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
-                                    <td @if ($isSpaceUser) class="space-visit-cell" @endif>
-                                        @if ($isSpaceUser)
-                                            {{ $this->formatSpaceVisitLabel($booking->visit_type ?? null) }}
-                                        @else
-                                            <div class="filtered-pet-cell">
-                                                <span class="booking-pet-name">{{ $petName }}</span>
-                                                <span>
-                                                    @if ($petType)
-                                                        <span class="booking-pet-type">{{ $petType }}</span>
-                                                    @endif
-                                                    @if ($petMore)
-                                                        <span class="booking-pet-more">{{ $petMore }}</span>
-                                                    @endif
-                                                </span>
-                                            </div>
-                                        @endif
-                                    </td>
-                                    <td class="service-type">
-                                        @if ($isSpaceUser)
-                                            {{ $this->formatSpaceServiceLabel($booking->service, $booking->time) }}
-                                        @else
-                                            {!! $this->formatServiceTypeLabel($booking->service) !!}
-                                        @endif
-                                    </td>
-                                    <td class="booking-details-col">
-                                        <div class="booking-details">
-                                            <div class="details-date">{{ $bookingDetailsDate }}</div>
-                                            <div class="details-time">
-                                                {{ $bookingDetailsTimeDisplay }}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>£{{ number_format((float) $booking->amount, 2) }}</td>
-                                    <td class="action-col">
-                                        <div class="booking-action-cell">
-                                            <button type="button" class="booking-accept-btn"
-                                                wire:click="acceptBooking({{ $booking->id }})" wire:loading.attr="disabled"
-                                                wire:target="acceptBooking({{ $booking->id }})" aria-label="Accept booking">
-                                                <span wire:loading.remove
-                                                    wire:target="acceptBooking({{ $booking->id }})">Accept</span>
-                                                <span class="booking-accept-loading" wire:loading.inline-flex
-                                                    wire:target="acceptBooking({{ $booking->id }})">
-                                                    <span class="booking-accept-spinner" aria-hidden="true"></span>
-                                                </span>
-                                            </button>
-                                            <button type="button" class="booking-decline-btn"
-                                                @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                                                wire:click="openDeclineModal({{ $booking->id }})" aria-label="Decline booking">
-                                                Decline
-                                            </button>
-                                            <x-business-hub.common.more-action-btn variant="pending" :row-id="$booking->id" />
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                            <tr class="bookings-empty-row" wire:key="booking-row-{{ $activeStatus }}-empty" @if ($visiblePendingBookings->isNotEmpty()) hidden @endif>
-                                <td colspan="8" class="empty-bookings">No pending bookings found.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                @endif
-
-                @if ($activeStatus === 'confirmed')
-                    @php
-                        $isSpaceUser = $this->isSpaceUser();
-                    @endphp
-                    <table class="bookings-table confirmed-bookings-table{{ $isSpaceUser ? ' is-space' : '' }}">
-                        <thead>
-                            @if ($isSpaceUser)
-                                <tr>
-                                    <th>Booking ID</th>
-                                    <th>Client</th>
-                                    <th>Service Type</th>
-                                    <th>Location</th>
-                                    <th>Booking Details</th>
-                                    <th>Staff</th>
-                                    <th class="confirmed-action-col">Action</th>
-                                </tr>
-                            @else
-                                <tr>
-                                    <th>Booking ID</th>
-                                    <th class="booking-details-col">Appointment Details</th>
-                                    <th>Pet</th>
-                                    <th>Service Type</th>
-                                    <th>Owner</th>
-                                    <th>Location</th>
-                                    <th>Staff</th>
-                                    <th class="confirmed-action-col">Action</th>
-                                </tr>
-                            @endif
-                        </thead>
-                        <tbody wire:key="bookings-table-confirmed" class="bookings-table-body">
-                            @php
-                                $confirmedBookings = $bookings->where('booking_status', 'confirmed')->values();
-                                if ($pendingSort === 'oldest_submitted') {
-                                    $confirmedBookings = $confirmedBookings->sortBy('created_at')->values();
-                                } elseif ($pendingSort === 'amount_high') {
-                                    $confirmedBookings = $confirmedBookings->sortByDesc(fn($b) => (float) $b->amount)->values();
-                                } elseif ($pendingSort === 'amount_low') {
-                                    $confirmedBookings = $confirmedBookings->sortBy(fn($b) => (float) $b->amount)->values();
-                                } else {
-                                    $confirmedBookings = $confirmedBookings->sortByDesc('created_at')->values();
-                                }
-                                $visibleConfirmedBookings = $confirmedBookings;
-                            @endphp
-                            @foreach ($visibleConfirmedBookings as $booking)
-                                @php
-                                    $petNames = $booking->pets->pluck('name')->filter()->values()->all();
-                                    $petTypes = $booking->pets->pluck('pet_type')->filter()->unique()->values()->all();
-                                    $petName = $petNames[0] ?? 'N/A';
-                                    $petMore = count($petNames) > 1 ? '+' . (count($petNames) - 1) : '';
-                                    $petType = $petTypes[0] ?? null;
-
-                                    $appointmentDate = optional($booking->date)->format('d/m/y');
-                                    $appointmentTimeRaw = (string) $booking->time;
-                                    $appointmentTime = $appointmentTimeRaw;
-
-                                    if (str_contains($appointmentTimeRaw, '-')) {
-                                        $parts = preg_split('/\s*-\s*/', $appointmentTimeRaw, 2);
-                                        $startPart = $parts[0] ?? '';
-                                        $endPart = $parts[1] ?? '';
-                                        preg_match('/(\d{1,2}:\d{2})/', $startPart, $mStart);
-                                        preg_match('/(\d{1,2}:\d{2})/', $endPart, $mEnd);
-
-                                        if (!empty($mStart[1]) && !empty($mEnd[1])) {
-                                            try {
-                                                $startDt = new DateTime($mStart[1]);
-                                                $endDt = new DateTime($mEnd[1]);
-                                                if ($endDt < $startDt) {
-                                                    $endDt->modify('+1 day');
-                                                }
-                                                $durationMinutes = (int) max(0, ($endDt->getTimestamp() - $startDt->getTimestamp()) / 60);
-                                                $durationLabel = '(' . (int) floor($durationMinutes / 60) . 'hr' . ($durationMinutes % 60 ? ' ' . $durationMinutes % 60 . 'm' : '') . ')';
-                                                if ($isSpaceUser) {
-                                                    $appointmentTime = $startDt->format('H:i') . ' - ' . $endDt->format('H:i') . ' ' . $durationLabel;
-                                                } else {
-                                                    $appointmentTime = $startDt->format('H:i') . ' - ' . $endDt->format('H:i') . ' ' . strtolower($endDt->format('a')) . ' ' . $durationLabel;
-                                                }
-                                            } catch (Throwable $e) {
-                                                $appointmentTime = $appointmentTimeRaw;
-                                            }
-                                        }
-                                    }
-                                    $appointmentTimeDisplay = $appointmentTime;
-
-                                    if ($isSpaceUser) {
-                                        $locationLabel = $this->formatSpaceVisitLabel($booking->visit_type ?? null);
-                                    } else {
-                                        $locationLabel = str_replace('_', ' ', strtolower((string) ($booking->visit_type ?? '')));
-                                        $locationLabel = $locationLabel === 'home' || $locationLabel === 'home visit' ? 'Home Visit' : ($locationLabel === 'salon' || $locationLabel === 'salon visit' ? 'Salon Visit' : ucfirst($locationLabel ?: 'N/A'));
-                                    }
-                                @endphp
-                                <tr wire:key="booking-row-confirmed-{{ $booking->id }}" class="bookings-data-row"
-                                    data-search="{{ $this->bookingSearchHaystack($booking) }}" @if ($loop->index >= 10) hidden @endif>
-                                    <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
-                                    @if ($isSpaceUser)
-                                        <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
-                                        <td class="service-type">{{ $this->formatSpaceServiceLabel($booking->service, $booking->time) }}</td>
-                                        <td class="space-visit-cell">{{ $locationLabel }}</td>
-                                        <td>
-                                            <div class="confirmed-appointment-cell">
-                                                <div>{{ $appointmentDate }}</div>
-                                                <div>{{ $appointmentTimeDisplay }}</div>
-                                            </div>
-                                        </td>
-                                        <td>{{ $booking->staff ?: 'N/A' }}</td>
-                                    @else
-                                        <td class="booking-details-col">
-                                            <div class="confirmed-appointment-cell">
-                                                <div>{{ $appointmentDate }}</div>
-                                                <div>{{ $appointmentTimeDisplay }}</div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="filtered-pet-cell">
-                                                <span class="booking-pet-name">{{ $petName }}</span>
-                                                <span>
-                                                    @if ($petType)
-                                                        <span class="booking-pet-type">{{ $petType }}</span>
-                                                    @endif
-                                                    @if ($petMore)
-                                                        <span class="booking-pet-more">{{ $petMore }}</span>
-                                                    @endif
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td class="service-type">{!! $this->formatServiceTypeLabel($booking->service) !!}</td>
-                                        <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
-                                        <td>{{ $locationLabel }}</td>
-                                        <td>{{ $booking->staff ?: 'N/A' }}</td>
-                                    @endif
-                                    <td class="confirmed-action-col">
-                                        <div class="confirmed-action-cell">
-                                            <button type="button" class="confirmed-action-btn is-message" aria-label="Message">
-                                                <img src="{{ asset('images/business-hub/icon-booking-message.svg') }}" alt=""
-                                                    width="36" height="36">
-                                            </button>
-                                            <button type="button" class="confirmed-action-btn is-reschedule"
-                                                @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                                                wire:click="openRescheduleModal({{ $booking->id }})" aria-label="Reschedule">
-                                                <img src="{{ asset('images/business-hub/icon-booking-reschedule.svg') }}" alt=""
-                                                    width="36" height="36">
-                                            </button>
-                                            <x-business-hub.common.more-action-btn variant="confirmed" :row-id="$booking->id"
-                                                :owner-id="$booking->pet_owner_id ?? $booking->petOwner?->id" />
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                            <tr class="bookings-empty-row" @if ($visibleConfirmedBookings->isNotEmpty()) hidden @endif>
-                                <td colspan="{{ $isSpaceUser ? 7 : 8 }}" class="empty-bookings">No confirmed bookings
-                                    found.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                @endif
-
-                @if ($activeStatus === 'completed')
-                    @php
-                        $isSpaceUser = $this->isSpaceUser();
-                    @endphp
-                    <table class="bookings-table completed-bookings-table{{ $isSpaceUser ? ' is-space' : '' }}">
-                        <thead>
-                            <tr>
-                                <th>Booking ID</th>
-                                <th>Date</th>
-                                <th>{{ $isSpaceUser ? 'Space' : 'Pet' }}</th>
-                                <th>Service Type</th>
-                                <th>Rating</th>
-                                <th>Earnings</th>
-                                <th class="completed-action-col">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody wire:key="bookings-table-completed" class="bookings-table-body">
-                            @php
-                                $completedBookings = $bookings->where('booking_status', 'completed')->values();
-                                if ($pendingSort === 'oldest_submitted') {
-                                    $completedBookings = $completedBookings->sortBy('created_at')->values();
-                                } elseif ($pendingSort === 'amount_high') {
-                                    $completedBookings = $completedBookings->sortByDesc(fn($b) => (float) $b->amount)->values();
-                                } elseif ($pendingSort === 'amount_low') {
-                                    $completedBookings = $completedBookings->sortBy(fn($b) => (float) $b->amount)->values();
-                                } else {
-                                    $completedBookings = $completedBookings->sortByDesc('created_at')->values();
-                                }
-                                $visibleCompletedBookings = $completedBookings;
-                            @endphp
-                            @foreach ($visibleCompletedBookings as $booking)
-                                @php
-                                    $firstPet = $booking->pets->first();
-                                    $petName = $firstPet?->name ?? 'N/A';
-                                    $petType = $firstPet?->pet_type ?? null;
-                                    $rating = data_get($booking, 'rating');
-                                    $completedLocationLabel = strtolower((string) ($booking->visit_type ?? ''));
-                                    $completedLocationLabel = str_replace('_', ' ', $completedLocationLabel);
-                                    $completedLocationLabel = $completedLocationLabel === 'home' || $completedLocationLabel === 'home visit' ? 'Home Visit' : ($completedLocationLabel === 'salon' || $completedLocationLabel === 'salon visit' ? 'Salon Visit' : ucfirst($completedLocationLabel ?: 'N/A'));
-                                @endphp
-                                <tr wire:key="booking-row-completed-{{ $booking->id }}" class="bookings-data-row"
-                                    data-search="{{ $this->bookingSearchHaystack($booking) }}" @if ($loop->index >= 10) hidden @endif>
-                                    <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
-                                    <td>{{ optional($booking->date)->format('d/m/y') }}</td>
-                                    <td>
-                                        @if ($isSpaceUser)
-                                            <span class="completed-space-label">{{ $completedLocationLabel }}</span>
-                                        @else
-                                            <div class="pet-name-wrap">
-                                                <span class="pet-name">{{ $petName }}</span>
-                                                @if ($petType)
-                                                    <span class="pet-type">{{ $petType }}</span>
-                                                @endif
-                                            </div>
-                                        @endif
-                                    </td>
-                                    <td class="service-type">{!! $this->formatServiceTypeLabel($booking->service) !!}</td>
-                                    <td>
-                                        <span class="completed-rating">
-                                            <img src="{{ asset('images/business-hub/icon-booking-star.svg') }}" alt=""
-                                                width="16" height="16">
-                                            <span>{{ is_numeric($rating) ? number_format((float) $rating, 1) : '-' }}</span>
-                                        </span>
-                                    </td>
-                                    <td>£{{ number_format((float) $booking->amount, 2) }}</td>
-                                    <td class="completed-action-col">
-                                        <div class="completed-action-cell">
-                                            <button type="button" class="completed-action-btn is-view"
-                                                @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                                                wire:click="openCompletedBookingModal({{ $booking->id }})"
-                                                aria-label="View completed booking">
-                                                <img src="{{ asset('images/business-hub/icon-booking-view.svg') }}" alt=""
-                                                    width="36" height="36">
-                                            </button>
-                                            <button type="button" class="completed-action-btn is-download"
-                                                @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                                                wire:click="openCompletedBookingModal({{ $booking->id }})"
-                                                aria-label="Download invoice">
-                                                <img src="{{ asset('images/business-hub/icon-booking-download-circle.svg') }}"
-                                                    alt="" width="36" height="36" class="completed-download-ring">
-                                                <img src="{{ asset('images/business-hub/icon-booking-download-arrow.svg') }}"
-                                                    alt="" width="16" height="19" class="completed-download-arrow">
-                                            </button>
-                                            <x-business-hub.common.more-action-btn :row-id="$booking->id" message-only />
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                            <tr class="bookings-empty-row" @if ($visibleCompletedBookings->isNotEmpty()) hidden @endif>
-                                <td colspan="7" class="empty-bookings">No completed bookings found.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                @endif
-
-                @if ($activeStatus === 'cancelled')
-                    @php
-                        $isSpaceUser = $this->isSpaceUser();
-                    @endphp
-                    <table class="bookings-table cancelled-bookings-table{{ $isSpaceUser ? ' is-space' : '' }}">
-                        <thead>
-                            <tr>
-                                <th>Booking ID</th>
-                                <th>Date</th>
-                                <th>{{ $isSpaceUser ? 'Client' : 'Pet Owner' }}</th>
-                                <th>{{ $isSpaceUser ? 'Service' : 'Pet' }}</th>
-                                <th>Cancelled By</th>
-                                <th>Refund Amount</th>
-                                <th>Refund Status</th>
-                                <th class="cancelled-action-col">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody wire:key="bookings-table-cancelled" class="bookings-table-body">
-                            @php
-                                $cancelledBookings = $bookings->where('booking_status', 'cancelled')->values();
-                                if ($pendingSort === 'oldest_submitted') {
-                                    $cancelledBookings = $cancelledBookings->sortBy('created_at')->values();
-                                } elseif ($pendingSort === 'amount_high') {
-                                    $cancelledBookings = $cancelledBookings->sortByDesc(fn($b) => (float) ($b->refund_amount ?? $b->amount))->values();
-                                } elseif ($pendingSort === 'amount_low') {
-                                    $cancelledBookings = $cancelledBookings->sortBy(fn($b) => (float) ($b->refund_amount ?? $b->amount))->values();
-                                } else {
-                                    $cancelledBookings = $cancelledBookings->sortByDesc('created_at')->values();
-                                }
-                                $visibleCancelledBookings = $cancelledBookings;
-                            @endphp
-                            @foreach ($visibleCancelledBookings as $booking)
-                                @php
-                                    $firstPet = $booking->pets->first();
-                                    $petName = $firstPet?->name ?? 'N/A';
-                                    $petType = $firstPet?->pet_type ?? null;
-                                    $cancelledPetLabel = trim($petName . ($petType ? ' ' . $petType : ''));
-                                    $cancelledByRaw = strtolower(trim((string) ($booking->cancelled_by ?? '')));
-                                    $cancelledByYou = in_array($cancelledByRaw, ['groomer', 'space host', 'you', 'host'], true);
-                                    $cancelledByLabel = $cancelledByYou ? 'You' : 'Client';
-                                    $refundAmount = $booking->refund_amount !== null ? (float) $booking->refund_amount : (float) $booking->amount;
-                                    $refundStatus = trim((string) ($booking->refund_status ?? 'In Progress')) ?: 'In Progress';
-                                    $refundStatusKey = strtolower($refundStatus);
-                                    $refundStatusClass = $refundStatusKey === 'rejected' ? 'rejected' : ($refundStatusKey === 'in progress' || $refundStatusKey === 'in-progress' ? 'in-progress' : 'processed');
-                                    $refundStatusLabel = $refundStatusClass === 'rejected' ? 'Rejected' : ($refundStatusClass === 'in-progress' ? 'In Progress' : 'Processed');
-                                    $cancelledLocationLabel = strtolower((string) ($booking->visit_type ?? ''));
-                                    $cancelledLocationLabel = str_replace('_', ' ', $cancelledLocationLabel);
-                                    $cancelledLocationLabel = $cancelledLocationLabel === 'home' || $cancelledLocationLabel === 'home visit' ? 'Home Visit' : ($cancelledLocationLabel === 'salon' || $cancelledLocationLabel === 'salon visit' ? 'Salon Visit' : ucfirst($cancelledLocationLabel ?: 'N/A'));
-                                @endphp
-                                <tr wire:key="booking-row-cancelled-{{ $booking->id }}" class="bookings-data-row"
-                                    data-search="{{ $this->bookingSearchHaystack($booking) }}" @if ($loop->index >= 10) hidden @endif>
-                                    <td>FG-{{ str_pad((string) $booking->id, 5, '0', STR_PAD_LEFT) }}</td>
-                                    <td>{{ optional($booking->date)->format('d/m/y') }}</td>
-                                    <td>{{ $booking->petOwner->name ?? 'N/A' }}</td>
-                                    <td>
-                                        @if ($isSpaceUser)
-                                            {{ $this->formatSpaceServiceLabel($booking->service, $booking->time) }}
-                                        @else
-                                            {{ $cancelledPetLabel }}
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <span
-                                            class="cancelled-by-chip {{ $cancelledByYou ? 'you' : 'client' }}">{{ $cancelledByLabel }}</span>
-                                    </td>
-                                    <td>£{{ number_format($refundAmount, 2) }}</td>
-                                    <td>
-                                        <span
-                                            class="refund-status-chip {{ $refundStatusClass }}">{{ $refundStatusLabel }}</span>
-                                    </td>
-                                    <td class="cancelled-action-col">
-                                        <div class="completed-action-cell">
-                                            <button type="button" class="completed-action-btn is-view"
-                                                @click="window.dispatchEvent(new CustomEvent('bookings-tabs-loading-start'))"
-                                                wire:click="openCancelledBookingModal({{ $booking->id }})"
-                                                aria-label="View cancelled booking">
-                                                <img src="{{ asset('images/business-hub/icon-booking-view.svg') }}" alt=""
-                                                    width="36" height="36">
-                                            </button>
-                                            <button type="button" class="completed-action-btn is-download"
-                                                data-invoice-url="{{ $this->bookingInvoicePdfUrl($booking) }}"
-                                                onclick="window.downloadBookingInvoicePdf(this.dataset.invoiceUrl)"
-                                                aria-label="Download invoice">
-                                                <img src="{{ asset('images/business-hub/icon-booking-download-circle.svg') }}"
-                                                    alt="" width="36" height="36" class="completed-download-ring">
-                                                <img src="{{ asset('images/business-hub/icon-booking-download-arrow.svg') }}"
-                                                    alt="" width="16" height="19" class="completed-download-arrow">
-                                            </button>
-                                            <x-business-hub.common.more-action-btn :row-id="$booking->id" message-only />
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                            <tr class="bookings-empty-row" @if ($visibleCancelledBookings->isNotEmpty()) hidden @endif>
-                                <td colspan="8" class="empty-bookings">No cancelled bookings found.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                @endif
-
-                @if ($activeStatus === 'all')
-                    @php
-                        $isSpaceUser = $this->isSpaceUser();
-                    @endphp
-                    <table class="bookings-table bookings-table-all{{ $isSpaceUser ? ' is-space' : '' }}">
-                        <thead>
-                            <tr>
-                                <th>Booking ID</th>
-                                <th>{{ $isSpaceUser ? 'Client' : 'Owner' }}</th>
-                                <th>{{ $isSpaceUser ? 'Space' : 'Pet' }}</th>
-                                <th>{{ $isSpaceUser ? 'Service' : 'Service Type' }}</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Amount</th>
-                                <th class="view-col">View</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bookings-table-body" wire:ignore>
-                            <template x-for="row in visibleRows" :key="row.id">
-                                <tr>
-                                    <td x-text="row.idLabel"></td>
-                                    <td x-text="row.owner"></td>
-                                    <td>
-                                        <span class="space-visit-cell" x-show="isSpace" x-text="row.visitType"></span>
-                                        <div class="pet-name-wrap" x-show="!isSpace">
-                                            <span class="pet-name" x-text="row.petName"></span>
-                                            <span class="pet-type" x-show="row.petType" x-text="row.petType"></span>
-                                        </div>
-                                    </td>
-                                    <td class="service-type" :class="!isSpace && isGroomerService ? 'service-type-groomer' : ''"
-                                        x-html="row.serviceHtml"></td>
-                                    <td x-text="row.date"></td>
-                                    <td>
-                                        <span class="status-chip" :class="row.status" x-text="row.statusLabel"></span>
-                                    </td>
-                                    <td x-text="'£' + row.amount"></td>
-                                    <td class="view-col">
-                                        <div class="view-col-inner all-bookings-actions">
-                                            <button type="button" class="view-btn" @click="openView(row.id)"
-                                                aria-label="View booking">
-                                                <img src="{{ asset('images/business-hub/icon-booking-view.svg') }}" alt=""
-                                                    width="36" height="36">
-                                            </button>
-                                            @unless ($isSpaceUser)
-                                                <x-business-hub.common.more-action-btn message-only />
-                                            @endunless
-                                        </div>
-                                    </td>
-                                </tr>
-                            </template>
-                            <tr class="bookings-empty-row" x-show="visibleRows.length === 0" x-cloak>
-                                <td colspan="8" class="empty-bookings">No bookings found.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                @endif
-            </div>
+        <div class="bookings-empty-state" x-cloak x-show="filteredList.length === 0">
+            <span x-show="hasActiveSearchOrFilter">
+                No bookings here — try a different filter or clear the search.
+            </span>
+            <span x-show="!hasActiveSearchOrFilter">
+                There is no {{ $activeStatus === 'all' ? '' : ucfirst($activeStatus) . ' ' }}bookings.
+            </span>
         </div>
-        <div class="bookings-load-more-wrap" x-show="showLoadMore" x-cloak>
-            <button type="button" class="bookings-load-more-btn" @click="loadMore">
-                Load More
-            </button>
-        </div>
+    </div>
+
+    <div class="bookings-load-more-wrap" x-show="showLoadMore" x-cloak>
+        <button type="button" class="bookings-load-more-btn" @click="loadMore()">
+            Load More
+        </button>
     </div>
 
     @php
@@ -1587,6 +1237,190 @@ new class extends Component {
 </section>
 
 <script>
+    (function() {
+        const bhBookingsBoardFactory = () => ({
+            query: window.__bhBookingsSearchQuery || '',
+            visible: 08,
+            isSpace: {{ $isSpaceUser ? 'true' : 'false' }},
+            filterOpen: false,
+            sortOpen: false,
+            activeFilters: Array.isArray(window.__bhBookingsActiveFilters) ? [...window.__bhBookingsActiveFilters] : [],
+            rows: [],
+            filteredList: [],
+            shownRows: [],
+            showLoadMore: false,
+            get hasActiveSearchOrFilter() {
+                return String(this.query || '').trim() !== '' || (Array.isArray(this.activeFilters) && this.activeFilters.length > 0);
+            },
+            init() {
+                this.syncRows();
+                this.$watch('query', (value) => {
+                    window.__bhBookingsSearchQuery = value;
+                    this.visible = 10;
+                    this.applyView();
+                });
+                this._onLivewireCommit = () => {
+                    // Morph can replace the JSON template after commit — sync on the next frames.
+                    queueMicrotask(() => this.syncRows());
+                    requestAnimationFrame(() => this.syncRows());
+                };
+                document.addEventListener('livewire:commit', this._onLivewireCommit);
+                if (window.Livewire?.hook) {
+                    this._unhookMorph = window.Livewire.hook('morph.updated', ({
+                        el
+                    }) => {
+                        if (!el || !this.$el) {
+                            return;
+                        }
+                        if (el === this.$el || this.$el.contains(el) || el.contains?.(this.$el)) {
+                            this.syncRows();
+                        }
+                    });
+                    this._unhookCommit = window.Livewire.hook('commit', ({
+                        succeed
+                    }) => {
+                        succeed?.(() => this.syncRows());
+                    });
+                }
+                this.$nextTick(() => this.bindJsonObserver());
+            },
+            destroy() {
+                this.observer?.disconnect();
+                if (this._onLivewireCommit) {
+                    document.removeEventListener('livewire:commit', this._onLivewireCommit);
+                }
+                if (typeof this._unhookMorph === 'function') {
+                    this._unhookMorph();
+                }
+                if (typeof this._unhookCommit === 'function') {
+                    this._unhookCommit();
+                }
+            },
+            bindJsonObserver() {
+                this.observer?.disconnect();
+                const json = this.$refs.bookingRowsJson;
+                if (!json) {
+                    return;
+                }
+                this.observer = new MutationObserver(() => this.syncRows());
+                this.observer.observe(json, {
+                    characterData: true,
+                    childList: true,
+                    subtree: true
+                });
+            },
+            syncRows() {
+                this.readRows();
+                this.applyView();
+                this.bindJsonObserver();
+            },
+            readRows() {
+                const json = this.$refs.bookingRowsJson;
+                if (!json) {
+                    return;
+                }
+                const raw = json.content ? json.content.textContent : json.textContent;
+                try {
+                    const parsed = JSON.parse(raw || '[]');
+                    if (Array.isArray(parsed)) {
+                        this.rows = parsed;
+                    }
+                } catch (error) {}
+            },
+            applyView() {
+                let rows = Array.isArray(this.rows) ? this.rows : [];
+                if (this.activeFilters.length > 0) {
+                    rows = rows.filter((row) => this.activeFilters.some((filter) => this.rowMatchesFilter(row, filter)));
+                } else {
+                    // No service filter: keep pending bookings first (stable within each group).
+                    rows = [...rows].sort((a, b) => {
+                        const aPending = a.status === 'pending' ? 0 : 1;
+                        const bPending = b.status === 'pending' ? 0 : 1;
+                        return aPending - bPending;
+                    });
+                }
+                const q = String(this.query || '').trim().toLowerCase();
+                if (q) {
+                    rows = rows.filter((row) => String(row.haystack || '').includes(q));
+                }
+                this.filteredList = rows;
+                this.shownRows = q ? rows : rows.slice(0, this.visible);
+                this.showLoadMore = !q && rows.length > this.visible;
+                window.__bhBookingsActiveFilters = [...this.activeFilters];
+            },
+            toggleLocalFilter(option) {
+                const value = String(option || '').trim();
+                if (!value) {
+                    return;
+                }
+                if (this.activeFilters.includes(value)) {
+                    this.activeFilters = this.activeFilters.filter((item) => item !== value);
+                } else {
+                    this.activeFilters = [...this.activeFilters, value];
+                }
+                this.visible = 10;
+                this.applyView();
+            },
+            clearLocalFilter(option) {
+                const value = String(option || '').trim();
+                this.activeFilters = this.activeFilters.filter((item) => item !== value);
+                this.visible = 10;
+                this.applyView();
+            },
+            rowMatchesFilter(row, filter) {
+                const needle = String(filter || '').trim().toLowerCase();
+                if (!needle) {
+                    return false;
+                }
+                const haystack = String(row?.filterHaystack || row?.haystack || '').toLowerCase();
+                const aliases = ({
+                    'bath & tidy': ['bath & tidy', 'bath and tidy', 'bath & brush', 'bath and brush'],
+                    'bath and tidy': ['bath & tidy', 'bath and tidy', 'bath & brush', 'bath and brush'],
+                    'face trim only': ['face trim only', 'face trim'],
+                    'at studio': ['at studio', 'salon', 'studio', 'salon visit'],
+                    'home visit': ['home visit', 'home', 'homevisit'],
+                    'garden/shed': ['garden/shed', 'garden / shed', 'garden shed'],
+                    'private room': ['private room', 'private'],
+                    'mobile station': ['mobile station', 'mobile'],
+                })[needle] || [needle];
+                return aliases.some((alias) => haystack.includes(alias));
+            },
+            avatarInitials(name) {
+                const parts = String(name || 'P').trim().split(/\s+/).filter(Boolean);
+                if (!parts.length) {
+                    return '??';
+                }
+                if (parts.length === 1) {
+                    return parts[0].slice(0, 2).toUpperCase();
+                }
+                return (parts[0][0] + parts[1][0]).toUpperCase();
+            },
+            loadMore() {
+                this.visible += 10;
+                this.applyView();
+            },
+            openCard(row) {
+                if (!row || !row.id) {
+                    return;
+                }
+                window.dispatchEvent(new CustomEvent('booking-details-open', {
+                    detail: row
+                }));
+            },
+        });
+
+        window.__bhBookingsBoardFactory = bhBookingsBoardFactory;
+
+        if (window.Alpine) {
+            Alpine.data('bhBookingsBoard', bhBookingsBoardFactory);
+        } else if (!window.__bhBookingsBoardInitBound) {
+            window.__bhBookingsBoardInitBound = true;
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('bhBookingsBoard', window.__bhBookingsBoardFactory);
+            });
+        }
+    })();
+
     if (!window.downloadBookingInvoicePdf) {
         window.downloadBookingInvoicePdf = async function(invoiceUrl) {
             if (!invoiceUrl) {
@@ -2391,71 +2225,30 @@ new class extends Component {
 
     .bookings-board {
         width: 100%;
+        max-width: 1025px;
         padding: 0.35rem 0 20px;
         box-sizing: border-box;
+    }
+
+    .bookings-board [x-cloak] {
+        display: none !important;
     }
 
     .bookings-board-header {
         display: flex;
         flex-direction: column;
-        align-items: stretch;
-        gap: 2.5rem;
-        margin-bottom: 2.5rem;
+        gap: 1.5rem;
+        margin-bottom: 1.75rem;
         position: relative;
         z-index: 40;
     }
 
-    .bookings-search {
-        position: relative;
+    .booking-list-header {
         display: flex;
         align-items: center;
-        width: 400px;
-        max-width: 100%;
-        height: 42px;
-        margin-top: 2rem;
-    }
-
-    .bookings-search input {
-        width: 100%;
-        height: 42px;
-        border-radius: 10px;
-        border: 1px solid #FFC97A;
-        background: #FFF;
-        padding: 0 42px 0 10px;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        outline: none;
-    }
-
-    .bookings-search input::placeholder {
-        color: #D4D4D4;
-    }
-
-    .bookings-search input::-webkit-search-cancel-button {
-        display: none;
-    }
-
-    .bookings-search-icon {
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 18px;
-        height: 18px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
-    }
-
-    .bookings-search-icon img {
-        display: block;
-        width: 16px;
-        height: 16px;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
     }
 
     .booking-pill-row {
@@ -2467,15 +2260,12 @@ new class extends Component {
     .booking-pill {
         font-family: Lato;
         font-size: 16px;
-        font-style: normal;
         font-weight: 500;
-        line-height: normal;
         border-radius: 100px;
         min-height: 42px;
         padding: 0.6rem 1.15rem;
         border: none;
         cursor: pointer;
-        text-align: center;
         background: #F6F5F5;
         color: #9D9B98;
     }
@@ -2505,44 +2295,662 @@ new class extends Component {
         color: #FD6D70;
     }
 
-    .section-container:has(.section-panel.section-active .bookings-board) {
-        overflow: visible;
+    .bookings-auto-accept {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        padding: 0;
+        color: #C7C7C7;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: normal;
     }
 
-    .bookings-table-wrap {
+    .bookings-auto-accept svg {
+        width: 10px;
+        height: 15px;
+        display: block;
+        flex-shrink: 0;
+    }
+
+    .bookings-auto-accept.is-on {
+        color: #8BAE40;
+    }
+
+    .bookings-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: nowrap;
         width: 100%;
-        overflow: visible;
     }
 
-    .bookings-table-card {
-        width: 100%;
-        overflow: visible;
-        background: #FDFDFD;
-        border: 1px solid #F6F5F5;
-        border-radius: 10px;
-        box-shadow: 0px 0px 15px 2px rgba(59, 55, 49, 0.1);
-    }
-
-    .bookings-table-scroll {
-        width: 100%;
-        overflow: visible;
-        border-radius: 10px;
-    }
-
-    .bookings-board [x-cloak] {
-        display: none !important;
-    }
-
-    .bookings-table-body tr[hidden] {
-        display: none !important;
-    }
-
-    .bookings-table {
-        width: 100%;
-        max-width: 100%;
-        border-collapse: collapse;
-        table-layout: fixed;
+    .bookings-search {
+        position: relative;
+        display: flex;
+        align-items: center;
+        flex: 1 1 738px;
+        width: 738px;
         min-width: 0;
+        max-width: 738px;
+        height: 42px;
+    }
+
+    .bookings-search input {
+        width: 100%;
+        height: 42px;
+        border-radius: 10px;
+        border: 1px solid #E2E2E2;
+        background: #FFF;
+        padding: 0 42px 0 20px;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+        outline: none;
+    }
+
+    .bookings-search.has-value input,
+    .bookings-search input:focus {
+        border-color: var(--bh-booking-accent, #FFC97A);
+    }
+
+    .bookings-search input::placeholder {
+        color: #D4D4D4;
+    }
+
+    .bookings-search-icon {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 18px;
+        height: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+
+    .bookings-search-icon img {
+        width: 16px;
+        height: 16px;
+        display: block;
+    }
+
+    .bookings-toolbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-shrink: 0;
+        margin-left: 0;
+    }
+
+    .bookings-tool-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 42px;
+        width: 76px;
+        padding: 0;
+        border-radius: 10px;
+        border: 1px solid #E2E2E2;
+        background: #FFF;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        box-sizing: border-box;
+    }
+
+    .bookings-tool-btn.is-sort {
+        width: 171px;
+        min-width: 171px;
+        font-weight: 500;
+        padding: 0 14px;
+    }
+
+    .bookings-tool-btn.is-sort strong {
+        font-weight: 600;
+    }
+
+    .bookings-tool-btn img {
+        display: block;
+        width: auto;
+        height: auto;
+        flex-shrink: 0;
+    }
+
+    .bookings-filter-dropdown,
+    .bookings-sort-dropdown {
+        position: relative;
+    }
+
+    .bookings-filter-menu,
+    .bookings-sort-menu {
+        position: absolute;
+        top: calc(100% + 20px);
+        width: 207px;
+        padding: 20px;
+        background: #FFF;
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(59, 55, 49, 0.12);
+        box-sizing: border-box;
+        z-index: 50;
+    }
+
+    .bookings-filter-menu {
+        right: 0;
+        left: auto;
+    }
+
+    .bookings-sort-menu {
+        left: 0;
+        right: auto;
+    }
+
+    .bookings-filter-option,
+    .bookings-sort-option {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1;
+        cursor: pointer;
+        text-align: left;
+    }
+
+    .bookings-filter-option+.bookings-filter-option,
+    .bookings-sort-option+.bookings-sort-option {
+        margin-top: 14px;
+    }
+
+    .bookings-filter-option:hover,
+    .bookings-sort-option:hover {
+        color: #FFBA55;
+    }
+
+    .bookings-filter-option.is-active,
+    .bookings-sort-option.is-active {
+        color: #FFBA55;
+    }
+
+    .bookings-menu-check {
+        width: 10px;
+        height: 8px;
+        display: block;
+        flex-shrink: 0;
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    .bookings-filter-option.is-active .bookings-menu-check,
+    .bookings-sort-option.is-active .bookings-menu-check {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .bookings-filter-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .bookings-filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 100px;
+        border: none;
+        background: #F6F5F5;
+        color: #9D9B98;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .bookings-card-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 100%;
+    }
+
+    .bh-booking-card {
+        display: grid;
+        grid-template-columns: 56px 56px minmax(0, 1fr) auto;
+        align-items: center;
+        column-gap: 20px;
+        width: 100%;
+        max-width: 1025px;
+        height: 93px;
+        min-height: 93px;
+        padding: 10px 20px 10px 10px;
+        border-radius: 10px;
+        border: 1px solid #E2E2E2;
+        background: #FFF;
+        box-sizing: border-box;
+        cursor: pointer;
+        transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .bh-booking-card:hover {
+        box-shadow: 0 0 12px rgba(59, 55, 49, 0.08);
+    }
+
+    .bh-booking-card.is-pending {
+        border: 2px solid #FFC97A;
+        padding: 9px 19px 9px 9px;
+    }
+
+    /* Confirmed / completed / cancelled: Figma 555:5465 — cols left-clustered, status+price flush right */
+    .bh-booking-card.is-confirmed,
+    .bh-booking-card.is-completed,
+    .bh-booking-card.is-cancelled {
+        grid-template-columns: 56px 56px auto 1fr;
+    }
+
+    .bh-booking-card.is-confirmed .bh-booking-cols,
+    .bh-booking-card.is-completed .bh-booking-cols,
+    .bh-booking-card.is-cancelled .bh-booking-cols {
+        grid-template-columns: 80px max-content max-content max-content;
+        column-gap: 40px;
+        width: max-content;
+        max-width: 100%;
+    }
+
+    .bh-booking-card.is-confirmed .bh-booking-cols .bh-booking-value,
+    .bh-booking-card.is-completed .bh-booking-cols .bh-booking-value,
+    .bh-booking-card.is-cancelled .bh-booking-cols .bh-booking-value {
+        overflow: visible;
+        text-overflow: unset;
+    }
+
+    .bh-booking-card.is-confirmed .bh-booking-end,
+    .bh-booking-card.is-completed .bh-booking-end,
+    .bh-booking-card.is-cancelled .bh-booking-end {
+        justify-self: end;
+        width: auto;
+    }
+
+    .bh-booking-owner-block {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        min-width: 0;
+        position: relative;
+        box-sizing: border-box;
+    }
+
+    .bh-booking-owner-block .bh-booking-col {
+        flex: 0 1 auto;
+        min-width: 0;
+    }
+
+    .bh-booking-date {
+        width: 56px;
+        height: 73px;
+        border-radius: 5px;
+        background: #F7F4EC;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        color: #3B3731;
+        font-family: Lato;
+        text-align: center;
+        flex-shrink: 0;
+    }
+
+    .bh-booking-date-month {
+        color: #3B3731;
+        text-align: center;
+        leading-trim: both;
+        text-edge: cap;
+        font-family: Lato;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: 15px;
+    }
+
+    .bh-booking-date-day {
+        color: #3B3731;
+        leading-trim: both;
+        text-edge: cap;
+        font-family: "Playfair Display";
+        font-size: 25px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: 25px;
+    }
+
+    .bh-booking-date-time {
+        color: #9D9B98;
+        leading-trim: both;
+        text-edge: cap;
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 20px;
+    }
+
+    .bh-booking-avatar {
+        width: 56px;
+        height: 56px;
+        flex-shrink: 0;
+    }
+
+    .bh-booking-avatar .bh-avatar {
+        width: 56px;
+        height: 56px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .bh-booking-avatar .bh-avatar.is-fallback {
+        background: var(--bh-avatar-bg, var(--bh-booking-accent, #FFC97A));
+    }
+
+    .bh-booking-avatar .bh-avatar__photo {
+        width: 56px;
+        height: 56px;
+        object-fit: cover;
+        border-radius: 50%;
+        display: block;
+    }
+
+    .bh-booking-avatar .bh-avatar__initials {
+        color: #FDFDFD;
+        font-family: Lato, sans-serif;
+        font-size: var(--bh-avatar-font, 20px);
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .bh-booking-cols {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.25fr) minmax(0, 1.35fr);
+        column-gap: 40px;
+        min-width: 0;
+        align-items: center;
+        width: 100%;
+    }
+
+    .bh-booking-col {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        min-width: 0;
+        position: relative;
+        box-sizing: border-box;
+    }
+
+    .bh-booking-col+.bh-booking-col::before,
+    .bh-booking-cols>.bh-booking-owner-block::before {
+        content: '';
+        position: absolute;
+        left: -20px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 1px;
+        height: 43px;
+        background: #E2E2E2;
+    }
+
+    .bh-booking-label {
+        color: #948F88;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: normal;
+        white-space: nowrap;
+    }
+
+    .bh-booking-value {
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: normal;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .bh-booking-value.is-strong {
+        font-weight: 600;
+    }
+
+    .bh-booking-pet-name {
+        font-weight: 600;
+        color: #3B3731;
+    }
+
+    .bh-booking-pet-meta {
+        font-weight: 400;
+        color: #9D9B98;
+    }
+
+    .bh-booking-end {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 16px;
+        flex-shrink: 0;
+        min-width: 0;
+    }
+
+    .bh-booking-trailing {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        min-width: 0;
+        flex-shrink: 0;
+    }
+
+    .bh-client-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 24px;
+        padding: 0 10px;
+        border-radius: 100px;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1;
+        white-space: nowrap;
+        box-sizing: border-box;
+    }
+
+    .bh-client-chip.is-new {
+        background: rgba(201, 221, 160, 0.2);
+        color: #AFCD6F;
+    }
+
+    .bh-client-chip.is-repeat {
+        background: #F7FAFC;
+        color: #94BEDB;
+    }
+
+    .bh-client-chip.is-regular {
+        background: #FDF8F0;
+        color: #F9C45C;
+    }
+
+    .bh-booking-pending-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .bh-booking-timer {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #FFA899;
+        font-family: Lato;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        white-space: nowrap;
+    }
+
+    .bh-booking-timer img {
+        width: 9px;
+        height: 13px;
+        display: block;
+        flex-shrink: 0;
+    }
+
+    .bh-booking-decline {
+        width: 94px;
+        height: 42px;
+        border-radius: 75px;
+        border: none;
+        background: rgba(254, 111, 86, 0.1);
+        color: #FE6F56;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .bh-booking-accept {
+        width: 112px;
+        height: 42px;
+        border-radius: 75px;
+        border: 1px solid #AFCD6F;
+        background: #C9DDA0;
+        color: #FFF;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .bh-booking-accept img {
+        width: 12px;
+        height: 8px;
+        display: block;
+    }
+
+    .bh-booking-status-price {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 12px;
+        min-width: 85px;
+        flex-shrink: 0;
+    }
+
+    .bh-status-row {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .bh-auto-accept-bolt {
+        width: 9px;
+        height: 10px;
+        display: block;
+        flex-shrink: 0;
+        color: #8BAE40;
+    }
+
+    .bh-status-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 30px;
+        min-height: 30px;
+        padding: 0 10px;
+        border-radius: 100px;
+        font-family: Lato;
+        font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+        box-sizing: border-box;
+    }
+
+    .bh-status-chip.is-pending {
+        background: rgba(255, 201, 122, 0.2);
+        color: #FFBA55;
+    }
+
+    .bh-status-chip.is-confirmed {
+        background: rgba(201, 221, 160, 0.2);
+        color: #AFCD6F;
+    }
+
+    .bh-status-chip.is-completed {
+        background: rgba(148, 190, 219, 0.2);
+        color: #94BEDB;
+    }
+
+    .bh-status-chip.is-cancelled {
+        background: rgba(254, 111, 86, 0.12);
+        color: #FE6F56;
+    }
+
+    .bh-booking-price {
+        color: #3B3731;
+        text-align: right;
+        leading-trim: both;
+        text-edge: cap;
+        font-family: "Playfair Display";
+        font-size: 20px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .bookings-empty-state {
+        display: block;
+        width: 100%;
+        min-height: 220px;
+        padding: 4rem 1.5rem;
+        text-align: center;
+        color: #948F88;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.5;
+        box-sizing: border-box;
     }
 
     .bookings-load-more-wrap {
@@ -2558,890 +2966,81 @@ new class extends Component {
         width: 133px;
         height: 48px;
         background: #FFF;
-        color: #7a5d34;
         border-radius: 75px;
         border: 1px solid #3B3731;
         color: #3B3731;
-        text-align: center;
         font-family: Lato;
         font-size: 18px;
-        font-style: normal;
         font-weight: 600;
-        line-height: normal;
         cursor: pointer;
-        transition: background-color 0.15s ease, transform 0.15s ease;
+        transition: background-color 0.15s ease, transform 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     }
 
     .bookings-load-more-btn:hover {
-        background: #FFC97A;
+        background: var(--bh-booking-accent, #FFC97A);
         color: #FFF;
-        border: 1px solid #FFC97A;
+        border-color: var(--bh-booking-accent, #FFC97A);
         transform: translateY(-1px);
     }
 
-    .bookings-load-more-btn[disabled] {
-        opacity: 0.9;
-        cursor: wait;
-        transform: none;
-    }
-
-    .bookings-load-more-loading {
-        display: none;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .bookings-load-more-spinner {
-        width: 18px;
-        height: 18px;
-        border-radius: 9999px;
-        border: 2px solid #3B3731;
-        border-top-color: transparent;
-        animation: bookings-load-more-spin 0.7s linear infinite;
-    }
-
-    @keyframes bookings-load-more-spin {
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    .bookings-table th,
-    .bookings-table td {
-        border-bottom: 1px solid #F6F5F5;
-        padding: 16px 8px;
-        text-align: left;
-        white-space: normal;
-        overflow-wrap: break-word;
-        word-break: break-word;
-        vertical-align: middle !important;
-    }
-
-    .bookings-table thead th:first-child,
-    .bookings-table tbody td:first-child {
-        padding-left: 16px;
-    }
-
-    .bookings-table thead th:last-child,
-    .bookings-table tbody td:last-child {
-        padding-right: 16px;
-    }
-
-    .bookings-table thead {
-        border-radius: 10px 10px 0 0;
-        background: #F6F5F5;
-        color: #948F88;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .bookings-table th {
-        background: #F6F5F5;
-        color: #948F88;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        height: 50px;
-        padding-top: 0;
-        padding-bottom: 0;
-    }
-
-    .bookings-table thead th:first-child {
-        border-top-left-radius: 10px;
-    }
-
-    .bookings-table thead th:last-child {
-        border-top-right-radius: 10px;
-    }
-
-    .bookings-table td {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-    .bookings-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    .bookings-table tbody tr:not(.bookings-empty-row) td {
-        position: relative;
-        z-index: 0;
-    }
-
-    .bookings-table tbody tr:not(.bookings-empty-row):hover td::before {
-        content: '';
-        position: absolute;
-        top: 10px;
-        bottom: 10px;
-        left: 0;
-        right: 0;
-        background: #FFFAF2;
-        pointer-events: none;
-        z-index: -1;
-    }
-
-    .bookings-table tbody tr:not(.bookings-empty-row):hover td:first-child::before {
-        left: 6px;
-        border-radius: 5px 0 0 5px;
-    }
-
-    .bookings-table tbody tr:not(.bookings-empty-row):hover td:last-child::before {
-        right: 6px;
-        border-radius: 0 5px 5px 0;
-    }
-
-    .bookings-table-body tr {
-        animation: bookings-row-enter 220ms ease-out both;
-    }
-
-    @keyframes bookings-row-enter {
-        from {
-            opacity: 0;
-            transform: translateY(8px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .pet-name-wrap {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-    }
-
-    .pet-name {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .pet-type {
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-    .status-chip {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 100px;
-        min-height: 25px;
-        padding: 0.18rem 0.7rem;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-    }
-
-    .status-chip.pending {
-        color: #FFBA55;
-        background: rgba(255, 201, 122, 0.20);
-    }
-
-    .status-chip.confirmed {
-        color: #AFCD6F;
-        background: rgba(201, 221, 160, 0.20);
-    }
-
-    .status-chip.completed {
-        color: #9FC7E4;
-        background: rgba(203, 220, 232, 0.20);
-    }
-
-    .status-chip.cancelled {
-        color: #FF6E6E;
-        background: rgba(255, 110, 110, 0.20);
-    }
-
-    .bookings-table .view-col {
-        vertical-align: middle;
-        width: 100px;
-        white-space: nowrap;
-        padding-left: 8px;
-        padding-right: 12px;
-    }
-
-    .bookings-table-all th.view-col {
-        text-align: center;
-    }
-
-    .bookings-table-all .view-col-inner {
-        justify-content: center;
-    }
-
-    .bookings-table .action-col,
-    .bookings-table .confirmed-action-col,
-    .bookings-table .completed-action-col,
-    .bookings-table .cancelled-action-col {
-        width: 176px;
-        white-space: nowrap;
-        padding-left: 8px;
-        padding-right: 12px;
-        vertical-align: middle;
-    }
-
-    .bookings-table td.action-col,
-    .bookings-table td.confirmed-action-col,
-    .bookings-table td.completed-action-col,
-    .bookings-table td.cancelled-action-col {
-        vertical-align: middle;
-    }
-
-    .booking-list-table .action-col {
-        width: 230px;
-        padding-right: 16px;
-    }
-
-    .booking-list-table th.action-col,
-    .confirmed-bookings-table th.confirmed-action-col,
-    .completed-bookings-table th.completed-action-col,
-    .cancelled-bookings-table th.cancelled-action-col {
-        text-align: center;
-    }
-
-    .booking-list-table {
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-    }
-
-    .booking-list-table th {
-        color: #948F88;
-        font-weight: 600;
-    }
-
-    .booking-list-table td {
-        color: #3B3731;
-        font-weight: 400;
-    }
-
-    .booking-list-table .service-type,
-    .booking-list-table .service-type-groomer {
-        color: #3B3731 !important;
-        font-weight: 400 !important;
-    }
-
-    .booking-list-table .booking-pet-name {
-        color: #3B3731;
-        font-weight: 400;
-    }
-
-    .booking-list-table .booking-pet-type,
-    .booking-list-table .booking-pet-more,
-    .booking-list-table .details-time {
-        color: #9D9B98;
-        font-weight: 400;
-    }
-
-    .booking-list-table .submitted-date,
-    .booking-list-table .details-date {
-        color: #3B3731;
-    }
-
-    .booking-list-table .submitted-time {
-        color: #948F88;
-    }
-
-    .service-type {
-        color: #3B3731 !important;
-        font-family: Lato !important;
-        font-size: 16px !important;
-        font-style: normal !important;
-        font-weight: 600 !important;
-        line-height: normal !important;
-        white-space: normal !important;
-        vertical-align: middle !important;
-    }
-
-    .service-type-groomer {
-        font-weight: 600 !important;
-    }
-
-    .invoice-col,
-    .more-col {
-        vertical-align: middle;
-        padding: 0 !important;
-    }
-
-    .view-col-inner {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        text-align: center;
-        min-height: 36px;
-    }
-
-    .view-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: transparent;
-        border: 0;
-        padding: 0;
-        margin: 0;
-        cursor: pointer;
-        flex-shrink: 0;
-        width: 36px;
-        height: 36px;
-        line-height: 0;
-    }
-
-    .view-btn img,
-    .view-btn svg {
-        display: block;
-        width: 36px;
-        height: 36px;
-        flex-shrink: 0;
-    }
-
-    .all-bookings-actions {
-        width: 82px;
-        min-height: 36px;
-        justify-content: center;
-        gap: 10px;
-    }
-
-    .bookings-table.is-space thead th {
-        white-space: nowrap;
-        overflow-wrap: normal;
-        word-break: normal;
-        color: #948F88;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 600;
-    }
-
-    .booking-list-table.is-space .submitted-time {
-        color: #3B3731;
-        font-size: 16px;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-    .booking-list-table.is-space .submitted-date {
-        color: #9D9B98;
-        font-size: 16px;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-    .booking-list-table.is-space .service-type {
-        font-weight: 400 !important;
-        white-space: nowrap !important;
-    }
-
-    .booking-list-table.is-space .space-visit-cell {
-        white-space: nowrap;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 400;
-    }
-
-    .booking-list-table.is-space .details-time {
-        color: #9D9B98;
-        font-size: 16px;
-        font-weight: 400;
-        white-space: nowrap;
-    }
-
-    .bookings-table-all.is-space .space-visit-cell {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .bookings-table-all.is-space .service-type {
-        font-weight: 400 !important;
-        white-space: nowrap !important;
-    }
-
-    .bookings-table-all.is-space .view-col {
-        width: 64px;
-        padding-left: 8px;
-        padding-right: 8px;
-        text-align: center;
-    }
-
-    .bookings-table-all.is-space .all-bookings-actions {
-        width: 100%;
-        justify-content: center;
-        gap: 0;
-    }
-
-    a.view-btn {
-        color: inherit;
-        text-decoration: none;
-    }
-
-    button.view-btn {
-        color: inherit;
-    }
-
-    a.completed-booking-download-btn {
-        color: inherit;
-        text-decoration: none;
-    }
-
-    .completed-rating {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 500;
-        line-height: normal;
-    }
-
-    .completed-rating img {
-        display: block;
-        width: 16px;
-        height: 16px;
-        flex-shrink: 0;
-    }
-
-    .cancelled-bookings-table .bookings-empty-row td.empty-bookings {
-        height: 150px;
-        white-space: normal;
-        text-align: center;
-        color: #948F88 !important;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 600;
-        line-height: normal;
-    }
-
-    .cancelled-by-chip,
-    .refund-status-chip {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        height: 24px;
-        border-radius: 100px;
-        padding: 0 10px;
-        box-sizing: border-box;
-        text-align: center;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 500;
-        line-height: normal;
-        white-space: nowrap;
-    }
-
-    .cancelled-by-chip {
-        min-width: 55px;
-        padding: 0;
-    }
-
-    .cancelled-by-chip.client {
-        color: #FFBA55;
-        background: rgba(255, 201, 122, 0.20);
-    }
-
-    .cancelled-by-chip.you {
-        color: #3B3731;
-        background: rgba(157, 155, 152, 0.20);
-    }
-
-    .refund-status-chip.rejected {
-        min-width: 83px;
-        color: #FF6E6E;
-        background: #FFE2E2;
-    }
-
-    .refund-status-chip.in-progress {
-        min-width: 89px;
-        color: #9FC7E4;
-        background: rgba(203, 220, 232, 0.20);
-    }
-
-    .refund-status-chip.processed {
-        min-width: 83px;
-        color: #AFCD6F;
-        background: rgba(186, 207, 142, 0.20);
-    }
-
-    .cancelled-bookings-table {
-        table-layout: auto;
-    }
-
-    .cancelled-bookings-table th,
-    .cancelled-bookings-table td {
-        white-space: nowrap;
-        overflow-wrap: normal;
-        word-break: normal;
-    }
-
-    .cancelled-bookings-table tbody tr:not(.bookings-empty-row) td {
-        height: 78px;
-        padding-top: 0;
-        padding-bottom: 0;
-    }
-
-    .empty-bookings {
-        text-align: center !important;
-        color: #8f8b86 !important;
-    }
-
-    .booking-list-header {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        margin: 0;
-    }
-
-    .booking-list-title {
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        color: #FFBA55;
-        background: rgba(255, 201, 122, 0.10);
-        border-radius: 999px;
-        padding: 0.6rem 1.15rem;
-        border: none;
-        white-space: nowrap;
-    }
-
-    .submitted-at {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-    }
-
-    .submitted-date {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-    .submitted-time {
-        color: #948F88;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-    .booking-list-table .filtered-pet-cell {
-        gap: 0;
-    }
-
-    .filtered-pet-cell {
-        display: flex;
-        flex-direction: column;
-        flex-wrap: wrap;
-        gap: 0.35rem;
-        align-items: start;
-    }
-
-    .booking-pet-name {
-        font-weight: 600;
-        color: #3B3731;
-    }
-
-    .booking-pet-type {
-        color: #9D9B98;
-        font-weight: 400;
-    }
-
-    .booking-pet-more {
-        color: #9D9B98;
-        font-weight: 400;
-    }
-
-    .confirmed-appointment-cell {
-        display: flex;
-        flex-direction: column;
-        gap: 0.18rem;
-    }
-
-    .confirmed-appointment-cell div:first-child {
-        color: #3B3731;
-    }
-
-    .confirmed-appointment-cell div:last-child {
-        color: #3B3731;
-        white-space: nowrap;
-        overflow-wrap: normal;
-        word-break: normal;
-    }
-
-    .confirmed-appointment-time-space {
-        color: #9D9B98 !important;
-    }
-
-    .confirmed-space-label {
-        font-weight: 600;
-    }
-
-    .confirmed-bookings-table.is-space td {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-weight: 400;
-    }
-
-    .confirmed-bookings-table.is-space .service-type {
-        font-weight: 600 !important;
-        white-space: nowrap !important;
-    }
-
-    .confirmed-bookings-table.is-space .space-visit-cell {
-        white-space: nowrap;
-        font-weight: 400;
-    }
-
-    .confirmed-bookings-table.is-space .confirmed-appointment-cell div:last-child {
-        color: #3B3731;
-        white-space: nowrap;
-    }
-
-    .confirmed-action-cell {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.55rem;
-        width: 100%;
-        min-height: 36px;
-    }
-
-    .confirmed-action-btn {
-        border: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        padding: 0;
-        background: transparent;
-        width: 36px;
-        height: 36px;
-        flex-shrink: 0;
-    }
-
-    .confirmed-action-btn img,
-    .confirmed-action-btn svg {
-        display: block;
-        width: 36px;
-        height: 36px;
-    }
-
-    .completed-action-cell {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        width: 100%;
-        min-height: 36px;
-    }
-
-    .completed-action-btn {
-        position: relative;
-        border: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        padding: 0;
-        background: transparent;
-        width: 36px;
-        height: 36px;
-        flex-shrink: 0;
-    }
-
-    .completed-action-btn img.completed-download-ring,
-    .completed-action-btn.is-view img {
-        display: block;
-        width: 36px;
-        height: 36px;
-    }
-
-    .completed-action-btn .completed-download-arrow {
-        position: absolute;
-        display: block;
-        width: 16px;
-        height: 19px;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-
-    .completed-bookings-table td:nth-child(3),
-    .completed-bookings-table .pet-name-wrap,
-    .completed-bookings-table .pet-name,
-    .completed-bookings-table .pet-type {
-        flex-wrap: nowrap;
-        white-space: nowrap;
-        overflow-wrap: normal;
-        word-break: normal;
-    }
-
-    .booking-action-cell {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        position: relative;
+    .section-container:has(.section-panel.section-active .bookings-board) {
         overflow: visible;
-        width: 100%;
-        min-height: 36px;
     }
 
-    .booking-action-cell.is-open {
-        z-index: 10001;
-    }
+    @media (max-width: 900px) {
+        .bh-booking-card {
+            grid-template-columns: 56px 56px minmax(0, 1fr);
+            grid-template-rows: auto auto;
+            height: auto;
+            min-height: 93px;
+        }
 
-    .booking-accept-btn {
-        -webkit-appearance: none;
-        appearance: none;
-        border-radius: 100px;
-        background-color: #C9DDA0;
-        background-image: none;
-        border: 1px solid #AFCD6F;
-        box-sizing: border-box;
-        width: 75.939px;
-        height: 36px;
-        color: #FFFFFF;
-        text-align: center;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 600;
-        line-height: normal;
-        -webkit-font-smoothing: antialiased;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.4rem;
-        flex-shrink: 0;
-        padding: 0;
-        box-shadow: none;
-    }
+        .bh-booking-end {
+            grid-column: 1 / -1;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+            min-width: 0;
+        }
 
-    .booking-accept-btn[disabled] {
-        cursor: not-allowed;
-        opacity: 0.9;
-    }
+        .bh-booking-cols {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            column-gap: 20px;
+        }
 
-    .booking-accept-loading {
-        align-items: center;
-        gap: 0.4rem;
-    }
+        .bh-booking-col+.bh-booking-col::before,
+        .bh-booking-cols>.bh-booking-owner-block::before {
+            display: none;
+        }
 
-    .booking-accept-spinner {
-        width: 13px;
-        height: 13px;
-        border: 2px solid rgba(255, 255, 255, 0.55);
-        border-top-color: #FFF;
-        border-radius: 50%;
-        animation: booking-accept-spin 0.8s linear infinite;
-        flex: 0 0 auto;
-    }
+        .bookings-toolbar {
+            flex-wrap: wrap;
+            gap: 12px;
+        }
 
-    @keyframes booking-accept-spin {
-        to {
-            transform: rotate(360deg);
+        .bookings-search {
+            width: 100%;
+            max-width: none;
+            flex: 1 1 100%;
+        }
+
+        .bookings-toolbar-actions {
+            width: 100%;
+        }
+
+        .bookings-tool-btn {
+            width: auto;
+            padding: 0 14px;
+        }
+
+        .bookings-tool-btn.is-sort {
+            flex: 1;
+            width: auto;
         }
     }
 
-    .booking-decline-btn {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 75.939px;
-        height: 36px;
-        border-radius: 100px;
-        border: 1px solid #FF6E6E;
-        background-color: #FFFFFF;
-        background-image: none;
-        color: #FF6E6E;
-        text-align: center;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        -webkit-font-smoothing: antialiased;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        box-sizing: border-box;
-        flex-shrink: 0;
-        padding: 0;
-        box-shadow: none;
-    }
-
-    .bookings-table .booking-details-col {
-        width: 18%;
-        white-space: normal;
-    }
-
-    .booking-details {
-        display: flex;
-        flex-direction: column;
-        gap: 0.2rem;
-        min-width: 0;
-    }
-
-    .details-date {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
-
-    .details-time {
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        white-space: nowrap;
-        overflow-wrap: normal;
-        word-break: normal;
-    }
-
-    .details-time-space {
-        color: #9D9B98;
-    }
-
-    .completed-space-label {
-        font-weight: 600;
+    @media (max-width: 720px) {
+        .bh-booking-cols {
+            grid-template-columns: 1fr;
+        }
     }
 </style>

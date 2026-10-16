@@ -65,7 +65,7 @@
                 <h2
                     x-text="activeBookingFilter === 'pending' ? 'Pending Bookings' : (activeBookingFilter === 'confirmed' ? 'Confirmed Bookings' : (activeBookingFilter === 'completed' ? 'Completed Bookings' : (activeBookingFilter === 'cancelled' ? 'Cancelled Bookings' : 'All Bookings')))">
                 </h2>
-                <p>Manage your bookings.</p>
+                <p>Manage requests, upcoming appointments, and your booking history.</p>
             </div>
 
             <div class="active-section-header-pane active-section-header-availability" x-cloak
@@ -384,7 +384,7 @@
         font-family: Lato;
         font-size: 14px;
         font-style: normal;
-        font-weight: 600;
+        font-weight: 400;
         line-height: 20px;
         text-transform: none;
     }

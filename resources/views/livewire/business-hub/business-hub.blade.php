@@ -622,7 +622,10 @@ new class extends Component {
         $booking = $this->bookingsQuery()
             ->with(['pets', 'petOwner'])
             ->findOrFail($bookingId);
-        $booking->update(['booking_status' => 'confirmed']);
+        $booking->update([
+            'booking_status' => 'confirmed',
+            'auto_accepted' => false,
+        ]);
 
         $spacerId = $this->loggedInSpacerId();
         if ($spacerId) {
