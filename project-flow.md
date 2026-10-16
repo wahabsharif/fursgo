@@ -10,7 +10,6 @@ Pet grooming marketplace (UK-oriented):
 
 ## Stack & runh
 
-
 | Item        | Detail                                                          |
 | ----------- | --------------------------------------------------------------- |
 | Framework   | Laravel 12, PHP ^8.2                                            |
@@ -20,11 +19,7 @@ Pet grooming marketplace (UK-oriented):
 | Run         | `composer run dev` → `php artisan serve --no-reload`            |
 | Local reset | Non-prod only: `GET /seed` (migrate:fresh --seed), `GET /clear` |
 
-
-
-
 ## Directory map
-
 
 | Path                          | Purpose                                                                               |
 | ----------------------------- | ------------------------------------------------------------------------------------- |
@@ -42,19 +37,16 @@ Pet grooming marketplace (UK-oriented):
 | `database/seeders/`           | Including `DevUserSeeder`                                                             |
 | `public/`                     | CSS, images, fonts, icons                                                             |
 
-
 Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/views/livewire/{dot.path}.blade.php`.
 
 ## Auth & roles
 
 **Guards** (`config/auth.php`):
 
-
 | Guard            | Provider / model       | Use                        |
 | ---------------- | ---------------------- | -------------------------- |
 | `web`            | `User`                 | Pet owners (+ admin users) |
 | `groomer_spacer` | `GroomerSpacerProfile` | Groomers / space owners    |
-
 
 **Middleware aliases** (`bootstrap/app.php`):
 
@@ -71,14 +63,9 @@ Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/vie
 - Provider types on profile: `GroomerSpacerProfile.user_type` (e.g. groomer vs `space`).
 - DB table / FK spelling: `goormer_spacer_profiles`, often `goormer_spacer_id`.
 
-
-
 ## Route map (by actor)
 
-
-
 ### Public
-
 
 | Route                                                 | Volt / view                                                                            | Name                                    |
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------- |
@@ -94,11 +81,7 @@ Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/vie
 | 404                                                   | `resources/views/errors/404.blade.php` (business public chrome)                        | —                                       |
 | `/messages_notification/messages.php` (+ `/messages`) | Imported static Messages (`messages_notification.messages-legacy`)                     | `messages_notification.messages*`       |
 
-
-
-
 ### Pet owner (`web` or web-or-groomer middleware)
-
 
 | Route                                                | Notes                                                   |
 | ---------------------------------------------------- | ------------------------------------------------------- |
@@ -110,11 +93,7 @@ Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/vie
 | `/pet-details` GET/POST                              | Volt manager + `PetDetailController@store`              |
 | `/bookings` CRUD + accept/cancel                     | `BookingController`                                     |
 
-
-
-
 ### Provider (`groomer_spacer`)
-
 
 | Route                                                 | Notes                                                                                   |
 | ----------------------------------------------------- | --------------------------------------------------------------------------------------- |
@@ -125,22 +104,16 @@ Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/vie
 | `/marketing-hub` + `POST /marketing-hub/nav`          | Marketing                                                                               |
 | Invoice PDF/HTML                                      | `business-hub/bookings/{booking}/invoice.pdf`                                           |
 
-
-
-
 ### Admin
-
 
 | Route          | Notes                                    |
 | -------------- | ---------------------------------------- |
 | `/admin/login` | Volt `admin.auth.login`                  |
 | `/admin`       | Volt `admin.overview` (tabbed Alpine UI) |
 
-
 Auth routes: `routes/auth.php`. Admin: `routes/admin.php`.
 
 ## Core entities
-
 
 | Model                                                               | Role                                                                                                               |
 | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
@@ -155,7 +128,6 @@ Auth routes: `routes/auth.php`. Admin: `routes/admin.php`.
 | `Review`                                                            | Post-booking ratings                                                                                               |
 | `SupportTicket` (+ attachments), `FaqCategory`, `FaqArticle`        | Help                                                                                                               |
 | `AccountSetting`, `AccountLoginSession`, `AccountBlock`             | Account security / prefs                                                                                           |
-
 
 **Booking statuses:** `pending` → `confirmed` → `completed`; or `cancelled` (`cancelled_by`, `cancellation_reason`, refund fields).
 
@@ -172,8 +144,6 @@ flowchart LR
   Admin[Admin_user] --> AdminUI[AdminOverview]
 ```
 
-
-
 **Owner:** signup → optional `login-signup` owner setup → add pets (`/pet-details`) → search → booking/checkout → `/bookings` lifecycle.
 
 **Provider:** signup-groomer-space → business-verification (ID, business profile, legal, status) → `/business-hub` (services, availability, bookings, clients, earnings, settings) → optional `/marketing-hub`.
@@ -188,8 +158,9 @@ Single Volt pages; section state in session (not separate routes).
 
 - Sections: `business-hub`, `bookings`, `availability`, `manage-availability`, `services`, `clients`, `earnings`, `settings`
 - Booking filters: `pending` | `confirmed` | `completed` | `cancelled`
+- Bookings list: unified cards (date block · pet avatar · Booking ID / Service / Pet / Owner · status + price); pending rows show timer + Decline/Accept and `-----` ID; confirmed/completed/cancelled rows show client-tier chip beside Owner with status + price flush right; `bookings.auto_accepted` shows a green bolt beside the Confirmed chip; on All Bookings with no service filter, pending rows sort first then Soonest first; Filter checklist + chips; Sort (Soonest first / Highest·Lowest Value / Client A–Z); Auto-accept toggle (`goormer_spacer_profiles.auto_accept_booking`) — ON uses green `#8BAE40`
 - Overview dashboard: welcome + date + Manage availability; metric cards (Earned today / Next appointment / New review); Today’s schedule + Weekly revenue (Mon–Sun) + Pending Requests; groomer `#FFC97A` / space `#FFA899` visit badges
-- Pending “View details” opens Booking Request modal (`pending-request-modal`); Accept → Booking Confirmed modal; Decline → decline modal (reason + Reschedule/Decline); Reschedule modal proposes new date/time cards
+- Booking row click opens right-side Booking details drawer (`booking-details-drawer`) for pending / confirmed / completed / cancelled (status chip, owner + client tier, appointment grid, pets, service & add-ons + earn/payout box, status-specific footer actions); Pending “View details” on overview still opens Booking Request modal (`pending-request-modal`); Accept → Booking Confirmed modal; Decline → decline modal (reason + Reschedule/Decline); Reschedule modal proposes new date/time cards
 - Profile switcher: checkmark on active business; yellow `#fffbf4` highlight is hover/focus only
 - Avatar placeholders (no photo / broken image): initials via `App\Support\BusinessHubAvatar` / `x-business-hub.common.avatar` + `window.bhAvatarFallback`; text `#FDFDFD` Lato 800; bg groomer `#FFC97A`, space `#FFA899` (`--bh-avatar-bg` / `--bh-avatar-ring`). Photo available: white circle ring with same accent stroke.
 - Service menus: `services`, `add-ons`, `pet-preferences`, `service-area`
@@ -209,8 +180,6 @@ Volt entry: `resources/views/livewire/business-hub.blade.php`, nested under `liv
 - Business provider detail tabs: Overview, Profile (public profile / gallery / business details / notes / activity + Services · Policies · Reviews subnav; dual Groomer/Space Host via sidebar `viewAs` — space subnav active `#FFA899`, active status pills `#EAF3DE`/`#A7C569`), Activity, Account, Compliance, Support (ticket list → detail with submission / limited thread / linked states: populated · empty · na · suggested / shared admin notes / details+activity; no modals; sidebar stays default provider actions), Payouts (Earnings overview dual groomer/space — space accents `#FFA899` on subnav/chart/progress, space booking Full-Day·Half-Day·Hourly + bank settings; Transactions expandable cards; Payouts list; Invoices → payment-detail); Bookings (subnav Bookings · Availability · Clients — Bookings: metric cards + status filters + table Owner/Pet · Service/Location · Date/Time + export; row/eye opens booking detail with summary card · details · price breakdown · activity timeline; Availability: day schedule + calendar · working week hours · time off · booking intake status · activity timeline; Clients: table with avatar/initials · bookings · paid · last booked + export/pagination; eye opens client profile modal — stats · recent bookings · recent review + view full customer profile).
 - Pet owner detail tabs: overview, pets, bookings, payments (list + detail by status), support (ticket list → detail with submission / linked records + Add link / Mark as resolved / Open dispute (+ success) / Merge / Reassign / Close ticket modals / thread / notes / details+activity; sidebar switches list actions ↔ ticket actions), referrals, activity — under `resources/views/components/admin/customer/`.
 
-
-
 ## Codebase notes
 
 - Primary UI lives in Volt under `resources/views/livewire/`.
@@ -220,4 +189,3 @@ Volt entry: `resources/views/livewire/business-hub.blade.php`, nested under `liv
 - GET requests to Livewire `/update` paths redirect to referer (`bootstrap/app.php` exception handler).
 - Profile switch (`business-hub/switch`) only allows profiles with the same email.
 - Controllers: `BookingController`, `PetDetailController`, `SearchController`, `BookingInvoicePdfController`, `AccountDataExportController`, `LegalAgreementsPdfController`, `GroomerSpacerPrivateFileController`.
-
