@@ -146,6 +146,20 @@ Route::get('/my_account/my_profile', function () {
     return view('my_account.my-profile-legacy');
 })->name('my_account.my_profile');
 
+// Groomer / Space profiles (imported static pages from D:\fursgo\profiles — custom PHP URL parity)
+Route::get('/profiles/groomer/groomer_profile.php', function () {
+    return view('profiles.groomer-profile-legacy');
+})->name('profiles.groomer.php');
+Route::get('/profiles/groomer/groomer_profile', function () {
+    return view('profiles.groomer-profile-legacy');
+})->name('profiles.groomer');
+Route::get('/profiles/space/space_profile.php', function () {
+    return view('profiles.space-profile-legacy');
+})->name('profiles.space.php');
+Route::get('/profiles/space/space_profile', function () {
+    return view('profiles.space-profile-legacy');
+})->name('profiles.space');
+
 Route::get('/my-account/pet-owner-profile', fn() => VoltPage::render('account.profile'))
     ->middleware([EnsureWebOrGroomerSpacerAuthenticated::class])
     ->name('pet-owner-profile');
