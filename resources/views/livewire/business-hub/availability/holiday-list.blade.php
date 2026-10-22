@@ -195,7 +195,7 @@ new class extends Component {
                 </div>
             </div>
         @empty
-            <div class="ma-holiday-list__empty">No holiday / time off entries yet.</div>
+            <div class="ma-holiday-list__empty">No business time off scheduled yet.</div>
         @endforelse
     </div>
 </div>

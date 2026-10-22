@@ -64,10 +64,18 @@
         if (except !== 'settings') this.settingsOpen = false;
     },
     shouldNavigate(section, currentSection) {
-        const onSection = section === 'availability' ?
-            currentSection === 'availability' || currentSection === 'manage-availability' :
-            currentSection === section;
-        if (onSection) {
+        // Availability vs Manage Availability are different views.
+        // Only toggle the submenu when already on the Availability calendar.
+        if (section === 'availability') {
+            if (currentSection === 'availability') {
+                this.availabilityOpen = !this.availabilityOpen;
+                return false;
+            }
+            this.closeMenus('availability');
+            this.availabilityOpen = true;
+            return true;
+        }
+        if (currentSection === section) {
             this[section + 'Open'] = !this[section + 'Open'];
             return false;
         }
@@ -204,7 +212,7 @@
             <!-- Availability -->
             <li class="nav-item">
                 <a href="#"
-                    @click.prevent="if (shouldNavigate('availability', activeSection)) { startNavLoading(); activeSection = 'availability' }"
+                    @click.prevent="if (shouldNavigate('availability', activeSection)) { startNavLoading(); activeSection = 'availability'; window.dispatchEvent(new CustomEvent('dashboard-nav-changed', { detail: { section: 'availability' } })); }"
                     :class="{ 'active': activeSection === 'availability' || activeSection === 'manage-availability' }"
                     class="nav-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 14 13" fill="none">

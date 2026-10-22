@@ -3,15 +3,27 @@
     $detailIconBase = asset('images/booking-details');
 @endphp
 
-@teleport('body')
+<template x-teleport="body">
     <div class="booking-details-drawer-layer" x-cloak
-        x-bind:class="{ 'is-open': open, 'is-space': isSpace, [details.statusClass || '']: !!details.statusClass }">
+        x-bind:class="{ 'is-open': open, 'is-space': isSpace, [details.statusClass || '']: !!details.statusClass }"
+        x-on:wheel="open && !$event.target.closest('.bdd-scroll') && $event.preventDefault()"
+        x-on:touchmove="open && !$event.target.closest('.bdd-scroll') && $event.preventDefault()">
         <button type="button" class="booking-details-drawer-backdrop" @click="closeDrawer()"
             aria-label="Close booking details"></button>
 
         <aside class="booking-details-drawer" role="dialog" aria-modal="true"
-            aria-labelledby="booking-details-drawer-title" x-bind:style="{ top: topOffset + 'px' }" @click.stop
-            @wheel.stop.passive @touchmove.stop>
+            aria-labelledby="booking-details-drawer-title" x-bind:style="{ top: topOffset + 'px' }" @click.stop>
+            <div class="bdd-nav" x-show="backLabel" x-cloak>
+                <button type="button" class="bdd-back" @click="goBack()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="8" height="12" viewBox="0 0 8 12" fill="none" aria-hidden="true">
+                        <path d="M7 1L2 6L7 11" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span x-text="backLabel"></span>
+                </button>
+                <button type="button" class="bdd-close is-nav" @click="closeDrawer()" aria-label="Close">
+                    <img src="{{ $detailIconBase }}/close.svg" alt="" width="20" height="20">
+                </button>
+            </div>
             <header class="bdd-head">
                 <div class="bdd-head-copy">
                     <h3 id="booking-details-drawer-title" class="bdd-title">Booking details</h3>
@@ -24,7 +36,7 @@
                 </div>
                 <div class="bdd-head-actions">
                     <span class="bdd-status-chip" x-bind:class="details.statusClass" x-text="details.statusLabel"></span>
-                    <button type="button" class="bdd-close" @click="closeDrawer()" aria-label="Close">
+                    <button type="button" class="bdd-close" x-show="!backLabel" x-cloak @click="closeDrawer()" aria-label="Close">
                         <img src="{{ $detailIconBase }}/close.svg" alt="" width="20" height="20">
                     </button>
                 </div>
@@ -99,13 +111,14 @@
                             <div class="bdd-appt-value">
                                 <img x-show="!isSpace" src="{{ $iconBase }}/icon-location.svg" alt="" width="12" height="16" class="is-location">
                                 <img x-show="isSpace" src="{{ $iconBase }}/icon-space-shed.svg" alt="" width="17" height="14" class="is-space-type" x-cloak>
-                                <strong x-text="details.locationLabel"></strong>
+                                <strong class="bdd-space-type-value" x-text="details.locationLabel"></strong>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <section class="bdd-section" x-show="(details.pets || []).length" x-cloak>
+                <section class="bdd-section"
+                    x-show="!(isSpace && details.status === 'completed') && (details.pets || []).length" x-cloak>
                     <h4 class="bdd-section-label">Pet/s</h4>
                     <div class="bdd-pets">
                         <template x-for="(pet, index) in (details.pets || [])" :key="'pet-' + index">
@@ -205,9 +218,9 @@
             </footer>
         </aside>
     </div>
-@endteleport
+</template>
 
-@teleport('body')
+<template x-teleport="body">
     <div class="bdd-directions-overlay" x-cloak x-show="directionsOpen" x-transition.opacity.duration.150ms
         @click.self="closeDirections()" role="presentation">
         <div class="bdd-directions-modal" role="dialog" aria-modal="true" aria-labelledby="bdd-directions-title"
@@ -236,7 +249,7 @@
             </div>
         </div>
     </div>
-@endteleport
+</template>
 
 <style>
     .booking-details-drawer-layer {
@@ -244,12 +257,17 @@
         inset: 0;
         z-index: 2147483000;
         overscroll-behavior: none;
-        display: none;
+        display: block;
+        visibility: hidden;
+        pointer-events: none;
+        /* Keep layer fully opaque — only backdrop fades / panel slides (avoids flicker). */
+        transition: visibility 0s linear 280ms;
     }
 
-    .booking-details-drawer-layer.is-open,
-    .booking-details-drawer-layer[style*="display: block"] {
-        display: block;
+    .booking-details-drawer-layer.is-open {
+        visibility: visible;
+        pointer-events: auto;
+        transition: visibility 0s linear 0s;
     }
 
     .booking-details-drawer-layer[x-cloak] {
@@ -260,8 +278,14 @@
         position: absolute;
         inset: 0;
         border: 0;
-        background: rgba(59, 55, 49, 0.1);
+        background: rgba(59, 55, 49, 0.12);
         cursor: pointer;
+        opacity: 0;
+        transition: opacity 240ms ease;
+    }
+
+    .booking-details-drawer-layer.is-open .booking-details-drawer-backdrop {
+        opacity: 1;
     }
 
     .booking-details-drawer {
@@ -276,6 +300,9 @@
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        transform: translate3d(100%, 0, 0);
+        backface-visibility: hidden;
+        transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .booking-details-drawer img {
@@ -286,19 +313,39 @@
     }
 
     .booking-details-drawer-layer.is-open .booking-details-drawer {
-        animation: booking-details-drawer-in 120ms ease-out;
+        transform: translate3d(0, 0, 0);
     }
 
-    @keyframes booking-details-drawer-in {
-        from {
-            transform: translateX(20px);
-            opacity: 0.9;
-        }
+    .bdd-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 24px 0;
+    }
 
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+    .bdd-back {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        margin: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #3B3731;
+        font-family: Lato, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .bdd-back:hover {
+        opacity: 0.8;
+    }
+
+    .bdd-close.is-nav {
+        margin-top: 0;
     }
 
     .bdd-head {
@@ -396,6 +443,8 @@
     .bdd-scroll {
         flex: 1;
         overflow: auto;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
         padding: 20px 20px 16px;
         display: flex;
         flex-direction: column;
@@ -680,6 +729,10 @@
         font-weight: 400;
         line-height: 1.3;
         word-break: break-word;
+    }
+
+    .booking-details-drawer-layer.is-space .bdd-space-type-value {
+        color: #3B3731;
     }
 
     .bdd-pets {

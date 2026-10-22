@@ -429,6 +429,7 @@ new class extends Component {
 }; ?>
 
 <div x-data="bookingDetailsDrawer" @booking-details-open.window="openWith($event.detail)"
+    @booking-details-close.window="closeDrawer()"
     @keydown.escape.window="if (directionsOpen) { closeDirections(); } else if (open) { closeDrawer(); }">
     <x-business-hub.common.booking-details-drawer />
 </div>
@@ -440,6 +441,8 @@ new class extends Component {
             directionsOpen: false,
             topOffset: 0,
             requestId: 0,
+            backLabel: '',
+            backDateKey: '',
             isSpace: {{ $this->isSpaceUser() ? 'true' : 'false' }},
             details: {},
             init() {
@@ -448,6 +451,15 @@ new class extends Component {
             },
             destroy() {
                 window.removeEventListener('resize', this._onResize);
+            },
+            goBack() {
+                const dateKey = this.backDateKey || '';
+                this.closeDrawer();
+                window.dispatchEvent(new CustomEvent('booking-details-back', {
+                    detail: {
+                        dateKey
+                    },
+                }));
             },
             emptyDetails() {
                 return {
@@ -564,12 +576,14 @@ new class extends Component {
             },
             openWith(row) {
                 this.open = true;
+                this.backLabel = String(row?.backLabel || '').trim();
+                this.backDateKey = String(row?.backDateKey || row?.dateKey || '').trim();
                 this.details = this.fromRow(row);
                 this.syncTopOffset();
+                // `is-open` is driven only by Alpine `open` — avoid toggling it in JS (flicker).
                 const layer = document.querySelector('.booking-details-drawer-layer');
                 if (layer) {
-                    layer.style.display = 'block';
-                    layer.classList.add('is-open');
+                    layer.style.removeProperty('display');
                     layer.classList.toggle('is-space', this.isSpace);
                     layer.classList.remove('is-pending', 'is-confirmed', 'is-completed', 'is-cancelled');
                     if (this.details.statusClass) {
@@ -577,6 +591,7 @@ new class extends Component {
                     }
                 }
                 if (window.__lockBookingDetailsDrawer) window.__lockBookingDetailsDrawer();
+                window.dispatchEvent(new CustomEvent('booking-details-drawer-opened'));
                 const req = ++this.requestId;
                 const id = Number(row?.id || 0);
                 if (!id || !this.$wire?.load) {
@@ -614,13 +629,18 @@ new class extends Component {
                 }
                 this.directionsOpen = false;
                 this.open = false;
+                this.backLabel = '';
+                this.backDateKey = '';
                 this.requestId += 1;
                 const layer = document.querySelector('.booking-details-drawer-layer');
                 if (layer) {
-                    layer.style.display = 'none';
-                    layer.classList.remove('is-open');
+                    layer.style.removeProperty('display');
                 }
-                if (window.__unlockBookingDetailsDrawer) window.__unlockBookingDetailsDrawer();
+                // Unlock after slide-out so scrollbar reappearing mid-animation doesn't flicker.
+                window.setTimeout(() => {
+                    if (window.__unlockBookingDetailsDrawer) window.__unlockBookingDetailsDrawer();
+                    window.dispatchEvent(new CustomEvent('booking-details-drawer-closed'));
+                }, 280);
             },
             openDirections() {
                 this.directionsOpen = true;

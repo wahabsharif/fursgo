@@ -220,6 +220,286 @@ class BookingSeeder extends Seeder
             refundStatuses: $refundStatuses,
             discountSamples: $discountSamples,
         );
+
+        $this->seedAvailabilityCalendarDesign();
+    }
+
+    /**
+     * Current-month Availability calendar data matching the Figma redesign
+     * (capacity bars, mixed statuses, empty working days, day-drawer timeline).
+     * Seeds both groomer@dev.com and space@dev.com.
+     */
+    private function seedAvailabilityCalendarDesign(): void
+    {
+        $targets = [
+            ['email' => 'groomer@dev.com', 'isSpace' => false],
+            ['email' => 'space@dev.com', 'isSpace' => true],
+        ];
+
+        foreach ($targets as $target) {
+            $profile = GroomerSpacerProfile::where('email', $target['email'])->first();
+            if (!$profile) {
+                $this->command?->warn("Availability calendar seed skipped: {$target['email']} not found.");
+
+                continue;
+            }
+
+            $this->seedAvailabilityMonthForProfile($profile->id, $target['isSpace']);
+        }
+    }
+
+    private function seedAvailabilityMonthForProfile(int $spacerId, bool $isSpace): void
+    {
+        $ownerEmail = $isSpace ? 'avail.space.client@example.com' : 'avail.groomer.client@example.com';
+        $ownerName = $isSpace ? 'Susan R.' : 'Zach T.';
+        $extraOwners = $isSpace
+            ? [
+                ['email' => 'avail.space.client2@example.com', 'name' => 'Shiv R.'],
+                ['email' => 'avail.space.client3@example.com', 'name' => 'Quen W.'],
+            ]
+            : [
+                ['email' => 'avail.groomer.client2@example.com', 'name' => 'Patrick F.'],
+                ['email' => 'avail.groomer.client3@example.com', 'name' => 'Verity E.'],
+            ];
+
+        $petDefinitions = $isSpace
+            ? [
+                ['name' => 'Biscuit', 'pet_type' => 'Dog', 'breed' => 'Golden Retriever', 'sex' => 'female', 'birthday' => '2021-05-10', 'weight' => 26.0, 'photo' => 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=80', 'notes' => 'Friendly around other dogs.'],
+            ]
+            : [
+                ['name' => 'Max', 'pet_type' => 'Dog', 'breed' => 'Labrador Retriever', 'sex' => 'male', 'birthday' => '2019-08-22', 'weight' => 30.0, 'photo' => 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=600&q=80', 'notes' => 'Loves water.'],
+                ['name' => 'Chicken', 'pet_type' => 'Cat', 'breed' => 'Russian Blue', 'sex' => 'female', 'birthday' => '2022-01-08', 'weight' => 4.2, 'photo' => 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=600&q=80', 'notes' => 'Indoor only.'],
+            ];
+
+        $owner = User::firstOrCreate(
+            ['email' => $ownerEmail],
+            [
+                'name' => $ownerName,
+                'password' => bcrypt('password'),
+                'user_type' => 'pet_owner',
+                'user_status' => 'active',
+                'profile_image' => $petDefinitions[0]['photo'] ?? null,
+            ]
+        );
+        $pets = $this->ensurePets($owner, $petDefinitions);
+
+        $owners = [['owner' => $owner, 'pets' => $pets]];
+        foreach ($extraOwners as $extra) {
+            $extraOwner = User::firstOrCreate(
+                ['email' => $extra['email']],
+                [
+                    'name' => $extra['name'],
+                    'password' => bcrypt('password'),
+                    'user_type' => 'pet_owner',
+                    'user_status' => 'active',
+                ]
+            );
+            $owners[] = [
+                'owner' => $extraOwner,
+                'pets' => $this->ensurePets($extraOwner, [
+                    [
+                        'name' => $isSpace ? 'Pip' : 'Biscuit',
+                        'pet_type' => 'Dog',
+                        'breed' => 'Cocker Spaniel',
+                        'sex' => 'female',
+                        'birthday' => '2020-11-02',
+                        'weight' => 12.0,
+                        'photo' => 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=600&q=80',
+                        'notes' => null,
+                    ],
+                ]),
+            ];
+        }
+
+        $visitType = $isSpace ? 'Garden / Shed' : 'salon';
+        $serviceAddOns = $isSpace
+            ? [
+                'Hourly' => [['label' => 'Storage Locker', 'amount' => 8.0]],
+                'Half-Day' => [['label' => 'Deep Clean', 'amount' => 20.0]],
+                'Full-Day' => [['label' => 'After-Hours Access', 'amount' => 10.0]],
+            ]
+            : [
+                'Full Groom' => [
+                    ['label' => 'Fast-Dry Service', 'amount' => 10.0],
+                    ['label' => 'Hypoallergenic Shampoo Upgrade', 'amount' => 10.0],
+                ],
+                'Bath & Brush' => [['label' => 'De-shedding Booster', 'amount' => 12.0]],
+                'Nail Trim' => [['label' => 'Paw Balm Treatment', 'amount' => 6.0]],
+                'Pet Spa' => [['label' => 'Calming Aromatherapy', 'amount' => 7.5]],
+            ];
+
+        $staffRoster = $isSpace
+            ? ['Harper Lane', 'Riley Quinn', 'Jordan Lee']
+            : ['Emma Wilson', 'Oliver Brown', 'Sophia Ahmed'];
+
+        // Clear prior availability-design rows for this profile (idempotent reseed).
+        Booking::query()
+            ->where('goormer_spacer_id', $spacerId)
+            ->where('acquisition_source', 'availability_design')
+            ->each(function (Booking $booking) {
+                $booking->pets()->detach();
+                $booking->delete();
+            });
+
+        $monthStart = today()->copy()->startOfMonth();
+        $monthEnd = today()->copy()->endOfMonth();
+        $holidayKeys = $this->availabilityHolidayDateKeys();
+
+        // Showcase day near "today" for the day drawer (mixed statuses + free window).
+        $showcaseDay = today()->copy();
+        if ($showcaseDay->isWeekend()) {
+            $showcaseDay->nextWeekday();
+        }
+        while (isset($holidayKeys[$showcaseDay->toDateString()]) && $showcaseDay->lte($monthEnd)) {
+            $showcaseDay->addWeekdays(1);
+        }
+
+        $dayCursor = $monthStart->copy();
+        $weekdayIndex = 0;
+
+        while ($dayCursor->lte($monthEnd)) {
+            $dateKey = $dayCursor->toDateString();
+
+            if ($dayCursor->isWeekend() || isset($holidayKeys[$dateKey])) {
+                $dayCursor->addDay();
+
+                continue;
+            }
+
+            $slots = [];
+
+            if ($dayCursor->isSameDay($showcaseDay)) {
+                $slots = $isSpace
+                    ? [
+                        ['time' => '10:00 - 11:00', 'service' => 'Hourly', 'amount' => 25.0, 'booking_status' => 'completed'],
+                        ['time' => '11:00 - 15:00', 'service' => 'Half-Day', 'amount' => 80.0, 'booking_status' => 'confirmed'],
+                        ['time' => '15:00 - 16:00', 'service' => 'Hourly', 'amount' => 28.0, 'booking_status' => 'pending'],
+                    ]
+                    : [
+                        ['time' => '10:00 - 11:00', 'service' => 'Nail Trim', 'amount' => 25.0, 'booking_status' => 'completed'],
+                        ['time' => '11:00 - 12:00', 'service' => 'Pet Spa', 'amount' => 55.0, 'booking_status' => 'confirmed'],
+                        ['time' => '12:00 - 13:00', 'service' => 'Full Groom', 'amount' => 70.0, 'booking_status' => 'pending'],
+                    ];
+            } else {
+                // Rotate patterns so the month grid shows capacity bars like Figma.
+                $pattern = $weekdayIndex % 5;
+                if ($pattern === 0) {
+                    // 3 booked · ~5h free — completed + confirmed + pending (multi-color bar)
+                    $slots = $isSpace
+                        ? [
+                            ['time' => '10:00 - 11:00', 'service' => 'Hourly', 'amount' => 25.0, 'booking_status' => 'completed'],
+                            ['time' => '12:00 - 13:00', 'service' => 'Hourly', 'amount' => 25.0, 'booking_status' => 'confirmed'],
+                            ['time' => '14:00 - 15:00', 'service' => 'Hourly', 'amount' => 28.0, 'booking_status' => 'pending'],
+                        ]
+                        : [
+                            ['time' => '10:00 - 11:00', 'service' => 'Bath & Brush', 'amount' => 45.0, 'booking_status' => 'completed'],
+                            ['time' => '12:00 - 13:00', 'service' => 'Full Groom', 'amount' => 65.0, 'booking_status' => 'confirmed'],
+                            ['time' => '14:00 - 15:00', 'service' => 'Nail Trim', 'amount' => 25.0, 'booking_status' => 'pending'],
+                        ];
+                } elseif ($pattern === 1) {
+                    // Confirmed-heavy day
+                    $slots = $isSpace
+                        ? [
+                            ['time' => '10:00 - 14:00', 'service' => 'Half-Day', 'amount' => 80.0, 'booking_status' => 'confirmed'],
+                            ['time' => '15:00 - 16:00', 'service' => 'Hourly', 'amount' => 25.0, 'booking_status' => 'confirmed'],
+                        ]
+                        : [
+                            ['time' => '10:00 - 11:00', 'service' => 'Full Groom', 'amount' => 65.0, 'booking_status' => 'confirmed'],
+                            ['time' => '11:30 - 12:30', 'service' => 'Bath & Brush', 'amount' => 45.0, 'booking_status' => 'confirmed'],
+                            ['time' => '14:00 - 15:00', 'service' => 'Nail Trim', 'amount' => 25.0, 'booking_status' => 'confirmed'],
+                        ];
+                } elseif ($pattern === 2) {
+                    // Empty working day → "0 booked · 8h free"
+                    $slots = [];
+                } elseif ($pattern === 3) {
+                    // Busier day (6 × 1h) for denser bars
+                    if ($isSpace) {
+                        $slots = [
+                            ['time' => '10:00 - 11:00', 'service' => 'Hourly', 'amount' => 25.0, 'booking_status' => 'completed'],
+                            ['time' => '11:00 - 12:00', 'service' => 'Hourly', 'amount' => 25.0, 'booking_status' => 'completed'],
+                            ['time' => '12:00 - 13:00', 'service' => 'Hourly', 'amount' => 28.0, 'booking_status' => 'confirmed'],
+                            ['time' => '13:00 - 14:00', 'service' => 'Hourly', 'amount' => 25.0, 'booking_status' => 'confirmed'],
+                            ['time' => '14:00 - 15:00', 'service' => 'Hourly', 'amount' => 25.0, 'booking_status' => 'confirmed'],
+                            ['time' => '15:00 - 16:00', 'service' => 'Hourly', 'amount' => 30.0, 'booking_status' => 'pending'],
+                        ];
+                    } else {
+                        $slots = [
+                            ['time' => '10:00 - 11:00', 'service' => 'Full Groom', 'amount' => 65.0, 'booking_status' => 'completed'],
+                            ['time' => '11:00 - 12:00', 'service' => 'Bath & Brush', 'amount' => 45.0, 'booking_status' => 'completed'],
+                            ['time' => '12:00 - 13:00', 'service' => 'Nail Trim', 'amount' => 25.0, 'booking_status' => 'confirmed'],
+                            ['time' => '13:00 - 14:00', 'service' => 'Pet Spa', 'amount' => 55.0, 'booking_status' => 'confirmed'],
+                            ['time' => '14:00 - 15:00', 'service' => 'Full Groom', 'amount' => 70.0, 'booking_status' => 'confirmed'],
+                            ['time' => '15:00 - 16:00', 'service' => 'Bath & Brush', 'amount' => 48.0, 'booking_status' => 'pending'],
+                        ];
+                    }
+                } else {
+                    // Full-day / long booking for space; completed pair for groomer
+                    $slots = $isSpace
+                        ? [
+                            ['time' => '10:00 - 18:00', 'service' => 'Full-Day', 'amount' => 120.0, 'booking_status' => 'confirmed'],
+                        ]
+                        : [
+                            ['time' => '10:00 - 11:00', 'service' => 'Full Groom', 'amount' => 65.0, 'booking_status' => 'completed'],
+                            ['time' => '14:00 - 15:00', 'service' => 'Bath & Brush', 'amount' => 45.0, 'booking_status' => 'completed'],
+                        ];
+                }
+            }
+
+            foreach ($slots as $slotIndex => $slot) {
+                $ownerBag = $owners[$slotIndex % count($owners)];
+                $status = $slot['booking_status'];
+                $createdDaysAgo = $status === 'completed'
+                    ? max(1, (int) today()->diffInDays($dayCursor))
+                    : null;
+
+                $this->seedBooking(
+                    ownerId: $ownerBag['owner']->id,
+                    spacerId: $spacerId,
+                    pets: $ownerBag['pets'],
+                    bookingData: [
+                        'time' => $slot['time'],
+                        'date' => $dateKey,
+                        'service' => $slot['service'],
+                        'amount' => $slot['amount'],
+                        'visit_type' => $visitType,
+                        'booking_status' => $status,
+                        'pet_indices' => [0],
+                        'acquisition_source' => 'availability_design',
+                        'created_days_ago' => $createdDaysAgo,
+                        'auto_accepted' => $status === 'confirmed' && $slotIndex === 0,
+                    ],
+                    serviceAddOns: $serviceAddOns,
+                    staffRoster: $staffRoster,
+                    completedRatings: [4.5, 4.8, 5.0],
+                    refundStatuses: ['Processed'],
+                    discountSamples: [0.0],
+                );
+            }
+
+            $weekdayIndex++;
+            $dayCursor->addDay();
+        }
+    }
+
+    /**
+     * @return array<string, true>
+     */
+    private function availabilityHolidayDateKeys(): array
+    {
+        $month = today()->copy()->startOfMonth();
+        $firstOff = $month->copy()->addDays(6);
+        while ($firstOff->isWeekend()) {
+            $firstOff->addDay();
+        }
+        $secondOff = $month->copy()->addDays(13);
+        while ($secondOff->isWeekend() || $secondOff->equalTo($firstOff)) {
+            $secondOff->addDay();
+        }
+
+        return [
+            $firstOff->toDateString() => true,
+            $secondOff->toDateString() => true,
+        ];
     }
 
     /**

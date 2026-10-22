@@ -42,7 +42,8 @@
     </template>
 
     <div class="active-section-header"
-        x-show="activeSection !== 'settings' && (activeSection !== 'clients' || !clientProfileOpen)" x-cloak>
+        x-show="activeSection !== 'settings' && activeSection !== 'manage-availability' && (activeSection !== 'clients' || !clientProfileOpen)"
+        x-cloak>
         <div class="active-section-header-stack">
             <div class="active-section-header-pane active-section-header-overview" x-cloak
                 x-show="activeSection === 'business-hub'" x-transition.opacity.duration.280ms>
@@ -81,23 +82,9 @@
                 </button>
             </div>
 
+            {{-- Manage Availability titles live in the section (list + schedule heads, Figma 443:899 / 447:123) --}}
             <div class="active-section-header-pane active-section-header-manage-availability" x-cloak
-                x-show="activeSection === 'manage-availability'" x-transition.opacity.duration.280ms>
-                <button type="button" class="manage-availability-back-btn"
-                    @click="window.dispatchEvent(new CustomEvent('nav-list-loading-start')); activeSection = 'availability'"
-                    aria-label="Back to availability">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="11" viewBox="0 0 17 11" fill="none">
-                        <path
-                            d="M0 5.202L5.211 0L5.877 0.684C6.015 0.828 6.069 0.972 6.039 1.116C6.015 1.254 5.94 1.386 5.814 1.512L3.609 3.708C3.297 4.02 3.012 4.278 2.754 4.482C3.102 4.434 3.468 4.398 3.852 4.374C4.242 4.344 4.635 4.329 5.031 4.329H16.074V6.084H5.031C4.629 6.084 4.233 6.072 3.843 6.048C3.459 6.024 3.093 5.988 2.745 5.94C2.877 6.042 3.012 6.156 3.15 6.282C3.294 6.408 3.447 6.549 3.609 6.705L5.832 8.919C5.958 9.045 6.033 9.18 6.057 9.324C6.087 9.462 6.033 9.6 5.895 9.738L5.229 10.431L0 5.202Z"
-                            fill="#3B3731" />
-                    </svg>
-                    Availability
-                </button>
-                <div>
-                    <h2>Manage Availability</h2>
-                    <p>Set your working hours, days off, and staff schedules.</p>
-                </div>
-            </div>
+                x-show="false" aria-hidden="true"></div>
 
             <div class="active-section-header-pane active-section-header-clients" x-cloak
                 x-show="activeSection === 'clients'" x-transition.opacity.duration.280ms>

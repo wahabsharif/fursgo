@@ -10,36 +10,47 @@
             <template x-for="day in mainMonthGrid" :key="day.key">
                 <article class="availability-day-cell"
                     :class="{
-                        'is-muted': !day.inCurrentMonth || isClosedDay(day.date),
-                        'is-today-cell': isSelectedDate(day.date),
-                        'is-selected-cell': isSelectedDate(day.date),
-                    }">
-                    <strong :class="{ 'is-today': isSelectedDate(day.date), 'is-selected': isSelectedDate(day.date) }"
-                        x-text="day.day"></strong>
-                    <ul x-show="day.inCurrentMonth && day.slots.length">
-                        <template x-for="(slot, slotIndex) in day.slots" :key="day.key + '-slot-' + slotIndex">
-                            <li :class="{
-                                [slot.type]: true,
-                                'is-calendar-slot-clickable': slot.bookingId || slot.isOverflow,
-                            }" @click.stop="onCalendarSlotClick(slot, day.key)">
-                                <svg x-show="slot.type !== 'neutral' && slot.type !== 'holiday'" class="slot-icon"
-                                    xmlns="http://www.w3.org/2000/svg" width="14" height="13" viewBox="0 0 14 13"
-                                    fill="none" aria-hidden="true">
-                                    <path
-                                        d="M0.5 6.3467C0.5 4.02618 0.5 2.86561 1.25343 2.14503C2.00686 1.42444 3.21864 1.42383 5.64286 1.42383H8.21429C10.6385 1.42383 11.8509 1.42383 12.6037 2.14503C13.3565 2.86623 13.3571 4.02618 13.3571 6.3467V7.57741C13.3571 9.89793 13.3571 11.0585 12.6037 11.7791C11.8503 12.4997 10.6385 12.5003 8.21429 12.5003H5.64286C3.21864 12.5003 2.00621 12.5003 1.25343 11.7791C0.500643 11.0579 0.5 9.89793 0.5 7.57741V6.3467Z"
-                                        stroke="currentColor" />
-                                    <path d="M3.71433 1.42304V0.5M10.1429 1.42304V0.5M0.821472 4.49983H13.0358"
-                                        stroke="currentColor" stroke-linecap="round" />
-                                    <path
-                                        d="M10.7858 9.4225C10.7858 9.5857 10.7181 9.74222 10.5975 9.85762C10.477 9.97302 10.3135 10.0379 10.143 10.0379C9.97247 10.0379 9.80895 9.97302 9.68839 9.85762C9.56783 9.74222 9.5001 9.5857 9.5001 9.4225C9.5001 9.25929 9.56783 9.10277 9.68839 8.98737C9.80895 8.87197 9.97247 8.80714 10.143 8.80714C10.3135 8.80714 10.477 8.87197 10.5975 8.98737C10.7181 9.10277 10.7858 9.25929 10.7858 9.4225ZM10.7858 6.96106C10.7858 7.12426 10.7181 7.28078 10.5975 7.39619C10.477 7.51159 10.3135 7.57642 10.143 7.57642C9.97247 7.57642 9.80895 7.51159 9.68839 7.39619C9.56783 7.28078 9.5001 7.12426 9.5001 6.96106C9.5001 6.79786 9.56783 6.64134 9.68839 6.52594C9.80895 6.41054 9.97247 6.3457 10.143 6.3457C10.3135 6.3457 10.477 6.41054 10.5975 6.52594C10.7181 6.64134 10.7858 6.79786 10.7858 6.96106ZM7.57153 9.4225C7.57153 9.5857 7.5038 9.74222 7.38324 9.85762C7.26269 9.97302 7.09917 10.0379 6.92868 10.0379C6.75818 10.0379 6.59467 9.97302 6.47411 9.85762C6.35355 9.74222 6.28582 9.5857 6.28582 9.4225C6.28582 9.25929 6.35355 9.10277 6.47411 8.98737C6.59467 8.87197 6.75818 8.80714 6.92868 8.80714C7.09917 8.80714 7.26269 8.87197 7.38324 8.98737C7.5038 9.10277 7.57153 9.25929 7.57153 9.4225ZM7.57153 6.96106C7.57153 7.12426 7.5038 7.28078 7.38324 7.39619C7.26269 7.51159 7.09917 7.57642 6.92868 7.57642C6.75818 7.57642 6.59467 7.51159 6.47411 7.39619C6.35355 7.28078 6.28582 7.12426 6.28582 6.96106C6.28582 6.79786 6.35355 6.64134 6.47411 6.52594C6.59467 6.41054 6.75818 6.3457 6.92868 6.3457C7.09917 6.3457 7.26269 6.41054 7.38324 6.52594C7.5038 6.64134 7.57153 6.79786 7.57153 6.96106ZM4.35725 9.4225C4.35725 9.5857 4.28952 9.74222 4.16896 9.85762C4.0484 9.97302 3.88489 10.0379 3.71439 10.0379C3.54389 10.0379 3.38038 9.97302 3.25982 9.85762C3.13926 9.74222 3.07153 9.5857 3.07153 9.4225C3.07153 9.25929 3.13926 9.10277 3.25982 8.98737C3.38038 8.87197 3.54389 8.80714 3.71439 8.80714C3.88489 8.80714 4.0484 8.87197 4.16896 8.98737C4.28952 9.10277 4.35725 9.25929 4.35725 9.4225ZM4.35725 6.96106C4.35725 7.12426 4.28952 7.28078 4.16896 7.39619C4.0484 7.51159 3.88489 7.57642 3.71439 7.57642C3.54389 7.57642 3.38038 7.51159 3.25982 7.39619C3.13926 7.28078 3.07153 7.12426 3.07153 6.96106C3.07153 6.79786 3.13926 6.64134 3.25982 6.52594C3.38038 6.41054 3.54389 6.3457 3.71439 6.3457C3.88489 6.3457 4.0484 6.41054 4.16896 6.52594C4.28952 6.64134 4.35725 6.79786 4.35725 6.96106Z"
-                                        fill="currentColor" />
-                                </svg>
-                                <img x-show="slot.type === 'neutral'" class="slot-plus-icon"
-                                    src="{{ asset('images/business-hub/icon-availability-plus.svg') }}" alt="" />
-                                <span x-text="slot.label"></span>
-                            </li>
-                        </template>
-                    </ul>
+                        'is-outside': !day.inCurrentMonth,
+                        'is-closed': day.inCurrentMonth && day.capacity.isEmpty,
+                        'is-time-off-cell': day.inCurrentMonth && day.capacity.isTimeOff,
+                        'is-today-cell': day.inCurrentMonth && isToday(day.date) && isSelectedDate(day.date),
+                        'is-selected-cell': day.inCurrentMonth && isSelectedDate(day.date) && !isToday(day.date),
+                        'is-clickable': day.inCurrentMonth,
+                    }"
+                    @click.stop="day.inCurrentMonth && openBookingsDrawerForDate(day.key)">
+                    <div class="availability-day-cell-top">
+                        <strong class="availability-day-cell-date"
+                            :class="{ 'is-today': day.inCurrentMonth && (isToday(day.date) || isSelectedDate(day.date)) }"
+                            x-text="day.day"></strong>
+                    </div>
+
+                    <template x-if="day.inCurrentMonth && !day.capacity.isEmpty">
+                        <div class="availability-day-cell-body">
+                            {{-- Figma: layered rounded pills on #EFEFEF track (bar above summary) --}}
+                            <div class="availability-day-cell-bar"
+                                :class="{ 'is-time-off': day.capacity.isTimeOff }"
+                                aria-hidden="true">
+                                <template x-if="!day.capacity.isTimeOff">
+                                    <template x-for="(seg, segIdx) in day.capacity.barLayers"
+                                        :key="'seg-' + day.key + '-' + segIdx">
+                                        <span class="availability-day-cell-bar-segment"
+                                            :class="'is-' + seg.type"
+                                            :style="`left: ${seg.left}%; width: ${seg.width}%`"></span>
+                                    </template>
+                                </template>
+                            </div>
+
+                            <p class="availability-day-cell-summary is-time-off" x-show="day.capacity.isTimeOff" x-cloak>
+                                Time off
+                            </p>
+                            <p class="availability-day-cell-summary" x-show="!day.capacity.isTimeOff" x-cloak>
+                                <span class="availability-day-cell-booked"
+                                    x-text="day.capacity.bookedCount + ' booked ·'"></span>
+                                <span class="availability-day-cell-free"
+                                    x-text="' ' + day.capacity.freeHours + 'h free'"></span>
+                            </p>
+                        </div>
+                    </template>
                 </article>
             </template>
         </div>
@@ -52,7 +63,7 @@
     }
 
     .availability-calendar-card {
-        border: 1px solid #ddd6cd;
+        border: 1px solid #e2e2e2;
         border-radius: 10px;
         background: #fff;
         overflow: hidden;
@@ -93,8 +104,8 @@
     .availability-calendar-title h3 {
         margin: 0;
         color: #3B3731;
-        font-family: Lato;
-        font-size: 18px;
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 22px;
         font-weight: 600;
         text-align: center;
         white-space: nowrap;
@@ -109,175 +120,199 @@
     }
 
     .availability-weekdays span {
-        border-bottom: 1px solid #D4D4D4;
+        border-bottom: 1px solid #e2e2e2;
         background: #F9FAFC;
-        padding: 15px 8px;
+        padding: 14px 8px;
         text-align: center;
-        color: #948F88;
-        font-family: Lato;
-        font-size: 14px;
+        color: #9C9790;
+        font-family: Lato, sans-serif;
+        font-size: 16px;
         font-style: normal;
         font-weight: 600;
         line-height: normal;
     }
 
     .availability-weekdays span.is-current-weekday {
-        color: var(--availability-accent, #FFC97A);
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 900;
-        line-height: normal;
+        color: #3B3731;
+        font-weight: 600;
     }
 
     .availability-day-cell {
-        aspect-ratio: 1 / 1;
+        min-height: 115px;
         border-right: 1px solid #eee7df;
         border-bottom: 1px solid #eee7df;
-        padding: 9px 13px 6px;
+        padding: 10px 12px 12px;
         position: relative;
         display: flex;
         flex-direction: column;
         align-items: stretch;
         justify-content: flex-start;
+        gap: 6px;
+        background: #fff;
+        box-sizing: border-box;
+        transition: background 120ms ease;
     }
 
-    .availability-day-cell strong {
-        display: block;
-        width: 100%;
-        flex-shrink: 0;
-        text-align: right;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 14px;
+    .availability-day-cell.is-clickable {
+        cursor: pointer;
+    }
+
+    .availability-day-cell.is-clickable:hover {
+        background: #FBFBFB;
+    }
+
+    .availability-day-cell-top {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    .availability-day-cell-date {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        height: 28px;
+        padding: 0 6px;
+        color: #565149;
+        font-family: Lato, sans-serif;
+        font-size: 16px;
         font-style: normal;
         font-weight: 600;
         line-height: normal;
+        box-sizing: border-box;
     }
 
-    .availability-day-cell strong.is-today,
-    .availability-day-cell strong.is-selected {
-        background: transparent !important;
-        color: var(--availability-accent, #FFC97A) !important;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: 900;
-        line-height: normal;
+    .availability-day-cell-date.is-today {
+        width: 28px;
+        min-width: 28px;
+        max-width: 28px;
+        height: 28px;
+        padding: 0;
+        aspect-ratio: 1 / 1;
+        color: #ffffff !important;
+        background: var(--availability-accent, #FFC97A);
+        border-radius: 50%;
+        font-weight: 700;
+        flex-shrink: 0;
     }
 
     .availability-day-cell.is-today-cell,
     .availability-day-cell.is-selected-cell {
-        background: var(--availability-today-bg, #FFFBF4);
-        border-radius: 3px;
+        background: #fff;
     }
 
-    .availability-day-cell ul {
+    .availability-day-cell.is-today-cell::before,
+    .availability-day-cell.is-selected-cell::before {
+        content: '';
+        position: absolute;
+        inset: 2px;
+        border: 1px solid var(--availability-accent, #FFC97A);
+        border-radius: 4px;
+        background: #FFFCF8;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .availability-layout.is-space .availability-day-cell.is-today-cell::before,
+    .availability-layout.is-space .availability-day-cell.is-selected-cell::before {
+        background: var(--availability-today-bg, #FFF7F5);
+    }
+
+    .availability-day-cell.is-today-cell:hover::before,
+    .availability-day-cell.is-selected-cell:hover::before {
+        background: var(--availability-today-bg, #FFFBF4);
+    }
+
+    .availability-day-cell.is-today-cell>*,
+    .availability-day-cell.is-selected-cell>* {
         position: relative;
-        flex: 1 1 auto;
-        min-height: 0;
-        width: 100%;
-        margin: 5px 0 0;
-        padding: 0;
-        list-style: none;
+        z-index: 1;
+    }
+
+    .availability-day-cell-body {
         display: flex;
         flex-direction: column;
-        align-items: flex-start;
-        justify-content: flex-start;
         gap: 5px;
-        overflow: hidden;
+        margin-top: auto;
+        padding-top: 4px;
     }
 
-    .availability-day-cell li {
-        border-radius: 74px;
-        width: 85px;
-        max-width: 100%;
-        height: 21px;
-        min-height: 21px;
-        padding: 0 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 5px;
-        text-align: center;
-        font-family: Lato;
+    .availability-day-cell-summary {
+        margin: 0;
+        color: #3B3731;
+        font-family: Lato, sans-serif;
         font-size: 14px;
         font-style: normal;
         font-weight: 600;
-        line-height: normal;
-        letter-spacing: 0.14px;
-        box-sizing: border-box;
+        line-height: 1.2;
+        letter-spacing: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    .availability-day-cell li .slot-icon {
-        flex-shrink: 0;
-        display: block;
+    .availability-day-cell.is-clickable .availability-day-cell-summary.is-time-off {
+        color: #9D9B98;
     }
 
-    .availability-day-cell li .slot-plus-icon {
-        display: block;
-        flex-shrink: 0;
-        width: 7px;
-        height: 7px;
-        object-fit: contain;
+    .availability-day-cell-booked {
+        color: #3B3731;
     }
 
-    .availability-day-cell li.blue {
-        background: rgba(203, 220, 232, 0.20);
-        color: #7AB7E3;
+    .availability-day-cell-free {
+        color: #A0BA6B;
     }
 
-    .availability-day-cell li.green {
-        background: #F4F8EC;
-        color: #B5DB65;
+    /* Figma: 6px track + absolute rounded segment pills (not flex-cut slices) */
+    .availability-day-cell-bar {
+        position: relative;
+        width: 100%;
+        height: 6px;
+        border-radius: 100px;
+        background: #EFEFEF;
+        overflow: visible;
     }
 
-    .availability-day-cell li.orange {
-        background: #FFF4E4;
-        color: #FFAE37;
+    .availability-day-cell-bar.is-time-off {
+        background: #E8E8E8;
     }
 
-    .availability-day-cell li.red {
-        background: #FFE2E2;
-        color: #FF6E6E;
-        text-decoration: line-through;
-    }
-
-    .availability-day-cell li.neutral {
-        background: #EAEAEA;
-        color: #888;
-        gap: 2px;
-    }
-
-    .availability-day-cell li.holiday {
-        background: #D9D9D9;
-        color: #888;
-    }
-
-    .availability-day-cell li.is-calendar-slot-clickable {
-        cursor: pointer;
-    }
-
-    .availability-day-cell.is-muted {
-        background: #F9FAFC;
-        isolation: isolate;
-    }
-
-    .availability-day-cell.is-muted::before {
-        content: '';
+    .availability-day-cell-bar-segment {
         position: absolute;
-        inset: 0;
-        z-index: 0;
-        background-image: url('{{ asset('images/muted-bg.svg') }}');
-        background-repeat: no-repeat;
-        background-position: center;
-        background-size: 100% 100%;
+        top: 0;
+        height: 6px;
+        border-radius: 100px;
+        box-sizing: border-box;
         pointer-events: none;
     }
 
-    .availability-day-cell.is-muted>* {
-        position: relative;
+    /* Figma pastel layers: completed → confirmed → pending */
+    .availability-day-cell-bar-segment.is-blue {
+        background: #CBDCE8;
+        z-index: 3;
+    }
+
+    .availability-day-cell-bar-segment.is-green {
+        background: #D8E8B7;
+        z-index: 2;
+    }
+
+    .availability-day-cell-bar-segment.is-orange {
+        background: #FFC97A;
         z-index: 1;
+    }
+
+    .availability-day-cell.is-outside {
+        background: #F9F8F4;
+    }
+
+    .availability-day-cell.is-outside .availability-day-cell-date {
+        color: #BCBCBC;
+    }
+
+    .availability-day-cell.is-closed .availability-day-cell-date {
+        color: #9D9B98;
     }
 </style>
 
@@ -397,19 +432,90 @@
             weekEnd.setDate(weekStart.getDate() + 6);
             const weekNum = getISOWeekNumber(weekStart);
             const month = MONTHS_SHORT[weekStart.getMonth()];
-            return `Week ${weekNum} , ${month} ${pad2(weekStart.getDate())} - ${pad2(weekEnd.getDate())}`;
+            return `Week ${weekNum}, ${month} ${pad2(weekStart.getDate())} – ${pad2(weekEnd.getDate())}`;
         };
 
-        const slotHourLabelFromHour = (hour24) => {
-            if (hour24 == null || Number.isNaN(hour24)) return '—';
-            const h = Math.min(23, Math.max(0, hour24));
-            if (h === 0) return '12AM';
-            if (h < 12) return `${h}AM`;
-            if (h === 12) return '12PM';
-            return `${h}PM`;
+        // Shared body geometry (Figma week 436:610 + day 443:435): 10×55px rows.
+        // Row 0 = spacer under the day header; last row muted. Events sit below spacer.
+        const TIMELINE_ROW_PX = 55;
+        const TIMELINE_ROW_COUNT = 10;
+        const TIMELINE_SPACER_PX = TIMELINE_ROW_PX;
+
+        const hourLabel = (hour) => (hour < 12 ? `${hour}am` : (hour === 12 ? '12pm' : `${hour}pm`));
+
+        // Week (436:610): 8am–16pm, one 55px row per hour, labels on every line.
+        const WEEK_TIMELINE = {
+            startMin: 8 * 60,
+            endMin: 17 * 60,
+            hourPx: TIMELINE_ROW_PX,
+            labelStride: 1,
+            hours: Array.from({
+                length: 9
+            }, (_, i) => {
+                const hour = 8 + i;
+                return {
+                    hour,
+                    label: hourLabel(hour)
+                };
+            }),
         };
 
-        const compactTimeRange = (value) => String(value || '').replace(/\s*-\s*/g, '-');
+        // Day (443:435): 8am–12pm only; each hour spans two 55px rows (110px);
+        // labels 8am / 9am / 10am / 11am / 12pm on every other line.
+        const DAY_TIMELINE = {
+            startMin: 8 * 60,
+            endMin: 12 * 60,
+            hourPx: TIMELINE_ROW_PX * 2,
+            labelStride: 2,
+            hours: [8, 9, 10, 11, 12].map((hour) => ({
+                hour,
+                label: hourLabel(hour)
+            })),
+        };
+
+        const parseClockToMinutes = (value) => {
+            const raw = String(value || '').trim();
+            if (!raw) return null;
+            const match = raw.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
+            if (!match) return null;
+            let h = parseInt(match[1], 10);
+            const m = parseInt(match[2], 10);
+            if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+            const meridiem = (match[3] || '').toLowerCase();
+            if (meridiem === 'pm' && h < 12) h += 12;
+            if (meridiem === 'am' && h === 12) h = 0;
+            return h * 60 + m;
+        };
+
+        const formatTimelineClock = (totalMinutes) => {
+            if (!Number.isFinite(totalMinutes)) return '';
+            const dayMins = ((totalMinutes % (24 * 60)) + (24 * 60)) % (24 * 60);
+            let h = Math.floor(dayMins / 60);
+            const m = dayMins % 60;
+            const suffix = h < 12 ? 'am' : 'pm';
+            const h12 = h % 12 === 0 ? 12 : h % 12;
+            return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')}${suffix}`;
+        };
+
+        const formatClientShort = (name) => {
+            const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+            if (!parts.length) return 'Client';
+            if (parts.length === 1) return parts[0];
+            return `${parts[0]} ${(parts[1][0] || '').toUpperCase()}.`;
+        };
+
+        const spaceKindTimelineLabel = (kind) => {
+            switch (kind) {
+                case 'Full day':
+                    return 'Full-day (8 hours)';
+                case 'Half-Day':
+                    return 'Half-day (4 hours)';
+                case 'Hourly':
+                    return 'Hourly (1 hour)';
+                default:
+                    return kind || 'Service';
+            }
+        };
 
         window.availabilityCalendarShell = function() {
             return {
@@ -419,6 +525,7 @@
                 isBookingsDrawerOpen: false,
                 isBookingDetailOpen: false,
                 selectedBooking: null,
+                selectedBookingId: null,
                 isSpaceAccount: false,
                 bookingsByDate: {},
                 workingHours: {},
@@ -426,6 +533,7 @@
                 searchQuery: '',
                 drawerTopOffset: 0,
                 drawerFilterDateKey: null,
+                detailsBackDateKey: null,
                 dayViewDate: null,
                 weekdays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
                 currentWeekdayIndex: 0,
@@ -440,6 +548,21 @@
                     this.weekStart = new Date(this.today);
                     this.weekStart.setDate(this.today.getDate() - this.currentWeekdayIndex);
                     this.dayViewDate = new Date(this.today);
+                    this._onBookingDetailsClosed = () => {
+                        this.selectedBookingId = null;
+                        this.isBookingDetailOpen = false;
+                        // Back restores the day drawer in the same turn; X close clears leftovers after.
+                        queueMicrotask(() => {
+                            if (!this.isBookingsDrawerOpen) {
+                                this.detailsBackDateKey = null;
+                            }
+                            if (typeof window.__syncAvailabilityDrawerScrollLock === 'function') {
+                                window.__syncAvailabilityDrawerScrollLock();
+                            }
+                        });
+                    };
+                    window.addEventListener('booking-details-drawer-closed', this._onBookingDetailsClosed);
+                    window.addEventListener('booking-details-back', (event) => this.returnToDayDrawerFromDetails(event));
                     this.drawerFilterDateKey = null;
                     this.syncDrawerTopOffset();
                     window.addEventListener('resize', () => this.syncDrawerTopOffset());
@@ -462,27 +585,49 @@
                 },
                 openBookingsDrawer() {
                     this.closeBookingDetail();
+                    this.detailsBackDateKey = null;
                     this.drawerFilterDateKey = null;
                     this.syncDrawerTopOffset();
                     this.isBookingsDrawerOpen = true;
-                    document.body.style.overflow = 'hidden';
+                    this.$nextTick(() => {
+                        if (typeof window.__syncAvailabilityDrawerScrollLock === 'function') {
+                            window.__syncAvailabilityDrawerScrollLock();
+                        }
+                    });
                 },
                 openBookingsDrawerForDate(dateKey) {
                     if (!dateKey) {
                         return;
                     }
                     this.closeBookingDetail();
+                    const picked = this.dateFromKey(dateKey);
+                    if (picked) {
+                        this.selectedDate = picked;
+                        this.currentWeekdayIndex = (picked.getDay() + 6) % 7;
+                    }
+                    this.detailsBackDateKey = null;
                     this.drawerFilterDateKey = dateKey;
                     this.syncDrawerTopOffset();
                     this.isBookingsDrawerOpen = true;
-                    document.body.style.overflow = 'hidden';
+                    this.$nextTick(() => {
+                        if (typeof window.__syncAvailabilityDrawerScrollLock === 'function') {
+                            window.__syncAvailabilityDrawerScrollLock();
+                        }
+                    });
                 },
                 closeBookingsDrawer() {
                     this.isBookingsDrawerOpen = false;
                     this.drawerFilterDateKey = null;
-                    if (!this.isBookingDetailOpen) {
+                    // Restore scroll after slide-out so the page doesn't jump mid-animation.
+                    window.setTimeout(() => {
+                        if (this.isBookingsDrawerOpen || this.isBookingDetailOpen) return;
+                        if (typeof window.__syncAvailabilityDrawerScrollLock === 'function') {
+                            window.__syncAvailabilityDrawerScrollLock();
+                            return;
+                        }
+                        if (document.body.classList.contains('booking-details-drawer-open')) return;
                         document.body.style.overflow = '';
-                    }
+                    }, 280);
                 },
                 drawerHasBookingsForFilter() {
                     if (!this.drawerFilterDateKey) {
@@ -545,25 +690,59 @@
                     if (!row) {
                         return;
                     }
-                    this.closeBookingsDrawer();
-                    this.syncDrawerTopOffset();
-                    this.selectedBooking = row;
+                    const backDateKey = this.drawerFilterDateKey || row.dateKey || '';
+                    const daySummary = backDateKey ? this.dayDrawerSummary(backDateKey) : null;
+                    const backLabel = daySummary?.title ?
+                        `Back to ${daySummary.title}` :
+                        (backDateKey ? 'Back to day' : '');
+                    // Close day list before opening details; Back restores it.
+                    this.detailsBackDateKey = backDateKey || null;
+                    this.isBookingsDrawerOpen = false;
+                    this.drawerFilterDateKey = null;
+                    this.selectedBookingId = Number(row.id || bookingId) || null;
                     this.isBookingDetailOpen = true;
-                    document.body.style.overflow = 'hidden';
+                    this.syncDrawerTopOffset();
+                    window.dispatchEvent(new CustomEvent('booking-details-open', {
+                        detail: {
+                            id: row.id,
+                            status: row.statusKey || '',
+                            statusLabel: row.status || '',
+                            statusClass: row.statusBadgeClass || '',
+                            service: row.service || '',
+                            date: row.date || '',
+                            dateKey: row.dateKey || backDateKey || '',
+                            time: row.time || '',
+                            client: row.client || '',
+                            backLabel,
+                            backDateKey,
+                        },
+                    }));
                 },
                 closeBookingDetail() {
-                    this.isBookingDetailOpen = false;
                     this.selectedBooking = null;
-                    if (!this.isBookingsDrawerOpen) {
-                        document.body.style.overflow = '';
-                    }
+                    this.selectedBookingId = null;
+                    this.isBookingDetailOpen = false;
+                    window.dispatchEvent(new CustomEvent('booking-details-close'));
                 },
                 handleAvailabilityEscape() {
-                    if (this.isBookingDetailOpen) {
+                    if (document.body.classList.contains('booking-details-drawer-open') || this.isBookingDetailOpen) {
                         this.closeBookingDetail();
                         return;
                     }
                     this.closeBookingsDrawer();
+                },
+                returnToDayDrawerFromDetails(event) {
+                    const dateKey = (event && event.detail && event.detail.dateKey) || this.detailsBackDateKey;
+                    this.selectedBookingId = null;
+                    this.isBookingDetailOpen = false;
+                    this.detailsBackDateKey = null;
+                    if (dateKey) {
+                        this.openBookingsDrawerForDate(dateKey);
+                        return;
+                    }
+                    if (typeof window.__syncAvailabilityDrawerScrollLock === 'function') {
+                        window.__syncAvailabilityDrawerScrollLock();
+                    }
                 },
                 onCalendarSlotClick(slot, dateKey) {
                     if (slot.bookingId) {
@@ -596,6 +775,90 @@
                 get dayViewLabel() {
                     return formatDayViewLabel(this.dayViewDate);
                 },
+                timelineConfig(forWeek = false) {
+                    if (forWeek) return WEEK_TIMELINE;
+                    return this.activeView === 'day' ? DAY_TIMELINE : WEEK_TIMELINE;
+                },
+                get timelineHours() {
+                    return this.timelineConfig(this.activeView === 'week').hours;
+                },
+                get timelineHourPx() {
+                    return this.timelineConfig(this.activeView === 'week').hourPx;
+                },
+                get timelineRowCount() {
+                    return TIMELINE_ROW_COUNT;
+                },
+                get timelineBodyHeight() {
+                    return TIMELINE_ROW_COUNT * TIMELINE_ROW_PX;
+                },
+                get timelineRows() {
+                    return Array.from({
+                        length: TIMELINE_ROW_COUNT
+                    }, (_, index) => ({
+                        key: `row-${index}`,
+                        isSpacer: index === 0,
+                        isLast: index === TIMELINE_ROW_COUNT - 1,
+                    }));
+                },
+                // Labels sit on the lines under the spacer. Day: every 2 rows; week: every row.
+                timelineHourLabelTop(index) {
+                    const cfg = this.timelineConfig(this.activeView === 'week');
+                    return (Number(index) * cfg.labelStride + 1) * TIMELINE_ROW_PX - 2;
+                },
+                parseSlotStartMinutes(row, booking) {
+                    const fromStart = parseClockToMinutes(booking?.timeStart);
+                    if (fromStart != null) return fromStart;
+                    const fromTime = parseClockToMinutes(String(booking?.time || '').split(/\s*-\s*/)[0]);
+                    if (fromTime != null) return fromTime;
+                    return parseClockToMinutes(row?.label);
+                },
+                buildTimelineEvent(row, index, dateKey, forWeek = false) {
+                    const cfg = forWeek ? WEEK_TIMELINE : DAY_TIMELINE;
+                    const byId = window.__availabilityCalendar?.byId || {};
+                    const b = row.bookingId ? byId[String(row.bookingId)] : null;
+                    const startMin = this.parseSlotStartMinutes(row, b);
+                    const duration = this.bookingDurationMinutes(row.bookingId);
+                    const safeStart = Number.isFinite(startMin) ? startMin : cfg.startMin;
+                    const clampedStart = Math.max(cfg.startMin, Math.min(cfg.endMin - 15, safeStart));
+                    const endMin = Math.min(cfg.endMin, clampedStart + Math.max(15, duration));
+                    // Events start in the row below the spacer (Figma events at y≈555).
+                    const top = TIMELINE_SPACER_PX + ((clampedStart - cfg.startMin) / 60) * cfg.hourPx;
+                    const height = Math.max(24, ((endMin - clampedStart) / 60) * cfg.hourPx - 2);
+                    const clock = formatTimelineClock(clampedStart);
+                    const clientShort = formatClientShort(b?.client || 'Client');
+                    const petName = b?.petName || 'Pet';
+                    const service = b?.service || (this.isSpaceAccount ? '' : 'Service Type');
+                    let primary = '';
+                    let secondary = '';
+                    if (this.isSpaceAccount) {
+                        const kind = spaceKindTimelineLabel(b?.spaceKind || '');
+                        primary = `${clock} · ${kind}`;
+                        secondary = ` · ${petName} · ${clientShort}`;
+                    } else if (forWeek) {
+                        primary = `${clock} · ${service} `;
+                        secondary = `· ${petName} · ${clientShort}`;
+                    } else {
+                        // Figma day: tall = two lines; compact = one line with · separators
+                        primary = `${clock} · ${service}`;
+                        secondary = `${petName} · ${clientShort}`;
+                    }
+                    return {
+                        key: `tl-${dateKey}-${index}-${row.bookingId || 'x'}`,
+                        bookingId: row.bookingId || null,
+                        type: row.type || 'blue',
+                        top,
+                        height,
+                        primary,
+                        secondary,
+                        line1: primary,
+                        line2: secondary.trim().replace(/^·\s*/, ''),
+                        // Day short bars (~25px in Figma 443:867) stay single-line; overlaps
+                        // are also forced compact in dayViewSlots / weeklyGrid.
+                        isCompact: height < 48,
+                        isBehind: false,
+                        isWeek: forWeek,
+                    };
+                },
                 get dayViewSlots() {
                     if (!this.dayViewDate) {
                         return [];
@@ -605,29 +868,99 @@
                     const d = this.dayViewDate.getDate();
                     const dk =
                         `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                    const rows = this.filteredRowsForDate(dk);
+                    if (this.isHolidayDate(dk)) {
+                        return [];
+                    }
                     const byId = window.__availabilityCalendar?.byId || {};
-                    return rows.map((r, index) => {
-                        const b = r.bookingId ? byId[String(r.bookingId)] : null;
-                        const timeStr = compactTimeRange(b?.time && b.time !== 'Time not set' ? b.time :
-                            (r.label || '—'));
-                        const startPart = String(r.label || '').split(/\s*-\s*/)[0];
-                        const hm = startPart.match(/^(\d{1,2})/);
-                        const hour24 = hm ? parseInt(hm[1], 10) : NaN;
-                        const hourLabel = slotHourLabelFromHour(hour24);
-                        const petLine = b ?
-                            (b.petName + (b.petType ? ' - ' + b.petType : '')) :
-                            'Booking';
+                    const rows = this.filteredRowsForDate(dk)
+                        .filter((r) => r.bookingId)
+                        .filter((r) => {
+                            const b = byId[String(r.bookingId)] || null;
+                            const start = this.parseSlotStartMinutes(r, b);
+                            // Day axis is 8am–12pm (Figma 443:435); skip later starts.
+                            return start == null || start < DAY_TIMELINE.endMin;
+                        })
+                        .sort((a, b) => String(a.label).localeCompare(String(b.label)));
+                    const slots = rows.map((r, index) => this.buildTimelineEvent(r, index, dk, false));
+                    // Figma 443:864/867 — overlapping (or short) day events use one-line copy:
+                    // strong + muted on the same line with · separators.
+                    for (let i = 0; i < slots.length; i++) {
+                        const a = slots[i];
+                        const aEnd = a.top + a.height;
+                        for (let j = i + 1; j < slots.length; j++) {
+                            const b = slots[j];
+                            const bEnd = b.top + b.height;
+                            if (a.top < bEnd && b.top < aEnd) {
+                                a.isCompact = true;
+                                b.isCompact = true;
+                            }
+                        }
+                    }
+                    return slots;
+                },
+                get statsPeriodLabel() {
+                    return this.activeView === 'month' ? 'This month' : 'This week';
+                },
+                get statusCounts() {
+                    // Figma: Week + Day stats pills read "This week"
+                    if (this.activeView !== 'month' && this.weekStart) {
+                        return this.countStatusesInRange(this.weekStart, 7);
+                    }
+                    return this.monthStatusCounts;
+                },
+                countStatusesInRange(startDate, dayCount) {
+                    const counts = {
+                        confirmed: 0,
+                        pending: 0,
+                        completed: 0,
+                    };
+                    if (!startDate) return counts;
+                    const byId = window.__availabilityCalendar?.byId || {};
+                    for (let i = 0; i < dayCount; i++) {
+                        const d = new Date(startDate);
+                        d.setDate(startDate.getDate() + i);
+                        const key = this.dateKey(d);
+                        (this.bookingsByDate[key] || []).forEach((r) => {
+                            if (!r.bookingId) return;
+                            const b = byId[String(r.bookingId)];
+                            const status = String(b?.status || '').toLowerCase();
+                            if (status === 'confirmed') counts.confirmed++;
+                            else if (status === 'pending') counts.pending++;
+                            else if (status === 'completed') counts.completed++;
+                        });
+                    }
+                    return counts;
+                },
+                get dayViewIsTimeOff() {
+                    if (!this.dayViewDate) return false;
+                    const y = this.dayViewDate.getFullYear();
+                    const m = this.dayViewDate.getMonth();
+                    const d = this.dayViewDate.getDate();
+                    const dk =
+                        `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    return this.isHolidayDate(dk);
+                },
+                get dayViewHeaderLabel() {
+                    if (!this.dayViewDate) {
                         return {
-                            hourLabel,
-                            time: timeStr,
-                            pet: petLine,
-                            service: b?.service || '—',
-                            type: r.type || 'blue',
-                            bookingId: r.bookingId || null,
-                            key: `day-slot-${dk}-${index}`,
+                            weekday: '',
+                            date: ''
                         };
-                    });
+                    }
+                    const weekday = this.weekdays[(this.dayViewDate.getDay() + 6) % 7] || '';
+                    const day = this.dayViewDate.getDate();
+                    const month = MONTHS[this.dayViewDate.getMonth()] || '';
+                    return {
+                        weekday: weekday.slice(0, 3),
+                        date: `${day} ${month}`,
+                    };
+                },
+                selectWeekDay(dateKey) {
+                    const picked = this.dateFromKey(dateKey);
+                    if (picked) {
+                        this.selectedDate = picked;
+                        this.currentWeekdayIndex = (picked.getDay() + 6) % 7;
+                    }
                 },
                 prevMainMonth() {
                     this.mainMonth = new Date(this.mainMonth.getFullYear(), this.mainMonth.getMonth() - 1, 1);
@@ -643,11 +976,19 @@
                     this.weekStart = new Date(this.weekStart.getFullYear(), this.weekStart.getMonth(), this
                         .weekStart.getDate() + 7);
                 },
+                syncWeekStartToDate(dateObj) {
+                    if (!dateObj) return;
+                    const mondayIndex = (dateObj.getDay() + 6) % 7;
+                    this.weekStart = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate() - mondayIndex);
+                    this.currentWeekdayIndex = mondayIndex;
+                },
                 prevPeriod() {
                     if (this.activeView === 'day' && this.dayViewDate) {
                         const d = new Date(this.dayViewDate);
                         d.setDate(d.getDate() - 1);
                         this.dayViewDate = d;
+                        this.selectedDate = new Date(d);
+                        this.syncWeekStartToDate(d);
                         return;
                     }
                     if (this.activeView === 'week') {
@@ -662,6 +1003,8 @@
                         const d = new Date(this.dayViewDate);
                         d.setDate(d.getDate() + 1);
                         this.dayViewDate = d;
+                        this.selectedDate = new Date(d);
+                        this.syncWeekStartToDate(d);
                         return;
                     }
                     if (this.activeView === 'week') {
@@ -830,7 +1173,295 @@
                     const next = this.nextFreeSlotLabel();
                     return next ? `${openText} · next free slot ${next}` : openText;
                 },
-                buildMonthGrid(baseDate, includeSlots = false) {
+                workingMinutesForDate(dateObj) {
+                    if (!dateObj) return 0;
+                    const key = WEEKDAY_KEYS[dateObj.getDay()];
+                    const hours = this.workingHours?.[key];
+                    if (!hours?.status) return 0;
+                    const [sh, sm] = String(hours.start || '10:00').split(':');
+                    const [eh, em] = String(hours.end || '18:00').split(':');
+                    const start = (parseInt(sh, 10) || 0) * 60 + (parseInt(sm, 10) || 0);
+                    const end = (parseInt(eh, 10) || 0) * 60 + (parseInt(em, 10) || 0);
+                    return Math.max(0, end - start);
+                },
+                workingWindowForDate(dateObj) {
+                    if (!dateObj) return null;
+                    const key = WEEKDAY_KEYS[dateObj.getDay()];
+                    const hours = this.workingHours?.[key];
+                    if (!hours?.status) return null;
+                    return {
+                        start: String(hours.start || '10:00').slice(0, 5),
+                        end: String(hours.end || '18:00').slice(0, 5),
+                    };
+                },
+                dateFromKey(dateKey) {
+                    if (!dateKey) return null;
+                    const parts = String(dateKey).split('-').map((x) => parseInt(x, 10));
+                    if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null;
+                    return new Date(parts[0], parts[1] - 1, parts[2]);
+                },
+                bookingDurationMinutes(bookingId) {
+                    if (!bookingId) return 60;
+                    const byId = window.__availabilityCalendar?.byId || {};
+                    const b = byId[String(bookingId)];
+                    const raw = Number(b?.durationMinutes);
+                    if (Number.isFinite(raw) && raw > 0) return raw;
+                    return 60;
+                },
+                dayCapacitySummary(dateKey) {
+                    const blank = {
+                        isEmpty: true,
+                        isTimeOff: false,
+                        summary: '',
+                        segments: [],
+                        barLayers: [],
+                        freeHours: 0,
+                        bookedCount: 0,
+                        workingMinutes: 0,
+                    };
+                    const timeOff = {
+                        isEmpty: false,
+                        isTimeOff: true,
+                        summary: 'Time off',
+                        segments: [],
+                        barLayers: [],
+                        freeHours: 0,
+                        bookedCount: 0,
+                        workingMinutes: 0,
+                    };
+                    const d = this.dateFromKey(dateKey);
+                    if (!d) return blank;
+                    const isHoliday = this.isHolidayDate(dateKey);
+                    const isWorking = !this.isClosedDay(d);
+                    // Closed weekdays/weekends stay blank; holidays show Time off
+                    if (isHoliday) return timeOff;
+                    if (!isWorking) return blank;
+                    const workingMinutes = this.workingMinutesForDate(d);
+                    if (workingMinutes <= 0) return blank;
+                    const rows = (this.bookingsByDate[dateKey] || []).filter((r) => r.type !== 'red');
+                    // Figma order left→right: completed (blue) → confirmed (green) → pending (orange)
+                    const order = ['blue', 'green', 'orange'];
+                    const minutesByType = {
+                        blue: 0,
+                        green: 0,
+                        orange: 0,
+                    };
+                    let bookedMinutes = 0;
+                    rows.forEach((r) => {
+                        const dur = Math.max(15, this.bookingDurationMinutes(r.bookingId));
+                        bookedMinutes += dur;
+                        const t = order.includes(r.type) ? r.type : 'green';
+                        minutesByType[t] += dur;
+                    });
+                    // Cap total fill at 100%; keep relative status share
+                    const totalBooked = Math.min(bookedMinutes, workingMinutes);
+                    const scale = bookedMinutes > 0 ? totalBooked / bookedMinutes : 0;
+                    let left = 0;
+                    const barLayers = [];
+                    const segments = [];
+                    order.forEach((type) => {
+                        if (minutesByType[type] <= 0) return;
+                        const width = Math.min(
+                            100 - left,
+                            (minutesByType[type] * scale / workingMinutes) * 100,
+                        );
+                        if (width <= 0.25) return;
+                        // Match Figma: each status is its own rounded pill at cumulative left %
+                        barLayers.push({
+                            type,
+                            left: Number(left.toFixed(3)),
+                            width: Number(width.toFixed(3)),
+                        });
+                        segments.push({
+                            type,
+                            pct: Number(width.toFixed(3)),
+                        });
+                        left += width;
+                    });
+                    const bookedCount = rows.length;
+                    const freeMinutes = Math.max(0, workingMinutes - bookedMinutes);
+                    const freeHours = Math.max(0, Math.round(freeMinutes / 60));
+                    return {
+                        isEmpty: false,
+                        isTimeOff: false,
+                        summary: `${bookedCount} booked · ${freeHours}h free`,
+                        segments,
+                        barLayers,
+                        freeHours,
+                        bookedCount,
+                        workingMinutes,
+                    };
+                },
+                get monthStatusCounts() {
+                    const counts = {
+                        confirmed: 0,
+                        pending: 0,
+                        completed: 0,
+                    };
+                    if (!this.mainMonth) return counts;
+                    const year = this.mainMonth.getFullYear();
+                    const month = this.mainMonth.getMonth();
+                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+                    const byId = window.__availabilityCalendar?.byId || {};
+                    for (let day = 1; day <= daysInMonth; day++) {
+                        const key = this.dateKey(new Date(year, month, day));
+                        const rows = this.bookingsByDate[key] || [];
+                        rows.forEach((r) => {
+                            if (!r.bookingId) return;
+                            const b = byId[String(r.bookingId)];
+                            const status = String(b?.status || '').toLowerCase();
+                            if (status === 'confirmed') counts.confirmed++;
+                            else if (status === 'pending') counts.pending++;
+                            else if (status === 'completed') counts.completed++;
+                        });
+                    }
+                    return counts;
+                },
+                formatNextFreeSlotFigma() {
+                    const WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                    const start = this.today || new Date();
+                    const nowMinutes = start.getHours() * 60 + start.getMinutes();
+                    for (let offset = 0; offset < 90; offset++) {
+                        const dateObj = new Date(start.getFullYear(), start.getMonth(), start.getDate() + offset);
+                        const key = this.dateKey(dateObj);
+                        if (this.isClosedDay(dateObj) || this.isHolidayDate(key)) continue;
+                        const slots = this.hourSlotsForDate(dateObj);
+                        if (!slots.length) continue;
+                        const workingMinutes = this.workingMinutesForDate(dateObj);
+                        const rows = (this.bookingsByDate[key] || []).filter((r) => r.type !== 'red');
+                        let bookedMinutes = 0;
+                        rows.forEach((r) => {
+                            bookedMinutes += Math.max(15, this.bookingDurationMinutes(r.bookingId));
+                        });
+                        if (bookedMinutes >= workingMinutes) continue;
+                        let index = rows.length;
+                        if (offset === 0) {
+                            while (index < slots.length) {
+                                const parts = String(slots[index]).split(':');
+                                const slotMinutes = (parseInt(parts[0], 10) || 0) * 60 + (parseInt(parts[
+                                    1], 10) || 0);
+                                if (slotMinutes > nowMinutes) break;
+                                index++;
+                            }
+                        }
+                        if (index >= slots.length) continue;
+                        const time = slots[index];
+                        const freeHours = Math.max(1, Math.round((workingMinutes - bookedMinutes) / 60));
+                        return `${WEEKDAYS_SHORT[dateObj.getDay()]} ${dateObj.getDate()} ${MONTHS_SHORT[dateObj.getMonth()]} · ${time} (${freeHours}h)`;
+                    }
+                    return '—';
+                },
+                get nextFreeFigmaLabel() {
+                    return this.formatNextFreeSlotFigma();
+                },
+                dayDrawerSummary(dateKey) {
+                    const capacity = this.dayCapacitySummary(dateKey);
+                    const d = this.dateFromKey(dateKey);
+                    const WEEKDAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
+                        'Saturday'
+                    ];
+                    const MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+                        'August', 'September', 'October', 'November', 'December'
+                    ];
+                    const title = d ?
+                        `${d.getDate()} ${MONTHS_FULL[d.getMonth()]} ${d.getFullYear()}` :
+                        'Bookings';
+                    const weekday = d ? WEEKDAYS_LONG[d.getDay()] : '';
+                    const subtitle = capacity.isEmpty ?
+                        'No working hours' :
+                        capacity.isTimeOff ?
+                        'Time off' :
+                        capacity.summary;
+                    const window = d ? this.workingWindowForDate(d) : null;
+                    const windowLabel = window ? `${window.start} - ${window.end}` : '';
+                    return {
+                        title,
+                        weekday,
+                        subtitle,
+                        isEmpty: !!capacity.isEmpty,
+                        isTimeOff: capacity.isTimeOff,
+                        freeHours: capacity.freeHours,
+                        bookedCount: capacity.bookedCount,
+                        windowLabel,
+                        hasFreeTime: !capacity.isTimeOff && capacity.freeHours > 0,
+                    };
+                },
+                get currentDayDrawerSummary() {
+                    if (!this.drawerFilterDateKey) return null;
+                    return this.dayDrawerSummary(this.drawerFilterDateKey);
+                },
+                get dayDrawerTimelineCards() {
+                    if (!this.drawerFilterDateKey) return [];
+                    const dk = this.drawerFilterDateKey;
+                    const byId = window.__availabilityCalendar?.byId || {};
+                    const spaceIcons = window.__availabilityCalendar?.spaceIcons || {};
+                    const providerSpaceType = window.__availabilityCalendar?.providerSpaceType || '';
+                    const selectedId = this.selectedBookingId != null ? Number(this.selectedBookingId) : null;
+                    const rows = (this.bookingsByDate[dk] || []).slice();
+                    rows.sort((a, b) => String(a.label || '').localeCompare(String(b.label || '')));
+                    return rows
+                        .filter((r) => r.bookingId && byId[String(r.bookingId)])
+                        .map((r) => {
+                            const b = byId[String(r.bookingId)];
+                            let timeStart = String(b.timeStart || '').trim();
+                            if (!timeStart) {
+                                const timeRaw = String(b.time || '').trim();
+                                timeStart = timeRaw.includes('-') ? timeRaw.split(/\s*-\s*/)[0] : timeRaw;
+                            }
+                            // Figma 437:1047 shows HH:MM without seconds.
+                            if (/^\d{1,2}:\d{2}/.test(timeStart)) {
+                                timeStart = timeStart.slice(0, 5);
+                            }
+                            const statusKey = String(b.statusKey || '').toLowerCase() || 'default';
+                            const petLine = b.petBreed ?
+                                `${b.petName} (${b.petBreed})` :
+                                (b.petType ? `${b.petName} (${b.petType})` : b.petName);
+                            const spaceDurationIcon = (() => {
+                                switch (b.spaceKind) {
+                                    case 'Full day':
+                                        return spaceIcons.fullDay || '';
+                                    case 'Half-Day':
+                                        return spaceIcons.halfDay || '';
+                                    case 'Hourly':
+                                        return spaceIcons.hourly || '';
+                                    default:
+                                        return '';
+                                }
+                            })();
+                            const mins = Number(b.durationMinutes || 0);
+                            return {
+                                bookingId: b.id,
+                                timeStart: timeStart || '—',
+                                durationMinutesLabel: b.durationMinutesLabel || (mins > 0 ? `${mins} min` : ''),
+                                statusKey,
+                                statusLabel: b.status || '—',
+                                visitTypeLabel: b.visitTypeLabel || '',
+                                hasAddOns: !!b.hasAddOns,
+                                service: b.service || '',
+                                petLine,
+                                client: formatClientShort(b.client || 'Client'),
+                                isSelected: selectedId != null && Number(b.id) === selectedId,
+                                spaceKindHoursLabel: b.spaceKindHoursLabel || '',
+                                spaceDurationIcon,
+                                providerSpaceType: b.providerSpaceType || providerSpaceType || 'Space',
+                                shedIcon: spaceIcons.shed || '',
+                            };
+                        });
+                },
+                goToManageAvailability() {
+                    this.closeBookingsDrawer();
+                    this.closeBookingDetail();
+                    try {
+                        window.dispatchEvent(new CustomEvent('nav-list-loading-start'));
+                        if (window.Alpine?.$data) {
+                            const data = window.Alpine.$data(document.body);
+                            if (data) {
+                                data.activeSection = 'manage-availability';
+                            }
+                        }
+                    } catch (err) {}
+                },
+                buildMonthGrid(baseDate, includeSlots = false, includeCapacity = false) {
                     const year = baseDate.getFullYear();
                     const month = baseDate.getMonth();
                     const firstOfMonth = new Date(year, month, 1);
@@ -856,59 +1487,66 @@
                             inCurrentMonth,
                             slots: includeSlots && inCurrentMonth ?
                                 this.getSlotsForDate(dateObj.getFullYear(), dateObj.getMonth(), day) : [],
+                            capacity: includeCapacity && inCurrentMonth ?
+                                this.dayCapacitySummary(dateKey) : {
+                                    isEmpty: true,
+                                    isTimeOff: false,
+                                    summary: '',
+                                    segments: [],
+                                    barLayers: [],
+                                    freeHours: 0,
+                                    bookedCount: 0,
+                                    workingMinutes: 0,
+                                },
                         });
                     }
 
                     return cells;
                 },
                 get mainMonthGrid() {
-                    return this.buildMonthGrid(this.mainMonth, true);
+                    return this.buildMonthGrid(this.mainMonth, false, true);
                 },
                 get weeklyGrid() {
-                    const byId = window.__availabilityCalendar?.byId || {};
-                    const MAX_SLOTS = 4;
-
                     return Array.from({
                         length: 7
                     }, (_, index) => {
                         const dateObj = new Date(this.weekStart);
                         dateObj.setDate(this.weekStart.getDate() + index);
-                        const dayLabel = this.weekdays[index];
+                        const dayLabel = this.weekdays[index] || '';
                         const dateKey =
                             `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
-                        const rows = this.filteredRowsForDate(dateKey);
-                        const sortedRows = [...rows].sort((a, b) => String(a.label).localeCompare(
-                            String(b
-                                .label)));
-                        const visibleRows = sortedRows.slice(0, MAX_SLOTS);
-                        const slots = visibleRows.map((r, slotIdx) => {
-                            const b = r.bookingId ? byId[String(r.bookingId)] : null;
-                            const timeStr = compactTimeRange(b?.time && b.time !== 'Time not set' ? b.time :
-                                (r.label ||
-                                    '—'));
-                            const petLine = b ?
-                                (b.petName + (b.petType ? ' - ' + b.petType : '')) :
-                                'Booking';
-                            return {
-                                time: timeStr,
-                                pet: petLine,
-                                service: b?.service || '—',
-                                type: r.type || 'blue',
-                                bookingId: r.bookingId || null,
-                                key: `week-slot-${dateKey}-${slotIdx}`,
-                            };
-                        });
-                        const moreCount = Math.max(0, sortedRows.length - MAX_SLOTS);
+                        const isTimeOff = this.isHolidayDate(dateKey);
+                        const rows = isTimeOff ? [] : this.filteredRowsForDate(dateKey)
+                            .filter((r) => r.bookingId)
+                            .sort((a, b) => String(a.label).localeCompare(String(b.label)));
+                        const slots = rows.map((r, slotIdx) => this.buildTimelineEvent(r, slotIdx, dateKey, true));
+                        // Sort by start so earlier events paint underneath later ones.
+                        slots.sort((a, b) => a.top - b.top || b.height - a.height);
+                        // Only the underneath event is compact + top-aligned; the front
+                        // card keeps stacked primary/muted so muted text stays visible.
+                        for (let i = 0; i < slots.length; i++) {
+                            const a = slots[i];
+                            const aEnd = a.top + a.height;
+                            for (let j = i + 1; j < slots.length; j++) {
+                                const b = slots[j];
+                                const bEnd = b.top + b.height;
+                                if (a.top < bEnd && b.top < aEnd) {
+                                    a.isBehind = true;
+                                    a.isCompact = true;
+                                }
+                            }
+                        }
 
                         return {
                             key: dateKey,
                             label: dayLabel,
+                            weekdayShort: dayLabel.slice(0, 3),
                             day: dateObj.getDate(),
                             isToday: this.isToday(dateObj),
                             isSelected: this.isSelectedDate(dateObj),
-                            isMuted: this.isClosedDay(dateObj),
+                            isMuted: this.isClosedDay(dateObj) && !isTimeOff,
+                            isTimeOff,
                             slots,
-                            moreCount,
                             dateKey,
                         };
                     });

@@ -106,13 +106,75 @@
         'saturday' => 'Saturday',
         'sunday' => 'Sunday',
     ];
+
+    $maDayShort = [
+        'monday' => 'Mon',
+        'tuesday' => 'Tue',
+        'wednesday' => 'Wed',
+        'thursday' => 'Thu',
+        'friday' => 'Fri',
+        'saturday' => 'Sat',
+        'sunday' => 'Sun',
+    ];
+
+    $maScheduleSummary = static function (array $hours) use ($maDayKeys, $maDayShort): string {
+        $active = [];
+        foreach ($maDayKeys as $key) {
+            if (!empty($hours[$key]['status'])) {
+                $active[] = $key;
+            }
+        }
+        if ($active === []) {
+            return 'No working hours';
+        }
+        $first = $active[0];
+        $last = $active[count($active) - 1];
+        $start = (string) ($hours[$first]['start'] ?? '08:00');
+        $end = (string) ($hours[$first]['end'] ?? '16:00');
+        $range = $maDayShort[$first] ?? $first;
+        if ($first !== $last) {
+            $range .= '–' . ($maDayShort[$last] ?? $last);
+        }
+
+        return $range . ' (' . substr($start, 0, 5) . '–' . substr($end, 0, 5) . ')';
+    };
+
+    $maBasics = is_array($gsp?->business_basics) ? $gsp->business_basics : [];
+    $maBusinessName = trim((string) ($maBasics['business_name'] ?? '')) ?: (trim((string) ($gsp?->full_name ?? '')) ?: 'Business Account');
+    $maOwnerStaff = $staffMembers->first();
+    $maTeamStaff = $staffMembers->slice(1)->values();
 @endphp
 
-<div {{ $attributes->merge(['class' => 'dashboard-section-host']) }} x-data="{ extraStaff: [] }" @staff-added.window="(() => {
+<div {{ $attributes->merge(['class' => 'dashboard-section-host']) }} x-data="{
+    extraStaff: [],
+    maView: 'list',
+    scheduleTitle: @js($maBusinessName),
+    scheduleSubtitle: 'Editing business schedule',
+    openSchedule(staffId, title, isBusiness) {
+        this.maView = 'schedule';
+        this.scheduleTitle = title || 'Schedule';
+        this.scheduleSubtitle = isBusiness ? 'Editing business schedule' : 'Editing staff schedule';
+        window.dispatchEvent(new CustomEvent('ma-view-changed', {
+            detail: { view: 'schedule', title: this.scheduleTitle, subtitle: this.scheduleSubtitle },
+        }));
+        this.$nextTick(() => {
+            const pill = this.$el.querySelector(`.ma-staff-pill[data-staff-id='${staffId}']`);
+            if (pill) pill.click();
+        });
+    },
+    backToList() {
+        this.maView = 'list';
+        window.dispatchEvent(new CustomEvent('ma-view-changed', { detail: { view: 'list' } }));
+    },
+}"
+    x-init="$nextTick(() => window.dispatchEvent(new CustomEvent('ma-view-changed', { detail: { view: 'list' } })))"
+    @ma-back-to-list.window="backToList()"
+    @staff-added.window="(() => {
         const payload = {
             id: $event.detail.id,
             name: $event.detail.name,
             job_title: $event.detail.job_title || '',
+            email: $event.detail.email || '',
             image_url: $event.detail.image_url || null,
             imageFailed: false,
             initial: (() => {
@@ -123,263 +185,1114 @@
                 if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
                 return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
             })(),
+            schedule_summary: $event.detail.schedule_summary || 'No working hours',
+            status: 'Active',
             staff_payload: $event.detail.staff_payload || null,
         };
         extraStaff.push(payload);
-        $nextTick(() => {
-            const newPill = $el.querySelector(`.ma-staff-pill[data-staff-id='${payload.id}']`);
-            if (newPill) newPill.click();
-        });
+        maView = 'list';
+        window.dispatchEvent(new CustomEvent('ma-view-changed', { detail: { view: 'list' } }));
     })()">
     <section class="ma-board" aria-label="Manage availability board" style="--ma-accent: {{ $maAccentColor }};"
         data-ma-accent="{{ $maAccentColor }}">
-        <div class="ma-staff-strip">
-            <div class="ma-staff-list">
-                @foreach ($staffMembers as $staff)
+
+        <div class="ma-list" x-show="maView === 'list'" x-cloak>
+            <header class="ma-list-header">
+                <div>
+                    <h2 class="ma-list-title">Manage Availability</h2>
+                    <p class="ma-list-subtitle">Set your working hours, days off, and staff schedules.</p>
+                </div>
+                <button type="button" class="ma-list-add-btn" @click="$dispatch('open-add-staff-modal')">
+                    <img src="{{ asset('images/business-hub/icon-add-member.svg') }}" alt="" width="13" height="12" />
+                    Add Member
+                </button>
+            </header>
+
+            <p class="ma-list-section-label">Core Business</p>
+            @if ($maOwnerStaff)
+                @php
+                    $ownerHours = $maNormalizeWorkingHours($maOwnerStaff->working_hours);
+                    $ownerSummary = $maScheduleSummary($ownerHours);
+                    $ownerPaused = (bool) ($maOwnerStaff->pause_booking ?? false);
+                    $ownerInitial = \App\Support\BusinessHubAvatar::initials($maBusinessName);
+                    $ownerRawImage = trim((string) ($maOwnerStaff->image ?? ''));
+                    $ownerImageUrl = null;
+                    if ($ownerRawImage !== '') {
+                        $ownerImageUrl = preg_match('#^https?://#i', $ownerRawImage) ? $ownerRawImage : asset('storage/' . ltrim($ownerRawImage, '/'));
+                    }
+                @endphp
+                <button type="button" class="ma-entity-card is-business"
+                    @click="openSchedule({{ $maOwnerStaff->id }}, @js($maBusinessName), true)">
+                    <span class="ma-entity-avatar {{ $ownerImageUrl ? 'has-photo' : 'is-fallback' }}" data-bh-avatar>
+                        @if ($ownerImageUrl)
+                            <img src="{{ $ownerImageUrl }}" alt="{{ $maBusinessName }}"
+                                onerror="window.bhAvatarFallback && window.bhAvatarFallback(this)">
+                            <span data-bh-avatar-fallback hidden>{{ $ownerInitial }}</span>
+                        @else
+                            <span data-bh-avatar-fallback>{{ $ownerInitial }}</span>
+                        @endif
+                    </span>
+                    <span class="ma-entity-meta">
+                        <strong>{{ $maBusinessName }}</strong>
+                        <small>Business Account · {{ $ownerSummary }}</small>
+                    </span>
+                    <span class="ma-entity-status {{ $ownerPaused ? 'is-away' : 'is-active' }}">
+                        {{ $ownerPaused ? 'Away' : 'Active' }}
+                    </span>
+                    <span class="ma-entity-chevron" aria-hidden="true">
+                        <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
+                            <path d="M1 1l6 6-6 6" stroke="#9D9B98" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </span>
+                </button>
+            @endif
+
+            <p class="ma-list-section-label">Team members</p>
+            <div class="ma-team-list">
+                @forelse ($maTeamStaff as $member)
                     @php
-                        $initial = \App\Support\BusinessHubAvatar::initials($staff->name);
-                        $rawImage = trim((string) ($staff->image ?? ''));
-                        $imageUrl = null;
-                        if ($rawImage !== '') {
-                            $imageUrl = preg_match('#^https?://#i', $rawImage) ? $rawImage : asset('storage/' . ltrim($rawImage, '/'));
+                        $memberHours = $maNormalizeWorkingHours($member->working_hours);
+                        $memberSummary = $maScheduleSummary($memberHours);
+                        $memberPaused = (bool) ($member->pause_booking ?? false);
+                        $memberInitial = \App\Support\BusinessHubAvatar::initials($member->name);
+                        $memberRawImage = trim((string) ($member->image ?? ''));
+                        $memberImageUrl = null;
+                        if ($memberRawImage !== '') {
+                            $memberImageUrl = preg_match('#^https?://#i', $memberRawImage) ? $memberRawImage : asset('storage/' . ltrim($memberRawImage, '/'));
                         }
+                        $memberJob = trim((string) ($member->job_title ?? '')) ?: 'Team Member';
                     @endphp
-                    <button type="button" class="ma-staff-pill {{ $loop->first ? 'ma-staff-pill--active' : '' }}"
-                        data-staff-id="{{ $staff->id }}" data-staff-name="{{ $staff->name }}"
-                        data-staff-job-title="{{ $staff->job_title }}"
-                        data-staff-payload="{{ json_encode($maStaffPayload($staff)) }}">
-                        <span class="ma-staff-avatar {{ $imageUrl ? 'has-photo' : 'is-fallback' }}" data-bh-avatar>
-                            @if ($imageUrl)
-                                <img src="{{ $imageUrl }}" alt="{{ $staff->name }}"
+                    <button type="button" class="ma-entity-card"
+                        @click="openSchedule({{ $member->id }}, @js($member->name), false)">
+                        <span class="ma-entity-avatar {{ $memberImageUrl ? 'has-photo' : 'is-fallback' }}" data-bh-avatar>
+                            @if ($memberImageUrl)
+                                <img src="{{ $memberImageUrl }}" alt="{{ $member->name }}"
                                     onerror="window.bhAvatarFallback && window.bhAvatarFallback(this)">
-                                <span data-bh-avatar-fallback hidden>{{ $initial }}</span>
+                                <span data-bh-avatar-fallback hidden>{{ $memberInitial }}</span>
                             @else
-                                <span data-bh-avatar-fallback>{{ $initial }}</span>
+                                <span data-bh-avatar-fallback>{{ $memberInitial }}</span>
                             @endif
                         </span>
-                        <span class="ma-staff-pill__meta">
-                            <strong>{{ $staff->name }}</strong>
-                            <small>{{ $staff->job_title }}</small>
+                        <span class="ma-entity-meta">
+                            <strong>{{ $member->name }}</strong>
+                            <small>{{ $memberJob }} · {{ $memberSummary }}</small>
+                        </span>
+                        <span class="ma-entity-status {{ $memberPaused ? 'is-away' : 'is-active' }}">
+                            {{ $memberPaused ? 'Away' : 'Active' }}
+                        </span>
+                        <span class="ma-entity-chevron" aria-hidden="true">
+                            <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
+                                <path d="M1 1l6 6-6 6" stroke="#9D9B98" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
                         </span>
                     </button>
-                @endforeach
+                @empty
+                    <p class="ma-team-empty" x-show="extraStaff.length === 0">No team members yet. Add a member to manage their schedule.</p>
+                @endforelse
 
-                <template x-for="staff in extraStaff" :key="staff.id">
-                    <button type="button" class="ma-staff-pill" :data-staff-id="staff.id" :data-staff-name="staff.name"
-                        :data-staff-job-title="staff.job_title"
-                        :data-staff-payload="staff.staff_payload ? JSON.stringify(staff.staff_payload) : ''">
-                        <span class="ma-staff-avatar" data-bh-avatar
+                <template x-for="staff in extraStaff" :key="'list-' + staff.id">
+                    <button type="button" class="ma-entity-card"
+                        @click="openSchedule(staff.id, staff.name, false)">
+                        <span class="ma-entity-avatar" data-bh-avatar
                             :class="{ 'has-photo': !!staff.image_url && !staff.imageFailed, 'is-fallback': !staff.image_url || staff.imageFailed }">
                             <template x-if="staff.image_url && !staff.imageFailed">
-                                <img :src="staff.image_url" :alt="staff.name"
-                                    x-on:error="staff.imageFailed = true">
+                                <img :src="staff.image_url" :alt="staff.name" x-on:error="staff.imageFailed = true">
                             </template>
                             <template x-if="!staff.image_url || staff.imageFailed">
                                 <span x-text="staff.initial"></span>
                             </template>
                         </span>
-                        <span class="ma-staff-pill__meta">
+                        <span class="ma-entity-meta">
                             <strong x-text="staff.name"></strong>
-                            <small x-text="staff.job_title"></small>
+                            <small x-text="(staff.job_title || 'Team Member') + ' · ' + (staff.schedule_summary || 'No working hours')"></small>
+                        </span>
+                        <span class="ma-entity-status is-active">Active</span>
+                        <span class="ma-entity-chevron" aria-hidden="true">
+                            <svg width="8" height="14" viewBox="0 0 8 14" fill="none">
+                                <path d="M1 1l6 6-6 6" stroke="#9D9B98" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
                         </span>
                     </button>
                 </template>
-
-                <button type="button" class="ma-staff-add" aria-label="Add staff"
-                    @click="$dispatch('open-add-staff-modal')">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none">
-                        <circle cx="18" cy="18" r="17.5" fill="white" stroke="#E2E2E2" />
-                        <path d="M18.4942 11V26" stroke="#3B3731" stroke-linecap="round" />
-                        <path d="M26 18.4941L11 18.4941" stroke="#3B3731" stroke-linecap="round" />
-                    </svg>
-                </button>
             </div>
         </div>
 
-        <livewire:business-hub.availability.add-staff-modal />
-        <livewire:business-hub.availability.staff-actions />
-
-        <div class="ma-section ma-card" style="padding-bottom: 0 !important;">
-            <div class="ma-title-row">
-                <h3>Work Week Hours</h3>
-                <p class="ma-editing-label">Editing schedule for <span class="ma-editing-label__name"
-                        data-staff-name-target>{{ $activeStaff?->name }}</span><span class="ma-editing-label__job"
-                        data-staff-job-wrap @if (!$activeStaff?->job_title) style="display: none" @endif> (<span
-                            data-staff-job-title-target>{{ $activeStaff?->job_title }}</span>)</span>
-                </p>
+        <div class="ma-schedule" x-show="maView === 'schedule'" x-cloak>
+            <div class="ma-schedule-head">
+                <button type="button" class="ma-back-link" @click="backToList()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="11" viewBox="0 0 17 11" fill="none" aria-hidden="true">
+                        <path d="M0 5.202L5.211 0L5.877 0.684C6.015 0.828 6.069 0.972 6.039 1.116C6.015 1.254 5.94 1.386 5.814 1.512L3.609 3.708C3.297 4.02 3.012 4.278 2.754 4.482C3.102 4.434 3.468 4.398 3.852 4.374C4.242 4.344 4.635 4.329 5.031 4.329H16.074V6.084H5.031C4.629 6.084 4.233 6.072 3.843 6.048C3.459 6.024 3.093 5.988 2.745 5.94C2.877 6.042 3.012 6.156 3.15 6.282C3.294 6.408 3.447 6.549 3.609 6.705L5.832 8.919C5.958 9.045 6.033 9.18 6.057 9.324C6.087 9.462 6.033 9.6 5.895 9.738L5.229 10.431L0 5.202Z" fill="#9D9B98" />
+                    </svg>
+                    Back to All availability
+                </button>
+                <div class="ma-schedule-titles">
+                    <h2 class="ma-schedule-title" data-staff-name-target x-text="scheduleTitle">{{ $maBusinessName }}</h2>
+                    <p class="ma-schedule-subtitle" data-schedule-subtitle x-text="scheduleSubtitle">Editing business schedule</p>
+                </div>
             </div>
 
-            <div class="ma-week-grid">
-                <div class="ma-week-row ma-week-row--head">
-                    <div class="ma-week-grid__head ma-week-col ma-week-col--day">Working week</div>
-                    <div class="ma-week-grid__head ma-week-col ma-week-col--time">Start — end time</div>
-                    <div class="ma-week-grid__head ma-week-col ma-week-col--hours">Hours</div>
-                    <div class="ma-week-grid__head ma-week-col ma-week-col--edit">Edit</div>
+            <div class="ma-staff-strip">
+                <div class="ma-staff-list">
+                    @foreach ($staffMembers as $staff)
+                        @php
+                            $initial = \App\Support\BusinessHubAvatar::initials($staff->name);
+                            $rawImage = trim((string) ($staff->image ?? ''));
+                            $imageUrl = null;
+                            if ($rawImage !== '') {
+                                $imageUrl = preg_match('#^https?://#i', $rawImage) ? $rawImage : asset('storage/' . ltrim($rawImage, '/'));
+                            }
+                        @endphp
+                        <button type="button" class="ma-staff-pill {{ $loop->first ? 'ma-staff-pill--active' : '' }}"
+                            data-staff-id="{{ $staff->id }}" data-staff-name="{{ $staff->name }}"
+                            data-display-title="{{ $loop->first ? $maBusinessName : $staff->name }}"
+                            data-is-business="{{ $loop->first ? '1' : '0' }}"
+                            data-staff-job-title="{{ $staff->job_title }}"
+                            data-staff-payload="{{ json_encode($maStaffPayload($staff)) }}">
+                            <span class="ma-staff-avatar {{ $imageUrl ? 'has-photo' : 'is-fallback' }}" data-bh-avatar>
+                                @if ($imageUrl)
+                                    <img src="{{ $imageUrl }}" alt="{{ $staff->name }}"
+                                        onerror="window.bhAvatarFallback && window.bhAvatarFallback(this)">
+                                    <span data-bh-avatar-fallback hidden>{{ $initial }}</span>
+                                @else
+                                    <span data-bh-avatar-fallback>{{ $initial }}</span>
+                                @endif
+                            </span>
+                            <span class="ma-staff-pill__meta">
+                                <strong>{{ $staff->name }}</strong>
+                                <small>{{ $staff->job_title }}</small>
+                            </span>
+                        </button>
+                    @endforeach
+
+                    <template x-for="staff in extraStaff" :key="staff.id">
+                        <button type="button" class="ma-staff-pill" :data-staff-id="staff.id" :data-staff-name="staff.name"
+                            :data-display-title="staff.name" data-is-business="0"
+                            :data-staff-job-title="staff.job_title"
+                            :data-staff-payload="staff.staff_payload ? JSON.stringify(staff.staff_payload) : ''">
+                            <span class="ma-staff-avatar" data-bh-avatar
+                                :class="{ 'has-photo': !!staff.image_url && !staff.imageFailed, 'is-fallback': !staff.image_url || staff.imageFailed }">
+                                <template x-if="staff.image_url && !staff.imageFailed">
+                                    <img :src="staff.image_url" :alt="staff.name"
+                                        x-on:error="staff.imageFailed = true">
+                                </template>
+                                <template x-if="!staff.image_url || staff.imageFailed">
+                                    <span x-text="staff.initial"></span>
+                                </template>
+                            </span>
+                            <span class="ma-staff-pill__meta">
+                                <strong x-text="staff.name"></strong>
+                                <small x-text="staff.job_title"></small>
+                            </span>
+                        </button>
+                    </template>
+
+                    <button type="button" class="ma-staff-add" aria-label="Add staff"
+                        @click="$dispatch('open-add-staff-modal')">
+                        <img src="{{ asset('images/business-hub/icon-add-member.svg') }}" alt="" width="13" height="12" />
+                    </button>
+                </div>
+            </div>
+
+            <div class="ma-section ma-card--pause">
+                <div class="ma-pause-row{{ $activePauseBooking ? ' is-paused' : '' }}" data-pause-row>
+                    <div class="ma-pause-copy">
+                        <strong data-pause-title>
+                            @if ($activePauseBooking)
+                                New bookings paused
+                            @else
+                                Pause new bookings <small>(effective today)</small>
+                            @endif
+                        </strong>
+                        <p data-pause-copy>
+                            @if ($activePauseBooking)
+                                Clients can still see your profile, but can't request new appointments. Existing bookings are unaffected.
+                            @else
+                                Clients are currently able to request appointments in your open slots.
+                            @endif
+                        </p>
+                    </div>
+                    <label class="ma-switch">
+                        <input type="checkbox" data-pause-booking {{ $activePauseBooking ? 'checked' : '' }}>
+                        <span class="ma-switch-slider"></span>
+                        <span class="ma-switch-check-icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path
+                                    d="M9.99391 0C4.49726 0 0 4.49726 0 9.99391C0 15.4906 4.49726 19.9878 9.99391 19.9878C15.4906 19.9878 19.9878 15.4906 19.9878 9.99391C19.9878 4.49726 15.4906 0 9.99391 0ZM8.41154 14.5744C8.18156 14.8044 7.80869 14.8044 7.57871 14.5744L3.70323 10.699C3.31384 10.3096 3.31384 9.67824 3.70323 9.28885C4.09225 8.89984 4.72282 8.8994 5.11237 9.28786L7.99513 12.1626L14.8709 5.28678C15.2624 4.8953 15.8975 4.89642 16.2876 5.28928C16.6757 5.68019 16.6746 6.31139 16.2851 6.70092L8.41154 14.5744Z"
+                                    fill="white" />
+                            </svg>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="ma-section ma-card ma-card--week">
+                <div class="ma-title-row">
+                    <h3>Work Week Hours</h3>
                 </div>
 
-                @foreach ($maDayLabels as $dayKey => $dayLabel)
-                    @php
-                        $entry = $activeWorkingHours[$dayKey];
-                        $dayStatus = $entry['status'];
-                        $dayStart = $entry['start'];
-                        $dayEnd = $entry['end'];
-                    @endphp
-                    <div class="ma-week-row">
-                        <div class="ma-cell ma-week-col ma-week-col--day {{ $dayStatus ? '' : 'is-disabled' }}"
-                            data-day="{{ $dayKey }}" data-day-cell="name">
-                            <div class="ma-day-name">
-                                <span>{{ $dayLabel }}</span>
-                                <label class="ma-switch" style="height: 24px;">
-                                    <input type="checkbox" data-day-status {{ $dayStatus ? 'checked' : '' }}>
-                                    <span class="ma-switch-slider"></span>
-                                    <span class="ma-switch-check-icon" aria-hidden="true">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                            viewBox="0 0 20 20" fill="none">
-                                            <path
-                                                d="M9.99391 0C4.49726 0 0 4.49726 0 9.99391C0 15.4906 4.49726 19.9878 9.99391 19.9878C15.4906 19.9878 19.9878 15.4906 19.9878 9.99391C19.9878 4.49726 15.4906 0 9.99391 0ZM8.41154 14.5744C8.18156 14.8044 7.80869 14.8044 7.57871 14.5744L3.70323 10.699C3.31384 10.3096 3.31384 9.67824 3.70323 9.28885C4.09225 8.89984 4.72282 8.8994 5.11237 9.28786L7.99513 12.1626L14.8709 5.28678C15.2624 4.8953 15.8975 4.89642 16.2876 5.28928C16.6757 5.68019 16.6746 6.31139 16.2851 6.70092L8.41154 14.5744Z"
-                                                fill="white" />
-                                        </svg>
-                                    </span>
-                                </label>
+                <div class="ma-week-grid">
+                    <div class="ma-week-row ma-week-row--head">
+                        <div class="ma-week-grid__head ma-week-col ma-week-col--day">Working week</div>
+                        <div class="ma-week-grid__head ma-week-col ma-week-col--time">Start — end time</div>
+                        <div class="ma-week-grid__head ma-week-col ma-week-col--hours">Hours</div>
+                        <div class="ma-week-grid__head ma-week-col ma-week-col--edit">Edit</div>
+                    </div>
+
+                    @foreach ($maDayLabels as $dayKey => $dayLabel)
+                        @php
+                            $entry = $activeWorkingHours[$dayKey];
+                            $dayStatus = $entry['status'];
+                            $dayStart = $entry['start'];
+                            $dayEnd = $entry['end'];
+                        @endphp
+                        <div class="ma-week-row">
+                            <div class="ma-cell ma-week-col ma-week-col--day {{ $dayStatus ? '' : 'is-disabled' }}"
+                                data-day="{{ $dayKey }}" data-day-cell="name">
+                                <div class="ma-day-name">
+                                    <span>{{ $dayLabel }}</span>
+                                    <label class="ma-switch" style="height: 24px;">
+                                        <input type="checkbox" data-day-status {{ $dayStatus ? 'checked' : '' }}>
+                                        <span class="ma-switch-slider"></span>
+                                        <span class="ma-switch-check-icon" aria-hidden="true">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                                viewBox="0 0 20 20" fill="none">
+                                                <path
+                                                    d="M9.99391 0C4.49726 0 0 4.49726 0 9.99391C0 15.4906 4.49726 19.9878 9.99391 19.9878C15.4906 19.9878 19.9878 15.4906 19.9878 9.99391C19.9878 4.49726 15.4906 0 9.99391 0ZM8.41154 14.5744C8.18156 14.8044 7.80869 14.8044 7.57871 14.5744L3.70323 10.699C3.31384 10.3096 3.31384 9.67824 3.70323 9.28885C4.09225 8.89984 4.72282 8.8994 5.11237 9.28786L7.99513 12.1626L14.8709 5.28678C15.2624 4.8953 15.8975 4.89642 16.2876 5.28928C16.6757 5.68019 16.6746 6.31139 16.2851 6.70092L8.41154 14.5744Z"
+                                                    fill="white" />
+                                            </svg>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="ma-cell ma-time-range ma-week-col ma-week-col--time {{ $dayStatus ? '' : 'is-unavailable is-disabled' }}"
+                                data-day="{{ $dayKey }}" data-day-cell="time">
+                                <span class="ma-time-chip" data-time-type="start" data-time-value="{{ $dayStart }}"
+                                    role="button" tabindex="0">
+                                    <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
+                                        <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1.5" />
+                                        <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5"
+                                            stroke-linecap="round" />
+                                    </svg>
+                                    <span data-time-start>{{ $maFormatTime($dayStart) }}</span>
+                                </span>
+                                <span class="ma-time-separator" aria-hidden="true">—</span>
+                                <span class="ma-time-chip" data-time-type="end" data-time-value="{{ $dayEnd }}" role="button"
+                                    tabindex="0">
+                                    <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
+                                        <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1.5" />
+                                        <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5"
+                                            stroke-linecap="round" />
+                                    </svg>
+                                    <span data-time-end>{{ $maFormatTime($dayEnd) }}</span>
+                                </span>
+                                <span class="ma-time-unavailable">Unavailable - not bookable</span>
+                            </div>
+                            <div class="ma-cell ma-hours-cell ma-week-col ma-week-col--hours {{ $dayStatus ? '' : 'is-disabled' }}"
+                                data-day="{{ $dayKey }}" data-day-cell="hours">
+                                <span data-day-hours>{{ $maHoursLabel($dayStart, $dayEnd, $dayStatus) }}</span>
+                            </div>
+                            <div class="ma-cell ma-edit-cell ma-week-col ma-week-col--edit {{ $dayStatus ? '' : 'is-disabled' }}"
+                                data-day="{{ $dayKey }}" data-day-cell="edit">
+                                <button type="button" class="ma-save-mini" data-day-action="save">
+                                    <span class="ma-save-mini__label" data-save-label>Save</span>
+                                    <span class="ma-save-spinner" data-save-spinner aria-hidden="true"></span>
+                                </button>
+                                <button type="button" class="ma-row-action" data-day-action="edit" aria-label="Edit day slot">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none">
+                                        <circle cx="18" cy="18" r="17.5" fill="white" stroke="#E2E2E2" />
+                                        <path d="M20.0588 13.7457L22.5294 16.1573M18.4118 25H25M11.8235 21.7845L11 25L14.2941 24.1961L23.8355 14.8824C24.1443 14.5809 24.3178 14.172 24.3178 13.7457C24.3178 13.3194 24.1443 12.9105 23.8355 12.609L23.6939 12.4707C23.385 12.1693 22.9662 12 22.5294 12C22.0927 12 21.6738 12.1693 21.3649 12.4707L11.8235 21.7845Z" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </button>
                             </div>
                         </div>
-                        <div class="ma-cell ma-time-range ma-week-col ma-week-col--time {{ $dayStatus ? '' : 'is-unavailable is-disabled' }}"
-                            data-day="{{ $dayKey }}" data-day-cell="time">
-                            <span class="ma-time-chip" data-time-type="start" data-time-value="{{ $dayStart }}"
-                                role="button" tabindex="0">
-                                <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
-                                    <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1.5" />
-                                    <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5"
-                                        stroke-linecap="round" />
-                                </svg>
-                                <span data-time-start>{{ $maFormatTime($dayStart) }}</span>
-                            </span>
-                            <span class="ma-time-separator" aria-hidden="true">—</span>
-                            <span class="ma-time-chip" data-time-type="end" data-time-value="{{ $dayEnd }}" role="button"
-                                tabindex="0">
-                                <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
-                                    <circle cx="8" cy="8" r="6" stroke="#3B3731" stroke-width="1.5" />
-                                    <path d="M8 4.5V8L10.5 10" stroke="#3B3731" stroke-width="1.5"
-                                        stroke-linecap="round" />
-                                </svg>
-                                <span data-time-end>{{ $maFormatTime($dayEnd) }}</span>
-                            </span>
-                            <span class="ma-time-unavailable">Unavailable - not bookable</span>
-                        </div>
-                        <div class="ma-cell ma-hours-cell ma-week-col ma-week-col--hours {{ $dayStatus ? '' : 'is-disabled' }}"
-                            data-day="{{ $dayKey }}" data-day-cell="hours">
-                            <span data-day-hours>{{ $maHoursLabel($dayStart, $dayEnd, $dayStatus) }}</span>
-                        </div>
-                        <div class="ma-cell ma-edit-cell ma-week-col ma-week-col--edit {{ $dayStatus ? '' : 'is-disabled' }}"
-                            data-day="{{ $dayKey }}" data-day-cell="edit">
-                            <button type="button" class="ma-save-mini" data-day-action="save">
-                                <span class="ma-save-mini__label" data-save-label>Save</span>
-                                <span class="ma-save-spinner" data-save-spinner aria-hidden="true"></span>
-                            </button>
-                            <button type="button" class="ma-row-action" data-day-action="edit" aria-label="Edit day slot">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none">
-                                    <circle cx="18" cy="18" r="17.5" fill="white" stroke="#E2E2E2" />
-                                    <path d="M20.0588 13.7457L22.5294 16.1573M18.4118 25H25M11.8235 21.7845L11 25L14.2941 24.1961L23.8355 14.8824C24.1443 14.5809 24.3178 14.172 24.3178 13.7457C24.3178 13.3194 24.1443 12.9105 23.8355 12.609L23.6939 12.4707C23.385 12.1693 22.9662 12 22.5294 12C22.0927 12 21.6738 12.1693 21.3649 12.4707L11.8235 21.7845Z" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-
-        <div class="ma-section ma-card" style="padding-bottom: 5px !important;">
-            <h3>Holiday / Time Off</h3>
-            <div class="ma-holiday-grid">
-                <div class="ma-holiday-form">
-                    <div class="ma-inline-fields">
-                        <label class="ma-field" data-date-trigger="from">
-                            <span>Date From</span>
-                            <span class="ma-field-value">
-                                <span id="manage-availability-date-from">{{ $maTodayDisplay }}</span>
-                                <span class="ma-field-value__icon" aria-hidden="true">
-                                    <img src="{{ asset('images/business-hub/icon-holiday-calendar.svg') }}" alt="">
-                                </span>
-                            </span>
-                        </label>
-                        <label class="ma-field" data-date-trigger="to">
-                            <span>Date To</span>
-                            <span class="ma-field-value">
-                                <span id="manage-availability-date-to">{{ $maTodayDisplay }}</span>
-                                <span class="ma-field-value__icon" aria-hidden="true">
-                                    <img src="{{ asset('images/business-hub/icon-holiday-calendar.svg') }}" alt="">
-                                </span>
-                            </span>
-                        </label>
-                    </div>
-                    <label class="ma-field">
-                        <span>Reason <span class="ma-field__optional">(optional)</span></span>
-                        <textarea rows="3" data-holiday-reason placeholder=""></textarea>
-                    </label>
-                    <div class="ma-form-actions">
-                        <button type="button" class="ma-add-time-off" data-holiday-action="save">
-                            <span class="ma-save-mini__label" data-save-label>+ Add Time Off</span>
-                            <span class="ma-save-spinner" data-save-spinner aria-hidden="true"></span>
-                        </button>
-                    </div>
+                    @endforeach
                 </div>
-                <div class="ma-holiday-calendar">
+            </div>
+
+            <div class="ma-section ma-card ma-card--timeoff"
+                x-data="{
+                    holidayModalOpen: false,
+                    holidayMode: 'all-day',
+                    openHolidayModal() {
+                        this.holidayModalOpen = true;
+                        this.$dispatch('ma-open-holiday-modal');
+                    },
+                    closeHolidayModal() {
+                        this.holidayModalOpen = false;
+                        this.$dispatch('ma-close-holiday-modal');
+                    }
+                }"
+                @ma-open-holiday-modal.window="holidayModalOpen = true"
+                @ma-close-holiday-modal.window="holidayModalOpen = false"
+                @keydown.escape.window="if (holidayModalOpen) closeHolidayModal()">
+                <h3>Business time off</h3>
+                <button type="button" class="ma-add-time-off-dashed" @click="openHolidayModal()">
+                    <img src="{{ asset('images/business-hub/icon-add-time-off-plus.svg') }}" alt="" width="11" height="11" />
+                    Add Time Off
+                </button>
+
+                <livewire:business-hub.availability.holiday-list :staff-id="$activeStaff?->id" />
+
+                {{-- Hidden range calendar (feeds date fields / JS) --}}
+                <div class="ma-holiday-calendar-host" aria-hidden="true">
                     <x-ui.range-date-calendar id="dashboard-manage-availability-range"
                         start-name="manage_availability_start_date" end-name="manage_availability_end_date"
                         start-value="{{ $maTodayIso }}" end-value="{{ $maTodayIso }}" calendar-width="100%" />
                 </div>
+
+                <template x-teleport="body">
+                    <div class="ma-holiday-modal-overlay" :class="{ 'is-open': holidayModalOpen }"
+                        :aria-hidden="holidayModalOpen ? 'false' : 'true'"
+                        @click.self="closeHolidayModal()">
+                        <div class="ma-holiday-modal" role="dialog" aria-modal="true"
+                            aria-labelledby="ma-holiday-modal-title">
+                            <div class="ma-holiday-modal__head">
+                                <h4 id="ma-holiday-modal-title">Add business time off</h4>
+                                <button type="button" class="ma-holiday-modal__close" @click="closeHolidayModal()"
+                                    aria-label="Close">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                        <circle cx="10" cy="10" r="9.5" fill="#F6F6F6" stroke="#E2E2E2" />
+                                        <path d="M6.5 6.5L13.5 13.5M13.5 6.5L6.5 13.5" stroke="#3B3731" stroke-width="1.3" stroke-linecap="round" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="ma-holiday-modal__body">
+                                <div class="ma-holiday-form">
+                                    <div class="ma-inline-fields">
+                                        <div class="ma-field" data-date-trigger="from" role="button" tabindex="0">
+                                            <span>Date from</span>
+                                            <span class="ma-field-value">
+                                                <span id="manage-availability-date-from">{{ $maTodayDisplay }}</span>
+                                                <span class="ma-field-value__icon" aria-hidden="true">
+                                                    <img src="{{ asset('images/business-hub/icon-holiday-calendar.svg') }}" alt="">
+                                                </span>
+                                            </span>
+                                        </div>
+                                        <div class="ma-field" data-date-trigger="to" role="button" tabindex="0">
+                                            <span>Date to</span>
+                                            <span class="ma-field-value">
+                                                <span id="manage-availability-date-to">{{ $maTodayDisplay }}</span>
+                                                <span class="ma-field-value__icon" aria-hidden="true">
+                                                    <img src="{{ asset('images/business-hub/icon-holiday-calendar.svg') }}" alt="">
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="ma-field ma-field--duration">
+                                        <span>Duration</span>
+                                        <div class="ma-holiday-mode" role="tablist" aria-label="Time off duration">
+                                            <button type="button" class="ma-holiday-mode__btn" role="tab"
+                                                :aria-selected="holidayMode === 'all-day'"
+                                                :class="{ 'is-active': holidayMode === 'all-day' }"
+                                                @click="holidayMode = 'all-day'">All day</button>
+                                            <button type="button" class="ma-holiday-mode__btn" role="tab"
+                                                :aria-selected="holidayMode === 'hours'"
+                                                :class="{ 'is-active': holidayMode === 'hours' }"
+                                                @click="holidayMode = 'hours'">Specific Hours</button>
+                                        </div>
+                                        <div class="ma-holiday-hours" :class="{ 'is-open': holidayMode === 'hours' }"
+                                            :aria-hidden="holidayMode === 'hours' ? 'false' : 'true'">
+                                            <div class="ma-holiday-hours__inner">
+                                                <input type="text" class="ma-holiday-time ma-time-chip"
+                                                    data-holiday-time data-time-type="start" data-time-value="07:00"
+                                                    data-time-start value="07:00 AM" inputmode="numeric"
+                                                    autocomplete="off" spellcheck="false" aria-label="Start time" />
+                                                <span class="ma-time-separator" aria-hidden="true">—</span>
+                                                <input type="text" class="ma-holiday-time ma-time-chip"
+                                                    data-holiday-time data-time-type="end" data-time-value="14:00"
+                                                    data-time-end value="14:00 PM" inputmode="numeric"
+                                                    autocomplete="off" spellcheck="false" aria-label="End time" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <label class="ma-field">
+                                        <span>Reason <span class="ma-field__optional">(optional)</span></span>
+                                        <textarea rows="3" data-holiday-reason placeholder=""></textarea>
+                                    </label>
+                                    <div class="ma-form-actions">
+                                        <button type="button" class="ma-btn ma-btn-light"
+                                            @click="closeHolidayModal()">Cancel</button>
+                                        <button type="button" class="ma-add-time-off" data-holiday-action="save">
+                                            <span class="ma-save-mini__label" data-save-label>
+                                                <img src="{{ asset('images/business-hub/icon-add-time-off-plus.svg') }}" alt="" width="11" height="11" />
+                                                Add Time Off
+                                            </span>
+                                            <span class="ma-save-spinner" data-save-spinner aria-hidden="true"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
             </div>
 
-            <livewire:business-hub.availability.holiday-list :staff-id="$activeStaff?->id" />
-
-        </div>
-
-        <div class="ma-section ma-card ma-card--pause">
-            <h3>Pause Bookings</h3>
-            <div class="ma-pause-row{{ $activePauseBooking ? ' is-paused' : '' }}" data-pause-row>
-                <div class="ma-pause-copy">
-                    <strong data-pause-title>
-                        @if ($activePauseBooking)
-                            New bookings paused
-                        @else
-                            Pause new bookings <small>(effective today)</small>
-                        @endif
-                    </strong>
-                    <p data-pause-copy>
-                        @if ($activePauseBooking)
-                            Clients can still see your profile, but can't request new appointments. Existing bookings are unaffected.
-                        @else
-                            Clients are currently able to request appointments in your open slots.
-                        @endif
-                    </p>
+            <div class="ma-save-bar" data-save-bar>
+                <p class="ma-save-bar__status" data-save-status>All changes saved <span>· just now</span></p>
+                <div class="ma-footer-actions">
+                    <button type="button" class="ma-btn ma-btn-light" data-ma-cancel disabled>Cancel</button>
+                    <button type="button" class="ma-btn ma-btn-primary" data-ma-save-changes disabled>Save Changes</button>
                 </div>
-                <label class="ma-switch">
-                    <input type="checkbox" data-pause-booking {{ $activePauseBooking ? 'checked' : '' }}>
-                    <span class="ma-switch-slider"></span>
-                    <span class="ma-switch-check-icon" aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                            <path
-                                d="M9.99391 0C4.49726 0 0 4.49726 0 9.99391C0 15.4906 4.49726 19.9878 9.99391 19.9878C15.4906 19.9878 19.9878 15.4906 19.9878 9.99391C19.9878 4.49726 15.4906 0 9.99391 0ZM8.41154 14.5744C8.18156 14.8044 7.80869 14.8044 7.57871 14.5744L3.70323 10.699C3.31384 10.3096 3.31384 9.67824 3.70323 9.28885C4.09225 8.89984 4.72282 8.8994 5.11237 9.28786L7.99513 12.1626L14.8709 5.28678C15.2624 4.8953 15.8975 4.89642 16.2876 5.28928C16.6757 5.68019 16.6746 6.31139 16.2851 6.70092L8.41154 14.5744Z"
-                                fill="white" />
-                        </svg>
-                    </span>
-                </label>
             </div>
-        </div>
+        </div>{{-- /.ma-schedule --}}
 
-        <div class="ma-save-bar" data-save-bar>
-            <p class="ma-save-bar__status" data-save-status>All changes saved <span>· just now</span></p>
-            <div class="ma-footer-actions">
-                <button type="button" class="ma-btn ma-btn-light" data-ma-cancel disabled>Cancel</button>
-                <button type="button" class="ma-btn ma-btn-primary" data-ma-save-changes disabled>Save Changes</button>
-            </div>
+        {{-- Outside .ma-schedule so Livewire roots don't inflate staff→pause gap --}}
+        <div class="ma-livewire-hosts">
+            <livewire:business-hub.availability.add-staff-modal />
+            <livewire:business-hub.availability.staff-actions />
         </div>
     </section>
 </div>
 
 <style>
+    /* Figma 443:899 — list landing */
+    .ma-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .ma-list-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 28px;
+    }
+
+    .ma-list-title {
+        margin: 0;
+        color: #3b3731;
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 28px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .ma-list-subtitle {
+        margin: 8px 0 0;
+        color: #9d9b98;
+        font-family: Lato, sans-serif;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 20px;
+    }
+
+    .ma-list-add-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 154px;
+        height: 48px;
+        padding: 0 22px;
+        border: 0;
+        border-radius: 100px;
+        background: #3b3731;
+        color: #fdfdfd;
+        font-family: Lato, sans-serif;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 500;
+        line-height: normal;
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .ma-list-add-btn img {
+        display: block;
+        width: 13px;
+        height: 12px;
+        flex-shrink: 0;
+    }
+
+    .ma-list-add-btn:hover {
+        background: #2a2722;
+    }
+
+    .ma-list-section-label {
+        margin: 12px 0 0;
+        color: #9d9b98;
+        font-family: Lato, sans-serif;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        letter-spacing: 0;
+        text-transform: uppercase;
+    }
+
+    .ma-list-section-label+.ma-entity-card,
+    .ma-list-section-label+.ma-team-list {
+        margin-top: 10px;
+    }
+
+    .ma-team-list {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #e6e6e6;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .ma-entity-card {
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr) auto 12px;
+        align-items: center;
+        column-gap: 16px;
+        width: 100%;
+        min-height: 76px;
+        padding: 10px 16px 10px 20px;
+        border: 0;
+        background: #fff;
+        text-align: left;
+        cursor: pointer;
+        font: inherit;
+        color: inherit;
+        transition: background-color 0.18s ease;
+    }
+
+    .ma-entity-card.is-business {
+        border: 1px solid #ffe2b8;
+        border-radius: 10px;
+        background: rgba(255, 201, 122, 0.05);
+    }
+
+    .ma-board[data-ma-accent="#FFA899"] .ma-entity-card.is-business {
+        border-color: #ffd0c6;
+        background: rgba(255, 168, 153, 0.08);
+    }
+
+    .ma-team-list .ma-entity-card {
+        border-bottom: 1px solid #e6e6e6;
+        border-radius: 0;
+    }
+
+    .ma-team-list .ma-entity-card:last-child {
+        border-bottom: 0;
+    }
+
+    .ma-entity-card:hover {
+        background: #fffcf8;
+    }
+
+    .ma-entity-card.is-business:hover {
+        background: rgba(255, 201, 122, 0.1);
+    }
+
+    .ma-entity-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+        background: var(--ma-accent, #ffc97a);
+        color: #fdfdfd;
+        font-family: Lato, sans-serif;
+        font-size: 16px;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    .ma-entity-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .ma-entity-meta {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .ma-entity-meta strong {
+        color: #3b3731;
+        font-family: Lato, sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.25;
+    }
+
+    .ma-entity-meta small {
+        color: #948f88;
+        font-family: Lato, sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.25;
+    }
+
+    .ma-entity-status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 70px;
+        height: 28px;
+        padding: 0 14px;
+        border-radius: 100px;
+        font-family: Lato, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1;
+        justify-self: end;
+    }
+
+    .ma-entity-status.is-active {
+        background: #f9fbf4;
+        color: #afcd6f;
+    }
+
+    .ma-entity-status.is-away {
+        background: #fffaf2;
+        color: #f9c45c;
+    }
+
+    .ma-entity-chevron {
+        display: inline-flex;
+        line-height: 0;
+        justify-self: end;
+    }
+
+    .ma-team-empty {
+        margin: 0;
+        padding: 20px;
+        color: #9d9b98;
+        font-family: Lato, sans-serif;
+        font-size: 15px;
+    }
+
+    .ma-schedule {
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+        width: 100%;
+    }
+
+    .ma-schedule-head {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .ma-schedule-titles {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .ma-back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        color: #9d9b98;
+        font-family: Lato, sans-serif;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+        letter-spacing: 0.16px;
+        cursor: pointer;
+    }
+
+    .ma-back-link svg path {
+        fill: #9d9b98;
+    }
+
+    .ma-schedule-title {
+        margin: 0;
+        color: #3b3731;
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 28px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .ma-schedule-subtitle {
+        margin: 0;
+        color: #9d9b98;
+        font-family: Lato, sans-serif;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 20px;
+    }
+
+    .ma-add-time-off-dashed {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        height: 42px;
+        margin: 0 0 20px;
+        border: 1px dashed #dfd4b7;
+        border-radius: 10px;
+        background: #f7f4ec;
+        color: #3b3731;
+        font-family: Lato, sans-serif;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 500;
+        line-height: normal;
+        cursor: pointer;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .ma-add-time-off-dashed img {
+        display: block;
+        width: 11px;
+        height: 11px;
+        flex-shrink: 0;
+    }
+
+    .ma-add-time-off-dashed:hover {
+        background: #f3efe4;
+        border-color: #d0c4a4;
+    }
+
+    .ma-holiday-calendar-host {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+    }
+
+    .ma-holiday-modal-overlay {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        box-sizing: border-box;
+        background: rgba(59, 55, 49, 0.1);
+        overscroll-behavior: none;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        will-change: opacity;
+        transition: opacity 180ms ease, visibility 0s linear 180ms;
+    }
+
+    .ma-holiday-modal-overlay.is-open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transition: opacity 180ms ease, visibility 0s linear 0s;
+    }
+
+    .ma-holiday-modal {
+        position: relative;
+        width: min(505px, 100%);
+        max-height: min(90vh, 560px);
+        overflow: visible;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 10px 20px 2px rgba(0, 0, 0, 0.05);
+        padding: 0 0 24px;
+        margin: auto;
+        flex-shrink: 0;
+        font-family: Lato, sans-serif;
+        color: #3b3731;
+        transform: translateY(10px) scale(0.97);
+        will-change: transform;
+        transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .ma-holiday-modal-overlay.is-open .ma-holiday-modal {
+        transform: translateY(0) scale(1);
+    }
+
+    .ma-holiday-modal__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 0;
+        padding: 20px 20px 0;
+    }
+
+    .ma-holiday-modal__head h4 {
+        margin: 0;
+        color: #3b3731;
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 24px;
+        font-style: normal;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .ma-holiday-modal__close {
+        border: 0;
+        background: transparent;
+        padding: 0;
+        cursor: pointer;
+        line-height: 0;
+        border-radius: 50%;
+        transition: transform 160ms ease, opacity 160ms ease;
+    }
+
+    .ma-holiday-modal__close:hover {
+        opacity: 0.85;
+        transform: scale(1.04);
+    }
+
+    .ma-holiday-modal__body {
+        padding: 20px 20px 0;
+    }
+
+    .ma-holiday-modal .ma-holiday-form {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 20px;
+    }
+
+    .ma-holiday-modal .ma-inline-fields {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .ma-holiday-modal .ma-field>span:first-child {
+        display: block;
+        margin-bottom: 10px;
+        color: #3b3731;
+        font-family: Lato, sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .ma-holiday-modal .ma-field__optional {
+        color: #9c9790;
+        font-weight: 400;
+    }
+
+    .ma-holiday-modal .ma-field .ma-field-value {
+        height: 42px;
+        min-height: 42px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 0 12px 0 10px;
+        font-size: 18px;
+        font-weight: 400;
+        line-height: 25px;
+        cursor: pointer;
+        transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .ma-holiday-modal .ma-field .ma-field-value:hover {
+        border-color: #cfcfcf;
+    }
+
+    .ma-holiday-modal .ma-field textarea {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        min-height: 87px;
+        height: 87px;
+        padding: 10px 12px;
+        font-size: 16px;
+        line-height: 22px;
+        resize: none;
+        transition: border-color 160ms ease;
+    }
+
+    .ma-holiday-modal .ma-field textarea:focus {
+        outline: none;
+        border-color: var(--ma-accent, #ffc97a);
+    }
+
+    .ma-holiday-modal .ma-field--duration {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ma-holiday-mode {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+        gap: 0;
+        width: 100%;
+        height: 42px;
+        padding: 3px;
+        border: 0;
+        border-radius: 100px;
+        background: #f9fafc;
+        box-sizing: border-box;
+    }
+
+    .ma-holiday-mode__btn {
+        border: 0;
+        background: transparent;
+        border-radius: 100px;
+        height: 36px;
+        color: #888;
+        font-family: Lato, sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: normal;
+        cursor: pointer;
+        transition: background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .ma-holiday-mode__btn.is-active {
+        background: #fff;
+        color: var(--ma-accent, #ffc97a);
+        font-weight: 700;
+        box-shadow: 0 2px 4px 0 rgba(59, 55, 49, 0.1);
+    }
+
+    .ma-holiday-hours {
+        display: grid;
+        grid-template-rows: 0fr;
+        opacity: 0;
+        margin-top: 0;
+        transition: grid-template-rows 220ms cubic-bezier(0.16, 1, 0.3, 1),
+            opacity 180ms ease,
+            margin-top 220ms cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: none;
+    }
+
+    .ma-holiday-hours.is-open {
+        grid-template-rows: 1fr;
+        opacity: 1;
+        margin-top: 10px;
+        pointer-events: auto;
+    }
+
+    .ma-holiday-hours__inner {
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 0;
+    }
+
+    .ma-holiday-time {
+        flex: 1 1 0;
+        display: block;
+        width: auto;
+        max-width: none;
+        height: 42px;
+        min-height: 42px;
+        padding: 0 14px;
+        border: 1px solid #e6e6e6;
+        border-radius: 10px;
+        background: #fff;
+        color: #3b3731;
+        font-family: Lato, sans-serif;
+        font-size: 18px;
+        font-weight: 400;
+        line-height: 42px;
+        box-sizing: border-box;
+        cursor: text;
+        box-shadow: none;
+        outline: none;
+        transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .ma-holiday-time:hover,
+    .ma-holiday-time:focus,
+    .ma-holiday-time.ma-time-chip--open {
+        border-color: var(--ma-accent, #ffc97a);
+    }
+
+    .ma-holiday-hours .ma-time-separator {
+        flex: 0 0 auto;
+        color: #c5c5c5;
+        font-size: 14px;
+        line-height: 1;
+    }
+
+    .ma-holiday-modal .ma-form-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 4px;
+    }
+
+    .ma-holiday-modal .ma-form-actions .ma-btn-light {
+        width: 100%;
+        height: 42px;
+        border-radius: 75px;
+        border: 1px solid #e2e2e2;
+        background: #fff;
+        color: #9d9b98;
+        font-family: Lato, sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: normal;
+        box-shadow: none;
+        transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+    }
+
+    .ma-holiday-modal .ma-form-actions .ma-btn-light:hover {
+        background: #fafafa;
+    }
+
+    .ma-holiday-modal .ma-add-time-off {
+        width: 100%;
+        min-width: 0;
+        height: 42px;
+        border-radius: 100px;
+        border: 0;
+        background: #f7f4ec;
+        box-shadow: none;
+        color: #3b3731;
+        font-family: Lato, sans-serif;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 500;
+        line-height: normal;
+        transition: background-color 160ms ease, transform 160ms ease;
+    }
+
+    .ma-holiday-modal .ma-add-time-off .ma-save-mini__label {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .ma-holiday-modal .ma-add-time-off .ma-save-mini__label img {
+        display: block;
+        width: 11px;
+        height: 11px;
+        flex-shrink: 0;
+    }
+
+    .ma-holiday-modal .ma-add-time-off:hover {
+        background: #f0ebe0;
+    }
+
+    .ma-holiday-modal .ma-form-actions .ma-btn-light:active,
+    .ma-holiday-modal .ma-add-time-off:active {
+        transform: translateY(1px);
+    }
+
     .ma-board {
-        margin-top: 1.25rem;
+        margin-top: 0;
         width: 100%;
         color: #3B3731;
         font-family: Lato;
@@ -388,24 +1301,39 @@
         gap: 40px;
     }
 
-    .ma-board>div:not([class]) {
-        height: 0;
-        margin-bottom: -40px;
-        overflow: visible;
-        pointer-events: none;
+    .ma-board>[x-cloak] {
+        display: none !important;
     }
 
-    .ma-board>div:not([class])>* {
+    .ma-board>div:not([class]),
+    .ma-livewire-hosts {
+        height: 0;
+        margin: 0;
+        overflow: visible;
+        pointer-events: none;
+        flex: 0 0 0;
+    }
+
+    .ma-board>div:not([class])>*,
+    .ma-livewire-hosts>* {
         pointer-events: auto;
     }
 
     .ma-card {
-        background: #FDFDFD;
-        border: 1px solid #F6F5F5;
+        background: #fdfdfd;
+        border: 1px solid #e6e6e6;
         border-radius: 10px;
-        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.10);
-        padding: 25px;
+        box-shadow: none;
+        padding: 20px;
         margin-bottom: 0;
+    }
+
+    .ma-card--week {
+        padding-bottom: 8px;
+    }
+
+    .ma-card--timeoff {
+        padding-bottom: 8px;
     }
 
     .ma-holiday-form {
@@ -417,11 +1345,11 @@
     }
 
     .ma-staff-strip {
-        background: #FDFDFD;
-        border: 1px solid #F6F5F5;
+        background: #fff;
+        border: 1px solid #e2e2e2;
         border-radius: 10px;
-        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.10);
-        padding: 10px;
+        box-shadow: none;
+        padding: 10px 14px;
         min-height: 68px;
         display: flex;
         align-items: center;
@@ -432,7 +1360,7 @@
         display: flex;
         align-items: center;
         flex-wrap: wrap;
-        gap: 20px;
+        gap: 12px;
         width: 100%;
     }
 
@@ -443,8 +1371,8 @@
         align-items: center;
         gap: 10px;
         cursor: pointer;
-        padding: 6px;
-        padding-right: 30px;
+        padding: 6px 14px 6px 6px;
+        min-width: 162px;
         min-height: 48px;
         border-radius: 100px;
         position: relative;
@@ -452,12 +1380,12 @@
     }
 
     .ma-staff-pill:hover {
-        background: #F7F7F7;
+        background: #f7f7f7;
     }
 
     .ma-staff-pill--active {
-        background: #FFF4E4;
-        border-color: var(--ma-accent, #FFC97A);
+        background: #fdfaf6;
+        border-color: var(--ma-accent, #ffc97a);
     }
 
     .ma-staff-pill:last-child {
@@ -497,20 +1425,20 @@
 
     .ma-staff-pill strong {
         display: block;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 14px;
+        color: #3b3731;
+        font-family: Lato, sans-serif;
+        font-size: 16px;
         font-style: normal;
-        font-weight: 600;
+        font-weight: 400;
         line-height: normal;
         text-align: left;
     }
 
     .ma-staff-pill small {
         display: block;
-        color: #9D9B98;
-        font-family: Lato;
-        font-size: 12px;
+        color: #9d9b98;
+        font-family: Lato, sans-serif;
+        font-size: 14px;
         font-style: normal;
         font-weight: 400;
         line-height: normal;
@@ -524,30 +1452,47 @@
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        border: 1px solid #F5F5F5;
-        background: #FFF;
-        box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.03);
-        color: #3B3731;
+        border: 0;
+        background: var(--ma-accent, #FFC97A);
+        box-shadow: 0 0 10px 0 rgba(255, 216, 140, 0.55);
+        color: #fff;
         cursor: pointer;
         padding: 0;
         flex-shrink: 0;
+        margin-left: auto;
+    }
+
+    .ma-staff-add img {
+        display: block;
+        width: 13px;
+        height: 12px;
+    }
+
+    .ma-staff-add:hover {
+        filter: brightness(0.97);
     }
 
     .ma-section {
         margin-bottom: 0;
     }
 
-    .ma-section h3 {
-        color: #3B3731;
-        font-family: "Playfair Display";
-        font-size: 28px;
+    .ma-section h3,
+    .ma-title-row h3 {
+        color: #3b3731;
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 24px;
         font-style: normal;
         font-weight: 600;
         line-height: normal;
         width: fit-content;
         padding-bottom: 0;
         border-bottom: 0;
-        margin: 0 0 18px;
+        margin: 0 0 20px;
+        text-transform: none;
+    }
+
+    .ma-title-row h3 {
+        margin-bottom: 0;
     }
 
     .ma-title-row {
@@ -558,10 +1503,6 @@
         padding-bottom: 0;
         border-bottom: 0;
         margin-bottom: 20px;
-    }
-
-    .ma-title-row h3 {
-        margin-bottom: 0;
     }
 
     .ma-editing-label {
@@ -620,7 +1561,7 @@
         align-items: center;
         width: 100%;
         gap: 2rem;
-        border-bottom: 1px solid #D4D4D4;
+        border-bottom: 1px solid #e6e6e6;
         box-sizing: border-box;
     }
 
@@ -697,12 +1638,12 @@
     }
 
     .ma-day-name span {
-        color: #3B3731;
-        font-family: Lato;
+        color: #3b3731;
+        font-family: Lato, sans-serif;
         font-size: 18px;
         font-style: normal;
-        font-weight: 400;
-        line-height: 22px;
+        font-weight: 600;
+        line-height: normal;
     }
 
     .ma-time-range {
@@ -722,13 +1663,13 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 15px;
-        padding: 0 20px;
-        border: 1px solid #D4D4D4;
+        gap: 12px;
+        padding: 0 16px;
+        border: 1px solid #e6e6e6;
         border-radius: 10px;
         background: #fff;
-        color: #3B3731;
-        font-family: Lato;
+        color: #3b3731;
+        font-family: Lato, sans-serif;
         font-size: 18px;
         font-style: normal;
         font-weight: 400;
@@ -748,7 +1689,7 @@
 
     .ma-time-dropdown {
         position: fixed;
-        z-index: 9999;
+        z-index: 10060;
         max-height: 260px;
         overflow-y: auto;
         overscroll-behavior: contain;
@@ -860,16 +1801,42 @@
         gap: 2rem;
     }
 
+    /* Figma 447:123 — idle = pencil; editing = Save; unavailable = none */
+    .ma-edit-cell .ma-save-mini {
+        display: none;
+    }
+
     .ma-edit-cell .ma-row-action {
-        display: none;
-    }
-
-    .ma-edit-cell.is-disabled .ma-save-mini {
-        display: none;
-    }
-
-    .ma-edit-cell.is-disabled .ma-row-action {
         display: flex;
+    }
+
+    .ma-edit-cell.is-editing .ma-save-mini {
+        display: flex;
+    }
+
+    .ma-edit-cell.is-editing .ma-row-action {
+        display: none;
+    }
+
+    .ma-edit-cell.is-disabled .ma-save-mini,
+    .ma-edit-cell.is-disabled .ma-row-action {
+        display: none;
+    }
+
+    .ma-time-range:not(.is-editing):not(.is-unavailable) .ma-time-chip {
+        border-color: transparent;
+        background: transparent;
+        cursor: default;
+        pointer-events: none;
+        font-weight: 600;
+    }
+
+    .ma-time-range.is-editing .ma-time-chip {
+        border-color: #e6e6e6;
+        background: #fff;
+        cursor: pointer;
+        pointer-events: auto;
+        font-weight: 400;
     }
 
     .ma-row-action {
@@ -888,11 +1855,11 @@
         width: 74px;
         height: 42px;
         border-radius: 100px;
-        background: #BACF8E;
+        background: #bacf8e;
         box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.10);
-        color: #FFF;
+        color: #fff;
         text-align: center;
-        font-family: Lato;
+        font-family: Lato, sans-serif;
         font-size: 16px;
         font-style: normal;
         font-weight: 600;
@@ -902,7 +1869,7 @@
     }
 
     .ma-save-mini:hover {
-        background: #A8C076;
+        background: #a8c076;
     }
 
     .ma-save-mini.is-saving {
@@ -1257,30 +2224,35 @@
         cursor: pointer;
     }
 
+    /* Figma 452:2626 — single 240×234 date calendar (fits 6 week rows) */
     .ma-mini-cal {
         position: fixed;
-        z-index: 9999;
-        background: #fff;
-        border: 1px solid #ccc3b7;
-        border-radius: 12px;
-        padding: 14px 16px;
+        z-index: 10060;
+        width: 240px;
+        height: 234px;
+        padding: 10px;
         box-sizing: border-box;
-        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
-        color: #3B3731;
-        font-family: Lato;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border: 1px solid #d4d4d4;
+        border-radius: 10px;
+        box-shadow: none;
+        color: #3b3731;
+        font-family: Lato, sans-serif;
         opacity: 0;
-        transform: translateY(-4px);
+        transform: translateY(6px) scale(0.98);
         pointer-events: none;
-        transition: opacity 0.14s ease, transform 0.14s ease;
+        transition: opacity 160ms ease, transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .ma-mini-cal.is-open {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
         pointer-events: auto;
     }
 
-    /* When switching Date From ↔ Date To, is-open never toggles off; skip transition to reset enter animation. */
     .ma-mini-cal.ma-mini-cal--instant {
         transition: none;
     }
@@ -1289,7 +2261,9 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 8px;
+        height: 26px;
+        margin-bottom: 10px;
+        flex-shrink: 0;
     }
 
     .ma-mini-cal__nav {
@@ -1298,29 +2272,40 @@
         padding: 0;
         margin: 0;
         cursor: pointer;
-        width: 28px;
-        height: 28px;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 20px;
-        font-weight: 600;
-        line-height: 1;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        box-shadow: 0 4px 4px rgba(0, 0, 0, 0.03);
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        transition: color 180ms ease, transform 180ms ease;
+        flex-shrink: 0;
+        overflow: hidden;
+        transition: transform 160ms ease, box-shadow 160ms ease;
     }
 
     .ma-mini-cal__nav:hover {
-        color: #FFC97A;
-        transform: scale(1.1);
+        transform: scale(1.06);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.06);
+    }
+
+    .ma-mini-cal__nav img {
+        display: block;
+        width: 26px;
+        height: 26px;
+        pointer-events: none;
+    }
+
+    .ma-mini-cal__nav--next img {
+        transform: scaleX(-1);
     }
 
     .ma-mini-cal__title {
-        color: #3B3731;
-        font-family: Lato;
+        flex: 1;
+        min-width: 0;
+        color: #3b3731;
+        font-family: Lato, sans-serif;
         font-size: 16px;
-        font-style: normal;
         font-weight: 600;
         line-height: normal;
         text-align: center;
@@ -1330,56 +2315,90 @@
     .ma-mini-cal__grid {
         display: grid;
         grid-template-columns: repeat(7, minmax(0, 1fr));
+        width: 100%;
+        max-width: 220px;
+        margin: 0 auto;
     }
 
     .ma-mini-cal__weekdays {
-        margin-bottom: 6px;
+        margin-bottom: 4px;
+        flex-shrink: 0;
     }
 
     .ma-mini-cal__weekdays span {
+        height: 17px;
         text-align: center;
-        color: #9C9790;
-        font-family: Lato;
+        color: #9c9790;
+        font-family: Lato, sans-serif;
         font-size: 14px;
-        font-style: normal;
         font-weight: 600;
-        line-height: normal;
+        line-height: 17px;
+    }
+
+    .ma-mini-cal__grid {
+        flex: 1 1 auto;
+        min-height: 0;
+        grid-auto-rows: 1fr;
+        align-content: stretch;
+        gap: 0;
     }
 
     .ma-mini-cal__day {
+        position: relative;
         border: 0;
         background: transparent;
         width: 100%;
-        height: 34px;
+        min-width: 0;
+        height: auto;
+        min-height: 0;
         margin: 0;
         padding: 0;
         display: flex;
         align-items: center;
         justify-content: center;
-        text-align: center;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 14px;
-        font-style: normal;
+        color: #3b3731;
+        font-family: Lato, sans-serif;
+        font-size: 13px;
         font-weight: 600;
-        line-height: normal;
+        line-height: 1;
         cursor: pointer;
-        border-radius: 0;
-        transition: background-color 180ms ease, color 180ms ease;
+        z-index: 1;
+        overflow: hidden;
+    }
+
+    .ma-mini-cal__day.is-in-range {
+        background: rgba(255, 201, 122, 0.2);
+    }
+
+    .ma-mini-cal__day.is-range-start {
+        border-radius: 50% 0 0 50%;
+    }
+
+    .ma-mini-cal__day.is-range-end {
+        border-radius: 0 50% 50% 0;
+    }
+
+    .ma-mini-cal__day.is-range-start.is-range-end {
+        border-radius: 50%;
     }
 
     .ma-mini-cal__day-label {
-        width: 30px;
-        height: 30px;
+        width: 26px;
+        height: 26px;
+        max-width: 100%;
+        max-height: 100%;
         border-radius: 50%;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        transition: background-color 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+        position: relative;
+        z-index: 1;
+        box-sizing: border-box;
+        transition: background-color 160ms ease, color 160ms ease;
     }
 
     .ma-mini-cal__day.is-other-month .ma-mini-cal__day-label {
-        color: transparent;
+        color: #3b3731;
     }
 
     .ma-mini-cal__day.is-disabled {
@@ -1387,26 +2406,27 @@
     }
 
     .ma-mini-cal__day.is-disabled .ma-mini-cal__day-label {
-        color: #DBD8D2;
+        color: #dbd8d2;
     }
 
     .ma-mini-cal__day:not(.is-disabled):not(.is-selected):hover .ma-mini-cal__day-label {
-        transform: scale(1.05);
+        background: rgba(255, 201, 122, 0.25);
     }
 
     .ma-mini-cal__day.is-selected .ma-mini-cal__day-label {
-        background: #FFC97A;
+        background: #ffc97a;
         color: #fff;
-        transform: scale(1.02);
-        box-shadow: 0 2px 8px rgba(255, 201, 122, 0.35);
     }
 
     .ma-card--pause {
-        padding: 20px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
     }
 
     .ma-card--pause>h3 {
-        margin-bottom: 20px;
+        display: none;
     }
 
     .ma-pause-row {
@@ -1415,17 +2435,17 @@
         align-items: center;
         justify-content: space-between;
         gap: 20px;
-        border: 1px solid #EDEDED;
+        border: 1px solid #ededed;
         border-radius: 10px;
-        background: #F5F5F5;
-        padding: 20px;
-        min-height: 84px;
+        background: #f5f5f5;
+        padding: 18px 20px;
+        min-height: 76px;
         box-sizing: border-box;
     }
 
     .ma-pause-row.is-paused {
-        background: #FEE;
-        border-color: #EDEDED;
+        background: #ffecec;
+        border-color: #f3cfcf;
     }
 
     .ma-pause-copy {
@@ -1563,10 +2583,14 @@
     }
 
     .ma-footer-actions {
-        display: flex;
+        display: none;
         justify-content: flex-end;
         gap: 20px;
         margin: 0;
+    }
+
+    .ma-save-bar.is-dirty .ma-footer-actions {
+        display: flex;
     }
 
     .ma-btn:disabled {
@@ -1642,7 +2666,8 @@
             const staffNameTarget = root.querySelector('[data-staff-name-target]');
             const staffJobTitleTarget = root.querySelector('[data-staff-job-title-target]');
             const staffJobWrap = root.querySelector('[data-staff-job-wrap]');
-            const reasonField = root.querySelector('[data-holiday-reason]');
+            const holidayReasonField = () => document.querySelector(
+                '.ma-holiday-modal [data-holiday-reason]');
             const pauseField = root.querySelector('[data-pause-booking]');
             const pauseCopy = root.querySelector('[data-pause-copy]');
             const pauseTitle = root.querySelector('[data-pause-title]');
@@ -1764,9 +2789,13 @@
                 if (timeRow) {
                     timeRow.classList.toggle('is-unavailable', !isOn);
                     timeRow.classList.toggle('is-disabled', !isOn);
+                    if (!isOn) timeRow.classList.remove('is-editing');
                 }
                 if (hoursRow) hoursRow.classList.toggle('is-disabled', !isOn);
-                if (editRow) editRow.classList.toggle('is-disabled', !isOn);
+                if (editRow) {
+                    editRow.classList.toggle('is-disabled', !isOn);
+                    if (!isOn) editRow.classList.remove('is-editing');
+                }
                 updateHoursForDay(day);
             };
 
@@ -1794,6 +2823,8 @@
                     if (endEl) endEl.textContent = endLabel;
                     const saveBtn = editRow.querySelector('[data-day-action="save"]');
                     if (saveBtn) saveBtn.classList.remove('is-saving');
+                    timeRow.classList.remove('is-editing');
+                    editRow.classList.remove('is-editing');
                     setDayAvailability(day, !!data.status);
                 });
             };
@@ -1807,6 +2838,7 @@
             })();
 
             const resetHolidayForm = () => {
+                const reasonField = holidayReasonField();
                 if (reasonField) reasonField.value = '';
                 window.dispatchEvent(new CustomEvent('range-calendar-set', {
                     detail: {
@@ -1843,10 +2875,15 @@
 
             const syncActiveStaff = (pill) => {
                 if (!pill) return;
-                const name = pill.dataset.staffName || '';
+                const name = pill.dataset.displayTitle || pill.dataset.staffName || '';
                 const job = pill.dataset.staffJobTitle || '';
+                const isBusiness = pill.dataset.isBusiness === '1';
                 if (staffNameTarget) {
                     staffNameTarget.textContent = name;
+                }
+                const subtitleEl = root.querySelector('[data-schedule-subtitle]');
+                if (subtitleEl) {
+                    subtitleEl.textContent = isBusiness ? 'Editing business schedule' : 'Editing staff schedule';
                 }
                 if (staffJobTitleTarget) {
                     staffJobTitleTarget.textContent = job;
@@ -1891,11 +2928,20 @@
                     checkbox.checked = true;
                 }
                 setDayAvailability(day, editing || !!(checkbox && checkbox.checked));
+                const timeRow = root.querySelector(`[data-day="${day}"][data-day-cell="time"]`);
+                const editRow = root.querySelector(`[data-day="${day}"][data-day-cell="edit"]`);
                 if (editing) {
-                    const timeRow = root.querySelector(`[data-day="${day}"][data-day-cell="time"]`);
-                    const editRow = root.querySelector(`[data-day="${day}"][data-day-cell="edit"]`);
-                    if (timeRow) timeRow.classList.remove('is-disabled', 'is-unavailable');
-                    if (editRow) editRow.classList.remove('is-disabled');
+                    if (timeRow) {
+                        timeRow.classList.remove('is-disabled', 'is-unavailable');
+                        timeRow.classList.add('is-editing');
+                    }
+                    if (editRow) {
+                        editRow.classList.remove('is-disabled');
+                        editRow.classList.add('is-editing');
+                    }
+                } else {
+                    if (timeRow) timeRow.classList.remove('is-editing');
+                    if (editRow) editRow.classList.remove('is-editing');
                 }
             };
 
@@ -1956,9 +3002,13 @@
                     const value = option.dataset.timeOption;
                     const label = option.textContent;
                     activeTimeChip.dataset.timeValue = value;
-                    const span = activeTimeChip.querySelector(
-                        '[data-time-start], [data-time-end]');
-                    if (span) span.textContent = label;
+                    if (activeTimeChip.matches?.('input.ma-holiday-time')) {
+                        activeTimeChip.value = label;
+                    } else {
+                        const span = activeTimeChip.querySelector(
+                            '[data-time-start], [data-time-end]');
+                        if (span) span.textContent = label;
+                    }
                     const day = activeTimeChip.closest('[data-day]')?.dataset.day;
                     if (day) updateHoursForDay(day);
                     markDirty(`day-${day || 'time'}`);
@@ -2009,7 +3059,7 @@
                 root.addEventListener('click', (event) => {
                     const chip = event.target.closest('.ma-time-chip');
                     const chipRow = chip?.closest('.ma-time-range');
-                    if (chip && chipRow && !chipRow.classList.contains('is-disabled')) {
+                    if (chip && chipRow && chipRow.classList.contains('is-editing') && !chipRow.classList.contains('is-disabled')) {
                         event.stopPropagation();
                         if (activeTimeChip === chip) {
                             closeTimeDropdown();
@@ -2027,6 +3077,7 @@
                         event.preventDefault();
                         const from = holidayEditBtn.dataset.from || todayIso;
                         const to = holidayEditBtn.dataset.to || from;
+                        const reasonField = holidayReasonField();
                         if (reasonField) reasonField.value = holidayEditBtn.dataset.reason || '';
                         window.dispatchEvent(new CustomEvent('range-calendar-set', {
                             detail: {
@@ -2035,6 +3086,7 @@
                                 end: to,
                             },
                         }));
+                        window.dispatchEvent(new CustomEvent('ma-open-holiday-modal'));
                         return;
                     }
 
@@ -2136,7 +3188,11 @@
                     }
                 });
 
-                reasonField?.addEventListener('input', () => markDirty('reason'));
+                document.addEventListener('input', (event) => {
+                    if (event.target?.matches?.('.ma-holiday-modal [data-holiday-reason]')) {
+                        markDirty('reason');
+                    }
+                });
 
                 cancelBtn?.addEventListener('click', () => {
                     const pill = root.querySelector('.ma-staff-pill.ma-staff-pill--active');
@@ -2185,45 +3241,46 @@
                     if (activeTimeChip) positionTimeDropdown(activeTimeChip);
                 });
 
-                const holidaySaveBtn = root.querySelector(
-                    '[data-holiday-action="save"]');
-                if (holidaySaveBtn) {
-                    holidaySaveBtn.addEventListener('click', () => {
-                        if (holidaySaveBtn.classList.contains('is-saving')) return;
-                        const activePill = root.querySelector(
-                            '.ma-staff-pill.ma-staff-pill--active');
-                        const staffId = activePill?.dataset.staffId;
-                        if (!staffId) return;
-                        const range = (typeof getInlineRangeValues === 'function') ?
-                            getInlineRangeValues() : {
-                                start: '',
-                                end: ''
-                            };
-                        const reason = reasonField?.value || '';
-                        const payload = {
-                            staffId: parseInt(staffId, 10),
-                            from: range.start || '',
-                            to: range.end || '',
-                            reason,
-                        };
+                document.addEventListener('click', (event) => {
+                    const holidaySaveBtn = event.target.closest(
+                        '.ma-holiday-modal [data-holiday-action="save"]');
+                    if (!holidaySaveBtn) return;
+                    if (holidaySaveBtn.classList.contains('is-saving')) return;
+                    event.preventDefault();
+                    const activePill = root.querySelector(
+                        '.ma-staff-pill.ma-staff-pill--active');
+                    const staffId = activePill?.dataset.staffId;
+                    if (!staffId) return;
+                    const range = getInlineRangeValues();
+                    const reason = holidayReasonField()?.value || '';
+                    const startChip = document.querySelector(
+                        '.ma-holiday-modal [data-holiday-time][data-time-type="start"]');
+                    const endChip = document.querySelector(
+                        '.ma-holiday-modal [data-holiday-time][data-time-type="end"]');
+                    const payload = {
+                        staffId: parseInt(staffId, 10),
+                        from: range.start || '',
+                        to: range.end || '',
+                        reason,
+                        startTime: startChip?.dataset.timeValue || '',
+                        endTime: endChip?.dataset.timeValue || '',
+                    };
 
-                        holidaySaveBtn.classList.add('is-saving');
-                        if (window.Livewire) {
-                            window.Livewire.dispatch('save-staff-holiday',
-                                payload);
-                        }
-                    });
-                }
+                    holidaySaveBtn.classList.add('is-saving');
+                    if (window.Livewire) {
+                        window.Livewire.dispatch('save-staff-holiday', payload);
+                    }
+                });
 
                 window.addEventListener('staff-holiday-saved', () => {
-                    const btn = root.querySelector(
-                        '[data-holiday-action="save"]');
+                    const btn = document.querySelector(
+                        '.ma-holiday-modal [data-holiday-action="save"]');
                     if (btn) btn.classList.remove('is-saving');
                     resetHolidayForm();
+                    window.dispatchEvent(new CustomEvent('ma-close-holiday-modal'));
                 });
             }
 
-            const dateTriggers = root.querySelectorAll('[data-date-trigger]');
             const MINI_CAL_MONTHS = ['January', 'February', 'March', 'April', 'May',
                 'June', 'July', 'August', 'September', 'October', 'November', 'December'
             ];
@@ -2246,10 +3303,10 @@
             };
 
             const getInlineRangeValues = () => {
-                const start = root.querySelector(
+                const start = document.querySelector(
                     '#dashboard-manage-availability-range input[name="manage_availability_start_date"]'
                 );
-                const end = root.querySelector(
+                const end = document.querySelector(
                     '#dashboard-manage-availability-range input[name="manage_availability_end_date"]'
                 );
                 return {
@@ -2277,6 +3334,15 @@
                 const prevMonthDays = new Date(miniCalView.year, miniCalView.month, 0)
                     .getDate();
 
+                const rangeStart = isoToDate(range.start);
+                const rangeEnd = isoToDate(range.end);
+                const rangeFrom = rangeStart && rangeEnd ?
+                    (rangeStart <= rangeEnd ? rangeStart : rangeEnd) :
+                    rangeStart || rangeEnd;
+                const rangeTo = rangeStart && rangeEnd ?
+                    (rangeStart <= rangeEnd ? rangeEnd : rangeStart) :
+                    null;
+
                 const appendDay = (year, month, day, isOtherMonth) => {
                     const cell = document.createElement('button');
                     cell.type = 'button';
@@ -2288,9 +3354,29 @@
                     cell.appendChild(label);
                     const iso = formatISO(year, month, day);
                     cell.dataset.date = iso;
+                    const thisDate = new Date(year, month, day);
+                    thisDate.setHours(0, 0, 0, 0);
+
                     if (iso === selectedISO) cell.classList.add('is-selected');
+                    if (iso === range.start || iso === range.end) {
+                        if (iso === range.start) cell.classList.add('is-range-start');
+                        if (iso === range.end) cell.classList.add('is-range-end');
+                    }
+                    if (rangeFrom && rangeTo && thisDate >= rangeFrom && thisDate <= rangeTo) {
+                        cell.classList.add('is-in-range');
+                        if (thisDate.getTime() === rangeFrom.getTime()) {
+                            cell.classList.add('is-range-start');
+                        }
+                        if (thisDate.getTime() === rangeTo.getTime()) {
+                            cell.classList.add('is-range-end');
+                        }
+                    } else if (rangeFrom && !rangeTo && iso === formatISO(
+                            rangeFrom.getFullYear(), rangeFrom.getMonth(), rangeFrom.getDate()
+                        )) {
+                        cell.classList.add('is-in-range', 'is-range-start', 'is-range-end');
+                    }
+
                     if (otherDate) {
-                        const thisDate = new Date(year, month, day);
                         if (type === 'from' && thisDate > otherDate) {
                             cell.classList.add('is-disabled');
                         } else if (type === 'to' && thisDate < otherDate) {
@@ -2327,14 +3413,24 @@
                 }
             };
 
+            const miniCalPrevIcon = @json(asset('images/business-hub/icon-mini-cal-prev.svg'));
+
             const buildMiniCalendar = () => {
+                // Keep exactly one calendar popup in the DOM (Figma 452:2626).
+                document.querySelectorAll('.ma-mini-cal').forEach((node) => node.remove());
+
                 const el = document.createElement('div');
                 el.className = 'ma-mini-cal';
+                el.setAttribute('data-ma-mini-cal', '1');
                 el.innerHTML = `
                     <div class="ma-mini-cal__header">
-                        <button type="button" class="ma-mini-cal__nav" data-mini-cal-prev aria-label="Previous month">&lsaquo;</button>
+                        <button type="button" class="ma-mini-cal__nav" data-mini-cal-prev aria-label="Previous month">
+                            <img src="${miniCalPrevIcon}" alt="" width="26" height="26" />
+                        </button>
                         <span class="ma-mini-cal__title" data-mini-cal-title></span>
-                        <button type="button" class="ma-mini-cal__nav" data-mini-cal-next aria-label="Next month">&rsaquo;</button>
+                        <button type="button" class="ma-mini-cal__nav ma-mini-cal__nav--next" data-mini-cal-next aria-label="Next month">
+                            <img src="${miniCalPrevIcon}" alt="" width="26" height="26" />
+                        </button>
                     </div>
                     <div class="ma-mini-cal__weekdays">
                         <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
@@ -2369,7 +3465,11 @@
             };
 
             const ensureMiniCalendar = () => {
-                if (miniCalEl) return miniCalEl;
+                const existing = document.querySelector('.ma-mini-cal[data-ma-mini-cal="1"]');
+                if (existing) {
+                    miniCalEl = existing;
+                    return miniCalEl;
+                }
                 miniCalEl = buildMiniCalendar();
                 return miniCalEl;
             };
@@ -2378,14 +3478,21 @@
                 if (!miniCalEl) return;
                 const target = anchor.querySelector('.ma-field-value') || anchor;
                 const rect = target.getBoundingClientRect();
-                miniCalEl.style.width = `${rect.width}px`;
-                miniCalEl.style.top = `${rect.bottom + 6}px`;
-                const width = rect.width;
+                const width = 240;
+                const height = 234;
+                miniCalEl.style.width = `${width}px`;
+                miniCalEl.style.height = `${height}px`;
+
+                let top = rect.bottom + 8;
+                if (top + height > window.innerHeight - 8) {
+                    top = Math.max(8, rect.top - height - 8);
+                }
                 let left = rect.left;
                 if (left + width > window.innerWidth - 8) {
                     left = window.innerWidth - width - 8;
                 }
                 if (left < 8) left = 8;
+                miniCalEl.style.top = `${top}px`;
                 miniCalEl.style.left = `${left}px`;
             };
 
@@ -2399,6 +3506,7 @@
             };
 
             const openMiniCalendar = (trigger) => {
+                closeTimeDropdown();
                 const el = ensureMiniCalendar();
                 const switchingAnchorWhileOpen =
                     el.classList.contains('is-open') &&
@@ -2445,27 +3553,125 @@
                 closeMiniCalendar();
             };
 
-            if (dateTriggers.length && !root.dataset.dateTriggersBound) {
-                root.dataset.dateTriggersBound = '1';
-                dateTriggers.forEach((trigger) => {
-                    trigger.addEventListener('click', (event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        if (activeDateTrigger === trigger) {
-                            closeMiniCalendar();
-                        } else {
-                            closeTimeDropdown();
-                            openMiniCalendar(trigger);
+            const parseHolidayTimeLabel = (raw) => {
+                const text = String(raw || '').trim().toUpperCase().replace(/\s+/g, ' ');
+                if (!text) return null;
+                const match = text.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+                if (!match) return null;
+                let hour = parseInt(match[1], 10);
+                let minute = parseInt(match[2] ?? '0', 10);
+                const suffix = (match[3] || '').toUpperCase();
+                if (Number.isNaN(hour) || Number.isNaN(minute) || minute > 59) return null;
+                // Accept both 12h (7:00 AM) and display-style 24h+suffix (14:00 PM).
+                if (suffix === 'AM' || suffix === 'PM') {
+                    if (hour <= 12) {
+                        if (hour < 1) return null;
+                        if (suffix === 'AM') {
+                            if (hour === 12) hour = 0;
+                        } else if (hour !== 12) {
+                            hour += 12;
+                        }
+                    } else if (hour > 23) {
+                        return null;
+                    }
+                } else if (hour > 23) {
+                    return null;
+                }
+                const value = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                return {
+                    value,
+                    label: formatTime(value),
+                };
+            };
+
+            const applyHolidayTimeInput = (input) => {
+                const parsed = parseHolidayTimeLabel(input.value);
+                if (!parsed) {
+                    const fallback = input.dataset.timeValue || '07:00';
+                    input.value = formatTime(fallback);
+                    return;
+                }
+                input.dataset.timeValue = parsed.value;
+                input.value = parsed.label;
+                markDirty('holiday-time');
+            };
+
+            const onHolidayDateTriggerClick = (event) => {
+                const trigger = event.currentTarget;
+                event.preventDefault();
+                event.stopPropagation();
+                if (activeDateTrigger === trigger) {
+                    closeMiniCalendar();
+                } else {
+                    openMiniCalendar(trigger);
+                }
+            };
+
+            const onHolidayTimeFocus = (event) => {
+                const holidayChip = event.currentTarget;
+                closeMiniCalendar();
+                openTimeDropdown(holidayChip);
+            };
+
+            const bindHolidayModalControls = () => {
+                document.querySelectorAll('.ma-holiday-modal [data-date-trigger]').forEach((trigger) => {
+                    if (trigger.dataset.maDateBound === '1') return;
+                    trigger.dataset.maDateBound = '1';
+                    trigger.addEventListener('click', onHolidayDateTriggerClick);
+                    trigger.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            onHolidayDateTriggerClick(event);
                         }
                     });
                 });
 
+                document.querySelectorAll('.ma-holiday-modal [data-holiday-time]').forEach((chip) => {
+                    if (chip.dataset.maTimeBound === '1') return;
+                    chip.dataset.maTimeBound = '1';
+                    chip.addEventListener('focus', onHolidayTimeFocus);
+                    chip.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        closeMiniCalendar();
+                        openTimeDropdown(chip);
+                    });
+                    chip.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape') {
+                            closeTimeDropdown();
+                            chip.blur();
+                        }
+                        if (event.key === 'Enter') {
+                            event.preventDefault();
+                            applyHolidayTimeInput(chip);
+                            closeTimeDropdown();
+                        }
+                    });
+                    chip.addEventListener('blur', () => {
+                        // Allow dropdown option click to land first.
+                        setTimeout(() => {
+                            if (document.activeElement?.closest?.('.ma-time-dropdown')) return;
+                            applyHolidayTimeInput(chip);
+                            if (activeTimeChip === chip) closeTimeDropdown();
+                        }, 150);
+                    });
+                });
+            };
+
+            window.__maOpenHolidayDateCalendar = (trigger) => {
+                if (!trigger) return;
+                openMiniCalendar(trigger);
+            };
+
+            if (!root.dataset.dateTriggersBound) {
+                root.dataset.dateTriggersBound = '1';
+
+                // Outside-click close (capture). Open handlers are bound on the modal controls themselves.
                 document.addEventListener('click', (event) => {
                     if (!miniCalEl || !miniCalEl.classList.contains('is-open')) return;
                     if (event.target.closest('.ma-mini-cal')) return;
-                    if (event.target.closest('[data-date-trigger]')) return;
+                    if (event.target.closest('.ma-holiday-modal [data-date-trigger]')) return;
                     closeMiniCalendar();
-                });
+                }, true);
 
                 document.addEventListener('keydown', (event) => {
                     if (event.key === 'Escape') closeMiniCalendar();
@@ -2482,24 +3688,20 @@
                 window.addEventListener('resize', () => {
                     if (activeDateTrigger) positionMiniCalendar(activeDateTrigger);
                 });
+
+                window.addEventListener('ma-close-holiday-modal', () => {
+                    closeMiniCalendar();
+                    closeTimeDropdown();
+                });
+
+                window.addEventListener('ma-open-holiday-modal', bindHolidayModalControls);
+
+                // Modal may already be in the DOM after Alpine teleport.
+                bindHolidayModalControls();
+                setTimeout(bindHolidayModalControls, 0);
+                setTimeout(bindHolidayModalControls, 250);
+                document.addEventListener('alpine:initialized', bindHolidayModalControls);
             }
-
-            const calendarRoot = document.getElementById('dashboard-manage-availability-range');
-            const dateFromInput = document.getElementById('manage-availability-date-from');
-            const dateToInput = document.getElementById('manage-availability-date-to');
-
-            if (!calendarRoot || !dateFromInput || !dateToInput) {
-                return;
-            }
-
-            const startHiddenInput = calendarRoot.querySelector('input[name="manage_availability_start_date"]');
-            const endHiddenInput = calendarRoot.querySelector('input[name="manage_availability_end_date"]');
-
-            if (!startHiddenInput || !endHiddenInput) {
-                return;
-            }
-
-            root.dataset.rangeSyncBound = '1';
 
             const formatDate = (isoDate) => {
                 if (!isoDate) return '';
@@ -2531,25 +3733,28 @@
                 if (toEl) toEl.textContent = formatDate(liveEndInput()?.value);
             };
 
-            syncRangeFields();
-            setTimeout(syncRangeFields, 0);
-            setTimeout(syncRangeFields, 120);
-            document.addEventListener('alpine:initialized', syncRangeFields, {
-                once: true
-            });
+            if (!root.dataset.rangeSyncBound) {
+                root.dataset.rangeSyncBound = '1';
+                syncRangeFields();
+                setTimeout(syncRangeFields, 0);
+                setTimeout(syncRangeFields, 120);
+                setTimeout(syncRangeFields, 400);
+                document.addEventListener('alpine:initialized', syncRangeFields);
+                window.addEventListener('ma-open-holiday-modal', syncRangeFields);
 
-            window.addEventListener('range-calendar-changed', (event) => {
-                const detail = event?.detail || {};
-                if (detail.componentId && detail.componentId !==
-                    'dashboard-manage-availability-range') {
-                    return;
-                }
+                window.addEventListener('range-calendar-changed', (event) => {
+                    const detail = event?.detail || {};
+                    if (detail.componentId && detail.componentId !==
+                        'dashboard-manage-availability-range') {
+                        return;
+                    }
 
-                const fromEl = liveDateFrom();
-                const toEl = liveDateTo();
-                if (fromEl) fromEl.textContent = formatDate(detail.start ?? liveStartInput()?.value);
-                if (toEl) toEl.textContent = formatDate(detail.end ?? liveEndInput()?.value);
-            });
+                    const fromEl = liveDateFrom();
+                    const toEl = liveDateTo();
+                    if (fromEl) fromEl.textContent = formatDate(detail.start ?? liveStartInput()?.value);
+                    if (toEl) toEl.textContent = formatDate(detail.end ?? liveEndInput()?.value);
+                });
+            }
         };
 
         if (document.readyState === 'loading') {
