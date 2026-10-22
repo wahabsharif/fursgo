@@ -23,7 +23,8 @@
 
 </head>
 
-<body>
+@php($bodyClass = trim($__env->yieldContent('body_class')))
+<body @if ($bodyClass !== '') class="{{ $bodyClass }}" @endif>
 
     <x-common.header />
 
