@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             PetPreferenceSeeder::class,
             StaffSeeder::class,
             FaqSeeder::class,
+            HomepageContentSeeder::class,
         ]);
     }
 }
