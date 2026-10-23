@@ -1207,9 +1207,19 @@ section.rating-section.section {
     width: 210px;
 }
 
+.testimonial-section .card .text-stars .stars {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: max-content;
+    line-height: 0;
+    white-space: nowrap;
+}
+
 .testimonial-section .card .text-stars .stars svg {
-    width: 110px;
+    width: 18px;
     height: 17px;
+    flex: 0 0 18px;
 }
 
 .testimonial-section .card .testimonial-photo {

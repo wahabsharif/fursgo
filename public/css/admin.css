@@ -19011,6 +19011,7 @@ body.admin-co-modal-lock {
     font-weight: 400;
 }
 
+.admin-wc-modal-field input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
 .admin-wc-modal-field textarea {
     box-sizing: border-box;
     width: 392px;
@@ -19018,7 +19019,6 @@ body.admin-co-modal-lock {
     height: 43px;
     min-height: 43px;
     padding: 11px 12px;
-    resize: vertical;
     border: 1px solid #e7e6e6;
     border-radius: 5px;
     outline: none;
@@ -19029,6 +19029,10 @@ body.admin-co-modal-lock {
     font-style: normal;
     font-weight: 400;
     line-height: normal;
+}
+
+.admin-wc-modal-field textarea {
+    resize: vertical;
 }
 
 .admin-wc-modal-field textarea#admin-wc-rating-copy,
@@ -19056,6 +19060,7 @@ body.admin-co-modal-lock {
     margin: 16px 0 0;
 }
 
+.admin-wc-modal-field input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):focus,
 .admin-wc-modal-field textarea:focus {
     border-color: #9fc356;
     box-shadow: 0 0 0 3px rgba(159, 195, 86, 0.14);
@@ -19345,6 +19350,7 @@ body.admin-co-modal-lock {
         font-size: 14px;
     }
 
+    .admin-wc-modal-field input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
     .admin-wc-modal-field textarea {
         height: 43px;
         min-height: 43px;

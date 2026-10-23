@@ -34,7 +34,7 @@ Pet grooming marketplace (UK-oriented):
 | `resources/views/livewire/`   | Volt page components (primary UI)                                                     |
 | `resources/views/components/` | Blade UI (business-hub, admin, shared)                                                |
 | `database/migrations/`        | Schema                                                                                |
-| `database/seeders/`           | Including `DevUserSeeder`                                                             |
+| `database/seeders/`           | Including `DevUserSeeder`, `HomepageContentSeeder`                                    |
 | `public/`                     | CSS, images, fonts, icons                                                             |
 
 Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/views/livewire/{dot.path}.blade.php`.
@@ -69,7 +69,7 @@ Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/vie
 
 | Route                                                 | Volt / view                                                                            | Name                                    |
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------- |
-| `/`                                                   | `home`                                                                                 | `home`                                  |
+| `/`                                                   | `home` (Volt + `HomepageContent::customer()`)                                          | `home`                                  |
 | `/business-landing-page`                              | static blade                                                                           | `business-landing-page`                 |
 | `/business-homepage-groomer-space-owner`              | `business.homepage` or hub shell variant                                               | `business-homepage-groomer-space-owner` |
 | `/search-results`                                     | `search.results`                                                                       | `search-results`                        |
@@ -108,10 +108,11 @@ Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/vie
 
 ### Admin
 
-| Route          | Notes                                    |
-| -------------- | ---------------------------------------- |
-| `/admin/login` | Volt `admin.auth.login`                  |
-| `/admin`       | Volt `admin.overview` (tabbed Alpine UI) |
+| Route                                 | Notes                                                      |
+| ------------------------------------- | ---------------------------------------------------------- |
+| `/admin/login`                        | Volt `admin.auth.login`                                    |
+| `/admin`                              | Volt `admin.overview` (tabbed Alpine UI)                   |
+| `POST /admin/homepage-content/{section}` | Save Customer Homepage CMS section (`HomepageContentController`) |
 
 Auth routes: `routes/auth.php`. Admin: `routes/admin.php`.
 
@@ -129,6 +130,7 @@ Auth routes: `routes/auth.php`. Admin: `routes/admin.php`.
 | `Payment`, `PromoCode`, `PromoCodeUsage`                            | Money / discounts                                                                                                  |
 | `Review`                                                            | Post-booking ratings                                                                                               |
 | `SupportTicket` (+ attachments), `FaqCategory`, `FaqArticle`        | Help                                                                                                               |
+| `HomepageSetting`, `HomepageItem`                                   | Customer Homepage CMS (`homepage_settings` + `homepage_items`); loader `App\Support\HomepageContent`               |
 | `AccountSetting`, `AccountLoginSession`, `AccountBlock`             | Account security / prefs                                                                                           |
 
 **Booking statuses:** `pending` → `confirmed` → `completed`; or `cancelled` (`cancelled_by`, `cancellation_reason`, refund fields).
@@ -182,7 +184,7 @@ Volt entry: `resources/views/livewire/business-hub.blade.php`, nested under `liv
 
 - Login: `/admin/login`; middleware `auth.admin`.
 - Overview: `/admin` with Alpine tabs — components under `resources/views/components/admin/` and `resources/views/admin/tabs/`.
-- Website Content tab: subnav (Homepage & Marketing · Static Pages · Help Centre · Legal & Policy Documents · Global Footer); Homepage & Marketing switches by editing target — Customer Homepage (full sections), For Groomers & Hosts (Page Banner + Hero Photo), Business Homepage (Page Banner + Hero Photo). Other subnav panels are placeholders.
+- Website Content tab: subnav (Homepage & Marketing · Static Pages · Help Centre · Legal & Policy Documents · Global Footer). **Customer Homepage** is DB-backed (`homepage_settings` + `homepage_items`): admin Alpine loads via `HomepageContent::adminBootstrap()`, saves via `POST /admin/homepage-content/{section}`; public `/` renders the same data. Sections: Hero (+ rating strip), Feature Highlight, How it works, Popular Services, Testimonials, Our Mission, Service Map. Seed: `HomepageContentSeeder` (skips if settings already exist). Groomers & Hosts / Business Homepage targets and other subnav panels remain placeholders.
 - Business provider detail tabs: Overview, Profile (public profile / gallery / business details / notes / activity + Services · Policies · Reviews subnav; dual Groomer/Space Host via sidebar `viewAs` — space subnav active `#FFA899`, active status pills `#EAF3DE`/`#A7C569`), Activity, Account, Compliance, Support (ticket list → detail with submission / limited thread / linked states: populated · empty · na · suggested / shared admin notes / details+activity; no modals; sidebar stays default provider actions), Payouts (Earnings overview dual groomer/space — space accents `#FFA899` on subnav/chart/progress, space booking Full-Day·Half-Day·Hourly + bank settings; Transactions expandable cards; Payouts list; Invoices → payment-detail); Bookings (subnav Bookings · Availability · Clients — Bookings: metric cards + status filters + table Owner/Pet · Service/Location · Date/Time + export; row/eye opens booking detail with summary card · details · price breakdown · activity timeline; Availability: day schedule + calendar · working week hours · time off · booking intake status · activity timeline; Clients: table with avatar/initials · bookings · paid · last booked + export/pagination; eye opens client profile modal — stats · recent bookings · recent review + view full customer profile).
 - Pet owner detail tabs: overview, pets, bookings, payments (list + detail by status), support (ticket list → detail with submission / linked records + Add link / Mark as resolved / Open dispute (+ success) / Merge / Reassign / Close ticket modals / thread / notes / details+activity; sidebar switches list actions ↔ ticket actions), referrals, activity — under `resources/views/components/admin/customer/`.
 
