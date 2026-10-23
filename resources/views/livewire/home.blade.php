@@ -1,20 +1,18 @@
 <?php
 
+use App\Support\HomepageContent;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
 new #[Layout('layouts.app')] class extends Component {
     /**
-     * Homepage shell — UI from custom index.php.
-     * Search forms GET to /search-results with mode, pet_type, pet_size, serviceType, search.
-     * Swap static sections (testimonials, rating copy) to Eloquent via with() later.
+     * Homepage shell — search forms GET to /search-results.
+     * Marketing sections load from homepage_settings / homepage_items.
      */
     public function with(): array
     {
         return [
-            // 'testimonials' => [],
-            // 'ratingAverage' => 4.9,
-            // 'ratingCountLabel' => '5,000 +',
+            'homepage' => HomepageContent::customer(),
         ];
     }
 }; ?>

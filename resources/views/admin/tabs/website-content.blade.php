@@ -28,78 +28,12 @@ $businessBanner = [
 'photo' => 'images/blp-hero-section-imagerectangle-293.png',
 ];
 
-$featureItems = [
-['title' => 'Booked in Minutes', 'desc' => 'No calls, no quotes.'],
-['title' => 'Trusted Professionals', 'desc' => 'Verified & insured.'],
-['title' => 'Happy Pets', 'desc' => 'Gentle grooming, stress-free service.'],
-];
-
-$howItWorks = [
-[
-'title' => 'Search',
-'desc' => 'No more guessing or endless calling around. We help you find the right groomer with total confidence.',
-'icon' => 'images/admin/website-content/how-search.png',
-],
-[
-'title' => 'Book & Pay',
-'desc' => 'Simple, secure, and built to save you time. Book in seconds, pay safely, and manage everything in one place.',
-'icon' => 'images/admin/website-content/how-book-pay.png',
-],
-[
-'title' => 'Relax',
-'desc' => 'Calm, clear, and stress-free appointments so your pet feels comfortable and you stay informed.',
-'icon' => 'images/admin/website-content/how-relax.png',
-],
-];
-
-$popularServices = [
-[
-'title' => 'Full Groom',
-'desc' => 'Bath, trim, blow-dry, and essential hygiene.',
-'image' => 'images/admin/provider/gallery/1.jpg',
-],
-[
-'title' => 'Bath & Tidy',
-'desc' => 'A quick refresh to keep your pet clean between full grooms.',
-'image' => 'images/admin/provider/gallery/2.jpg',
-],
-[
-'title' => 'Nail Trim',
-'desc' => 'Quality and careful nail care focused on comfort and safety.',
-'image' => 'images/admin/provider/gallery/3.jpg',
-],
-[
-'title' => 'Pet Spa',
-'desc' => 'Soothing coat and skin treatments to nourish & refresh.',
-'image' => null,
-],
-[
-'title' => 'Mobile Grooming',
-'desc' => 'Grooming at home, for a stress-free experience.',
-'image' => null,
-],
-];
-
-$testimonials = [
-[
-'name' => 'Sarah M.',
-'when' => '1 day ago',
-'dateSubmitted' => '01/05/2025',
-'quote' => 'The easiest booking I\'ve ever made! My dog looked amazing and the groomer was so kind.',
-'rating' => 5,
-'avatar' => asset('images/testimonial-1.png'),
-],
-[
-'name' => 'Sarah M.',
-'when' => '1 day ago',
-'dateSubmitted' => '01/05/2025',
-'quote' => 'The easiest booking I\'ve ever made! My dog looked amazing and the groomer was so kind.',
-'rating' => 5,
-'avatar' => null,
-],
-];
-
-$cities = ['London', 'Manchester', 'Birmingham', 'Leeds', 'Bristol', 'Edinburgh'];
+$wc = \App\Support\HomepageContent::adminBootstrap();
+$featureItems = $wc['featureItems'];
+$howItWorks = $wc['howItWorksSteps'];
+$popularServices = $wc['popularServicesItems'];
+$testimonials = $wc['testimonials'];
+$cities = $wc['cities'];
 
 $legalDocuments = [
     [
@@ -155,27 +89,53 @@ $versionHistory = [
         section: 'homepage',
         editingOpen: false,
         wcModal: null,
-        heroHeadline: 'Book trusted pet grooming in minutes!',
-        heroRatingCopy: 'All groomers are ID-verified and insured through Fursgo Protect.',
+        saving: false,
+        csrfToken: @js(csrf_token()),
+        homepageSaveUrl: @js(url('/admin/homepage-content')),
+        heroHeadline: @js($wc['heroHeadline']),
+        heroRatingValue: @js($wc['heroRatingValue']),
+        heroRatingHeadline: @js($wc['heroRatingHeadline']),
+        heroRatingCopy: @js($wc['heroRatingCopy']),
         heroHeadlineDraft: '',
+        heroRatingHeadlineDraft: '',
         heroRatingCopyDraft: '',
-        heroPhotoUrl: @js(asset('images/hero_section.png')),
-        heroPhotoName: 'FursGo_Banner.jpeg',
+        heroPhotoUrl: @js($wc['heroPhotoUrl']),
+        heroPhotoPath: @js($wc['heroPhotoPath']),
+        heroPhotoName: 'Hero photo',
         heroPhotoDraftUrl: '',
         heroPhotoDraftName: '',
-        featureHeadline: 'Groom from anywhere. Book from anywhere. Earn from anywhere.',
+        heroPhotoFile: null,
+        featureHeadline: @js($wc['featureHeadline']),
         featureHeadlineDraft: '',
         featureItems: @js($featureItems),
         featureItemIndex: null,
         featureTitleDraft: '',
         featureDescDraft: '',
-        featurePhotoUrl: @js(asset('images/pet_details_2.png')),
-        featurePhotoName: 'FursGo_Banner.jpeg',
+        featurePhotoUrl: @js($wc['featurePhotoUrl']),
+        featurePhotoPath: @js($wc['featurePhotoPath']),
+        featurePhotoName: 'Feature photo',
         featurePhotoDraftUrl: '',
         featurePhotoDraftName: '',
-        testimonialIntro: 'Loved by Pet Parents',
-        testimonialDesc: 'Your pet\'s safety comes first. Every groomer is background-checked, insured, and trained in animal handling.',
-        testimonialTrust: 'All payments and messages are protected through Fursgo.',
+        featurePhotoFile: null,
+        howItWorksTitle: @js($wc['howItWorksTitle']),
+        howItWorksIntro: @js($wc['howItWorksIntro']),
+        howItWorksSteps: @js($howItWorks),
+        howItWorksTitleDraft: '',
+        howItWorksIntroDraft: '',
+        howItWorksStepIndex: null,
+        howItWorksStepTitleDraft: '',
+        howItWorksStepDescDraft: '',
+        popularServicesTitle: @js($wc['popularServicesTitle']),
+        popularServicesIntro: @js($wc['popularServicesIntro']),
+        popularServicesItems: @js($popularServices),
+        popularServicesTitleDraft: '',
+        popularServicesIntroDraft: '',
+        popularServiceIndex: null,
+        popularServiceTitleDraft: '',
+        popularServiceDescDraft: '',
+        testimonialIntro: @js($wc['testimonialIntro']),
+        testimonialDesc: @js($wc['testimonialDesc']),
+        testimonialTrust: @js($wc['testimonialTrust']),
         testimonialIntroDraft: '',
         testimonialDescDraft: '',
         testimonialTrustDraft: '',
@@ -185,19 +145,23 @@ $versionHistory = [
         testimonialDateDraft: '',
         testimonialPhotoDraftUrl: '',
         testimonialPhotoDraftName: '',
+        testimonialPhotoFile: null,
         pendingTestimonial: null,
-        banner3Title: 'Our Mission',
-        banner3Desc: 'To create a harmonious grooming community — where pets receive gentle, timely care; owners enjoy convenience and peace of mind; groomers find flexible, rewarding opportunities; space owners foster meaningful connections; and Fetchers enable smooth, stress-free journeys.',
-        banner3Cta: 'About Us',
+        banner3Title: @js($wc['banner3Title']),
+        banner3Desc: @js($wc['banner3Desc']),
+        banner3Cta: @js($wc['banner3Cta']),
+        banner3CtaUrl: @js($wc['banner3CtaUrl']),
         banner3TitleDraft: '',
         banner3DescDraft: '',
         banner3CtaDraft: '',
-        banner3PhotoUrl: @js(asset('images/our_mission.png')),
-        banner3PhotoName: 'FursGo_Banner.jpeg',
+        banner3PhotoUrl: @js($wc['banner3PhotoUrl']),
+        banner3PhotoPath: @js($wc['banner3PhotoPath']),
+        banner3PhotoName: 'Mission photo',
         banner3PhotoDraftUrl: '',
         banner3PhotoDraftName: '',
-        serviceMapTitle: 'Fursgo across the UK',
-        serviceMapDesc: 'Now serving pet owners across the UK.',
+        banner3PhotoFile: null,
+        serviceMapTitle: @js($wc['serviceMapTitle']),
+        serviceMapDesc: @js($wc['serviceMapDesc']),
         serviceMapTitleDraft: '',
         serviceMapDescDraft: '',
         cities: @js($cities),
@@ -274,28 +238,91 @@ $versionHistory = [
         closeWcModal() {
             this.wcModal = null;
             this.featureItemIndex = null;
+            this.howItWorksStepIndex = null;
+            this.popularServiceIndex = null;
             this.testimonialEditIndex = null;
             this.pendingTestimonial = null;
             this.legalEditIndex = null;
+            this.heroPhotoFile = null;
+            this.featurePhotoFile = null;
+            this.banner3PhotoFile = null;
+            this.testimonialPhotoFile = null;
+        },
+        async persistSection(section, extra = {}) {
+            if (this.saving) return false;
+            this.saving = true;
+            try {
+                const form = new FormData();
+                Object.entries(extra).forEach(([key, value]) => {
+                    if (value === undefined || value === null) return;
+                    if (value instanceof File) {
+                        form.append(key, value);
+                        return;
+                    }
+                    if (typeof value === 'object') {
+                        form.append(key, JSON.stringify(value));
+                        return;
+                    }
+                    form.append(key, value);
+                });
+
+                const response = await fetch(this.homepageSaveUrl + '/' + section, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': this.csrfToken,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: form,
+                    credentials: 'same-origin',
+                });
+
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    alert(payload.message || 'Could not save homepage content.');
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error(error);
+                alert('Could not save homepage content.');
+                return false;
+            } finally {
+                this.saving = false;
+            }
         },
         openHeroEditor() {
             this.heroHeadlineDraft = this.heroHeadline;
+            this.heroRatingHeadlineDraft = this.heroRatingHeadline;
             this.heroRatingCopyDraft = this.heroRatingCopy;
             this.wcModal = 'hero-text';
             this.$nextTick(() => this.$refs.heroHeadlineInput && this.$refs.heroHeadlineInput.focus());
         },
-        saveHeroEditor() {
+        async saveHeroEditor() {
             if (!this.heroHeadlineDraft.trim()) {
                 this.$refs.heroHeadlineInput.focus();
                 return;
             }
+            if (!this.heroRatingHeadlineDraft.trim()) {
+                this.$refs.heroRatingHeadlineInput && this.$refs.heroRatingHeadlineInput.focus();
+                return;
+            }
+            const ok = await this.persistSection('hero', {
+                headline: this.heroHeadlineDraft.trim(),
+                rating_value: this.heroRatingValue,
+                rating_headline: this.heroRatingHeadlineDraft.trim(),
+                rating_copy: this.heroRatingCopyDraft.trim(),
+            });
+            if (!ok) return;
             this.heroHeadline = this.heroHeadlineDraft.trim();
+            this.heroRatingHeadline = this.heroRatingHeadlineDraft.trim();
             this.heroRatingCopy = this.heroRatingCopyDraft.trim();
             this.closeWcModal();
         },
         openHeroPhotoEditor() {
             this.heroPhotoDraftUrl = this.heroPhotoUrl;
             this.heroPhotoDraftName = this.heroPhotoName;
+            this.heroPhotoFile = null;
             this.wcModal = 'hero-photo';
         },
         onHeroPhotoSelected(event) {
@@ -304,11 +331,20 @@ $versionHistory = [
             if (this.heroPhotoDraftUrl && this.heroPhotoDraftUrl.startsWith('blob:')) {
                 URL.revokeObjectURL(this.heroPhotoDraftUrl);
             }
+            this.heroPhotoFile = file;
             this.heroPhotoDraftUrl = URL.createObjectURL(file);
             this.heroPhotoDraftName = file.name;
             event.target.value = '';
         },
-        saveHeroPhotoEditor() {
+        async saveHeroPhotoEditor() {
+            const ok = await this.persistSection('hero', {
+                headline: this.heroHeadline,
+                rating_value: this.heroRatingValue,
+                rating_headline: this.heroRatingHeadline,
+                rating_copy: this.heroRatingCopy,
+                photo: this.heroPhotoFile,
+            });
+            if (!ok) return;
             this.heroPhotoUrl = this.heroPhotoDraftUrl;
             this.heroPhotoName = this.heroPhotoDraftName;
             this.closeWcModal();
@@ -318,11 +354,16 @@ $versionHistory = [
             this.wcModal = 'feature-headline';
             this.$nextTick(() => this.$refs.featureHeadlineInput && this.$refs.featureHeadlineInput.focus());
         },
-        saveFeatureHeadlineEditor() {
+        async saveFeatureHeadlineEditor() {
             if (!this.featureHeadlineDraft.trim()) {
                 this.$refs.featureHeadlineInput.focus();
                 return;
             }
+            const ok = await this.persistSection('feature', {
+                headline: this.featureHeadlineDraft.trim(),
+                items: this.featureItems,
+            });
+            if (!ok) return;
             this.featureHeadline = this.featureHeadlineDraft.trim();
             this.closeWcModal();
         },
@@ -335,19 +376,27 @@ $versionHistory = [
             this.wcModal = 'feature-item';
             this.$nextTick(() => this.$refs.featureTitleInput && this.$refs.featureTitleInput.focus());
         },
-        saveFeatureItemEditor() {
+        async saveFeatureItemEditor() {
             if (!this.featureTitleDraft.trim()) {
                 this.$refs.featureTitleInput.focus();
                 return;
             }
             if (this.featureItemIndex === null) return;
-            this.featureItems[this.featureItemIndex].title = this.featureTitleDraft.trim();
-            this.featureItems[this.featureItemIndex].desc = this.featureDescDraft.trim();
+            const nextItems = this.featureItems.map((item, index) => index === this.featureItemIndex
+                ? { ...item, title: this.featureTitleDraft.trim(), desc: this.featureDescDraft.trim() }
+                : item);
+            const ok = await this.persistSection('feature', {
+                headline: this.featureHeadline,
+                items: nextItems,
+            });
+            if (!ok) return;
+            this.featureItems = nextItems;
             this.closeWcModal();
         },
         openFeaturePhotoEditor() {
             this.featurePhotoDraftUrl = this.featurePhotoUrl;
             this.featurePhotoDraftName = this.featurePhotoName;
+            this.featurePhotoFile = null;
             this.wcModal = 'feature-photo';
         },
         onFeaturePhotoSelected(event) {
@@ -356,13 +405,116 @@ $versionHistory = [
             if (this.featurePhotoDraftUrl && this.featurePhotoDraftUrl.startsWith('blob:')) {
                 URL.revokeObjectURL(this.featurePhotoDraftUrl);
             }
+            this.featurePhotoFile = file;
             this.featurePhotoDraftUrl = URL.createObjectURL(file);
             this.featurePhotoDraftName = file.name;
             event.target.value = '';
         },
-        saveFeaturePhotoEditor() {
+        async saveFeaturePhotoEditor() {
+            const ok = await this.persistSection('feature', {
+                headline: this.featureHeadline,
+                items: this.featureItems,
+                photo: this.featurePhotoFile,
+            });
+            if (!ok) return;
             this.featurePhotoUrl = this.featurePhotoDraftUrl;
             this.featurePhotoName = this.featurePhotoDraftName;
+            this.closeWcModal();
+        },
+        openHowItWorksEditor() {
+            this.howItWorksTitleDraft = this.howItWorksTitle;
+            this.howItWorksIntroDraft = this.howItWorksIntro;
+            this.wcModal = 'how-it-works-text';
+            this.$nextTick(() => this.$refs.howItWorksTitleInput && this.$refs.howItWorksTitleInput.focus());
+        },
+        async saveHowItWorksEditor() {
+            if (!this.howItWorksTitleDraft.trim()) {
+                this.$refs.howItWorksTitleInput.focus();
+                return;
+            }
+            const ok = await this.persistSection('how_it_works', {
+                title: this.howItWorksTitleDraft.trim(),
+                intro: this.howItWorksIntroDraft.trim(),
+                steps: this.howItWorksSteps,
+            });
+            if (!ok) return;
+            this.howItWorksTitle = this.howItWorksTitleDraft.trim();
+            this.howItWorksIntro = this.howItWorksIntroDraft.trim();
+            this.closeWcModal();
+        },
+        openHowItWorksStepEditor(index) {
+            const step = this.howItWorksSteps[index];
+            if (!step) return;
+            this.howItWorksStepIndex = index;
+            this.howItWorksStepTitleDraft = step.title;
+            this.howItWorksStepDescDraft = step.desc;
+            this.wcModal = 'how-it-works-step';
+            this.$nextTick(() => this.$refs.howItWorksStepTitleInput && this.$refs.howItWorksStepTitleInput.focus());
+        },
+        async saveHowItWorksStepEditor() {
+            if (!this.howItWorksStepTitleDraft.trim()) {
+                this.$refs.howItWorksStepTitleInput.focus();
+                return;
+            }
+            if (this.howItWorksStepIndex === null) return;
+            const nextSteps = this.howItWorksSteps.map((step, index) => index === this.howItWorksStepIndex
+                ? { ...step, title: this.howItWorksStepTitleDraft.trim(), desc: this.howItWorksStepDescDraft.trim() }
+                : step);
+            const ok = await this.persistSection('how_it_works', {
+                title: this.howItWorksTitle,
+                intro: this.howItWorksIntro,
+                steps: nextSteps,
+            });
+            if (!ok) return;
+            this.howItWorksSteps = nextSteps;
+            this.closeWcModal();
+        },
+        openPopularServicesEditor() {
+            this.popularServicesTitleDraft = this.popularServicesTitle;
+            this.popularServicesIntroDraft = this.popularServicesIntro;
+            this.wcModal = 'popular-services-text';
+            this.$nextTick(() => this.$refs.popularServicesTitleInput && this.$refs.popularServicesTitleInput.focus());
+        },
+        async savePopularServicesEditor() {
+            if (!this.popularServicesTitleDraft.trim()) {
+                this.$refs.popularServicesTitleInput.focus();
+                return;
+            }
+            const ok = await this.persistSection('popular_services', {
+                title: this.popularServicesTitleDraft.trim(),
+                intro: this.popularServicesIntroDraft.trim(),
+                items: this.popularServicesItems,
+            });
+            if (!ok) return;
+            this.popularServicesTitle = this.popularServicesTitleDraft.trim();
+            this.popularServicesIntro = this.popularServicesIntroDraft.trim();
+            this.closeWcModal();
+        },
+        openPopularServiceItemEditor(index) {
+            const item = this.popularServicesItems[index];
+            if (!item) return;
+            this.popularServiceIndex = index;
+            this.popularServiceTitleDraft = item.title;
+            this.popularServiceDescDraft = item.desc;
+            this.wcModal = 'popular-service-item';
+            this.$nextTick(() => this.$refs.popularServiceTitleInput && this.$refs.popularServiceTitleInput.focus());
+        },
+        async savePopularServiceItemEditor() {
+            if (!this.popularServiceTitleDraft.trim()) {
+                this.$refs.popularServiceTitleInput.focus();
+                return;
+            }
+            if (this.popularServiceIndex === null) return;
+            const nextItems = this.popularServicesItems.map((item, index) => index === this.popularServiceIndex
+                ? { ...item, title: this.popularServiceTitleDraft.trim(), desc: this.popularServiceDescDraft.trim() }
+                : item);
+            const ok = await this.persistSection('popular_services', {
+                title: this.popularServicesTitle,
+                intro: this.popularServicesIntro,
+                items: nextItems,
+            });
+            if (!ok) return;
+            this.popularServicesItems = nextItems;
             this.closeWcModal();
         },
         openTestimonialTextEditor() {
@@ -372,11 +524,18 @@ $versionHistory = [
             this.wcModal = 'testimonial-text';
             this.$nextTick(() => this.$refs.testimonialIntroInput && this.$refs.testimonialIntroInput.focus());
         },
-        saveTestimonialTextEditor() {
+        async saveTestimonialTextEditor() {
             if (!this.testimonialIntroDraft.trim()) {
                 this.$refs.testimonialIntroInput.focus();
                 return;
             }
+            const ok = await this.persistSection('testimonials', {
+                intro: this.testimonialIntroDraft.trim(),
+                desc: this.testimonialDescDraft.trim(),
+                trust: this.testimonialTrustDraft.trim(),
+                items: this.testimonials,
+            });
+            if (!ok) return;
             this.testimonialIntro = this.testimonialIntroDraft.trim();
             this.testimonialDesc = this.testimonialDescDraft.trim();
             this.testimonialTrust = this.testimonialTrustDraft.trim();
@@ -387,6 +546,7 @@ $versionHistory = [
             this.pendingTestimonial = null;
             this.testimonialNameDraft = '';
             this.testimonialDateDraft = '';
+            this.testimonialPhotoFile = null;
             this.wcModal = 'testimonial-add';
             this.$nextTick(() => this.$refs.testimonialNameInput && this.$refs.testimonialNameInput.focus());
         },
@@ -397,6 +557,7 @@ $versionHistory = [
             this.pendingTestimonial = null;
             this.testimonialNameDraft = item.name;
             this.testimonialDateDraft = item.dateSubmitted || '';
+            this.testimonialPhotoFile = null;
             this.wcModal = 'testimonial-add';
             this.$nextTick(() => this.$refs.testimonialNameInput && this.$refs.testimonialNameInput.focus());
         },
@@ -418,7 +579,7 @@ $versionHistory = [
                 this.testimonials[this.testimonialEditIndex].dateSubmitted = dateSubmitted;
                 this.testimonials[this.testimonialEditIndex].when = dateSubmitted;
                 this.testimonialPhotoDraftUrl = this.testimonials[this.testimonialEditIndex].avatar || '';
-                this.testimonialPhotoDraftName = this.testimonials[this.testimonialEditIndex].avatar ? 'FursGo_Banner.jpeg' : '';
+                this.testimonialPhotoDraftName = this.testimonials[this.testimonialEditIndex].avatar ? 'Photo' : '';
                 this.wcModal = 'testimonial-photo';
                 return;
             }
@@ -430,9 +591,10 @@ $versionHistory = [
                 quote: 'The easiest booking I\'ve ever made! My dog looked amazing and the groomer was so kind.',
                 rating: 5,
                 avatar: null,
+                image_path: null,
             };
-            this.testimonialPhotoDraftUrl = @js(asset('images/testimonial-1.png'));
-            this.testimonialPhotoDraftName = 'FursGo_Banner.jpeg';
+            this.testimonialPhotoDraftUrl = '';
+            this.testimonialPhotoDraftName = '';
             this.wcModal = 'testimonial-photo';
         },
         onTestimonialPhotoSelected(event) {
@@ -441,25 +603,51 @@ $versionHistory = [
             if (this.testimonialPhotoDraftUrl && this.testimonialPhotoDraftUrl.startsWith('blob:')) {
                 URL.revokeObjectURL(this.testimonialPhotoDraftUrl);
             }
+            this.testimonialPhotoFile = file;
             this.testimonialPhotoDraftUrl = URL.createObjectURL(file);
             this.testimonialPhotoDraftName = file.name;
             event.target.value = '';
         },
-        saveTestimonialPhoto() {
+        async saveTestimonialPhoto() {
+            let nextItems = [...this.testimonials];
+            let photoIndex = this.testimonialEditIndex;
+
             if (this.testimonialEditIndex !== null) {
-                this.testimonials[this.testimonialEditIndex].avatar = this.testimonialPhotoDraftUrl || null;
+                nextItems[this.testimonialEditIndex] = {
+                    ...nextItems[this.testimonialEditIndex],
+                    avatar: this.testimonialPhotoDraftUrl || nextItems[this.testimonialEditIndex].avatar,
+                };
+            } else if (this.pendingTestimonial) {
+                this.pendingTestimonial.avatar = this.testimonialPhotoDraftUrl || null;
+                nextItems = [...nextItems, this.pendingTestimonial];
+                photoIndex = nextItems.length - 1;
+            } else {
                 this.closeWcModal();
                 return;
             }
 
-            if (!this.pendingTestimonial) {
-                this.closeWcModal();
-                return;
-            }
-
-            this.pendingTestimonial.avatar = this.testimonialPhotoDraftUrl || null;
-            this.testimonials.push(this.pendingTestimonial);
+            const ok = await this.persistSection('testimonials', {
+                intro: this.testimonialIntro,
+                desc: this.testimonialDesc,
+                trust: this.testimonialTrust,
+                items: nextItems,
+                photo: this.testimonialPhotoFile,
+                photo_index: this.testimonialPhotoFile ? photoIndex : null,
+            });
+            if (!ok) return;
+            this.testimonials = nextItems;
             this.closeWcModal();
+        },
+        async removeTestimonial(index) {
+            const nextItems = this.testimonials.filter((_, i) => i !== index);
+            const ok = await this.persistSection('testimonials', {
+                intro: this.testimonialIntro,
+                desc: this.testimonialDesc,
+                trust: this.testimonialTrust,
+                items: nextItems,
+            });
+            if (!ok) return;
+            this.testimonials = nextItems;
         },
         openBanner3Editor() {
             this.banner3TitleDraft = this.banner3Title;
@@ -468,7 +656,7 @@ $versionHistory = [
             this.wcModal = 'banner3-text';
             this.$nextTick(() => this.$refs.banner3TitleInput && this.$refs.banner3TitleInput.focus());
         },
-        saveBanner3Editor() {
+        async saveBanner3Editor() {
             if (!this.banner3TitleDraft.trim()) {
                 this.$refs.banner3TitleInput.focus();
                 return;
@@ -477,6 +665,13 @@ $versionHistory = [
                 this.$refs.banner3CtaInput.focus();
                 return;
             }
+            const ok = await this.persistSection('mission', {
+                title: this.banner3TitleDraft.trim(),
+                desc: this.banner3DescDraft.trim(),
+                cta: this.banner3CtaDraft.trim(),
+                cta_url: this.banner3CtaUrl,
+            });
+            if (!ok) return;
             this.banner3Title = this.banner3TitleDraft.trim();
             this.banner3Desc = this.banner3DescDraft.trim();
             this.banner3Cta = this.banner3CtaDraft.trim();
@@ -485,6 +680,7 @@ $versionHistory = [
         openBanner3PhotoEditor() {
             this.banner3PhotoDraftUrl = this.banner3PhotoUrl;
             this.banner3PhotoDraftName = this.banner3PhotoName;
+            this.banner3PhotoFile = null;
             this.wcModal = 'banner3-photo';
         },
         onBanner3PhotoSelected(event) {
@@ -493,11 +689,20 @@ $versionHistory = [
             if (this.banner3PhotoDraftUrl && this.banner3PhotoDraftUrl.startsWith('blob:')) {
                 URL.revokeObjectURL(this.banner3PhotoDraftUrl);
             }
+            this.banner3PhotoFile = file;
             this.banner3PhotoDraftUrl = URL.createObjectURL(file);
             this.banner3PhotoDraftName = file.name;
             event.target.value = '';
         },
-        saveBanner3PhotoEditor() {
+        async saveBanner3PhotoEditor() {
+            const ok = await this.persistSection('mission', {
+                title: this.banner3Title,
+                desc: this.banner3Desc,
+                cta: this.banner3Cta,
+                cta_url: this.banner3CtaUrl,
+                photo: this.banner3PhotoFile,
+            });
+            if (!ok) return;
             this.banner3PhotoUrl = this.banner3PhotoDraftUrl;
             this.banner3PhotoName = this.banner3PhotoDraftName;
             this.closeWcModal();
@@ -508,11 +713,17 @@ $versionHistory = [
             this.wcModal = 'service-map-text';
             this.$nextTick(() => this.$refs.serviceMapTitleInput && this.$refs.serviceMapTitleInput.focus());
         },
-        saveServiceMapEditor() {
+        async saveServiceMapEditor() {
             if (!this.serviceMapTitleDraft.trim()) {
                 this.$refs.serviceMapTitleInput.focus();
                 return;
             }
+            const ok = await this.persistSection('service_map', {
+                title: this.serviceMapTitleDraft.trim(),
+                desc: this.serviceMapDescDraft.trim(),
+                cities: this.cities,
+            });
+            if (!ok) return;
             this.serviceMapTitle = this.serviceMapTitleDraft.trim();
             this.serviceMapDesc = this.serviceMapDescDraft.trim();
             this.closeWcModal();
@@ -522,19 +733,33 @@ $versionHistory = [
             this.wcModal = 'add-city';
             this.$nextTick(() => this.$refs.cityNameInput && this.$refs.cityNameInput.focus());
         },
-        saveAddCity() {
+        async saveAddCity() {
             const name = this.cityNameDraft.trim();
             if (!name) {
                 this.$refs.cityNameInput.focus();
                 return;
             }
-            if (!this.cities.some(c => c.toLowerCase() === name.toLowerCase())) {
-                this.cities.push(name);
-            }
+            const nextCities = this.cities.some(c => c.toLowerCase() === name.toLowerCase())
+                ? this.cities
+                : [...this.cities, name];
+            const ok = await this.persistSection('service_map', {
+                title: this.serviceMapTitle,
+                desc: this.serviceMapDesc,
+                cities: nextCities,
+            });
+            if (!ok) return;
+            this.cities = nextCities;
             this.closeWcModal();
         },
-        removeCity(index) {
-            this.cities.splice(index, 1);
+        async removeCity(index) {
+            const nextCities = this.cities.filter((_, i) => i !== index);
+            const ok = await this.persistSection('service_map', {
+                title: this.serviceMapTitle,
+                desc: this.serviceMapDesc,
+                cities: nextCities,
+            });
+            if (!ok) return;
+            this.cities = nextCities;
         },
         openFooterCtaEditor() {
             this.footerCtaHeadlineDraft = this.footerCtaHeadline;
@@ -755,7 +980,7 @@ $versionHistory = [
                             <path d="M14.0674 8.20765C14.3609 7.26411 15.6391 7.26412 15.9326 8.20766L17.0309 11.7377C17.1622 12.1597 17.5387 12.4454 17.9635 12.4454H21.5175C22.4675 12.4454 22.8624 13.7149 22.0939 14.298L19.2186 16.4797C18.8749 16.7405 18.7311 17.2027 18.8624 17.6247L19.9607 21.1548C20.2542 22.0983 19.2202 22.8829 18.4516 22.2998L15.5764 20.1181C15.2327 19.8573 14.7673 19.8573 14.4236 20.1181L11.5484 22.2998C10.7798 22.8829 9.74579 22.0983 10.0393 21.1548L11.1376 17.6247C11.2689 17.2027 11.1251 16.7405 10.7814 16.4797L7.9061 14.298C7.13758 13.7149 7.53255 12.4454 8.4825 12.4454H12.0365C12.4613 12.4454 12.8379 12.1597 12.9691 11.7377L14.0674 8.20765Z" fill="#FFC97A" />
                         </svg>
                         <div class="admin-wc-trust-copy">
-                            <p>4.9 average rating from 5,000 + pet owners.</p>
+                            <p x-text="heroRatingHeadline"></p>
                             <p x-text="heroRatingCopy"></p>
                         </div>
                     </div>
@@ -853,14 +1078,14 @@ $versionHistory = [
                     height="96">
             </section>
 
-            {{-- Banner 1 --}}
+            {{-- Banner 1 — How it works --}}
             <section class="admin-wc-card">
                 <div class="admin-wc-card-head">
                     <div>
                         <h2 class="admin-wc-card-title">Banner 1</h2>
-                        <p class="admin-wc-card-sub">Lorem Ipsum dolor sit amet</p>
+                        <p class="admin-wc-card-sub">How it works</p>
                     </div>
-                    <button type="button" class="admin-wc-edit-link">
+                    <button type="button" class="admin-wc-edit-link" @click="openHowItWorksEditor()" aria-haspopup="dialog">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
                             <path d="M6.90909 1.43188H2.11869C1.75569 1.43188 1.40756 1.57609 1.15088 1.83276C0.8942 2.08944 0.75 2.43757 0.75 2.80057V12.3814C0.75 12.7444 0.8942 13.0925 1.15088 13.3492C1.40756 13.6059 1.75569 13.7501 2.11869 13.7501H11.6995C12.0625 13.7501 12.4106 13.6059 12.6673 13.3492C12.924 13.0925 13.0682 12.7444 13.0682 12.3814V7.59097" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                             <path d="M11.2717 1.1752C11.544 0.902948 11.9132 0.75 12.2983 0.75C12.6833 0.75 13.0525 0.902948 13.3248 1.1752C13.597 1.44744 13.75 1.81669 13.75 2.20171C13.75 2.58673 13.597 2.95598 13.3248 3.22823L7.15679 9.39689C6.99429 9.55925 6.79354 9.6781 6.57304 9.74249L4.60692 10.3173C4.54804 10.3345 4.48562 10.3355 4.4262 10.3203C4.36678 10.3051 4.31254 10.2742 4.26916 10.2308C4.22579 10.1874 4.19487 10.1332 4.17965 10.0738C4.16443 10.0143 4.16546 9.95193 4.18263 9.89304L4.75748 7.92692C4.82217 7.7066 4.94125 7.50609 5.10376 7.34386L11.2717 1.1752Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -870,41 +1095,41 @@ $versionHistory = [
                 </div>
 
                 <div class="admin-wc-preview admin-wc-hero-preview admin-wc-preview-block">
-                    <p class="admin-wc-preview-headline">How it works</p>
-                    <p class="admin-wc-preview-body">Finding the right groomer shouldn't be overwhelming. We've made it simple, safe, and stress-free — so you can book with confidence in just a few steps.</p>
+                    <p class="admin-wc-preview-headline" x-text="howItWorksTitle"></p>
+                    <p class="admin-wc-preview-body" x-text="howItWorksIntro"></p>
                 </div>
 
                 <div class="admin-wc-divider"></div>
 
                 <ul class="admin-wc-list">
-                    @foreach ($howItWorks as $item)
-                    <li class="admin-wc-list-item">
-                        <span class="admin-wc-step-icon" aria-hidden="true">
-                            <img src="{{ asset($item['icon']) }}" alt="" width="18" height="18">
-                        </span>
-                        <div class="admin-wc-list-copy">
-                            <p class="admin-wc-list-title">{{ $item['title'] }}</p>
-                            <p class="admin-wc-list-desc">{{ $item['desc'] }}</p>
-                        </div>
-                        <button type="button" class="admin-wc-icon-btn" aria-label="Edit {{ $item['title'] }}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-                                <path d="M6.90909 1.43188H2.11869C1.75569 1.43188 1.40756 1.57609 1.15088 1.83276C0.8942 2.08944 0.75 2.43757 0.75 2.80057V12.3814C0.75 12.7444 0.8942 13.0925 1.15088 13.3492C1.40756 13.6059 1.75569 13.7501 2.11869 13.7501H11.6995C12.0625 13.7501 12.4106 13.6059 12.6673 13.3492C12.924 13.0925 13.0682 12.7444 13.0682 12.3814V7.59097" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M11.2717 1.1752C11.544 0.902948 11.9132 0.75 12.2983 0.75C12.6833 0.75 13.0525 0.902948 13.3248 1.1752C13.597 1.44744 13.75 1.81669 13.75 2.20171C13.75 2.58673 13.597 2.95598 13.3248 3.22823L7.15679 9.39689C6.99429 9.55925 6.79354 9.6781 6.57304 9.74249L4.60692 10.3173C4.54804 10.3345 4.48562 10.3355 4.4262 10.3203C4.36678 10.3051 4.31254 10.2742 4.26916 10.2308C4.22579 10.1874 4.19487 10.1332 4.17965 10.0738C4.16443 10.0143 4.16546 9.95193 4.18263 9.89304L4.75748 7.92692C4.82217 7.7066 4.94125 7.50609 5.10376 7.34386L11.2717 1.1752Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </button>
-                    </li>
-                    @endforeach
+                    <template x-for="(item, index) in howItWorksSteps" :key="item.id || index">
+                        <li class="admin-wc-list-item">
+                            <span class="admin-wc-step-icon" aria-hidden="true">
+                                <img :src="item.image || @js(asset('images/search.png'))" alt="" width="18" height="18">
+                            </span>
+                            <div class="admin-wc-list-copy">
+                                <p class="admin-wc-list-title" x-text="item.title"></p>
+                                <p class="admin-wc-list-desc" x-text="item.desc"></p>
+                            </div>
+                            <button type="button" class="admin-wc-icon-btn" @click="openHowItWorksStepEditor(index)" :aria-label="'Edit ' + item.title" aria-haspopup="dialog">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                                    <path d="M6.90909 1.43188H2.11869C1.75569 1.43188 1.40756 1.57609 1.15088 1.83276C0.8942 2.08944 0.75 2.43757 0.75 2.80057V12.3814C0.75 12.7444 0.8942 13.0925 1.15088 13.3492C1.40756 13.6059 1.75569 13.7501 2.11869 13.7501H11.6995C12.0625 13.7501 12.4106 13.6059 12.6673 13.3492C12.924 13.0925 13.0682 12.7444 13.0682 12.3814V7.59097" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M11.2717 1.1752C11.544 0.902948 11.9132 0.75 12.2983 0.75C12.6833 0.75 13.0525 0.902948 13.3248 1.1752C13.597 1.44744 13.75 1.81669 13.75 2.20171C13.75 2.58673 13.597 2.95598 13.3248 3.22823L7.15679 9.39689C6.99429 9.55925 6.79354 9.6781 6.57304 9.74249L4.60692 10.3173C4.54804 10.3345 4.48562 10.3355 4.4262 10.3203C4.36678 10.3051 4.31254 10.2742 4.26916 10.2308C4.22579 10.1874 4.19487 10.1332 4.17965 10.0738C4.16443 10.0143 4.16546 9.95193 4.18263 9.89304L4.75748 7.92692C4.82217 7.7066 4.94125 7.50609 5.10376 7.34386L11.2717 1.1752Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </li>
+                    </template>
                 </ul>
             </section>
 
-            {{-- Banner 2 --}}
+            {{-- Banner 2 — Popular Services --}}
             <section class="admin-wc-card">
                 <div class="admin-wc-card-head">
                     <div>
                         <h2 class="admin-wc-card-title">Banner 2</h2>
-                        <p class="admin-wc-card-sub">Lorem Ipsum dolor sit amet</p>
+                        <p class="admin-wc-card-sub">Popular Services</p>
                     </div>
-                    <button type="button" class="admin-wc-edit-link">
+                    <button type="button" class="admin-wc-edit-link" @click="openPopularServicesEditor()" aria-haspopup="dialog">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
                             <path d="M6.90909 1.43188H2.11869C1.75569 1.43188 1.40756 1.57609 1.15088 1.83276C0.8942 2.08944 0.75 2.43757 0.75 2.80057V12.3814C0.75 12.7444 0.8942 13.0925 1.15088 13.3492C1.40756 13.6059 1.75569 13.7501 2.11869 13.7501H11.6995C12.0625 13.7501 12.4106 13.6059 12.6673 13.3492C12.924 13.0925 13.0682 12.7444 13.0682 12.3814V7.59097" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                             <path d="M11.2717 1.1752C11.544 0.902948 11.9132 0.75 12.2983 0.75C12.6833 0.75 13.0525 0.902948 13.3248 1.1752C13.597 1.44744 13.75 1.81669 13.75 2.20171C13.75 2.58673 13.597 2.95598 13.3248 3.22823L7.15679 9.39689C6.99429 9.55925 6.79354 9.6781 6.57304 9.74249L4.60692 10.3173C4.54804 10.3345 4.48562 10.3355 4.4262 10.3203C4.36678 10.3051 4.31254 10.2742 4.26916 10.2308C4.22579 10.1874 4.19487 10.1332 4.17965 10.0738C4.16443 10.0143 4.16546 9.95193 4.18263 9.89304L4.75748 7.92692C4.82217 7.7066 4.94125 7.50609 5.10376 7.34386L11.2717 1.1752Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -914,37 +1139,38 @@ $versionHistory = [
                 </div>
 
                 <div class="admin-wc-preview admin-wc-hero-preview admin-wc-preview-block">
-                    <p class="admin-wc-preview-headline">Popular Services</p>
-                    <p class="admin-wc-preview-body">Our most trusted services — chosen by owners who want comfort, reliability, and peace of mind.</p>
+                    <p class="admin-wc-preview-headline" x-text="popularServicesTitle"></p>
+                    <p class="admin-wc-preview-body" x-text="popularServicesIntro"></p>
                 </div>
 
                 <div class="admin-wc-divider"></div>
 
                 <ul class="admin-wc-list">
-                    @foreach ($popularServices as $item)
-                    <li class="admin-wc-list-item">
-                        @if ($item['image'])
-                        <img src="{{ asset($item['image']) }}" alt="" class="admin-wc-service-thumb" width="30" height="30">
-                        @else
-                        <span class="admin-wc-service-placeholder" aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30" fill="none">
-                                <rect x="0.5" y="0.5" width="29" height="29" rx="4.5" fill="#F3F3F3" stroke="#E2E2E2" />
-                                <path d="M18.713 15.4615C18.713 15.7225 18.5015 15.934 18.2405 15.934H15.857V18.4365C15.857 18.7168 15.6298 18.944 15.3495 18.944C15.0692 18.944 14.842 18.7168 14.842 18.4365V15.934H12.4725C12.2115 15.934 12 15.7225 12 15.4615C12 15.2005 12.2115 14.989 12.4725 14.989H14.842V12.5075C14.842 12.2272 15.0692 12 15.3495 12C15.6298 12 15.857 12.2272 15.857 12.5075V14.989H18.2405C18.5015 14.989 18.713 15.2005 18.713 15.4615Z" fill="#E2E2E2" />
-                            </svg>
-                        </span>
-                        @endif
-                        <div class="admin-wc-list-copy">
-                            <p class="admin-wc-list-title">{{ $item['title'] }}</p>
-                            <p class="admin-wc-list-desc">{{ $item['desc'] }}</p>
-                        </div>
-                        <button type="button" class="admin-wc-icon-btn" aria-label="Edit {{ $item['title'] }}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-                                <path d="M6.90909 1.43188H2.11869C1.75569 1.43188 1.40756 1.57609 1.15088 1.83276C0.8942 2.08944 0.75 2.43757 0.75 2.80057V12.3814C0.75 12.7444 0.8942 13.0925 1.15088 13.3492C1.40756 13.6059 1.75569 13.7501 2.11869 13.7501H11.6995C12.0625 13.7501 12.4106 13.6059 12.6673 13.3492C12.924 13.0925 13.0682 12.7444 13.0682 12.3814V7.59097" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M11.2717 1.1752C11.544 0.902948 11.9132 0.75 12.2983 0.75C12.6833 0.75 13.0525 0.902948 13.3248 1.1752C13.597 1.44744 13.75 1.81669 13.75 2.20171C13.75 2.58673 13.597 2.95598 13.3248 3.22823L7.15679 9.39689C6.99429 9.55925 6.79354 9.6781 6.57304 9.74249L4.60692 10.3173C4.54804 10.3345 4.48562 10.3355 4.4262 10.3203C4.36678 10.3051 4.31254 10.2742 4.26916 10.2308C4.22579 10.1874 4.19487 10.1332 4.17965 10.0738C4.16443 10.0143 4.16546 9.95193 4.18263 9.89304L4.75748 7.92692C4.82217 7.7066 4.94125 7.50609 5.10376 7.34386L11.2717 1.1752Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </button>
-                    </li>
-                    @endforeach
+                    <template x-for="(item, index) in popularServicesItems" :key="item.id || index">
+                        <li class="admin-wc-list-item">
+                            <template x-if="item.image">
+                                <img :src="item.image" alt="" class="admin-wc-service-thumb" width="30" height="30">
+                            </template>
+                            <template x-if="!item.image">
+                                <span class="admin-wc-service-placeholder" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30" fill="none">
+                                        <rect x="0.5" y="0.5" width="29" height="29" rx="4.5" fill="#F3F3F3" stroke="#E2E2E2" />
+                                        <path d="M18.713 15.4615C18.713 15.7225 18.5015 15.934 18.2405 15.934H15.857V18.4365C15.857 18.7168 15.6298 18.944 15.3495 18.944C15.0692 18.944 14.842 18.7168 14.842 18.4365V15.934H12.4725C12.2115 15.934 12 15.7225 12 15.4615C12 15.2005 12.2115 14.989 12.4725 14.989H14.842V12.5075C14.842 12.2272 15.0692 12 15.3495 12C15.6298 12 15.857 12.2272 15.857 12.5075V14.989H18.2405C18.5015 14.989 18.713 15.2005 18.713 15.4615Z" fill="#E2E2E2" />
+                                    </svg>
+                                </span>
+                            </template>
+                            <div class="admin-wc-list-copy">
+                                <p class="admin-wc-list-title" x-text="item.title"></p>
+                                <p class="admin-wc-list-desc" x-text="item.desc"></p>
+                            </div>
+                            <button type="button" class="admin-wc-icon-btn" @click="openPopularServiceItemEditor(index)" :aria-label="'Edit ' + item.title" aria-haspopup="dialog">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                                    <path d="M6.90909 1.43188H2.11869C1.75569 1.43188 1.40756 1.57609 1.15088 1.83276C0.8942 2.08944 0.75 2.43757 0.75 2.80057V12.3814C0.75 12.7444 0.8942 13.0925 1.15088 13.3492C1.40756 13.6059 1.75569 13.7501 2.11869 13.7501H11.6995C12.0625 13.7501 12.4106 13.6059 12.6673 13.3492C12.924 13.0925 13.0682 12.7444 13.0682 12.3814V7.59097" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M11.2717 1.1752C11.544 0.902948 11.9132 0.75 12.2983 0.75C12.6833 0.75 13.0525 0.902948 13.3248 1.1752C13.597 1.44744 13.75 1.81669 13.75 2.20171C13.75 2.58673 13.597 2.95598 13.3248 3.22823L7.15679 9.39689C6.99429 9.55925 6.79354 9.6781 6.57304 9.74249L4.60692 10.3173C4.54804 10.3345 4.48562 10.3355 4.4262 10.3203C4.36678 10.3051 4.31254 10.2742 4.26916 10.2308C4.22579 10.1874 4.19487 10.1332 4.17965 10.0738C4.16443 10.0143 4.16546 9.95193 4.18263 9.89304L4.75748 7.92692C4.82217 7.7066 4.94125 7.50609 5.10376 7.34386L11.2717 1.1752Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </li>
+                    </template>
                 </ul>
             </section>
 
@@ -1023,7 +1249,7 @@ $versionHistory = [
                                                 <circle cx="8" cy="6" r="2" stroke="#3B3731" stroke-width="1.2" />
                                             </svg>
                                         </button>
-                                        <button type="button" class="admin-wc-square-btn" @click="testimonials.splice(index, 1)" aria-label="Delete testimonial">
+                                        <button type="button" class="admin-wc-square-btn" @click="removeTestimonial(index)" aria-label="Delete testimonial">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                                                 <path d="M2.5 2.5L9.5 9.5M9.5 2.5L2.5 9.5" stroke="#3B3731" stroke-width="1.3" stroke-linecap="round" />
                                             </svg>
@@ -2847,25 +3073,20 @@ $versionHistory = [
                                 aria-required="true"></textarea>
                         </label>
 
-                        <div class="admin-wc-modal-field">
+                        <label class="admin-wc-modal-field">
+                            <span>Rating Headline <b aria-hidden="true">*</b></span>
+                            <textarea
+                                x-ref="heroRatingHeadlineInput"
+                                x-model="heroRatingHeadlineDraft"
+                                rows="2"
+                                required
+                                aria-required="true"></textarea>
+                        </label>
+
+                        <label class="admin-wc-modal-field">
                             <span>Rating Copy</span>
-                            <div class="admin-wc-modal-rating" aria-label="4.9 rating, auto-calculated">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
-                                    <path d="M14.0674 3.20765C14.3609 2.26411 15.6391 2.26412 15.9326 3.20766L17.0309 6.73772C17.1622 7.15973 17.5387 7.44542 17.9635 7.44542H21.5175C22.4675 7.44542 22.8624 8.71491 22.0939 9.29802L19.2186 11.4797C18.8749 11.7405 18.7311 12.2027 18.8624 12.6247L19.9607 16.1548C20.2542 17.0983 19.2202 17.8829 18.4516 17.2998L15.5764 15.1181C15.2327 14.8573 14.7673 14.8573 14.4236 15.1181L11.5484 17.2998C10.7798 17.8829 9.74579 17.0983 10.0393 16.1548L11.1376 12.6247C11.2689 12.2027 11.1251 11.7405 10.7814 11.4797L7.9061 9.29802C7.13758 8.71491 7.53255 7.44542 8.4825 7.44542H12.0365C12.4613 7.44542 12.8379 7.15973 12.9691 6.73772L14.0674 3.20765Z" fill="#FFC97A" transform="translate(0 5)" />
-                                </svg>
-                                <strong>4.9</strong>
-                                <span class="admin-wc-modal-auto">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="9" height="11" viewBox="0 0 9 11" fill="none">
-                                        <path d="M2.16675 4.38889V2.72222C2.16675 2.13285 2.40087 1.56762 2.81762 1.15087C3.23437 0.734126 3.7996 0.5 4.38897 0.5C4.97834 0.5 5.54357 0.734126 5.96032 1.15087C6.37707 1.56762 6.61119 2.13285 6.61119 2.72222V4.38889" stroke="#AAAAAA" stroke-linecap="round" />
-                                        <path d="M0.5 4.38889H8.27778V9.38889C8.27778 9.68357 8.16071 9.96619 7.95234 10.1746C7.74397 10.3829 7.46135 10.5 7.16667 10.5H1.61111C1.31643 10.5 1.03381 10.3829 0.825437 10.1746C0.617063 9.96619 0.5 9.68357 0.5 9.38889V4.38889Z" stroke="#AAAAAA" stroke-linejoin="round" />
-                                        <circle cx="4.389" cy="7.44445" r="0.833333" fill="#AAAAAA" />
-                                    </svg>
-                                    Auto-calculated
-                                </span>
-                            </div>
-                            <label class="admin-wc-visually-hidden" for="admin-wc-rating-copy">Rating description</label>
                             <textarea id="admin-wc-rating-copy" x-model="heroRatingCopyDraft" rows="2"></textarea>
-                        </div>
+                        </label>
                     </div>
 
                     <footer class="admin-wc-modal-actions">
@@ -3092,6 +3313,158 @@ $versionHistory = [
                         <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
                         <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
                         <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Edit How it works text --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'how-it-works-text'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-how-it-works-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-how-it-works-modal-title">Edit How it works</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close how it works modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+                <form class="admin-wc-modal-form" @submit.prevent="saveHowItWorksEditor()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>Title <b aria-hidden="true">*</b></span>
+                            <input type="text" x-ref="howItWorksTitleInput" x-model="howItWorksTitleDraft" required>
+                        </label>
+                        <label class="admin-wc-modal-field">
+                            <span>Intro</span>
+                            <textarea x-model="howItWorksIntroDraft" rows="4"></textarea>
+                        </label>
+                    </div>
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish" :disabled="saving">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Edit How it works step --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'how-it-works-step'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-how-it-works-step-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-how-it-works-step-modal-title">Edit step</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close how it works step modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+                <form class="admin-wc-modal-form" @submit.prevent="saveHowItWorksStepEditor()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>Title <b aria-hidden="true">*</b></span>
+                            <input type="text" x-ref="howItWorksStepTitleInput" x-model="howItWorksStepTitleDraft" required>
+                        </label>
+                        <label class="admin-wc-modal-field">
+                            <span>Description</span>
+                            <textarea x-model="howItWorksStepDescDraft" rows="4"></textarea>
+                        </label>
+                    </div>
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish" :disabled="saving">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Edit Popular Services text --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'popular-services-text'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-popular-services-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-popular-services-modal-title">Edit Popular Services</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close popular services modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+                <form class="admin-wc-modal-form" @submit.prevent="savePopularServicesEditor()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>Title <b aria-hidden="true">*</b></span>
+                            <input type="text" x-ref="popularServicesTitleInput" x-model="popularServicesTitleDraft" required>
+                        </label>
+                        <label class="admin-wc-modal-field">
+                            <span>Intro</span>
+                            <textarea x-model="popularServicesIntroDraft" rows="4"></textarea>
+                        </label>
+                    </div>
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish" :disabled="saving">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Edit Popular Service item --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'popular-service-item'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-popular-service-item-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-popular-service-item-modal-title">Edit service</h2>
+                        <p x-text="editingLabel"></p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close popular service item modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+                <form class="admin-wc-modal-form" @submit.prevent="savePopularServiceItemEditor()">
+                    <div class="admin-wc-modal-body">
+                        <label class="admin-wc-modal-field">
+                            <span>Title <b aria-hidden="true">*</b></span>
+                            <input type="text" x-ref="popularServiceTitleInput" x-model="popularServiceTitleDraft" required>
+                        </label>
+                        <label class="admin-wc-modal-field">
+                            <span>Description</span>
+                            <textarea x-model="popularServiceDescDraft" rows="4"></textarea>
+                        </label>
+                    </div>
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish" :disabled="saving">Save &amp; publish</button>
                     </footer>
                 </form>
             </section>
