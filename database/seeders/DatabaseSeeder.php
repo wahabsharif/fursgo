@@ -35,6 +35,7 @@ class DatabaseSeeder extends Seeder
             StaffSeeder::class,
             FaqSeeder::class,
             HomepageContentSeeder::class,
+            GroomersHostsContentSeeder::class,
         ]);
     }
 }
