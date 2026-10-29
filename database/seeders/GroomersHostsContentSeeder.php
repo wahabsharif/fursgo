@@ -40,7 +40,7 @@ class GroomersHostsContentSeeder extends Seeder
         return [
             'settings' => [
                 'hero_eyebrow' => '→ Grow your grooming business',
-                'hero_headline' => 'Set your own schedule, pricing & preferences.',
+                'hero_headline' => "Set your own schedule,\npricing & preferences.",
                 'hero_description' => "Join thousands of professionals earning more with FursGo.\nYou control when you work, what you charge, and who you serve.",
                 'hero_primary_cta' => 'Start your Profile',
                 'hero_primary_cta_url' => '/business-landing-page',
@@ -50,7 +50,7 @@ class GroomersHostsContentSeeder extends Seeder
 
                 'flexibility_title' => 'Control & flexibility',
 
-                'safety_title' => 'Guaranteed safety & support',
+                'safety_title' => "Guaranteed\nsafety & support",
                 'safety_photo' => 'images/admin/website-content/safety-support-shield.svg',
 
                 'tools_title' => 'Professional tools & CRM',

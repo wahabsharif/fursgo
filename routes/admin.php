@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\GroomersHostsContentController;
 use App\Http\Controllers\Admin\HomepageContentController;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
@@ -17,5 +18,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::post('homepage-content/{section}', [HomepageContentController::class, 'update'])
             ->name('homepage-content.update');
+
+        Route::post('groomers-hosts-content/{section}', [GroomersHostsContentController::class, 'update'])
+            ->name('groomers-hosts-content.update');
     });
 });

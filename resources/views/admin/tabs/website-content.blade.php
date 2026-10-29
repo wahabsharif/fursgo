@@ -13,15 +13,6 @@ $editingTargets = [
 ['id' => 'business', 'label' => 'Business Homepage - FursGo Business', 'url' => 'fursgo.com/'],
 ];
 
-$groomersBanner = [
-'headline' => 'Set your own schedule, pricing & preferences.',
-'description' => [
-'Join thousands of professionals earning more with FursGo.',
-'You control when you work, what you charge, and who you serve.',
-],
-'photo' => 'images/business-homepage-groomer-space-owner-hero-section.png',
-];
-
 $businessBanner = [
 'headline' => 'Step into a new opportunity — built around your love for animals.',
 'description' => 'Begin your application.',
@@ -34,6 +25,8 @@ $howItWorks = $wc['howItWorksSteps'];
 $popularServices = $wc['popularServicesItems'];
 $testimonials = $wc['testimonials'];
 $cities = $wc['cities'];
+
+$gh = \App\Support\GroomersHostsContent::adminBootstrap();
 
 $legalDocuments = [
     [
@@ -92,6 +85,7 @@ $versionHistory = [
         saving: false,
         csrfToken: @js(csrf_token()),
         homepageSaveUrl: @js(url('/admin/homepage-content')),
+        groomersHostsSaveUrl: @js(url('/admin/groomers-hosts-content')),
         heroHeadline: @js($wc['heroHeadline']),
         heroRatingValue: @js($wc['heroRatingValue']),
         heroRatingHeadline: @js($wc['heroRatingHeadline']),
@@ -183,13 +177,19 @@ $versionHistory = [
         contactAppStoreLink: '',
         contactAppStoreLabelDraft: '',
         contactAppStoreLinkDraft: '',
-        groomersBannerEyebrow: 'Loved by Pet Parents',
-        groomersBannerHeadline: @js($groomersBanner['headline']),
-        groomersBannerDesc: @js(implode(' ', $groomersBanner['description'])),
-        groomersBannerPrimaryCta: 'Start your Profile',
-        groomersBannerPrimaryLink: 'fursgo.com/business/signup',
-        groomersBannerSecondaryCta: 'Learn More',
-        groomersBannerSecondaryLink: 'fursgo.com/our_mission',
+        groomersBannerEyebrow: @js($gh['heroEyebrow']),
+        groomersBannerHeadline: @js($gh['heroHeadline']),
+        groomersBannerDesc: @js($gh['heroDescription']),
+        groomersBannerPrimaryCta: @js($gh['heroPrimaryCta']),
+        groomersBannerPrimaryLink: @js($gh['heroPrimaryCtaUrl']),
+        groomersBannerSecondaryCta: @js($gh['heroSecondaryCta']),
+        groomersBannerSecondaryLink: @js($gh['heroSecondaryCtaUrl']),
+        groomersBannerPhotoUrl: @js($gh['heroPhotoUrl']),
+        groomersBannerPhotoPath: @js($gh['heroPhotoPath']),
+        groomersBannerPhotoName: 'Hero photo',
+        groomersBannerPhotoDraftUrl: '',
+        groomersBannerPhotoDraftName: '',
+        groomersBannerPhotoFile: null,
         groomersBannerEyebrowDraft: '',
         groomersBannerHeadlineDraft: '',
         groomersBannerDescDraft: '',
@@ -247,8 +247,9 @@ $versionHistory = [
             this.featurePhotoFile = null;
             this.banner3PhotoFile = null;
             this.testimonialPhotoFile = null;
+            this.groomersBannerPhotoFile = null;
         },
-        async persistSection(section, extra = {}) {
+        async persistSection(section, extra = {}, saveUrl = null) {
             if (this.saving) return false;
             this.saving = true;
             try {
@@ -266,7 +267,7 @@ $versionHistory = [
                     form.append(key, value);
                 });
 
-                const response = await fetch(this.homepageSaveUrl + '/' + section, {
+                const response = await fetch((saveUrl || this.homepageSaveUrl) + '/' + section, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': this.csrfToken,
@@ -279,13 +280,13 @@ $versionHistory = [
 
                 const payload = await response.json().catch(() => ({}));
                 if (!response.ok) {
-                    alert(payload.message || 'Could not save homepage content.');
+                    alert(payload.message || 'Could not save content.');
                     return false;
                 }
-                return true;
+                return payload;
             } catch (error) {
                 console.error(error);
-                alert('Could not save homepage content.');
+                alert('Could not save content.');
                 return false;
             } finally {
                 this.saving = false;
@@ -815,7 +816,7 @@ $versionHistory = [
             this.wcModal = 'groomers-page-banner';
             this.$nextTick(() => this.$refs.groomersBannerHeadlineInput && this.$refs.groomersBannerHeadlineInput.focus());
         },
-        saveGroomersPageBannerEditor() {
+        async saveGroomersPageBannerEditor() {
             if (!this.groomersBannerHeadlineDraft.trim()) {
                 this.$refs.groomersBannerHeadlineInput.focus();
                 return;
@@ -824,6 +825,16 @@ $versionHistory = [
                 this.$refs.groomersBannerDescInput.focus();
                 return;
             }
+            const ok = await this.persistSection('hero', {
+                eyebrow: this.groomersBannerEyebrowDraft.trim(),
+                headline: this.groomersBannerHeadlineDraft.trim(),
+                description: this.groomersBannerDescDraft.trim(),
+                primary_cta: this.groomersBannerPrimaryCtaDraft.trim(),
+                primary_cta_url: this.groomersBannerPrimaryLinkDraft.trim(),
+                secondary_cta: this.groomersBannerSecondaryCtaDraft.trim(),
+                secondary_cta_url: this.groomersBannerSecondaryLinkDraft.trim(),
+            }, this.groomersHostsSaveUrl);
+            if (!ok) return;
             this.groomersBannerEyebrow = this.groomersBannerEyebrowDraft.trim();
             this.groomersBannerHeadline = this.groomersBannerHeadlineDraft.trim();
             this.groomersBannerDesc = this.groomersBannerDescDraft.trim();
@@ -831,6 +842,44 @@ $versionHistory = [
             this.groomersBannerPrimaryLink = this.groomersBannerPrimaryLinkDraft.trim();
             this.groomersBannerSecondaryCta = this.groomersBannerSecondaryCtaDraft.trim();
             this.groomersBannerSecondaryLink = this.groomersBannerSecondaryLinkDraft.trim();
+            this.closeWcModal();
+        },
+        openGroomersHeroPhotoEditor() {
+            this.groomersBannerPhotoDraftUrl = this.groomersBannerPhotoUrl;
+            this.groomersBannerPhotoDraftName = this.groomersBannerPhotoName;
+            this.groomersBannerPhotoFile = null;
+            this.wcModal = 'groomers-hero-photo';
+        },
+        onGroomersHeroPhotoSelected(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (this.groomersBannerPhotoDraftUrl && this.groomersBannerPhotoDraftUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(this.groomersBannerPhotoDraftUrl);
+            }
+            this.groomersBannerPhotoFile = file;
+            this.groomersBannerPhotoDraftUrl = URL.createObjectURL(file);
+            this.groomersBannerPhotoDraftName = file.name;
+            event.target.value = '';
+        },
+        async saveGroomersHeroPhotoEditor() {
+            const ok = await this.persistSection('hero', {
+                eyebrow: this.groomersBannerEyebrow,
+                headline: this.groomersBannerHeadline,
+                description: this.groomersBannerDesc,
+                primary_cta: this.groomersBannerPrimaryCta,
+                primary_cta_url: this.groomersBannerPrimaryLink,
+                secondary_cta: this.groomersBannerSecondaryCta,
+                secondary_cta_url: this.groomersBannerSecondaryLink,
+                photo: this.groomersBannerPhotoFile,
+            }, this.groomersHostsSaveUrl);
+            if (!ok) return;
+            if (ok.content && ok.content.hero) {
+                this.groomersBannerPhotoUrl = ok.content.hero.photo || this.groomersBannerPhotoDraftUrl;
+                this.groomersBannerPhotoPath = ok.content.hero.photo_path || this.groomersBannerPhotoPath;
+            } else {
+                this.groomersBannerPhotoUrl = this.groomersBannerPhotoDraftUrl;
+            }
+            this.groomersBannerPhotoName = this.groomersBannerPhotoDraftName;
             this.closeWcModal();
         },
         openLegalDocumentEditor(index) {
@@ -1876,7 +1925,7 @@ $versionHistory = [
                         <h2 class="admin-wc-card-title">Hero Photo</h2>
                         <p class="admin-wc-card-sub">Custom photo uploaded</p>
                     </div>
-                    <button type="button" class="admin-wc-edit-link">
+                    <button type="button" class="admin-wc-edit-link" @click="openGroomersHeroPhotoEditor()" aria-haspopup="dialog">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
                             <path d="M6.90909 1.43188H2.11869C1.75569 1.43188 1.40756 1.57609 1.15088 1.83276C0.8942 2.08944 0.75 2.43757 0.75 2.80057V12.3814C0.75 12.7444 0.8942 13.0925 1.15088 13.3492C1.40756 13.6059 1.75569 13.7501 2.11869 13.7501H11.6995C12.0625 13.7501 12.4106 13.6059 12.6673 13.3492C12.924 13.0925 13.0682 12.7444 13.0682 12.3814V7.59097" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                             <path d="M11.2717 1.1752C11.544 0.902948 11.9132 0.75 12.2983 0.75C12.6833 0.75 13.0525 0.902948 13.3248 1.1752C13.597 1.44744 13.75 1.81669 13.75 2.20171C13.75 2.58673 13.597 2.95598 13.3248 3.22823L7.15679 9.39689C6.99429 9.55925 6.79354 9.6781 6.57304 9.74249L4.60692 10.3173C4.54804 10.3345 4.48562 10.3355 4.4262 10.3203C4.36678 10.3051 4.31254 10.2742 4.26916 10.2308C4.22579 10.1874 4.19487 10.1332 4.17965 10.0738C4.16443 10.0143 4.16546 9.95193 4.18263 9.89304L4.75748 7.92692C4.82217 7.7066 4.94125 7.50609 5.10376 7.34386L11.2717 1.1752Z" stroke="#3B3731" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -1885,7 +1934,7 @@ $versionHistory = [
                     </button>
                 </div>
                 <img
-                    src="{{ asset($groomersBanner['photo']) }}"
+                    :src="groomersBannerPhotoUrl"
                     alt="Groomers hero photo preview"
                     class="admin-wc-thumb admin-wc-thumb-lg"
                     width="160"
@@ -4124,8 +4173,72 @@ $versionHistory = [
 
                     <footer class="admin-wc-modal-actions">
                         <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
-                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft">Save as draft</button>
-                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish">Save &amp; publish</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft" :disabled="saving">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish" :disabled="saving">Save &amp; publish</button>
+                    </footer>
+                </form>
+            </section>
+
+            {{-- Edit Groomers & Hosts Hero Photo --}}
+            <section
+                class="admin-wc-modal"
+                x-show="wcModal === 'groomers-hero-photo'"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-wc-groomers-hero-photo-modal-title">
+                <header class="admin-wc-modal-head">
+                    <div>
+                        <h2 id="admin-wc-groomers-hero-photo-modal-title">Edit Hero Photo</h2>
+                        <p>For Groomers &amp; Hosts</p>
+                    </div>
+                    <button type="button" class="admin-wc-modal-close" @click="closeWcModal()" aria-label="Close edit hero photo modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="9.5" transform="matrix(-1 0 0 1 20 0)" fill="#F3F3F3" stroke="#E8E8E8" />
+                            <path d="M13.1462 13.24L9.99983 10.0936L13.0934 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M7.09351 13.24L10.2399 10.0936L7.14632 6.99999" stroke="#3B3731" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form class="admin-wc-modal-form" @submit.prevent="saveGroomersHeroPhotoEditor()">
+                    <div class="admin-wc-modal-body">
+                        <div class="admin-wc-modal-field admin-wc-modal-image-field">
+                            <div class="admin-wc-modal-image-label-row">
+                                <span>Image <b aria-hidden="true">*</b></span>
+                                <span class="admin-wc-modal-image-hint">Recommended 1200x900px photo</span>
+                            </div>
+                            <div class="admin-wc-modal-image-frame" :class="{ 'is-empty': !groomersBannerPhotoDraftUrl }">
+                                <template x-if="groomersBannerPhotoDraftUrl">
+                                    <img :src="groomersBannerPhotoDraftUrl" alt="Hero photo preview" class="admin-wc-modal-image-preview">
+                                </template>
+                                <template x-if="!groomersBannerPhotoDraftUrl">
+                                    <div class="admin-wc-modal-image-empty">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <rect x="3" y="5" width="18" height="14" rx="2" stroke="#C4C2BF" stroke-width="1.5" />
+                                            <circle cx="8.5" cy="10" r="1.5" fill="#C4C2BF" />
+                                            <path d="M3 16L8 12L11 14.5L16 9L21 16" stroke="#C4C2BF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        <span>No image set</span>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="admin-wc-modal-image-actions">
+                                <input
+                                    id="admin-wc-groomers-hero-photo-input"
+                                    class="admin-wc-visually-hidden"
+                                    type="file"
+                                    accept="image/*"
+                                    @change="onGroomersHeroPhotoSelected($event)">
+                                <label for="admin-wc-groomers-hero-photo-input" class="admin-wc-modal-browse">Browse file</label>
+                                <span class="admin-wc-modal-file-name" x-text="groomersBannerPhotoDraftName || 'No files selected'"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="admin-wc-modal-actions">
+                        <button type="button" class="admin-wc-modal-btn admin-wc-modal-btn-cancel" @click="closeWcModal()">Cancel</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-draft" :disabled="saving">Save as draft</button>
+                        <button type="submit" class="admin-wc-modal-btn admin-wc-modal-btn-publish" :disabled="saving">Save &amp; publish</button>
                     </footer>
                 </form>
             </section>
