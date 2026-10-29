@@ -17,7 +17,7 @@ new #[Layout('layouts.app')] class extends Component {
     }
 }; ?>
 
-<div>
+<div class="home-page">
     <x-home.cookie-consent />
 
     @include('home')

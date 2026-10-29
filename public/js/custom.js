@@ -11,19 +11,32 @@
 
   function initMobileMenu() {
     const toggleBtn = document.querySelector(".menu-toggle");
-    const menu = document.querySelector(".menu-items");
-    const header = document.querySelector(".logo-toggle-button");
+    const siteHeader = toggleBtn?.closest("header");
+    const menus = siteHeader
+      ? [...siteHeader.querySelectorAll(".menu-items")]
+      : [];
+    const header = siteHeader?.querySelector(".logo-toggle-button");
 
-    if (!toggleBtn || !menu || !header || toggleBtn.dataset.menuBound === "1") {
+    if (
+      !toggleBtn ||
+      menus.length === 0 ||
+      !header ||
+      toggleBtn.dataset.menuBound === "1"
+    ) {
       return;
     }
 
     toggleBtn.dataset.menuBound = "1";
+    toggleBtn.setAttribute("aria-expanded", "false");
     toggleBtn.addEventListener("click", () => {
-      menu.classList.toggle("active");
-      header.classList.toggle("fixed");
-      document.body.classList.toggle("menu-open");
-      toggleBtn.innerHTML = menu.classList.contains("active") ? "✖" : "&#9776;";
+      const isOpen = !siteHeader.classList.contains("menu-open");
+
+      menus.forEach((menu) => menu.classList.toggle("active", isOpen));
+      header.classList.toggle("fixed", isOpen);
+      siteHeader.classList.toggle("menu-open", isOpen);
+      document.body.classList.toggle("menu-open", isOpen);
+      toggleBtn.classList.toggle("is-open", isOpen);
+      toggleBtn.setAttribute("aria-expanded", String(isOpen));
     });
   }
 
@@ -464,10 +477,7 @@
     function go(i, smooth = true) {
       index = normalize(i);
       const mobile = isMobile();
-      const viewportW =
-        mobile && window.visualViewport
-          ? window.visualViewport.width
-          : viewport.clientWidth;
+      const viewportW = viewport.clientWidth;
 
       let offset = 0;
       for (let n = 0; n < index; n++) {
