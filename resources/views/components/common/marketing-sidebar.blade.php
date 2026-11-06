@@ -30,7 +30,7 @@
         }
 
         .dashboard-wrapper {
-            --dashboard-sidebar-col: 14rem;
+            --dashboard-sidebar-col: 16.5rem;
             display: grid;
             grid-template-columns: var(--dashboard-sidebar-col) 1px minmax(0, 1fr);
             column-gap: 0;

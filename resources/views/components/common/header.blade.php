@@ -882,7 +882,7 @@
 
         <style>
             .dashboard-header {
-                --dashboard-sidebar-col: 14rem;
+                --dashboard-sidebar-col: 16.5rem;
                 --profile-item-active-bg: #fffbf4;
                 --profile-check-color: #ffc46e;
                 position: sticky;
