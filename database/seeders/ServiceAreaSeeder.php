@@ -18,22 +18,22 @@ class ServiceAreaSeeder extends Seeder
             return;
         }
 
-        $mapColors = ['#B8D4E8', '#FFD4B8', '#C8E8B8'];
+        $mapColors = ['#8EBFDF', '#F0A36A', '#B7D48A'];
 
         $areas = [
             [
                 'name' => 'Waterloo South Bank',
                 'radius' => 0.5,
-                'latitude' => 51.50198,
-                'longitude' => -0.11714,
+                'latitude' => 51.50406,
+                'longitude' => -0.11664,
                 'address' => 'Waterloo Station, London SE1',
                 'is_paused' => false,
             ],
             [
                 'name' => 'Southwark',
                 'radius' => 1.5,
-                'latitude' => 51.5045,
-                'longitude' => -0.086,
+                'latitude' => 51.50135,
+                'longitude' => -0.09399,
                 'address' => 'Borough High St, London SE1',
                 'is_paused' => false,
             ],

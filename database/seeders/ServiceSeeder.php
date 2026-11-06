@@ -33,6 +33,7 @@ class ServiceSeeder extends Seeder
                 'medium' => (int) round($row['base_duration'] * 1.5),
                 'large' => $row['base_duration'] * 2,
             ];
+            $petTypes = $row['pet_types'] ?? ['cat', 'dog', 'other'];
 
             Service::updateOrCreate(
                 [
@@ -42,8 +43,8 @@ class ServiceSeeder extends Seeder
                 [
                     'description' => $row['description'],
                     'pet_compatibility' => [
-                        'pet_types' => ['cat', 'dog', 'other'],
-                        'other_pets' => ['rabbit', 'guinea pig'],
+                        'pet_types' => $petTypes,
+                        'other_pets' => in_array('other', $petTypes, true) ? ['rabbit', 'guinea pig'] : [],
                         'pet_sizes' => ['small', 'medium', 'large'],
                     ],
                     'duration' => [
@@ -76,6 +77,7 @@ class ServiceSeeder extends Seeder
                 'buffer_time' => 15,
                 'base_price' => 25,
                 'prices' => ['small' => 25, 'medium' => 35, 'large' => 45],
+                'pet_types' => ['dog', 'cat'],
             ],
             [
                 'name' => 'Full Groom',
@@ -85,6 +87,7 @@ class ServiceSeeder extends Seeder
                 'base_price' => 45,
                 'prices' => ['small' => 45, 'medium' => 60, 'large' => 80],
                 'durations' => ['small' => 75, 'medium' => 90, 'large' => 120],
+                'pet_types' => ['dog'],
             ],
             [
                 'name' => 'Bath & Brush',
@@ -93,6 +96,7 @@ class ServiceSeeder extends Seeder
                 'buffer_time' => 10,
                 'base_price' => 30,
                 'prices' => ['small' => 30, 'medium' => 40, 'large' => 55],
+                'pet_types' => ['dog', 'cat'],
             ],
             [
                 'name' => 'Nail Trim',
@@ -101,6 +105,7 @@ class ServiceSeeder extends Seeder
                 'buffer_time' => 5,
                 'base_price' => 15,
                 'prices' => ['small' => 15, 'medium' => 18, 'large' => 22],
+                'pet_types' => ['cat', 'dog', 'other'],
             ],
             [
                 'name' => 'Face Trim',
@@ -109,6 +114,7 @@ class ServiceSeeder extends Seeder
                 'buffer_time' => 10,
                 'base_price' => 20,
                 'prices' => ['small' => 20, 'medium' => 25, 'large' => 30],
+                'pet_types' => ['cat'],
             ],
             [
                 'name' => 'Ear Cleaning',
@@ -117,6 +123,7 @@ class ServiceSeeder extends Seeder
                 'buffer_time' => 5,
                 'base_price' => 12,
                 'prices' => ['small' => 12, 'medium' => 14, 'large' => 16],
+                'pet_types' => ['other'],
             ],
         ];
     }
@@ -135,6 +142,7 @@ class ServiceSeeder extends Seeder
                 'base_price' => 25,
                 'prices' => ['small' => 25, 'medium' => 25, 'large' => 25],
                 'durations' => ['small' => 60, 'medium' => 60, 'large' => 60],
+                'pet_types' => ['dog', 'cat'],
             ],
             [
                 'name' => 'Half-Day',
@@ -144,6 +152,7 @@ class ServiceSeeder extends Seeder
                 'base_price' => 80,
                 'prices' => ['small' => 80, 'medium' => 80, 'large' => 80],
                 'durations' => ['small' => 240, 'medium' => 240, 'large' => 240],
+                'pet_types' => ['dog'],
             ],
             [
                 'name' => 'Full-Day',
@@ -153,6 +162,7 @@ class ServiceSeeder extends Seeder
                 'base_price' => 120,
                 'prices' => ['small' => 120, 'medium' => 120, 'large' => 120],
                 'durations' => ['small' => 480, 'medium' => 480, 'large' => 480],
+                'pet_types' => ['cat', 'other'],
             ],
         ];
     }
