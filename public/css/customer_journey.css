@@ -34,7 +34,7 @@ body:has(.sticky-search) header {
     position: relative;
     top: auto;
     margin: 0;
-    background-color: #fff;
+    background-color: #FDFCF8;
 }
 
 .sticky-search {
