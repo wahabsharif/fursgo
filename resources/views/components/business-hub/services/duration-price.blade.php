@@ -240,9 +240,10 @@
             align-items: end;
         }
 
-        .service-dp-top.is-pair {
-            grid-template-columns: 1fr 1fr;
-            gap: 2.5rem;
+        /* Space add-on only (Base Price + Base Duration, no buffer) — keeps the 3-col rhythm. */
+        .service-form-space .service-dp-top.is-pair {
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.25rem;
         }
 
         .service-dp-top.is-price-only {
@@ -406,26 +407,28 @@
 
         .service-dp-table-head {
             display: grid;
-            grid-template-columns: 1.15fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             align-items: center;
-            height: 50px;
+            height: 49px;
             padding: 0 1.25rem;
-            background: #f6f5f5;
+            background: #F6F5F5;
+            border: 1px solid #F6F5F5;
+            border-bottom: 0;
             border-radius: 10px 10px 0 0;
         }
 
         .service-dp-table-head p {
             margin: 0;
-            color: #948f88;
+            color: #948F88;
             font-family: Lato;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
-            text-transform: capitalize;
+            text-transform: uppercase;
         }
 
         .service-dp-table-body {
-            background: #fff;
-            border: 1px solid #f6f5f5;
+            background: #FFF;
+            border: 1px solid #F6F5F5;
             border-top: 0;
             border-radius: 0 0 10px 10px;
             overflow: visible;
@@ -433,7 +436,7 @@
 
         .service-dp-table-row {
             display: grid;
-            grid-template-columns: 1.15fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             align-items: center;
             gap: 1rem;
             min-height: 68px;
@@ -494,13 +497,20 @@
 
         .service-dp-overtime {
             display: grid;
-            grid-template-columns: 1fr auto 1fr;
+            grid-template-columns: 320px auto 320px;
             gap: 1.25rem;
             align-items: end;
-            padding: 1.25rem;
-            background: #fff;
-            border: 1px solid #f6f5f5;
+            justify-content: start;
+            padding: 1.25rem 0;
+            background: #FFF;
+            border: none;
             border-radius: 10px;
+        }
+
+        .service-dp-overtime>.service-field {
+            width: 320px;
+            max-width: 320px;
+            min-width: 0;
         }
 
         .service-dp-overtime.is-fixed {
@@ -513,10 +523,10 @@
         }
 
         .service-dp-overtime.is-fixed>.service-field {
-            flex: 0 1 317px;
-            width: 317px;
+            flex: 0 0 320px;
+            width: 320px;
             min-width: 0;
-            max-width: 317px;
+            max-width: 320px;
         }
 
         .service-dp-overtime.is-fixed .service-dp-overtime-per {
@@ -608,10 +618,11 @@
                 align-items: stretch;
             }
 
+            .service-dp-overtime>.service-field,
             .service-dp-overtime.is-fixed>.service-field {
                 width: 100%;
                 max-width: none;
-                flex-basis: auto;
+                flex: 1 1 auto;
             }
 
             .service-dp-top.is-price-only>.service-field {
