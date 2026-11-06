@@ -130,7 +130,7 @@ new class extends Component {
 }; ?>
 
 <section class="service-area-form-panel" aria-label="Add service area form"
-    x-data="serviceAreaFormMap(@entangle('latitude').live, @entangle('longitude').live, @entangle('radius').live, @entangle('address').live, @entangle('isActive').live)"
+    x-data="serviceAreaFormMap(@entangle('latitude').live, @entangle('longitude').live, @entangle('radius').live, @entangle('address'), @entangle('isActive').live, @entangle('name'))"
     x-on:service-area-form-delete.window="$wire.deleteCurrent()"
     x-on:service-area-edit-requested.window="
         const d = $event.detail || {};
@@ -140,56 +140,97 @@ new class extends Component {
     ">
     <form class="service-area-form" wire:submit.prevent="save">
         <input type="hidden" data-service-area-map-dirty value="">
-        <div class="service-area-form-layout">
-            <div class="service-area-form-fields">
-                <div class="service-form-card service-area-identity-card">
-                    <label class="service-field">
-                        <span>Service Area Name</span>
-                        <input type="text" placeholder="e.g. Waterloo South Bank" wire:model="name"
-                            @input="window.dispatchEvent(new CustomEvent('service-form-title-changed', { detail: { title: $event.target.value } }))" />
-                    </label>
 
-                    <label class="service-field service-area-postcode-field" @click.outside="closeSuggestions()">
-                        <span>Centre Point</span>
-                        <div class="service-area-postcode-wrap">
-                            <input type="text" x-model="address"
-                                placeholder="Start typing a postcode, street or landmark ..."
-                                autocomplete="off" spellcheck="false" role="combobox"
-                                aria-autocomplete="list" :aria-expanded="showSuggestions && suggestions.length > 0"
-                                aria-controls="service-area-postcode-suggestions" @input.debounce.300ms="searchPostcodes()"
-                                @keydown.arrow-down.prevent="highlightNext()"
-                                @keydown.arrow-up.prevent="highlightPrevious()" @keydown.enter.prevent="selectHighlighted()"
-                                @keydown.escape.prevent="closeSuggestions()" @focus="searchPostcodes()" />
-                            <ul id="service-area-postcode-suggestions" class="service-area-postcode-suggestions"
-                                x-show="showSuggestions && suggestions.length > 0" x-cloak role="listbox">
-                                <template x-for="(item, index) in suggestions" :key="item.postcode">
-                                    <li role="option" :aria-selected="highlightedIndex === index">
-                                        <button type="button" class="service-area-postcode-suggestion"
-                                            :class="{ 'is-active': highlightedIndex === index }"
-                                            @click="selectPostcode(item)">
-                                            <span class="service-area-postcode-code" x-text="item.postcode"></span>
-                                            <span class="service-area-postcode-place" x-text="item.label"></span>
-                                        </button>
-                                    </li>
-                                </template>
-                            </ul>
-                            <p class="service-area-searching-hint" x-show="isSearching" x-cloak>Searching UK postcodes…</p>
-                        </div>
-                        <p class="service-area-field-hint">We will centre the circle to this address.</p>
-                        <p class="service-area-field-hint service-area-field-hint-error" x-show="geocodeError"
-                            x-text="geocodeError" x-cloak></p>
-                    </label>
+        <div class="service-form-card service-area-identity-card">
+            <h4 class="service-section-title">Service Area</h4>
+            <div class="service-area-identity-grid">
+                <div class="service-field service-area-suggest-field" @click.outside="closeNameSuggestions()">
+                    <span>Service Area Name</span>
+                    <div class="service-area-postcode-wrap">
+                        <input type="text" x-model="name" placeholder="e.g. Waterloo South Bank"
+                            autocomplete="off" spellcheck="false" role="combobox"
+                            aria-autocomplete="list"
+                            :aria-expanded="showNameSuggestions && nameSuggestions.length > 0"
+                            aria-controls="service-area-name-suggestions"
+                            @input.debounce.300ms="searchNameSuggestions()"
+                            @input="window.dispatchEvent(new CustomEvent('service-form-title-changed', { detail: { title: $event.target.value } }))"
+                            @keydown.arrow-down.prevent="highlightNext('name')"
+                            @keydown.arrow-up.prevent="highlightPrevious('name')"
+                            @keydown.enter.prevent="selectHighlighted('name')"
+                            @keydown.escape.prevent="closeNameSuggestions()"
+                            @focus="searchNameSuggestions()" />
+                        <ul id="service-area-name-suggestions" class="service-area-postcode-suggestions"
+                            x-show="showNameSuggestions && nameSuggestions.length > 0" x-cloak role="listbox">
+                            <template x-for="(item, index) in nameSuggestions" :key="item.id">
+                                <li role="option" :aria-selected="nameHighlightedIndex === index">
+                                    <button type="button" class="service-area-postcode-suggestion"
+                                        :class="{ 'is-active': nameHighlightedIndex === index }"
+                                        @mousedown.prevent="selectNameSuggestion(item)">
+                                        <span class="service-area-postcode-code" x-text="item.title"></span>
+                                        <span class="service-area-postcode-place" x-text="item.subtitle"></span>
+                                    </button>
+                                </li>
+                            </template>
+                        </ul>
+                        <p class="service-area-searching-hint" x-show="isNameSearching" x-cloak>Searching places…</p>
+                    </div>
                 </div>
 
-                <div class="service-form-card service-area-radius-card">
-                    <p class="service-area-radius-label">Service radius</p>
-                    <p class="service-area-radius-readout">
-                        <span x-text="Number(radius || 0).toFixed(1)"></span>
-                        <small>miles</small>
-                    </p>
+                <div class="service-field service-area-suggest-field service-area-postcode-field"
+                    @click.outside="closeCentreSuggestions()">
+                    <span>Centre Point</span>
+                    <div class="service-area-postcode-wrap">
+                        <input type="text" x-model="address"
+                            placeholder="Start typing a postcode, street or landmark ..."
+                            autocomplete="off" spellcheck="false" role="combobox"
+                            aria-autocomplete="list"
+                            :aria-expanded="showCentreSuggestions && centreSuggestions.length > 0"
+                            aria-controls="service-area-centre-suggestions"
+                            @input.debounce.300ms="searchCentreSuggestions()"
+                            @keydown.arrow-down.prevent="highlightNext('centre')"
+                            @keydown.arrow-up.prevent="highlightPrevious('centre')"
+                            @keydown.enter.prevent="selectHighlighted('centre')"
+                            @keydown.escape.prevent="closeCentreSuggestions()"
+                            @focus="searchCentreSuggestions()" />
+                        <ul id="service-area-centre-suggestions" class="service-area-postcode-suggestions"
+                            x-show="showCentreSuggestions && centreSuggestions.length > 0" x-cloak role="listbox">
+                            <template x-for="(item, index) in centreSuggestions" :key="item.id">
+                                <li role="option" :aria-selected="centreHighlightedIndex === index">
+                                    <button type="button" class="service-area-postcode-suggestion"
+                                        :class="{ 'is-active': centreHighlightedIndex === index }"
+                                        @mousedown.prevent="selectCentreSuggestion(item)">
+                                        <span class="service-area-postcode-code" x-text="item.title"></span>
+                                        <span class="service-area-postcode-place" x-text="item.subtitle"></span>
+                                    </button>
+                                </li>
+                            </template>
+                        </ul>
+                        <p class="service-area-searching-hint" x-show="isCentreSearching" x-cloak>Searching locations…</p>
+                    </div>
+                    <p class="service-area-field-hint service-area-field-hint-error" x-show="geocodeError"
+                        x-text="geocodeError" x-cloak></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="service-form-card service-area-radius-card">
+            <div class="service-area-radius-layout">
+                <div class="service-area-radius-controls">
+                    <h4 class="service-section-title service-area-radius-label">Service radius</h4>
+                    <div class="service-area-radius-value-row">
+                        <label class="service-field service-area-radius-input-field">
+                            <span class="sr-only">Radius in miles</span>
+                            <input type="number" min="0.2" max="10" step="0.1" wire:model.live="radius"
+                                aria-label="Service radius in miles" />
+                        </label>
+                        <p class="service-area-radius-readout">
+                            <span x-text="Number(radius || 0).toFixed(1)"></span>
+                            <small>miles</small>
+                        </p>
+                    </div>
                     <div class="service-area-slider">
                         <input type="range" min="0.2" max="10" step="0.1" wire:model.live="radius"
-                            aria-label="Service radius in miles"
+                            aria-label="Service radius slider"
                             :style="`--p: ${(Number(radius) - 0.2) / 9.8}`" />
                         <img class="service-area-slider-thumb" src="{{ asset('images/business-hub/icon-radius-thumb.svg') }}"
                             alt="" width="39" height="39" :style="`--p: ${(Number(radius) - 0.2) / 9.8}`">
@@ -205,28 +246,29 @@ new class extends Component {
                         <span x-text="coverageLabel()"></span>
                     </p>
                 </div>
-            </div>
 
-            <div class="service-area-form-map-col">
-                <div class="service-area-map-shell" wire:ignore>
-                    <div id="service-area-form-map" class="service-area-map" role="img"
-                        aria-label="Service area location picker"></div>
-                    <p class="service-area-zoom-hint">Hold Ctrl to Zoom in &amp; out</p>
+                <div class="service-area-form-map-col">
+                    <div class="service-area-map-shell" wire:ignore>
+                        <div id="service-area-form-map" class="service-area-map" role="img"
+                            aria-label="Service area location picker"></div>
+                        <p class="service-area-zoom-hint">Hold Ctrl to Zoom in &amp; out</p>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="service-form-card service-settings-card">
-            <h4>Setting Options</h4>
-            <div class="service-setting-row" :class="{ 'is-active': isActive }">
+            <h4 class="service-section-title">Setting Options</h4>
+            <div class="service-setting-row" :class="{ 'is-active': isActive }" role="switch"
+                :aria-checked="isActive.toString()" tabindex="0" aria-label="Visibility controls"
+                @click="isActive = !isActive"
+                @keydown.enter.prevent="isActive = !isActive"
+                @keydown.space.prevent="isActive = !isActive">
                 <div>
                     <strong>Visibility Controls</strong>
-                    <p x-text="isActive ? 'This is an active area - Clients within this radius can book home visits.' : 'This area is paused - Clients cannot book home visits here.'"></p>
+                    <p x-text="isActive ? 'This is an active area - clients within this radius can book home visits' : 'This area is paused - clients cannot book home visits here'"></p>
                 </div>
-                <button type="button" class="service-toggle" :class="{ 'is-on': isActive }"
-                    @click="isActive = !isActive"
-                    :aria-pressed="isActive ? 'true' : 'false'"
-                    aria-label="Visibility controls"></button>
+                <span class="service-toggle" :class="{ 'is-on': isActive }" aria-hidden="true"></span>
             </div>
         </div>
 
@@ -238,29 +280,40 @@ new class extends Component {
     <script>
         (() => {
             const register = () => {
-                if (typeof Alpine === 'undefined' || window.__serviceAreaFormMapRegistered) {
+                if (typeof Alpine === 'undefined') {
                     return;
                 }
 
-                window.__serviceAreaFormMapRegistered = true;
+                const registryVersion = 2;
+                if (window.__serviceAreaFormMapRegistered === registryVersion) {
+                    return;
+                }
+
+                window.__serviceAreaFormMapRegistered = registryVersion;
 
                 const METERS_PER_STATUTE_MILE = {{ json_encode(\App\Models\ServiceArea::METERS_PER_STATUTE_MILE) }};
 
-                Alpine.data('serviceAreaFormMap', (latitude, longitude, radius, address, isActive) => ({
+                Alpine.data('serviceAreaFormMap', (latitude, longitude, radius, address, isActive, name) => ({
                     latitude,
                     longitude,
                     radius,
                     address,
                     isActive,
+                    name,
                     map: null,
                     marker: null,
                     circle: null,
                     geocodeError: '',
-                    suggestions: [],
-                    showSuggestions: false,
-                    highlightedIndex: -1,
-                    isSearching: false,
-                    searchToken: 0,
+                    nameSuggestions: [],
+                    centreSuggestions: [],
+                    showNameSuggestions: false,
+                    showCentreSuggestions: false,
+                    nameHighlightedIndex: -1,
+                    centreHighlightedIndex: -1,
+                    isNameSearching: false,
+                    isCentreSearching: false,
+                    nameSearchToken: 0,
+                    centreSearchToken: 0,
                     initMapAttempt: 0,
                     radiusAnimFrameId: null,
                     coverageLabel() {
@@ -299,68 +352,110 @@ new class extends Component {
                     normalizePostcode(value) {
                         return String(value || '').trim().toUpperCase();
                     },
+                    closeNameSuggestions() {
+                        this.showNameSuggestions = false;
+                        this.nameHighlightedIndex = -1;
+                    },
+                    closeCentreSuggestions() {
+                        this.showCentreSuggestions = false;
+                        this.centreHighlightedIndex = -1;
+                    },
                     closeSuggestions() {
-                        this.showSuggestions = false;
-                        this.highlightedIndex = -1;
+                        this.closeNameSuggestions();
+                        this.closeCentreSuggestions();
                     },
-                    highlightNext() {
-                        if (!this.suggestions.length) {
+                    activeSuggestions(field) {
+                        return field === 'name' ? this.nameSuggestions : this.centreSuggestions;
+                    },
+                    highlightNext(field) {
+                        const list = this.activeSuggestions(field);
+                        if (!list.length) {
                             return;
                         }
-                        this.showSuggestions = true;
-                        this.highlightedIndex = (this.highlightedIndex + 1) % this.suggestions.length;
-                    },
-                    highlightPrevious() {
-                        if (!this.suggestions.length) {
+                        if (field === 'name') {
+                            this.showNameSuggestions = true;
+                            this.nameHighlightedIndex = (this.nameHighlightedIndex + 1) % list.length;
                             return;
                         }
-                        this.showSuggestions = true;
-                        this.highlightedIndex = this.highlightedIndex <= 0 ?
-                            this.suggestions.length - 1 :
-                            this.highlightedIndex - 1;
+                        this.showCentreSuggestions = true;
+                        this.centreHighlightedIndex = (this.centreHighlightedIndex + 1) % list.length;
                     },
-                    selectHighlighted() {
-                        const highlighted = this.suggestions[this.highlightedIndex];
-                        if (this.showSuggestions && this.highlightedIndex >= 0 && highlighted) {
-                            this.selectPostcode(highlighted);
+                    highlightPrevious(field) {
+                        const list = this.activeSuggestions(field);
+                        if (!list.length) {
+                            return;
+                        }
+                        if (field === 'name') {
+                            this.showNameSuggestions = true;
+                            this.nameHighlightedIndex = this.nameHighlightedIndex <= 0 ?
+                                list.length - 1 :
+                                this.nameHighlightedIndex - 1;
+                            return;
+                        }
+                        this.showCentreSuggestions = true;
+                        this.centreHighlightedIndex = this.centreHighlightedIndex <= 0 ?
+                            list.length - 1 :
+                            this.centreHighlightedIndex - 1;
+                    },
+                    selectHighlighted(field) {
+                        if (field === 'name') {
+                            const item = this.nameSuggestions[this.nameHighlightedIndex];
+                            if (this.showNameSuggestions && item) {
+                                this.selectNameSuggestion(item);
+                            }
+                            return;
+                        }
+
+                        const item = this.centreSuggestions[this.centreHighlightedIndex];
+                        if (this.showCentreSuggestions && item) {
+                            this.selectCentreSuggestion(item);
                             return;
                         }
                         this.lookupExactPostcode();
                     },
-                    async searchPostcodes() {
-                        const query = this.normalizePostcode(this.address);
-                        const token = ++this.searchToken;
-
-                        if (query.length < 2) {
-                            this.suggestions = [];
-                            this.closeSuggestions();
-                            this.geocodeError = '';
-                            return;
-                        }
-
-                        this.isSearching = true;
-                        this.geocodeError = '';
-
+                    async fetchPlaces(query) {
                         try {
-                            const autocompleteResponse = await fetch(
-                                `https://api.postcodes.io/postcodes/${encodeURIComponent(query)}/autocomplete`,
+                            const response = await fetch(
+                                `https://api.postcodes.io/places?q=${encodeURIComponent(query)}`,
                             );
-                            const autocompleteData = await autocompleteResponse.json();
-
-                            if (token !== this.searchToken) {
-                                return;
+                            const data = await response.json();
+                            if (!Array.isArray(data?.result)) {
+                                return [];
                             }
 
+                            return data.result.slice(0, 8).map((place) => ({
+                                id: `place-${place.code}`,
+                                title: place.name_1,
+                                subtitle: [place.local_type, place.county_unitary || place.district_borough || place
+                                        .region
+                                    ]
+                                    .filter(Boolean)
+                                    .join(', '),
+                                lat: place.latitude ?? null,
+                                lng: place.longitude ?? null,
+                                postcode: place.outcode || null,
+                                kind: 'place',
+                            }));
+                        } catch (error) {
+                            return [];
+                        }
+                    },
+                    async fetchPostcodeSuggestions(query) {
+                        try {
+                            const normalized = this.normalizePostcode(query);
+                            if (normalized.length < 2 || !/[0-9]/.test(normalized)) {
+                                return [];
+                            }
+
+                            const autocompleteResponse = await fetch(
+                                `https://api.postcodes.io/postcodes/${encodeURIComponent(normalized)}/autocomplete`,
+                            );
+                            const autocompleteData = await autocompleteResponse.json();
                             const postcodes = Array.isArray(autocompleteData?.result) ?
                                 autocompleteData.result.slice(0, 8) : [];
 
                             if (!postcodes.length) {
-                                this.suggestions = [];
-                                this.closeSuggestions();
-                                this.geocodeError = query.length >= 3 ?
-                                    'No UK postcodes found. Try a different search.' :
-                                    '';
-                                return;
+                                return [];
                             }
 
                             const bulkResponse = await fetch('https://api.postcodes.io/postcodes', {
@@ -374,73 +469,168 @@ new class extends Component {
                                 }),
                             });
                             const bulkData = await bulkResponse.json();
-
-                            if (token !== this.searchToken) {
-                                return;
-                            }
-
                             const resolved = (bulkData?.result || [])
                                 .filter((entry) => entry?.result)
                                 .map((entry) => ({
-                                    postcode: entry.result.postcode,
-                                    label: [entry.result.admin_district, entry.result
-                                            .region
-                                        ]
+                                    id: `pc-${entry.result.postcode}`,
+                                    title: entry.result.postcode,
+                                    subtitle: [entry.result.admin_district, entry.result.region]
                                         .filter(Boolean)
                                         .join(', '),
                                     lat: entry.result.latitude,
                                     lng: entry.result.longitude,
+                                    postcode: entry.result.postcode,
+                                    kind: 'postcode',
                                 }));
 
                             const resolvedCodes = new Set(resolved.map((item) => item.postcode));
                             postcodes.forEach((postcode) => {
                                 if (!resolvedCodes.has(postcode)) {
                                     resolved.push({
-                                        postcode,
-                                        label: 'United Kingdom',
+                                        id: `pc-${postcode}`,
+                                        title: postcode,
+                                        subtitle: 'United Kingdom',
                                         lat: null,
                                         lng: null,
+                                        postcode,
+                                        kind: 'postcode',
                                     });
                                 }
                             });
 
-                            this.suggestions = resolved;
-                            this.showSuggestions = this.suggestions.length > 0;
-                            this.highlightedIndex = this.showSuggestions ? 0 : -1;
+                            return resolved;
                         } catch (error) {
-                            if (token !== this.searchToken) {
+                            return [];
+                        }
+                    },
+                    async searchNameSuggestions() {
+                        const query = String(this.name || '').trim();
+                        const token = ++this.nameSearchToken;
+
+                        if (query.length < 2) {
+                            this.nameSuggestions = [];
+                            this.closeNameSuggestions();
+                            return;
+                        }
+
+                        this.isNameSearching = true;
+                        this.closeCentreSuggestions();
+
+                        try {
+                            const places = await this.fetchPlaces(query);
+                            if (token !== this.nameSearchToken) {
                                 return;
                             }
-                            this.suggestions = [];
-                            this.closeSuggestions();
-                            this.geocodeError =
-                                'Unable to search postcodes right now. Please try again.';
+                            this.nameSuggestions = places;
+                            this.showNameSuggestions = places.length > 0;
+                            this.nameHighlightedIndex = places.length ? 0 : -1;
+                        } catch (error) {
+                            if (token !== this.nameSearchToken) {
+                                return;
+                            }
+                            this.nameSuggestions = [];
+                            this.closeNameSuggestions();
                         } finally {
-                            if (token === this.searchToken) {
-                                this.isSearching = false;
+                            if (token === this.nameSearchToken) {
+                                this.isNameSearching = false;
                             }
                         }
                     },
-                    async selectPostcode(item) {
+                    async searchCentreSuggestions() {
+                        const query = String(this.address || '').trim();
+                        const token = ++this.centreSearchToken;
+
+                        if (query.length < 2) {
+                            this.centreSuggestions = [];
+                            this.closeCentreSuggestions();
+                            this.geocodeError = '';
+                            return;
+                        }
+
+                        this.isCentreSearching = true;
+                        this.geocodeError = '';
+                        this.closeNameSuggestions();
+
+                        try {
+                            const [placesResult, postcodesResult] = await Promise.allSettled([
+                                this.fetchPlaces(query),
+                                this.fetchPostcodeSuggestions(query),
+                            ]);
+
+                            if (token !== this.centreSearchToken) {
+                                return;
+                            }
+
+                            const places = placesResult.status === 'fulfilled' ? placesResult.value : [];
+                            const postcodes = postcodesResult.status === 'fulfilled' ? postcodesResult.value : [];
+                            const looksLikePostcode = /\d/.test(query);
+                            const merged = looksLikePostcode ? [...postcodes, ...places] : [...places, ...postcodes];
+                            const seen = new Set();
+                            this.centreSuggestions = merged.filter((item) => {
+                                if (!item?.id || seen.has(item.id)) {
+                                    return false;
+                                }
+                                seen.add(item.id);
+                                return true;
+                            }).slice(0, 8);
+
+                            this.showCentreSuggestions = this.centreSuggestions.length > 0;
+                            this.centreHighlightedIndex = this.showCentreSuggestions ? 0 : -1;
+
+                            if (!this.centreSuggestions.length && query.length >= 3) {
+                                this.geocodeError = 'No matching locations found. Try a different search.';
+                            }
+                        } catch (error) {
+                            if (token !== this.centreSearchToken) {
+                                return;
+                            }
+                            this.centreSuggestions = [];
+                            this.closeCentreSuggestions();
+                            this.geocodeError = 'Unable to search locations right now. Please try again.';
+                        } finally {
+                            if (token === this.centreSearchToken) {
+                                this.isCentreSearching = false;
+                            }
+                        }
+                    },
+                    selectNameSuggestion(item) {
+                        if (!item) {
+                            return;
+                        }
+                        this.name = item.title;
+                        this.closeNameSuggestions();
+                        window.dispatchEvent(new CustomEvent('service-form-title-changed', {
+                            detail: {
+                                title: item.title,
+                            },
+                        }));
+                    },
+                    async selectCentreSuggestion(item) {
                         if (!item) {
                             return;
                         }
 
                         if (item.lat !== null && item.lng !== null) {
-                            this.applyPostcode(item.postcode, item.lat, item.lng);
+                            this.applyCentrePoint(
+                                item.kind === 'postcode' ? item.postcode : [item.title, item.subtitle].filter(Boolean).join(', '),
+                                item.lat,
+                                item.lng,
+                            );
                             return;
                         }
 
-                        await this.lookupExactPostcode(item.postcode);
+                        if (item.postcode) {
+                            await this.lookupExactPostcode(item.postcode);
+                        }
                     },
                     async lookupExactPostcode(forcedPostcode = null) {
                         const postcode = this.normalizePostcode(forcedPostcode ?? this.address);
                         if (!postcode) {
-                            this.geocodeError = 'Enter a UK postcode to search.';
+                            this.geocodeError = 'Enter a UK postcode or place to search.';
                             return;
                         }
 
-                        this.isSearching = true;
+                        this.isCentreSearching = true;
                         this.geocodeError = '';
 
                         try {
@@ -450,31 +640,34 @@ new class extends Component {
                             const data = await response.json();
 
                             if (data.status !== 200 || !data.result) {
-                                this.geocodeError = 'Enter a valid UK postcode.';
+                                this.geocodeError = 'Enter a valid UK postcode or choose a suggested place.';
                                 return;
                             }
 
-                            this.applyPostcode(
+                            this.applyCentrePoint(
                                 data.result.postcode,
                                 data.result.latitude,
                                 data.result.longitude,
                             );
                         } catch (error) {
                             this.geocodeError =
-                                'Unable to look up that postcode. Please try again.';
+                                'Unable to look up that location. Please try again.';
                         } finally {
-                            this.isSearching = false;
+                            this.isCentreSearching = false;
                         }
                     },
-                    applyPostcode(postcode, lat, lng) {
-                        this.address = postcode;
+                    applyCentrePoint(label, lat, lng) {
+                        this.address = label;
                         this.latitude = Number(lat);
                         this.longitude = Number(lng);
-                        this.closeSuggestions();
+                        this.closeCentreSuggestions();
                         this.geocodeError = '';
                         this.map?.setView([this.latitude, this.longitude], 14);
                         this.updatePreview();
                         this.markMapDirty();
+                    },
+                    applyPostcode(postcode, lat, lng) {
+                        this.applyCentrePoint(postcode, lat, lng);
                     },
                     async reverseGeocodeFromMap(lat, lng) {
                         try {
@@ -527,17 +720,13 @@ new class extends Component {
                             position: 'bottomright',
                         }).addTo(this.map);
 
-                        L.tileLayer(
-                            'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-                                subdomains: 'abcd',
-                                maxZoom: 20,
-                            }).addTo(this.map);
+                        const cartoKey = @json((string) config('services.carto.api_key'));
+                        const cartoQuery = cartoKey ? ('?key=' + encodeURIComponent(cartoKey)) : '';
 
                         L.tileLayer(
-                            'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+                            'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png' + cartoQuery, {
                                 subdomains: 'abcd',
                                 maxZoom: 20,
-                                pane: 'overlayPane',
                             }).addTo(this.map);
 
                         const pinIcon = L.divIcon({
@@ -680,41 +869,91 @@ new class extends Component {
         gap: 40px;
     }
 
-    .service-area-form-layout {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(280px, 505px);
-        gap: 20px;
-        align-items: stretch;
-    }
-
-    .service-area-form-fields {
-        position: relative;
-        z-index: 2;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        min-width: 0;
-        height: 100%;
-    }
-
     .service-area-form-panel .service-form-card {
-        background: #fdfdfd;
-        border: 1px solid #f6f5f5;
-        border-radius: 10px;
-        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.1);
-        padding: 20px;
-    }
-
-    .service-area-identity-card,
-    .service-area-radius-card {
-        flex: 1 1 0;
         display: flex;
         flex-direction: column;
-        min-height: 0;
+        gap: 20px;
+        background: #FDFDFD;
+        border: 1px solid #E6E6E6;
+        border-radius: 10px;
+        box-shadow: none;
+        padding: 20px;
+        overflow: visible;
     }
 
-    .service-area-identity-card {
+    .service-area-form-panel .service-area-identity-card {
+        position: relative;
+        z-index: 6;
+        overflow: visible;
+    }
+
+    .service-area-identity-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 20px;
+        align-items: start;
+        overflow: visible;
+    }
+
+    .service-area-form-panel .service-area-radius-card {
+        gap: 0;
+    }
+
+    .service-area-radius-layout {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .service-area-radius-controls {
+        display: flex;
+        flex-direction: column;
+        flex: 0 1 465px;
+        width: 100%;
+        max-width: 465px;
+        min-width: 0;
+    }
+
+    .service-area-radius-value-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        width: 100%;
+        margin-bottom: 10px;
+        margin-top: 20px;
+    }
+
+    .service-area-radius-input-field {
+        width: 83px;
+        flex: 0 0 83px;
+        margin: 0;
+        gap: 0;
+    }
+
+    .service-area-radius-input-field input {
+        width: 83px;
+        padding: 0 12px;
+        -moz-appearance: textfield;
+    }
+
+    .service-area-radius-input-field input::-webkit-outer-spin-button,
+    .service-area-radius-input-field input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
     }
 
     .service-field {
@@ -723,12 +962,20 @@ new class extends Component {
         gap: 0.5rem;
     }
 
-    .service-field>span,
-    .service-area-radius-label {
+    .service-field>span {
         margin: 0;
         color: #3b3731;
         font-family: Lato;
         font-size: 16px;
+        font-weight: 600;
+        line-height: normal;
+    }
+
+    .service-area-radius-label {
+        margin: 0 0 28px;
+        color: #3B3731;
+        font-family: "Playfair Display";
+        font-size: 24px;
         font-weight: 600;
         line-height: normal;
     }
@@ -755,9 +1002,10 @@ new class extends Component {
         display: flex;
         align-items: baseline;
         gap: 6px;
-        margin: 12px 0 0;
+        margin: 0;
         color: #3b3731;
         font-family: Lato;
+        white-space: nowrap;
     }
 
     .service-area-radius-readout span {
@@ -767,13 +1015,16 @@ new class extends Component {
     }
 
     .service-area-radius-readout small {
+        font-family: "Playfair Display", serif;
         font-size: 16px;
         font-weight: 400;
+        line-height: normal;
     }
 
     .service-area-slider {
         position: relative;
-        margin-top: 18px;
+        width: 100%;
+        margin-bottom: 20px;
     }
 
     .service-area-slider-thumb {
@@ -835,47 +1086,29 @@ new class extends Component {
     }
 
     .service-area-slider-labels {
-        position: relative;
-        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
         margin-top: 2px;
     }
 
     .service-area-slider-labels span {
-        position: absolute;
-        top: 0;
         color: #9d9b98;
         font-family: Lato;
         font-size: 12px;
         font-weight: 400;
         line-height: normal;
         white-space: nowrap;
-        transform: translateX(-50%);
-    }
-
-    .service-area-slider-labels span:first-child {
-        left: 0;
-        transform: none;
-    }
-
-    .service-area-slider-labels span:nth-child(2) {
-        left: 23.5%;
-    }
-
-    .service-area-slider-labels span:nth-child(3) {
-        left: 49%;
-    }
-
-    .service-area-slider-labels span:last-child {
-        left: 100%;
-        transform: translateX(-100%);
     }
 
     .service-area-coverage {
         display: flex;
         align-items: center;
         gap: 12px;
+        width: 100%;
         height: 48px;
-        margin: auto 0 0;
+        margin: 0;
         padding: 0 16px;
         border-radius: 10px;
         background: #f3f7fa;
@@ -884,6 +1117,7 @@ new class extends Component {
         font-size: 16px;
         font-weight: 400;
         line-height: normal;
+        box-sizing: border-box;
     }
 
     .service-area-coverage img {
@@ -897,27 +1131,45 @@ new class extends Component {
         white-space: nowrap;
     }
 
+    .service-area-form-panel .service-section-title,
     .service-area-form-panel .service-settings-card h4 {
-        margin: 0 0 20px;
+        margin: 0;
         padding: 0;
         border: 0;
         color: #3B3731;
         font-family: "Playfair Display", serif;
-        font-size: 28px;
+        font-size: 24px;
         font-weight: 600;
         line-height: normal;
     }
 
     .service-area-form-panel .service-setting-row {
         margin-bottom: 0;
+        cursor: pointer;
+        user-select: none;
     }
 
+    .service-area-form-panel .service-setting-row .service-toggle {
+        pointer-events: none;
+    }
+
+    .service-area-form-panel .service-setting-row.is-active,
+    .service-area-form-panel .service-setting-row:has(.service-toggle.is-on) {
+        border: 1px solid #BACF8E;
+        background: #F1F5E9;
+    }
+
+    .service-area-suggest-field,
     .service-area-postcode-field {
         position: relative;
     }
 
     .service-area-postcode-wrap {
         position: relative;
+    }
+
+    .service-area-identity-grid .service-area-suggest-field:first-child .service-area-postcode-suggestions {
+        z-index: 45;
     }
 
     .service-area-postcode-suggestions {
@@ -992,21 +1244,21 @@ new class extends Component {
     .service-area-form-map-col {
         position: relative;
         z-index: 1;
-        width: 100%;
-        max-width: 505px;
-        justify-self: end;
+        flex: 0 0 505px;
+        width: 505px;
+        max-width: 100%;
         min-height: 0;
     }
 
     .service-area-form-map-col .service-area-map-shell {
         position: relative;
         width: 100%;
-        aspect-ratio: 1;
-        border: 1px solid #e3e3e3;
+        height: 350px;
+        border: 1px solid #e2e2e2;
         border-radius: 10px;
         overflow: hidden;
         background: #f4f4f4;
-        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.1);
+        box-shadow: none;
     }
 
     .service-area-form-map-col .service-area-map,
@@ -1062,7 +1314,7 @@ new class extends Component {
     }
 
     .service-area-form-map-col .service-area-map .leaflet-tile-pane {
-        filter: grayscale(1);
+        filter: none;
     }
 
     .service-area-form-panel .save-btn-loading {
@@ -1109,13 +1361,27 @@ new class extends Component {
     }
 
     @media (max-width: 992px) {
-        .service-area-form-layout {
+        .service-area-identity-grid {
             grid-template-columns: 1fr;
         }
 
-        .service-area-form-map-col {
+        .service-area-radius-layout {
+            flex-direction: column;
+        }
+
+        .service-area-radius-controls {
+            flex: 1 1 auto;
             max-width: none;
-            justify-self: stretch;
+        }
+
+        .service-area-form-map-col {
+            flex: 1 1 auto;
+            width: 100%;
+            max-width: none;
+        }
+
+        .service-area-form-map-col .service-area-map-shell {
+            height: 320px;
         }
     }
 </style>

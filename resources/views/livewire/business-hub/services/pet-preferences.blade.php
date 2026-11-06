@@ -154,7 +154,11 @@ new class extends Component {
     }
 }; ?>
 
-<section class="pet-preferences-wrapper">
+@php
+    $isSpaceUser = strtolower((string) data_get(auth('groomer_spacer')->user() ?? auth()->user(), 'user_type', '')) === 'space';
+@endphp
+
+<section @class(['pet-preferences-wrapper', 'is-space' => $isSpaceUser])>
     <div class="pet-preferences-grid">
         <article class="pet-preferences-card" x-data="{
             editTypes: @entangle('editTypes').live,
@@ -282,20 +286,22 @@ new class extends Component {
                 @endforeach
             </div>
 
-            <div class="pet-pref-other-summary" x-show="!editTypes">
+            <div class="pet-pref-other-summary" @unless ($isSpaceUser) x-show="!editTypes" @endunless>
                 <span>Other includes:</span>
                 <p x-text="includesLabel()"></p>
             </div>
 
             <div class="pet-pref-edit-panel" x-show="editTypes" x-cloak>
                 <div class="pet-pref-other-field">
-                    <span>Other Pet types</span>
+                    <span>Other</span>
                     <div class="pet-pref-other-input-row">
                         <input type="text" x-model="otherInput" @keydown.enter.prevent="addByEnter()"
-                            placeholder="e.g Rabbit, Ferret, Hamster" />
+                            placeholder="e.g. Rabbit, Ferret, Hamster etc." />
                         <button type="button" class="pet-pref-add-btn" aria-label="Add pet type" @click="addByEnter()">
-                            <img src="{{ asset('images/business-hub/icon-other-pet-add.svg') }}" width="64" height="64"
-                                alt="" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+                                <circle cx="18" cy="18" r="18" fill="#FFC97A" />
+                                <path d="M18 11V25M11 18H25" stroke="#FFF" stroke-width="2" stroke-linecap="round" />
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -311,18 +317,18 @@ new class extends Component {
                         </div>
                     </template>
                 </div>
+            </div>
 
-                <div class="pet-pref-actions">
-                    <button type="button" class="pet-pref-cancel-btn" @click="cancelTypesEdit()">Cancel</button>
-                    <button type="button" class="pet-pref-save-btn" @click="saveTypes()"
-                        wire:loading.attr="disabled" wire:target="saveTypePreferences">
-                        <span wire:loading.class="hidden" wire:target="saveTypePreferences">Save Changes</span>
-                        <span class="pet-pref-save-loading hidden" wire:loading.class.remove="hidden"
-                            wire:target="saveTypePreferences">
-                            <span class="pet-pref-save-spinner"></span>
-                        </span>
-                    </button>
-                </div>
+            <div class="pet-pref-actions" x-show="editTypes" x-cloak>
+                <button type="button" class="pet-pref-cancel-btn" @click="cancelTypesEdit()">Cancel</button>
+                <button type="button" class="pet-pref-save-btn" @click="saveTypes()"
+                    wire:loading.attr="disabled" wire:target="saveTypePreferences">
+                    <span wire:loading.class="hidden" wire:target="saveTypePreferences">Save Changes</span>
+                    <span class="pet-pref-save-loading hidden" wire:loading.class.remove="hidden"
+                        wire:target="saveTypePreferences">
+                        <span class="pet-pref-save-spinner"></span>
+                    </span>
+                </button>
             </div>
         </article>
 
@@ -399,15 +405,18 @@ new class extends Component {
         position: relative;
         display: flex;
         flex-direction: column;
+        box-sizing: border-box;
         min-height: 195px;
         background: #fdfdfd;
+        border: 1px solid #e6e6e6;
         border-radius: 10px;
-        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.1);
         padding: 20px;
+        overflow: hidden;
     }
 
     .pet-preferences-card.is-editing {
-        min-height: 355px;
+        min-height: 430px;
+        padding-bottom: 0;
     }
 
     .pet-preferences-card-head {
@@ -420,13 +429,14 @@ new class extends Component {
 
     .pet-preferences-card-head h4 {
         margin: 0;
-        padding-top: 8px;
-        color: #3B3731;
+        padding-top: 0;
+        color: #9d9b98;
         font-family: Lato;
-        font-size: 18px;
+        font-size: 14px;
         font-style: normal;
         font-weight: 600;
         line-height: normal;
+        text-transform: uppercase;
     }
 
     .pet-pref-edit-btn {
@@ -456,7 +466,6 @@ new class extends Component {
         align-items: center;
         flex-wrap: wrap;
         gap: 20px;
-        margin-top: 22px;
     }
 
     .pet-pref-chip {
@@ -536,6 +545,23 @@ new class extends Component {
         text-transform: capitalize;
     }
 
+    .pet-preferences-wrapper.is-space .pet-pref-other-summary p {
+        font-weight: 400;
+    }
+
+    .pet-preferences-wrapper.is-space .pet-pref-chip--size .pet-pref-chip-tick {
+        display: none;
+    }
+
+    .pet-preferences-wrapper.is-space .pet-pref-chip--size.is-active {
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .pet-preferences-wrapper.is-space .pet-preferences-card.is-editing {
+        min-height: 430px;
+    }
+
     .pet-pref-edit-panel {
         display: flex;
         flex-direction: column;
@@ -559,14 +585,13 @@ new class extends Component {
     }
 
     .pet-pref-other-input-row {
-        display: flex;
-        align-items: flex-start;
-        gap: 20px;
+        position: relative;
+        width: 100%;
+        max-width: 465px;
     }
 
     .pet-pref-other-input-row input {
-        width: 332px;
-        max-width: 100%;
+        width: 100%;
         height: 48px;
         border: 1px solid #D4D4D4;
         border-radius: 10px;
@@ -576,7 +601,7 @@ new class extends Component {
         font-size: 16px;
         font-weight: 400;
         line-height: normal;
-        padding: 0 20px;
+        padding: 0 52px 0 20px;
     }
 
     .pet-pref-other-input-row input::placeholder {
@@ -584,22 +609,26 @@ new class extends Component {
     }
 
     .pet-pref-add-btn {
-        position: relative;
-        width: 48px;
-        height: 48px;
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        z-index: 2;
+        width: 36px;
+        height: 36px;
         border: 0;
         background: transparent;
         padding: 0;
         cursor: pointer;
-        flex-shrink: 0;
-        overflow: visible;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         line-height: 0;
     }
 
-    .pet-pref-add-btn img {
-        position: absolute;
-        left: -8px;
-        top: -3px;
+    .pet-pref-add-btn svg {
+        display: block;
+        width: 36px;
+        height: 36px;
         pointer-events: none;
     }
 
@@ -658,14 +687,30 @@ new class extends Component {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
-        margin-top: auto;
-        padding-top: 40px;
+        gap: 20px;
+        margin-top: 20px;
+        margin-left: -20px;
+        margin-right: -20px;
+        margin-bottom: 0;
+        min-height: 80px;
+        padding: 19px 20px;
+        background: rgba(186, 207, 142, 0.2);
+        border-top: 1px solid #B5DB65;
+        box-sizing: border-box;
+        flex-shrink: 0;
+        width: calc(100% + 40px);
+    }
+
+    .pet-preferences-card.is-editing .pet-pref-edit-panel {
+        flex: 1 1 auto;
+    }
+
+    .pet-preferences-card.is-editing>.pet-pref-chips:has(+ .pet-pref-actions) {
+        margin-bottom: auto;
     }
 
     .pet-pref-cancel-btn,
     .pet-pref-save-btn {
-        width: 138px;
         height: 42px;
         border-radius: 100px;
         font-family: Lato;
@@ -681,12 +726,14 @@ new class extends Component {
     }
 
     .pet-pref-cancel-btn {
+        width: 88px;
         background: #fff;
         border: 1px solid #D9D9D9;
         color: #9D9B98;
     }
 
     .pet-pref-save-btn {
+        width: 138px;
         border: 0;
         background: #BACF8E;
         box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
