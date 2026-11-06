@@ -14,11 +14,11 @@ new class extends Component {
     public array $selectedSizes = [];
     public bool $addOnsCompatibility = false;
     public bool $visibilityControls = false;
-    public string $baseDuration = '60 Minutes';
-    public string $bufferTime = '15 min';
+    public string $baseDuration = '90 Minutes';
+    public string $bufferTime = '15 Minutes';
     public float $basePrice = 25;
     public float $overtimeCharge = 10;
-    public string $overtimePer = '15 Minutes';
+    public string $overtimePer = '90 Minutes';
 
     public function mount(?int $editingId = null): void
     {
@@ -49,8 +49,7 @@ new class extends Component {
     private function minutesLabel(mixed $value, string $fallback): string
     {
         if (is_string($value) && preg_match('/\d+/', $value, $matches)) {
-            $minutes = (int) $matches[0];
-            return str_contains((string) $value, 'min') && !str_contains((string) $value, 'Minutes') ? $minutes . ' min' : $minutes . ' Minutes';
+            return ((int) $matches[0]) . ' Minutes';
         }
 
         $minutes = (int) $value;
@@ -130,12 +129,12 @@ new class extends Component {
         $this->otherPets = array_values((array) data_get($compat, 'other_pets', []));
         $this->selectedSizes = array_values((array) data_get($compat, 'pet_sizes', []));
         $duration = (array) $service->duration;
-        $this->baseDuration = $this->minutesLabel(data_get($duration, 'base_duration'), '60 Minutes');
-        $this->bufferTime = $this->minutesLabel(data_get($duration, 'buffer_time'), '15 min');
+        $this->baseDuration = $this->minutesLabel(data_get($duration, 'base_duration'), '90 Minutes');
+        $this->bufferTime = $this->minutesLabel(data_get($duration, 'buffer_time'), '15 Minutes');
         $pricing = (array) $service->pricing;
         $this->basePrice = (float) data_get($pricing, 'base_price', 25);
         $this->overtimeCharge = (float) data_get($pricing, 'overtime_charge.price', 10);
-        $this->overtimePer = $this->minutesOption(data_get($pricing, 'overtime_charge.per'), '15 Minutes');
+        $this->overtimePer = $this->minutesOption(data_get($pricing, 'overtime_charge.per'), '90 Minutes');
         $this->addOnsCompatibility = (bool) $service->add_ons_compatibility;
         $this->visibilityControls = (bool) $service->visibility_controls;
         if ($silent) {
@@ -209,6 +208,7 @@ new class extends Component {
     ">
     <form class="service-form service-form-space" wire:submit.prevent="save">
         <div class="service-form-card">
+            <h4 class="service-section-title">Service</h4>
             <div class="service-form-grid">
                 <label class="service-field">
                     <span>Service Name</span>
@@ -223,37 +223,39 @@ new class extends Component {
             </div>
         </div>
 
-        <div class="service-form-block">
+        <div class="service-form-card">
             <h4 class="service-section-title">Pet Compatibility</h4>
-            <div class="service-form-card">
-                <x-business-hub.services.pet-compatibility title="" other-pets-input-id="service-other-pet-space" />
-            </div>
+            <x-business-hub.services.pet-compatibility title="" other-pets-input-id="service-other-pet-space" />
         </div>
 
-        <div class="service-form-block">
+        <div class="service-form-card">
             <h4 class="service-section-title">Duration & Price</h4>
-            <div class="service-form-card">
-                <x-business-hub.services.duration-price :show-by-size="false" :show-buffer="false" money />
-            </div>
+            <x-business-hub.services.duration-price :show-by-size="false" money />
         </div>
 
         <div class="service-form-card service-settings-card">
-            <h4>Setting Options</h4>
-            <div class="service-setting-row">
+            <h4 class="service-section-title">Setting Options</h4>
+            <div class="service-setting-row" :class="{ 'is-active': addOnsCompatibility }" role="switch"
+                :aria-checked="addOnsCompatibility.toString()" tabindex="0"
+                @click="addOnsCompatibility = !addOnsCompatibility"
+                @keydown.enter.prevent="addOnsCompatibility = !addOnsCompatibility"
+                @keydown.space.prevent="addOnsCompatibility = !addOnsCompatibility">
                 <div>
                     <strong>Add-ons Compatibility</strong>
                     <p>Allow add-ons with this service</p>
                 </div>
-                <button type="button" class="service-toggle" :class="{ 'is-on': addOnsCompatibility }"
-                    @click="addOnsCompatibility = !addOnsCompatibility"></button>
+                <span class="service-toggle" :class="{ 'is-on': addOnsCompatibility }" aria-hidden="true"></span>
             </div>
-            <div class="service-setting-row" :class="{ 'is-active': visibilityControls }">
+            <div class="service-setting-row" :class="{ 'is-active': visibilityControls }" role="switch"
+                :aria-checked="visibilityControls.toString()" tabindex="0"
+                @click="visibilityControls = !visibilityControls"
+                @keydown.enter.prevent="visibilityControls = !visibilityControls"
+                @keydown.space.prevent="visibilityControls = !visibilityControls">
                 <div>
                     <strong>Visibility Controls</strong>
                     <p>This service is active on your profile — clients can book it now</p>
                 </div>
-                <button type="button" class="service-toggle" :class="{ 'is-on': visibilityControls }"
-                    @click="visibilityControls = !visibilityControls"></button>
+                <span class="service-toggle" :class="{ 'is-on': visibilityControls }" aria-hidden="true"></span>
             </div>
         </div>
 
@@ -263,12 +265,6 @@ new class extends Component {
 
 <style>
     .service-form-space {
-        gap: 40px;
-    }
-
-    .service-form-space .service-form-block {
-        display: flex;
-        flex-direction: column;
         gap: 20px;
     }
 
