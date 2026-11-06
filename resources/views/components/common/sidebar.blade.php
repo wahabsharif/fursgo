@@ -101,14 +101,7 @@
     " @earnings-menu-selected.window="activeEarningsMenu = $event.detail?.menu || 'overview'"
     @settings-menu-selected.window="activeSettingsMenu = $event.detail?.menu || 'general'"
     class="{{ $variant === 'dashboard' ? 'dashboard-sidebar' : '' }}"
-    style="{{ $variant === 'dashboard' ? 'margin: 0; width: 100%; position: relative;' : 'position: relative;' }}">
-    <style>
-        :root {
-            --sidebar-active-bg:
-                {{ $activeBgColor }};
-            --sidebar-hover-bg: #F7F4EC;
-        }
-    </style>
+    style="--sidebar-active-bg: {{ $activeBgColor }}; --sidebar-hover-bg: #F7F4EC; {{ $variant === 'dashboard' ? 'margin: 0; width: 100%; position: relative;' : 'position: relative;' }}">
 
     <!-- Mobile Toggle Button -->
     <button @click="mobileOpen = !mobileOpen" class="mobile-toggle" aria-label="Toggle Sidebar">
@@ -450,7 +443,7 @@
 
         /* Dashboard Layout — 1440px shell; sidebar rail aligns with header divider */
         .dashboard-wrapper {
-            --dashboard-sidebar-col: 16.5rem;
+            --dashboard-sidebar-col: 261px;
             display: grid;
             grid-template-columns: var(--dashboard-sidebar-col) 1px minmax(0, 1fr);
             column-gap: 0;

@@ -128,27 +128,28 @@
 
     $headerSwitchBusinesses = [];
     if (!$isBusinessVerificationRoute && $gsp instanceof GroomerSpacerProfile && filled($gsp->email)) {
-        $headerSwitchBusinesses = GroomerSpacerProfile::query()
-            ->where('email', $gsp->email)
-            ->orderBy('id')
-            ->get()
-            ->map(function (GroomerSpacerProfile $profile) use ($gsp, $resolveHeaderProfileImage) {
-                $bd = is_array($profile->business_details) ? $profile->business_details : [];
-                $bb = is_array($profile->business_basics) ? $profile->business_basics : [];
-                $name = trim((string) ($bb['display_name'] ?? ($bd['business_name'] ?? ($profile->full_name ?? 'Business'))));
-                $role = strtolower((string) ($profile->user_type ?? 'groomer')) === 'space' ? 'Space Host' : 'Groomer';
-                $area = ServiceArea::query()->where('groomer_spacer_id', $profile->id)->value('name');
-                $area = is_string($area) && trim($area) !== '' ? trim($area) : null;
+        $switchProfiles = GroomerSpacerProfile::query()->where('email', $gsp->email)->orderBy('id')->get();
 
-                return [
-                    'id' => $profile->id,
-                    'name' => $name !== '' ? $name : 'Business',
-                    'meta' => $area ? $role . ' · ' . $area : $role,
-                    'image' => $resolveHeaderProfileImage($profile),
-                    'active' => (int) $profile->id === (int) $gsp->id,
-                ];
-            })
-            ->all();
+        foreach ($switchProfiles as $profile) {
+            if (!$profile instanceof GroomerSpacerProfile) {
+                continue;
+            }
+
+            $bd = is_array($profile->business_details) ? $profile->business_details : [];
+            $bb = is_array($profile->business_basics) ? $profile->business_basics : [];
+            $name = trim((string) ($bb['display_name'] ?? ($bd['business_name'] ?? ($profile->full_name ?? 'Business'))));
+            $role = strtolower((string) ($profile->user_type ?? 'groomer')) === 'space' ? 'Space Host' : 'Groomer';
+            $area = ServiceArea::query()->where('groomer_spacer_id', $profile->id)->value('name');
+            $area = is_string($area) && trim($area) !== '' ? trim($area) : null;
+
+            $headerSwitchBusinesses[] = [
+                'id' => $profile->id,
+                'name' => $name !== '' ? $name : 'Business',
+                'meta' => $area ? $role . ' · ' . $area : $role,
+                'image' => $resolveHeaderProfileImage($profile),
+                'active' => (int) $profile->id === (int) $gsp->id,
+            ];
+        }
     }
 @endphp
 
@@ -882,7 +883,7 @@
 
         <style>
             .dashboard-header {
-                --dashboard-sidebar-col: 16.5rem;
+                --dashboard-sidebar-col: 261px;
                 --profile-item-active-bg: #fffbf4;
                 --profile-check-color: #ffc46e;
                 position: sticky;
