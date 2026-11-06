@@ -77,6 +77,12 @@
                     placeholder="Specify Pet Type" breeds-select-id="" x-model="otherPetInput"
                     @input="filterSuggestions()" @focus="if (otherPetInput.trim()) { filterSuggestions(); }"
                     @keydown.enter.prevent="addPet()" />
+                <button type="button" class="service-other-pet-add-btn" aria-label="Add pet type" @click="addPet()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+                        <circle cx="18" cy="18" r="18" fill="#FFC97A" />
+                        <path d="M18 11V25M11 18H25" stroke="#FFF" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </button>
                 <div id="{{ $inputId }}-suggestions" class="pet-type-suggestions pet-type-suggestions--service"
                     x-show="showSuggestions && suggestions.length > 0" x-cloak>
                     <template x-for="pet in suggestions" :key="pet.id">
@@ -85,9 +91,6 @@
                     </template>
                 </div>
             </div>
-            <button type="button" class="service-other-pet-add-btn" aria-label="Add pet type" @click="addPet()">
-                <img src="{{ asset('images/business-hub/icon-other-pet-add.svg') }}" width="64" height="64" alt="" />
-            </button>
         </div>
 
         <div class="service-other-pets-chips" x-show="otherPets.length > 0" x-cloak>
@@ -128,17 +131,13 @@
         }
 
         .service-input-with-icon {
-            display: flex;
-            align-items: flex-start;
-            gap: 20px;
-            width: 100%;
+            width: 417px;
+            max-width: 100%;
         }
 
         .service-other-pet-type-wrap {
             position: relative;
-            width: 417px;
-            max-width: 100%;
-            flex-shrink: 0;
+            width: 100%;
         }
 
         .pet-type-field--service {
@@ -162,7 +161,7 @@
             font-size: 16px;
             font-weight: 400;
             line-height: normal;
-            padding: 0.65rem 0.9rem;
+            padding: 0 52px 0 20px;
         }
 
         .pet-type-input--service::placeholder {
@@ -206,15 +205,19 @@
         }
 
         .service-other-pet-add-btn {
-            position: relative;
-            width: 48px;
-            height: 48px;
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            z-index: 2;
+            width: 36px;
+            height: 36px;
             border: 0;
             background: transparent;
             padding: 0;
             cursor: pointer;
-            flex-shrink: 0;
-            overflow: visible;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             line-height: 0;
             transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
         }
@@ -223,10 +226,10 @@
             transform: scale(0.94);
         }
 
-        .service-other-pet-add-btn img {
-            position: absolute;
-            left: -8px;
-            top: -3px;
+        .service-other-pet-add-btn svg {
+            display: block;
+            width: 36px;
+            height: 36px;
             pointer-events: none;
         }
 

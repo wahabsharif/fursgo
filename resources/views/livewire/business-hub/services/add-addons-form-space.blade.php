@@ -13,9 +13,10 @@ new class extends Component {
     public array $selectedPets = [];
     public array $selectedSizes = [];
     public bool $visibilityControls = true;
+    public string $baseDuration = '90 Minutes';
     public float $basePrice = 25;
     public float $overtimeCharge = 10;
-    public string $overtimePer = '15 Minutes';
+    public string $overtimePer = '90 Minutes';
 
     public function mount(?int $editingId = null): void
     {
@@ -33,10 +34,21 @@ new class extends Component {
         return $id ? (int) $id : null;
     }
 
+    private function parseMinutes(?string $value): int|string
+    {
+        if ($value === null || trim($value) === '') {
+            return '';
+        }
+
+        preg_match('/\d+/', $value, $matches);
+
+        return isset($matches[0]) ? (int) $matches[0] : '';
+    }
+
     private function minutesOption(mixed $value, string $fallback): string
     {
-        if (is_string($value) && preg_match('/(\d+)\s*min/i', $value, $matches)) {
-            return $matches[1] . ' Minutes';
+        if (is_string($value) && preg_match('/\d+/', $value, $matches)) {
+            return ((int) $matches[0]) . ' Minutes';
         }
 
         if (is_numeric($value) && (int) $value > 0) {
@@ -73,10 +85,12 @@ new class extends Component {
         $this->selectedPets = array_values((array) (data_get($compat, 'pet_type') ?: data_get($compat, 'pet_types', [])));
         $this->otherPets = array_values((array) data_get($compat, 'other_pets', []));
         $this->selectedSizes = array_values((array) (data_get($compat, 'pet_size') ?: data_get($compat, 'pet_sizes', [])));
+        $duration = is_array($addOn->duration) ? (array) $addOn->duration : [];
+        $this->baseDuration = $this->minutesOption(data_get($duration, 'base_duration', is_numeric($addOn->duration) ? $addOn->duration : null), '90 Minutes');
         $pricing = (array) $addOn->pricing;
         $this->basePrice = (float) data_get($pricing, 'base_price', 25);
         $this->overtimeCharge = (float) data_get($pricing, 'overtime_charge.price', 10);
-        $this->overtimePer = $this->minutesOption(data_get($pricing, 'overtime_charge.per'), '15 Minutes');
+        $this->overtimePer = $this->minutesOption(data_get($pricing, 'overtime_charge.per'), '90 Minutes');
         $this->visibilityControls = (bool) $addOn->visibility_controls;
         if ($silent) {
             $this->skipRender();
@@ -94,7 +108,15 @@ new class extends Component {
                 'other_pets' => array_values($this->otherPets),
                 'pet_size' => array_values($this->selectedSizes),
             ],
-            'duration' => '',
+            'duration' => [
+                'base_duration' => $this->parseMinutes($this->baseDuration),
+                'buffer_time' => '',
+                'duration_by_size' => [
+                    'small' => $this->parseMinutes($this->baseDuration),
+                    'medium' => $this->parseMinutes($this->baseDuration),
+                    'large' => $this->parseMinutes($this->baseDuration),
+                ],
+            ],
             'pricing' => [
                 'base_price' => (float) $this->basePrice,
                 'overtime_charge' => ['price' => (float) $this->overtimeCharge, 'per' => $this->overtimePer],
@@ -174,6 +196,7 @@ new class extends Component {
     ">
     <form class="service-form service-form-space" wire:submit.prevent="save">
         <div class="service-form-card">
+            <h4 class="service-section-title">Add-on</h4>
             <div class="service-form-grid">
                 <label class="service-field">
                     <span>Add-on Name</span>
@@ -189,30 +212,28 @@ new class extends Component {
             </div>
         </div>
 
-        <div class="service-form-block">
+        <div class="service-form-card">
             <h4 class="service-section-title">Pet Compatibility</h4>
-            <div class="service-form-card">
-                <x-business-hub.services.pet-compatibility title="" other-pets-input-id="addon-other-pet-space" />
-            </div>
+            <x-business-hub.services.pet-compatibility title="" other-pets-input-id="addon-other-pet-space" />
         </div>
 
-        <div class="service-form-block">
+        <div class="service-form-card">
             <h4 class="service-section-title">Duration & Price</h4>
-            <div class="service-form-card">
-                <x-business-hub.services.duration-price :show-by-size="false" :show-buffer="false"
-                    :show-base-duration="false" money />
-            </div>
+            <x-business-hub.services.duration-price :show-by-size="false" :show-buffer="false" money />
         </div>
 
         <div class="service-form-card service-settings-card">
-            <h4>Setting Options</h4>
-            <div class="service-setting-row" :class="{ 'is-active': visibilityControls }">
+            <h4 class="service-section-title">Setting Options</h4>
+            <div class="service-setting-row" :class="{ 'is-active': visibilityControls }" role="switch"
+                :aria-checked="visibilityControls.toString()" tabindex="0"
+                @click="visibilityControls = !visibilityControls"
+                @keydown.enter.prevent="visibilityControls = !visibilityControls"
+                @keydown.space.prevent="visibilityControls = !visibilityControls">
                 <div>
                     <strong>Visibility Controls</strong>
                     <p>This add-on is active on your profile — clients can book it now</p>
                 </div>
-                <button type="button" class="service-toggle" :class="{ 'is-on': visibilityControls }"
-                    @click="visibilityControls = !visibilityControls"></button>
+                <span class="service-toggle" :class="{ 'is-on': visibilityControls }" aria-hidden="true"></span>
             </div>
         </div>
 
@@ -222,12 +243,6 @@ new class extends Component {
 
 <style>
     .service-form-space {
-        gap: 40px;
-    }
-
-    .service-form-space .service-form-block {
-        display: flex;
-        flex-direction: column;
         gap: 20px;
     }
 

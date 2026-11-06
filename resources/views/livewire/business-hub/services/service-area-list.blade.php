@@ -24,10 +24,10 @@ new class extends Component {
             return [];
         }
 
-        return ServiceArea::query()
-            ->where('groomer_spacer_id', $profileId)
-            ->latest()
-            ->get()
+        /** @var \Illuminate\Database\Eloquent\Collection<int, ServiceArea> $areas */
+        $areas = ServiceArea::query()->where('groomer_spacer_id', $profileId)->latest()->get();
+
+        return $areas
             ->map(
                 fn(ServiceArea $area) => [
                     'id' => $area->id,
@@ -122,7 +122,8 @@ new class extends Component {
 <section class="service-area-panel" aria-label="Service area list" wire:ignore.self
     x-data="serviceAreaMap(@js($mapAreas), @entangle('selectedAreaId').live)"
     x-on:service-area-map-refresh.window="refreshMap()"
-    x-on:service-area-data-updated.window="setAreas($event.detail?.areas ?? [])">
+    x-on:service-area-data-updated.window="setAreas($event.detail?.areas ?? [])"
+    x-on:service-area-remove="removeArea($event.detail?.id)">
     <div class="service-area-layout">
         <div class="service-area-table-col">
             @php
@@ -131,11 +132,12 @@ new class extends Component {
             @endphp
             <div class="service-area-card">
                 <div class="service-area-card-head">
-                    <h4>Your Service Areas <span>{{ $activeCount }} active · {{ $pausedCount }} paused</span></h4>
+                    <h4>Your Service Areas ({{ $activeCount }} active · {{ $pausedCount }} paused)</h4>
                 </div>
                 <div class="service-area-rows">
                     @forelse ($this->serviceAreas as $area)
                         <article wire:key="service-area-row-{{ $area['id'] }}"
+                            data-area-id="{{ $area['id'] }}"
                             @class([
                                 'service-area-row',
                                 'is-selected' => $selectedAreaId === $area['id'],
@@ -160,7 +162,7 @@ new class extends Component {
                                     @click.stop="window.dispatchEvent(new CustomEvent('service-area-edit-requested', { detail: { areaId: {{ $area['id'] }}, title: @js($area['name']), state: { editingId: {{ $area['id'] }}, name: @js($area['name']), address: @js($area['address']), radius: {{ $area['radius'] }}, latitude: {{ $area['lat'] }}, longitude: {{ $area['lng'] }}, isActive: {{ $area['is_paused'] ? 'false' : 'true' }} } } }))">
                                     <x-business-hub.common.icon name="edit" />
                                 </button>
-                                <div class="service-area-more" x-data="{ open: false }" @click.outside="open = false"
+                                <div class="service-area-more" x-data="{ open: false }" :class="{ 'is-open': open }" @click.outside="open = false"
                                     @keydown.escape.window="open = false">
                                     <button type="button" class="service-action-btn" aria-label="Actions for {{ $area['name'] }}"
                                         @click.stop="open = !open">
@@ -173,8 +175,7 @@ new class extends Component {
                                             <span>{{ $area['is_paused'] ? 'Resume area' : 'Pause area' }}</span>
                                         </button>
                                         <button type="button" class="is-danger"
-                                            wire:click="deleteArea({{ $area['id'] }})"
-                                            @click="open = false">
+                                            x-on:click.stop="open = false; $dispatch('service-area-remove', { id: {{ $area['id'] }} })">
                                             <span>Delete area</span>
                                         </button>
                                     </div>
@@ -208,7 +209,12 @@ new class extends Component {
 
                 window.__serviceAreaMapRegistered = true;
 
-                const METERS_PER_STATUTE_MILE = {{ json_encode(\App\Models\ServiceArea::METERS_PER_STATUTE_MILE) }};
+                const CARTO_KEY = @json((string) config('services.carto.api_key'));
+                const cartoTiles = (style) => {
+                    const base = 'https://{s}.basemaps.cartocdn.com/' + style + '/{z}/{x}/{y}{r}.png';
+
+                    return CARTO_KEY ? base + '?key=' + encodeURIComponent(CARTO_KEY) : base;
+                };
 
                 Alpine.data('serviceAreaMap', (areas, selectedAreaId) => ({
                     areas: areas ?? [],
@@ -270,28 +276,34 @@ new class extends Component {
                         this.map = L.map(mapEl, {
                             zoomControl: false,
                             attributionControl: false,
+                            scrollWheelZoom: false,
                             preferCanvas: true,
+                        });
+                        this.map.setView(this.designCenter, this.designZoom);
+
+                        L.DomEvent.on(mapEl, 'wheel', (event) => {
+                            if (!event.ctrlKey || !this.map) {
+                                return;
+                            }
+
+                            L.DomEvent.preventDefault(event);
+                            this.map.setZoom(this.map.getZoom() + (event.deltaY > 0 ? -1 : 1));
                         });
 
                         L.control.zoom({
                             position: 'bottomright',
                         }).addTo(this.map);
 
-                        L.tileLayer(
-                            'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-                                subdomains: 'abcd',
-                                maxZoom: 20,
-                            }).addTo(this.map);
-
-                        L.tileLayer(
-                            'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
-                                subdomains: 'abcd',
-                                maxZoom: 20,
-                                pane: 'overlayPane',
-                            }).addTo(this.map);
+                        L.tileLayer(cartoTiles('light_all'), {
+                            subdomains: 'abcd',
+                            maxZoom: 20,
+                        }).addTo(this.map);
 
                         this.drawAreas();
-                        setTimeout(() => this.map?.invalidateSize(), 120);
+                        setTimeout(() => {
+                            this.map?.invalidateSize();
+                            this.frameMap();
+                        }, 150);
                     },
                     clearLayers() {
                         Object.values(this.layers).forEach(({
@@ -305,40 +317,92 @@ new class extends Component {
                         });
                         this.layers = {};
                     },
+                    designCenter: [51.50369, -0.10369],
+                    designZoom: 14,
+                    designDiameterPx(miles) {
+                        const value = Number(miles);
+                        if (value === 0.5) {
+                            return 125;
+                        }
+                        if (value === 1) {
+                            return 127;
+                        }
+                        if (value === 1.5) {
+                            return 211;
+                        }
+
+                        return 211 * (value / 1.5);
+                    },
+                    displayRadiusMeters(miles) {
+                        const latitude = this.designCenter[0] * Math.PI / 180;
+                        const metersPerPixel = 156543.03392 * Math.cos(latitude) / (2 ** this.designZoom);
+
+                        return (this.designDiameterPx(miles) / 2) * metersPerPixel;
+                    },
+                    escapeHtml(value) {
+                        return String(value).replace(/[&<>"']/g, (char) => ({
+                            '&': '&amp;',
+                            '<': '&lt;',
+                            '>': '&gt;',
+                            '"': '&quot;',
+                            "'": '&#39;',
+                        } [char]));
+                    },
+                    pinIcon(area = null) {
+                        const tooltip = area ?
+                            `<div class="service-area-map-tooltip"><strong>${this.escapeHtml(area.name)}</strong><span>Radius: ${this.escapeHtml(this.formatRadius(area.radius))}</span></div>` :
+                            '';
+
+                        return L.divIcon({
+                            className: 'service-area-pin-wrap',
+                            html: `${tooltip}<span class="service-area-pin" aria-hidden="true"><span class="service-area-pin-base"></span><span class="service-area-pin-active"></span></span>`,
+                            iconSize: [34, 48],
+                            iconAnchor: [17, 24],
+                        });
+                    },
+                    bindAreaHover(marker, circle, area) {
+                        let hovering = 0;
+                        const show = () => {
+                            hovering += 1;
+                            marker.setZIndexOffset(500);
+                            marker.getElement()?.classList.add('is-hover');
+                        };
+                        const hide = () => {
+                            hovering = Math.max(0, hovering - 1);
+                            if (hovering > 0) {
+                                return;
+                            }
+                            const isActive = Number(area.id) === Number(this.selectedAreaId);
+                            marker.setZIndexOffset(isActive ? 400 : (area.is_paused ? 0 : 100));
+                            marker.getElement()?.classList.remove('is-hover');
+                        };
+
+                        marker.on('mouseover', show);
+                        marker.on('mouseout', hide);
+                        circle.on('mouseover', show);
+                        circle.on('mouseout', hide);
+                    },
                     drawAreas() {
                         if (!this.map) {
                             return;
                         }
 
-                        const pinIcon = L.divIcon({
-                            className: 'service-area-pin-wrap',
-                            html: `<span class="service-area-pin" aria-hidden="true"></span>`,
-                            iconSize: [22, 30],
-                            iconAnchor: [11, 15],
-                        });
-
                         this.areas.forEach((area) => {
-                            const radiusMeters = Number(area.radius) * METERS_PER_STATUTE_MILE;
+                            const paused = !!area.is_paused;
                             const circle = L.circle([area.lat, area.lng], {
-                                radius: radiusMeters,
+                                radius: this.displayRadiusMeters(area.radius),
                                 color: area.color,
                                 fillColor: area.color,
-                                fillOpacity: 0.35,
-                                weight: 3,
-                                opacity: 0.9,
+                                fillOpacity: 0.28,
+                                weight: 2,
+                                opacity: 0.95,
                             }).addTo(this.map);
 
                             const marker = L.marker([area.lat, area.lng], {
-                                icon: pinIcon,
-                            });
-                            const spokenRadius = this.formatRadius(area.radius);
-                            marker.bindTooltip(
-                                `<div class="service-area-map-tooltip"><strong>${area.name}</strong><span>Radius: ${spokenRadius}</span></div>`, {
-                                    permanent: true,
-                                    direction: 'top',
-                                    offset: [0, -18],
-                                    className: 'service-area-leaflet-tooltip',
-                                });
+                                icon: this.pinIcon(area),
+                                zIndexOffset: paused ? 0 : 100,
+                            }).addTo(this.map);
+                            this.bindAreaHover(marker, circle, area);
 
                             this.layers[area.id] = {
                                 circle,
@@ -346,15 +410,24 @@ new class extends Component {
                             };
                         });
 
-                        if (this.areas.length) {
-                            const bounds = L.latLngBounds(this.areas.map((area) => [area.lat, area
-                                .lng
-                            ]));
-                            this.map.fitBounds(bounds.pad(0.45), {
-                                maxZoom: 14,
+                        this.frameMap();
+                        this.highlightSelected();
+                    },
+                    frameMap() {
+                        if (!this.map) {
+                            return;
+                        }
+
+                        this.map.setView(this.designCenter, this.designZoom, {
+                            animate: false,
+                        });
+
+                        const markers = L.latLngBounds(this.areas.map((area) => [area.lat, area.lng]));
+                        if (markers.isValid() && !this.map.getBounds().contains(markers)) {
+                            this.map.fitBounds(markers.pad(0.45), {
+                                animate: false,
+                                maxZoom: this.designZoom,
                             });
-                        } else {
-                            this.map.setView([51.5074, -0.1278], 12);
                         }
 
                         this.highlightSelected();
@@ -368,25 +441,93 @@ new class extends Component {
                         this.clearLayers();
                         this.drawAreas();
                     },
+                    fadeOutMapArea(areaId) {
+                        const layer = this.layers[areaId];
+                        if (!layer || !this.map) {
+                            return Promise.resolve();
+                        }
+
+                        const markerEl = layer.marker?.getElement();
+                        markerEl?.classList.add('is-fading-out');
+
+                        const startOpacity = Number(layer.circle.options.opacity ?? 0.95);
+                        const startFill = Number(layer.circle.options.fillOpacity ?? 0.28);
+                        const duration = 280;
+                        const startedAt = performance.now();
+
+                        return new Promise((resolve) => {
+                            const tick = (now) => {
+                                const progress = Math.min(1, (now - startedAt) / duration);
+                                const remain = 1 - progress;
+                                layer.circle.setStyle({
+                                    opacity: startOpacity * remain,
+                                    fillOpacity: startFill * remain,
+                                });
+
+                                if (progress < 1) {
+                                    requestAnimationFrame(tick);
+                                    return;
+                                }
+
+                                if (this.map.hasLayer(layer.circle)) {
+                                    this.map.removeLayer(layer.circle);
+                                }
+                                if (layer.marker && this.map.hasLayer(layer.marker)) {
+                                    this.map.removeLayer(layer.marker);
+                                }
+                                delete this.layers[areaId];
+                                resolve();
+                            };
+
+                            requestAnimationFrame(tick);
+                        });
+                    },
+                    async removeArea(areaId) {
+                        const id = Number(areaId);
+                        if (!id || this._removingAreaId) {
+                            return;
+                        }
+
+                        this._removingAreaId = id;
+                        const panel = this.$el || document.querySelector('.service-area-panel');
+                        const row = panel?.querySelector(`[data-area-id="${id}"]`);
+                        row?.classList.add('is-deleting');
+
+                        try {
+                            await Promise.all([
+                                this.fadeOutMapArea(id),
+                                new Promise((resolve) => setTimeout(resolve, 280)),
+                            ]);
+
+                            if (this.$wire) {
+                                await this.$wire.deleteArea(id);
+                                return;
+                            }
+
+                            const wireId = panel?.getAttribute('wire:id') ||
+                                panel?.closest('[wire\\:id]')?.getAttribute('wire:id');
+                            if (wireId && window.Livewire) {
+                                await window.Livewire.find(wireId).call('deleteArea', id);
+                            }
+                        } finally {
+                            this._removingAreaId = null;
+                        }
+                    },
                     highlightSelected() {
                         Object.entries(this.layers).forEach(([id, layer]) => {
                             const isActive = Number(id) === Number(this.selectedAreaId);
                             const area = this.areas.find((item) => Number(item.id) === Number(id));
                             const paused = !!area?.is_paused;
                             layer.circle.setStyle({
-                                fillOpacity: isActive ? 0.45 : (paused ? 0.18 : 0.28),
-                                weight: isActive ? 3 : 2,
-                                opacity: paused ? 0.45 : 0.9,
+                                fillOpacity: isActive ? 0.34 : 0.28,
+                                weight: isActive ? 2.5 : 2,
+                                opacity: 0.95,
                             });
                             if (!layer.marker) {
                                 return;
                             }
-                            if (isActive) {
-                                layer.marker.addTo(this.map);
-                                layer.marker.openTooltip();
-                            } else if (this.map.hasLayer(layer.marker)) {
-                                this.map.removeLayer(layer.marker);
-                            }
+                            layer.marker.setIcon(this.pinIcon(area));
+                            layer.marker.setZIndexOffset(isActive ? 400 : (paused ? 0 : 100));
                         });
                     },
                     refreshMap() {
@@ -438,33 +579,28 @@ new class extends Component {
 
     .service-area-card {
         background: #fdfdfd;
+        border: 1px solid #e6e6e6;
         border-radius: 10px;
-        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.1);
         overflow: visible;
     }
 
     .service-area-card-head {
         display: flex;
         align-items: center;
-        height: 50px;
+        height: 49px;
         padding: 0 20px;
         background: #f6f5f5;
-        border-radius: 10px 10px 0 0;
+        border-radius: 9px 9px 0 0;
     }
 
     .service-area-card-head h4 {
         margin: 0;
-        color: #3B3731;
+        color: #948f88;
         font-family: Lato;
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 600;
         line-height: normal;
-    }
-
-    .service-area-card-head h4 span {
-        margin-left: 8px;
-        color: #948f88;
-        font-weight: 400;
+        text-transform: uppercase;
     }
 
     .service-area-rows {
@@ -473,29 +609,55 @@ new class extends Component {
     }
 
     .service-area-row {
+        position: relative;
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto auto;
         align-items: center;
         gap: 16px;
         min-height: 81px;
+        max-height: 120px;
         padding: 12px 20px;
-        border-top: 1px solid #ebebeb;
+        border-top: 1px solid #e6e6e6;
         cursor: pointer;
         background: transparent;
-        transition: background-color 0.2s ease;
+        overflow: visible;
+        transition: opacity 0.28s ease, transform 0.28s ease, max-height 0.28s ease, min-height 0.28s ease, padding 0.28s ease, border-color 0.28s ease, gap 0.28s ease;
+    }
+
+    .service-area-row>* {
+        position: relative;
+        z-index: 1;
+    }
+
+    .service-area-row::before {
+        content: "";
+        position: absolute;
+        inset: 2px;
+        border-radius: 5px;
+        background: transparent;
+        pointer-events: none;
+        transition: background-color 0.22s ease;
     }
 
     .service-area-row:first-child {
         border-top: 0;
     }
 
-    .service-area-row:hover {
-        background: #fffaf2;
+    .service-area-row:hover::before {
+        background: #fff7e7;
     }
 
-    .service-area-row.is-selected,
-    .service-area-row.is-selected:hover {
-        background: #fff7e7;
+    .service-area-row.is-deleting {
+        opacity: 0;
+        transform: translateY(-6px);
+        min-height: 0;
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        gap: 0;
+        border-top-color: transparent;
+        pointer-events: none;
+        overflow: hidden;
     }
 
     .service-area-row.is-paused .service-area-row-copy strong,
@@ -575,56 +737,61 @@ new class extends Component {
         white-space: nowrap;
     }
 
+    .service-area-row:has(.service-area-more.is-open) {
+        z-index: 5;
+    }
+
     .service-area-more {
         position: relative;
     }
 
+    .service-area-more.is-open {
+        z-index: 6;
+    }
+
     .service-area-more-menu {
         position: absolute;
-        top: calc(100% + 4px);
+        top: calc(100% + 8px);
         left: 0;
-        width: 130px;
+        box-sizing: border-box;
+        width: 159px;
+        padding: 3px;
         background: #fff;
-        border: 1px solid #D9D9D9;
-        border-radius: 5px;
-        overflow: hidden;
+        border: 1px solid #e2e2e2;
+        border-radius: 10px;
         z-index: 40;
     }
 
     .service-area-more-menu button {
         width: 100%;
-        height: 36px;
+        height: 31px;
         border: 0;
-        border-bottom: 1px solid #D9D9D9;
-        background: #fff;
-        padding: 4px;
-        color: #3B3731;
+        background: transparent;
+        padding: 0;
+        color: #3b3731;
         font-family: Lato;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 500;
         text-align: left;
         cursor: pointer;
     }
 
-    .service-area-more-menu button:last-child {
-        border-bottom: 0;
-    }
-
     .service-area-more-menu button span {
         display: flex;
         align-items: center;
-        height: 28px;
-        padding: 0 6px;
-        border-radius: 5px;
+        height: 31px;
+        padding: 0 10px;
+        border-radius: 6px;
     }
 
-    .service-area-more-menu button:hover span {
-        background: #FAF8F4;
+    .service-area-more-menu button:hover span,
+    .service-area-more-menu button:focus-visible span {
+        background: #faf8f4;
     }
 
+    .service-area-more-menu button.is-danger,
     .service-area-more-menu button.is-danger span {
-        background: #FAF8F4;
-        color: #FF6E6E;
+        color: #fe6f56;
     }
 
     .service-area-empty {
@@ -638,19 +805,18 @@ new class extends Component {
         position: relative;
         z-index: 1;
         width: 100%;
-        max-width: 505px;
+        max-width: 500px;
         justify-self: end;
     }
 
     .service-area-map-shell {
         position: relative;
         width: 100%;
-        aspect-ratio: 1;
+        aspect-ratio: 500 / 505;
         border: 1px solid #e3e3e3;
         border-radius: 10px;
         overflow: hidden;
-        background: #f4f4f4;
-        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.1);
+        background: #f3f3f3;
     }
 
     .service-area-map,
@@ -710,9 +876,8 @@ new class extends Component {
         background: #fafafa;
     }
 
-    /* Grayscale basemap only; markers, circles, and labels stay in colour */
     .service-area-map .leaflet-tile-pane {
-        filter: grayscale(1);
+        filter: none;
     }
 
     .service-area-panel .service-action-btns {
@@ -742,41 +907,101 @@ new class extends Component {
     .service-area-pin-wrap {
         background: transparent !important;
         border: none !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        overflow: visible !important;
+        transition: opacity 0.28s ease, transform 0.28s ease;
+    }
+
+    .service-area-pin-wrap.is-fading-out {
+        opacity: 0;
+        transform: scale(0.85) translateY(-4px);
+        pointer-events: none;
     }
 
     .service-area-pin {
+        position: relative;
         display: block;
-        width: 22px;
-        height: 30px;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='48' viewBox='0 0 34 48' fill='none'%3E%3Cpath d='M17 22.8C15.3898 22.8 13.8455 22.1679 12.7069 21.0426C11.5682 19.9174 10.9286 18.3913 10.9286 16.8C10.9286 15.2087 11.5682 13.6826 12.7069 12.5574C13.8455 11.4321 15.3898 10.8 17 10.8C18.6102 10.8 20.1545 11.4321 21.2931 12.5574C22.4318 13.6826 23.0714 15.2087 23.0714 16.8C23.0714 17.5879 22.9144 18.3681 22.6093 19.0961C22.3042 19.8241 21.8569 20.4855 21.2931 21.0426C20.7294 21.5998 20.0601 22.0417 19.3234 22.3433C18.5868 22.6448 17.7973 22.8 17 22.8ZM17 0C12.4913 0 8.1673 1.76999 4.97918 4.92061C1.79107 8.07122 0 12.3444 0 16.8C0 29.4 17 48 17 48C17 48 34 29.4 34 16.8C34 12.3444 32.2089 8.07122 29.0208 4.92061C25.8327 1.76999 21.5087 0 17 0Z' fill='%23FFC97A'/%3E%3C/svg%3E");
+        width: 34px;
+        height: 48px;
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.12));
+        transition: transform 0.22s ease;
+    }
+
+    .service-area-pin-base,
+    .service-area-pin-active {
+        position: absolute;
+        inset: 0;
+        display: block;
         background-size: contain;
         background-repeat: no-repeat;
-        background-position: center center;
+        background-position: center bottom;
+        transition: opacity 0.22s ease;
     }
 
-    .service-area-leaflet-tooltip {
-        background: #fff;
-        border: 0;
-        border-radius: 10px;
-        box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
-        padding: 0;
-        color: #3b3731;
-        font-family: Lato;
+    .service-area-pin-base {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='32' viewBox='0 0 34 48' fill='none'%3E%3Cpath d='M17 22.8C15.3898 22.8 13.8455 22.1679 12.7069 21.0426C11.5682 19.9174 10.9286 18.3913 10.9286 16.8C10.9286 15.2087 11.5682 13.6826 12.7069 12.5574C13.8455 11.4321 15.3898 10.8 17 10.8C18.6102 10.8 20.1545 11.4321 21.2931 12.5574C22.4318 13.6826 23.0714 15.2087 23.0714 16.8C23.0714 17.5879 22.9144 18.3681 22.6093 19.0961C22.3042 19.8241 21.8569 20.4855 21.2931 21.0426C20.7294 21.5998 20.0601 22.0417 19.3234 22.3433C18.5868 22.6448 17.7973 22.8 17 22.8ZM17 0C12.4913 0 8.1673 1.76999 4.97918 4.92061C1.79107 8.07122 0 12.3444 0 16.8C0 29.4 17 48 17 48C17 48 34 29.4 34 16.8C34 12.3444 32.2089 8.07122 29.0208 4.92061C25.8327 1.76999 21.5087 0 17 0Z' fill='%23FFFFFF' stroke='%23D0D0D0' stroke-width='2'/%3E%3C/svg%3E");
+        opacity: 1;
     }
 
-    .service-area-leaflet-tooltip::before {
-        border-top-color: #fff;
+    .service-area-pin-active {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='32' viewBox='0 0 34 48' fill='none'%3E%3Cpath d='M17 22.8C15.3898 22.8 13.8455 22.1679 12.7069 21.0426C11.5682 19.9174 10.9286 18.3913 10.9286 16.8C10.9286 15.2087 11.5682 13.6826 12.7069 12.5574C13.8455 11.4321 15.3898 10.8 17 10.8C18.6102 10.8 20.1545 11.4321 21.2931 12.5574C22.4318 13.6826 23.0714 15.2087 23.0714 16.8C23.0714 17.5879 22.9144 18.3681 22.6093 19.0961C22.3042 19.8241 21.8569 20.4855 21.2931 21.0426C20.7294 21.5998 20.0601 22.0417 19.3234 22.3433C18.5868 22.6448 17.7973 22.8 17 22.8ZM17 0C12.4913 0 8.1673 1.76999 4.97918 4.92061C1.79107 8.07122 0 12.3444 0 16.8C0 29.4 17 48 17 48C17 48 34 29.4 34 16.8C34 12.3444 32.2089 8.07122 29.0208 4.92061C25.8327 1.76999 21.5087 0 17 0Z' fill='%23FF9E42'/%3E%3C/svg%3E");
+        opacity: 0;
+    }
+
+    .service-area-pin-wrap:hover .service-area-pin,
+    .service-area-pin-wrap.is-hover .service-area-pin {
+        transform: translateY(-2px) scale(1.04);
+    }
+
+    .service-area-pin-wrap:hover .service-area-pin-base,
+    .service-area-pin-wrap.is-hover .service-area-pin-base {
+        opacity: 0;
+    }
+
+    .service-area-pin-wrap:hover .service-area-pin-active,
+    .service-area-pin-wrap.is-hover .service-area-pin-active {
+        opacity: 1;
     }
 
     .service-area-map-tooltip {
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 18px);
+        z-index: 2;
         display: flex;
         flex-direction: column;
         gap: 2px;
-        padding: 8px 12px 10px;
+        box-sizing: border-box;
         min-width: 106px;
+        padding: 8px 12px 10px;
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+        color: #3b3731;
+        font-family: Lato;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(-50%) translateY(6px) scale(0.96);
+        transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease;
+    }
+
+    .service-area-pin-wrap:hover .service-area-map-tooltip,
+    .service-area-pin-wrap.is-hover .service-area-map-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0) scale(1);
+    }
+
+    .service-area-map-tooltip::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: -6px;
+        width: 12px;
+        height: 12px;
+        background: #fff;
+        transform: translateX(-50%) rotate(45deg);
     }
 
     .service-area-map-tooltip strong {

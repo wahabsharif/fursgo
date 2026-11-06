@@ -28,6 +28,8 @@ class AddOnSeeder extends Seeder
         }
 
         foreach ($catalog as $row) {
+            $petTypes = $row['pet_types'] ?? ['cat', 'dog'];
+
             AddOn::updateOrCreate(
                 [
                     'groomer_spacer_id' => $profile->id,
@@ -36,8 +38,8 @@ class AddOnSeeder extends Seeder
                 [
                     'description' => $row['description'],
                     'pet_compatibility' => [
-                        'pet_type' => ['cat', 'dog'],
-                        'pet_size' => ['small', 'medium', 'large'],
+                        'pet_types' => $petTypes,
+                        'pet_sizes' => ['small', 'medium', 'large'],
                     ],
                     'duration' => [
                         'base_duration' => $row['base_duration'],
@@ -65,6 +67,7 @@ class AddOnSeeder extends Seeder
                 'base_duration' => 15,
                 'buffer_time' => 5,
                 'base_price' => 10,
+                'pet_types' => ['cat', 'dog', 'other'],
             ],
             [
                 'name' => 'Teeth Brushing',
@@ -72,6 +75,7 @@ class AddOnSeeder extends Seeder
                 'base_duration' => 10,
                 'buffer_time' => 5,
                 'base_price' => 8,
+                'pet_types' => ['dog'],
             ],
             [
                 'name' => 'Paw Balm',
@@ -79,6 +83,7 @@ class AddOnSeeder extends Seeder
                 'base_duration' => 5,
                 'buffer_time' => 0,
                 'base_price' => 6,
+                'pet_types' => ['dog', 'cat'],
             ],
             [
                 'name' => 'Cologne Finish',
@@ -86,6 +91,7 @@ class AddOnSeeder extends Seeder
                 'base_duration' => 5,
                 'buffer_time' => 0,
                 'base_price' => 5,
+                'pet_types' => ['cat'],
             ],
             [
                 'name' => 'Deshedding Treatment',
@@ -93,6 +99,7 @@ class AddOnSeeder extends Seeder
                 'base_duration' => 20,
                 'buffer_time' => 5,
                 'base_price' => 15,
+                'pet_types' => ['dog'],
             ],
         ];
     }

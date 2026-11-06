@@ -119,10 +119,8 @@
                 <div class="services-header-copy">
                     <button type="button" class="service-list-header-btn" x-cloak x-show="serviceFormOpen"
                         @click="window.dispatchEvent(new CustomEvent('service-form-cancel'))">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="11" viewBox="0 0 17 11" fill="none">
-                            <path
-                                d="M0 5.202L5.211 0L5.877 0.684C6.015 0.828 6.069 0.972 6.039 1.116C6.015 1.254 5.94 1.386 5.814 1.512L3.609 3.708C3.297 4.02 3.012 4.278 2.754 4.482C3.102 4.434 3.468 4.398 3.852 4.374C4.242 4.344 4.635 4.329 5.031 4.329H16.074V6.084H5.031C4.629 6.084 4.233 6.072 3.843 6.048C3.459 6.024 3.093 5.988 2.745 5.94C2.877 6.042 3.012 6.156 3.15 6.282C3.294 6.408 3.447 6.549 3.609 6.705L5.832 8.919C5.958 9.045 6.033 9.18 6.057 9.324C6.087 9.462 6.033 9.6 5.895 9.738L5.229 10.431L0 5.202Z"
-                                fill="#3B3731" />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="5" height="9" viewBox="0 0 5 9" fill="none">
+                            <path d="M4.29285 0.5L0.707092 4.08575L4.29285 7.67151" stroke-linecap="round" stroke="#9D9B98" />
                         </svg>
                         <span
                             x-text="activeServiceMenu === 'add-ons' ? 'Add-ons List' : (activeServiceMenu === 'service-area' ? 'Service Area' : 'Service List')"></span>
@@ -133,7 +131,7 @@
                                 x-text="serviceFormOpen ? (activeServiceMenu === 'service-area' ? (serviceFormTitle || 'Add Service Area') : serviceFormTitle) : (activeServiceMenu === 'add-ons' ? 'Add-ons' : (activeServiceMenu === 'pet-preferences' ? 'Pet Preferences' : (activeServiceMenu === 'service-area' ? 'Service Area' : 'Services')))">
                             </h2>
                             <p
-                                x-text="serviceFormOpen && activeServiceMenu === 'services' ? 'Manage what this service includes, who it’s for, how long it takes and what it costs.' : (serviceFormOpen && activeServiceMenu === 'add-ons' ? 'Manage what this add-ons includes, who it’s for, how long it takes and what it costs.' : (serviceFormOpen && activeServiceMenu === 'service-area' ? 'Set the centre point and how far you’ll travel from it.' : (activeServiceMenu === 'service-area' ? 'Manage your service area, add-ons, pet preferences and service area.' : 'Manage your services, add-ons, pet preferences and service area.')))"
+                                x-text="serviceFormOpen && activeServiceMenu === 'services' ? 'Manage what this service includes, who it’s for, how long it takes and what it costs.' : (serviceFormOpen && activeServiceMenu === 'add-ons' ? 'Manage what this add-ons includes, who it’s for, how long it takes and what it costs.' : (serviceFormOpen && activeServiceMenu === 'service-area' ? 'Set the centre point and how far you’ll travel from it.' : 'Manage your services, add-ons, pet preferences and service area.'))"
                                 style="font-weight: 400;">
                             </p>
                         </div>
@@ -144,18 +142,21 @@
                                 aria-hidden="true">
                                 <path
                                     d="M4.286 1.5h3.428M1.714 3.23h8.572M9.857 3.23v7.77c0 .466-.377.844-.843.844H2.986a.844.844 0 0 1-.843-.844V3.23m2.286 1.73v4.5m2.743-4.5v4.5"
-                                    stroke="#FF6E6E" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" />
+                                    stroke="#FDFDFD" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                             <span
                                 x-text="activeServiceMenu === 'add-ons' ? 'Delete Add-on' : (activeServiceMenu === 'service-area' ? 'Delete area' : 'Delete Service')"></span>
                         </button>
                     </div>
                 </div>
-                <button type="button" class="services-header-pill" x-cloak
+                <button type="button" class="services-header-pill services-header-pill-add" x-cloak
                     x-show="!serviceFormOpen && activeServiceMenu !== 'pet-preferences'"
                     @click="window.dispatchEvent(new CustomEvent('service-add-requested', { detail: { menu: activeServiceMenu } }))">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+                        <path d="M5.5 0.5V10.5M0.5 5.5H10.5" stroke="#FDFDFD" stroke-width="1.5" stroke-linecap="round" />
+                    </svg>
                     <span
-                        x-text="activeServiceMenu === 'add-ons' ? '+ Add Add-ons' : (activeServiceMenu === 'service-area' ? '+ Add Service Area' : '+ Add Service')"></span>
+                        x-text="activeServiceMenu === 'add-ons' ? 'Add Add-on' : (activeServiceMenu === 'service-area' ? 'Add Service Area' : 'Add Service')"></span>
                 </button>
             </div>
         </div>
@@ -281,6 +282,10 @@
 
     .dashboard-wrapper>main {
         position: relative;
+    }
+
+    .dashboard-wrapper>main:has(.section-panel.section-active .services-dashboard) {
+        padding-left: 50px;
     }
 
     .dashboard-content-wrapper {
@@ -543,7 +548,21 @@
         line-height: normal;
         cursor: pointer;
         white-space: nowrap;
+        gap: 0.55rem;
         transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+
+    .services-header-pill-add {
+        border-color: #3B3731;
+        background: #3B3731;
+        color: #FDFDFD;
+        font-weight: 500;
+    }
+
+    .services-header-pill-add svg {
+        width: 11px;
+        height: 11px;
+        flex-shrink: 0;
     }
 
     .services-header-pill:hover {
@@ -556,16 +575,21 @@
 
     .services-header-pill-delete {
         min-width: 162px;
-        height: 42px;
+        height: 48px;
         gap: 8px;
-        border-color: #ff6e6e;
-        color: #ff6e6e;
-        box-shadow: 0 0 5px 2px rgba(59, 55, 49, 0.1);
+        border-color: #FF6E6E;
+        background: #FF6E6E;
+        color: #FDFDFD;
+        box-shadow: none;
         font-weight: 400;
     }
 
     .services-header-pill-delete svg {
         flex-shrink: 0;
+    }
+
+    .services-header-pill-delete svg path {
+        stroke: #FDFDFD;
     }
 
     .manage-availability-back-btn {
@@ -592,14 +616,16 @@
         align-items: center;
         justify-content: flex-start;
         gap: 12px;
-        color: #3B3731;
+        color: #9D9B98;
         font-family: Lato;
-        font-size: 18px;
+        font-size: 16px;
         font-style: normal;
         font-weight: 600;
         line-height: normal;
+        letter-spacing: 0.16px;
         cursor: pointer;
         padding: 0;
+        margin-bottom: 1.5rem;
     }
 
     .active-section-header-stack {
@@ -610,7 +636,6 @@
     .active-section-header-pane {
         grid-area: 1 / 1;
         width: 100%;
-        margin-bottom: 2rem;
     }
 
     .active-section-header-clients {

@@ -247,6 +247,7 @@ new class extends Component {
     ">
     <form class="service-form" wire:submit.prevent="save">
         <div class="service-form-card">
+            <h4 class="service-section-title">Service</h4>
             <div class="service-form-grid">
                 <label class="service-field">
                     <span>Service Name</span>
@@ -262,33 +263,39 @@ new class extends Component {
             </div>
         </div>
 
-        <h4 class="service-section-title">Pet Compatibility</h4>
         <div class="service-form-card">
+            <h4 class="service-section-title">Pet Compatibility</h4>
             <x-business-hub.services.pet-compatibility title="" other-pets-input-id="service-other-pet-groomer" />
         </div>
 
-        <h4 class="service-section-title">Duration & Price</h4>
         <div class="service-form-card">
+            <h4 class="service-section-title">Duration & Price</h4>
             <x-business-hub.services.duration-price />
         </div>
 
         <div class="service-form-card service-settings-card">
-            <h4>Setting Options</h4>
-            <div class="service-setting-row">
+            <h4 class="service-section-title">Setting Options</h4>
+            <div class="service-setting-row" :class="{ 'is-active': addOnsCompatibility }" role="switch"
+                :aria-checked="addOnsCompatibility.toString()" tabindex="0"
+                @click="addOnsCompatibility = !addOnsCompatibility"
+                @keydown.enter.prevent="addOnsCompatibility = !addOnsCompatibility"
+                @keydown.space.prevent="addOnsCompatibility = !addOnsCompatibility">
                 <div>
                     <strong>Add-ons Compatibility</strong>
                     <p>Allow add-ons with this service</p>
                 </div>
-                <button type="button" class="service-toggle" :class="{ 'is-on': addOnsCompatibility }"
-                    @click="addOnsCompatibility = !addOnsCompatibility"></button>
+                <span class="service-toggle" :class="{ 'is-on': addOnsCompatibility }" aria-hidden="true"></span>
             </div>
-            <div class="service-setting-row" :class="{ 'is-active': visibilityControls }">
+            <div class="service-setting-row" :class="{ 'is-active': visibilityControls }" role="switch"
+                :aria-checked="visibilityControls.toString()" tabindex="0"
+                @click="visibilityControls = !visibilityControls"
+                @keydown.enter.prevent="visibilityControls = !visibilityControls"
+                @keydown.space.prevent="visibilityControls = !visibilityControls">
                 <div>
                     <strong>Visibility Controls</strong>
                     <p>This service is active on your profile — clients can book it now</p>
                 </div>
-                <button type="button" class="service-toggle" :class="{ 'is-on': visibilityControls }"
-                    @click="visibilityControls = !visibilityControls"></button>
+                <span class="service-toggle" :class="{ 'is-on': visibilityControls }" aria-hidden="true"></span>
             </div>
         </div>
 
@@ -304,24 +311,28 @@ new class extends Component {
     .service-form {
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 20px;
     }
 
     .service-form-card {
-        background: #fdfdfd;
-        border: 1px solid #f6f5f5;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        background: #FDFDFD;
+        border: 1px solid #E6E6E6;
         border-radius: 10px;
-        box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.1);
-        padding: 1.5rem 1.25rem;
+        box-shadow: none;
+        padding: 20px;
     }
 
-    .service-settings-card h4 {
-        margin: 0 0 1rem;
+    .service-settings-card h4,
+    .service-form-card>.service-section-title {
+        margin: 0;
         padding: 0;
         border: 0;
         color: #3B3731;
         font-family: "Playfair Display";
-        font-size: 28px;
+        font-size: 24px;
         font-weight: 600;
     }
 
@@ -333,32 +344,40 @@ new class extends Component {
         min-height: 84px;
         padding: 1.15rem 1.25rem;
         border-radius: 10px;
-        border: 1px solid #ededed;
-        background: #f5f5f5;
+        border: 1px solid #EDEDED;
+        background: #F5F5F5;
         margin-bottom: 0.65rem;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .service-setting-row .service-toggle {
+        pointer-events: none;
     }
 
     .service-setting-row:last-child {
         margin-bottom: 0;
     }
 
-    .service-setting-row.is-active {
-        background: #f1f5e9;
+    .service-setting-row.is-active,
+    .service-setting-row:has(.service-toggle.is-on) {
+        border: 1px solid #BACF8E;
+        background: #F1F5E9;
     }
 
     .service-setting-row strong {
         display: block;
         color: #3B3731;
         font-family: Lato;
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 600;
     }
 
     .service-setting-row p {
         margin: 0.2rem 0 0;
-        color: #9D9B98;
+        color: #9C9790;
         font-family: Lato;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 400;
     }
 
@@ -609,14 +628,13 @@ new class extends Component {
     .service-form-actions {
         display: flex;
         justify-content: flex-end;
-        gap: 0.75rem;
+        gap: 20px;
         margin-top: 0;
     }
 
     .service-form-btn {
-        width: 138px;
         height: 42px;
-        border-radius: 75px;
+        border-radius: 100px;
         border: 1px solid transparent;
         text-align: center;
         font-family: Lato;
@@ -633,13 +651,15 @@ new class extends Component {
     }
 
     .service-form-btn-cancel {
+        width: 88px;
         border-color: #D9D9D9;
-        background: transparent;
+        background: #fff;
         color: #9D9B98;
     }
 
     .service-form-btn-save {
-        background: #bacf8e;
+        width: 138px;
+        background: #BACF8E;
         color: #fff;
         box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
     }

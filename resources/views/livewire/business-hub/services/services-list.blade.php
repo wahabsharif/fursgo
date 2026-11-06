@@ -9,6 +9,7 @@ use Livewire\Volt\Component;
 new class extends Component {
     public string $search = '';
     public string $sort = 'newest';
+    public string $filter = 'all';
 
     public int $perPage = 10;
 
@@ -16,10 +17,11 @@ new class extends Component {
 
     public ?int $groomerSpacerId = null;
 
-    public function mount(string $search = '', string $sort = 'newest'): void
+    public function mount(string $search = '', string $sort = 'newest', string $filter = 'all'): void
     {
         $this->search = $search;
         $this->sort = $sort;
+        $this->filter = $filter;
         $this->groomerSpacerId = $this->profileId();
     }
 
@@ -55,10 +57,14 @@ new class extends Component {
             $query->where('service_name', 'like', '%' . $term . '%');
         }
 
+        if (in_array($this->filter, ['cat', 'dog', 'other'], true)) {
+            $query->whereJsonContains('pet_compatibility->pet_types', $this->filter);
+        }
+
         return match ($this->sort) {
-            'oldest' => $query->oldest(),
+            'duration_asc' => $query->orderByRaw("CAST(JSON_UNQUOTE(JSON_EXTRACT(duration, '$.base_duration')) AS UNSIGNED) ASC"),
+            'price_asc' => $query->orderByRaw("CAST(JSON_UNQUOTE(JSON_EXTRACT(pricing, '$.base_price')) AS DECIMAL(10,2)) ASC"),
             'name_asc' => $query->orderBy('service_name'),
-            'name_desc' => $query->orderByDesc('service_name'),
             default => $query->latest(),
         };
     }
@@ -204,11 +210,39 @@ new class extends Component {
         unset($this->services, $this->totalServices, $this->canLoadMore);
     }
 
-    #[On('services-toolbar-updated')]
-    public function applyToolbar($search = '', $sort = 'newest'): void
+    public function updatedSearch(): void
     {
+        $this->resetToolbarPagination();
+    }
+
+    public function updatedSort(): void
+    {
+        $this->resetToolbarPagination();
+    }
+
+    public function updatedFilter(): void
+    {
+        $this->resetToolbarPagination();
+    }
+
+    #[On('services-toolbar-updated')]
+    public function applyToolbar(mixed $search = '', mixed $sort = 'newest', mixed $filter = 'all'): void
+    {
+        if (is_array($search)) {
+            $payload = $search;
+            $search = $payload['search'] ?? '';
+            $sort = $payload['sort'] ?? 'newest';
+            $filter = $payload['filter'] ?? 'all';
+        }
+
         $this->search = (string) $search;
         $this->sort = (string) $sort;
+        $this->filter = (string) $filter;
+        $this->resetToolbarPagination();
+    }
+
+    private function resetToolbarPagination(): void
+    {
         $this->perPage = 10;
         unset($this->services, $this->totalServices, $this->canLoadMore);
     }

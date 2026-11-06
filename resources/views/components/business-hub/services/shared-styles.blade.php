@@ -434,9 +434,9 @@
             width: 100%;
             overflow-x: auto;
             background: #FDFDFD;
-            border: 1px solid #F6F5F5;
+            border: 1px solid #E6E6E6;
             border-radius: 10px;
-            box-shadow: 0px 0px 15px 2px rgba(59, 55, 49, 0.1);
+            box-shadow: none;
         }
 
         .service-list-table {
@@ -455,12 +455,13 @@
             background: #F6F5F5;
             color: #948F88;
             font-family: Lato;
-            font-size: 16px;
+            font-size: 14px;
             font-style: normal;
             font-weight: 600;
             line-height: normal;
             text-align: left;
-            height: 50px;
+            text-transform: uppercase;
+            height: 49px;
             padding: 0 8px;
             border: 0;
             vertical-align: middle;
@@ -485,6 +486,17 @@
             border-top-right-radius: 10px;
         }
 
+        .service-list-table tbody tr {
+            background-color: #FDFDFD;
+        }
+
+        .service-list-table tbody tr:not(:last-child) {
+            background-image: linear-gradient(#E6E6E6, #E6E6E6);
+            background-repeat: no-repeat;
+            background-position: 20px 100%;
+            background-size: calc(100% - 40px) 1px;
+        }
+
         .service-list-table tbody td {
             color: #3B3731;
             font-family: Lato;
@@ -496,8 +508,8 @@
             height: 56px;
             padding: 10px 8px;
             border: 0;
-            border-bottom: 1px solid #F6F5F5;
-            background: #FDFDFD;
+            border-bottom: 0;
+            background: transparent;
             vertical-align: middle;
         }
 
@@ -551,7 +563,13 @@
         }
 
         .service-list-table tr.is-muted td:not(.service-action-col) {
-            opacity: 0.5;
+            color: #9D9B98;
+        }
+
+        .service-list-table tr.is-muted td.service-applies-col,
+        .service-list-table tr.is-muted td.service-duration-col,
+        .service-list-table tr.is-muted td.service-price-col {
+            color: rgba(59, 55, 49, 0.5);
         }
 
         .service-list-table tr.is-newly-added td {
@@ -577,6 +595,14 @@
             padding: 2rem 1.25rem !important;
         }
 
+        .service-list-table thead th.service-action-col {
+            text-align: center;
+        }
+
+        .service-list-table tbody td.service-action-col {
+            text-align: right;
+        }
+
         .service-action-col {
             width: 122px;
             white-space: nowrap;
@@ -585,7 +611,9 @@
         .service-action-btns {
             display: inline-flex;
             align-items: center;
+            justify-content: flex-end;
             gap: 10px;
+            width: 100%;
         }
 
         .service-action-btn {
@@ -770,7 +798,7 @@
         .service-form {
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 20px;
         }
 
         .service-section-title {
@@ -779,17 +807,20 @@
             border: 0;
             color: #3B3731;
             font-family: "Playfair Display";
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 600;
             line-height: normal;
         }
 
         .service-form-card {
-            background: #fdfdfd;
-            border: 1px solid #f6f5f5;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: #FDFDFD;
+            border: 1px solid #E6E6E6;
             border-radius: 10px;
-            box-shadow: 0 0 15px 2px rgba(59, 55, 49, 0.1);
-            padding: 1.5rem 1.25rem;
+            box-shadow: none;
+            padding: 20px;
             overflow: visible;
         }
 
@@ -803,7 +834,7 @@
         }
 
         .service-form-card .service-price-top-row {
-            margin-top: 1.25rem;
+            margin-top: 0;
         }
 
         .service-form-grid {
@@ -817,13 +848,14 @@
             width: 100%;
         }
 
-        .service-settings-card h4 {
-            margin: 0 0 1.15rem;
+        .service-settings-card h4,
+        .service-form-card>.service-section-title {
+            margin: 0;
             padding: 0;
             border: 0;
             color: #3B3731;
             font-family: "Playfair Display";
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 600;
             line-height: normal;
         }
@@ -836,17 +868,25 @@
             min-height: 84px;
             padding: 1.15rem 1.25rem;
             border-radius: 10px;
-            border: 1px solid #ededed;
-            background: #f5f5f5;
+            border: 1px solid #EDEDED;
+            background: #F5F5F5;
             margin-bottom: 0.65rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .service-setting-row .service-toggle {
+            pointer-events: none;
         }
 
         .service-setting-row:last-child {
             margin-bottom: 0;
         }
 
-        .service-setting-row.is-active {
-            background: #f1f5e9;
+        .service-setting-row.is-active,
+        .service-setting-row:has(.service-toggle.is-on) {
+            border: 1px solid #BACF8E;
+            background: #F1F5E9;
         }
 
         .service-setting-row strong {
@@ -907,7 +947,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 138px;
             height: 42px;
             border-radius: 100px;
             border: none;
@@ -926,6 +965,7 @@
         }
 
         .service-form-footer .service-form-btn-cancel {
+            width: 88px;
             border: 1px solid #D9D9D9;
             background: #fff;
             color: #9D9B98;
@@ -933,6 +973,7 @@
         }
 
         .service-form-footer .service-form-btn-save {
+            width: 138px;
             border: none;
             background: #BACF8E;
             color: #fff;
@@ -956,15 +997,20 @@
 
         .services-header-pill-delete {
             min-width: 162px;
-            height: 42px;
+            height: 48px;
             gap: 8px;
-            border-color: #ff6e6e;
-            color: #ff6e6e;
-            box-shadow: 0 0 5px 2px rgba(59, 55, 49, 0.1);
+            border-color: #FF6E6E;
+            background: #FF6E6E;
+            color: #FDFDFD;
+            box-shadow: none;
         }
 
         .services-header-pill-delete svg {
             flex-shrink: 0;
+        }
+
+        .services-header-pill-delete svg path {
+            stroke: #FDFDFD;
         }
 
         @media (max-width: 768px) {
@@ -1074,6 +1120,13 @@
                     const select = option.closest('.service-custom-select');
                     const label = select?.closest('.service-field')?.querySelector('span')?.textContent?.trim();
                     mark(option, 'select:' + (label || 'duration'));
+                    return;
+                }
+
+                const settingRow = event.target.closest('.service-setting-row');
+                if (settingRow) {
+                    const label = settingRow.querySelector('strong')?.textContent?.trim();
+                    mark(settingRow, 'toggle:' + (label || 'setting'));
                     return;
                 }
 
