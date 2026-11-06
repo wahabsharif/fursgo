@@ -12,6 +12,7 @@ new class extends Component {
 
     public string $search = '';
     public string $sort = 'newest';
+    public string $filter = 'all';
 
     private function profileId(): ?int
     {
@@ -36,9 +37,16 @@ new class extends Component {
 
     public function setSort(string $sort): void
     {
-        $allowed = ['newest', 'oldest', 'name_asc', 'name_desc'];
+        $allowed = ['newest', 'duration_asc', 'price_asc', 'name_asc'];
         $this->sort = in_array($sort, $allowed, true) ? $sort : 'newest';
-        $this->dispatchToolbar();
+        // Lists are synced from the toolbar Alpine layer to avoid concurrent Livewire updates.
+    }
+
+    public function setFilter(string $filter): void
+    {
+        $allowed = ['all', 'cat', 'dog', 'other'];
+        $this->filter = in_array($filter, $allowed, true) ? $filter : 'all';
+        // Lists are synced from the toolbar Alpine layer to avoid concurrent Livewire updates.
     }
 
     public function updatedSearch(): void
@@ -69,7 +77,40 @@ new class extends Component {
 
     private function dispatchToolbar(): void
     {
-        $this->dispatch('services-toolbar-updated', search: trim($this->search), sort: $this->sort);
+        $search = trim($this->search);
+        $sort = $this->sort;
+        $filter = $this->filter;
+
+        // Event path (may miss remounted Alpine/x-if children in the hub shell).
+        $this->dispatch('services-toolbar-updated', search: $search, sort: $sort, filter: $filter);
+
+        // Direct sync — hub mounts services under Alpine x-if, so nested Livewire
+        // parent→child / event delivery is unreliable for the list components.
+        $this->js(
+            '(() => {
+                const search = ' .
+                json_encode($search) .
+                ';
+                const sort = ' .
+                json_encode($sort) .
+                ';
+                const filter = ' .
+                json_encode($filter) .
+                ';
+                const targets = new Set([
+                    "business-hub.services.services-list",
+                    "business-hub.services.add-ons-list",
+                ]);
+                (window.Livewire?.all?.() || []).forEach((component) => {
+                    if (!targets.has(component.name)) {
+                        return;
+                    }
+                    if (typeof component.$wire?.applyToolbar === "function") {
+                        component.$wire.applyToolbar(search, sort, filter);
+                    }
+                });
+            })()',
+        );
     }
 }; ?>
 
@@ -78,6 +119,22 @@ new class extends Component {
     $userType = strtolower((string) data_get(auth()->user(), 'user_type', ''));
     $showServiceArea = $userType !== 'space';
     $addServiceTitle = $userType === 'space' ? 'Hourly' : 'Full Groom';
+    $sortLabels = [
+        'newest' => 'Newest first',
+        'duration_asc' => 'Duration Ascending',
+        'price_asc' => 'Price Ascending',
+        'name_asc' => 'Service Name (A-Z)',
+    ];
+    $filterLabels = [
+        'cat' => 'Cats Only',
+        'dog' => 'Dogs Only',
+        'other' => 'Others Only',
+        'all' => 'All Pets',
+    ];
+    $currentSortKey = (string) $this->sort;
+    $currentSortLabel = $sortLabels[$currentSortKey] ?? 'Newest first';
+    $currentFilterKey = (string) $this->filter;
+    $servicesIndexId = $this->getId();
 @endphp
 
 @include('components.business-hub.services.shared-styles')
@@ -212,84 +269,206 @@ new class extends Component {
     x-on:service-area-created.window="returnToServiceAreaList()" x-on:service-form-cancel.window="closeAllForms()">
 
     <div class="services-toolbar" x-show="!formOpen()" x-cloak>
-        <label class="services-search" x-show="activeServiceMenu !== 'service-area'">
-            <input type="search" wire:model.live.debounce.300ms="search"
-                :placeholder="activeServiceMenu === 'add-ons' || activeServiceMenu === 'pet-preferences' ? 'Search add-ons list ...' : 'Search service list ...'" />
-            <span class="services-search-icon" aria-hidden="true">
-                <x-business-hub.common.icon name="search" />
-            </span>
-        </label>
+        <div class="services-tabs" role="tablist" aria-label="Services views">
+            <button type="button" class="services-tab is-services"
+                :class="{ 'is-active': activeServiceMenu === 'services' }"
+                @click="selectMenu('services')">
+                All Services ({{ $this->serviceCount }})
+            </button>
+            <button type="button" class="services-tab is-addons"
+                :class="{ 'is-active': activeServiceMenu === 'add-ons' }"
+                @click="selectMenu('add-ons')">
+                Add-ons ({{ $this->addOnCount }})
+            </button>
+            <button type="button" class="services-tab is-prefs"
+                :class="{ 'is-active': activeServiceMenu === 'pet-preferences' }"
+                @click="selectMenu('pet-preferences')">
+                Pet Preferences
+            </button>
+            @if ($showServiceArea)
+                <button type="button" class="services-tab is-area"
+                    :class="{ 'is-active': activeServiceMenu === 'service-area' }"
+                    @click="selectMenu('service-area')">
+                    Service Area
+                </button>
+            @endif
+        </div>
 
         <div class="services-toolbar-row">
-            <div class="services-tabs" role="tablist" aria-label="Services views">
-                <button type="button" class="services-tab is-services"
-                    :class="{ 'is-active': activeServiceMenu === 'services' }"
-                    @click="selectMenu('services')">
-                    All Services ({{ $this->serviceCount }})
-                </button>
-                <button type="button" class="services-tab is-addons"
-                    :class="{ 'is-active': activeServiceMenu === 'add-ons' }"
-                    @click="selectMenu('add-ons')">
-                    Add-ons ({{ $this->addOnCount }})
-                </button>
-                <button type="button" class="services-tab is-prefs"
-                    :class="{ 'is-active': activeServiceMenu === 'pet-preferences' }"
-                    @click="selectMenu('pet-preferences')">
-                    Pet Preferences
-                </button>
-                @if ($showServiceArea)
-                    <button type="button" class="services-tab is-area"
-                        :class="{ 'is-active': activeServiceMenu === 'service-area' }"
-                        @click="selectMenu('service-area')">
-                        Service Area
-                    </button>
-                @endif
-            </div>
+            <label class="services-search">
+                <input type="search" wire:model.live.debounce.300ms="search"
+                    placeholder="Search by service type or add-ons ..." />
+                <span class="services-search-icon" aria-hidden="true">
+                    <x-business-hub.common.icon name="search" />
+                </span>
+            </label>
 
-            <div class="services-sort" x-show="activeServiceMenu !== 'service-area'" x-cloak>
-                <div class="sort-dropdown" x-data="{
+            <div class="services-toolbar-actions">
+                <div class="services-filter" x-data="{
                     open: false,
                     menuLeft: 8,
                     menuTop: 8,
-                    menuWidth: 220,
+                    menuWidth: 207,
+                    componentId: @js($servicesIndexId),
+                    activeKey: @js($currentFilterKey),
+                    servicesWire() {
+                        const byId = window.Livewire?.find?.(this.componentId);
+                        if (byId) {
+                            return byId;
+                        }
+                        return (window.Livewire?.all?.() || []).find((c) => (c.name || '') === 'business-hub.services.index') || null;
+                    },
+                    syncLists(filterKey) {
+                        const parent = this.servicesWire();
+                        const search = parent?.search ?? '';
+                        const sort = parent?.sort ?? 'newest';
+                        const targets = new Set([
+                            'business-hub.services.services-list',
+                            'business-hub.services.add-ons-list',
+                        ]);
+                        (window.Livewire?.all?.() || []).forEach((component) => {
+                            if (!targets.has(component.name)) {
+                                return;
+                            }
+                            if (typeof component.$wire?.applyToolbar === 'function') {
+                                component.$wire.applyToolbar(search, sort, filterKey);
+                            }
+                        });
+                    },
                     repositionMenu() {
-                        const rect = $refs.sortBtn.getBoundingClientRect();
-                        this.menuTop = rect.bottom + 10;
+                        const rect = $refs.filterBtn.getBoundingClientRect();
+                        this.menuTop = rect.bottom + 7;
                         this.menuLeft = Math.max(8, Math.min(rect.right - this.menuWidth, window.innerWidth - this.menuWidth - 8));
                     },
                     toggleMenu() {
                         if (!this.open) {
                             this.repositionMenu();
+                            window.dispatchEvent(new CustomEvent('services-tool-menu-open', { detail: 'filter' }));
+                            this.open = true;
+                            return;
                         }
-                        this.open = !this.open;
+                        this.open = false;
+                    },
+                    applyFilter(key) {
+                        this.open = false;
+                        this.activeKey = key;
+                        // Update visible lists first — parent→child Livewire sync is unreliable under hub Alpine x-if.
+                        this.syncLists(key);
+                        const wire = this.servicesWire();
+                        if (wire && typeof wire.setFilter === 'function') {
+                            wire.setFilter(key);
+                        } else if (wire && typeof wire.call === 'function') {
+                            wire.call('setFilter', key);
+                        }
                     }
                 }" @keydown.escape.window="open = false" @resize.window="if (open) repositionMenu()"
                     @scroll.window="if (open) repositionMenu()"
-                    @click.window="if (open && !$refs.sortBtn.contains($event.target) && (!$refs.sortMenu || !$refs.sortMenu.contains($event.target))) { open = false }">
-                    <button type="button" class="sort-trigger" x-ref="sortBtn" @click.stop="toggleMenu()"
-                        aria-label="Sort list" :aria-expanded="open.toString()">
-                        <span>Sort</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="7" viewBox="0 0 13 7"
-                            fill="none">
-                            <path d="M11.9103 0.5L6.15684 6.25344L0.499989 0.596581" stroke="#A8A8A8"
-                                stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
+                    @services-tool-menu-open.window="if ($event.detail !== 'filter') open = false"
+                    @click.window="if (open && !$refs.filterBtn.contains($event.target) && (!$refs.filterMenu || !$refs.filterMenu.contains($event.target))) { open = false }">
+                    <button type="button" class="services-tool-btn" x-ref="filterBtn" @click.stop="toggleMenu()"
+                        aria-label="Filter list" :aria-expanded="open.toString()">
+                        <img src="{{ asset('images/business-hub/icon-booking-filter.svg') }}" alt="" width="8" height="10" />
+                        <span>Filter</span>
                     </button>
                     <template x-teleport="body">
-                        <div class="sort-menu" x-cloak x-show="open" x-ref="sortMenu"
+                        <div class="services-tool-menu services-filter-menu" x-cloak x-show="open" x-ref="filterMenu"
                             x-transition.opacity.duration.100ms
                             :style="`position: fixed; left: ${menuLeft}px; top: ${menuTop}px; width: ${menuWidth}px; z-index: 99999;`">
-                            @foreach ([
-        'newest' => 'Newest first',
-        'oldest' => 'Oldest first',
-        'name_asc' => 'Name (A–Z)',
-        'name_desc' => 'Name (Z–A)',
-    ] as $sortKey => $sortLabel)
-                                <button type="button" class="sort-options"
-                                    :class="{ 'is-active': @js($sort) === '{{ $sortKey }}' }"
-                                    wire:click="setSort('{{ $sortKey }}')" @click="open = false">
+                            @foreach ($filterLabels as $filterKey => $filterLabel)
+                                <button type="button" class="services-tool-option"
+                                    :class="{ 'is-active': activeKey === '{{ $filterKey }}' }"
+                                    x-on:click="applyFilter('{{ $filterKey }}')">
+                                    <span>{{ $filterLabel }}</span>
+                                    <svg class="services-tool-check" xmlns="http://www.w3.org/2000/svg" width="8" height="6" viewBox="0 0 8 6" fill="none" aria-hidden="true">
+                                        <path d="M1 3L3 5L7 1" stroke="#FFBA55" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </button>
+                            @endforeach
+                        </div>
+                    </template>
+                </div>
+
+                <div class="services-sort" x-data="{
+                    open: false,
+                    menuLeft: 8,
+                    menuTop: 8,
+                    menuWidth: 207,
+                    componentId: @js($servicesIndexId),
+                    activeKey: @js($currentSortKey),
+                    sortLabels: @js($sortLabels),
+                    servicesWire() {
+                        const byId = window.Livewire?.find?.(this.componentId);
+                        if (byId) {
+                            return byId;
+                        }
+                        return (window.Livewire?.all?.() || []).find((c) => (c.name || '') === 'business-hub.services.index') || null;
+                    },
+                    syncLists(sortKey) {
+                        const parent = this.servicesWire();
+                        const search = parent?.search ?? '';
+                        const filter = parent?.filter ?? 'all';
+                        const targets = new Set([
+                            'business-hub.services.services-list',
+                            'business-hub.services.add-ons-list',
+                        ]);
+                        (window.Livewire?.all?.() || []).forEach((component) => {
+                            if (!targets.has(component.name)) {
+                                return;
+                            }
+                            if (typeof component.$wire?.applyToolbar === 'function') {
+                                component.$wire.applyToolbar(search, sortKey, filter);
+                            }
+                        });
+                    },
+                    repositionMenu() {
+                        const rect = $refs.sortBtn.getBoundingClientRect();
+                        this.menuTop = rect.bottom + 7;
+                        this.menuLeft = Math.max(8, Math.min(rect.right - this.menuWidth, window.innerWidth - this.menuWidth - 8));
+                    },
+                    toggleMenu() {
+                        if (!this.open) {
+                            this.repositionMenu();
+                            window.dispatchEvent(new CustomEvent('services-tool-menu-open', { detail: 'sort' }));
+                            this.open = true;
+                            return;
+                        }
+                        this.open = false;
+                    },
+                    applySort(key) {
+                        this.open = false;
+                        this.activeKey = key;
+                        this.syncLists(key);
+                        const wire = this.servicesWire();
+                        if (wire && typeof wire.setSort === 'function') {
+                            wire.setSort(key);
+                        } else if (wire && typeof wire.call === 'function') {
+                            wire.call('setSort', key);
+                        }
+                    }
+                }" @keydown.escape.window="open = false" @resize.window="if (open) repositionMenu()"
+                    @scroll.window="if (open) repositionMenu()"
+                    @services-tool-menu-open.window="if ($event.detail !== 'sort') open = false"
+                    @click.window="if (open && !$refs.sortBtn.contains($event.target) && (!$refs.sortMenu || !$refs.sortMenu.contains($event.target))) { open = false }">
+                    <button type="button" class="services-tool-btn services-sort-btn" x-ref="sortBtn" @click.stop="toggleMenu()"
+                        aria-label="Sort list" :aria-expanded="open.toString()">
+                        <img src="{{ asset('images/business-hub/icon-booking-sort.svg') }}" alt="" width="15" height="11" />
+                        <span>
+                            <strong>Sort:</strong>
+                            <span x-text="sortLabels[activeKey] || 'Newest first'"></span>
+                        </span>
+                    </button>
+                    <template x-teleport="body">
+                        <div class="services-tool-menu" x-cloak x-show="open" x-ref="sortMenu"
+                            x-transition.opacity.duration.100ms
+                            :style="`position: fixed; left: ${menuLeft}px; top: ${menuTop}px; width: ${menuWidth}px; z-index: 99999;`">
+                            @foreach ($sortLabels as $sortKey => $sortLabel)
+                                <button type="button" class="services-tool-option"
+                                    :class="{ 'is-active': activeKey === '{{ $sortKey }}' }"
+                                    x-on:click="applySort('{{ $sortKey }}')">
                                     <span>{{ $sortLabel }}</span>
-                                    <span class="sort-indicator"></span>
+                                    <svg class="services-tool-check" xmlns="http://www.w3.org/2000/svg" width="11" height="8" viewBox="0 0 11 8" fill="none" aria-hidden="true">
+                                        <path d="M1 4L4 7L10 1" stroke="#FFBA55" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
                                 </button>
                             @endforeach
                         </div>
@@ -301,7 +480,7 @@ new class extends Component {
 
     <div x-show="activeServiceMenu === 'services'" x-cloak>
         <div x-show="!showAddService">
-            <livewire:business-hub.services.services-list :search="$search" :sort="$sort" wire:key="svc-list" />
+            <livewire:business-hub.services.services-list :search="$search" :sort="$sort" :filter="$filter" wire:key="svc-list" />
         </div>
 
         <div x-show="showAddService" x-cloak x-transition:enter="service-view-enter"
@@ -320,7 +499,7 @@ new class extends Component {
 
     <div x-show="activeServiceMenu === 'add-ons'" x-cloak>
         <div x-show="!showAddOn">
-            <livewire:business-hub.services.add-ons-list :search="$search" :sort="$sort" wire:key="addon-list" />
+            <livewire:business-hub.services.add-ons-list :search="$search" :sort="$sort" :filter="$filter" wire:key="addon-list" />
         </div>
 
         <div x-show="showAddOn" x-cloak x-transition:enter="service-view-enter"
@@ -379,53 +558,8 @@ new class extends Component {
     .services-toolbar {
         display: flex;
         flex-direction: column;
-        gap: 2.5rem;
+        gap: 2rem;
         margin-bottom: 2rem;
-    }
-
-    .services-search {
-        position: relative;
-        display: flex;
-        align-items: center;
-        width: 400px;
-        max-width: 100%;
-        height: 42px;
-    }
-
-    .services-search input {
-        width: 100%;
-        height: 42px;
-        border-radius: 10px;
-        border: 1px solid #FFC97A;
-        background: #FFF;
-        padding: 0 42px 0 16px;
-        color: #3B3731;
-        font-family: Lato;
-        font-size: 14px;
-        font-weight: 400;
-        outline: none;
-    }
-
-    .services-search input::placeholder {
-        color: #C4C0BA;
-        font-size: 14px;
-    }
-
-    .services-search-icon {
-        position: absolute;
-        right: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-        pointer-events: none;
-        display: inline-flex;
-    }
-
-    .services-toolbar-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        flex-wrap: wrap;
     }
 
     .services-tabs {
@@ -437,7 +571,7 @@ new class extends Component {
 
     .services-tab {
         height: 42px;
-        padding: 0 1.5rem;
+        padding: 0 1.25rem;
         border: 0;
         border-radius: 100px;
         background: #F6F5F5;
@@ -470,83 +604,152 @@ new class extends Component {
         color: #FF8B77;
     }
 
-    .services-sort {
-        margin-left: auto;
+    .services-toolbar-row {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: nowrap;
+        width: 100%;
+        max-width: none;
+        box-sizing: border-box;
     }
 
-    .services-sort .sort-trigger {
-        width: 59px;
-        height: 32px;
-        border-radius: 100px;
-        border: none;
+    .services-search {
+        position: relative;
+        display: flex;
+        align-items: center;
+        flex: 1 1 auto;
+        min-width: 0;
+        height: 42px;
+    }
+
+    .services-search input {
+        width: 100%;
+        height: 42px;
+        border-radius: 10px;
+        border: 1px solid #E2E2E2;
         background: #FFF;
-        color: #A8A8A8;
+        padding: 0 42px 0 20px;
+        color: #3B3731;
         font-family: Lato;
-        font-size: 14px;
-        font-weight: 500;
+        font-size: 16px;
+        font-weight: 400;
+        outline: none;
+    }
+
+    .services-search input::placeholder {
+        color: #9D9B98;
+        font-size: 16px;
+    }
+
+    .services-search-icon {
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        display: inline-flex;
+    }
+
+    .services-toolbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex: 0 0 auto;
+        margin-left: 0;
+    }
+
+    .services-tool-btn {
+        height: 42px;
+        min-width: 76px;
+        padding: 0 0.85rem;
+        border-radius: 10px;
+        border: 1px solid #E2E2E2;
+        background: #FFF;
+        color: #3B3731;
+        font-family: Lato;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: normal;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.35rem;
-        box-shadow: 0px 1px 6.7px 0px rgba(59, 55, 49, 0.12);
+        gap: 0.5rem;
+        white-space: nowrap;
     }
 
-    .sort-menu {
-        position: absolute;
-        top: calc(100% + 0.6rem);
-        right: 0;
-        width: 220px;
-        min-width: 220px;
+    .services-tool-btn img {
+        width: auto;
+        height: auto;
+        flex-shrink: 0;
+        display: block;
+    }
+
+    .services-sort-btn {
+        min-width: 171px;
+        font-weight: 500;
+        justify-content: flex-start;
+        padding: 0 0.75rem;
+    }
+
+    .services-sort-btn strong {
+        font-weight: 600;
+    }
+
+    .services-tool-menu {
         box-sizing: border-box;
-        background: #F8F8F8;
-        border: 2px solid #e6e6e5;
-        border-radius: 10px 0 10px 10px;
+        min-height: 144px;
+        background: #FFF;
+        border: 1px solid #E2E2E2;
+        border-radius: 10px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 0;
+        box-shadow: 0 8px 24px rgba(59, 55, 49, 0.12);
         z-index: 99999;
-        overflow: hidden;
     }
 
-    .sort-options {
+    .services-filter-menu {
+        width: 207px;
+        height: 144px;
+        min-height: 144px;
+    }
+
+    .services-tool-option {
         width: 100%;
         border: 0;
-        border-bottom: 2px solid #e6e6e5;
-        background: #FFF;
-        padding: 1rem;
+        background: transparent;
+        padding: 0;
+        min-height: 16px;
         text-align: left;
         color: #3B3731;
         font-family: Lato;
-        font-size: 14px;
-        font-weight: 400;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: normal;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 12px;
     }
 
-    .sort-options:last-child {
-        border-bottom: none;
+    .services-tool-option.is-active {
+        color: #FFBA55;
     }
 
-    .sort-options:hover {
-        background: #F2F2F2;
-    }
-
-    .sort-indicator {
-        width: 26px;
-        height: 26px;
-        border-radius: 999px;
-        border: 2px solid #FFC97A;
-        background: transparent;
-        position: relative;
+    .services-tool-check {
+        width: 8px;
+        height: 6px;
         flex-shrink: 0;
+        opacity: 0;
     }
 
-    .sort-options.is-active .sort-indicator::after {
-        content: '';
-        position: absolute;
-        inset: 2px;
-        border-radius: 999px;
-        background: #FFC97A;
+    .services-tool-option.is-active .services-tool-check {
+        opacity: 1;
     }
 
     .service-view-enter {
@@ -587,14 +790,13 @@ new class extends Component {
     .service-form-actions {
         display: flex;
         justify-content: flex-end;
-        gap: 0.75rem;
+        gap: 20px;
         margin-top: 0.5rem;
     }
 
     .service-form-btn {
-        width: 138px;
         height: 42px;
-        border-radius: 75px;
+        border-radius: 100px;
         border: 1px solid transparent;
         text-align: center;
         font-family: Lato;
@@ -611,14 +813,17 @@ new class extends Component {
     }
 
     .service-form-btn-cancel {
+        width: 88px;
         border-color: #D9D9D9;
-        background: transparent;
+        background: #fff;
         color: #9D9B98;
     }
 
     .service-form-btn-save {
-        background: #c9dda0;
+        width: 138px;
+        background: #BACF8E;
         color: #fff;
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
     }
 
     .save-btn-loading {
@@ -647,8 +852,29 @@ new class extends Component {
     }
 
     @media (max-width: 768px) {
+        .services-toolbar-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .services-toolbar-row {
+            flex-wrap: wrap;
+            max-width: none;
+        }
+
         .services-search {
+            flex: 1 1 100%;
             width: 100%;
+        }
+
+        .services-toolbar-actions {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        .services-tool-btn,
+        .services-sort-btn {
+            flex: 1;
         }
     }
 </style>
