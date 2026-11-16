@@ -1,3 +1,16 @@
+@php
+    $hero = $homepage['hero'] ?? [];
+    $feature = $homepage['feature'] ?? [];
+    $howItWorks = $homepage['how_it_works'] ?? [];
+    $popularServices = $homepage['popular_services'] ?? [];
+    $testimonials = $homepage['testimonials'] ?? [];
+    $mission = $homepage['mission'] ?? [];
+    $serviceMap = $homepage['service_map'] ?? [];
+
+    $featureLines = preg_split('/\.\s*/', trim((string) ($feature['headline'] ?? ''), " \t\n\r\0\x0B."), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+    $featureLineClasses = ['groom', 'book', 'earn'];
+    $featureDotClasses = ['dot1', 'dot2', 'dot3'];
+@endphp
 <!-- hero section -->
     <section>
         <div class="container">
@@ -5,7 +18,7 @@
                 <div class="col-lg-12">
                     <div class="hero-section">
                         <div class="inverted-radius">
-                            <img src="{{ asset('images/hero_section.png') }}">
+                            <img src="{{ $hero['photo'] ?? asset('images/hero_section.png') }}" alt="">
                         </div>
                         <div class="bottom-left">
                             <div class="find-grommer-content">
@@ -482,10 +495,9 @@
                                 <path d="M9.25234 9.65772C10.1188 9.65772 10.8867 9.0998 11.1545 8.27575L13.3944 1.38199C13.9931 -0.460632 16.5999 -0.460626 17.1986 1.382L19.7897 9.35646C19.8545 9.55606 19.8875 9.76462 19.8875 9.97449V27.1231L16.4721 24.6416C15.7711 24.1324 14.8219 24.1324 14.1209 24.6416L8.25674 28.9022C6.68931 30.041 4.58035 28.5088 5.17905 26.6662L7.41897 19.7724C7.68672 18.9484 7.3934 18.0456 6.69243 17.5363L0.82825 13.2758C-0.739177 12.137 0.0663681 9.65772 2.00382 9.65772H9.25234Z" fill="#FFC97A" />
                             </svg>
                         </div>
-                        <h1>4.9 average rating from 5,000 + pet owners.</h1>
+                        <h1>{{ $hero['rating_headline'] ?? '4.9 average rating from 5,000 + pet owners.' }}</h1>
                     </div>
-                    <p class="rating-sub-text text-center pt-3">All groomers are ID-verified and insured through FursGo
-                        Protect.</p>
+                    <p class="rating-sub-text text-center pt-3">{{ $hero['rating_copy'] ?? 'All groomers are ID-verified and insured through FursGo Protect.' }}</p>
                 </div>
             </div>
         </div>
@@ -497,56 +509,48 @@
             <div class="row d-flex">
                 <div class="col-lg-4 ">
                     <h1 class="text-styling">
-                        <span class="groom">Groom</span> from anywhere<span class="dot1">.</span>
-                        <br>
-                        <span class="book">Book</span> from anywhere<span class="dot2">.</span>
-                        <br>
-                        <span class="earn">Earn</span> from anywhere<span class="dot3">.</span>
+                        @forelse ($featureLines as $index => $line)
+                            @php
+                                $parts = preg_split('/\s+/', trim($line), 2);
+                                $first = $parts[0] ?? '';
+                                $rest = $parts[1] ?? '';
+                                $wordClass = $featureLineClasses[$index] ?? 'groom';
+                                $dotClass = $featureDotClasses[$index] ?? 'dot1';
+                            @endphp
+                            <span class="{{ $wordClass }}">{{ $first }}</span>@if ($rest !== '') {{ $rest }}@endif<span class="{{ $dotClass }}">.</span>
+                            @if (! $loop->last)
+                                <br>
+                            @endif
+                        @empty
+                            <span class="groom">Groom</span> from anywhere<span class="dot1">.</span>
+                            <br>
+                            <span class="book">Book</span> from anywhere<span class="dot2">.</span>
+                            <br>
+                            <span class="earn">Earn</span> from anywhere<span class="dot3">.</span>
+                        @endforelse
                     </h1>
                 </div>
                 <div class="col-lg-4 p-0 m-0">
                     <div class="img-fluid">
-                        <img src="{{ asset('images/dog.png') }}" alt="" style="border-radius: 10px;">
+                        <img src="{{ $feature['photo'] ?? asset('images/dog.png') }}" alt="" style="border-radius: 10px;">
                     </div>
                 </div>
                 <div class="col-lg-4 align-items-center">
                     <div class="points">
-                        <div class="point">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50"
-                                fill="none">
-                                <path
-                                    d="M25 0C11.25 0 0 11.25 0 25C0 38.75 11.25 50 25 50C38.75 50 50 38.75 50 25C50 11.25 38.75 0 25 0ZM20 37.5L7.5 25L11.025 21.475L20 30.425L38.975 11.45L42.5 15L20 37.5Z"
-                                    fill="#D8E8B7" />
-                            </svg>
-                            <div class="text">
-                                <h1>Booked in Minutes</h1>
-                                <span class="mt-1">No calls, no quotes.</span>
+                        @foreach (($feature['items'] ?? []) as $item)
+                            <div class="point">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50"
+                                    fill="none">
+                                    <path
+                                        d="M25 0C11.25 0 0 11.25 0 25C0 38.75 11.25 50 25 50C38.75 50 50 38.75 50 25C50 11.25 38.75 0 25 0ZM20 37.5L7.5 25L11.025 21.475L20 30.425L38.975 11.45L42.5 15L20 37.5Z"
+                                        fill="#D8E8B7" />
+                                </svg>
+                                <div class="text">
+                                    <h1>{{ $item['title'] }}</h1>
+                                    <span class="mt-1">{{ $item['description'] }}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="point">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50"
-                                fill="none">
-                                <path
-                                    d="M25 0C11.25 0 0 11.25 0 25C0 38.75 11.25 50 25 50C38.75 50 50 38.75 50 25C50 11.25 38.75 0 25 0ZM20 37.5L7.5 25L11.025 21.475L20 30.425L38.975 11.45L42.5 15L20 37.5Z"
-                                    fill="#D8E8B7" />
-                            </svg>
-                            <div class="text">
-                                <h1>Trusted Professionals</h1>
-                                <span class="mt-1">Verified & insured.</span>
-                            </div>
-                        </div>
-                        <div class="point">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50"
-                                fill="none">
-                                <path
-                                    d="M25 0C11.25 0 0 11.25 0 25C0 38.75 11.25 50 25 50C38.75 50 50 38.75 50 25C50 11.25 38.75 0 25 0ZM20 37.5L7.5 25L11.025 21.475L20 30.425L38.975 11.45L42.5 15L20 37.5Z"
-                                    fill="#D8E8B7" />
-                            </svg>
-                            <div class="text">
-                                <h1>Happy Pets</h1>
-                                <span class="mt-1">Gentle grooming, stress-free service.</span>
-                            </div>
-                        </div>
+                        @endforeach
                     </div>
 
                 </div>
@@ -561,92 +565,47 @@
 
                 <!-- Heading -->
                 <div class="col-lg-12 text-center">
-                    <h1>How it works</h1>
-                    <span>
-                        Finding the right groomer shouldn’t be overwhelming — and with FursGo, it isn’t. <br>
-                        We give you clear profiles and real availability, so you can confidently choose the <br>
-                        groomer who’s the right fit for your pet’s needs.
-                    </span>
+                    <h1>{{ $howItWorks['title'] ?? 'How it works' }}</h1>
+                    <span>{{ $howItWorks['intro'] ?? '' }}</span>
                 </div>
 
                 <div class="how-it-works-grid section">
-
-                    <!-- Step 1 -->
-                    <div class="how-step">
-                        <div class="how-it-works-image-content-area">
-                            <div class="search-image">
-                                <img src="{{ asset('images/search.png') }}" class="how-it-works-images" alt="">
-                            </div>
-                            <div class="numbering">
-                                <span>1</span>
-                            </div>
-                            <div class="content">
-                                <h2>Search</h2>
-                                <span>
-                                    No more guessing or endless calling around. We help you find the right groomer with
-                                    total confidence.
-                                </span>
+                    @foreach (($howItWorks['steps'] ?? []) as $index => $step)
+                        <div class="how-step">
+                            <div class="how-it-works-image-content-area">
+                                <div class="{{ $index === 0 ? 'search-image' : ($index === 1 ? 'book-and-pay-content' : 'relax-content') }}">
+                                    <img src="{{ $step['image'] ?? asset('images/search.png') }}" class="how-it-works-images" alt="">
+                                </div>
+                                <div class="numbering">
+                                    <span>{{ $index + 1 }}</span>
+                                </div>
+                                <div class="content">
+                                    <h2>{{ $step['title'] }}</h2>
+                                    <span>{{ $step['description'] }}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Arrow -->
-                    <div class="how-up-arrow">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="171" height="26" viewBox="0 0 171 26"
-                            fill="none">
-                            <path d="M0.558105 0.851562C27.4847 18.9625 98.982 44.3179 169.558 0.851562"
-                                stroke="#3B3731" stroke-width="2" stroke-dasharray="10 10" />
-                        </svg>
-                    </div>
-
-                    <!-- Step 2 -->
-                    <div class="how-step">
-                        <div class="how-it-works-image-content-area">
-                            <div class="book-and-pay-content">
-                                <img src="{{ asset('images/book_and_pay.png') }}" class="how-it-works-images"
-                                    alt="">
-                            </div>
-                            <div class="numbering">
-                                <span>2</span>
-                            </div>
-                            <div class="content">
-                                <h2>Book & Pay</h2>
-                                <span>
-                                    Simple, secure, and built to save you time. Book in seconds, pay safely, and manage
-                                    everything in one place.
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Arrow -->
-                    <div class="how-down-arrow">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="171" height="26" viewBox="0 0 171 26"
-                            fill="none">
-                            <path d="M0.558105 24.9469C27.4847 6.83593 98.982 -18.5194 169.558 24.9469" stroke="#3B3731"
-                                stroke-width="2" stroke-dasharray="10 10" />
-                        </svg>
-                    </div>
-
-                    <!-- Step 3 -->
-                    <div class="how-step">
-                        <div class="how-it-works-image-content-area">
-                            <div class="relax-content">
-                                <img src="{{ asset('images/relax.png') }}" class="how-it-works-images" alt="">
-                            </div>
-                            <div class="numbering">
-                                <span>3</span>
-                            </div>
-                            <div class="content">
-                                <h2>Relax</h2>
-                                <span>
-                                    Calm, clear, and stress-free appointments so your pet feels comfortable and you stay
-                                    informed.
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
+                        @if (! $loop->last)
+                            @if ($index % 2 === 0)
+                                <div class="how-up-arrow">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="171" height="26" viewBox="0 0 171 26"
+                                        fill="none">
+                                        <path d="M0.558105 0.851562C27.4847 18.9625 98.982 44.3179 169.558 0.851562"
+                                            stroke="#3B3731" stroke-width="2" stroke-dasharray="10 10" />
+                                    </svg>
+                                </div>
+                            @else
+                                <div class="how-down-arrow">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="171" height="26" viewBox="0 0 171 26"
+                                        fill="none">
+                                        <path d="M0.558105 24.9469C27.4847 6.83593 98.982 -18.5194 169.558 24.9469" stroke="#3B3731"
+                                            stroke-width="2" stroke-dasharray="10 10" />
+                                    </svg>
+                                </div>
+                            @endif
+                        @endif
+                    @endforeach
                 </div>
 
             </div>
@@ -659,60 +618,23 @@
             <div class="row">
                 <div class="col-lg-12 ">
                     <div class="popular-section d-flex flex-column align-items-end align-items-xs-center">
-                        <h1 class="popular-services-heading">Popular Services</h1>
-                        <span>
-                            Our most trusted services — chosen by owners who want comfort,
-                            reliability, and peace of mind.
-                        </span>
+                        <h1 class="popular-services-heading">{{ $popularServices['title'] ?? 'Popular Services' }}</h1>
+                        <span>{{ $popularServices['intro'] ?? '' }}</span>
                     </div>
                 </div>
             </div>
             <div class="popular-services-content-grid section">
-                <div class="popular-content-area">
-                    <div class="image-wrapper oval">
-                        <img src="{{ asset('images/popular-services-1.png') }}" alt="">
+                @foreach (($popularServices['items'] ?? []) as $service)
+                    <div class="popular-content-area">
+                        <div class="image-wrapper {{ $service['meta']['shape_class'] ?? 'oval' }}">
+                            <img src="{{ $service['image'] ?? asset('images/popular-services-1.png') }}" alt="">
+                        </div>
+                        <div class="text-area">
+                            <h2>{{ $service['title'] }}</h2>
+                            <span>{{ $service['description'] }}</span>
+                        </div>
                     </div>
-                    <div class="text-area">
-                        <h2>Full Groom</h2>
-                        <span>Bath, trim, blow-dry, <br> and essential hygiene.</span>
-                    </div>
-                </div>
-                <div class="popular-content-area">
-                    <div class="image-wrapper circle">
-                        <img src="{{ asset('images/popular-services-2.png') }}" alt="">
-                    </div>
-                    <div class="text-area">
-                        <h2>Bath & Tidy</h2>
-                        <span>A quick refresh to keep your <br> pet clean between full grooms.</span>
-                    </div>
-                </div>
-                <div class="popular-content-area">
-                    <div class="image-wrapper rectangle">
-                        <img src="{{ asset('images/popular-services-3.png') }}" alt="">
-                    </div>
-                    <div class="text-area">
-                        <h2>Nail Trim</h2>
-                        <span>Quality and careful nail care <br> focused on comfort and safety.</span>
-                    </div>
-                </div>
-                <div class="popular-content-area">
-                    <div class="image-wrapper oval">
-                        <img src="{{ asset('images/popular-services-4.png') }}" alt="">
-                    </div>
-                    <div class="text-area">
-                        <h2>Pet Spa</h2>
-                        <span>Soothing coat and skin <br> treatments to nourish & refresh.</span>
-                    </div>
-                </div>
-                <div class="popular-content-area">
-                    <div class="image-wrapper circle">
-                        <img src="{{ asset('images/popular-services-5.png') }}" alt="">
-                    </div>
-                    <div class="text-area">
-                        <h2>Mobile Grooming</h2>
-                        <span>Grooming at home, for a <br> stress-free experience.</span>
-                    </div>
-                </div>
+                @endforeach
             </div>
         </div>
     </section>
@@ -741,11 +663,8 @@
                                 </svg>
                             </div>
                             <br>
-                            <h3 class="testimonial-sub-heading">Loved by Pet Parents</h3>
-                            <p>Your pet’s safety comes first. <br> Every groomer is background- <br> checked, insured,
-                                and trained
-                                in <br> animal
-                                handling.</p>
+                            <h3 class="testimonial-sub-heading">{{ $testimonials['intro'] ?? 'Loved by Pet Parents' }}</h3>
+                            <p>{!! nl2br(e($testimonials['desc'] ?? '')) !!}</p>
 
                             <!-- arrows + dots BELOW text (left column) -->
                             <div class="controls left-controls">
@@ -825,143 +744,49 @@
                                     </svg>
                                 </div>
                                 <div class="track" id="track">
-                                    <div class="card active default">
-                                        <div class="svg-div">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="card-shape" width="400"
-                                                height="257" viewBox="0 0 400 257" fill="none">
-                                                <path
-                                                    d="M10 0.5H390C395.247 0.5 399.5 4.75329 399.5 10V198C399.5 203.247 395.247 207.5 390 207.5H219C213.201 207.5 208.5 212.201 208.5 218V247C208.5 252.247 204.247 256.5 199 256.5H10C4.7533 256.5 0.5 252.247 0.5 247V10C0.500001 4.7533 4.7533 0.5 10 0.5Z" />
-                                            </svg>
-                                        </div>
-                                        <div class="text-stars">
-                                            <p>The easiest booking I’ve ever made! My dog looked amazing and the groomer
-                                                was so
-                                                kind.
-                                            </p>
-                                            <div class="stars">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="110" height="17"
-                                                    viewBox="0 0 110 17" fill="none">
-                                                    <path
-                                                        d="M7.58756 0.802006C7.92671 -0.267338 9.40341 -0.267334 9.74255 0.80201L11.0114 4.80273C11.1631 5.28095 11.5981 5.60473 12.0889 5.60473H16.195C17.2925 5.60473 17.7488 7.04353 16.8609 7.70442L13.539 10.177C13.1419 10.4726 12.9758 10.9964 13.1275 11.4747L14.3963 15.4754C14.7355 16.5447 13.5408 17.434 12.6529 16.7731L9.33099 14.3005C8.9339 14.0049 8.39621 14.0049 7.99913 14.3005L4.67723 16.7731C3.78932 17.434 2.59466 16.5447 2.9338 15.4754L4.20266 11.4747C4.35433 10.9964 4.18817 10.4726 3.79109 10.177L0.469188 7.70442C-0.418717 7.04353 0.0376084 5.60473 1.13512 5.60473H5.24122C5.73204 5.60473 6.16704 5.28095 6.31871 4.80273L7.58756 0.802006Z"
-                                                        fill="#FFC97A" />
-                                                    <path
-                                                        d="M53.9225 0.802006C54.2617 -0.267338 55.7384 -0.267334 56.0775 0.80201L57.3464 4.80273C57.498 5.28095 57.933 5.60473 58.4239 5.60473H62.53C63.6275 5.60473 64.0838 7.04353 63.1959 7.70442L59.874 10.177C59.4769 10.4726 59.3107 10.9964 59.4624 11.4747L60.7313 15.4754C61.0704 16.5447 59.8758 17.434 58.9878 16.7731L55.6659 14.3005C55.2689 14.0049 54.7312 14.0049 54.3341 14.3005L51.0122 16.7731C50.1243 17.434 48.9296 16.5447 49.2688 15.4754L50.5376 11.4747C50.6893 10.9964 50.5231 10.4726 50.126 10.177L46.8041 7.70442C45.9162 7.04353 46.3726 5.60473 47.4701 5.60473H51.5762C52.067 5.60473 52.502 5.28095 52.6537 4.80273L53.9225 0.802006Z"
-                                                        fill="#FFC97A" />
-                                                    <path
-                                                        d="M30.755 0.802006C31.0942 -0.267338 32.5709 -0.267334 32.91 0.80201L34.1789 4.80273C34.3306 5.28095 34.7656 5.60473 35.2564 5.60473H39.3625C40.46 5.60473 40.9163 7.04353 40.0284 7.70442L36.7065 10.177C36.3094 10.4726 36.1433 10.9964 36.2949 11.4747L37.5638 15.4754C37.9029 16.5447 36.7083 17.434 35.8204 16.7731L32.4985 14.3005C32.1014 14.0049 31.5637 14.0049 31.1666 14.3005L27.8447 16.7731C26.9568 17.434 25.7621 16.5447 26.1013 15.4754L27.3701 11.4747C27.5218 10.9964 27.3557 10.4726 26.9586 10.177L23.6367 7.70442C22.7488 7.04353 23.2051 5.60473 24.3026 5.60473H28.4087C28.8995 5.60473 29.3345 5.28095 29.4862 4.80273L30.755 0.802006Z"
-                                                        fill="#FFC97A" />
-                                                    <path
-                                                        d="M77.09 0.802006C77.4291 -0.267338 78.9058 -0.267334 79.245 0.80201L80.5138 4.80273C80.6655 5.28095 81.1005 5.60473 81.5913 5.60473H85.6974C86.7949 5.60473 87.2512 7.04353 86.3633 7.70442L83.0414 10.177C82.6443 10.4726 82.4782 10.9964 82.6299 11.4747L83.8987 15.4754C84.2379 16.5447 83.0432 17.434 82.1553 16.7731L78.8334 14.3005C78.4363 14.0049 77.8986 14.0049 77.5015 14.3005L74.1796 16.7731C73.2917 17.434 72.0971 16.5447 72.4362 15.4754L73.7051 11.4747C73.8567 10.9964 73.6906 10.4726 73.2935 10.177L69.9716 7.70442C69.0837 7.04353 69.54 5.60473 70.6375 5.60473H74.7436C75.2344 5.60473 75.6694 5.28095 75.8211 4.80273L77.09 0.802006Z"
-                                                        fill="#FFC97A" />
-                                                    <path
-                                                        d="M100.257 0.802006C100.597 -0.267338 102.073 -0.267334 102.412 0.80201L103.681 4.80273C103.833 5.28095 104.268 5.60473 104.759 5.60473H108.865C109.962 5.60473 110.419 7.04353 109.531 7.70442L106.209 10.177C105.812 10.4726 105.646 10.9964 105.797 11.4747L107.066 15.4754C107.405 16.5447 106.211 17.434 105.323 16.7731L102.001 14.3005C101.604 14.0049 101.066 14.0049 100.669 14.3005L97.3471 16.7731C96.4592 17.434 95.2645 16.5447 95.6037 15.4754L96.8725 11.4747C97.0242 10.9964 96.858 10.4726 96.461 10.177L93.1391 7.70442C92.2512 7.04353 92.7075 5.60473 93.805 5.60473H97.9111C98.4019 5.60473 98.8369 5.28095 98.9886 4.80273L100.257 0.802006Z"
-                                                        fill="#FFC97A" />
-                                                </svg>
+                                    @foreach (($testimonials['items'] ?? []) as $index => $item)
+                                        <div class="card{{ $index === 0 ? ' active default' : '' }}">
+                                            <div class="svg-div">
+                                                @if ($index === 0)
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="card-shape" width="400"
+                                                        height="257" viewBox="0 0 400 257" fill="none">
+                                                        <path
+                                                            d="M10 0.5H390C395.247 0.5 399.5 4.75329 399.5 10V198C399.5 203.247 395.247 207.5 390 207.5H219C213.201 207.5 208.5 212.201 208.5 218V247C208.5 252.247 204.247 256.5 199 256.5H10C4.7533 256.5 0.5 252.247 0.5 247V10C0.500001 4.7533 4.7533 0.5 10 0.5Z" />
+                                                    </svg>
+                                                @else
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="card-shape" width="296"
+                                                        height="257" fill="none">
+                                                        <path
+                                                            d="M10 0.5H286C291.247 0.5 295.5 4.75329 295.5 10V198C295.5 203.247 291.247 207.5 286 207.5H164.66C158.861 207.5 154.16 212.201 154.16 218V247C154.16 252.247 149.907 256.5 144.66 256.5H10C4.7533 256.5 0.5 252.247 0.5 247V10C0.500001 4.7533 4.7533 0.5 10 0.5Z" />
+                                                    </svg>
+                                                @endif
+                                            </div>
+                                            <div class="text-stars">
+                                                <p>{{ $item['description'] }}</p>
+                                                <div class="stars" aria-label="{{ (int) ($item['meta']['rating'] ?? 5) }} out of 5 stars">
+                                                    @for ($star = 1; $star <= (int) ($item['meta']['rating'] ?? 5); $star++)
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="17" viewBox="0 0 18 17" fill="none" aria-hidden="true">
+                                                            <path d="M8.58756 0.802006C8.92671 -0.267338 10.4034 -0.267334 10.7426 0.80201L12.0114 4.80273C12.1631 5.28095 12.5981 5.60473 13.0889 5.60473H17.195C18.2925 5.60473 18.7488 7.04353 17.8609 7.70442L14.539 10.177C14.1419 10.4726 13.9758 10.9964 14.1275 11.4747L15.3963 15.4754C15.7355 16.5447 14.5408 17.434 13.6529 16.7731L10.331 14.3005C9.9339 14.0049 9.39621 14.0049 8.99913 14.3005L5.67723 16.7731C4.78932 17.434 3.59466 16.5447 3.9338 15.4754L5.20266 11.4747C5.35433 10.9964 5.18817 10.4726 4.79109 10.177L1.46919 7.70442C0.581283 7.04353 1.03761 5.60473 2.13512 5.60473H6.24122C6.73204 5.60473 7.16704 5.28095 7.31871 4.80273L8.58756 0.802006Z" fill="#FFC97A" />
+                                                        </svg>
+                                                    @endfor
+                                                </div>
+                                            </div>
+                                            @if (! empty($item['image']))
+                                                <div class="testimonial-photo"><img src="{{ $item['image'] }}" alt=""></div>
+                                            @endif
+                                            <div class="{{ $index === 0 ? 'avatar-meta' : '' }}">
+                                                <div class="avatar">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35"
+                                                        viewBox="0 0 35 35" fill="none">
+                                                        <circle cx="17.5" cy="17.5" r="17.5" fill="#FFC97A" />
+                                                    </svg>
+                                                </div>
+                                                <div class="meta">
+                                                    <p>{{ $item['title'] }} <br> <span>{{ $item['meta']['date_label'] ?? '' }}</span></p>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="testimonial-photo"><img
-                                                src="{{ asset('images/testimonial-1.png') }}" />
-                                        </div>
-                                        <div class="avatar-meta">
-                                            <div class="avatar">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35"
-                                                    viewBox="0 0 35 35" fill="none">
-                                                    <circle cx="17.5" cy="17.5" r="17.5" fill="#FFC97A" />
-                                                </svg>
-                                            </div>
-                                            <div class="meta">
-                                                <p>Sarah M. <br> <span>1 day ago</span></p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="card">
-                                        <div class="svg-div">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="card-shape" width="296"
-                                                height="257" fill="none">
-                                                <path
-                                                    d="M10 0.5H286C291.247 0.5 295.5 4.75329 295.5 10V198C295.5 203.247 291.247 207.5 286 207.5H164.66C158.861 207.5 154.16 212.201 154.16 218V247C154.16 252.247 149.907 256.5 144.66 256.5H10C4.7533 256.5 0.5 252.247 0.5 247V10C0.500001 4.7533 4.7533 0.5 10 0.5Z" />
-                                            </svg>
-                                        </div>
-                                        <div class="text-stars">
-                                            <p>
-                                                Five stars every time. Reliable and professional.
-                                            </p>
-                                            <div class="stars">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="110" height="17"
-                                                    viewBox="0 0 110 17" fill="none">
-                                                    <path
-                                                        d="M7.58756 0.802006C7.92671 -0.267338 9.40341 -0.267334 9.74255 0.80201L11.0114 4.80273C11.1631 5.28095 11.5981 5.60473 12.0889 5.60473H16.195C17.2925 5.60473 17.7488 7.04353 16.8609 7.70442L13.539 10.177C13.1419 10.4726 12.9758 10.9964 13.1275 11.4747L14.3963 15.4754C14.7355 16.5447 13.5408 17.434 12.6529 16.7731L9.33099 14.3005C8.9339 14.0049 8.39621 14.0049 7.99913 14.3005L4.67723 16.7731C3.78932 17.434 2.59466 16.5447 2.9338 15.4754L4.20266 11.4747C4.35433 10.9964 4.18817 10.4726 3.79109 10.177L0.469188 7.70442C-0.418717 7.04353 0.0376084 5.60473 1.13512 5.60473H5.24122C5.73204 5.60473 6.16704 5.28095 6.31871 4.80273L7.58756 0.802006Z"
-                                                        fill="#FFC97A" />
-                                                    <path
-                                                        d="M53.9225 0.802006C54.2617 -0.267338 55.7384 -0.267334 56.0775 0.80201L57.3464 4.80273C57.498 5.28095 57.933 5.60473 58.4239 5.60473H62.53C63.6275 5.60473 64.0838 7.04353 63.1959 7.70442L59.874 10.177C59.4769 10.4726 59.3107 10.9964 59.4624 11.4747L60.7313 15.4754C61.0704 16.5447 59.8758 17.434 58.9878 16.7731L55.6659 14.3005C55.2689 14.0049 54.7312 14.0049 54.3341 14.3005L51.0122 16.7731C50.1243 17.434 48.9296 16.5447 49.2688 15.4754L50.5376 11.4747C50.6893 10.9964 50.5231 10.4726 50.126 10.177L46.8041 7.70442C45.9162 7.04353 46.3726 5.60473 47.4701 5.60473H51.5762C52.067 5.60473 52.502 5.28095 52.6537 4.80273L53.9225 0.802006Z"
-                                                        fill="#FFC97A" />
-                                                    <path
-                                                        d="M30.755 0.802006C31.0942 -0.267338 32.5709 -0.267334 32.91 0.80201L34.1789 4.80273C34.3306 5.28095 34.7656 5.60473 35.2564 5.60473H39.3625C40.46 5.60473 40.9163 7.04353 40.0284 7.70442L36.7065 10.177C36.3094 10.4726 36.1433 10.9964 36.2949 11.4747L37.5638 15.4754C37.9029 16.5447 36.7083 17.434 35.8204 16.7731L32.4985 14.3005C32.1014 14.0049 31.5637 14.0049 31.1666 14.3005L27.8447 16.7731C26.9568 17.434 25.7621 16.5447 26.1013 15.4754L27.3701 11.4747C27.5218 10.9964 27.3557 10.4726 26.9586 10.177L23.6367 7.70442C22.7488 7.04353 23.2051 5.60473 24.3026 5.60473H28.4087C28.8995 5.60473 29.3345 5.28095 29.4862 4.80273L30.755 0.802006Z"
-                                                        fill="#FFC97A" />
-                                                    <path
-                                                        d="M77.09 0.802006C77.4291 -0.267338 78.9058 -0.267334 79.245 0.80201L80.5138 4.80273C80.6655 5.28095 81.1005 5.60473 81.5913 5.60473H85.6974C86.7949 5.60473 87.2512 7.04353 86.3633 7.70442L83.0414 10.177C82.6443 10.4726 82.4782 10.9964 82.6299 11.4747L83.8987 15.4754C84.2379 16.5447 83.0432 17.434 82.1553 16.7731L78.8334 14.3005C78.4363 14.0049 77.8986 14.0049 77.5015 14.3005L74.1796 16.7731C73.2917 17.434 72.0971 16.5447 72.4362 15.4754L73.7051 11.4747C73.8567 10.9964 73.6906 10.4726 73.2935 10.177L69.9716 7.70442C69.0837 7.04353 69.54 5.60473 70.6375 5.60473H74.7436C75.2344 5.60473 75.6694 5.28095 75.8211 4.80273L77.09 0.802006Z"
-                                                        fill="#FFC97A" />
-                                                    <path
-                                                        d="M100.257 0.802006C100.597 -0.267338 102.073 -0.267334 102.412 0.80201L103.681 4.80273C103.833 5.28095 104.268 5.60473 104.759 5.60473H108.865C109.962 5.60473 110.419 7.04353 109.531 7.70442L106.209 10.177C105.812 10.4726 105.646 10.9964 105.797 11.4747L107.066 15.4754C107.405 16.5447 106.211 17.434 105.323 16.7731L102.001 14.3005C101.604 14.0049 101.066 14.0049 100.669 14.3005L97.3471 16.7731C96.4592 17.434 95.2645 16.5447 95.6037 15.4754L96.8725 11.4747C97.0242 10.9964 96.858 10.4726 96.461 10.177L93.1391 7.70442C92.2512 7.04353 92.7075 5.60473 93.805 5.60473H97.9111C98.4019 5.60473 98.8369 5.28095 98.9886 4.80273L100.257 0.802006Z"
-                                                        fill="#FFC97A" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                        <div class="avatar">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35"
-                                                viewBox="0 0 35 35" fill="none">
-                                                <circle cx="17.5" cy="17.5" r="17.5" fill="#FFC97A" />
-                                            </svg>
-                                        </div>
-                                        <div class="meta">
-                                            <p>David R. <br> <span>1 week ago</span></p>
-                                        </div>
-                                    </div>
-                                    <div class="card">
-                                        <div class="svg-div">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="card-shape" width="296"
-                                                height="257" fill="none">
-                                                <path
-                                                    d="M10 0.5H286C291.247 0.5 295.5 4.75329 295.5 10V198C295.5 203.247 291.247 207.5 286 207.5H164.66C158.861 207.5 154.16 212.201 154.16 218V247C154.16 252.247 149.907 256.5 144.66 256.5H10C4.7533 256.5 0.5 252.247 0.5 247V10C0.500001 4.7533 4.7533 0.5 10 0.5Z" />
-                                            </svg>
-                                        </div>
-                                        <div class="text-stars">
-                                            <p>
-                                                Such a smooth <br> experience — my <br> pup loved it!
-                                            </p>
-                                            <div class="stars">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="110" height="17"
-                                                    viewBox="0 0 110 17" fill="none">
-                                                    <path
-                                                        d="M7.58756 0.802006C7.92671 -0.267338 9.40341 -0.267334 9.74255 0.80201L11.0114 4.80273C11.1631 5.28095 11.5981 5.60473 12.0889 5.60473H16.195C17.2925 5.60473 17.7488 7.04353 16.8609 7.70442L13.539 10.177C13.1419 10.4726 12.9758 10.9964 13.1275 11.4747L14.3963 15.4754C14.7355 16.5447 13.5408 17.434 12.6529 16.7731L9.33099 14.3005C8.9339 14.0049 8.39621 14.0049 7.99913 14.3005L4.67723 16.7731C3.78932 17.434 2.59466 16.5447 2.9338 15.4754L4.20266 11.4747C4.35433 10.9964 4.18817 10.4726 3.79109 10.177L0.469188 7.70442C-0.418717 7.04353 0.0376084 5.60473 1.13512 5.60473H5.24122C5.73204 5.60473 6.16704 5.28095 6.31871 4.80273L7.58756 0.802006Z"
-                                                        fill="#FFC97A" />
-                                                    <path
-                                                        d="M53.9225 0.802006C54.2617 -0.267338 55.7384 -0.267334 56.0775 0.80201L57.3464 4.80273C57.498 5.28095 57.933 5.60473 58.4239 5.60473H62.53C63.6275 5.60473 64.0838 7.04353 63.1959 7.70442L59.874 10.177C59.4769 10.4726 59.3107 10.9964 59.4624 11.4747L60.7313 15.4754C61.0704 16.5447 59.8758 17.434 58.9878 16.7731L55.6659 14.3005C55.2689 14.0049 54.7312 14.0049 54.3341 14.3005L51.0122 16.7731C50.1243 17.434 48.9296 16.5447 49.2688 15.4754L50.5376 11.4747C50.6893 10.9964 50.5231 10.4726 50.126 10.177L46.8041 7.70442C45.9162 7.04353 46.3726 5.60473 47.4701 5.60473H51.5762C52.067 5.60473 52.502 5.28095 52.6537 4.80273L53.9225 0.802006Z"
-                                                        fill="#FFC97A" />
-                                                    <path
-                                                        d="M30.755 0.802006C31.0942 -0.267338 32.5709 -0.267334 32.91 0.80201L34.1789 4.80273C34.3306 5.28095 34.7656 5.60473 35.2564 5.60473H39.3625C40.46 5.60473 40.9163 7.04353 40.0284 7.70442L36.7065 10.177C36.3094 10.4726 36.1433 10.9964 36.2949 11.4747L37.5638 15.4754C37.9029 16.5447 36.7083 17.434 35.8204 16.7731L32.4985 14.3005C32.1014 14.0049 31.5637 14.0049 31.1666 14.3005L27.8447 16.7731C26.9568 17.434 25.7621 16.5447 26.1013 15.4754L27.3701 11.4747C27.5218 10.9964 27.3557 10.4726 26.9586 10.177L23.6367 7.70442C22.7488 7.04353 23.2051 5.60473 24.3026 5.60473H28.4087C28.8995 5.60473 29.3345 5.28095 29.4862 4.80273L30.755 0.802006Z"
-                                                        fill="#FFC97A" />
-                                                    <path
-                                                        d="M77.09 0.802006C77.4291 -0.267338 78.9058 -0.267334 79.245 0.80201L80.5138 4.80273C80.6655 5.28095 81.1005 5.60473 81.5913 5.60473H85.6974C86.7949 5.60473 87.2512 7.04353 86.3633 7.70442L83.0414 10.177C82.6443 10.4726 82.4782 10.9964 82.6299 11.4747L83.8987 15.4754C84.2379 16.5447 83.0432 17.434 82.1553 16.7731L78.8334 14.3005C78.4363 14.0049 77.8986 14.0049 77.5015 14.3005L74.1796 16.7731C73.2917 17.434 72.0971 16.5447 72.4362 15.4754L73.7051 11.4747C73.8567 10.9964 73.6906 10.4726 73.2935 10.177L69.9716 7.70442C69.0837 7.04353 69.54 5.60473 70.6375 5.60473H74.7436C75.2344 5.60473 75.6694 5.28095 75.8211 4.80273L77.09 0.802006Z"
-                                                        fill="#FFC97A" />
-                                                    <path
-                                                        d="M100.257 0.802006C100.597 -0.267338 102.073 -0.267334 102.412 0.80201L103.681 4.80273C103.833 5.28095 104.268 5.60473 104.759 5.60473H108.865C109.962 5.60473 110.419 7.04353 109.531 7.70442L106.209 10.177C105.812 10.4726 105.646 10.9964 105.797 11.4747L107.066 15.4754C107.405 16.5447 106.211 17.434 105.323 16.7731L102.001 14.3005C101.604 14.0049 101.066 14.0049 100.669 14.3005L97.3471 16.7731C96.4592 17.434 95.2645 16.5447 95.6037 15.4754L96.8725 11.4747C97.0242 10.9964 96.858 10.4726 96.461 10.177L93.1391 7.70442C92.2512 7.04353 92.7075 5.60473 93.805 5.60473H97.9111C98.4019 5.60473 98.8369 5.28095 98.9886 4.80273L100.257 0.802006Z"
-                                                        fill="#FFC97A" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                        <div class="avatar">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35"
-                                                viewBox="0 0 35 35" fill="none">
-                                                <circle cx="17.5" cy="17.5" r="17.5" fill="#FFC97A" />
-                                            </svg>
-                                        </div>
-                                        <div class="meta">
-                                            <p>Sarah M. <br> <span>1 day ago</span></p>
-                                        </div>
-                                    </div>
-
-
+                                    @endforeach
                                 </div>
                             </div>
                         </div>
@@ -979,17 +804,13 @@
             <div class="our-mission row d-flex justify-content-center align-items-center">
                 <div class="col-lg-7">
                     <div class="image-wrapper">
-                        <img src="{{ asset('images/our_mission.png') }}" style="border-radius: 10px;">
+                        <img src="{{ $mission['photo'] ?? asset('images/our_mission.png') }}" alt="" style="border-radius: 10px;">
                     </div>
                 </div>
                 <div class="col-lg-5 content-column">
-                    <h1 class="main-heading">Our Mission</h1>
-                    <p class="description">To create a harmonious grooming community—where pets receive gentle, timely
-                        care; owners enjoy convenience and peace of mind; groomers find flexible, rewarding
-                        opportunities; space owners foster meaningful connections; and Fetchers enable smooth,
-                        stress‑free journeys.
-                    </p>
-                    <a href="{{ route('profile_pets_preferences.about_us') }}" wire:navigate class="action-button">About Us</a>
+                    <h1 class="main-heading">{{ $mission['title'] ?? 'Our Mission' }}</h1>
+                    <p class="description">{{ $mission['desc'] ?? '' }}</p>
+                    <a href="{{ $mission['cta_url'] ?? route('profile_pets_preferences.about_us') }}" wire:navigate class="action-button">{{ $mission['cta'] ?? 'About Us' }}</a>
                 </div>
             </div>
         </div>
@@ -1010,18 +831,16 @@
                 </div>
                 <div class="col-lg-11 mt-xs-5">
                     <div class="fursgo-address-map">
-                        <h1 class="fursgo-address-heading">FursGo across the UK</h1>
-                        <p class="fursgo-sub-heading">Now serving pet owners across the UK .</p>
+                        <h1 class="fursgo-address-heading">{{ $serviceMap['title'] ?? 'FursGo across the UK' }}</h1>
+                        <p class="fursgo-sub-heading">{{ $serviceMap['desc'] ?? '' }}</p>
                         <ul class="fursgo-locations">
-                            <li>London</li>
-                            <li>Manchester</li>
-                            <li>Birmingham Leeds</li>
-                            <li>Bristol</li>
-                            <li>Edinburgh</li>
+                            @foreach (($serviceMap['cities'] ?? []) as $city)
+                                <li>{{ $city['title'] }}</li>
+                            @endforeach
                         </ul>
                         <p class="link">More Coming soon.</p>
                         <div class="fursgo-map-image-wrapper">
-                            <img src="{{ asset('images/Intersect.png') }}" alt="">
+                            <img src="{{ $serviceMap['image'] ?? asset('images/Intersect.png') }}" alt="">
                         </div>
                     </div>
                 </div>

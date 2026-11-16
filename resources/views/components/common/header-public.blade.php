@@ -10,7 +10,9 @@
                         </span>
                         <span class="header-business-public-logo-pill">Business</span>
                     </a>
-                    <button type="button" class="menu-toggle" aria-label="Toggle menu">&#9776;</button>
+                    <button type="button" class="menu-toggle" aria-label="Toggle menu">
+                        <span class="menu-toggle-icon" aria-hidden="true"></span>
+                    </button>
                 </div>
                 <ul class="menu-items header-business-public-nav">
                     <li>
@@ -310,7 +312,7 @@
         }
     </style>
 @else
-    <header>
+    <header class="public-site-header">
         <nav class="navbar">
             <div class="container">
                 <div class="row align-items-center">
@@ -345,44 +347,48 @@
                                         fill="#FFC97A" />
                                 </svg>
                             </a>
-                            <button type="button" class="menu-toggle" aria-label="Toggle menu">&#9776;</button>
+                            <button type="button" class="menu-toggle" aria-label="Toggle menu">
+                                <span class="menu-toggle-icon" aria-hidden="true"></span>
+                            </button>
                         </div>
                     </div>
-                    <div class="col-lg-7">
-                        <ul class="menu-items">
-                            <li>
-                                <a href="{{ url('/') }}#how_it_works">How it works</a>
-                            </li>
-                            <li>
-                                <a href="{{ route('business-homepage-groomer-space-owner') }}"
-                                    class="{{ $isForGroomersHostsActive ? 'active' : '' }}" wire:navigate>For Groomers &amp;
-                                    Hosts</a>
-                            </li>
-                            <li>
-                                {{-- Previous Livewire Help Centre link (kept for reference):
-                                <a href="{{ $isBusinessHomepageRoute ? route('help-and-support', ['chrome' => 'business']) : route('help-and-support') }}"
-                                    class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
-                                --}}
-                                <a href="{{ route('help-and-support') }}"
-                                    class="{{ $isHelpCentreRoute ? 'active' : '' }}">Help Centre</a>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="col-lg-3">
-                        <ul class="menu-items justify-content-end">
-                            <li>
-                                <div class="login-signup-div">
-                                    @if ($isBusinessSiteRoute)
-                                        <a href="{{ route('login-groomer-space') }}" class="login-btn" wire:navigate>Log in</a>
-                                        <a href="{{ route('signup-groomer-space') }}" class="signup-btn active"
-                                            wire:navigate>Sign Up</a>
-                                    @else
-                                        <a href="{{ route('login-signup.login') }}" class="login-btn">Log in</a>
-                                        <a href="{{ route('login-signup.signup') }}" class="signup-btn active">Sign Up</a>
-                                    @endif
-                                </div>
-                            </li>
-                        </ul>
+                    <div class="public-header-menus">
+                        <div class="col-lg-7">
+                            <ul class="menu-items">
+                                <li>
+                                    <a href="{{ url('/') }}#how_it_works">How it works</a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('business-homepage-groomer-space-owner') }}"
+                                        class="{{ $isForGroomersHostsActive ? 'active' : '' }}" wire:navigate>For Groomers &amp;
+                                        Hosts</a>
+                                </li>
+                                <li>
+                                    {{-- Previous Livewire Help Centre link (kept for reference):
+                                    <a href="{{ $isBusinessHomepageRoute ? route('help-and-support', ['chrome' => 'business']) : route('help-and-support') }}"
+                                        class="{{ $isHelpCentreRoute ? 'active' : '' }}" wire:navigate>Help Centre</a>
+                                    --}}
+                                    <a href="{{ route('help-and-support') }}"
+                                        class="{{ $isHelpCentreRoute ? 'active' : '' }}">Help Centre</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-3">
+                            <ul class="menu-items justify-content-end">
+                                <li>
+                                    <div class="login-signup-div">
+                                        @if ($isBusinessSiteRoute)
+                                            <a href="{{ route('login-groomer-space') }}" class="login-btn" wire:navigate>Log in</a>
+                                            <a href="{{ route('signup-groomer-space') }}" class="signup-btn active"
+                                                wire:navigate>Sign Up</a>
+                                        @else
+                                            <a href="{{ route('login-signup.login') }}" class="login-btn">Log in</a>
+                                            <a href="{{ route('login-signup.signup') }}" class="signup-btn active">Sign Up</a>
+                                        @endif
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
