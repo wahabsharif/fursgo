@@ -125,12 +125,14 @@
                         @endif
 
                         <div class="bh-confirmed-card-body">
-                            @if ($visitBadge)
-                                <span class="bh-confirmed-badge">{{ $visitBadge }}</span>
-                            @endif
-                            <p class="bh-confirmed-names{{ $visitBadge ? ' has-badge' : '' }}">
-                                {!! $namesLine !!}
-                            </p>
+                            <div class="bh-confirmed-name-row">
+                                <p class="bh-confirmed-names">
+                                    {!! $namesLine !!}
+                                </p>
+                                @if ($visitBadge)
+                                    <span class="bh-confirmed-badge">{{ $visitBadge }}</span>
+                                @endif
+                            </div>
 
                             <div class="bh-confirmed-meta">
                                 <span>
@@ -167,6 +169,11 @@
 @endif
 
 @once
+    <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+        <filter id="bh-confirmed-meta-icon" color-interpolation-filters="sRGB">
+            <feColorMatrix type="matrix" values="0 0 0 0 0.615686 0 0 0 0 0.607843 0 0 0 0 0.596078 0 0 0 1 0" />
+        </filter>
+    </svg>
     <style>
         html.pending-detail-open,
         body.pending-detail-open {
@@ -232,7 +239,7 @@
 
         .bh-confirmed-header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 19px;
             flex-shrink: 0;
         }
 
@@ -275,6 +282,7 @@
         .bh-confirmed-avatar {
             width: 34px;
             height: 34px;
+            margin-top: 3px;
             border-radius: 50%;
             overflow: hidden;
             flex-shrink: 0;
@@ -304,24 +312,23 @@
         }
 
         .bh-confirmed-card-body {
-            position: relative;
             min-width: 0;
             flex: 1;
-            padding-top: 3px;
+        }
+
+        .bh-confirmed-name-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 9px;
+            min-height: 24px;
         }
 
         .bh-confirmed-names {
             margin: 0;
             font-size: 14px;
-            line-height: normal;
-            text-box-edge: cap alphabetic;
-            text-box-trim: trim-both;
+            line-height: 17px;
             min-width: 0;
-            padding-right: 0;
-        }
-
-        .bh-confirmed-names.has-badge {
-            padding-right: 110px;
         }
 
         .bh-confirmed-names strong {
@@ -335,12 +342,10 @@
         }
 
         .bh-confirmed-badge {
-            position: absolute;
-            top: 0;
-            right: 0;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            flex: 0 0 auto;
             height: 24px;
             padding: 0 10px;
             border-radius: 100px;
@@ -349,9 +354,7 @@
             font-size: 14px;
             font-weight: 500;
             white-space: nowrap;
-            line-height: normal;
-            text-box-edge: cap alphabetic;
-            text-box-trim: trim-both;
+            line-height: 1;
         }
 
         .bh-confirmed-overlay.is-space .bh-confirmed-badge,
@@ -364,11 +367,12 @@
         .bh-confirmed-meta {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 10px;
+            align-items: center;
+            gap: 20px;
+            margin-top: 6px;
             color: #9D9B98;
             font-size: 14px;
-            line-height: normal;
+            line-height: 12px;
         }
 
         .bh-confirmed-meta span {
@@ -384,34 +388,38 @@
             height: 12px;
             display: block;
             flex-shrink: 0;
+            filter: url("#bh-confirmed-meta-icon");
         }
 
         .bh-confirmed-divider {
             height: 1px;
             background: #E2E2E2;
-            margin: 20px 0;
+            margin: 20px 0 19px;
         }
 
         .bh-confirmed-notified {
+            position: relative;
+            display: block;
             margin: 0;
+            padding-left: 13px;
             color: #8BAE40;
             font-size: 14px;
             font-weight: 400;
             line-height: normal;
-            display: flex;
-            align-items: center;
-            gap: 8px;
             text-box-edge: cap alphabetic;
             text-box-trim: trim-both;
         }
 
         .bh-confirmed-notified::before {
             content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
             width: 5px;
             height: 5px;
             border-radius: 50%;
             background: #8BAE40;
-            flex-shrink: 0;
+            transform: translateY(-50%);
         }
 
         .bh-confirmed-footer {
