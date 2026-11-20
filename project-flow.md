@@ -79,7 +79,9 @@ Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/vie
 | Groomer/space unavailability URLs                     | `groomer.unavailability` / `space.unavailability`                                      | various                                 |
 | Overlay demos                                         | cookies / rating blade files                                                           | cookies*, rating*                       |
 | 404                                                   | `resources/views/errors/404.blade.php` (business public chrome)                        | —                                       |
-| `/messages_notification/messages.php` (+ `/messages`) | Imported static Messages (`messages_notification.messages-legacy`)                     | `messages_notification.messages*`       |
+| `/messages_notification/messages`                     | Imported static Messages (`messages_notification.messages-legacy`)                     | `messages_notification.messages`        |
+| `/messages_notification/notifications`                | Business hub Notifications (`messages_notification.notifications-legacy`, dashboard)  | `messages_notification.notifications`  |
+| `/messages_notification/notifications-owner` (+ `.php`) | Imported pet-owner Notifications (`notifications-owner-legacy`) from old PHP        | `messages_notification.notifications.*` |
 | `/profiles/groomer/groomer_profile.php` (+ no `.php`) | Imported static Groomer Profile (`profiles.groomer-profile-legacy`)                    | `profiles.groomer*`                     |
 | `/profiles/space/space_profile.php` (+ no `.php`)     | Imported static Space Profile (`profiles.space-profile-legacy`)                        | `profiles.space*`                       |
 
@@ -195,8 +197,8 @@ Volt entry: `resources/views/livewire/business-hub.blade.php`, nested under `liv
 - Primary UI lives in Volt under `resources/views/livewire/`.
 - `web.php` keeps underscore/hyphen URL aliases and redirects for legacy parity.
 - Help & Support serves legacy static views; older Volt help components remain (see comments in `web.php`).
-- Messages serves imported static view from `D:\fursgo\messages_notification` (`messages.css` + `messages-page.js`); aliases keep `/messages_notification/messages` links working.
-- Notifications (`/messages_notification/notifications`, Figma 815:3753) uses the dashboard shell without the hub sidebar. 820px column: Playfair title, pills All / Bookings / Reviews / Payments / System, search + “Sort: Newest first” + more menu (Mark All Read / Clear All), 90px rows. Unread rows stay filled `#fffbf4` groomer / `#ffeeeb` space; the same fill shows on hover. Header notification dropdown uses that unread fill too. Settings tile stays `#ffa899`.
+- Messages serves imported static view from `D:\fursgo\messages_notification` (`messages.css` + page scripts); aliases keep `/messages_notification/messages` links working.
+- Notifications hub page (`/messages_notification/notifications`, Figma 815:3753) uses the dashboard shell (`notifications-legacy`). Pet-owner import from `D:\fursgo\messages_notification\notifications.php` is at `/messages_notification/notifications-owner` (+ `.php`) as `notifications-owner-legacy`.
 - Groomer/Space Profiles serve imported static views from `D:\fursgo\profiles` (`groomer_space_profile.css`, `choose_partner_modal.css`, `profile.js` + Leaflet/CARTO); `body_class` via `layouts.app`.
 - GET requests to Livewire `/update` paths redirect to referer (`bootstrap/app.php` exception handler).
 - Profile switch (`business-hub/switch`) only allows profiles with the same email.
