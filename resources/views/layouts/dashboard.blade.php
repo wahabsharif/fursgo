@@ -21,6 +21,7 @@
             request()->routeIs('help-and-support') => 'help-centre',
             request()->routeIs('account-settings') => 'account-settings',
             request()->routeIs('business-verification', 'business-verification.*') => 'business-verification',
+            request()->routeIs('messages_notification.notifications') => 'notifications',
             default => 'hub',
         };
 
@@ -34,6 +35,9 @@
     <x-partials.head />
     @if (request()->routeIs('account-settings'))
         <link rel="stylesheet" href="{{ asset('css/account-settings.css') }}">
+    @endif
+    @if (request()->routeIs('messages_notification.notifications'))
+        <link rel="stylesheet" href="{{ asset('css/messages_notification/notifications-page.css') }}">
     @endif
     @if ($isDashboardHub)
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />

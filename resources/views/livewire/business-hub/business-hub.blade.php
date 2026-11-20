@@ -2861,7 +2861,7 @@ new class extends Component {
             border-radius: 75px;
             font-family: Lato, sans-serif;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 400;
             cursor: pointer;
             line-height: normal;
             padding: 0;
@@ -2876,6 +2876,10 @@ new class extends Component {
         }
 
         .bh-btn-accept {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
             flex: 1 1 auto;
             min-width: 0;
             border: 0;
@@ -3120,7 +3124,9 @@ new class extends Component {
                                 <button type="button" class="bh-btn-details"
                                     wire:click="viewDetails({{ (int) $request['booking_id'] }})">View Details</button>
                                 <button type="button" class="bh-btn-accept"
-                                    wire:click="acceptRequest({{ (int) $request['booking_id'] }})">Accept Request</button>
+                                    wire:click="acceptRequest({{ (int) $request['booking_id'] }})"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="10" viewBox="0 0 14 10" fill="none">
+                                        <path d="M0.625 4.625L5.125 8.625L12.625 0.625" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" stroke="white" />
+                                    </svg>Accept Request</button>
                             </div>
                         </article>
                     @empty
