@@ -110,7 +110,13 @@ body.cbg-page {
     color 0.3s ease;
 }
 
-.cbg-step-item.active .cbg-step-circle,
+/* Current step = orange; finished steps = green check */
+.cbg-step-item.active .cbg-step-circle {
+  color: #fff;
+  background: #FFC97A;
+  border-color: #FFD88C;
+}
+
 .cbg-step-item.completed .cbg-step-circle {
   color: #fff;
   background: #c9dda0;
@@ -523,8 +529,9 @@ body.cbg-page {
 }
 
 .cbg-pet-card.selected {
-  border-color: #FFC97A;
-  background: #FFFDF8;
+  border-radius: 10px;
+  border: 1px solid #FFD88C;
+  background: #FFFCF8;
 }
 
 .cbg-pet-card .cbg-pet-radio {
@@ -1832,7 +1839,7 @@ body.cbg-page {
 }
 
 .cbg-summary-padding.groomer-bg {
-  background: #FFFCF8;
+  background: #FBFAF6;
 }
 
 .cbg-summary-padding.space-bg {

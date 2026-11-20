@@ -75,7 +75,7 @@ Pages render via `app/Support/VoltPage.php` → Volt name maps to `resources/vie
 | `/search-results`                                     | `search.results`                                                                       | `search-results`                        |
 | `/support-and-assistance/search`                      | `help.search`                                                                          | `search`                                |
 | `/support-and-assistance/help-and-support`            | legacy static help                                                                     | `help-and-support`                      |
-| Checkout shells                                       | `checkout.booking-groomer`, `checkout.booking-space`, `checkout.booking-groomer-space` | `checkout.*`                            |
+| Checkout shells                                       | `checkout.booking-groomer` (6 steps: Pet → Service → Groomer → Extra → Review → Pay), `checkout.booking-space`, `checkout.booking-groomer-space` | `checkout.*`                            |
 | Groomer/space unavailability URLs                     | `groomer.unavailability` / `space.unavailability`                                      | various                                 |
 | Overlay demos                                         | cookies / rating blade files                                                           | cookies*, rating*                       |
 | 404                                                   | `resources/views/errors/404.blade.php` (business public chrome)                        | —                                       |

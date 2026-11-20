@@ -35,8 +35,45 @@ new #[Layout('layouts.app'), Title('Fursgo - Book a Groomer')] class extends Com
             ],
         ];
 
+        // Demo groomers for step 3 (Choose your groomer)
+        $groomers = [
+            [
+                'id' => 'any',
+                'name' => 'Any groomer',
+                'title' => '',
+                'subtitle' => 'First available · fastest booking',
+                'image' => '',
+                'selected' => false,
+            ],
+            [
+                'id' => 'rebecca',
+                'name' => 'Rebecca',
+                'title' => 'Senior Groomer',
+                'subtitle' => 'Senior Groomer • 8 yrs',
+                'image' => 'images/message_profile_1.png',
+                'selected' => true,
+            ],
+            [
+                'id' => 'jeremy',
+                'name' => 'Jeremy',
+                'title' => 'Cat & small-pet specialist',
+                'subtitle' => 'Cat & small-pet specialist • 5 yrs',
+                'image' => 'images/block_user_1.png',
+                'selected' => false,
+            ],
+            [
+                'id' => 'tanya',
+                'name' => 'Tanya',
+                'title' => 'Junior Groomer',
+                'subtitle' => 'Junior Groomer • 3 yrs',
+                'image' => 'images/block_user_2.png',
+                'selected' => false,
+            ],
+        ];
+
         return [
             'pets' => $pets,
+            'groomers' => $groomers,
             'studioImage' => asset('images/card1.png'),
         ];
     }
@@ -45,6 +82,7 @@ new #[Layout('layouts.app'), Title('Fursgo - Book a Groomer')] class extends Com
 <div>
     @include('partials.checkout.booking-groomer-content', [
         'pets' => $pets,
+        'groomers' => $groomers,
         'studioImage' => $studioImage,
     ])
 </div>
@@ -56,10 +94,17 @@ new #[Layout('layouts.app'), Title('Fursgo - Book a Groomer')] class extends Com
 
 @push('script')
     <script>
+        // Mark page + set asset base URL for the checkout JS
         (function () {
             document.body.classList.add('cbg-page');
+
             var meta = document.querySelector('meta[name="asset-base-url"]');
-            var base = (meta && meta.content) ? meta.content.replace(/\/?$/, '/') : '/';
+            var base = '/';
+
+            if (meta && meta.content) {
+                base = meta.content.replace(/\/?$/, '/');
+            }
+
             document.body.dataset.baseUrl = base;
         })();
     </script>

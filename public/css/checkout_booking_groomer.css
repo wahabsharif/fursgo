@@ -1,9 +1,183 @@
 /**
- * checkout_booking_groomer — groomer checkout overrides.
- * Shared styles: assets/css/checkout_booking.css
+ * Groomer checkout overrides only.
+ * Shared styles live in: css/checkout_booking.css
  */
 
-/* Booking summary card */
+/* --------------------------------------------------------------------------
+   Step 3 — Groomer list
+   -------------------------------------------------------------------------- */
+
+.cbg-page .cbg-groomer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 2rem;
+}
+
+/* Default (not selected) card */
+.cbg-page .cbg-groomer-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 20px 18px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: #F8F8F8;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+/* Selected card */
+.cbg-page .cbg-groomer-option.selected {
+  border: 1px solid #FFD88C;
+  background: #FFFCF8;
+}
+
+.cbg-page .cbg-groomer-option-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.cbg-page .cbg-groomer-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cbg-page .cbg-groomer-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cbg-page .cbg-groomer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cbg-page .cbg-groomer-name {
+  color: #3b3731;
+  font-family: Lato, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.cbg-page .cbg-groomer-title {
+  color: #9d9b98;
+  font-family: Lato, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+/* Right-side Select / Selected pill */
+.cbg-page .cbg-groomer-select-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-width: 96px;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 96px;
+  border: 1px solid #d4d4d4;
+  background: #fff;
+  color: #3b3731;
+  font-family: Lato, sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.cbg-page .cbg-groomer-option.selected .cbg-groomer-select-btn {
+  border-color: #ffc97a;
+  background: #ffc97a;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   Sidebar — "Your Groomer" card
+   -------------------------------------------------------------------------- */
+
+.cbg-page .cbg-summary-groomer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #FBFAF6;
+}
+
+.cbg-page .cbg-summary-groomer[hidden] {
+  display: none;
+}
+
+.cbg-page .cbg-summary-groomer-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cbg-page .cbg-summary-groomer-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cbg-page .cbg-summary-groomer-avatar--any {
+  border: 1px solid #eae8e5;
+}
+
+.cbg-page .cbg-summary-groomer-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cbg-page .cbg-summary-groomer-label {
+  color: #9d9b98;
+  font-family: Lato, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cbg-page .cbg-summary-groomer-name {
+  color: #3b3731;
+  font-family: Lato, sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+/* --------------------------------------------------------------------------
+   Sidebar — booking summary shell
+   -------------------------------------------------------------------------- */
+
 .cbg-page .cbg-booking-summary {
   padding: 25px 30px 0;
   border-color: #eae8e5;
@@ -39,7 +213,10 @@
   font-size: 14px;
 }
 
-/* Accordion sections */
+/* --------------------------------------------------------------------------
+   Sidebar — service / add-ons accordion
+   -------------------------------------------------------------------------- */
+
 .cbg-page .cbg-summary-sections {
   margin-top: 4px;
 }

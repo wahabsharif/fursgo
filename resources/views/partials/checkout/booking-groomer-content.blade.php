@@ -1,4 +1,7 @@
-{{-- Converted from custom checkout_booking_groomer/index.php --}}
+{{-- Book a Groomer checkout: Pet → Service → Groomer → Extra → Review → Pay --}}
+@php
+    $groomers = $groomers ?? [];
+@endphp
 <div class="cbg-page" data-base-url="{{ rtrim(asset(''), '/') }}/">
     <section class="container mt-5">
         <div class="cbg-breadcrumb d-flex align-items-center gap-10">
@@ -25,14 +28,18 @@
                     </div>
                     <div class="cbg-step-item" data-step="2">
                         <div class="cbg-step-circle">3</div>
-                        <div class="cbg-step-label">Extra</div>
+                        <div class="cbg-step-label">Groomer</div>
                     </div>
                     <div class="cbg-step-item" data-step="3">
                         <div class="cbg-step-circle">4</div>
-                        <div class="cbg-step-label">Review</div>
+                        <div class="cbg-step-label">Extra</div>
                     </div>
                     <div class="cbg-step-item" data-step="4">
                         <div class="cbg-step-circle">5</div>
+                        <div class="cbg-step-label">Review</div>
+                    </div>
+                    <div class="cbg-step-item" data-step="5">
+                        <div class="cbg-step-circle">6</div>
                         <div class="cbg-step-label">Pay</div>
                     </div>
                 </div>
@@ -46,7 +53,7 @@
                 <!-- Step 1: Pet -->
                 <div class="cbg-step-panel active" id="cbgStep0" data-step="0">
                     <div class="cbg-sub-panel active" id="cbgPetChoice">
-                        <p class="cbg-step-badge">Step 1 of 5</p>
+                        <p class="cbg-step-badge">Step 1 of 6</p>
                         <h2>Tell us about your Pet</h2>
                         <div class="cbg-card">
                             <div class="cbg-pet-choice-btns">
@@ -64,7 +71,7 @@
                     </div>
 
                     <div class="cbg-sub-panel" id="cbgPetAddNew">
-                        <p class="cbg-step-badge">Step 1 of 5</p>
+                        <p class="cbg-step-badge">Step 1 of 6</p>
                         <h2>Tell us about your Pet</h2>
                         <div class="cbg-card">
                             <div class="cbg-pet-form-layout">
@@ -187,7 +194,7 @@
                     </div>
 
                     <div class="cbg-sub-panel" id="cbgPetSelectExisting">
-                        <p class="cbg-step-badge">Step 1 of 5</p>
+                        <p class="cbg-step-badge">Step 1 of 6</p>
                         <h2>Select existing Pet</h2>
                         <div class="cbg-pet-list">
                             @foreach ($pets as $pet)
@@ -277,7 +284,7 @@
 
                 <!-- Step 2: Service -->
                 <div class="cbg-step-panel" id="cbgStep1" data-step="1">
-                    <p class="cbg-step-badge">Step 2 of 5</p>
+                    <p class="cbg-step-badge">Step 2 of 6</p>
                     <h2>Confirm the Service</h2>
 
                     <div class="cbg-service-confirm">
@@ -473,9 +480,79 @@
                     </div>
                 </div>
 
-                <!-- Step 3: Extras -->
+                <!-- Step 3: Groomer -->
                 <div class="cbg-step-panel" id="cbgStep2" data-step="2">
-                    <p class="cbg-step-badge">Step 3 of 5</p>
+                    <p class="cbg-step-badge">Step 3 of 6</p>
+                    <h2>Choose your groomer</h2>
+
+                    <div class="cbg-groomer-list" id="cbgGroomerList" role="listbox" aria-label="Choose your groomer">
+                        @foreach ($groomers as $groomer)
+                            @php
+                                $isSelected = !empty($groomer['selected']);
+                                $isAny = ($groomer['id'] ?? '') === 'any';
+                                $imageUrl = !empty($groomer['image']) ? asset($groomer['image']) : '';
+                            @endphp
+
+                            <button
+                                type="button"
+                                class="cbg-groomer-option {{ $isSelected ? 'selected' : '' }}"
+                                role="option"
+                                aria-selected="{{ $isSelected ? 'true' : 'false' }}"
+                                data-groomer-id="{{ $groomer['id'] }}"
+                                data-groomer-name="{{ $groomer['name'] }}"
+                                data-groomer-title="{{ $groomer['title'] }}"
+                                data-groomer-image="{{ $imageUrl }}"
+                            >
+                                <span class="cbg-groomer-option-main">
+                                    <span class="cbg-groomer-avatar {{ $isAny ? 'cbg-groomer-avatar--any' : '' }}" aria-hidden="true">
+                                        @if ($isAny)
+                                            {{-- Shuffle / "any" icon --}}
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 56 56" fill="none">
+                                                <rect width="56" height="56" rx="28" fill="#FFF7E8" />
+                                                <path d="M38.3333 31.3333L41.6667 34.6667L38.3333 38M38.3333 18L41.6667 21.3333L38.3333 24.6667M15 34.6667H20.916C21.8305 34.6667 22.7309 34.4409 23.5372 34.0094C24.3435 33.5779 25.0309 32.954 25.5382 32.1931L28.3333 28" stroke="#FFC97A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M15 21.3333H20.916C21.8305 21.3334 22.7309 21.5591 23.5372 21.9907C24.3435 22.4222 25.0309 23.0461 25.5382 23.807L31.1285 32.1931C31.6358 32.954 32.3231 33.5779 33.1295 34.0094C33.9358 34.4409 34.8362 34.6667 35.7507 34.6667H39.4444M39.4444 21.3333H35.7507C34.8362 21.3334 33.9358 21.5591 33.1295 21.9907C32.3231 22.4222 31.6358 23.0461 31.1285 23.807L30.5556 24.6667" stroke="#FFC97A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                        @else
+                                            <img src="{{ $imageUrl }}" alt="">
+                                        @endif
+                                    </span>
+
+                                    <span class="cbg-groomer-meta">
+                                        <span class="cbg-groomer-name">{{ $groomer['name'] }}</span>
+                                        <span class="cbg-groomer-title">{{ $groomer['subtitle'] }}</span>
+                                    </span>
+                                </span>
+
+                                <span class="cbg-groomer-select-btn">
+                                    @if ($isSelected)
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                            <path d="M2.5 7.2L5.4 10.1L11.5 3.9" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        Selected
+                                    @else
+                                        Select
+                                    @endif
+                                </span>
+                            </button>
+                        @endforeach
+                    </div>
+
+                    <div class="cbg-panel-footer" id="cbgGroomerFooter">
+                        <button type="button" class="cbg-btn-secondary" id="cbgGroomerBackBtn">Back</button>
+                        <div class="cbg-continue-wrap active" id="cbgContinueGroomer" data-continue-context="groomer">
+                            <button type="button">
+                                Continue
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="11" viewBox="0 0 18 11" fill="none" aria-hidden="true">
+                                    <path d="M17.7098 4.79038C18.1054 5.18216 18.1048 5.82163 17.7085 6.21273L13.1513 10.7098C12.796 11.0605 12.2233 11.0559 11.8737 10.6995C11.7351 10.5628 11.6797 10.4261 11.7074 10.2895C11.7421 10.1528 11.8182 10.0229 11.936 9.89991L14.9174 6.97834C15.0836 6.81432 15.2394 6.66739 15.3848 6.53754C15.5 6.43474 15.4113 6.2291 15.2577 6.24466C15.0799 6.26268 14.8972 6.27829 14.7096 6.29152C14.3287 6.31885 13.934 6.33252 13.5254 6.33252H0.835466C0.374051 6.33252 0 5.95847 0 5.49705C0 5.03564 0.374051 4.66159 0.835466 4.66159H13.5254C13.934 4.66159 14.3322 4.67526 14.72 4.70259C14.9048 4.71562 15.0849 4.73097 15.2602 4.74865C15.416 4.76436 15.504 4.55812 15.3848 4.45657C15.2394 4.32672 15.0836 4.17979 14.9174 4.01577L11.9152 1.0737C11.7905 0.950687 11.7144 0.820839 11.6867 0.684158C11.659 0.547476 11.7109 0.410795 11.8425 0.274113C12.1977 -0.0877635 12.7795 -0.0918727 13.1398 0.264949L17.7098 4.79038Z" fill="#FFF" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Extras -->
+                <div class="cbg-step-panel" id="cbgStep3" data-step="3">
+                    <p class="cbg-step-badge">Step 4 of 6</p>
                     <x-ui.extras-addons
                         instance-id="checkout"
                         on-change-js="handleCheckoutExtrasChange"
@@ -501,9 +578,9 @@
                     </div>
                 </div>
 
-                <!-- Step 4: Review -->
-                <div class="cbg-step-panel" id="cbgStep3" data-step="3">
-                    <p class="cbg-step-badge">Step 4 of 5</p>
+                <!-- Step 5: Review -->
+                <div class="cbg-step-panel" id="cbgStep4" data-step="4">
+                    <p class="cbg-step-badge">Step 5 of 6</p>
                     <h2>Review</h2>
 
                     <div class="cbg-review">
@@ -536,7 +613,7 @@
                             <div class="cbg-review-fields">
                                 <div class="cbg-review-field">
                                     <span class="cbg-review-label">Groomer</span>
-                                    <span class="cbg-review-value">Sarah's Grooming Studio</span>
+                                    <span class="cbg-review-value" id="cbgReviewGroomerName">Rebecca</span>
                                 </div>
                                 <div class="cbg-review-field">
                                     <span class="cbg-review-label">Service</span>
@@ -552,7 +629,7 @@
                         <div class="cbg-review-card" id="cbgReviewExtrasCard">
                             <div class="cbg-review-card-head">
                                 <h3>Extras &amp; add-ons</h3>
-                                <button type="button" class="cbg-review-edit" data-review-step="2">Edit</button>
+                                <button type="button" class="cbg-review-edit" data-review-step="3">Edit</button>
                             </div>
                             <div class="cbg-review-extras-list" id="cbgReviewExtrasList"></div>
                         </div>
@@ -669,9 +746,9 @@
                     </div>
                 </div>
 
-                <!-- Step 5: Pay -->
-                <div class="cbg-step-panel" id="cbgStep4" data-step="4">
-                    <p class="cbg-step-badge">Step 5 of 5</p>
+                <!-- Step 6: Pay -->
+                <div class="cbg-step-panel" id="cbgStep5" data-step="5">
+                    <p class="cbg-step-badge">Step 6 of 6</p>
 
                     <div class="cbg-pay">
                         <h2 id="cbgPayHeading">Select Payment Method</h2>
@@ -870,6 +947,16 @@
                                         18 Dec <span> (14:30–15:30) </span>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div class="cbg-summary-groomer" id="cbgSummaryGroomer">
+                            <div class="cbg-summary-groomer-avatar" id="cbgSummaryGroomerAvatar">
+                                <img src="{{ asset('images/message_profile_1.png') }}" alt="" id="cbgSummaryGroomerImg">
+                            </div>
+                            <div class="cbg-summary-groomer-copy">
+                                <span class="cbg-summary-groomer-label">Your Groomer</span>
+                                <span class="cbg-summary-groomer-name" id="cbgSummaryGroomerName">Rebecca <span>· Senior Groomer</span></span>
                             </div>
                         </div>
 

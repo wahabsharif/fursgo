@@ -1,8 +1,24 @@
 (function () {
   "use strict";
 
-  const STEPS = ["Pet", "Service", "Extras", "Review", "Pay"];
+  // Step order: 0 Pet, 1 Service, 2 Groomer, 3 Extras, 4 Review, 5 Pay
+  const STEPS = ["Pet", "Service", "Groomer", "Extras", "Review", "Pay"];
   const SERVICE_PRICE = 40;
+
+  // Button label when a groomer is selected (check icon + text)
+  const SELECTED_BTN_HTML =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">' +
+    '<path d="M2.5 7.2L5.4 10.1L11.5 3.9" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />' +
+    "</svg> Selected";
+
+  // Small icon used in the sidebar when "Any groomer" is chosen
+  const ANY_GROOMER_ICON =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+    '<path d="M16 3H21V8" stroke="#3B3731" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />' +
+    '<path d="M8 21H3V16" stroke="#3B3731" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />' +
+    '<path d="M21 3L14.5 9.5" stroke="#3B3731" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />' +
+    '<path d="M3 21L9.5 14.5" stroke="#3B3731" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />' +
+    "</svg>";
 
   let currentStep = 0;
   let petSubView = "choice";
@@ -10,6 +26,14 @@
   let editingPetId = null;
   let newPetData = null;
   let selectedService = { name: "Full Groom", price: SERVICE_PRICE };
+
+  // Default selected groomer (matches the "selected" card in the HTML)
+  let selectedGroomer = {
+    id: "rebecca",
+    name: "Rebecca",
+    title: "Senior Groomer",
+    image: "",
+  };
   let petBreedsData = {};
   let addressMode = "home"; // 'home' | 'different'
   let addressEditing = false;
@@ -31,6 +55,7 @@
       addNew: document.getElementById("cbgContinueAddNew"),
       selectExisting: document.getElementById("cbgContinueSelectExisting"),
       service: document.getElementById("cbgContinueService"),
+      groomer: document.getElementById("cbgContinueGroomer"),
       extras: document.getElementById("cbgContinueExtras"),
     },
     subPanels: {
@@ -48,6 +73,10 @@
     summaryPromos: document.getElementById("cbgSummaryPromos"),
     summaryPromoDivider: document.getElementById("cbgSummaryPromoDivider"),
     summaryTotal: document.getElementById("cbgSummaryTotal"),
+    summaryGroomer: document.getElementById("cbgSummaryGroomer"),
+    summaryGroomerAvatar: document.getElementById("cbgSummaryGroomerAvatar"),
+    summaryGroomerImg: document.getElementById("cbgSummaryGroomerImg"),
+    summaryGroomerName: document.getElementById("cbgSummaryGroomerName"),
   };
 
   function getAddonsApi() {
@@ -130,9 +159,55 @@
       els.summaryTotal.textContent = "£" + total.toFixed(2);
     }
 
+    updateSummaryGroomer();
     updateExtrasFooter();
     updateReviewPricing();
-    if (currentStep === 4) updatePayStep();
+    if (currentStep === 5) updatePayStep();
+  }
+
+  // Update the "Your Groomer" block in the sidebar
+  function updateSummaryGroomer() {
+    if (!els.summaryGroomer) return;
+
+    // Hide the block if nothing is selected
+    if (!selectedGroomer || !selectedGroomer.id) {
+      els.summaryGroomer.hidden = true;
+      return;
+    }
+
+    els.summaryGroomer.hidden = false;
+
+    // Name + optional title, e.g. "Rebecca • Senior Groomer"
+    if (els.summaryGroomerName) {
+      var nameText = escapeHtml(selectedGroomer.name || "Groomer");
+      var titleText = selectedGroomer.title
+        ? " <span>• " + escapeHtml(selectedGroomer.title) + "</span>"
+        : "";
+      els.summaryGroomerName.innerHTML = nameText + titleText;
+    }
+
+    if (!els.summaryGroomerAvatar) return;
+
+    var isAny = selectedGroomer.id === "any";
+    els.summaryGroomerAvatar.classList.toggle(
+      "cbg-summary-groomer-avatar--any",
+      isAny,
+    );
+
+    // "Any groomer" (or no photo) → show icon; otherwise show photo
+    if (isAny || !selectedGroomer.image) {
+      els.summaryGroomerAvatar.innerHTML = ANY_GROOMER_ICON;
+      els.summaryGroomerImg = null;
+      return;
+    }
+
+    els.summaryGroomerAvatar.innerHTML =
+      '<img src="' +
+      escapeHtml(selectedGroomer.image) +
+      '" alt="' +
+      escapeHtml(selectedGroomer.name || "") +
+      '" id="cbgSummaryGroomerImg">';
+    els.summaryGroomerImg = document.getElementById("cbgSummaryGroomerImg");
   }
 
   function updateExtrasFooter() {
@@ -172,8 +247,8 @@
 
     updateContinueState();
 
-    if (stepIndex === 3) populateReview();
-    if (stepIndex === 4) {
+    if (stepIndex === 4) populateReview();
+    if (stepIndex === 5) {
       updateSummary();
       updatePayStep();
       positionPayFooter();
@@ -285,7 +360,11 @@
       els.continueWraps.service,
       currentStep === 1 && isServiceStepValid(),
     );
-    setContinueState(els.continueWraps.extras, currentStep === 2);
+    setContinueState(
+      els.continueWraps.groomer,
+      currentStep === 2 && selectedGroomer != null,
+    );
+    setContinueState(els.continueWraps.extras, currentStep === 3);
     updateConfirmPayState();
   }
 
@@ -293,7 +372,7 @@
     const btn = document.getElementById("cbgConfirmPayBtn");
     const terms = document.getElementById("cbgReviewTerms");
     if (!btn) return;
-    const enabled = currentStep === 3 && terms?.checked;
+    const enabled = currentStep === 4 && terms?.checked;
     btn.disabled = !enabled;
     btn.classList.toggle("active", enabled);
   }
@@ -423,6 +502,13 @@
       pet?.breed || "—";
     document.getElementById("cbgReviewServiceName").textContent =
       selectedService.name;
+
+    const reviewGroomer = document.getElementById("cbgReviewGroomerName");
+    if (reviewGroomer) {
+      reviewGroomer.textContent = selectedGroomer?.title
+        ? selectedGroomer.name + " • " + selectedGroomer.title
+        : selectedGroomer?.name || "—";
+    }
 
     const extrasList = document.getElementById("cbgReviewExtrasList");
     const extrasCard = document.getElementById("cbgReviewExtrasCard");
@@ -624,7 +710,7 @@
 
   function updatePayButtonState() {
     const btn = document.getElementById("cbgPayBtn");
-    if (!btn || currentStep !== 4) return;
+    if (!btn || currentStep !== 5) return;
 
     const canPay =
       !selectedPayMethod
@@ -637,7 +723,7 @@
   }
 
   function scrollActivePayMethodIntoView() {
-    if (currentStep !== 4) return;
+    if (currentStep !== 5) return;
 
     const activeMethod = document.querySelector(".cbg-pay-method.active");
     const head = activeMethod?.querySelector(".cbg-pay-method-head");
@@ -697,7 +783,7 @@
 
     document
       .getElementById("cbgPayBackBtn")
-      ?.addEventListener("click", () => showStep(3));
+      ?.addEventListener("click", () => showStep(4));
 
     document.getElementById("cbgPayBtn")?.addEventListener("click", () => {
       const btn = document.getElementById("cbgPayBtn");
@@ -1195,10 +1281,64 @@
     );
   }
 
+  // Mark one groomer card as selected and sync the sidebar
+  function selectGroomer(option) {
+    if (!option) return;
+
+    // 1) Save selection from data-* attributes on the button
+    selectedGroomer = {
+      id: option.dataset.groomerId || "",
+      name: option.dataset.groomerName || "",
+      title: option.dataset.groomerTitle || "",
+      image: option.dataset.groomerImage || "",
+    };
+
+    // 2) Update UI: only the clicked card gets .selected
+    document.querySelectorAll(".cbg-groomer-option").forEach(function (btn) {
+      var isSelected = btn === option;
+      btn.classList.toggle("selected", isSelected);
+      btn.setAttribute("aria-selected", isSelected ? "true" : "false");
+
+      var selectBtn = btn.querySelector(".cbg-groomer-select-btn");
+      if (selectBtn) {
+        selectBtn.innerHTML = isSelected ? SELECTED_BTN_HTML : "Select";
+      }
+    });
+
+    // 3) Refresh sidebar + Continue button
+    updateSummaryGroomer();
+    updateContinueState();
+  }
+
+  // Wire up clicks for the Groomer step
+  function setupGroomerStep() {
+    // Start from whatever card already has .selected in the HTML
+    var selectedOption = document.querySelector(".cbg-groomer-option.selected");
+    if (selectedOption) {
+      selectGroomer(selectedOption);
+    }
+
+    document.querySelectorAll(".cbg-groomer-option").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        selectGroomer(btn);
+      });
+    });
+
+    var backBtn = document.getElementById("cbgGroomerBackBtn");
+    if (backBtn) {
+      backBtn.addEventListener("click", function () {
+        showStep(1); // back to Service
+      });
+    }
+  }
+
   function setupExtrasStep() {
-    document
-      .getElementById("cbgExtrasBackBtn")
-      ?.addEventListener("click", () => showStep(1));
+    var backBtn = document.getElementById("cbgExtrasBackBtn");
+    if (backBtn) {
+      backBtn.addEventListener("click", function () {
+        showStep(2); // back to Groomer
+      });
+    }
   }
 
   function setupReviewStep() {
@@ -1211,13 +1351,13 @@
 
     document
       .getElementById("cbgReviewBackBtn")
-      ?.addEventListener("click", () => showStep(2));
+      ?.addEventListener("click", () => showStep(3));
 
     document
       .getElementById("cbgConfirmPayBtn")
       ?.addEventListener("click", () => {
         const btn = document.getElementById("cbgConfirmPayBtn");
-        if (btn && !btn.disabled) showStep(4);
+        if (btn && !btn.disabled) showStep(5);
       });
 
     document
@@ -1299,6 +1439,7 @@
     setupPetPhotoUpload();
     setupPetCards();
     setupServiceStep();
+    setupGroomerStep();
     setupExtrasStep();
     setupReviewStep();
     setupPayStep();
